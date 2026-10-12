@@ -1,0 +1,253 @@
+{
+	"id": 1,
+	"name": "Fun With Fungus",
+	"categories": [
+		{
+			"id": 4377726,
+			"name": "Commander",
+			"isPremier": true,
+			"includedInDeck": true,
+			"includedInPrice": true
+		}
+	],
+	"cards": [
+		{
+			"quantity": 1,
+			"categories": ["Commander"],
+			"card": {
+				"uid": "92b0be6d-9183-4938-b7a1-ae7f04ba78a0",
+				"collectorNumber": "227",
+				"edition": {
+					"editioncode": "tsp"
+				},
+				"oracleCard": {
+					"name": "Thelon of Havenwood"
+				}
+			}
+		},
+		{
+			"quantity": 1,
+			"categories": null,
+			"card": {
+				"uid": "480c2b30-c2c2-4b8b-ae0f-9f03732f92a1",
+				"collectorNumber": "16",
+				"edition": {
+					"editioncode": "mps"
+				},
+				"oracleCard": {
+					"name": "Mana Crypt"
+				}
+			}
+		},
+		{
+			"quantity": 1,
+			"categories": null,
+			"card": {
+				"uid": "de42a771-4f5c-4295-b070-8cb857a0279e",
+				"collectorNumber": "56",
+				"edition": {
+					"editioncode": "mbs"
+				},
+				"oracleCard": {
+					"name": "Spread the Sickness"
+				}
+			}
+		},
+		{
+			"quantity": 1,
+			"categories": null,
+			"card": {
+				"uid": "52341830-8cea-421f-b901-9229004f2d45",
+				"collectorNumber": "87",
+				"edition": {
+					"editioncode": "mbs"
+				},
+				"oracleCard": {
+					"name": "Plaguemaw Beast"
+				}
+			}
+		},
+		{
+			"quantity": 1,
+			"categories": null,
+			"card": {
+				"uid": "dce72636-08e4-484e-ad81-4d1597a31ffb",
+				"collectorNumber": "145",
+				"edition": {
+					"editioncode": "som"
+				},
+				"oracleCard": {
+					"name": "Contagion Engine"
+				}
+			}
+		},
+		{
+			"quantity": 1,
+			"categories": null,
+			"card": {
+				"uid": "7fafcefa-d33c-4d73-b3b7-2930f28b845e",
+				"collectorNumber": "144",
+				"edition": {
+					"editioncode": "som"
+				},
+				"oracleCard": {
+					"name": "Contagion Clasp"
+				}
+			}
+		},
+		{
+			"quantity": 1,
+			"categories": null,
+			"card": {
+				"uid": "c7e71299-98f6-494e-b187-8d22ce5f50af",
+				"collectorNumber": "158",
+				"edition": {
+					"editioncode": "rav"
+				},
+				"oracleCard": {
+					"name": "Doubling Season"
+				}
+			}
+		},
+		{
+			"quantity": 1,
+			"categories": null,
+			"card": {
+				"uid": "e2803fdc-2ae1-438c-b5b1-559817e85fdb",
+				"collectorNumber": "137",
+				"edition": {
+					"editioncode": "plc"
+				},
+				"oracleCard": {
+					"name": "Psychotrope Thallid"
+				}
+			}
+		},
+		{
+			"quantity": 1,
+			"categories": null,
+			"card": {
+				"uid": "44ee5ee3-11f8-4a4e-bfa3-10ff45ed6d1b",
+				"collectorNumber": "102",
+				"edition": {
+					"editioncode": "tsp"
+				},
+				"oracleCard": {
+					"name": "Deathspore Thallid"
+				}
+			}
+		},
+		{
+			"quantity": 1,
+			"categories": null,
+			"card": {
+				"uid": "ac526fb0-e6d0-4ee0-9888-15098c1704df",
+				"collectorNumber": "225",
+				"edition": {
+					"editioncode": "tsp"
+				},
+				"oracleCard": {
+					"name": "Thallid Germinator"
+				}
+			}
+		},
+		{
+			"quantity": 1,
+			"categories": null,
+			"card": {
+				"uid": "2f834b1f-9f05-4553-a9b5-828a8348ed30",
+				"collectorNumber": "220",
+				"edition": {
+					"editioncode": "tsp"
+				},
+				"oracleCard": {
+					"name": "Sporesower Thallid"
+				}
+			}
+		},
+		{
+			"quantity": 1,
+			"categories": null,
+			"card": {
+				"uid": "a87cbbdb-3bbc-48da-b5e3-fcdbddebec81",
+				"collectorNumber": "213",
+				"edition": {
+					"editioncode": "tsp"
+				},
+				"oracleCard": {
+					"name": "Savage Thallid"
+				}
+			}
+		},
+		{
+			"quantity": 1,
+			"categories": null,
+			"card": {
+				"uid": "4caaf31b-86a9-485b-8da7-d5b526ed1233",
+				"collectorNumber": "74a",
+				"edition": {
+					"editioncode": "fem"
+				},
+				"oracleCard": {
+					"name": "Thallid"
+				}
+			}
+		},
+		{
+			"quantity": 1,
+			"categories": null,
+			"card": {
+				"uid": "e585241e-c647-456d-b3b1-3d48dd78c372",
+				"collectorNumber": "69",
+				"edition": {
+					"editioncode": "fem"
+				},
+				"oracleCard": {
+					"name": "Feral Thallid"
+				}
+			}
+		},
+		{
+			"quantity": 1,
+			"categories": null,
+			"card": {
+				"uid": "ac4800be-5f77-42f5-914c-2a8e647e3af5",
+				"collectorNumber": "143",
+				"edition": {
+					"editioncode": "mor"
+				},
+				"oracleCard": {
+					"name": "Door of Destinies"
+				}
+			}
+		},
+		{
+			"quantity": 1,
+			"categories": null,
+			"card": {
+				"uid": "01033dae-fec1-41f2-b7f2-cc6a43331790",
+				"collectorNumber": "199",
+				"edition": {
+					"editioncode": "isd"
+				},
+				"oracleCard": {
+					"name": "Parallel Lives"
+				}
+			}
+		},
+		{
+			"quantity": 1,
+			"categories": null,
+			"card": {
+				"uid": "c1f53d7a-9dad-46e8-b686-cd1362867445",
+				"collectorNumber": "281",
+				"edition": {
+					"editioncode": "soi"
+				},
+				"oracleCard": {
+					"name": "Westvale Abbey // Ormendahl, Profane Prince"
+				}
+			}
+		}
+	]
+}

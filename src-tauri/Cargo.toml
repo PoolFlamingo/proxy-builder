@@ -38,9 +38,19 @@ rusqlite = { version = "0.40", features = ["bundled"] }
 # Huella de cada imagen del almacén de blobs.
 sha2 = "0.11"
 uuid = { version = "1", features = ["v4"] }
+# Red: Scryfall y Archidekt. 🛑 `default-features = false` y `rustls`: nada de
+# OpenSSL en el árbol (regla de judlex). Tras tocarlo, `cargo tree -i openssl`
+# tiene que salir vacío.
+reqwest = { version = "0.13", default-features = false, features = ["json", "query", "rustls", "gzip"] }
+tokio = { version = "1", features = ["rt", "sync", "time", "macros"] }
+futures = { version = "0.3", default-features = false, features = ["std", "async-await"] }
+# Registro de lo que hace la app (cada petición de red queda apuntada).
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std"] }
 
 [dev-dependencies]
 tempfile = "3"
+tokio = { version = "1", features = ["rt", "macros", "time", "test-util"] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 # Recuerda tamaño, posición y si estaba maximizada.
