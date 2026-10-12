@@ -1,0 +1,11 @@
+# Los tipos de Rust que viajan a la pantalla se exportan a TypeScript con
+# `ts-rs` al pasar los tests (`pnpm bindings`). Esta variable dice dónde: a
+# `src/bindings/`, para que React los importe con `@/bindings/…`.
+#
+# 🛑 Va en la RAÍZ del proyecto y no en `src-tauri/.cargo/`: Cargo busca su
+# configuración desde el directorio donde se lanza, no desde el manifiesto, y
+# los scripts de pnpm lanzan `cargo --manifest-path src-tauri/Cargo.toml`
+# desde aquí. En `src-tauri/.cargo/` no se leía y los tipos acababan en
+# `src-tauri/bindings/`.
+[env]
+TS_RS_EXPORT_DIR = { value = "src/bindings", relative = true }

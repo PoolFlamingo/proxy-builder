@@ -23,6 +23,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::sistema::ping,
             commands::sistema::ping_error,
+            commands::decklist::parse_decklist,
+            commands::layout::compute_page_plan,
         ])
         .run(tauri::generate_context!());
 
