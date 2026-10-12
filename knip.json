@@ -17,10 +17,11 @@
 		"@dnd-kit/core",
 		"@dnd-kit/sortable",
 		"@tauri-apps/plugin-dialog",
-		"@tauri-apps/plugin-opener",
-		"@tauri-apps/api",
-		"zustand"
+		"@tauri-apps/plugin-opener"
 	],
 	"ignoreBinaries": ["rustfmt"],
-	"ignoreExportsUsedInFile": { "interface": true, "type": true }
+	"ignoreExportsUsedInFile": {
+		"interface": true,
+		"type": true
+	}
 }

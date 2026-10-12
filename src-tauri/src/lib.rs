@@ -9,6 +9,8 @@
 
 pub mod commands;
 pub mod error;
+pub mod state;
+pub mod store;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -20,11 +22,34 @@ pub fn run() {
     let constructor = constructor.plugin(tauri_plugin_window_state::Builder::new().build());
 
     let resultado = constructor
+        .setup(|app| {
+            use tauri::Manager;
+            let rutas = app.path();
+            let paths = state::Paths {
+                data: rutas.app_data_dir()?,
+                cache: rutas.app_cache_dir()?,
+            };
+            let estado = state::AppState::open(paths).map_err(|e| e.to_string())?;
+            app.manage(estado);
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             commands::sistema::ping,
             commands::sistema::ping_error,
             commands::decklist::parse_decklist,
             commands::layout::compute_page_plan,
+            commands::library::deck_list,
+            commands::library::deck_create,
+            commands::library::deck_open,
+            commands::library::deck_save,
+            commands::library::deck_rename,
+            commands::library::deck_duplicate,
+            commands::library::deck_delete,
+            commands::library::blob_import_files,
+            commands::library::blob_generic_back,
+            commands::library::blob_gc,
+            commands::library::app_setting_get,
+            commands::library::app_setting_set,
         ])
         .run(tauri::generate_context!());
 

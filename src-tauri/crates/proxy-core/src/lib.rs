@@ -12,6 +12,7 @@
 #![cfg_attr(not(test), deny(clippy::unwrap_used, clippy::expect_used))]
 
 pub mod decklist;
+pub mod imaging;
 pub mod layout;
 pub mod model;
 pub mod paper;
