@@ -1,0 +1,26 @@
+{
+	"$schema": "https://unpkg.com/knip@6/schema.json",
+	"entry": ["scripts/**/*.{ts,mjs,js}", "src/**/*.test.{ts,tsx}"],
+	"project": ["src/**/*.{ts,tsx}", "scripts/**/*.{ts,mjs,js}"],
+	"rules": {
+		"exports": "off",
+		"nsExports": "off",
+		"types": "off",
+		"nsTypes": "off",
+		"enumMembers": "off",
+		"duplicates": "off"
+	},
+	"ignore": ["src/components/ui/**", "src/lib/ipc.ts"],
+	"ignoreDependencies": [
+		"tw-animate-css",
+		"tailwindcss",
+		"@dnd-kit/core",
+		"@dnd-kit/sortable",
+		"@tauri-apps/plugin-dialog",
+		"@tauri-apps/plugin-opener",
+		"@tauri-apps/api",
+		"zustand"
+	],
+	"ignoreBinaries": ["rustfmt"],
+	"ignoreExportsUsedInFile": { "interface": true, "type": true }
+}

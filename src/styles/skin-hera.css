@@ -1,0 +1,371 @@
+/* ────────────────────────────────────────────────────────────────────────
+   Skin "Hera" (PROVISIONAL) — un diseño propio, no un efecto sobre shadcn.
+   Canvas con aurora animada, SIDEBAR y CONTENIDO flotantes (paneles
+   despegados con esquinas grandes y sombra), navegación en píldora con hover
+   deslizante, tarjetas que se elevan, botones con degradado y brillo.
+   Consume los tokens del tema activo, así cada paleta le da su acento.
+   Se activa con data-skin="hera". Si no convence, se borra el archivo y su
+   entrada en el toggle de Ajustes.
+   ──────────────────────────────────────────────────────────────────────── */
+
+[data-skin="hera"] {
+  /* Radio alineado al de la ventana de macOS (variable global --radius), en vez
+     del radio grande de cristal original. Cambia solo --radius para tunearlo. */
+  --hera-radius: var(--radius);
+  --hera-radius-sm: calc(var(--radius) - 0.2rem);
+  --hera-glass: color-mix(in oklch, var(--card) 60%, transparent);
+  --hera-glass-strong: color-mix(in oklch, var(--card) 82%, transparent);
+  --hera-border: color-mix(in oklch, var(--foreground) 12%, transparent);
+  --hera-hairline: inset 0 1px 0 color-mix(in oklch, white 9%, transparent);
+
+  /* Filigrana de Hera: pinstripe vertical fino y PAREJO. Clave: el "pico" es un
+     degradado simétrico (transparente→luz→transparente) en cada periodo de
+     4px, SIN cantos duros de 1px. Un borde duro de 1px cae sobre posiciones
+     fraccionarias de píxel (peor en WKWebView con cristal) y se reparte
+     desigual entre píxeles → ese moiré irregular. Con borde suave, cada línea
+     se ve igual de limpia caiga donde caiga. */
+  --hera-lines: repeating-linear-gradient(
+    90deg,
+    transparent 0,
+    color-mix(in oklch, white 11%, transparent) 2px,
+    transparent 4px
+  );
+  /* Velo de cristal propio: claro arriba que se apaga y vira a sombra abajo. */
+  --hera-sheen: linear-gradient(
+    180deg,
+    color-mix(in oklch, white 9%, transparent) 0%,
+    transparent 30%,
+    transparent 68%,
+    color-mix(in oklch, black 13%, transparent) 100%
+  );
+}
+
+/* ── Canvas: aurora animada detrás de los paneles flotantes ────────────── */
+[data-skin="hera"] [data-slot="sidebar-wrapper"] {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(
+      40% 50% at 10% 6%,
+      color-mix(in oklch, var(--chart-1) 34%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      44% 54% at 92% 14%,
+      color-mix(in oklch, var(--chart-4) 30%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      52% 62% at 60% 100%,
+      color-mix(in oklch, var(--chart-2) 26%, transparent),
+      transparent 70%
+    ),
+    var(--background);
+}
+[data-skin="hera"] [data-slot="sidebar-wrapper"]::before {
+  content: "";
+  position: absolute;
+  inset: -12%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      32% 38% at 28% 30%,
+      color-mix(in oklch, var(--primary) 26%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      28% 34% at 78% 68%,
+      color-mix(in oklch, var(--chart-5) 22%, transparent),
+      transparent 70%
+    );
+  animation: hera-drift 20s ease-in-out infinite alternate;
+}
+@keyframes hera-drift {
+  0% {
+    transform: translate3d(-3%, -2%, 0) scale(1);
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate3d(4%, 3%, 0) scale(1.12);
+    opacity: 1;
+  }
+}
+
+/* ── Sidebar flotante (cristal) ────────────────────────────────────────── */
+[data-skin="hera"] [data-slot="sidebar-container"] {
+  padding: 14px;
+  /* Mata la línea divisoria del variant por defecto: en Hera el sidebar flota. */
+  /* biome-ignore lint/complexity/noImportantStyles: vence al `border-r` de Tailwind del sidebar; quitarlo se prueba antes en WebKitGTK */
+  border: 0 !important;
+}
+[data-skin="hera"] [data-slot="sidebar-inner"] {
+  border-radius: var(--hera-radius);
+  border: 1px solid var(--hera-border);
+  background: var(--hera-glass);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  box-shadow:
+    0 22px 50px -24px rgba(0, 0, 0, 0.62),
+    var(--hera-hairline);
+}
+
+/* ── Contenido flotante (cristal) ──────────────────────────────────────── */
+[data-skin="hera"] [data-slot="sidebar-inset"] {
+  position: relative;
+  z-index: 1;
+  margin: 14px 14px 14px 0;
+  border-radius: var(--hera-radius);
+  border: 1px solid var(--hera-border);
+  background: var(--hera-glass-strong);
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
+  box-shadow:
+    0 22px 50px -24px rgba(0, 0, 0, 0.62),
+    var(--hera-hairline);
+  overflow: hidden;
+}
+[data-skin="hera"] [data-slot="topbar"] {
+  background: transparent;
+  border-bottom: 1px solid var(--hera-border);
+}
+
+/* Marca con halo. */
+[data-skin="hera"] [data-slot="sidebar-header"] .bg-primary {
+  box-shadow: 0 8px 24px -8px color-mix(in oklch, var(--primary) 70%, transparent);
+}
+
+/* ── Navegación: píldoras con hover deslizante y activo en degradado ───── */
+[data-skin="hera"] [data-slot="sidebar-menu-button"] {
+  border-radius: 999px;
+  transition:
+    transform 0.15s ease,
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+[data-skin="hera"] [data-slot="sidebar-menu-button"]:hover {
+  transform: translateX(3px);
+  background: color-mix(in oklch, var(--primary) 12%, transparent);
+  color: var(--sidebar-foreground); /* el texto no se oscurece al pasar */
+}
+[data-skin="hera"] [data-slot="sidebar-menu-button"][data-active="true"] {
+  background: linear-gradient(
+    120deg,
+    color-mix(in oklch, var(--primary) 95%, transparent),
+    color-mix(in oklch, var(--chart-4) 68%, transparent)
+  );
+  color: var(--primary-foreground);
+  box-shadow: 0 10px 24px -8px color-mix(in oklch, var(--primary) 62%, transparent);
+}
+[data-skin="hera"] [data-slot="sidebar-menu-button"][data-active="true"]:hover {
+  transform: translateX(3px);
+  filter: brightness(1.05);
+}
+
+/* ── Tarjetas de cristal mate (grano fusionado) que se elevan ──────────── */
+[data-skin="hera"] [data-slot="card"] {
+  position: relative;
+  isolation: isolate;
+  background: var(--hera-glass);
+  -webkit-backdrop-filter: blur(var(--macup-blur, 16px));
+  backdrop-filter: blur(var(--macup-blur, 16px));
+  border: 1px solid var(--hera-border);
+  border-radius: var(--hera-radius);
+  box-shadow:
+    var(--macup-shadow, 0 16px 40px -20px rgba(0, 0, 0, 0.55)),
+    var(--hera-hairline);
+}
+/* Grano detrás del contenido (no ensucia el texto). */
+[data-skin="hera"] [data-slot="card"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--macup-noise, 0.1);
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 120px 120px;
+}
+/* ── Botones: píldora, degradado, brillo ───────────────────────────────── */
+[data-skin="hera"] [data-slot="button"] {
+  border-radius: 999px;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+[data-skin="hera"] [data-slot="button"][data-variant="default"] {
+  background: linear-gradient(
+    120deg,
+    var(--primary),
+    color-mix(in oklch, var(--primary) 42%, var(--chart-4))
+  );
+  color: var(--primary-foreground);
+  border: none;
+  box-shadow: 0 10px 24px -8px color-mix(in oklch, var(--primary) 62%, transparent);
+}
+[data-skin="hera"] [data-slot="button"][data-variant="destructive"] {
+  background: linear-gradient(
+    120deg,
+    var(--destructive),
+    color-mix(in oklch, var(--destructive) 48%, var(--chart-5))
+  );
+  color: white;
+  border: none;
+  box-shadow: 0 10px 24px -8px color-mix(in oklch, var(--destructive) 62%, transparent);
+}
+[data-skin="hera"] [data-slot="button"][data-variant="outline"],
+[data-skin="hera"] [data-slot="button"][data-variant="secondary"] {
+  background: color-mix(in oklch, var(--card) 45%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--hera-border);
+  color: var(--foreground);
+}
+[data-skin="hera"] [data-slot="button"][data-variant="default"]:hover,
+[data-skin="hera"] [data-slot="button"][data-variant="destructive"]:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+[data-skin="hera"] [data-slot="button"][data-variant="outline"]:hover,
+[data-skin="hera"] [data-slot="button"][data-variant="secondary"]:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in oklch, var(--primary) 45%, transparent);
+}
+
+/* ── Campos y superficies flotantes de cristal ─────────────────────────── */
+[data-skin="hera"] [data-slot="input"],
+[data-skin="hera"] [data-slot="textarea"],
+[data-skin="hera"] [data-slot="select-trigger"] {
+  background: color-mix(in oklch, var(--card) 40%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--hera-border);
+  border-radius: var(--hera-radius-sm);
+}
+[data-skin="hera"] [data-slot="popover-content"],
+[data-skin="hera"] [data-slot="dropdown-menu-content"],
+[data-skin="hera"] [data-slot="select-content"],
+[data-skin="hera"] [data-slot="tooltip-content"] {
+  background: var(--hera-glass-strong);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--hera-border);
+  border-radius: var(--hera-radius);
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Toggle segmentado de cristal ──────────────────────────────────────── */
+[data-skin="hera"] [data-slot="toggle-group"] {
+  background: color-mix(in oklch, var(--card) 40%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-radius: 999px;
+  padding: 3px;
+  border: 1px solid var(--hera-border);
+}
+[data-skin="hera"] [data-slot="toggle-group-item"] {
+  /* biome-ignore lint/complexity/noImportantStyles: vence a los `rounded-*` por posición del toggle-group (first:/last:) */
+  border-radius: 999px !important;
+  border: none;
+}
+/* El fondo del activo va por la variable que lee la regla de `[data-pestanas]`
+   en index.css: así el degradado de Hera se aplica sin depender de quién gane
+   por orden de aparición en la hoja. */
+[data-skin="hera"] [data-slot="toggle-group"] {
+  /* La activa es el primario con su texto (09/10/2026): el par que garantiza
+     contraste en cada paleta. Sin degradado, sin sombra de texto y sin la
+     barra al pie. Solo un toque de sombra de color para que «flote». */
+  --pestana-activa: var(--primary);
+  --pestana-activa-sombra: 0 6px 16px -6px
+    color-mix(in oklch, var(--primary) 60%, transparent);
+  --pestana-activa-texto: var(--primary-foreground);
+}
+[data-skin="hera"] [data-slot="toggle-group-item"]:is([aria-checked="true"], [aria-pressed="true"]) {
+  background: var(--pestana-activa);
+  color: var(--pestana-activa-texto);
+  box-shadow: var(--pestana-activa-sombra);
+}
+
+/* ── Badges píldora con brillo ─────────────────────────────────────────── */
+[data-skin="hera"] [data-slot="badge"] {
+  border-radius: 999px;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Filigrana opcional (checkbox en Ajustes → data-hera-filigree="1").
+   Superpone los hairlines de cristal grabado a TODAS las superficies de Hera
+   sin alterar su material: la línea va por encima del tinte de cristal y por
+   debajo del contenido, así que combina con el blur y el acento del tema.
+   ════════════════════════════════════════════════════════════════════════ */
+/* Superficies LIGERAS (sidebar, popovers, campos, toggles): el pinstripe puede
+   ir en el fondo, porque no tienen contenido pesado que fuerce rasterización.
+   Solo tocamos background-image; el color de cristal lo fija la regla base. */
+[data-skin="hera"][data-hera-filigree="1"] [data-slot="sidebar-inner"],
+[data-skin="hera"][data-hera-filigree="1"] [data-slot="popover-content"],
+[data-skin="hera"][data-hera-filigree="1"] [data-slot="dropdown-menu-content"],
+[data-skin="hera"][data-hera-filigree="1"] [data-slot="select-content"],
+[data-skin="hera"][data-hera-filigree="1"] [data-slot="tooltip-content"],
+[data-skin="hera"][data-hera-filigree="1"] [data-slot="input"],
+[data-skin="hera"][data-hera-filigree="1"] [data-slot="select-trigger"],
+[data-skin="hera"][data-hera-filigree="1"] [data-slot="toggle-group"] {
+  background-image: var(--hera-lines), var(--hera-sheen);
+  background-repeat: repeat, no-repeat;
+  background-size: auto, 100% 100%;
+}
+
+/* TARJETAS: el velo va en el fondo (es un degradado suave, tolera el blur)…
+   …pero el pinstripe va en una CAPA SUPERIOR (::after). Las tarjetas grandes
+   con gráficos/globo fuerzan una capa GPU de menor resolución; si el pinstripe
+   estuviera en su fondo, se difuminaría con ella (justo lo que pasaba). En una
+   capa superior independiente se pinta nítido, como en el sidebar. */
+[data-skin="hera"][data-hera-filigree="1"] [data-slot="card"] {
+  background-image: var(--hera-sheen);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+[data-skin="hera"][data-hera-filigree="1"] [data-slot="card"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+  background-image: var(--hera-lines);
+  background-repeat: repeat;
+  background-size: auto;
+}
+/* OJO: el panel de contenido (sidebar-inset) NO lleva pinstripe a propósito.
+   Sus líneas se verían A TRAVÉS de las tarjetas de cristal y cruzarían con las
+   de la tarjeta → moiré. Una sola capa por superficie = limpio. */
+
+/* ════════════════════════════════════════════════════════════════════════
+   AÑADIDO DE JUDLEX (no está en el skin original de MacUp, que no usa Dialog).
+   Un diálogo es una superficie flotante más: recibe exactamente el mismo
+   cristal, borde y sombra que popovers, menús y selects. Sin esto el modal
+   sale con el fondo y el borde por defecto de shadcn y parece un parche.
+   Si algún día se resincroniza el skin desde MacUp, este bloque se conserva.
+   ════════════════════════════════════════════════════════════════════════ */
+[data-skin="hera"] [data-slot="dialog-content"] {
+  background: var(--hera-glass-strong);
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
+  border: 1px solid var(--hera-border);
+  border-radius: var(--hera-radius);
+  box-shadow:
+    0 24px 60px -20px rgba(0, 0, 0, 0.65),
+    var(--hera-hairline);
+}
+/* El velo: tinte del propio tema, no un negro plano ajeno a la paleta. */
+[data-skin="hera"] [data-slot="dialog-overlay"] {
+  background: color-mix(in oklch, var(--background) 55%, transparent);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+[data-skin="hera"][data-hera-filigree="1"] [data-slot="dialog-content"] {
+  background-image: var(--hera-lines), var(--hera-sheen);
+  background-repeat: repeat, no-repeat;
+  background-size: auto, 100% 100%;
+}

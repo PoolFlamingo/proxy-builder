@@ -1,0 +1,210 @@
+/* ────────────────────────────────────────────────────────────────────────
+   Opciones de material, fondo y sombra para el estilo base (Plano / shadcn).
+   Atributos en <html>:
+     data-bg="gradient" | "aurora"      → fondo del área de contenido
+     data-material="glass" | "matte"    → cristal / cristal mate (cards+rail+header)
+     data-shadow="0..4"                 → intensidad de sombra de las tarjetas
+   Variables (sliders):
+     --macup-blur  (px)   desenfoque del cristal
+     --macup-noise (0..1) opacidad del grano del cristal mate
+   El skin Hera, si está activo, define lo suyo y manda sobre esto.
+   ──────────────────────────────────────────────────────────────────────── */
+
+/* ── Fondos ────────────────────────────────────────────────────────────── */
+[data-bg="gradient"] [data-slot="sidebar-inset"] {
+  background:
+    radial-gradient(
+      55% 45% at 18% 0%,
+      color-mix(in oklch, var(--primary) 13%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      50% 50% at 100% 25%,
+      color-mix(in oklch, var(--chart-2) 11%, transparent),
+      transparent 60%
+    ),
+    var(--background);
+  background-attachment: fixed;
+}
+
+[data-bg="aurora"] [data-slot="sidebar-inset"] {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(
+      42% 52% at 12% 8%,
+      color-mix(in oklch, var(--chart-1) 26%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      46% 56% at 88% 18%,
+      color-mix(in oklch, var(--chart-4) 22%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      52% 60% at 60% 98%,
+      color-mix(in oklch, var(--chart-2) 20%, transparent),
+      transparent 70%
+    ),
+    var(--background);
+  background-attachment: fixed;
+}
+[data-bg="aurora"] [data-slot="sidebar-inset"]::before {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      34% 40% at 30% 28%,
+      color-mix(in oklch, var(--primary) 18%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      30% 36% at 76% 66%,
+      color-mix(in oklch, var(--chart-5) 16%, transparent),
+      transparent 70%
+    );
+  animation: macup-aurora 24s ease-in-out infinite alternate;
+}
+@keyframes macup-aurora {
+  0% {
+    transform: translate3d(-3%, -2%, 0) scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate3d(4%, 3%, 0) scale(1.12);
+    opacity: 1;
+  }
+}
+
+/* Si se elige cristal pero no hay fondo, damos un velo tenue para que el
+   desenfoque tenga algo que difuminar (si no, no se notaría). */
+[data-material="glass"]:not([data-bg]) [data-slot="sidebar-inset"],
+[data-material="matte"]:not([data-bg]) [data-slot="sidebar-inset"] {
+  background:
+    radial-gradient(
+      60% 50% at 15% 0%,
+      color-mix(in oklch, var(--primary) 9%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      55% 55% at 100% 30%,
+      color-mix(in oklch, var(--chart-2) 8%, transparent),
+      transparent 60%
+    ),
+    var(--background);
+  background-attachment: fixed;
+}
+
+/* ── Sombra de las tarjetas (controlada por el slider vía --macup-shadow) ─
+   Va DELANTE de las reglas de material: son más específicas y no tocan la
+   sombra, así que el orden no cambia nada y biome no avisa. */
+[data-slot="card"] {
+  box-shadow: var(--macup-shadow, 0 4px 10px -2px rgba(0, 0, 0, 0.16));
+}
+
+/* ── Cristal en las TARJETAS (siempre que se elija material) ────────────── */
+[data-material="glass"] [data-slot="card"],
+[data-material="matte"] [data-slot="card"] {
+  -webkit-backdrop-filter: blur(var(--macup-blur, 16px));
+  backdrop-filter: blur(var(--macup-blur, 16px));
+}
+[data-material="glass"] [data-slot="card"] {
+  background: color-mix(in oklch, var(--card) 58%, transparent);
+  border: 1px solid color-mix(in oklch, var(--foreground) 10%, transparent);
+}
+[data-material="matte"] [data-slot="card"] {
+  position: relative;
+  isolation: isolate;
+  background: color-mix(in oklch, var(--card) 70%, transparent);
+  border: 1px solid color-mix(in oklch, var(--foreground) 10%, transparent);
+}
+
+/* ── Cristal en el SIDEBAR + HEADER (solo con "Incluye Sidebar") ────────── */
+[data-fx-sidebar][data-material="glass"] [data-slot="sidebar-inner"],
+[data-fx-sidebar][data-material="matte"] [data-slot="sidebar-inner"],
+[data-fx-sidebar][data-material="glass"] [data-slot="topbar"],
+[data-fx-sidebar][data-material="matte"] [data-slot="topbar"] {
+  -webkit-backdrop-filter: blur(var(--macup-blur, 16px));
+  backdrop-filter: blur(var(--macup-blur, 16px));
+}
+[data-fx-sidebar][data-material="glass"] [data-slot="sidebar-inner"] {
+  background: color-mix(in oklch, var(--sidebar) 58%, transparent);
+}
+[data-fx-sidebar][data-material="matte"] [data-slot="sidebar-inner"] {
+  position: relative;
+  isolation: isolate;
+  background: color-mix(in oklch, var(--sidebar) 70%, transparent);
+}
+[data-fx-sidebar][data-material="glass"] [data-slot="topbar"] {
+  background: color-mix(in oklch, var(--background) 45%, transparent);
+}
+[data-fx-sidebar][data-material="matte"] [data-slot="topbar"] {
+  position: relative;
+  isolation: isolate;
+  background: color-mix(in oklch, var(--background) 60%, transparent);
+}
+
+/* Grano (mate) DETRÁS del contenido: tarjetas siempre; rail/header con flag. */
+[data-material="matte"] [data-slot="card"]::before,
+[data-fx-sidebar][data-material="matte"] [data-slot="sidebar-inner"]::before,
+[data-fx-sidebar][data-material="matte"] [data-slot="topbar"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--macup-noise, 0.14);
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 120px 120px;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   AÑADIDO DE JUDLEX: los diálogos son una superficie más.
+   MacUp no usa Dialog, así que el fichero original solo viste tarjetas. Sin
+   esto, con el material por defecto (mate) las tarjetas salen con cristal y
+   grano y el modal sale plano: parece pegado de otra app.
+   ════════════════════════════════════════════════════════════════════════ */
+/* Sin skin, el diálogo toma la superficie de tarjeta (no el fondo de la app)
+   y el velo se tiñe con el tema en vez de ser un negro plano. Va DELANTE de
+   las de material: esas son más específicas y su `background` gana igual. */
+[data-slot="dialog-content"] {
+  background-color: var(--card);
+  box-shadow: var(--macup-shadow, 0 4px 10px -2px rgba(0, 0, 0, 0.16));
+}
+[data-material="glass"] [data-slot="dialog-content"],
+[data-material="matte"] [data-slot="dialog-content"] {
+  -webkit-backdrop-filter: blur(var(--macup-blur, 16px));
+  backdrop-filter: blur(var(--macup-blur, 16px));
+  border: 1px solid color-mix(in oklch, var(--foreground) 10%, transparent);
+}
+[data-material="glass"] [data-slot="dialog-content"] {
+  background: color-mix(in oklch, var(--card) 88%, transparent);
+}
+/* OJO: aquí NO se toca `position`. La regla equivalente de las tarjetas lleva
+   `position: relative` (lo necesita para el grano), pero el diálogo es
+   `position: fixed` y cambiarlo lo saca del centrado: se va abajo y a la
+   derecha. `isolation` basta para que el grano quede detrás del contenido. */
+[data-material="matte"] [data-slot="dialog-content"] {
+  isolation: isolate;
+  background: color-mix(in oklch, var(--card) 92%, transparent);
+}
+[data-material="matte"] [data-slot="dialog-content"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--macup-noise, 0.14);
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 120px 120px;
+}
+[data-slot="dialog-overlay"] {
+  background: color-mix(in oklch, var(--background) 60%, transparent);
+}
