@@ -1,4 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
+import type { Deck } from "@/bindings/Deck";
+import type { PagePlan } from "@/bindings/PagePlan";
+import type { ParsedDecklist } from "@/bindings/ParsedDecklist";
 
 /**
  * **La única puerta a Rust.** Cada comando de `src-tauri/src/commands/` tiene
@@ -12,6 +15,8 @@ import { invoke } from "@tauri-apps/api/core";
 export interface Commands {
 	ping: { args: Record<string, never>; result: string };
 	ping_error: { args: Record<string, never>; result: null };
+	parse_decklist: { args: { text: string }; result: ParsedDecklist };
+	compute_page_plan: { args: { deck: Deck }; result: PagePlan };
 }
 
 export function call<C extends keyof Commands>(

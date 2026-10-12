@@ -11,13 +11,11 @@
 
 #![cfg_attr(not(test), deny(clippy::unwrap_used, clippy::expect_used))]
 
+pub mod decklist;
+pub mod layout;
+pub mod model;
+pub mod paper;
+pub mod units;
+
 /// Versión del núcleo, para los metadatos del PDF y los paquetes de deck.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn el_crate_compila_y_tiene_version() {
-        assert!(!super::VERSION.is_empty());
-    }
-}

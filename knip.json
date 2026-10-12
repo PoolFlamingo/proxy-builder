@@ -10,7 +10,7 @@
 		"enumMembers": "off",
 		"duplicates": "off"
 	},
-	"ignore": ["src/components/ui/**", "src/lib/ipc.ts"],
+	"ignore": ["src/bindings/**", "src/components/ui/**", "src/lib/ipc.ts"],
 	"ignoreDependencies": [
 		"tw-animate-css",
 		"tailwindcss",

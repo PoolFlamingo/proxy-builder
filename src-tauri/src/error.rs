@@ -76,6 +76,17 @@ impl From<std::io::Error> for AppError {
     }
 }
 
+impl From<proxy_core::layout::LayoutError> for AppError {
+    fn from(e: proxy_core::layout::LayoutError) -> Self {
+        use proxy_core::layout::LayoutError as L;
+        let motivo = match e {
+            L::CardDoesNotFit => "card_does_not_fit",
+            L::InvalidSettings => "invalid_settings",
+        };
+        AppError::new(ErrorCode::InvalidInput).with("motivo", motivo)
+    }
+}
+
 pub type AppResult<T> = Result<T, AppError>;
 
 #[cfg(test)]
