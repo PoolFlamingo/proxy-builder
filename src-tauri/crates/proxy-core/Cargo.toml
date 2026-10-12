@@ -13,5 +13,16 @@ ts-rs = "12"
 regex = "1"
 # Leer formato y medidas de una imagen sin decodificarla (la misma que usa krilla).
 imagesize = "0.14"
+# Decodificar y codificar imágenes (solo los formatos que se usan).
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "webp", "rayon"] }
+# Remuestreo Lanczos3 con SIMD (mucho más rápido que el de `image`).
+fast_image_resize = { version = "6.1.0", features = ["rayon"] }
+rayon = "1.12"
+sha2 = "0.11"
+# El PDF, como en judlex: determinista, fuentes en subconjunto, sin nada
+# nativo. `raster-images` para incrustar las cartas (el JPEG va tal cual,
+# con DCTDecode); `simple-text` para las etiquetas de la hoja de calibración.
+krilla = { version = "0.8.2", default-features = false, features = ["raster-images", "simple-text"] }
 
 [dev-dependencies]
+lopdf = "0.45"
