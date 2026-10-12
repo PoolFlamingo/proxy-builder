@@ -4,7 +4,12 @@
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+
 use crate::error::AppResult;
+use crate::jobs::Jobs;
+use crate::scryfall::client::Scryfall;
 use crate::store::blobs::BlobStore;
 use crate::store::db::Db;
 
@@ -21,6 +26,11 @@ pub struct AppState {
     pub db: Db,
     pub blobs: BlobStore,
     pub paths: Paths,
+    pub scryfall: Arc<Scryfall>,
+    pub jobs: Jobs,
+    /// Miniaturas de resultados de búsqueda: huella de la URL → URL. Lo rellenan
+    /// las búsquedas y lo lee el protocolo de imágenes (ruta `/t/`).
+    pub miniaturas: Mutex<HashMap<String, String>>,
     /// Trabajos de resolución/exportación en marcha (la limpieza de imágenes
     /// no corre mientras haya alguno).
     trabajos: AtomicUsize,
@@ -36,6 +46,9 @@ impl AppState {
             db,
             blobs,
             paths,
+            scryfall: Arc::new(Scryfall::new()?),
+            jobs: Jobs::default(),
+            miniaturas: Mutex::new(HashMap::new()),
             trabajos: AtomicUsize::new(0),
         })
     }

@@ -7,8 +7,12 @@
 
 #![cfg_attr(not(test), deny(clippy::unwrap_used, clippy::expect_used))]
 
+pub mod archidekt;
 pub mod commands;
 pub mod error;
+pub mod jobs;
+pub mod registro;
+pub mod scryfall;
 pub mod state;
 pub mod store;
 
@@ -29,6 +33,7 @@ pub fn run() {
                 data: rutas.app_data_dir()?,
                 cache: rutas.app_cache_dir()?,
             };
+            registro::iniciar(&rutas.app_log_dir()?);
             let estado = state::AppState::open(paths).map_err(|e| e.to_string())?;
             app.manage(estado);
             Ok(())
@@ -50,6 +55,15 @@ pub fn run() {
             commands::library::blob_gc,
             commands::library::app_setting_get,
             commands::library::app_setting_set,
+            commands::cards::resolve_decklist,
+            commands::cards::job_cancel,
+            commands::cards::card_autocomplete,
+            commands::cards::card_search,
+            commands::cards::card_prints,
+            commands::cards::card_fetch,
+            commands::cards::sets_list,
+            commands::cards::set_cards,
+            commands::cards::import_archidekt,
         ])
         .run(tauri::generate_context!());
 
