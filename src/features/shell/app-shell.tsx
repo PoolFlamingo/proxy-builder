@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { SettingsDialog } from "@/features/settings/settings-dialog";
+import { SaveIndicator } from "./save-indicator";
 
 export type Vista = "deck" | "biblioteca";
 
@@ -59,7 +60,8 @@ export function AppShell({
 						{t("Biblioteca")}
 					</ToggleGroupItem>
 				</ToggleGroup>
-				<div className="ml-auto">
+				<div className="ml-auto flex items-center gap-2.5">
+					<SaveIndicator />
 					<Button
 						size="sm"
 						variant="ghost"

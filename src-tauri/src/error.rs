@@ -76,6 +76,12 @@ impl From<std::io::Error> for AppError {
     }
 }
 
+impl From<rusqlite::Error> for AppError {
+    fn from(e: rusqlite::Error) -> Self {
+        AppError::new(ErrorCode::Db).with("detalle", e)
+    }
+}
+
 impl From<proxy_core::layout::LayoutError> for AppError {
     fn from(e: proxy_core::layout::LayoutError) -> Self {
         use proxy_core::layout::LayoutError as L;

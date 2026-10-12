@@ -3,4 +3,5 @@
 
 pub mod decklist;
 pub mod layout;
+pub mod library;
 pub mod sistema;

@@ -11,5 +11,7 @@ serde_json = "1"
 thiserror = "2"
 ts-rs = "12"
 regex = "1"
+# Leer formato y medidas de una imagen sin decodificarla (la misma que usa krilla).
+imagesize = "0.14"
 
 [dev-dependencies]
