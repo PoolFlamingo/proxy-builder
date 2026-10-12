@@ -1,0 +1,38 @@
+root = true
+
+# 🛑 El proyecto indenta con TABULADOR, igual que ZodHub. Un tabulador es un
+# byte por nivel; cuatro espacios son cuatro. Quien manda de verdad es Biome
+# (`biome.json`, `formatter.indentStyle: "tab"`), que corre al guardar y en el
+# pre-commit; esto es para que el editor no pelee con él antes de que Biome
+# llegue a tocar el fichero.
+[*]
+indent_style = tab
+indent_size = 4
+end_of_line = lf
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{ts,tsx,js,jsx,mjs,cjs,json,css,html}]
+indent_style = tab
+indent_size = 2
+
+# 🛑 Rust NO lleva tabulador, y no es una excepción por gusto: `cargo fmt` usa
+# `rustfmt`, cuyo valor de fábrica es CUATRO ESPACIOS y que reformatea el
+# fichero entero cada vez que corre. Poner aquí tabulador haría que el editor y
+# `cargo fmt --check` (que está en el pre-commit) se contradijeran en cada
+# guardado, y ganaría siempre el que corre después.
+[*.rs]
+indent_style = space
+indent_size = 4
+
+# Markdown: el sangrado tiene significado (listas anidadas) y un tabulador de
+# ancho 4 convierte un elemento de lista en un bloque de código.
+[*.md]
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = false
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2

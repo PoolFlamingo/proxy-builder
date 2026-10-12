@@ -1,0 +1,62 @@
+[package]
+name = "proxy-builder"
+version = "0.1.0"
+description = "Proxy Builder — decks proxy de Magic: The Gathering listos para imprimir"
+authors = ["Pablo"]
+edition = "2021"
+rust-version = "1.92"
+
+[lib]
+# El sufijo `_lib` evita que el nombre de la librería choque con el del
+# binario en Windows (https://github.com/rust-lang/cargo/issues/8519).
+name = "proxy_builder_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+# El núcleo puro (`crates/proxy-core`: parser, geometría, imagen y PDF) vive en
+# su propio crate, sin Tauri, sin red y sin base de datos, para probarlo en
+# segundos con `cargo test -p proxy-core`. Mismo patrón que `crates/ai` en
+# judlex. Los perfiles van aquí, en la raíz: en un workspace solo cuentan éstos.
+[workspace]
+members = [".", "crates/proxy-core"]
+resolver = "2"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+proxy-core = { path = "crates/proxy-core" }
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+ts-rs = "12"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+# Recuerda tamaño, posición y si estaba maximizada.
+tauri-plugin-window-state = "2"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Perfiles (copiados de judlex con su motivo)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# 🛑 El debuginfo del perfil dev va EMPAQUETADO. En judlex `target` llegó a
+# pesar 115,9 GB porque, con `split-debuginfo = "unpacked"` (lo de fábrica en
+# macOS), rustc deja el DWARF en objetos sueltos que Cargo nunca barre. Con
+# estas líneas se queda en unos pocos GB y además compila más rápido.
+# Al tocarlas, `cargo clean` primero.
+[profile.dev]
+debug = "line-tables-only"
+split-debuginfo = "packed"
+
+[profile.dev.package."*"]
+debug = false
+
+# Las dependencias de imagen se compilan optimizadas también en desarrollo:
+# procesar una carta a 600 PPP sin optimizar tarda segundos en vez de
+# milisegundos, y eso hace inservible la vista previa en `tauri dev`.
+opt-level = 2
+
+[profile.dev.build-override]
+debug = false

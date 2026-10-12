@@ -1,0 +1,195 @@
+/* ────────────────────────────────────────────────────────────────────────
+   Skin "Zeus" (neumórfico) — portado del proyecto JUDLEX.
+   Reviste los componentes shadcn con relieve 3D, superficies en degradado y
+   "filigrana" (líneas finas verticales). Consume los tokens de color del tema
+   activo (var(--card), --primary…), así que combina con cualquier paleta.
+   Se activa con <html data-skin="zeus">.
+   ──────────────────────────────────────────────────────────────────────── */
+
+[data-skin="zeus"] {
+  /* Radio alineado al de la ventana (variable global --radius). */
+  --ef-radius-lg: calc(var(--radius) + 0.15rem);
+  --ef-radius-md: var(--radius);
+  --ef-radius-sm: calc(var(--radius) - 0.2rem);
+
+  --ef-edge: color-mix(in oklch, var(--foreground) 13%, transparent);
+  --ef-edge-soft: color-mix(in oklch, var(--foreground) 7%, transparent);
+
+  /* Sombras (base negra: funcionan sobre cualquier paleta). */
+  --ef-panel-shadow: 8px 8px 22px rgba(0, 0, 0, 0.42),
+    -3px -3px 12px rgba(255, 255, 255, 0.025),
+    inset 0 1px 1px rgba(255, 255, 255, 0.06);
+  --ef-button-shadow: 0 5px 12px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --ef-button-shadow-hover: 0 9px 20px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  --ef-pressed-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --ef-well-shadow: inset 0 5px 15px rgba(0, 0, 0, 0.5),
+    0 1px 0 rgba(255, 255, 255, 0.04);
+
+  /* Superficies en degradado, derivadas del color del tema activo. */
+  --ef-panel-surface: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--card) 90%, white 9%) 0%,
+    color-mix(in oklch, var(--card) 92%, black 12%) 100%
+  );
+  --ef-rail-surface: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--sidebar) 92%, white 7%) 0%,
+    color-mix(in oklch, var(--sidebar) 90%, black 12%) 100%
+  );
+  --ef-button-surface: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--secondary) 84%, white 9%) 0%,
+    color-mix(in oklch, var(--secondary) 90%, black 14%) 100%
+  );
+  --ef-well-bg: color-mix(in oklch, var(--background) 80%, black 10%);
+
+  /* Filigrana: hairlines verticales finas, muy sutiles, como capa de fondo.
+     Finas (1px/4px) como el original. Lo que las rompía era la capa GPU
+     (translateZ) que rasterizaba a baja resolución y luego escalaba; al
+     quitarla, las líneas vuelven a verse nítidas. */
+  --ef-filigrana: repeating-linear-gradient(
+    90deg,
+    color-mix(in oklch, var(--foreground) 5%, transparent) 0 1px,
+    transparent 1px 4px
+  );
+}
+
+/* ── Armazón: rail (sidebar) + contenido como paneles con relieve ───────── */
+[data-skin="zeus"] [data-slot="sidebar-inner"] {
+  border-right: 1px solid var(--ef-edge);
+  background: var(--ef-filigrana), var(--ef-rail-surface);
+  box-shadow: var(--ef-panel-shadow);
+}
+[data-skin="zeus"] [data-slot="sidebar-inset"] {
+  background: var(--ef-filigrana), var(--ef-panel-surface);
+}
+[data-skin="zeus"] [data-slot="topbar"] {
+  border-bottom: 1px solid var(--ef-edge-soft);
+}
+
+/* Items de navegación del rail: relieve al activo. */
+[data-skin="zeus"] [data-slot="sidebar-menu-button"] {
+  border-radius: var(--ef-radius-sm);
+}
+[data-skin="zeus"] [data-slot="sidebar-menu-button"][data-active="true"] {
+  background: var(--ef-button-surface);
+  box-shadow: var(--ef-button-shadow);
+}
+
+/* ── Tarjetas / paneles ────────────────────────────────────────────────── */
+[data-skin="zeus"] [data-slot="card"] {
+  border: 1px solid var(--ef-edge);
+  border-radius: var(--ef-radius-md);
+  box-shadow: var(--ef-panel-shadow);
+  background: var(--ef-filigrana), var(--ef-panel-surface);
+}
+
+/* ── Botones ───────────────────────────────────────────────────────────── */
+[data-skin="zeus"] [data-slot="button"] {
+  border-radius: var(--ef-radius-sm);
+  /* No animamos box-shadow (repintarla cada frame es lo que laguea en WKWebView). */
+  transition: transform 0.12s ease, background 0.16s ease;
+}
+[data-skin="zeus"] [data-slot="button"][data-variant="outline"],
+[data-skin="zeus"] [data-slot="button"][data-variant="secondary"] {
+  background: var(--ef-button-surface);
+  box-shadow: var(--ef-button-shadow);
+  border: 1px solid var(--ef-edge);
+  color: var(--foreground);
+}
+[data-skin="zeus"] [data-slot="button"][data-variant="default"] {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--primary) 88%, white 12%) 0%,
+    color-mix(in oklch, var(--primary) 90%, black 12%) 100%
+  );
+  box-shadow: var(--ef-button-shadow);
+  border: 1px solid color-mix(in oklch, var(--primary) 55%, black 30%);
+}
+[data-skin="zeus"] [data-slot="button"][data-variant="destructive"] {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--destructive) 88%, white 12%) 0%,
+    color-mix(in oklch, var(--destructive) 90%, black 12%) 100%
+  );
+  box-shadow: var(--ef-button-shadow);
+  border: 1px solid color-mix(in oklch, var(--destructive) 55%, black 30%);
+}
+[data-skin="zeus"] [data-slot="button"][data-variant="default"]:hover,
+[data-skin="zeus"] [data-slot="button"][data-variant="destructive"]:hover,
+[data-skin="zeus"] [data-slot="button"][data-variant="outline"]:hover,
+[data-skin="zeus"] [data-slot="button"][data-variant="secondary"]:hover {
+  box-shadow: var(--ef-button-shadow-hover);
+  transform: translateY(-1px);
+}
+[data-skin="zeus"] [data-slot="button"][data-variant="default"]:active,
+[data-skin="zeus"] [data-slot="button"][data-variant="destructive"]:active,
+[data-skin="zeus"] [data-slot="button"][data-variant="outline"]:active,
+[data-skin="zeus"] [data-slot="button"][data-variant="secondary"]:active {
+  box-shadow: var(--ef-pressed-shadow);
+  transform: translateY(0);
+}
+
+/* ── Campos hundidos: input, select ────────────────────────────────────── */
+[data-skin="zeus"] [data-slot="input"],
+[data-skin="zeus"] [data-slot="textarea"],
+[data-skin="zeus"] [data-slot="select-trigger"] {
+  background: var(--ef-well-bg);
+  box-shadow: var(--ef-well-shadow);
+  border: 1px solid var(--ef-edge-soft);
+  border-radius: var(--ef-radius-sm);
+}
+
+/* ── Superficies flotantes: popover, dropdown, select, tooltip ─────────── */
+[data-skin="zeus"] [data-slot="popover-content"],
+[data-skin="zeus"] [data-slot="dropdown-menu-content"],
+[data-skin="zeus"] [data-slot="select-content"],
+[data-skin="zeus"] [data-slot="tooltip-content"] {
+  border: 1px solid var(--ef-edge);
+  border-radius: var(--ef-radius-md);
+  box-shadow: var(--ef-panel-shadow);
+  background: var(--ef-filigrana), var(--ef-panel-surface);
+}
+
+/* ── Badges / chips: pequeño relieve ───────────────────────────────────── */
+[data-skin="zeus"] [data-slot="badge"] {
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Toggle group (segmentado) como campo hundido con relieve al activo. */
+[data-skin="zeus"] [data-slot="toggle-group"] {
+  background: var(--ef-well-bg);
+  box-shadow: var(--ef-well-shadow);
+  border-radius: var(--ef-radius-sm);
+  padding: 3px;
+}
+[data-skin="zeus"] [data-slot="toggle-group"] {
+  /* La activa es el primario con su texto (09/10/2026), como en el resto de
+     skins; Zeus solo le pone su relieve. Antes mezclaba el acento con la
+     superficie y llevaba una barra al pie. */
+  --pestana-activa: var(--primary);
+  --pestana-activa-sombra: var(--ef-button-shadow);
+  --pestana-activa-texto: var(--primary-foreground);
+}
+[data-skin="zeus"] [data-slot="toggle-group-item"]:is([aria-checked="true"], [aria-pressed="true"]) {
+  background: var(--pestana-activa);
+  box-shadow: var(--pestana-activa-sombra);
+  border-radius: calc(var(--ef-radius-sm) - 3px);
+}
+
+/* ── Diálogos (añadido de JUDLEX: MacUp no usa Dialog) ─────────────────────
+   Mismo relieve y misma superficie que los demás paneles flotantes. */
+[data-skin="zeus"] [data-slot="dialog-content"] {
+  border: 1px solid var(--ef-edge);
+  border-radius: var(--ef-radius-md);
+  box-shadow: var(--ef-panel-shadow);
+  background: var(--ef-filigrana), var(--ef-panel-surface);
+}
+[data-skin="zeus"] [data-slot="dialog-overlay"] {
+  background: color-mix(in oklch, var(--background) 60%, transparent);
+}

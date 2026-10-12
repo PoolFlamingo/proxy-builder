@@ -1,0 +1,28 @@
+# Gate previo al commit de Proxy Builder (el de judlex, adaptado a pnpm).
+#
+# Es la red barata: si un commit tarda más de ~20 s aquí, algo se ha metido en
+# el sitio equivocado.
+
+# `cargo`/`rustfmt` viven en ~/.cargo/bin y las GUI de git no heredan el PATH
+# del shell interactivo.
+export PATH="$HOME/.cargo/bin:$PATH"
+
+pnpm exec lint-staged
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACM)
+
+if echo "$STAGED" | grep -qE '\.(ts|tsx)$'; then
+  pnpm exec tsc --noEmit
+  pnpm run --silent idiomas
+  pnpm run --silent check:title
+fi
+
+if echo "$STAGED" | grep -qE '\.rs$'; then
+  if command -v cargo >/dev/null 2>&1; then
+    # 🛑 Con `-D warnings`: un aviso nuevo se arregla o se permite en su sitio
+    # con `#[allow(clippy::…)]` y el porqué, nunca con `--no-verify`.
+    pnpm run --silent check:clippy
+  else
+    echo "pre-commit: no hay 'cargo' en el PATH; clippy no se ha ejecutado."
+  fi
+fi

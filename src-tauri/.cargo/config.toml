@@ -1,0 +1,5 @@
+# Los tipos de Rust que viajan a la pantalla se exportan a TypeScript con
+# `ts-rs` al pasar los tests (`pnpm bindings`). Esta variable dice dónde: a
+# `src/bindings/` del proyecto, para que React los importe con `@/bindings/…`.
+[env]
+TS_RS_EXPORT_DIR = { value = "../src/bindings", relative = true }

@@ -1,0 +1,680 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./fonts.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   Sistema de temas de Proxy Builder (portado de judlex)
+   - Base (default) theme below in :root / .dark
+   - Additional selectable themes live in src/themes.css and are
+     applied via [data-theme="<name>"] on <html>.
+   - Paste tweakcn exports into src/themes.css to add more themes.
+   ============================================================ */
+
+:root {
+  --radius: 0.625rem;
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --tracking-normal: 0em;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@theme inline {
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-mono);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@import "./themes.css";
+@import "./styles/materials.css";
+@import "./styles/skin-zeus.css";
+@import "./styles/skin-hera.css";
+
+/* ── Radio uniforme = esquinas de la ventana de macOS ────────────────────────
+   Igualamos el redondeo de TODOS los elementos (tarjetas, botones, campos…) al
+   de la ventana de la app, en todos los temas. Un solo valor para tunear.
+   (~12px es el redondeo suave típico de las ventanas de macOS.) */
+/* !important para ganar a la variante oscura de cada tema
+   ([data-theme="x"].dark { --radius }), que si no tiene más especificidad. */
+:root,
+[data-theme],
+[data-theme].dark {
+  --radius: 0.875rem !important; /* = 14px */
+}
+
+/* ── Un solo color de borde en toda la app ───────────────────────────────────
+   Varias paletas de tweakcn traen `--input` bastante más claro que `--border`
+   (en Cosmic Night, 0.48 contra 0.31). Eso hace que el borde de un segmentado
+   o de un campo no case con el de la tarjeta que lo contiene y el conjunto se
+   ve sucio. Regla de la casa: **el borde es siempre el mismo**, así que
+   `--input` se iguala a `--border` en todos los temas. Si algún día se quiere
+   distinguir un campo, se hace con el fondo, no con el borde. */
+:root,
+[data-theme],
+[data-theme].dark {
+  --input: var(--border) !important;
+}
+
+/* ── Excepción: el tema «Base» va tal cual sale de shadcn ────────────────────
+   Base está en la lista para poder COMPARAR: cuando algo se ve raro en un tema
+   de color, se cambia a Base y se sabe si el problema es del tema o del
+   componente. Para eso tiene que ser el de la demo, sin nada de la casa
+   encima — ni el radio de 14 px, ni el borde igualado.
+
+   Los efectos (skin, fondo, material, sombras) los apaga `ThemeProvider`
+   mientras Base está activo; lo elegido por el usuario no se borra y vuelve
+   con cualquier otro tema.
+
+   Va DESPUÉS de las dos reglas de arriba y con la misma especificidad: a
+   igualdad, gana la última. */
+[data-theme="base"] {
+  --radius: 0.625rem !important;
+  --input: oklch(0.922 0 0) !important;
+}
+[data-theme="base"].dark {
+  --radius: 0.625rem !important;
+  --input: oklch(0.325 0 0) !important;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    letter-spacing: var(--tracking-normal);
+    -webkit-font-smoothing: antialiased;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  /* Cursor de mano en TODO lo interactivo. Tailwind Preflight pone `cursor:
+     default` en los <button>, por eso el ratón no cambiaba. Esto lo devuelve
+     a la manita en botones, enlaces, selects y cualquier role="button". */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[href],
+  select:not(:disabled),
+  summary,
+  label[for] {
+    cursor: pointer;
+  }
+}
+
+/* ── Scrollbars temáticas (sin capa, para que ganen siempre) ─────────────
+   Acento del tema mezclado con la superficie de tarjeta: oscuro en modo
+   oscuro, claro en modo claro, y cambia de tono con cada paleta. Nunca blanco.
+   Fallback a --primary por si el motor no soporta color-mix. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) transparent;
+  scrollbar-color: color-mix(in oklch, var(--primary) 50%, var(--card))
+    transparent;
+}
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  background: color-mix(in oklch, var(--primary) 45%, var(--card));
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklch, var(--primary) 65%, var(--card));
+  background-clip: padding-box;
+}
+/* Scrollbar del componente ScrollArea (Radix): mismo color del tema, nunca
+   el gris/blanco de `border`. !important para ganar a la utilidad bg-border. */
+[data-slot="scroll-area-thumb"] {
+  background: var(--primary) !important;
+  background: color-mix(in oklch, var(--primary) 45%, var(--card)) !important;
+}
+
+/* La barra lateral no muestra scrollbar nativo (era el blanco que salía). El
+   contenido sigue desplazable con el trackpad si hiciera falta. */
+[data-slot="sidebar-inner"],
+[data-slot="sidebar-content"] {
+  scrollbar-width: none;
+}
+[data-slot="sidebar-inner"]::-webkit-scrollbar,
+[data-slot="sidebar-content"]::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Hover suave (acento tenue), como el menú del sidebar ───────────────── */
+.soft-hover:hover {
+  background-color: color-mix(in oklch, var(--primary) 12%, transparent);
+}
+[data-slot="toggle-group-item"]:hover:not([aria-checked="true"]):not([aria-pressed="true"]) {
+  background-color: color-mix(in oklch, var(--primary) 12%, transparent);
+  color: var(--foreground);
+}
+
+/* Tabs/toggles un pelín más bajos (−2px arriba/abajo) para reducir altura. */
+[data-slot="toggle-group-item"] {
+  height: 1.75rem;
+  /* Las que no están seleccionadas se apagan: con el mismo color de texto que
+     la activa, lo único que las diferenciaba era un fondo apenas más claro.
+     `relative` es para la marca de la activa (más abajo). */
+  color: var(--muted-foreground);
+  position: relative;
+}
+
+/* ── LA PESTAÑA ACTIVA SE VE, EN TODOS LOS SEGMENTADOS DE LA APP ─────────────
+   🛑 **La activa se reconoce por `aria-checked` / `aria-pressed`, NO por
+   `data-state="on"`.** Casi todas las pestañas van envueltas en
+   `<TooltipTrigger asChild>`, y el trigger del tooltip PISA el `data-state` del
+   item con el suyo (`closed`, `delayed-open`…): `[data-state="on"]` no casaba
+   nunca y la pestaña seleccionada no se distinguía (1/10/2026). El atributo
+   ARIA lo pone Radix según el valor y nadie más lo toca. Single → `aria-checked`,
+   múltiple → `aria-pressed`.
+   🛑 Esto vale para CUALQUIER `ToggleGroupItem`, lleve o no `data-pestanas`
+   (pestañas de ficha, Personal/Profesional, selector de tema, vistas de
+   Rendimiento, filtros…). Antes solo lo tenían las que llevaban el atributo, y
+   el resto dependía de `data-[state=on]:bg-accent`, que en el tema oscuro queda
+   a un paso del fondo: no se sabía cuál estaba seleccionada.
+   🛑 La activa es **`--primary` con `--primary-foreground`** en TODOS los skins
+   (09/10/2026, Pablo): el par que ya garantiza contraste en cada paleta. Antes
+   Hera usaba un degradado con texto blanco, Zeus el acento mezclado con la
+   superficie, y las dos llevaban una barra al pie («esa línea fea»). Ya no hay
+   marca aparte: el fondo de color es la marca.
+   El fondo va por `--pestana-activa` para que un skin pueda añadirle relieve
+   (sombra) sin pelearse por especificidad. El
+   selector lleva el grupo delante a propósito: tiene que ganar a la regla
+   `[data-pestanas] [data-slot="toggle-group-item"]` (más abajo), que pone el
+   tinte del 6 % a las inactivas y va después. */
+[data-slot="toggle-group"] [data-slot="toggle-group-item"]:is([aria-checked="true"], [aria-pressed="true"]),
+[data-slot="toggle-group"] [data-slot="toggle-group-item"]:is([aria-checked="true"], [aria-pressed="true"]):hover {
+  color: var(--pestana-activa-texto, var(--primary-foreground));
+  background: var(--pestana-activa, var(--primary));
+  box-shadow: var(--pestana-activa-sombra, none);
+  font-weight: 500;
+}
+/* ── Ancho del contenido ─────────────────────────────────────────────────
+   Todo el contenido de la app se detiene en 1400 px y se centra. En una
+   pantalla de 27" a pantalla completa, una tabla estirada a 2500 px obliga a
+   barrer la cabeza de un lado a otro para seguir una fila, y las tarjetas
+   quedan como cintas. El rail lateral no entra aquí: es cromo, no contenido.
+
+   Va como clase y no repetido en cada pantalla para que el día que este
+   número cambie, cambie en un sitio. */
+.contenido {
+  width: 100%;
+  max-width: 1400px;
+  margin-inline: auto;
+}
+
+/* ── Marco de la aplicación ──────────────────────────────────────────────
+   El hueco que rodea al contenido de cada pantalla: lo que separa el rail
+   lateral del contenido, el contenido del panel de consulta, y todo ello de
+   la barra superior. Es el aire del marco, NO la separación entre bloques
+   —esa sigue siendo la densidad de 10px (`gap-2.5`) del sistema—.
+
+   🛑 Va como variable y no repetido en cada pantalla a propósito. Es un
+   número que se ajusta a ojo y hay que poder probarlo entero de una vez: si
+   estuviera escrito en las nueve pantallas, cada prueba serían nueve
+   ediciones y una acabaría desparejada. Se usa con la sintaxis de variable
+   de Tailwind v4: `p-(--pb-marco)`, `px-(--pb-marco)`…
+
+   Prueba del 11/08/2026 (Claudio): 10px → 20px, el doble. La densidad de
+   partida le pareció apelmazada. Para volver atrás, este número a `0.625rem`
+   y no hay que tocar nada más. */
+:root {
+  --pb-marco: 1.25rem;
+}
+
+/* ── Alto de la cabecera de tabla ─────────────────────────────────────────
+   La usa `TableHead` en `src/components/ui/table.tsx` (`h-[var(--pb-row-h)]`)
+   — SOLO la cabecera, nunca las filas de datos (`TableCell` no la lee, se
+   queda con su `p-2` de siempre). Un solo número para las nueve tablas de la
+   app, en vez de repetirlo pantalla a pantalla: si un día se quiere más o
+   menos compacta, cambia aquí.
+
+   Ajuste del 19/08/2026 (Claudio): "un poco más pequeño de altura, lo que
+   es solo el header, para darle un toque más elegante". 2rem (32px) queda
+   por debajo del alto natural de una fila de datos (~36px con `p-2` y texto
+   `text-sm`), que es justo lo que separa visualmente la cabecera del
+   cuerpo — con `align-middle` ya puesto en `TableHead`, el texto queda
+   centrado dentro de esos 32px sin tocar nada más. */
+:root {
+  --pb-row-h: 2rem;
+}
+
+/* ── Pilotos de estado ───────────────────────────────────────────────────
+   Colores de LED, fuera de la paleta del tema a propósito: verde y rojo
+   significan lo mismo en cualquier tema y con cualquier acento. `--led-duda`
+   es el ámbar de «no lo sé», que no es lo mismo que «está mal». */
+:root {
+  --led-ok: oklch(0.72 0.17 152);
+  --led-duda: oklch(0.76 0.15 78);
+  --led-mal: oklch(0.63 0.21 25);
+  --led-off: oklch(0.6 0.02 260 / 45%);
+}
+
+/* ── Pestañas (segmentado a todo el ancho) ───────────────────────────────
+   Mismo segmentado del sistema, con dos matices propios:
+   · El activo es `--primary` con `--primary-foreground` (09/10/2026, Pablo): el
+     par que cada paleta define para que el texto se lea sobre el primario.
+     Antes el texto iba fijo en blanco; si una paleta se ve mal, se arregla en
+     la paleta, no con un color suelto aquí.
+   · Un poco más altas que un segmentado normal: son navegación, no un
+     control dentro de una tarjeta. */
+/* UN solo marco: el del grupo. Antes el recuadro lo formaban los bordes de
+   cada pestaña (variante `outline`) sumados unos a otros, y con el fondo del
+   propio grupo encima se veían dos cajas, una dentro de otra. */
+[data-pestanas] {
+  border: 1px solid var(--border);
+  /* Sin relleno propio: con un fondo aquí y otro en cada pestaña se veían dos
+     capas superpuestas. El único relleno del segmentado es el de la pestaña
+     activa. */
+  background-color: transparent;
+  /* Sin relleno, y la pestaña 2px más baja que el marco: así el segmentado
+     mide EXACTAMENTE lo que un botón de 2rem (`size="sm"`) y los dos quedan
+     a la misma altura cuando comparten fila. */
+  padding: 0;
+  box-shadow: none;
+}
+[data-pestanas] [data-slot="toggle-group-item"] {
+  height: calc(2rem - 2px);
+  /* El marco lo pone el GRUPO, no cada pestaña. La variante `outline` da a
+     cada item su propio borde y su sombra, y encima del recuadro del grupo se
+     veía una caja dentro de otra. */
+  border-color: transparent;
+  /* Un toque, no un fondo: sin él, una pestaña sin seleccionar es texto
+     flotando sobre el negro del tema oscuro — no se distingue que ahí hay un
+     botón hasta que se pasa el ratón por encima (Claudio, 19/08/2026). Con
+     `--foreground` al 6% se ve una superficie apenas más clara que el fondo
+     en oscuro, y apenas más oscura que el fondo en claro — se adapta sola al
+     tema, a diferencia de un blanco fijo. */
+  background-color: color-mix(in oklab, var(--foreground) 6%, transparent);
+  box-shadow: none;
+}
+/* ── Texto que respira mientras algo está en marcha ──────────────────────
+   El brillo que recorre la línea del paso que se está haciendo. Es el
+   `shimmer` de shadcn, escrito aquí para no traerse el paquete. Dice «esto
+   sigue vivo» mejor que una ruedecita, porque señala QUÉ está vivo. */
+@keyframes brillo-texto {
+  to {
+    background-position: -200% 0;
+  }
+}
+.brillo-texto {
+  background: linear-gradient(
+    90deg,
+    var(--muted-foreground) 0%,
+    var(--muted-foreground) 40%,
+    var(--foreground) 50%,
+    var(--muted-foreground) 60%,
+    var(--muted-foreground) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: brillo-texto 1.8s linear infinite;
+}
+/* Quien pide menos movimiento no debería tener que aguantar un texto que
+   late para siempre. */
+@media (prefers-reduced-motion: reduce) {
+  .brillo-texto {
+    background: none;
+    color: var(--muted-foreground);
+    animation: none;
+  }
+}
+
+/* ── Barra de redimensionar ───────────────────────────────────────────────
+   Del mismo color que el borde de una tarjeta, pero a media opacidad: es una
+   línea de separación más, no un control que deba llamar la atención. */
+[data-slot="resizable-handle"] {
+  background-color: color-mix(in oklch, var(--border) 50%, transparent);
+}
+/* La línea mide 1 px, pero la ZONA DE AGARRE no puede medir eso: el `after`
+   de la primitiva son 4 px y había que acertar el ratón casi al píxel. Se
+   ensancha a 12 px, invisibles, centrados en la línea. */
+[data-slot="resizable-handle"]::after {
+  width: 0.75rem;
+}
+[data-slot="resizable-handle"][aria-orientation="horizontal"]::after {
+  width: 100%;
+  height: 0.75rem;
+}
+/* El asidero de los seis puntos, SIEMPRE a la vista. Estaba oculto hasta
+   pasar por encima, y un control que no se ve no existe: nadie descubre que
+   la columna se puede ensanchar. */
+[data-slot="resizable-handle"] > div {
+  border-color: var(--border);
+  background-color: var(--card);
+  color: var(--muted-foreground);
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+[data-slot="resizable-handle"]:hover > div,
+[data-slot="resizable-handle"]:focus-visible > div,
+[data-slot="resizable-handle"][data-dragging] > div {
+  color: var(--foreground);
+  border-color: color-mix(in oklch, var(--foreground) 35%, transparent);
+}
+/* Con los skins de cristal, el borde de las tarjetas es el suyo. */
+[data-skin="hera"] [data-slot="resizable-handle"] {
+  background-color: color-mix(in oklch, var(--hera-border) 50%, transparent);
+}
+[data-skin="hera"] [data-slot="resizable-handle"] > div {
+  border-color: var(--hera-border);
+}
+
+/* ── Arreglo: `position: sticky` dentro de <ScrollArea> (Radix) ─────────────
+   Radix envuelve el contenido del viewport en un <div style="display:table">
+   (lo usa para medir overflow horizontal). Ese "display: table" rompe el
+   sticky de los descendientes: dejan de fijarse y se desplazan con el resto
+   del scroll. Como aquí el scroll siempre es vertical, forzamos ese div a
+   "block" para que el sticky (p. ej. cabeceras fijas dentro de una lista)
+   funcione de verdad. */
+[data-radix-scroll-area-viewport] > div {
+  display: block !important;
+}
+
+/* ── El movimiento de la app: una regla, tres clases ───────────────────────
+ *
+ * 🛑 REGLA DURA (Pablo, 03/10/2026): todo lo que aparece en pantalla porque
+ * alguien lo pidió o porque llegó un dato —un aviso, un panel, un resultado, un
+ * bloque que se despliega— ENTRA con una de estas tres clases en vez de
+ * saltar. No es una discoteca: son detalles de un cuarto de segundo, sin rebote
+ * ni giros, que se sienten sin verse. `scripts/movimiento.mjs` (dentro de
+ * `verificar.sh`) cuenta los sitios que aparecen de golpe y no deja que
+ * crezcan.
+ *
+ * - `.entra`          un bloque que sale: se funde y sube 4 px. Lo normal.
+ * - `.entra-fundido`  solo se funde. Para superficies grandes, lo que va
+ *                     dentro de un visor y todo lo que no admite desplazarse.
+ * - `.entra-lado`     un panel que llega desde la derecha: se funde y entra 12
+ *                     px. Para paneles laterales de detalles.
+ *
+ * Solo animan `opacity` y `translate`, que no recolocan nada de lo de al lado.
+ * Con `translate` y no `transform`: Tailwind y las filas virtualizadas ya
+ * usan `transform` en línea y animarlo lo pisaría (ver `CuerpoDeslizante`).
+ * Quien pida menos movimiento al sistema no ve nada: la regla global de abajo
+ * las apaga todas a la vez. */
+@keyframes entra {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+@keyframes entra-fundido {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes entra-lado {
+  from {
+    opacity: 0;
+    translate: 12px 0;
+  }
+}
+.entra {
+  animation: entra 220ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.entra-fundido {
+  animation: entra-fundido 200ms ease-out backwards;
+}
+.entra-lado {
+  animation: entra-lado 260ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+/* Quien pide menos movimiento al sistema no ve ninguna de las tres, ni
+   ninguna otra animación o transición de la app. Una sola regla para todo:
+   lo que se escriba mañana ya nace respetándola. */
+@media (prefers-reduced-motion: reduce) {
+  /* Los indicadores de «cargando» se quedan: un giro quieto parece una app
+     colgada, y no marean. */
+  *:not(.animate-spin):not(.animate-pulse),
+  *:not(.animate-spin):not(.animate-pulse)::before,
+  *:not(.animate-spin):not(.animate-pulse)::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Hendidura elegante: fondo negro muy transparente + sombra interior. Para
+   las zonas de gráficos y el fondo del globo. */
+.chart-well {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 0.6rem;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.18);
+}
+
+/* Rejilla de líneas (vertical + horizontal) como fondo, p. ej. tras el globo. */
+.grid-bg {
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      color-mix(in oklch, var(--foreground) 6%, transparent) 0 1px,
+      transparent 1px 32px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      color-mix(in oklch, var(--foreground) 6%, transparent) 0 1px,
+      transparent 1px 32px
+    );
+}
+
+/* Filas de datos tipo tabla: zebra + hover. Aplica a hijos directos. */
+.data-rows > * {
+  transition: background-color 0.12s ease;
+}
+.data-rows > *:nth-child(odd) {
+  background-color: color-mix(in oklch, var(--muted-foreground) 8%, transparent);
+}
+.data-rows > *:hover {
+  background-color: color-mix(in oklch, var(--primary) 12%, transparent);
+}
+
+/* ── Sliders: pista en muted, thumb con el color del tema ───────────────── */
+input[type="range"].macup-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--muted);
+}
+input[type="range"].macup-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: var(--primary);
+  border: 2px solid var(--background);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+input[type="range"].macup-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--background);
+  border-radius: 9999px;
+  background: var(--primary);
+  cursor: pointer;
+}
+input[type="range"].macup-range:disabled {
+  opacity: 0.4;
+}
+
+/* ── Toasts: el FONDO es neutro, el color va en el TEXTO ─────────────────
+   Claudio, 21/09/2026: «los toast… tienen el fondo ligeramente rojo, quítalo
+   y déjalo del color normal de los toast. Solo deja el color rojo cuando sea
+   un error, y el texto sea rojo también».
+
+   O sea: el fondo tintado se va de TODOS —un éxito con la caja teñida se
+   confunde con un error de un vistazo—, y lo que dice de qué va el aviso es
+   el color del TEXTO (y el del icono, que hereda de él): verde el éxito,
+   ámbar el aviso, azul la información, rojo el error.
+
+   🛑 El texto SÍ lleva color: dejarlo en blanco fue el error de la primera
+   vuelta. Sin él no queda NADA que distinga un éxito de un fallo salvo el
+   dibujo del icono, y el color es justo lo que se ve antes de leer.
+
+   🛑 Y el BORDE se queda en el normal (`var(--border)`), sin teñir. No es
+   solo estética: teñirlo al 32 % con `color-mix(in oklch, …)` salía NARANJA
+   en un toast de ÉXITO (Claudio, 21/09/2026: «¿por qué los toasts tienen un
+   border naranja?»). `oklch` interpola el MATIZ, y `--card` en oscuro es
+   `oklch(0.205 0 0)`: un gris, sí, pero con matiz 0 —la zona roja— escrito
+   de forma explícita. Mezclar 68 % de matiz 0 con 32 % de matiz 162,5 (el
+   verde) deja el resultado a mitad de camino, en 52°, que es ámbar:
+
+     #10b981            → oklch(0.696 0.149 162.5)  verde
+     68 % card + 32 %   → oklch(0.362 0.048  52.0)  naranja  ← el fallo
+
+   El gris no tiene color visible, pero su matiz PESA igual en la mezcla. Por
+   eso el texto sí sale del color correcto: lleva un 78 % del color puro y el
+   matiz de destino manda. Si alguna vez hay que teñir algo con poca
+   proporción de color, hágase `in oklab` —coordenadas rectangulares, sin
+   matiz que interpolar— o contra un color que ya tenga el matiz bueno. */
+[data-sonner-toast] {
+  border-radius: var(--radius);
+}
+[data-sonner-toast][data-type="success"] {
+  --normal-text: color-mix(in oklch, var(--card-foreground) 22%, #10b981 78%);
+}
+[data-sonner-toast][data-type="warning"] {
+  --normal-text: color-mix(in oklch, var(--card-foreground) 20%, #f59e0b 80%);
+}
+[data-sonner-toast][data-type="info"] {
+  --normal-text: color-mix(in oklch, var(--card-foreground) 25%, var(--primary) 75%);
+}
+/* El error es el único que además tiñe el fondo Y el borde: es lo que hay que
+   ver sin buscarlo, y es el que Claudio dejó dicho que siguiera en rojo.
+
+   Se queda en `oklch` y no pasa nada porque `--destructive` ya tiene el matiz
+   a 22°, pegado al 0 del gris: la mezcla cae en 2°-7°, que sigue siendo rojo
+   (sale un pelín rosado, nada más). En `oklab` conservaría los 22° exactos.
+   🛑 Si algún skin de `themes.css` le da a `--card` un matiz propio —uno
+   cálido, por ejemplo— esta mezcla se irá de color igual que se fue la del
+   borde verde, y entonces hay que pasar las tres a `in oklab`. */
+[data-sonner-toast][data-type="error"] {
+  --normal-bg: color-mix(in oklch, var(--card) 90%, var(--destructive) 10%);
+  --normal-border: color-mix(in oklch, var(--card) 68%, var(--destructive) 32%);
+  --normal-text: color-mix(in oklch, var(--card-foreground) 18%, var(--destructive) 82%);
+}
+/* La descripción, algo más apagada para que se lea bien sobre el tinte. */
+[data-sonner-toast] [data-description] {
+  opacity: 0.82;
+}
+
