@@ -2,7 +2,8 @@
 export const EXTRAS: Record<string, string> = {
 	"Ver un set entero y elegir cartas": "Browse a whole set and pick cards",
 	Sets: "Sets",
-	"Curva de maná, colores, precio y legalidad": "Mana curve, colours, price and legality",
+	"Curva, maná, funciones, probabilidades de robo, precios y legalidad":
+		"Curve, mana, roles, draw odds, prices and legality",
 	Estadísticas: "Stats",
 	"Todos los tipos": "All types",
 	Criaturas: "Creatures",
@@ -26,8 +27,6 @@ export const EXTRAS: Record<string, string> = {
 	"Coste medio": "Average cost",
 	"Precio estimado": "Estimated price",
 	"{n} sin precio": "{n} without a price",
-	"Fuera de la cuenta: {t} tokens y {u} cartas sin datos.":
-		"Not counted: {t} tokens and {u} cards without data.",
 	"Curva de maná (sin tierras)": "Mana curve (without lands)",
 	"{n} cartas de coste {c}": "{n} cards costing {c}",
 	Colores: "Colours",

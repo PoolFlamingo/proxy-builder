@@ -83,8 +83,18 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
   (escucha antes de lanzar). `src/lib/image-url.ts`: URLs de `pbimg://`.
 - Rust: `commands/{cards,decklist,export,identify,layout,library,stats}.rs`,
   `package.rs` (.pbdeck), `render.rs` + `protocol.rs` (miniaturas),
-  `ocr.rs` (OCR opcional del título con `ocrs`; modelos descargados la primera
-  vez a `app_data_dir/modelos/`), `proxy-core::{layout,imaging,pdf,stats,decklist}`.
+  `ocr.rs` (OCR opcional de la carta entera con `ocrs`, a la resolución
+  original: título, pie —donde muchas propias llevan el nombre original— y
+  resto; modelos descargados la primera vez a `app_data_dir/modelos/`),
+  `scryfall/nombres.rs` (catálogo de nombres de Scryfall en `app_cache_dir`,
+  renovado cada semana, para reconocer en local lo que lee el OCR),
+  `proxy-core::{layout,imaging,pdf,stats,decklist}`.
+- Estadísticas: todo el cálculo en `proxy-core::stats` (`mod.rs` cuenta;
+  `funciones.rs` deduce rampa/robo/eliminación… por el texto de reglas;
+  `mana.rs` lee costes; `prob.rs` hipergeométrica). `commands/stats.rs` pide
+  por `/cards/collection` lo que falte o tenga precios de más de 24 h, y a las
+  impresiones que no están en inglés les pone el precio de la inglesa (Scryfall
+  no les da). El diálogo (`features/stats/`) va en pestañas y solo pinta.
 - Cartas propias vinculadas: `CardSource::Custom { scryfallId? }`. La imagen
   sigue siendo la propia; el vínculo da la info de carta y las estadísticas.
   Una a una (`vincular-dialog`) o en bloque (`vincular-lote`: `identify_batch`

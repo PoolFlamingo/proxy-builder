@@ -49,6 +49,31 @@ pub fn leer(db: &Db, id: &str) -> AppResult<Option<(ScryCard, i64)>> {
     .transpose()
 }
 
+/// Una impresión concreta (set, número e idioma) de la caché, la más reciente.
+pub fn leer_impresion(
+    db: &Db,
+    set: &str,
+    numero: &str,
+    lang: &str,
+) -> AppResult<Option<(ScryCard, i64)>> {
+    let fila: Option<(String, i64)> = db
+        .conn()?
+        .query_row(
+            "SELECT json, fetched_at FROM scryfall_cards
+             WHERE set_code = ?1 AND collector_number = ?2 AND lang = ?3
+             ORDER BY fetched_at DESC LIMIT 1",
+            (set, numero, lang),
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
+        .optional()?;
+    fila.map(|(j, t)| {
+        serde_json::from_str(&j)
+            .map(|c| (c, t))
+            .map_err(|e| AppError::new(ErrorCode::Db).with("detalle", e))
+    })
+    .transpose()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -66,5 +91,20 @@ mod tests {
         assert_eq!(l, c);
         assert!(t > 0);
         assert!(leer(&db, "b").unwrap().is_none());
+    }
+
+    #[test]
+    fn leer_una_impresion_por_set_numero_e_idioma() {
+        let db = Db::in_memory().unwrap();
+        for (id, lang) in [("en", "en"), ("es", "es")] {
+            guardar(
+                &db,
+                &carta(serde_json::json!({"id":id,"name":"Sol Ring","lang":lang,"set":"cmm","collector_number":"410"})),
+            )
+            .unwrap();
+        }
+        let (c, _) = leer_impresion(&db, "cmm", "410", "en").unwrap().unwrap();
+        assert_eq!(c.id, "en");
+        assert!(leer_impresion(&db, "cmm", "411", "en").unwrap().is_none());
     }
 }
