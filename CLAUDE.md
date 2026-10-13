@@ -81,11 +81,19 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
   diálogos, preferencias), `trabajo-store` (el trabajo largo en marcha).
 - `src/lib/trabajos.ts`: lanzar un trabajo de Rust con eventos de progreso
   (escucha antes de lanzar). `src/lib/image-url.ts`: URLs de `pbimg://`.
-- Rust: `commands/{cards,decklist,export,layout,library,stats}.rs`,
+- Rust: `commands/{cards,decklist,export,identify,layout,library,stats}.rs`,
   `package.rs` (.pbdeck), `render.rs` + `protocol.rs` (miniaturas),
-  `proxy-core::{layout,imaging,pdf,stats,decklist}`.
+  `ocr.rs` (OCR opcional del título con `ocrs`; modelos descargados la primera
+  vez a `app_data_dir/modelos/`), `proxy-core::{layout,imaging,pdf,stats,decklist}`.
+- Cartas propias vinculadas: `CardSource::Custom { scryfallId? }`. La imagen
+  sigue siendo la propia; el vínculo da la info de carta y las estadísticas.
 - Valores de fábrica (Pablo, 13/10/2026): 2 mm de separación en blanco,
   sangrado 0 y guías de corte apagadas.
+- 🛑 Encuadre (Pablo, 13/10/2026): la imagen se **estira** al hueco exacto
+  (`imaging::frame`), aunque se deforme un poco; solo se recorta si la
+  proporción se aleja más de un 15 % (`MAX_ESTIRADO`).
+- 🛑 Los modales son 100 % opacos con cualquier material o skin (regla al
+  final de `src/index.css`).
 
 ## Forma de trabajo
 

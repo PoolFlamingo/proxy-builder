@@ -209,7 +209,7 @@ async fn segun_politica<A: CardApi>(
         .cloned())
 }
 
-fn meta_de(c: &ScryCard, fallback: bool) -> CardMeta {
+pub(crate) fn meta_de(c: &ScryCard, fallback: bool) -> CardMeta {
     CardMeta {
         name: c.name.clone(),
         set: Some(c.set.clone()),

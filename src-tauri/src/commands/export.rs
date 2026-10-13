@@ -421,7 +421,7 @@ mod tests {
             cards: (0..n)
                 .map(|i| DeckCard {
                     id: format!("c{i}"),
-                    source: CardSource::Custom,
+                    source: CardSource::Custom { scryfall_id: None },
                     front: Some(img.clone()),
                     back: BackSpec::DeckDefault,
                     edits: CardEdits::default(),

@@ -88,7 +88,9 @@ function Contenido() {
 			<DialogHeader>
 				<DialogTitle>{t("Estadísticas del deck")}</DialogTitle>
 				<DialogDescription>
-					{t("Datos y precios de Scryfall. Las cartas propias no cuentan.")}
+					{t(
+						"Datos y precios de Scryfall. Las cartas propias cuentan si están vinculadas a su carta de Scryfall.",
+					)}
 				</DialogDescription>
 			</DialogHeader>
 			<DialogCuerpo>

@@ -21,6 +21,7 @@ type Preferencias = {
 export type Dialogo =
 	| { tipo: "editar"; id: string }
 	| { tipo: "variante"; id: string }
+	| { tipo: "vincular"; id: string }
 	| { tipo: "anadir"; en?: number }
 	| { tipo: "moverA"; ids: string[] }
 	| { tipo: "sets" }

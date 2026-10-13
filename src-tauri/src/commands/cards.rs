@@ -119,7 +119,7 @@ fn huella_url(url: &str) -> String {
         .collect()
 }
 
-fn resumir(state: &AppState, cartas: Vec<ScryCard>) -> Vec<CardSummary> {
+pub(crate) fn resumir(state: &AppState, cartas: Vec<ScryCard>) -> Vec<CardSummary> {
     let mut registro = state.miniaturas.lock().ok();
     cartas
         .into_iter()

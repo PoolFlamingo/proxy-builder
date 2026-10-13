@@ -3,4 +3,4 @@
 /**
  * Qué es una carta del deck.
  */
-export type CardSource = { "kind": "scryfall", scryfallId: string, } | { "kind": "token", scryfallId: string, } | { "kind": "custom" } | { "kind": "blank" };
+export type CardSource = { "kind": "scryfall", scryfallId: string, } | { "kind": "token", scryfallId: string, } | { "kind": "custom", scryfallId?: string, } | { "kind": "blank" };

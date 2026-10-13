@@ -122,7 +122,7 @@ export function ExportPanel() {
 	const guias = s.cutGuides;
 
 	return (
-		<section className="flex h-full min-h-0 flex-col [&_[data-slot=button]]:text-xs">
+		<section className="flex h-full min-h-0 flex-col [&_[data-slot=button]]:text-xs [&_button[data-slot=tooltip-trigger]]:text-xs">
 			<div className="flex flex-col gap-2 border-b p-2.5">
 				<h2 className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
 					{t("Exportar")}

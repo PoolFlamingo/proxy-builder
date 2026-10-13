@@ -10,6 +10,7 @@ import { useDeckInicial } from "@/features/shell/use-deck-inicial";
 import { StatsDialog } from "@/features/stats/stats-dialog";
 import { AddCardDialog } from "@/features/variants/add-card-dialog";
 import { VariantDialog } from "@/features/variants/variant-dialog";
+import { VincularDialog } from "@/features/variants/vincular-dialog";
 
 export default function App() {
 	useDeckInicial();
@@ -23,6 +24,7 @@ export default function App() {
 			/>
 			<AddCardDialog />
 			<VariantDialog />
+			<VincularDialog />
 			<CardEditorDialog />
 			<MoverADialog />
 			<StatsDialog />

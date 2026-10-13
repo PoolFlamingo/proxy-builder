@@ -19,7 +19,34 @@ export type ThemeName =
 	| "notebook"
 	| "ocean-breeze"
 	| "sage-garden"
-	| "vercel";
+	| "vercel"
+	| "modern-minimal"
+	| "violet-bloom"
+	| "t3-chat"
+	| "bubblegum"
+	| "amethyst-haze"
+	| "doom-64"
+	| "catppuccin"
+	| "graphite"
+	| "tangerine"
+	| "quantum-rose"
+	| "bold-tech"
+	| "supabase"
+	| "neo-brutalism"
+	| "solar-dusk"
+	| "cyberpunk"
+	| "pastel-dreams"
+	| "caffeine"
+	| "retro-arcade"
+	| "midnight-bloom"
+	| "candyland"
+	| "northern-lights"
+	| "vintage-paper"
+	| "sunset-horizon"
+	| "claude"
+	| "darkmatter"
+	| "mono"
+	| "soft-pop";
 
 export const THEMES: { name: ThemeName; label: string; swatch: string }[] = [
 	// El primero a propósito: es el tema neutro de shadcn, la referencia contra
@@ -40,4 +67,33 @@ export const THEMES: { name: ThemeName; label: string; swatch: string }[] = [
 	{ name: "ocean-breeze", label: "Ocean Breeze", swatch: "oklch(0.7227 0.1920 149.5793)" },
 	{ name: "sage-garden", label: "Sage Garden", swatch: "oklch(0.6333 0.0309 154.9039)" },
 	{ name: "vercel", label: "Vercel", swatch: "oklch(0 0 0)" },
+	// Añadidos el 13/10/2026: el resto de presets oficiales de tweakcn
+	// (utils/theme-presets.ts del repositorio jnsahaj/tweakcn).
+	{ name: "modern-minimal", label: "Modern Minimal", swatch: "#3b82f6" },
+	{ name: "violet-bloom", label: "Violet Bloom", swatch: "#7033ff" },
+	{ name: "t3-chat", label: "T3 Chat", swatch: "#a84370" },
+	{ name: "bubblegum", label: "Bubblegum", swatch: "#d04f99" },
+	{ name: "amethyst-haze", label: "Amethyst Haze", swatch: "#8a79ab" },
+	{ name: "doom-64", label: "Doom 64", swatch: "#b71c1c" },
+	{ name: "catppuccin", label: "Catppuccin", swatch: "#8839ef" },
+	{ name: "graphite", label: "Graphite", swatch: "#606060" },
+	{ name: "tangerine", label: "Tangerine", swatch: "#e05d38" },
+	{ name: "quantum-rose", label: "Quantum Rose", swatch: "#e6067a" },
+	{ name: "bold-tech", label: "Bold Tech", swatch: "#8b5cf6" },
+	{ name: "supabase", label: "Supabase", swatch: "#72e3ad" },
+	{ name: "neo-brutalism", label: "Neo Brutalism", swatch: "#ff3333" },
+	{ name: "solar-dusk", label: "Solar Dusk", swatch: "#B45309" },
+	{ name: "cyberpunk", label: "Cyberpunk", swatch: "#ff00c8" },
+	{ name: "pastel-dreams", label: "Pastel Dreams", swatch: "#a78bfa" },
+	{ name: "caffeine", label: "Caffeine", swatch: "#644a40" },
+	{ name: "retro-arcade", label: "Retro Arcade", swatch: "#d33682" },
+	{ name: "midnight-bloom", label: "Midnight Bloom", swatch: "#6c5ce7" },
+	{ name: "candyland", label: "Candyland", swatch: "#ffc0cb" },
+	{ name: "northern-lights", label: "Northern Lights", swatch: "#34a85a" },
+	{ name: "vintage-paper", label: "Vintage Paper", swatch: "#a67c52" },
+	{ name: "sunset-horizon", label: "Sunset Horizon", swatch: "#ff7e5f" },
+	{ name: "claude", label: "Claude", swatch: "#c96442" },
+	{ name: "darkmatter", label: "Darkmatter", swatch: "#d87943" },
+	{ name: "mono", label: "Mono", swatch: "#737373" },
+	{ name: "soft-pop", label: "Soft Pop", swatch: "#4f46e5" },
 ];

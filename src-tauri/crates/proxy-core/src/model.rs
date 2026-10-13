@@ -62,8 +62,18 @@ pub enum CardSource {
         #[ts(rename = "scryfallId")]
         scryfall_id: String,
     },
-    /// Una imagen subida por el usuario.
-    Custom,
+    /// Una imagen subida por el usuario. Puede ir vinculada a la carta real
+    /// de Scryfall que representa (para las estadísticas y la info de carta);
+    /// la imagen sigue siendo la propia.
+    Custom {
+        #[serde(
+            rename = "scryfallId",
+            default,
+            skip_serializing_if = "Option::is_none"
+        )]
+        #[ts(rename = "scryfallId", optional)]
+        scryfall_id: Option<String>,
+    },
     /// Un hueco en blanco (lo que deja «+ Añadir página»).
     Blank,
 }
