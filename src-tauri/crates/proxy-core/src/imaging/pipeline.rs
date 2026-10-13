@@ -23,6 +23,10 @@ pub struct RenderSpec {
     pub card: CardSize,
     pub bleed_mm: f64,
     pub bleed_mode: BleedMode,
+    /// Rellenar las esquinas redondeadas con el color del borde; si no, lo
+    /// transparente se pone sobre blanco (el papel).
+    #[serde(default)]
+    pub fill_corners: bool,
     pub target: SpecTarget,
     pub format: ImageFormat,
     pub jpeg_quality: u8,
@@ -112,7 +116,11 @@ pub fn render(bytes: &[u8], s: &RenderSpec) -> Result<Rendered, ImagingError> {
         });
     }
     let mut img = decode(bytes)?;
-    corners::fill(&mut img);
+    if s.fill_corners {
+        corners::fill(&mut img);
+    } else {
+        corners::sobre_blanco(&mut img);
+    }
     let (tw, th) = trim_px(s.card, s.target.into());
     let mut img = fit(img, s.edits.rotation, s.edits.crop, tw, th)?;
     let px_mm = px_por_mm(s.card, tw);
@@ -164,6 +172,7 @@ mod tests {
             card: CardSize::MTG,
             bleed_mm: bleed,
             bleed_mode: BleedMode::Clamp,
+            fill_corners: true,
             target: SpecTarget::Dpi(300.0),
             format: ImageFormat::Jpeg,
             jpeg_quality: 95,

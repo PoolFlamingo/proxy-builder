@@ -76,6 +76,20 @@ fn radio_por_alfa(img: &RgbaImage) -> Option<u32> {
     Some(r.clamp(1, tope))
 }
 
+/// Sin rellenar: lo transparente (las esquinas de los PNG de Scryfall) se
+/// pone sobre blanco, el color del papel.
+pub fn sobre_blanco(img: &mut RgbaImage) {
+    for p in img.pixels_mut() {
+        let a = u32::from(p.0[3]);
+        if a < 255 {
+            for c in &mut p.0[..3] {
+                *c = ((u32::from(*c) * a + 255 * (255 - a)) / 255) as u8;
+            }
+            p.0[3] = 255;
+        }
+    }
+}
+
 /// Rellena esquinas transparentes y, en imágenes opacas, las esquinas claras
 /// que no casan con el borde. Devuelve el color de borde usado.
 pub fn fill(img: &mut RgbaImage) -> [u8; 4] {
@@ -290,6 +304,14 @@ pub(crate) mod tests {
         let antes = img.clone();
         fill(&mut img);
         assert_eq!(img, antes);
+    }
+
+    #[test]
+    fn sin_relleno_las_esquinas_transparentes_quedan_blancas() {
+        let mut img = carta(745, 1040, [10, 10, 10, 255], [0, 0, 0, 0]);
+        sobre_blanco(&mut img);
+        assert_eq!(img.get_pixel(0, 0).0, [255, 255, 255, 255]);
+        assert_eq!(img.get_pixel(372, 520).0, [180, 170, 160, 255]);
     }
 
     #[test]

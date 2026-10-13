@@ -311,6 +311,14 @@ export function ExportPanel() {
 							/>
 						</Fila>
 						<FilaInterruptor
+							etiqueta={t("Rellenar las esquinas")}
+							ayuda={t(
+								"Pinta del color del borde las esquinas redondeadas (transparentes o claras) de las imágenes, para que no salgan triángulos blancos al sangrar o recortar. Apagado, quedan del color del papel.",
+							)}
+							valor={s.fillCorners}
+							onChange={(v) => poner("fillCorners", v)}
+						/>
+						<FilaInterruptor
 							etiqueta={t("Sangrado en los reversos")}
 							valor={s.bleedOnBacks}
 							onChange={(v) => poner("bleedOnBacks", v)}

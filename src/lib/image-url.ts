@@ -67,6 +67,7 @@ export function parametros(
 		back: dorso,
 		bleedMm: sangradoMm,
 		bleedMode: ajustes.bleedMode,
+		fillCorners: ajustes.fillCorners,
 		card: ajustes.cardSize,
 	};
 }

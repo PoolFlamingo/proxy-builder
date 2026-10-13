@@ -12,4 +12,4 @@ export type PreviewParams = { edits: CardEdits,
  * Los ajustes de oscurecido del deck; Rust decide si aplican a esta
  * imagen (por su origen y por ser dorso), igual que al exportar.
  */
-edge: EdgeDarkening, back: boolean, bleedMm: number, bleedMode: BleedMode, card: CardSize, };
+edge: EdgeDarkening, back: boolean, bleedMm: number, bleedMode: BleedMode, fillCorners: boolean, card: CardSize, };

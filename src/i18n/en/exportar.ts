@@ -1,5 +1,8 @@
 // Panel de exportación, alineado de filas, presets y hoja de calibración.
 export const EXPORTAR: Record<string, string> = {
+	"Rellenar las esquinas": "Fill corners",
+	"Pinta del color del borde las esquinas redondeadas (transparentes o claras) de las imágenes, para que no salgan triángulos blancos al sangrar o recortar. Apagado, quedan del color del papel.":
+		"Paints the rounded corners (transparent or light) of the images with the border colour, so no white triangles show when bleeding or trimming. Off, they stay the colour of the paper.",
 	"1. Imprime esta hoja a doble cara con los mismos ajustes que usarás para el deck.":
 		"1. Print this sheet double-sided with the same settings you'll use for the deck.",
 	"2. Mira la hoja a contraluz: cada cruz roja del reverso debería caer en el centro de su casilla.":

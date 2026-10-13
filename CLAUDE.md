@@ -102,7 +102,8 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
   pantalla la deja revisar antes de vincular; con selección, solo esas).
 - Releases: los hace Pablo (o Claude Code en su VS Code), no esta sesión.
 - Valores de fábrica (Pablo, 13/10/2026): 2 mm de separación en blanco,
-  sangrado 0 y guías de corte apagadas.
+  sangrado 0, guías de corte apagadas y «Rellenar las esquinas» apagado (lo
+  transparente sale del color del papel; `corners::fill` solo si se activa).
 - 🛑 Encuadre (Pablo, 13/10/2026): la imagen se **estira** al hueco exacto
   (`imaging::frame`), aunque se deforme un poco; solo se recorta si la
   proporción se aleja más de un 15 % (`MAX_ESTIRADO`).

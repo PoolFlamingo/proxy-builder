@@ -341,7 +341,7 @@ export function PreviewPane() {
 									</Button>
 								</Empty>
 							) : (
-								<div className="flex flex-col items-center gap-6 px-4 py-5 pb-20">
+								<div className="flex w-max min-w-full flex-col items-center gap-6 px-4 py-5 pb-20">
 									{frentes.map((p, i) => (
 										<PageView
 											key={p.index}
