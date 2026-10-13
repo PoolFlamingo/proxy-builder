@@ -27,7 +27,7 @@ export function RejillaCartas({
 	columnas?: string;
 }) {
 	return (
-		<div className={cn("grid gap-2.5", columnas)}>
+		<div className={cn("grid gap-2.5 p-1.5", columnas)}>
 			{cartas.map((c) => (
 				<Tarjeta
 					key={c.id}
