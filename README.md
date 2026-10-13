@@ -8,7 +8,7 @@ Tauri 2 + Rust + React/TypeScript. Linux, Windows y macOS.
 
 ## Requisitos
 
-- Node 22 y pnpm 11 o superior.
+- Node 22 y pnpm 12 o superior.
 - Rust estable (1.92 o superior).
 - En Linux, las librerías de Tauri:
   `sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev`
