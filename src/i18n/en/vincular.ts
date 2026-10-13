@@ -1,9 +1,6 @@
 // Vincular cartas propias con Scryfall, zoom con la rueda y escala de la interfaz.
 export const VINCULAR: Record<string, string> = {
-	"Busca en Scryfall la carta real de cada imagen propia, por el nombre del fichero o leyendo el título. Solo vincula las que coinciden de verdad.":
-		"Looks up the real Scryfall card for each custom image, by file name or by reading the title. It only links the ones that truly match.",
 	"Vincular con Scryfall": "Link to Scryfall",
-	"Leer el título con OCR (más lento)": "Read the title with OCR (slower)",
 	"Ctrl + rueda del ratón para acercar o alejar": "Ctrl + mouse wheel to zoom in or out",
 	"Zoom de la vista previa": "Preview zoom",
 	"Cambiar el vínculo con Scryfall…": "Change the Scryfall link…",
@@ -24,9 +21,42 @@ export const VINCULAR: Record<string, string> = {
 	"Quitar el vínculo": "Remove the link",
 	"Vincular con {carta}": "Link to {carta}",
 	Vincular: "Link",
-	"No hay cartas propias sin vincular": "There are no unlinked custom cards",
-	"{v} de {n} cartas propias vinculadas; el resto, a mano (clic derecho → Vincular)":
-		"{v} of {n} custom cards linked; do the rest by hand (right-click → Link)",
-	"Identificando cartas propias…": "Identifying custom cards…",
 	"Imagen propia vinculada a su carta de Scryfall": "Custom image linked to its Scryfall card",
+	"Busca en Scryfall la carta real de cada imagen propia (por el nombre del fichero o leyendo el título) y te enseña lo que ha encontrado para que lo revises antes de vincular. Si hay cartas seleccionadas, solo esas.":
+		"Looks up the real Scryfall card for each custom image (by file name or by reading the title) and shows you what it found so you can review it before linking. If cards are selected, only those.",
+	"Vincular con Scryfall las seleccionadas…": "Link selected to Scryfall…",
+	"quedan ~{n} s": "~{n} s left",
+	"quedan ~{n} min": "~{n} min left",
+	"{n} cartas propias vinculadas con Scryfall": "{n} custom cards linked to Scryfall",
+	"Vincular con Scryfall en bloque": "Bulk link to Scryfall",
+	"{n} imágenes propias distintas entre las cartas seleccionadas.":
+		"{n} distinct custom images among the selected cards.",
+	"{n} imágenes propias distintas en el deck.": "{n} distinct custom images in the deck.",
+	"¿Qué cartas quieres leer?": "Which cards do you want to read?",
+	"Solo las que faltan": "Only the missing ones",
+	"{n} sin vincular": "{n} not linked",
+	"Todas otra vez": "All of them again",
+	"{n} imágenes, también las ya vinculadas": "{n} images, including the ones already linked",
+	"Leer el título con OCR (más fiable, unos 2 s por carta)":
+		"Read the title with OCR (more reliable, about 2 s per card)",
+	"Sin OCR solo se usa el nombre del fichero. La primera vez, el OCR descarga sus modelos (unos 12 MB).":
+		"Without OCR only the file name is used. The first time, OCR downloads its models (about 12 MB).",
+	"Sin OCR solo se usa el nombre del fichero: va rápido, pero acierta menos.":
+		"Without OCR only the file name is used: it's fast, but less accurate.",
+	"Leyendo {h} de {n}": "Reading {h} of {n}",
+	"Vinculando {h} de {n}": "Linking {h} of {n}",
+	"Exactas: {n}": "Exact: {n}",
+	"Probables: {n}": "Probable: {n}",
+	"Sin propuesta: {n}": "No match: {n}",
+	"Sin marcar": "Unchecked",
+	"Empezar ({n})": "Start ({n})",
+	"Parar y revisar lo leído": "Stop and review what was read",
+	"Vincular {n}": "Link {n}",
+	Parar: "Stop",
+	"No vincular": "Don't link",
+	"Vincular esta": "Link this one",
+	"Carta de Scryfall": "Scryfall card",
+	Exacta: "Exact",
+	Probable: "Probable",
+	"Sin propuesta": "No match",
 };

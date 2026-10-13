@@ -84,9 +84,17 @@ export function SlotMenu({ id, children }: { id: string; children: ReactNode }) 
 					<Palette />
 					{t("Cambiar variante")}
 				</ContextMenuItem>
-				{carta?.source.kind === "custom" && (
+				{varias && (
 					<ContextMenuItem
-						disabled={varias || !carta.front}
+						onSelect={() => useUi.getState().abrir({ tipo: "vincularLote", ids: ids() })}
+					>
+						<Link2 />
+						{t("Vincular con Scryfall las seleccionadas…")}
+					</ContextMenuItem>
+				)}
+				{carta?.source.kind === "custom" && !varias && (
+					<ContextMenuItem
+						disabled={!carta.front}
 						onSelect={() => useUi.getState().abrir({ tipo: "vincular", id })}
 					>
 						<Link2 />

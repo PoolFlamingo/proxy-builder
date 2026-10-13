@@ -5,8 +5,7 @@ import { create } from "zustand";
  * PDF. Lo pintan el pie del panel izquierdo y el botón de exportar, y desde
  * aquí se cancela.
  */
-/** `vincular` es un bucle de la pantalla (una llamada por carta), sin id de trabajo en Rust. */
-export type TipoTrabajo = "resolver" | "exportar" | "vincular";
+export type TipoTrabajo = "resolver" | "exportar";
 
 export type EstadoTrabajo = {
 	tipo: TipoTrabajo;
@@ -15,8 +14,6 @@ export type EstadoTrabajo = {
 	fase: string;
 	hechas: number;
 	total: number;
-	/** Se ha pedido parar (para los trabajos de la pantalla). */
-	parar: boolean;
 };
 
 type TrabajoStore = {
@@ -25,13 +22,11 @@ type TrabajoStore = {
 	setId: (jobId: number) => void;
 	avanzar: (fase: string, hechas: number, total: number) => void;
 	terminar: () => void;
-	pedirParada: () => void;
 };
 
 export const useTrabajo = create<TrabajoStore>((set, get) => ({
 	actual: null,
-	empezar: (tipo, fase) =>
-		set({ actual: { tipo, jobId: null, fase, hechas: 0, total: 0, parar: false } }),
+	empezar: (tipo, fase) => set({ actual: { tipo, jobId: null, fase, hechas: 0, total: 0 } }),
 	setId: (jobId) => {
 		const a = get().actual;
 		if (a) set({ actual: { ...a, jobId } });
@@ -41,8 +36,4 @@ export const useTrabajo = create<TrabajoStore>((set, get) => ({
 		if (a) set({ actual: { ...a, fase, hechas, total } });
 	},
 	terminar: () => set({ actual: null }),
-	pedirParada: () => {
-		const a = get().actual;
-		if (a) set({ actual: { ...a, parar: true } });
-	},
 }));

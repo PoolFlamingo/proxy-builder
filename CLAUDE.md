@@ -87,6 +87,10 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
   vez a `app_data_dir/modelos/`), `proxy-core::{layout,imaging,pdf,stats,decklist}`.
 - Cartas propias vinculadas: `CardSource::Custom { scryfallId? }`. La imagen
   sigue siendo la propia; el vínculo da la info de carta y las estadísticas.
+  Una a una (`vincular-dialog`) o en bloque (`vincular-lote`: `identify_batch`
+  en Rust con progreso, puntúa cada propuesta exacta/probable/ninguna y la
+  pantalla la deja revisar antes de vincular; con selección, solo esas).
+- Releases: los hace Pablo (o Claude Code en su VS Code), no esta sesión.
 - Valores de fábrica (Pablo, 13/10/2026): 2 mm de separación en blanco,
   sangrado 0 y guías de corte apagadas.
 - 🛑 Encuadre (Pablo, 13/10/2026): la imagen se **estira** al hueco exacto

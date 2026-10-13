@@ -90,6 +90,7 @@ pub fn run() {
             commands::identify::ocr_ready,
             commands::identify::card_identify,
             commands::identify::card_link,
+            commands::identify::identify_batch,
         ])
         .run(tauri::generate_context!());
 

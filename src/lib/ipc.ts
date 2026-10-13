@@ -12,6 +12,7 @@ import type { DeckSummary } from "@/bindings/DeckSummary";
 import type { ExportEstimate } from "@/bindings/ExportEstimate";
 import type { FaceImage } from "@/bindings/FaceImage";
 import type { GcReport } from "@/bindings/GcReport";
+import type { IdentifyRequest } from "@/bindings/IdentifyRequest";
 import type { PagePlan } from "@/bindings/PagePlan";
 import type { ParsedDecklist } from "@/bindings/ParsedDecklist";
 import type { Preset } from "@/bindings/Preset";
@@ -70,6 +71,7 @@ export interface Commands {
 		result: CardIdentify;
 	};
 	card_link: { args: { scryfallId: string }; result: CardMeta };
+	identify_batch: { args: { items: IdentifyRequest[]; ocr: boolean }; result: number };
 	export_pdf: { args: { deck: Deck; path: string }; result: number };
 	export_estimate: { args: { deck: Deck }; result: ExportEstimate };
 	export_calibration: {
@@ -101,6 +103,8 @@ export interface Events {
 	"resolve://done": import("@/bindings/ResolveDoneEvent").ResolveDoneEvent;
 	"export://progress": import("@/bindings/ExportProgressEvent").ExportProgressEvent;
 	"export://done": import("@/bindings/ExportDoneEvent").ExportDoneEvent;
+	"identify://progress": import("@/bindings/IdentifyProgressEvent").IdentifyProgressEvent;
+	"identify://done": import("@/bindings/IdentifyDoneEvent").IdentifyDoneEvent;
 }
 
 /** Escucha un evento de Rust. Devuelve la función que deja de escuchar. */
