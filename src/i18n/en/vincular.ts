@@ -15,15 +15,15 @@ export const VINCULAR: Record<string, string> = {
 	"Detectar con OCR": "Detect with OCR",
 	"La primera vez se descargan los modelos del OCR (unos 12 MB). Después funciona sin red.":
 		"The first time, the OCR models are downloaded (about 12 MB). After that it works offline.",
-	"Leído en el título:": "Read in the title:",
+	"Leído en la carta:": "Read on the card:",
 	"Nombre de la carta (en cualquier idioma)…": "Card name (any language)…",
 	"Busca por nombre o pulsa «Detectar con OCR».": "Search by name or click “Detect with OCR”.",
 	"Quitar el vínculo": "Remove the link",
 	"Vincular con {carta}": "Link to {carta}",
 	Vincular: "Link",
 	"Imagen propia vinculada a su carta de Scryfall": "Custom image linked to its Scryfall card",
-	"Busca en Scryfall la carta real de cada imagen propia (por el nombre del fichero o leyendo el título) y te enseña lo que ha encontrado para que lo revises antes de vincular. Si hay cartas seleccionadas, solo esas.":
-		"Looks up the real Scryfall card for each custom image (by file name or by reading the title) and shows you what it found so you can review it before linking. If cards are selected, only those.",
+	"Busca en Scryfall la carta real de cada imagen propia (por el nombre del fichero o leyendo la carta: el título, el nombre original del pie o cualquier línea) y te enseña lo que ha encontrado para que lo revises antes de vincular. Si hay cartas seleccionadas, solo esas.":
+		"Looks up the real Scryfall card for each custom image (by file name or by reading the card: the title, the original name at the bottom or any line) and shows you what it found so you can review it before linking. If cards are selected, only those.",
 	"Vincular con Scryfall las seleccionadas…": "Link selected to Scryfall…",
 	"quedan ~{n} s": "~{n} s left",
 	"quedan ~{n} min": "~{n} min left",
@@ -37,8 +37,8 @@ export const VINCULAR: Record<string, string> = {
 	"{n} sin vincular": "{n} not linked",
 	"Todas otra vez": "All of them again",
 	"{n} imágenes, también las ya vinculadas": "{n} images, including the ones already linked",
-	"Leer el título con OCR (más fiable, unos 2 s por carta)":
-		"Read the title with OCR (more reliable, about 2 s per card)",
+	"Leer la carta entera con OCR (más fiable, unos 2 s por carta)":
+		"Read the whole card with OCR (more reliable, about 2 s per card)",
 	"Sin OCR solo se usa el nombre del fichero. La primera vez, el OCR descarga sus modelos (unos 12 MB).":
 		"Without OCR only the file name is used. The first time, OCR downloads its models (about 12 MB).",
 	"Sin OCR solo se usa el nombre del fichero: va rápido, pero acierta menos.":

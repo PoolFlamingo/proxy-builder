@@ -296,7 +296,7 @@ export function DecklistPanel() {
 									<div className="flex flex-col gap-1.5">
 										<WithTooltip
 											content={t(
-												"Busca en Scryfall la carta real de cada imagen propia (por el nombre del fichero o leyendo el título) y te enseña lo que ha encontrado para que lo revises antes de vincular. Si hay cartas seleccionadas, solo esas.",
+												"Busca en Scryfall la carta real de cada imagen propia (por el nombre del fichero o leyendo la carta: el título, el nombre original del pie o cualquier línea) y te enseña lo que ha encontrado para que lo revises antes de vincular. Si hay cartas seleccionadas, solo esas.",
 											)}
 										>
 											<Button

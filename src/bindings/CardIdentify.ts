@@ -4,7 +4,7 @@ import type { Confidence } from "./Confidence";
 
 export type CardIdentify = { 
 /**
- * Lo que se ha leído en el título (vacío sin OCR).
+ * Lo que se ha leído: los nombres del pie y luego el título (vacío sin OCR).
  */
 lines: Array<string>, 
 /**

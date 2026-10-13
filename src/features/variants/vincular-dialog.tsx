@@ -26,7 +26,7 @@ import { desvincular, vincular } from "./vincular";
 
 /**
  * «Vincular con Scryfall»: decir qué carta real es una imagen propia. Se
- * busca por nombre (de partida, el del fichero) o se lee el título con OCR.
+ * busca por nombre (de partida, el del fichero) o se lee la carta entera con OCR.
  */
 export function VincularDialog() {
 	const dialogo = useUi((s) => s.dialogo);
@@ -133,7 +133,7 @@ function Contenido({ carta }: { carta: DeckCard }) {
 					)}
 					{leido.length > 0 && (
 						<div className="text-[11px]">
-							<div className="font-medium">{t("Leído en el título:")}</div>
+							<div className="font-medium">{t("Leído en la carta:")}</div>
 							{leido.map((l) => (
 								<button
 									key={l}

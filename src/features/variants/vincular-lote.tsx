@@ -30,7 +30,7 @@ import { estaVinculada, propiasPorImagen, vincular } from "./vincular";
 
 /**
  * **Vincular con Scryfall en bloque.** Rust lee (nombre del fichero y, si se
- * pide, OCR del título) y busca cada imagen propia; aquí se revisa lo que ha
+ * pide, OCR de la carta) y busca cada imagen propia; aquí se revisa lo que ha
  * propuesto y se vinculan de una vez las marcadas. Las exactas y probables
  * vienen marcadas; el resto se corrige en la lista o se deja sin vincular.
  *
@@ -214,7 +214,7 @@ function Contenido({ ids }: { ids?: string[] }) {
 					<label className="flex items-center gap-2 text-xs">
 						<Checkbox checked={ocr} onCheckedChange={(v) => setOcr(v === true)} />
 						<ScanText className="size-3.5" />
-						{t("Leer el título con OCR (más fiable, unos 2 s por carta)")}
+						{t("Leer la carta entera con OCR (más fiable, unos 2 s por carta)")}
 					</label>
 					<p className="text-[11px] text-muted-foreground">
 						{ocr
