@@ -4,5 +4,6 @@
 pub mod cache;
 pub mod client;
 pub mod models;
+pub mod nombres;
 pub mod rate;
 pub mod resolve;

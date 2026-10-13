@@ -142,6 +142,13 @@ impl Scryfall {
         Ok(c.map(|c| c.data).unwrap_or_default())
     }
 
+    /// Todos los nombres de carta (`/catalog/card-names`).
+    pub async fn card_names(&self) -> AppResult<Vec<String>> {
+        let url = format!("{API}/catalog/card-names");
+        let c: Option<Catalog> = self.json(|| self.http.get(&url)).await?;
+        Ok(c.map(|c| c.data).unwrap_or_default())
+    }
+
     pub async fn sets(&self) -> AppResult<Vec<SetInfo>> {
         let url = format!("{API}/sets");
         let l: Option<SetList> = self.json(|| self.http.get(&url)).await?;

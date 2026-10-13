@@ -1,5 +1,7 @@
 //! **OCR del nombre de una carta propia** (opcional): lee la franja de arriba
-//! de la imagen, donde va el nombre, para proponer la carta real de Scryfall.
+//! de la imagen, donde va el nombre, y la línea pequeña de abajo, donde muchas
+//! cartas propias ponen el nombre original («0001 S Jodah, Archmage Eternal»
+//! en el hueco del ilustrador), para proponer la carta real de Scryfall.
 //!
 //! Motor: `ocrs` (Rust puro, sin librerías del sistema). Sus dos modelos
 //! (~12 MB) no van dentro de la app: se descargan la primera vez que se usa
@@ -30,6 +32,10 @@ const MODELOS: [(&str, &str); 2] = [
 /// Proporción de la altura que se lee: el nombre y, en muchas cartas propias,
 /// el nombre original en pequeño justo debajo.
 const FRANJA_TITULO: f32 = 0.16;
+
+/// Desde qué altura (del centro de la línea) empieza el pie: número, rareza
+/// y, en las propias, el nombre original.
+const FRANJA_PIE: f32 = 0.94;
 
 static MOTOR: OnceLock<OcrEngine> = OnceLock::new();
 
@@ -104,25 +110,80 @@ fn motor(datos: &Path) -> AppResult<&'static OcrEngine> {
     MOTOR.get().ok_or_else(|| fallo("motor"))
 }
 
-/// Las líneas de texto de la franja del título, en orden de arriba abajo.
-/// Síncrono y pesado: se llama desde un hilo aparte.
-pub fn lineas_del_titulo(datos: &Path, img: &RgbaImage) -> AppResult<Vec<String>> {
+/// Lo que se ha leído en una imagen: las líneas del título y los nombres de
+/// la línea de abajo.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Lectura {
+    pub titulo: Vec<String>,
+    pub pie: Vec<String>,
+    pub resto: Vec<String>,
+}
+
+/// Lee la carta entera, a la resolución original de la imagen, y reparte las
+/// líneas: las de arriba son el título; las de abajo, el pie; el resto (el
+/// texto de reglas, la línea de tipo…) va en `resto`, por si el nombre está en
+/// otro sitio. Síncrono y pesado: se llama desde un hilo aparte.
+pub fn leer_carta(datos: &Path, img: &RgbaImage) -> AppResult<Lectura> {
     let motor = motor(datos)?;
-    let (w, h) = img.dimensions();
-    let alto = ((h as f32) * FRANJA_TITULO).round().max(1.0) as u32;
-    let franja = image::imageops::crop_imm(img, 0, 0, w, alto).to_image();
-    let rgb = image::DynamicImage::ImageRgba8(franja).into_rgb8();
+    let mut l = Lectura::default();
+    for (texto, y) in lineas(motor, img.clone())? {
+        if y < FRANJA_TITULO {
+            let t = limpiar(&texto);
+            if parece_un_nombre(&t) {
+                l.titulo.push(t);
+            }
+        } else if y > FRANJA_PIE {
+            l.pie.extend(nombre_del_pie(&texto));
+        } else {
+            let t = limpiar(&texto);
+            if parece_un_nombre(&t) {
+                l.resto.push(t);
+            }
+        }
+    }
+    Ok(l)
+}
+
+/// Las líneas de texto de una imagen, de arriba abajo, con la altura de su
+/// centro (0 = arriba, 1 = abajo).
+fn lineas(motor: &OcrEngine, img: RgbaImage) -> AppResult<Vec<(String, f32)>> {
+    let alto = img.height().max(1) as f32;
+    let rgb = image::DynamicImage::ImageRgba8(img).into_rgb8();
     let fuente = ImageSource::from_bytes(rgb.as_raw(), rgb.dimensions()).map_err(fallo)?;
     let entrada = motor.prepare_input(fuente).map_err(fallo)?;
     let palabras = motor.detect_words(&entrada).map_err(fallo)?;
     let lineas = motor.find_text_lines(&entrada, &palabras);
     let textos = motor.recognize_text(&entrada, &lineas).map_err(fallo)?;
-    Ok(textos
+    Ok(lineas
         .iter()
-        .flatten()
-        .map(|l| limpiar(&l.to_string()))
-        .filter(|l| parece_un_nombre(l))
+        .zip(textos)
+        .filter_map(|(rects, texto)| {
+            let texto = texto?.to_string();
+            let y = rects.iter().map(|r| r.center().y).sum::<f32>() / rects.len().max(1) as f32;
+            Some((texto, y / alto))
+        })
         .collect())
+}
+
+/// El nombre que pueda haber en una línea del pie: se quitan el número de
+/// colección y la letra de rareza del principio («0001 S Jodah, Archmage
+/// Eternal» → «Jodah, Archmage Eternal»). Las líneas sin minúsculas son el
+/// código del set y el idioma («RTS ES»), y las del copyright, ruido.
+pub fn nombre_del_pie(linea: &str) -> Option<String> {
+    let limpia = limpiar(linea);
+    let palabras: Vec<&str> = limpia.split_whitespace().collect();
+    let inicio = palabras
+        .iter()
+        .position(|p| {
+            !(p.chars().any(|c| c.is_ascii_digit())
+                || p.chars().count() <= 1
+                || p.eq_ignore_ascii_case("illus"))
+        })
+        .unwrap_or(palabras.len());
+    let nombre = palabras[inicio..].join(" ");
+    let minusculas = nombre.chars().any(char::is_lowercase);
+    let copyright = nombre.to_lowercase().contains("wizards");
+    (minusculas && !copyright && parece_un_nombre(&nombre)).then_some(nombre)
 }
 
 /// Descarta el ruido típico de la franja del título: los símbolos de maná y
@@ -190,6 +251,21 @@ mod tests {
     }
 
     #[test]
+    fn el_nombre_del_pie() {
+        assert_eq!(
+            nombre_del_pie("0001   S  Jodah, Archmage Eternal").as_deref(),
+            Some("Jodah, Archmage Eternal")
+        );
+        assert_eq!(
+            nombre_del_pie("0123/0280 R Illus. John Avon").as_deref(),
+            Some("John Avon")
+        );
+        assert_eq!(nombre_del_pie("RTS★ES  S.J."), None);
+        assert_eq!(nombre_del_pie("0001 S"), None);
+        assert_eq!(nombre_del_pie("TM & © 2024 Wizards of the Coast"), None);
+    }
+
+    #[test]
     fn limpiar_quita_ruido() {
         assert_eq!(
             limpiar("Castillo Real de Herbaria  ®"),
@@ -214,8 +290,8 @@ mod en_vivo {
         let bytes = std::fs::read(std::env::var("PB_OCR_IMG").unwrap()).unwrap();
         let img = proxy_core::imaging::decode::decode(&bytes).unwrap();
         let t = std::time::Instant::now();
-        let l = super::lineas_del_titulo(&datos, &img).unwrap();
+        let l = super::leer_carta(&datos, &img).unwrap();
         println!("{l:?} en {:?}", t.elapsed());
-        assert!(!l.is_empty());
+        assert!(!l.titulo.is_empty() || !l.pie.is_empty());
     }
 }

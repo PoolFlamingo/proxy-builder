@@ -1,6 +1,7 @@
 //! **Vincular una carta propia con la real de Scryfall**: identificarla (por
-//! su nombre de fichero y, si se pide, por OCR del título) y traer los datos
-//! de la elegida para la info de carta y las estadísticas.
+//! su nombre de fichero y, si se pide, por OCR de la carta entera: título,
+//! pie y el resto, contra el catálogo de nombres de Scryfall) y traer los
+//! datos de la elegida para la info de carta y las estadísticas.
 
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -16,11 +17,12 @@ use crate::ocr;
 use crate::scryfall::cache;
 use crate::scryfall::client::CardApi;
 use crate::scryfall::models::ScryCard;
+use crate::scryfall::nombres;
 use crate::scryfall::resolve::meta_de;
 use crate::state::AppState;
 
-/// Cuántos textos se prueban como mucho (pista + líneas del OCR).
-const MAX_TEXTOS: usize = 4;
+/// Cuántos textos se prueban como mucho (pista + pie + título del OCR).
+const MAX_TEXTOS: usize = 6;
 /// Cuántas cartas se proponen.
 const MAX_CANDIDATAS: usize = 12;
 
@@ -41,7 +43,7 @@ pub enum Confidence {
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct CardIdentify {
-    /// Lo que se ha leído en el título (vacío sin OCR).
+    /// Lo que se ha leído: los nombres del pie y luego el título (vacío sin OCR).
     pub lines: Vec<String>,
     /// Cartas propuestas, la más probable primero.
     pub candidates: Vec<CardSummary>,
@@ -166,11 +168,12 @@ async fn identificar(
     hint: Option<&str>,
     ocr: bool,
 ) -> AppResult<CardIdentify> {
-    let mut textos: Vec<String> = Vec::new();
-    if let Some(h) = hint.map(ocr::limpiar).filter(|h| h.len() >= 3) {
-        textos.push(h);
-    }
-    let mut lineas = Vec::new();
+    let pista: Vec<String> = hint
+        .map(ocr::limpiar)
+        .filter(|h| h.len() >= 3)
+        .into_iter()
+        .collect();
+    let mut leido = ocr::Lectura::default();
     if ocr {
         let datos = state.paths.data.clone();
         if !ocr::modelos_listos(&datos) {
@@ -178,17 +181,51 @@ async fn identificar(
         }
         let (bytes, _) = state.leer_blob(blob)?;
         let img = proxy_core::imaging::decode::decode(&bytes)?;
-        lineas = tauri::async_runtime::spawn_blocking(move || ocr::lineas_del_titulo(&datos, &img))
+        leido = tauri::async_runtime::spawn_blocking(move || ocr::leer_carta(&datos, &img))
             .await
             .map_err(|e| AppError::new(ErrorCode::Internal).with("detalle", e))??;
-        textos.extend(lineas.iter().cloned());
+    }
+    // El pie primero: cuando trae el nombre original, es el inglés exacto (el
+    // título de una carta propia suele ser inventado).
+    let principales: Vec<String> = pista
+        .iter()
+        .chain(&leido.pie)
+        .chain(&leido.titulo)
+        .cloned()
+        .collect();
+
+    // Los nombres reales que aparecen en la carta, buscados en local en el
+    // catálogo de Scryfall: primero lo exacto en el pie, el título y la pista;
+    // luego cualquier otra línea de la carta; y si nada, lo más parecido (una
+    // letra mal leída).
+    let mut seguros: Vec<String> = Vec::new();
+    let mut aproximados: Vec<String> = Vec::new();
+    match nombres::indice(&state.scryfall, &state.paths.cache).await {
+        Ok(indice) => {
+            for t in &principales {
+                seguros.extend(indice.exacto(t).or_else(|| indice.al_principio(t)));
+            }
+            for t in &leido.resto {
+                seguros.extend(indice.exacto(t));
+            }
+            if seguros.is_empty() {
+                aproximados.extend(
+                    principales
+                        .iter()
+                        .filter_map(|t| indice.parecido(t))
+                        .map(|h| h.nombre),
+                );
+            }
+        }
+        Err(e) => tracing::warn!(codigo = ?e.code, "sin catálogo de nombres"),
     }
 
     let mut vistas = HashSet::new();
     let mut probados = HashSet::new();
     let mut cartas = Vec::new();
-    for t in &textos {
-        if probados.len() >= MAX_TEXTOS || !probados.insert(t.to_lowercase()) {
+    let a_buscar = seguros.iter().chain(&aproximados).chain(&principales);
+    for t in a_buscar {
+        if probados.len() >= MAX_TEXTOS || !probados.insert(normalizar(t)) {
             continue;
         }
         for c in buscar(state, t).await? {
@@ -202,6 +239,9 @@ async fn identificar(
     }
     cartas.truncate(MAX_CANDIDATAS);
     let mut candidates = resumir(state, cartas);
+    // Los aproximados no puntúan: la propuesta se mide contra lo leído, y así
+    // una letra mal leída sale como «probable» para que se revise.
+    let textos: Vec<String> = seguros.iter().chain(&principales).cloned().collect();
     let (best, confidence) = puntuar(&candidates, &textos);
     // La propuesta, la primera de la lista.
     if let Some(i) = best
@@ -212,7 +252,7 @@ async fn identificar(
         candidates.insert(0, c);
     }
     Ok(CardIdentify {
-        lines: lineas,
+        lines: leido.pie.into_iter().chain(leido.titulo).collect(),
         candidates,
         best,
         confidence,
