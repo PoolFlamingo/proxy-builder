@@ -1,0 +1,11 @@
+# Configuración de pnpm (desde pnpm 11 va aquí, no en package.json).
+
+# Solo se instalan versiones publicadas hace al menos un día (1440 min). Es lo
+# que pnpm 11 hace por defecto y se deja escrito para que la nube y el equipo
+# de Pablo resuelvan lo mismo: el 13/10/2026 el lockfile traía versiones de
+# Radix publicadas horas antes y el `pnpm install` de Pablo lo rechazó.
+minimumReleaseAge: 1440
+
+# Paquetes a los que se deja ejecutar su script de instalación.
+allowBuilds:
+  esbuild: true
