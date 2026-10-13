@@ -23,7 +23,9 @@ export type Dialogo =
 	| { tipo: "variante"; id: string }
 	| { tipo: "vincular"; id: string }
 	/** Revisión en bloque: de las cartas `ids` o, sin ellas, de todo el deck. */
-	| { tipo: "vincularLote"; ids?: string[] }
+	/** `ids`: la selección, si la hay; `soloSeleccion`: empezar limitado a ella
+	 *  (se puede cambiar a todo el deck en el diálogo). */
+	| { tipo: "vincularLote"; ids?: string[]; soloSeleccion?: boolean }
 	| { tipo: "anadir"; en?: number }
 	| { tipo: "moverA"; ids: string[] }
 	| { tipo: "sets" }

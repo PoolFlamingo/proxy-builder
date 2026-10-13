@@ -86,7 +86,9 @@ export function SlotMenu({ id, children }: { id: string; children: ReactNode }) 
 				</ContextMenuItem>
 				{varias && (
 					<ContextMenuItem
-						onSelect={() => useUi.getState().abrir({ tipo: "vincularLote", ids: ids() })}
+						onSelect={() =>
+							useUi.getState().abrir({ tipo: "vincularLote", ids: ids(), soloSeleccion: true })
+						}
 					>
 						<Link2 />
 						{t("Vincular con Scryfall las seleccionadas…")}

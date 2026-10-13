@@ -34,16 +34,20 @@ import { estaVinculada, propiasPorImagen, vincular } from "./vincular";
  * propuesto y se vinculan de una vez las marcadas. Las exactas y probables
  * vienen marcadas; el resto se corrige en la lista o se deja sin vincular.
  *
- * Con cartas seleccionadas trabaja solo con ellas. Las copias con la misma
- * imagen van juntas (una fila por imagen).
+ * Con cartas seleccionadas deja elegir entre ellas y todo el deck (de
+ * partida, lo que diga quien lo abre: el menú de varias cartas, la
+ * selección; el botón del panel, todo el deck salvo que haya varias
+ * seleccionadas). Las copias con la misma imagen van juntas (una fila por
+ * imagen).
  */
 export function VincularLoteDialog() {
 	const dialogo = useUi((s) => s.dialogo);
 	const abierto = dialogo?.tipo === "vincularLote";
 	const ids = dialogo?.tipo === "vincularLote" ? dialogo.ids : undefined;
+	const soloSeleccion = dialogo?.tipo === "vincularLote" && !!dialogo.soloSeleccion;
 	return (
 		<Dialog open={abierto} onOpenChange={(o) => !o && useUi.getState().abrir(null)}>
-			{abierto && <Contenido ids={ids} />}
+			{abierto && <Contenido ids={ids} soloSeleccion={soloSeleccion} />}
 		</Dialog>
 	);
 }
@@ -75,13 +79,17 @@ function restante(
 	return t("quedan ~{n} min", { n: Math.round(segundos / 60) });
 }
 
-function Contenido({ ids }: { ids?: string[] }) {
+function Contenido({ ids, soloSeleccion }: { ids?: string[]; soloSeleccion: boolean }) {
 	const { t, mensaje } = useLang();
-	const propias = useMemo(() => propiasPorImagen(ids), [ids]);
+	const haySeleccion = !!ids && ids.length > 0;
+	const [enSeleccion, setEnSeleccion] = useState(haySeleccion && soloSeleccion);
+	const delDeck = useMemo(() => propiasPorImagen(), []);
+	const deSeleccion = useMemo(() => (ids ? propiasPorImagen(ids) : []), [ids]);
+	const propias = enSeleccion ? deSeleccion : delDeck;
 	const faltan = useMemo(() => propias.filter((c) => !estaVinculada(c)), [propias]);
-	const [alcance, setAlcance] = useState<"faltan" | "todas">(
-		faltan.length > 0 ? "faltan" : "todas",
-	);
+	const [eleccion, setAlcance] = useState<"faltan" | "todas">("faltan");
+	// «Solo las que faltan» sin ninguna que falte no tiene sentido.
+	const alcance = eleccion === "faltan" && faltan.length === 0 ? "todas" : eleccion;
 	const [ocr, setOcr] = useState(true);
 	const [fase, setFase] = useState<Fase>("elegir");
 	const [filas, setFilas] = useState<Fila[]>([]);
@@ -184,7 +192,7 @@ function Contenido({ ids }: { ids?: string[] }) {
 			<DialogHeader>
 				<DialogTitle>{t("Vincular con Scryfall en bloque")}</DialogTitle>
 				<DialogDescription>
-					{ids
+					{enSeleccion
 						? t("{n} imágenes propias distintas entre las cartas seleccionadas.", {
 								n: propias.length,
 							})
@@ -194,6 +202,23 @@ function Contenido({ ids }: { ids?: string[] }) {
 
 			{fase === "elegir" && (
 				<div className="flex flex-col gap-3">
+					{haySeleccion && (
+						<ToggleGroup
+							type="single"
+							variant="outline"
+							size="sm"
+							value={enSeleccion ? "seleccion" : "deck"}
+							onValueChange={(v) => v && setEnSeleccion(v === "seleccion")}
+							className="self-start"
+						>
+							<ToggleGroupItem value="deck" className="h-7 px-2.5 text-[11px]">
+								{t("Todo el deck ({n})", { n: delDeck.length })}
+							</ToggleGroupItem>
+							<ToggleGroupItem value="seleccion" className="h-7 px-2.5 text-[11px]">
+								{t("Solo las seleccionadas ({n})", { n: deSeleccion.length })}
+							</ToggleGroupItem>
+						</ToggleGroup>
+					)}
 					<p className="text-xs font-medium">{t("¿Qué cartas quieres leer?")}</p>
 					<div className="grid gap-2 sm:grid-cols-2">
 						<Eleccion
