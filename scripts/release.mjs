@@ -146,8 +146,13 @@ async function esperarEjecucion(flujo, sha, desde, extra = []) {
 	}
 	if (!id) throw new Fallo(`No aparece la ejecución de «${flujo}» para ${sha.slice(0, 7)}.`);
 	console.log(`  https://github.com/${repo()}/actions/runs/${id}`);
+	// A la vista: con la salida capturada la terminal se queda muda ~10 minutos
+	// y parece colgada (13/10/2026).
 	try {
-		ejecutar("gh", ["run", "watch", String(id), "--exit-status"]);
+		execFileSync("gh", ["run", "watch", String(id), "--exit-status", "--interval", "10"], {
+			cwd: RAIZ,
+			stdio: ["ignore", "inherit", "inherit"],
+		});
 	} catch {
 		throw new Fallo(`«${flujo}» ha fallado. Míralo en la URL de arriba.`);
 	}
