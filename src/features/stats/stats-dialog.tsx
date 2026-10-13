@@ -1,7 +1,8 @@
-import { Check, Loader2, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import type { DeckKind } from "@/bindings/DeckKind";
 import type { DeckStats } from "@/bindings/DeckStats";
-import { paraTraducir, useLang } from "@/components/language-provider";
+import { useLang } from "@/components/language-provider";
 import {
 	Dialog,
 	DialogContent,
@@ -10,47 +11,40 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { GraficoBarras } from "@/components/ui/grafico-barras";
-import { WithTooltip } from "@/components/ui/with-tooltip";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { call } from "@/lib/ipc";
-import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
+import { Funciones } from "./funciones";
+import { Legalidad } from "./legalidad";
+import { Mana } from "./mana";
+import { Precios } from "./precios";
+import { Probabilidades } from "./probabilidades";
+import { Resumen } from "./resumen";
+import { CLASES_MAZO, type Moneda } from "./textos";
+import { Tipos } from "./tipos";
 
-const COLORES: Record<string, { nombre: string; clase: string }> = {
-	W: { nombre: paraTraducir("Blanco"), clase: "bg-amber-100 text-amber-900" },
-	U: { nombre: paraTraducir("Azul"), clase: "bg-sky-500 text-white" },
-	B: { nombre: paraTraducir("Negro"), clase: "bg-neutral-800 text-white" },
-	R: { nombre: paraTraducir("Rojo"), clase: "bg-red-600 text-white" },
-	G: { nombre: paraTraducir("Verde"), clase: "bg-green-600 text-white" },
-	C: { nombre: paraTraducir("Incoloro"), clase: "bg-stone-400 text-black" },
-};
-
-const TIPOS: Record<string, string> = {
-	Creature: paraTraducir("Criaturas"),
-	Planeswalker: paraTraducir("Planeswalkers"),
-	Battle: paraTraducir("Batallas"),
-	Instant: paraTraducir("Instantáneos"),
-	Sorcery: paraTraducir("Conjuros"),
-	Artifact: paraTraducir("Artefactos"),
-	Enchantment: paraTraducir("Encantamientos"),
-	Land: paraTraducir("Tierras"),
-	Other: paraTraducir("Otros"),
-};
-
-const RAREZAS: Record<string, string> = {
-	common: paraTraducir("Común"),
-	uncommon: paraTraducir("Infrecuente"),
-	rare: paraTraducir("Rara"),
-	mythic: paraTraducir("Mítica"),
-	special: paraTraducir("Especial"),
-	bonus: paraTraducir("Bonus"),
-};
+type Pestana =
+	| "resumen"
+	| "mana"
+	| "tipos"
+	| "funciones"
+	| "probabilidades"
+	| "precios"
+	| "legalidad";
 
 /**
- * Estadísticas del deck (Fase 8): las calcula Rust con los datos de Scryfall
- * que ya tiene en caché (pide los que falten y refresca precios de más de un
- * día).
+ * Estadísticas del deck: las calcula Rust con los datos de Scryfall (de la
+ * caché; pide los que falten y refresca precios de más de un día). Aquí solo
+ * se pintan, repartidas en pestañas.
  */
 export function StatsDialog() {
 	const abierto = useUi((s) => s.dialogo?.tipo === "estadisticas");
@@ -62,196 +56,135 @@ export function StatsDialog() {
 }
 
 function Contenido() {
-	const { t, mensaje, lang } = useLang();
+	const { t, mensaje } = useLang();
 	const cartas = useDeck((s) => s.deck?.cards);
+	const [kind, setKind] = useState<DeckKind | null>(null);
 	const [s, setS] = useState<DeckStats | null>(null);
+	const [cargando, setCargando] = useState(true);
 	const [error, setError] = useState<unknown>(null);
+	const [pestana, setPestana] = useState<Pestana>("resumen");
+	const [moneda, setMoneda] = useState<Moneda>("eur");
 
 	useEffect(() => {
 		if (!cartas) return;
 		let vigente = true;
-		call("deck_stats", { cards: cartas })
+		setCargando(true);
+		call("deck_stats", { cards: cartas, kind })
 			.then((r) => vigente && setS(r))
-			.catch((e) => vigente && setError(e));
+			.catch((e) => vigente && setError(e))
+			.finally(() => vigente && setCargando(false));
 		return () => {
 			vigente = false;
 		};
-	}, [cartas]);
+	}, [cartas, kind]);
 
-	const euros = new Intl.NumberFormat(lang === "en" ? "en-GB" : "es-ES", {
-		style: "currency",
-		currency: "EUR",
-	});
+	const pestanas: { valor: Pestana; texto: string }[] = [
+		{ valor: "resumen", texto: t("Resumen") },
+		{ valor: "mana", texto: t("Maná") },
+		{ valor: "tipos", texto: t("Tipos") },
+		{ valor: "funciones", texto: t("Funciones") },
+		{ valor: "probabilidades", texto: t("Probabilidades") },
+		{ valor: "precios", texto: t("Precios") },
+		{ valor: "legalidad", texto: t("Legalidad") },
+	];
 
 	return (
-		<DialogContent className="flex max-h-[88vh] flex-col sm:max-w-3xl" cambiosSinGuardar={false}>
-			<DialogHeader>
-				<DialogTitle>{t("Estadísticas del deck")}</DialogTitle>
-				<DialogDescription>
+		<DialogContent
+			className="flex h-[88vh] flex-col sm:max-w-5xl [&_button[data-slot=tooltip-trigger]]:text-xs"
+			cambiosSinGuardar={false}
+		>
+			<DialogHeader className="pr-6">
+				<DialogTitle className="flex items-center gap-2">
+					{t("Estadísticas del deck")}
+					{cargando && s && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+				</DialogTitle>
+				<DialogDescription className="text-xs">
 					{t(
 						"Datos y precios de Scryfall. Las cartas propias cuentan si están vinculadas a su carta de Scryfall.",
 					)}
 				</DialogDescription>
 			</DialogHeader>
-			<DialogCuerpo>
-				{error !== null ? (
-					<p className="py-10 text-center text-xs text-destructive">{mensaje(error)}</p>
-				) : !s ? (
-					<div className="flex justify-center py-16">
-						<Loader2 className="size-5 animate-spin text-muted-foreground" />
-					</div>
-				) : (
-					<div className="flex flex-col gap-4">
-						<div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-							<Cifra titulo={t("Cartas")} valor={String(s.cards)} />
-							<Cifra titulo={t("Tierras")} valor={String(s.lands)} />
-							<Cifra titulo={t("Coste medio")} valor={s.averageCmc.toFixed(2)} />
-							<Cifra
-								titulo={t("Precio estimado")}
-								valor={euros.format(s.totalEur)}
-								nota={s.withoutPrice ? t("{n} sin precio", { n: s.withoutPrice }) : undefined}
-							/>
-						</div>
-						{(s.tokens > 0 || s.unknown > 0) && (
-							<p className="text-[11px] text-muted-foreground">
-								{t("Fuera de la cuenta: {t} tokens y {u} cartas sin datos.", {
-									t: s.tokens,
-									u: s.unknown,
-								})}
-							</p>
-						)}
-
-						<Bloque titulo={t("Curva de maná (sin tierras)")}>
-							<GraficoBarras
-								alto="h-40"
-								destacarUltimo={false}
-								formatearValor={(v) => String(Math.round(v))}
-								datos={s.curve.map((n, i) => ({
-									clave: String(i),
-									etiqueta: i === 7 ? "7+" : String(i),
-									valor: n,
-									detalle: t("{n} cartas de coste {c}", { n, c: i === 7 ? "7+" : i }),
-								}))}
-							/>
-						</Bloque>
-
-						<div className="grid gap-4 sm:grid-cols-2">
-							<Bloque titulo={t("Colores")}>
-								<div className="flex flex-wrap gap-1.5">
-									{s.colors.map((c) => (
-										<WithTooltip key={c.key} content={t(COLORES[c.key]?.nombre ?? c.key)}>
-											<span
-												className={cn(
-													"flex min-w-12 items-center justify-between gap-2 rounded-md px-2 py-1 font-mono text-xs",
-													COLORES[c.key]?.clase,
-													c.count === 0 && "opacity-30",
-												)}
-											>
-												<b>{c.key}</b>
-												{c.count}
-											</span>
-										</WithTooltip>
-									))}
-								</div>
-								<p className="mt-2 text-[11px] text-muted-foreground">
-									{t("Identidad de color: {c}", {
-										c: s.colorIdentity.length ? s.colorIdentity.join("") : t("incolora"),
-									})}
-								</p>
-							</Bloque>
-							<Bloque titulo={t("Rareza")}>
-								<Lista
-									filas={s.rarity.map((r) => ({
-										k: r.key,
-										n: r.count,
-										txt: t(RAREZAS[r.key] ?? r.key),
-									}))}
-								/>
-							</Bloque>
-						</div>
-
-						<Bloque titulo={t("Tipos")}>
-							<Lista
-								filas={s.types.map((r) => ({
-									k: r.key,
-									n: r.count,
-									txt: t(TIPOS[r.key] ?? r.key),
-								}))}
-							/>
-						</Bloque>
-
-						<Bloque titulo={t("Legalidad")}>
-							<div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-								{s.legality.map((l) => (
-									<WithTooltip
-										key={l.format}
-										content={
-											l.offenders.length
-												? t("No legales: {c}", { c: l.offenders.slice(0, 8).join(", ") })
-												: null
-										}
-									>
-										<span
-											className={cn(
-												"flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs capitalize",
-												l.legal
-													? "border-green-600/40 text-green-700 dark:text-green-400"
-													: "text-muted-foreground",
-											)}
-										>
-											{l.legal ? <Check className="size-3.5" /> : <X className="size-3.5" />}
-											{l.format}
-										</span>
-									</WithTooltip>
-								))}
-							</div>
-						</Bloque>
-					</div>
-				)}
-			</DialogCuerpo>
-		</DialogContent>
-	);
-}
-
-function Cifra({ titulo, valor, nota }: { titulo: string; valor: string; nota?: string }) {
-	return (
-		<div className="rounded-lg border bg-card p-2.5">
-			<div className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-				{titulo}
-			</div>
-			<div className="text-lg font-semibold">{valor}</div>
-			{nota && <div className="text-[10px] text-muted-foreground">{nota}</div>}
-		</div>
-	);
-}
-
-function Bloque({ titulo, children }: { titulo: string; children: React.ReactNode }) {
-	return (
-		<section className="flex flex-col gap-2">
-			<h3 className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-				{titulo}
-			</h3>
-			{children}
-		</section>
-	);
-}
-
-function Lista({ filas }: { filas: { k: string; n: number; txt: string }[] }) {
-	const max = Math.max(1, ...filas.map((f) => f.n));
-	return (
-		<div className="flex flex-col gap-1">
-			{filas.map((f) => (
-				<div key={f.k} className="grid grid-cols-[7rem_1fr_2rem] items-center gap-2 text-xs">
-					<span className="truncate">{f.txt}</span>
-					<div className="h-2 overflow-hidden rounded-full bg-muted">
-						<div
-							className="h-full rounded-full bg-primary"
-							style={{ width: `${(f.n / max) * 100}%` }}
-						/>
-					</div>
-					<span className="text-right font-mono text-[11px]">{f.n}</span>
+			{error !== null ? (
+				<p className="py-10 text-center text-xs text-destructive">{mensaje(error)}</p>
+			) : !s ? (
+				<div className="flex flex-1 flex-col items-center justify-center gap-2 text-xs text-muted-foreground">
+					<Loader2 className="size-5 animate-spin" />
+					{t("Leyendo los datos de las cartas…")}
 				</div>
-			))}
-		</div>
+			) : (
+				<Tabs
+					value={pestana}
+					onValueChange={(v) => setPestana(v as Pestana)}
+					className="min-h-0 flex-1"
+				>
+					<div className="flex flex-wrap items-center justify-between gap-2">
+						<TabsList>
+							{pestanas.map((p) => (
+								<TabsTrigger key={p.valor} value={p.valor}>
+									{p.texto}
+								</TabsTrigger>
+							))}
+						</TabsList>
+						<div className="flex items-center gap-1.5">
+							<Select
+								value={kind ?? "auto"}
+								onValueChange={(v) => setKind(v === "auto" ? null : (v as DeckKind))}
+							>
+								<SelectTrigger size="sm" className="h-7 w-60 text-xs">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="auto" className="text-xs">
+										{t("Automático: {c}", { c: t(CLASES_MAZO[s.detectedKind] ?? s.detectedKind) })}
+									</SelectItem>
+									{(["commander", "constructed", "limited"] as const).map((k) => (
+										<SelectItem key={k} value={k} className="text-xs">
+											{t(CLASES_MAZO[k])}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+							<ToggleGroup
+								type="single"
+								variant="outline"
+								size="sm"
+								value={moneda}
+								onValueChange={(v) => v && setMoneda(v as Moneda)}
+							>
+								<ToggleGroupItem value="eur" className="h-7 px-2 text-[11px]">
+									€
+								</ToggleGroupItem>
+								<ToggleGroupItem value="usd" className="h-7 px-2 text-[11px]">
+									$
+								</ToggleGroupItem>
+							</ToggleGroup>
+						</div>
+					</div>
+					<DialogCuerpo>
+						<TabsContent value="resumen">
+							<Resumen s={s} moneda={moneda} />
+						</TabsContent>
+						<TabsContent value="mana">
+							<Mana s={s} />
+						</TabsContent>
+						<TabsContent value="tipos">
+							<Tipos s={s} />
+						</TabsContent>
+						<TabsContent value="funciones">
+							<Funciones s={s} />
+						</TabsContent>
+						<TabsContent value="probabilidades">
+							<Probabilidades s={s} />
+						</TabsContent>
+						<TabsContent value="precios">
+							<Precios s={s} moneda={moneda} />
+						</TabsContent>
+						<TabsContent value="legalidad">
+							<Legalidad s={s} />
+						</TabsContent>
+					</DialogCuerpo>
+				</Tabs>
+			)}
+		</DialogContent>
 	);
 }

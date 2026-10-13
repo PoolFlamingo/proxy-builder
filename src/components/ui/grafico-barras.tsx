@@ -63,7 +63,7 @@ export function GraficoBarras({
 	datos,
 	alto = "h-56",
 	/** Cuántas divisiones tiene la rejilla, sin contar la línea base. */
-	divisiones = 4,
+	divisiones: divisionesPedidas = 4,
 	/** Cómo se escribe un valor del eje vertical. */
 	formatearValor = (v: number) => v.toFixed(2),
 	/** Destaca el último tramo: en una serie temporal es «ahora». */
@@ -71,6 +71,7 @@ export function GraficoBarras({
 	/** Al pulsar un tramo: lo que lo forma (el panel económico, Fase 4). Sin
 	 *  esto, las barras solo se consultan con el ratón. */
 	onPulsar,
+	enteros,
 	className,
 }: {
 	datos: BarraDato[];
@@ -79,9 +80,13 @@ export function GraficoBarras({
 	formatearValor?: (v: number) => string;
 	destacarUltimo?: boolean;
 	onPulsar?: (clave: string) => void;
+	/** Que las divisiones caigan en números enteros, con el valor multiplicado
+	 *  por esto (1 para recuentos, 100 para probabilidades en %). */
+	enteros?: number;
 	className?: string;
 }) {
 	const techo = useMemo(() => techoLegible(Math.max(0, ...datos.map((d) => d.valor))), [datos]);
+	const divisiones = enteros ? divisionesEnteras(techo * enteros) : divisionesPedidas;
 
 	// Una etiqueta de cada N, contando DESDE EL FINAL para que la última —la
 	// que más se mira— tenga siempre la suya. Con doce tramos o menos se
@@ -184,6 +189,15 @@ export function GraficoBarras({
 			</div>
 		</div>
 	);
+}
+
+/**
+ * Cuántas divisiones para que cada una sea un número entero (techo 50 → 5
+ * divisiones de 10, no 4 de 12,5).
+ */
+export function divisionesEnteras(techo: number): number {
+	const t = Math.round(techo * 1e6) / 1e6;
+	return [4, 5, 2, 1].find((d) => Number.isInteger(t / d)) ?? 4;
 }
 
 /**

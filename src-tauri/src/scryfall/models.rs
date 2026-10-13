@@ -22,6 +22,10 @@ pub struct CardFace {
     pub type_line: Option<String>,
     #[serde(default)]
     pub colors: Vec<String>,
+    pub mana_cost: Option<String>,
+    pub oracle_text: Option<String>,
+    pub power: Option<String>,
+    pub toughness: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -37,6 +41,7 @@ pub struct Prices {
     pub eur: Option<String>,
     pub eur_foil: Option<String>,
     pub usd: Option<String>,
+    pub usd_foil: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -75,6 +80,19 @@ pub struct ScryCard {
     pub legalities: BTreeMap<String, String>,
     pub printed_name: Option<String>,
     pub released_at: Option<String>,
+    // Para las estadísticas.
+    pub mana_cost: Option<String>,
+    pub oracle_text: Option<String>,
+    /// `None` = guardada en la caché antes de que la app leyera estos campos
+    /// (Scryfall siempre manda la lista, aunque sea vacía): hay que pedirla
+    /// otra vez.
+    pub keywords: Option<Vec<String>>,
+    #[serde(default)]
+    pub produced_mana: Vec<String>,
+    pub power: Option<String>,
+    pub toughness: Option<String>,
+    #[serde(default)]
+    pub game_changer: bool,
 }
 
 impl ScryCard {
@@ -114,6 +132,28 @@ impl ScryCard {
             self.image_status.as_deref(),
             Some("missing") | Some("placeholder")
         ) && self.face_uris(0).is_some()
+    }
+
+    /// El texto de reglas de todas las caras.
+    pub fn texto_completo(&self) -> String {
+        match &self.oracle_text {
+            Some(t) => t.clone(),
+            None => self
+                .card_faces
+                .iter()
+                .filter_map(|f| f.oracle_text.as_deref())
+                .collect::<Vec<_>>()
+                .join("\n"),
+        }
+    }
+
+    /// El coste de la cara de delante (las DFC lo llevan en cada cara; las
+    /// partidas, los dos juntos arriba).
+    pub fn coste(&self) -> Option<String> {
+        self.mana_cost
+            .clone()
+            .filter(|c| !c.is_empty())
+            .or_else(|| self.card_faces.first().and_then(|f| f.mana_cost.clone()))
     }
 
     /// ¿Responde a este nombre? (el completo, o el de alguna de sus caras,

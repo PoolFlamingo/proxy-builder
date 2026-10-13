@@ -225,7 +225,9 @@ export function PreviewPane() {
 						</ToggleGroupItem>
 					</WithTooltip>
 				</ToggleGroup>
-				<WithTooltip content={t("Curva de maná, colores, precio y legalidad")}>
+				<WithTooltip
+					content={t("Curva, maná, funciones, probabilidades de robo, precios y legalidad")}
+				>
 					<Button
 						size="xs"
 						variant="outline"

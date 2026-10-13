@@ -7,6 +7,7 @@ import type { CardMeta } from "@/bindings/CardMeta";
 import type { CardSummary } from "@/bindings/CardSummary";
 import type { Deck } from "@/bindings/Deck";
 import type { DeckCard } from "@/bindings/DeckCard";
+import type { DeckKind } from "@/bindings/DeckKind";
 import type { DeckStats } from "@/bindings/DeckStats";
 import type { DeckSummary } from "@/bindings/DeckSummary";
 import type { ExportEstimate } from "@/bindings/ExportEstimate";
@@ -64,7 +65,7 @@ export interface Commands {
 	set_cards: { args: { code: string; typeFilter: string | null }; result: CardSummary[] };
 	import_archidekt: { args: { url: string; includeSideboard: boolean }; result: ArchidektImport };
 	arrange_cards: { args: { cards: DeckCard[] }; result: string[] };
-	deck_stats: { args: { cards: DeckCard[] }; result: DeckStats };
+	deck_stats: { args: { cards: DeckCard[]; kind: DeckKind | null }; result: DeckStats };
 	ocr_ready: { args: Record<string, never>; result: boolean };
 	card_identify: {
 		args: { blob: string; hint: string | null; ocr: boolean };
