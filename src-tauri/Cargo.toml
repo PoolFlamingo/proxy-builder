@@ -44,12 +44,20 @@ uuid = { version = "1", features = ["v4"] }
 reqwest = { version = "0.13", default-features = false, features = ["json", "query", "rustls", "gzip"] }
 tokio = { version = "1", features = ["rt", "sync", "time", "macros"] }
 futures = { version = "0.3", default-features = false, features = ["std", "async-await"] }
+# Los parámetros de render viajan en la URL de la miniatura en base64url.
+base64 = "0.22"
+rayon = "1.12"
+krilla = { version = "0.8.2", default-features = false, features = ["raster-images", "simple-text"] }
 # Registro de lo que hace la app (cada petición de red queda apuntada).
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std"] }
+# Paquetes `.pbdeck`. Solo deflate (en Rust puro); nada de cifrado ni de los
+# demás compresores.
+zip = { version = "9", default-features = false, features = ["deflate-flate2-zlib-rs"] }
 
 [dev-dependencies]
 tempfile = "3"
+lopdf = "0.45"
 tokio = { version = "1", features = ["rt", "macros", "time", "test-util"] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]

@@ -11,6 +11,7 @@ use crate::error::AppResult;
 use crate::state::AppState;
 use crate::store::blobs::GcReport;
 use crate::store::decks::{self, DeckSummary};
+use crate::store::presets::{self, Preset, PresetKind};
 use crate::store::settings;
 
 #[tauri::command]
@@ -89,4 +90,90 @@ pub fn app_setting_get(state: State<'_, AppState>, key: String) -> AppResult<Opt
 #[tauri::command]
 pub fn app_setting_set(state: State<'_, AppState>, key: String, value: String) -> AppResult<()> {
     settings::set(&state.db, &key, &value)
+}
+
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct CacheStats {
+    pub files: u32,
+    #[ts(type = "number")]
+    pub bytes: u64,
+}
+
+fn recorrer(dir: &std::path::Path, out: &mut CacheStats) {
+    let Ok(entradas) = std::fs::read_dir(dir) else {
+        return;
+    };
+    for e in entradas.flatten() {
+        let p = e.path();
+        if p.is_dir() {
+            recorrer(&p, out);
+        } else if let Ok(m) = e.metadata() {
+            out.files += 1;
+            out.bytes += m.len();
+        }
+    }
+}
+
+/// Lo que ocupa la caché de miniaturas (se puede borrar sin perder nada).
+#[tauri::command]
+pub fn cache_stats(state: State<'_, AppState>) -> CacheStats {
+    let mut s = CacheStats { files: 0, bytes: 0 };
+    recorrer(&state.carpeta_renders(), &mut s);
+    s
+}
+
+/// Borra la caché de miniaturas. 🛑 Nunca toca el almacén de imágenes de los decks.
+#[tauri::command]
+pub fn cache_clear(state: State<'_, AppState>) -> AppResult<CacheStats> {
+    let antes = cache_stats(state.clone());
+    let dir = state.carpeta_renders();
+    if dir.exists() {
+        std::fs::remove_dir_all(&dir)?;
+    }
+    Ok(antes)
+}
+
+/// Guarda el deck con todas sus imágenes en un `.pbdeck`.
+#[tauri::command]
+pub async fn deck_export_package(
+    state: State<'_, AppState>,
+    id: String,
+    path: PathBuf,
+) -> AppResult<u64> {
+    let deck = decks::open(&state.db, &id)?;
+    crate::package::export(&deck, &path, &state.blobs, &state.db)
+}
+
+/// Mete en la biblioteca un `.pbdeck` (ids nuevos, imágenes comprobadas).
+#[tauri::command]
+pub async fn deck_import_package(state: State<'_, AppState>, path: PathBuf) -> AppResult<Deck> {
+    let f = std::fs::File::open(&path)?;
+    crate::package::import(std::io::BufReader::new(f), &state.blobs, &state.db)
+}
+
+#[tauri::command]
+pub fn preset_list(state: State<'_, AppState>, kind: PresetKind) -> AppResult<Vec<Preset>> {
+    presets::list(&state.db, kind)
+}
+
+#[tauri::command]
+pub fn preset_save(
+    state: State<'_, AppState>,
+    kind: PresetKind,
+    name: String,
+    json: String,
+) -> AppResult<Preset> {
+    if name.trim().is_empty() {
+        return Err(crate::error::AppError::new(
+            crate::error::ErrorCode::InvalidInput,
+        ));
+    }
+    presets::save(&state.db, kind, &name, &json)
+}
+
+#[tauri::command]
+pub fn preset_delete(state: State<'_, AppState>, id: String) -> AppResult<()> {
+    presets::delete(&state.db, &id)
 }

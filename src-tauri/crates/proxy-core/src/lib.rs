@@ -16,6 +16,7 @@ pub mod imaging;
 pub mod layout;
 pub mod model;
 pub mod paper;
+pub mod pdf;
 pub mod units;
 
 /// Versión del núcleo, para los metadatos del PDF y los paquetes de deck.

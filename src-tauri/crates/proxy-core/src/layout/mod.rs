@@ -1,9 +1,11 @@
 //! **Geometría de página.** `grid` cuenta casillas; `plan` coloca cada carta
 //! en cada cara de cada hoja. Ver `plan.rs` para las reglas de dúplex y DFC.
 
+pub mod arrange;
 pub mod grid;
 pub mod plan;
 
+pub use arrange::arrange;
 pub use grid::{Grid, RectMm};
 pub use plan::{plan, LineMm, Page, PagePlan, PlanWarning, SheetSide, Slot, SlotFace};
 
