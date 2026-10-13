@@ -3,6 +3,7 @@
 	"private": true,
 	"version": "0.1.0",
 	"type": "module",
+	"packageManager": "pnpm@12.11.2",
 	"scripts": {
 		"dev": "vite",
 		"build": "tsc && vite build",
@@ -59,6 +60,6 @@
 	},
 	"engines": {
 		"node": ">=22",
-		"pnpm": ">=11"
+		"pnpm": ">=12"
 	}
 }
