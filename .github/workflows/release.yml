@@ -1,12 +1,14 @@
-# Instaladores de Linux, Windows y macOS (Fase 9). Se lanza a mano o al subir
-# una etiqueta `v*`, y deja los ficheros en un borrador de release.
+# Instaladores de Linux, Windows y macOS (Fase 9). Se lanza a mano (pestaña
+# Actions → release → Run workflow) y deja los ficheros en un borrador de
+# release con la etiqueta `v<versión de tauri.conf.json>`.
+#
+# 🛑 Solo a mano, no al subir etiquetas: publicar el borrador crea la etiqueta,
+# y con el disparador de etiquetas eso volvía a compilarlo todo (13/10/2026).
 # Sin firma de código en v1: Windows SmartScreen y Gatekeeper avisarán (README).
 name: release
 
 on:
   workflow_dispatch:
-  push:
-    tags: ["v*"]
 
 permissions:
   contents: write
@@ -56,7 +58,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'v__VERSION__' }}
+          tagName: v__VERSION__
           releaseName: "Proxy Builder v__VERSION__"
           releaseBody: "Instaladores de Proxy Builder. Sin firma de código: ver el README."
           releaseDraft: true
