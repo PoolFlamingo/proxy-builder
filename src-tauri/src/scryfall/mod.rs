@@ -3,6 +3,7 @@
 
 pub mod cache;
 pub mod client;
+pub mod fichas;
 pub mod models;
 pub mod nombres;
 pub mod rate;

@@ -117,6 +117,8 @@ pub struct Lectura {
     pub titulo: Vec<String>,
     pub pie: Vec<String>,
     pub resto: Vec<String>,
+    /// Pone «Token» o «Ficha» en algún sitio (el pie o la línea de tipo).
+    pub ficha: bool,
 }
 
 /// Lee la carta entera, a la resolución original de la imagen, y reparte las
@@ -127,12 +129,15 @@ pub fn leer_carta(datos: &Path, img: &RgbaImage) -> AppResult<Lectura> {
     let motor = motor(datos)?;
     let mut l = Lectura::default();
     for (texto, y) in lineas(motor, img.clone())? {
+        if es_de_ficha(&texto) {
+            l.ficha = true;
+        }
         if y < FRANJA_TITULO {
             let t = limpiar(&texto);
             if parece_un_nombre(&t) {
                 l.titulo.push(t);
             }
-        } else if y > FRANJA_PIE {
+        } else if y > FRANJA_PIE || parece_pie(&texto) {
             l.pie.extend(nombre_del_pie(&texto));
         } else {
             let t = limpiar(&texto);
@@ -165,6 +170,28 @@ fn lineas(motor: &OcrEngine, img: RgbaImage) -> AppResult<Vec<(String, f32)>> {
         .collect())
 }
 
+/// ¿Empieza como la línea del pie? Número de colección (o `T002` en las
+/// fichas) y la letra de rareza: «0057 S Menmarch». Hay cartas con el pie más
+/// arriba de lo normal, así que no basta con la altura.
+pub fn parece_pie(linea: &str) -> bool {
+    let mut p = linea.split_whitespace();
+    let numero = p.next().is_some_and(|n| {
+        let digitos = n.chars().filter(char::is_ascii_digit).count();
+        digitos >= 2 && n.chars().all(|c| c.is_ascii_alphanumeric() || c == '/')
+    });
+    let rareza = p
+        .next()
+        .is_some_and(|r| r.chars().count() == 1 && r.chars().all(|c| c.is_ascii_uppercase()));
+    numero && rareza
+}
+
+/// ¿Dice que es una ficha? («T Token», «Ficha de criatura — Guerrero»).
+pub fn es_de_ficha(linea: &str) -> bool {
+    linea
+        .split(|c: char| !c.is_alphanumeric())
+        .any(|w| w.eq_ignore_ascii_case("token") || w.eq_ignore_ascii_case("ficha"))
+}
+
 /// El nombre que pueda haber en una línea del pie: se quitan el número de
 /// colección y la letra de rareza del principio («0001 S Jodah, Archmage
 /// Eternal» → «Jodah, Archmage Eternal»). Las líneas sin minúsculas son el
@@ -183,7 +210,9 @@ pub fn nombre_del_pie(linea: &str) -> Option<String> {
     let nombre = palabras[inicio..].join(" ");
     let minusculas = nombre.chars().any(char::is_lowercase);
     let copyright = nombre.to_lowercase().contains("wizards");
-    (minusculas && !copyright && parece_un_nombre(&nombre)).then_some(nombre)
+    // En las fichas, en el hueco del nombre pone «Token».
+    let ficha = es_de_ficha(&nombre) && nombre.split_whitespace().count() == 1;
+    (minusculas && !copyright && !ficha && parece_un_nombre(&nombre)).then_some(nombre)
 }
 
 /// Descarta el ruido típico de la franja del título: los símbolos de maná y
@@ -262,6 +291,13 @@ mod tests {
         );
         assert_eq!(nombre_del_pie("RTS★ES  S.J."), None);
         assert_eq!(nombre_del_pie("0001 S"), None);
+        assert_eq!(nombre_del_pie("T002 T Token"), None);
+        assert!(parece_pie("0057 S Menmarch"));
+        assert!(parece_pie("T002 T Token"));
+        assert!(!parece_pie("Criatura artefacto legendaria"));
+        assert!(!parece_pie("200 Fl permanente objetivo se"));
+        assert!(es_de_ficha("Ficha de artefacto -Tesoro"));
+        assert!(!es_de_ficha("Fichaje"));
         assert_eq!(nombre_del_pie("TM & © 2024 Wizards of the Coast"), None);
     }
 

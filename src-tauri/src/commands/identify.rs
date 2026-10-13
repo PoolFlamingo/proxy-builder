@@ -17,8 +17,8 @@ use crate::ocr;
 use crate::scryfall::cache;
 use crate::scryfall::client::CardApi;
 use crate::scryfall::models::ScryCard;
-use crate::scryfall::nombres;
 use crate::scryfall::resolve::meta_de;
+use crate::scryfall::{fichas, nombres};
 use crate::state::AppState;
 
 /// Cuántos textos se prueban como mucho (pista + pie + título del OCR).
@@ -72,28 +72,36 @@ pub fn normalizar(s: &str) -> String {
     sin_tildes.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
-/// Parecido entre 0 y 1 (1 − distancia de edición relativa).
+/// Parecido entre 0 y 1 (1 − distancia de edición relativa). Dos letras
+/// cambiadas de sitio cuentan como un solo error («Menmarch» por «Memnarch»):
+/// es el fallo típico de quien escribe el nombre a mano en la carta.
 pub fn parecido(a: &str, b: &str) -> f64 {
     let a: Vec<char> = a.chars().collect();
     let b: Vec<char> = b.chars().collect();
     if a.is_empty() && b.is_empty() {
         return 1.0;
     }
-    let mut fila: Vec<usize> = (0..=b.len()).collect();
-    for (i, ca) in a.iter().enumerate() {
-        let mut anterior = fila[0];
-        fila[0] = i + 1;
-        for (j, cb) in b.iter().enumerate() {
-            let tmp = fila[j + 1];
-            fila[j + 1] = if ca == cb {
-                anterior
-            } else {
-                1 + anterior.min(fila[j]).min(fila[j + 1])
-            };
-            anterior = tmp;
+    let (n, m) = (a.len(), b.len());
+    // Distancia de Damerau (alineamiento óptimo) con tres filas.
+    let mut previa: Vec<usize> = vec![0; m + 1];
+    let mut anterior: Vec<usize> = (0..=m).collect();
+    let mut fila: Vec<usize> = vec![0; m + 1];
+    for i in 1..=n {
+        fila[0] = i;
+        for j in 1..=m {
+            let coste = usize::from(a[i - 1] != b[j - 1]);
+            let mut d = (anterior[j] + 1)
+                .min(fila[j - 1] + 1)
+                .min(anterior[j - 1] + coste);
+            if i > 1 && j > 1 && a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1] {
+                d = d.min(previa[j - 2] + 1);
+            }
+            fila[j] = d;
         }
+        std::mem::swap(&mut previa, &mut anterior);
+        std::mem::swap(&mut anterior, &mut fila);
     }
-    1.0 - fila[b.len()] as f64 / a.len().max(b.len()) as f64
+    1.0 - anterior[m] as f64 / n.max(m) as f64
 }
 
 /// Desde cuánto parecido una propuesta es «probable».
@@ -223,6 +231,33 @@ async fn identificar(
     let mut vistas = HashSet::new();
     let mut probados = HashSet::new();
     let mut cartas = Vec::new();
+
+    // Las fichas: Scryfall no las devuelve sin `include:extras` y casi no las
+    // tiene en otros idiomas, así que se buscan por su tipo en inglés
+    // («Ficha de criatura — Guerrero» → `Warrior`).
+    let fichas = if leido.ficha {
+        fichas::candidatas(leido.titulo.iter().chain(&leido.resto))
+    } else {
+        Vec::new()
+    };
+    let mut primera_ficha: Option<String> = None;
+    for en in &fichas {
+        let q = format!("!\"{en}\" t:token include:extras");
+        let mut halladas = state
+            .scryfall
+            .search(&q, false, 6)
+            .await
+            .unwrap_or_default();
+        // Primero las que se llaman así, no las de dos caras («Dinosaur // Treasure»).
+        halladas.sort_by_key(|c| c.name != *en);
+        for c in halladas {
+            primera_ficha.get_or_insert_with(|| c.id.clone());
+            if vistas.insert(c.id.clone()) {
+                cartas.push(c);
+            }
+        }
+    }
+
     let a_buscar = seguros.iter().chain(&aproximados).chain(&principales);
     for t in a_buscar {
         if probados.len() >= MAX_TEXTOS || !probados.insert(normalizar(t)) {
@@ -242,7 +277,16 @@ async fn identificar(
     // Los aproximados no puntúan: la propuesta se mide contra lo leído, y así
     // una letra mal leída sale como «probable» para que se revise.
     let textos: Vec<String> = seguros.iter().chain(&principales).cloned().collect();
-    let (best, confidence) = puntuar(&candidates, &textos);
+    let (mut best, mut confidence) = puntuar(&candidates, &textos);
+    // Una ficha encontrada por su tipo traducido no se parece a lo leído
+    // («Guerrero» no es «Warrior»), pero es la propuesta; hay varias versiones
+    // de cada ficha, así que se deja como probable para revisarla.
+    if confidence == Confidence::None {
+        if let Some(id) = primera_ficha {
+            best = Some(id);
+            confidence = Confidence::Probable;
+        }
+    }
     // La propuesta, la primera de la lista.
     if let Some(i) = best
         .as_ref()
@@ -403,6 +447,9 @@ mod tests {
         assert_eq!(parecido("abc", "abc"), 1.0);
         assert!(parecido("birds of paradise", "birds of paradlse") > 0.9);
         assert!(parecido("sol ring", "city of brass") < 0.5);
+        // Dos letras cambiadas de sitio: un error.
+        assert_eq!(parecido("menmarch", "memnarch"), 0.875);
+        assert_eq!(parecido("", "abc"), 0.0);
     }
 
     #[test]
@@ -436,5 +483,53 @@ mod tests {
         )];
         let t = vec!["Insectile Aberration".to_string()];
         assert_eq!(puntuar(&cs, &t).1, Confidence::Exact);
+    }
+}
+
+/// Prueba en vivo (red y modelos del OCR): identifica las imágenes de una
+/// carpeta. `PB_OCR_DATOS=<carpeta con modelos/> PB_ID_DIR=<carpeta con
+/// imágenes> cargo test --release --lib identify::en_vivo -- --ignored --nocapture`.
+#[cfg(test)]
+mod en_vivo {
+    use super::*;
+    use crate::state::Paths;
+
+    #[tokio::test]
+    #[ignore]
+    async fn identifica_una_carpeta() {
+        let tmp = std::env::temp_dir().join("pb-identify");
+        let _ = std::fs::remove_dir_all(&tmp);
+        let datos = tmp.join("datos");
+        std::fs::create_dir_all(&datos).unwrap();
+        let origen = std::path::PathBuf::from(std::env::var("PB_OCR_DATOS").unwrap());
+        std::os::unix::fs::symlink(origen.join("modelos"), datos.join("modelos")).unwrap();
+        let state = AppState::open(Paths {
+            data: datos,
+            cache: tmp.join("cache"),
+        })
+        .unwrap();
+        let mut rutas: Vec<_> = std::fs::read_dir(std::env::var("PB_ID_DIR").unwrap())
+            .unwrap()
+            .map(|e| e.unwrap().path())
+            .filter(|p| p.extension().is_some_and(|e| e == "png"))
+            .collect();
+        rutas.sort();
+        for (ruta, img) in rutas
+            .iter()
+            .zip(state.blobs.import_files(&state.db, &rutas).unwrap())
+        {
+            let r = identificar(&state, &img.blob, None, true).await.unwrap();
+            let elegida = r
+                .best
+                .as_ref()
+                .and_then(|b| r.candidates.iter().find(|c| &c.id == b));
+            println!(
+                "{:?}: {:?} → {:?} ({:?})",
+                ruta.file_name().unwrap(),
+                r.lines,
+                elegida.map(|c| (&c.name, &c.set)),
+                r.confidence
+            );
+        }
     }
 }

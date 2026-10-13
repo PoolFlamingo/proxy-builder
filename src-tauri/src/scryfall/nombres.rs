@@ -30,6 +30,21 @@ static INDICE: OnceCell<Arc<Indice>> = OnceCell::const_new();
 #[derive(Debug, Default)]
 pub struct Indice {
     exactos: HashMap<String, String>,
+    /// Los mismos, con las letras que el OCR confunde igualadas (`plegar`).
+    plegados: HashMap<String, String>,
+}
+
+/// Iguala lo que el OCR confunde: `l`, `1` y `|` con la `i` («lsland»), y el
+/// `0` con la `o`.
+pub fn plegar(normalizado: &str) -> String {
+    normalizado
+        .chars()
+        .map(|c| match c {
+            'l' | '1' | '|' => 'i',
+            '0' => 'o',
+            c => c,
+        })
+        .collect()
 }
 
 /// Cómo se ha encontrado un nombre en una línea.
@@ -50,7 +65,11 @@ impl Indice {
                 }
             }
         }
-        Indice { exactos }
+        let plegados = exactos
+            .iter()
+            .map(|(k, v)| (plegar(k), v.clone()))
+            .collect();
+        Indice { exactos, plegados }
     }
 
     pub fn len(&self) -> usize {
@@ -63,7 +82,11 @@ impl Indice {
 
     /// El nombre que es exactamente esta línea (sin tildes ni signos).
     pub fn exacto(&self, linea: &str) -> Option<String> {
-        self.exactos.get(&normalizar(linea)).cloned()
+        let n = normalizar(linea);
+        self.exactos
+            .get(&n)
+            .or_else(|| self.plegados.get(&plegar(&n)))
+            .cloned()
     }
 
     /// El nombre con el que empieza la línea, el más largo («Jodah, Archmage
@@ -176,6 +199,9 @@ mod tests {
             Some("Delver of Secrets // Insectile Aberration")
         );
         assert_eq!(i.exacto("Rimuru, Rey Demonio"), None);
+        // Lo que el OCR confunde.
+        assert_eq!(i.exacto("lsland").as_deref(), Some("Island"));
+        assert_eq!(i.exacto("S0l Ring").as_deref(), Some("Sol Ring"));
     }
 
     #[test]
