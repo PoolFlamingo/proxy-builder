@@ -34,11 +34,7 @@ export function SaveIndicator() {
 	}[guardado];
 
 	const etiqueta = (
-		<span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-			<span className="max-w-48 truncate font-medium text-foreground">{nombre}</span>
-			<span aria-hidden>·</span>
-			{contenido}
-		</span>
+		<span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">{contenido}</span>
 	);
 	return guardado === "error" ? (
 		<WithTooltip content={mensaje(error)}>{etiqueta}</WithTooltip>

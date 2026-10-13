@@ -5,6 +5,7 @@ import type { CalibrationTextsInput } from "@/bindings/CalibrationTextsInput";
 import type { CardSummary } from "@/bindings/CardSummary";
 import type { Deck } from "@/bindings/Deck";
 import type { DeckCard } from "@/bindings/DeckCard";
+import type { DeckStats } from "@/bindings/DeckStats";
 import type { DeckSummary } from "@/bindings/DeckSummary";
 import type { ExportEstimate } from "@/bindings/ExportEstimate";
 import type { FaceImage } from "@/bindings/FaceImage";
@@ -60,6 +61,7 @@ export interface Commands {
 	set_cards: { args: { code: string; typeFilter: string | null }; result: CardSummary[] };
 	import_archidekt: { args: { url: string; includeSideboard: boolean }; result: ArchidektImport };
 	arrange_cards: { args: { cards: DeckCard[] }; result: string[] };
+	deck_stats: { args: { cards: DeckCard[] }; result: DeckStats };
 	export_pdf: { args: { deck: Deck; path: string }; result: number };
 	export_estimate: { args: { deck: Deck }; result: ExportEstimate };
 	export_calibration: {
@@ -67,6 +69,8 @@ export interface Commands {
 		result: string;
 	};
 	export_cancel: { args: { jobId: number }; result: boolean };
+	export_open: { args: { path: string }; result: null };
+	export_reveal: { args: { path: string }; result: null };
 	cache_stats: { args: Record<string, never>; result: CacheStats };
 	cache_clear: { args: Record<string, never>; result: CacheStats };
 	deck_export_package: { args: { id: string; path: string }; result: number };

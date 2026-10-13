@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLang } from "@/components/language-provider";
 import { abrirDeckInicial, iniciarAutoguardado, useDeck } from "@/stores/deck-store";
+import { iniciarPlan } from "@/stores/plan-store";
 
 /**
  * Al arrancar: abre el último deck (o crea uno), enciende el autoguardado y
@@ -12,8 +13,12 @@ export function useDeckInicial(): unknown {
 
 	useEffect(() => {
 		const parar = iniciarAutoguardado();
+		const pararPlan = iniciarPlan();
 		abrirDeckInicial(t("Deck sin título")).catch(setError);
-		return parar;
+		return () => {
+			parar();
+			pararPlan();
+		};
 		// Solo al montar: el nombre del deck nuevo se decide una vez.
 	}, []);
 

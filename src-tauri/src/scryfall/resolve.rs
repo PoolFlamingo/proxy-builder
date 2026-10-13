@@ -127,6 +127,19 @@ impl Peticion {
         }
     }
 
+    /// El nombre que se manda a Scryfall: de una carta de dos caras
+    /// (`Delver of Secrets // Insectile Aberration`) solo la primera, que es
+    /// lo que entiende `/cards/collection` (con el nombre entero no la
+    /// encuentra). La respuesta se reconoce igual por `responde_a`.
+    fn nombre_para_buscar(&self) -> String {
+        self.name
+            .split(" // ")
+            .next()
+            .unwrap_or(&self.name)
+            .trim()
+            .to_string()
+    }
+
     fn identificador(&self) -> Identifier {
         match (&self.set, &self.collector) {
             (Some(s), Some(n)) => Identifier::SetNumber {
@@ -134,11 +147,11 @@ impl Peticion {
                 collector_number: n.clone(),
             },
             (Some(s), None) => Identifier::NameSet {
-                name: self.name.clone(),
+                name: self.nombre_para_buscar(),
                 set: s.clone(),
             },
             _ => Identifier::Name {
-                name: self.name.clone(),
+                name: self.nombre_para_buscar(),
             },
         }
     }
@@ -574,6 +587,18 @@ pub(crate) mod tests {
         .await
         .unwrap();
         (r, api)
+    }
+
+    #[test]
+    fn una_dfc_se_pide_por_su_primera_cara() {
+        let l = parse("1 Delver of Secrets // Insectile Aberration");
+        let p = Peticion::de(&l.lines[0]);
+        assert_eq!(
+            p.identificador(),
+            Identifier::Name {
+                name: "Delver of Secrets".into()
+            }
+        );
     }
 
     #[tokio::test]
