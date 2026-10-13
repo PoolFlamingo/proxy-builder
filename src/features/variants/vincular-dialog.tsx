@@ -22,7 +22,7 @@ import { call } from "@/lib/ipc";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
 import { RejillaCartas } from "./rejilla-cartas";
-import { coincidencia, desvincular, vincular } from "./vincular";
+import { desvincular, vincular } from "./vincular";
 
 /**
  * «Vincular con Scryfall»: decir qué carta real es una imagen propia. Se
@@ -67,7 +67,7 @@ function Contenido({ carta }: { carta: DeckCard }) {
 				setLeido(r.lines);
 				setOcrListo(true);
 			}
-			setElegida(coincidencia(r.candidates, [texto, ...r.lines]) ?? r.candidates[0] ?? null);
+			setElegida(r.candidates.find((c) => c.id === r.best) ?? r.candidates[0] ?? null);
 		} catch (e) {
 			toast.error(mensaje(e));
 		} finally {

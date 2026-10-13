@@ -32,7 +32,6 @@ import { Progress } from "@/components/ui/progress";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { WithTooltip } from "@/components/ui/with-tooltip";
-import { autoVincular } from "@/features/variants/vincular";
 import type { AnchoMiniatura } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
 import { useDeck } from "@/stores/deck-store";
@@ -88,7 +87,6 @@ export function DecklistPanel() {
 	const [url, setUrl] = useState("");
 	const [conBanquillo, setConBanquillo] = useState(false);
 	const [importando, setImportando] = useState(false);
-	const [conOcr, setConOcr] = useState(false);
 	const layout = useDefaultLayout({ id: "proxybuilder.panel-lista", storage: localStorage });
 
 	const intentar = (f: () => Promise<unknown>) => async () => {
@@ -295,26 +293,27 @@ export function DecklistPanel() {
 										<RefreshCw />
 										{t("Volver al reverso genérico")}
 									</Button>
-									<div className="flex flex-col gap-1.5 rounded-md border border-dashed p-2">
+									<div className="flex flex-col gap-1.5">
 										<WithTooltip
 											content={t(
-												"Busca en Scryfall la carta real de cada imagen propia, por el nombre del fichero o leyendo el título. Solo vincula las que coinciden de verdad.",
+												"Busca en Scryfall la carta real de cada imagen propia (por el nombre del fichero o leyendo el título) y te enseña lo que ha encontrado para que lo revises antes de vincular. Si hay cartas seleccionadas, solo esas.",
 											)}
 										>
 											<Button
 												size="sm"
 												variant="outline"
-												onClick={intentar(() => autoVincular(t, conOcr))}
+												onClick={() => {
+													const sel = useUi.getState().seleccion;
+													useUi
+														.getState()
+														.abrir({ tipo: "vincularLote", ids: sel.length > 0 ? sel : undefined });
+												}}
 												disabled={ocupado}
 											>
 												<Link2 />
 												{t("Vincular con Scryfall")}
 											</Button>
 										</WithTooltip>
-										<label className="flex items-center gap-2 text-xs">
-											<Checkbox checked={conOcr} onCheckedChange={(v) => setConOcr(v === true)} />
-											{t("Leer el título con OCR (más lento)")}
-										</label>
 									</div>
 									<p className="text-[11px] text-muted-foreground">
 										{t(
@@ -458,12 +457,7 @@ function PiePanel() {
 								{trabajo.hechas}/{trabajo.total}
 							</span>
 						)}
-						<Button
-							size="xs"
-							variant="ghost"
-							onClick={cancelarTrabajo}
-							disabled={!trabajo.jobId && trabajo.tipo !== "vincular"}
-						>
+						<Button size="xs" variant="ghost" onClick={cancelarTrabajo} disabled={!trabajo.jobId}>
 							<X />
 							{t("Cancelar")}
 						</Button>

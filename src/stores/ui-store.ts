@@ -22,6 +22,8 @@ export type Dialogo =
 	| { tipo: "editar"; id: string }
 	| { tipo: "variante"; id: string }
 	| { tipo: "vincular"; id: string }
+	/** Revisión en bloque: de las cartas `ids` o, sin ellas, de todo el deck. */
+	| { tipo: "vincularLote"; ids?: string[] }
 	| { tipo: "anadir"; en?: number }
 	| { tipo: "moverA"; ids: string[] }
 	| { tipo: "sets" }

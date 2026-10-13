@@ -11,6 +11,7 @@ import { StatsDialog } from "@/features/stats/stats-dialog";
 import { AddCardDialog } from "@/features/variants/add-card-dialog";
 import { VariantDialog } from "@/features/variants/variant-dialog";
 import { VincularDialog } from "@/features/variants/vincular-dialog";
+import { VincularLoteDialog } from "@/features/variants/vincular-lote";
 
 export default function App() {
 	useDeckInicial();
@@ -25,6 +26,7 @@ export default function App() {
 			<AddCardDialog />
 			<VariantDialog />
 			<VincularDialog />
+			<VincularLoteDialog />
 			<CardEditorDialog />
 			<MoverADialog />
 			<StatsDialog />
