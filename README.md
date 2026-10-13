@@ -57,10 +57,12 @@ pnpm test:rust        # tests de Rust
 
 `pnpm tauri build` genera los de la plataforma en la que se ejecuta. El
 workflow `.github/workflows/release.yml` genera los de Linux, Windows y macOS
-(Intel y Apple Silicon) en un borrador de release: se sube la versión en
-`package.json`, `src-tauri/tauri.conf.json` y `src-tauri/Cargo.toml`, y se
-lanza a mano desde la pestaña Actions. Al publicar el borrador se crea la
-etiqueta.
+(Intel y Apple Silicon) en un borrador de release. Para sacar una versión:
+`pnpm release patch` (o `minor`, `major`, `X.Y.Z`; con `--dry` solo comprueba).
+Sube la versión en los cuatro sitios, la commitea y la sube, espera a la CI,
+lanza el workflow a mano (pestaña Actions → release) y, al terminar, pregunta si
+publicar el borrador. Al publicarlo se crea la etiqueta. Necesita `gh` con la
+sesión iniciada.
 
 Los instaladores no van firmados: Windows (SmartScreen) avisará de «editor
 desconocido» (Más información → Ejecutar de todas formas) y macOS (Gatekeeper)
