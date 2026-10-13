@@ -296,7 +296,7 @@ export function DecklistPanel() {
 									<div className="flex flex-col gap-1.5">
 										<WithTooltip
 											content={t(
-												"Busca en Scryfall la carta real de cada imagen propia (por el nombre del fichero o leyendo la carta: el título, el nombre original del pie o cualquier línea) y te enseña lo que ha encontrado para que lo revises antes de vincular. Si hay cartas seleccionadas, solo esas.",
+												"Busca en Scryfall la carta real de cada imagen propia (por el nombre del fichero o leyendo la carta: el título, el nombre original del pie o cualquier línea) y te enseña lo que ha encontrado para que lo revises antes de vincular. Con varias cartas seleccionadas, de partida solo esas.",
 											)}
 										>
 											<Button
@@ -304,9 +304,14 @@ export function DecklistPanel() {
 												variant="outline"
 												onClick={() => {
 													const sel = useUi.getState().seleccion;
-													useUi
-														.getState()
-														.abrir({ tipo: "vincularLote", ids: sel.length > 0 ? sel : undefined });
+													// Una sola carta seleccionada suele ser de un clic
+													// anterior (duplicar, el menú…): de partida, todo el
+													// deck; el diálogo deja elegir.
+													useUi.getState().abrir({
+														tipo: "vincularLote",
+														ids: sel.length > 0 ? sel : undefined,
+														soloSeleccion: sel.length > 1,
+													});
 												}}
 												disabled={ocupado}
 											>

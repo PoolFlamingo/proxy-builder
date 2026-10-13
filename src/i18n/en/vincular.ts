@@ -1,5 +1,7 @@
 // Vincular cartas propias con Scryfall, zoom con la rueda y escala de la interfaz.
 export const VINCULAR: Record<string, string> = {
+	"Todo el deck ({n})": "Whole deck ({n})",
+	"Solo las seleccionadas ({n})": "Selected only ({n})",
 	"Vincular con Scryfall": "Link to Scryfall",
 	"Ctrl + rueda del ratón para acercar o alejar": "Ctrl + mouse wheel to zoom in or out",
 	"Zoom de la vista previa": "Preview zoom",
@@ -22,8 +24,8 @@ export const VINCULAR: Record<string, string> = {
 	"Vincular con {carta}": "Link to {carta}",
 	Vincular: "Link",
 	"Imagen propia vinculada a su carta de Scryfall": "Custom image linked to its Scryfall card",
-	"Busca en Scryfall la carta real de cada imagen propia (por el nombre del fichero o leyendo la carta: el título, el nombre original del pie o cualquier línea) y te enseña lo que ha encontrado para que lo revises antes de vincular. Si hay cartas seleccionadas, solo esas.":
-		"Looks up the real Scryfall card for each custom image (by file name or by reading the card: the title, the original name at the bottom or any line) and shows you what it found so you can review it before linking. If cards are selected, only those.",
+	"Busca en Scryfall la carta real de cada imagen propia (por el nombre del fichero o leyendo la carta: el título, el nombre original del pie o cualquier línea) y te enseña lo que ha encontrado para que lo revises antes de vincular. Con varias cartas seleccionadas, de partida solo esas.":
+		"Looks up the real Scryfall card for each custom image (by file name or by reading the card: the title, the original name at the bottom or any line) and shows you what it found so you can review it before linking. With several cards selected, only those to begin with.",
 	"Vincular con Scryfall las seleccionadas…": "Link selected to Scryfall…",
 	"quedan ~{n} s": "~{n} s left",
 	"quedan ~{n} min": "~{n} min left",
