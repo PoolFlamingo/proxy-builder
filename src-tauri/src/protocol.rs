@@ -159,6 +159,7 @@ mod tests {
             back: false,
             bleed_mm: 1.0,
             bleed_mode: BleedMode::Clamp,
+            fill_corners: false,
             card: CardSize::MTG,
         };
         URL_SAFE_NO_PAD.encode(serde_json::to_vec(&p).unwrap())

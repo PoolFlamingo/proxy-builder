@@ -13,7 +13,13 @@ import type { RowOffsets } from "./RowOffsets";
 /**
  * Todo lo que decide cómo sale el papel.
  */
-export type PrintSettings = { paper: PaperFormat, landscape: boolean, cardSize: CardSize, minMarginMm: number, gapMm: number, bleedMm: number, bleedOnBacks: boolean, bleedMode: BleedMode, cutGuides: CutGuides, edgeDarkening: EdgeDarkening, duplex: Duplex, interleaveDfc: boolean, dfcFilter: DfcFilter, quality: Quality, encoding: Encoding, rowOffsets: RowOffsets, 
+export type PrintSettings = { paper: PaperFormat, landscape: boolean, cardSize: CardSize, minMarginMm: number, gapMm: number, bleedMm: number, bleedOnBacks: boolean, bleedMode: BleedMode, 
+/**
+ * Pintar del color del borde las esquinas redondeadas (transparentes o
+ * claras) de las imágenes. Apagado de fábrica (Pablo, 13/10/2026): las
+ * esquinas transparentes salen del color del papel.
+ */
+fillCorners: boolean, cutGuides: CutGuides, edgeDarkening: EdgeDarkening, duplex: Duplex, interleaveDfc: boolean, dfcFilter: DfcFilter, quality: Quality, encoding: Encoding, rowOffsets: RowOffsets, 
 /**
  * Partir el PDF cada N hojas (`None` = un solo fichero).
  */

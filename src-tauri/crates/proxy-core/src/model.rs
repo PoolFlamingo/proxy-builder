@@ -436,6 +436,11 @@ pub struct PrintSettings {
     pub bleed_mm: f64,
     pub bleed_on_backs: bool,
     pub bleed_mode: BleedMode,
+    /// Pintar del color del borde las esquinas redondeadas (transparentes o
+    /// claras) de las imágenes. Apagado de fábrica (Pablo, 13/10/2026): las
+    /// esquinas transparentes salen del color del papel.
+    #[serde(default)]
+    pub fill_corners: bool,
     pub cut_guides: CutGuides,
     pub edge_darkening: EdgeDarkening,
     pub duplex: Duplex,
@@ -463,6 +468,7 @@ impl Default for PrintSettings {
             bleed_mm: 0.0,
             bleed_on_backs: true,
             bleed_mode: BleedMode::Clamp,
+            fill_corners: false,
             cut_guides: CutGuides::default(),
             edge_darkening: EdgeDarkening::default(),
             duplex: Duplex::Off,

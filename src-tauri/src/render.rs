@@ -36,6 +36,8 @@ pub struct PreviewParams {
     pub back: bool,
     pub bleed_mm: f64,
     pub bleed_mode: BleedMode,
+    #[serde(default)]
+    pub fill_corners: bool,
     pub card: CardSize,
 }
 
@@ -59,6 +61,7 @@ pub fn spec_de_casilla(
         card: s.card_size,
         bleed_mm: slot.bleed_full_mm,
         bleed_mode: s.bleed_mode,
+        fill_corners: s.fill_corners,
         target: SpecTarget::Dpi(s.quality.dpi()),
         format: s.encoding.format,
         jpeg_quality: s.encoding.jpeg_quality,
@@ -74,6 +77,7 @@ pub fn spec_de_miniatura(blob: &str, img: &FaceImage, p: &PreviewParams, ancho: 
         card: p.card,
         bleed_mm: p.bleed_mm,
         bleed_mode: p.bleed_mode,
+        fill_corners: p.fill_corners,
         target: SpecTarget::Width(ancho),
         format: ImageFormat::Jpeg,
         jpeg_quality: 85,

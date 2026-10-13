@@ -65,6 +65,7 @@ const PORTADA = {
 	back: false,
 	bleedMm: 0,
 	bleedMode: "clamp" as const,
+	fillCorners: false,
 	card: { widthMm: 63, heightMm: 88 },
 };
 
