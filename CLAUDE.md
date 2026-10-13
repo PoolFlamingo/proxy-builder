@@ -67,10 +67,25 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
   `rustfmt --edition 2021` a pelo, nunca `cargo fmt`.
 - Clippy con `-D warnings`; nada de `unwrap()`/`expect()` fuera de tests
   (`#![cfg_attr(not(test), deny(...))]`).
-- 🟡 Temporal: `knip.json` ignora `src/components/ui/**`, `src/lib/ipc.ts` y
-  varias dependencias que aún no usa nadie. Se quita al cerrar la Fase 6.
 - Usar siempre `codebase-memory-mcp` y reindexar el proyecto al cerrar cada
   fase.
+
+## Mapa rápido
+
+- `src/features/<área>/`: `decklist` (panel izquierdo y sus acciones),
+  `preview` (hojas, casillas, menú, arrastre), `export` (panel derecho,
+  alinear filas, presets), `variants` (añadir carta, variantes, rejilla de
+  Scryfall), `card-editor`, `library`, `stats`, `set-browser`, `shell`.
+- `src/stores/`: `deck-store` (deck, historial, autoguardado), `plan-store`
+  (el `PagePlan` de Rust con 100 ms de espera), `ui-store` (zoom, selección,
+  diálogos, preferencias), `trabajo-store` (el trabajo largo en marcha).
+- `src/lib/trabajos.ts`: lanzar un trabajo de Rust con eventos de progreso
+  (escucha antes de lanzar). `src/lib/image-url.ts`: URLs de `pbimg://`.
+- Rust: `commands/{cards,decklist,export,layout,library,stats}.rs`,
+  `package.rs` (.pbdeck), `render.rs` + `protocol.rs` (miniaturas),
+  `proxy-core::{layout,imaging,pdf,stats,decklist}`.
+- Valores de fábrica (Pablo, 13/10/2026): 2 mm de separación en blanco,
+  sangrado 0 y guías de corte apagadas.
 
 ## Forma de trabajo
 
@@ -78,3 +93,11 @@ Se programa y se pasan los tests en la máquina de la nube (con WebKitGTK
 instalado para compilar el crate de la app), se sincroniza a
 `/home/estigio/Projects/Tauri/proxy-builder` y Pablo arranca la app en su
 equipo. Los planes (`plans/`) no se versionan.
+
+- Sincronizar: `git bundle` en la nube → `tmp/` de Pablo → `git fetch` del
+  bundle y `git merge --ff-only`.
+- Probar la ventana en la nube: `Xvfb :99` y la app con
+  `WEBKIT_DISABLE_COMPOSITING_MODE=1 WEBKIT_DISABLE_DMABUF_RENDERER=1`. Sin
+  eso, en una pantalla sin GPU las animaciones de entrada de los diálogos no
+  avanzan y quedan invisibles (pero abiertos y tapando los clics). En el
+  equipo de Pablo no hace falta.
