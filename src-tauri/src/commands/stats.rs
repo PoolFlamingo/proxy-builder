@@ -183,7 +183,15 @@ pub async fn deck_stats(
         .filter(|c| !matches!(c.source, CardSource::Blank))
         .map(|c| {
             let es_token = matches!(c.source, CardSource::Token { .. });
-            match id_scryfall(c).and_then(|id| datos.get(id)) {
+            let dato = id_scryfall(c).and_then(|id| datos.get(id));
+            // Una propia vinculada a una ficha también es una ficha.
+            let es_token = es_token
+                || dato.is_some_and(|s| {
+                    s.type_line
+                        .as_deref()
+                        .is_some_and(|t| t.starts_with("Token"))
+                });
+            match dato {
                 Some(s) => entrada(
                     c,
                     s,

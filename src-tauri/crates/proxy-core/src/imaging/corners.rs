@@ -57,6 +57,12 @@ pub fn color_de_borde(img: &RgbaImage) -> [u8; 4] {
     [mediana(r), mediana(g), mediana(bb), 255]
 }
 
+/// Qué parte de la caja de una esquina puede ocupar lo que se rellena. Lo que
+/// queda fuera del arco de una esquina redondeada es, como mucho, un 21 % del
+/// cuadrado de su radio (1 − π/4); si lo inundado es más, no es una esquina
+/// sino parte del dibujo (una franja, un fondo) y no se toca.
+const MAX_ESQUINA: f32 = 0.3;
+
 /// Radio de la esquina redondeada, medido en la diagonal de la esquina
 /// superior izquierda: el primer píxel opaco está a `r·(1 − 1/√2)` del vértice.
 fn radio_por_alfa(img: &RgbaImage) -> Option<u32> {
@@ -117,6 +123,10 @@ pub fn fill(img: &mut RgbaImage) -> [u8; 4] {
     }
 
     // (2) Sin alfa: inundar desde cada vértice, sin salir de una caja del 4 %.
+    // 🛑 Solo si lo inundado tiene forma de esquina redondeada (un trocito de la
+    // caja). En una carta a sangre con una franja oscura abajo, la «esquina» es
+    // la franja entera: llenaba toda la caja y salía un cuadrado del color del
+    // borde en cada esquina de abajo (Pablo, 13/10/2026).
     let caja = ((w as f32) * 0.04).round().max(2.0) as u32;
     for (vx, vy) in [(0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1)] {
         let semilla = img.get_pixel(vx, vy).0;
@@ -127,6 +137,7 @@ pub fn fill(img: &mut RgbaImage) -> [u8; 4] {
         let y0 = if vy == 0 { 0 } else { h - caja };
         let mut pila = vec![(vx, vy)];
         let mut visto = vec![false; (caja * caja) as usize];
+        let mut inundados = Vec::new();
         while let Some((x, y)) = pila.pop() {
             let i = ((y - y0) * caja + (x - x0)) as usize;
             if visto[i] {
@@ -136,7 +147,7 @@ pub fn fill(img: &mut RgbaImage) -> [u8; 4] {
             if distancia(img.get_pixel(x, y).0, semilla) > 0.12 {
                 continue;
             }
-            img.put_pixel(x, y, Rgba(borde));
+            inundados.push((x, y));
             if x > x0 {
                 pila.push((x - 1, y));
             }
@@ -149,6 +160,18 @@ pub fn fill(img: &mut RgbaImage) -> [u8; 4] {
             if y + 1 < y0 + caja {
                 pila.push((x, y + 1));
             }
+        }
+        // Una esquina redondeada llega más o menos igual de lejos por el canto
+        // de arriba (o abajo) que por el de al lado; una franja, no.
+        let por_fila = inundados.iter().filter(|(_, y)| *y == vy).count() as f32;
+        let por_columna = inundados.iter().filter(|(x, _)| *x == vx).count() as f32;
+        let simetrica =
+            (por_fila - por_columna).abs() <= (0.25 * por_fila.max(por_columna)).max(2.0);
+        if !simetrica || inundados.len() as f32 > MAX_ESQUINA * (caja * caja) as f32 {
+            continue;
+        }
+        for (x, y) in inundados {
+            img.put_pixel(x, y, Rgba(borde));
         }
     }
     borde
@@ -237,10 +260,69 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn una_carta_a_sangre_con_franja_oscura_abajo_no_cambia() {
+        // Arte a sangre (cielo claro arriba, verde en medio) con una franja
+        // negra abajo de lado a lado, como las tierras de arte completo: las
+        // esquinas de abajo son negras y distintas del «borde», pero no son
+        // esquinas redondeadas y no se pintan.
+        let (w, h) = (745u32, 1040u32);
+        let mut img = RgbaImage::from_fn(w, h, |_, y| {
+            if y < 300 {
+                Rgba([150, 190, 230, 255])
+            } else if y < h - 60 {
+                Rgba([60, 140, 50, 255])
+            } else {
+                Rgba([5, 5, 5, 255])
+            }
+        });
+        let antes = img.clone();
+        fill(&mut img);
+        assert_eq!(img, antes);
+
+        // Y con una franja estrecha (menos alta que la caja de la esquina).
+        let mut img = RgbaImage::from_fn(w, h, |_, y| {
+            if y < h - 6 {
+                Rgba([40, 90, 200, 255])
+            } else {
+                Rgba([5, 5, 5, 255])
+            }
+        });
+        let antes = img.clone();
+        fill(&mut img);
+        assert_eq!(img, antes);
+    }
+
+    #[test]
     fn una_carta_de_borde_blanco_no_cambia() {
         let mut img = carta(745, 1040, [250, 250, 250, 255], [255, 255, 255, 255]);
         let antes = img.clone();
         fill(&mut img);
         assert_eq!(img, antes);
+    }
+}
+
+/// Prueba con una imagen de verdad: `PB_IMG=<png> cargo test -p proxy-core
+/// corners::en_vivo -- --ignored --nocapture` dice cuántos píxeles cambia.
+#[cfg(test)]
+mod en_vivo {
+    #[test]
+    #[ignore]
+    fn cuantos_pixeles_cambia() {
+        let bytes = std::fs::read(std::env::var("PB_IMG").unwrap()).unwrap();
+        let img = crate::imaging::decode::decode(&bytes).unwrap();
+        let mut despues = img.clone();
+        super::fill(&mut despues);
+        let cambiados = img
+            .pixels()
+            .zip(despues.pixels())
+            .filter(|(a, b)| a != b)
+            .count();
+        println!("{cambiados} píxeles cambiados");
+        for (x, y, p) in img.enumerate_pixels() {
+            if p != despues.get_pixel(x, y) {
+                println!("  ({x},{y}) {:?} → {:?}", p.0, despues.get_pixel(x, y).0);
+                break;
+            }
+        }
     }
 }
