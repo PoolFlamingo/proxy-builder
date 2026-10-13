@@ -11,6 +11,7 @@ export const VISTA: Record<string, string> = {
 	"Página {n} de {total}": "Page {n} of {total}",
 	Acercar: "Zoom in",
 	Alejar: "Zoom out",
+	"Volver al 100 %": "Back to 100%",
 	"Auto ordenar": "Auto arrange",
 	"Añadir página": "Add page",
 	"El deck está vacío": "The deck is empty",

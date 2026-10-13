@@ -81,11 +81,12 @@ function Contenido({ carta }: { carta: DeckCard }) {
 		// Solo al abrir.
 	}, []);
 
-	const aceptar = async () => {
-		if (!elegida) return;
+	/** Vincula con la elegida (o con la que se pase: el doble clic). */
+	const aceptar = async (c: CardSummary | null = elegida) => {
+		if (!c || ocupado !== null) return;
 		setOcupado("vincular");
 		try {
-			const nombre = await vincular(carta.id, elegida.id);
+			const nombre = await vincular(carta.id, c.id);
 			useUi.getState().anunciar(t("Vinculada con {carta}", { carta: nombre }));
 			useUi.getState().abrir(null);
 		} catch (e) {
@@ -186,7 +187,9 @@ function Contenido({ carta }: { carta: DeckCard }) {
 									elegidas={new Set(elegida ? [elegida.id] : [])}
 									onElegir={(c) => setElegida(c)}
 									onDoble={(c) => {
+										// Doble clic = elegirla y vincular.
 										setElegida(c);
+										void aceptar(c);
 									}}
 								/>
 							)}
@@ -210,7 +213,7 @@ function Contenido({ carta }: { carta: DeckCard }) {
 				) : (
 					<span />
 				)}
-				<Button size="sm" onClick={aceptar} disabled={!elegida || ocupado !== null}>
+				<Button size="sm" onClick={() => aceptar()} disabled={!elegida || ocupado !== null}>
 					{ocupado === "vincular" ? <Loader2 className="animate-spin" /> : <Link2 />}
 					{elegida
 						? t("Vincular con {carta}", { carta: elegida.printedName ?? elegida.name })

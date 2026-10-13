@@ -16,6 +16,7 @@ import {
 	Layers,
 	Minus,
 	Plus,
+	RotateCcw,
 	SquareStack,
 	Wand2,
 } from "lucide-react";
@@ -268,6 +269,17 @@ export function PreviewPane() {
 					>
 						<Plus />
 					</Button>
+					<WithTooltip content={t("Volver al 100 %")}>
+						<Button
+							size="icon-xs"
+							variant="ghost"
+							onClick={() => setZoom(1)}
+							disabled={zoom === 1}
+							aria-label={t("Volver al 100 %")}
+						>
+							<RotateCcw />
+						</Button>
+					</WithTooltip>
 					<Button size="xs" onClick={() => useUi.getState().abrir({ tipo: "anadir" })}>
 						<Plus />
 						{t("Añadir carta")}
