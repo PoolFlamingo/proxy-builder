@@ -3,11 +3,23 @@
 // gana la última, en silencio); `pnpm idiomas` lo comprueba.
 
 import { AJUSTES } from "./ajustes";
+import { BIBLIOTECA } from "./biblioteca";
+import { CARTAS } from "./cartas";
 import { COMUN } from "./comun";
+import { EXPORTAR } from "./exportar";
+import { EXTRAS } from "./extras";
+import { LISTA } from "./lista";
 import { SHELL } from "./shell";
+import { VISTA } from "./vista";
 
 export const EN: Record<string, string> = {
 	...COMUN,
 	...AJUSTES,
 	...SHELL,
+	...LISTA,
+	...VISTA,
+	...EXPORTAR,
+	...BIBLIOTECA,
+	...CARTAS,
+	...EXTRAS,
 };

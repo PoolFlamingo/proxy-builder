@@ -260,6 +260,7 @@ pub struct CutGuides {
 impl Default for CutGuides {
     fn default() -> Self {
         Self {
+            // Apagadas por defecto: preferencia de Pablo (13/10/2026).
             enabled: false,
             color: "#00c853".to_string(),
             width_px: 0.5,
@@ -444,8 +445,12 @@ impl Default for PrintSettings {
             landscape: false,
             card_size: CardSize::MTG,
             min_margin_mm: 5.0,
+            // Separación en blanco entre cartas, como fabricard: cada carta
+            // queda a su tamaño exacto (63×88) para las fundas y el sangrado
+            // no tapa el hueco (Pablo, 13/10/2026). El sangrado sigue
+            // disponible para quien lo quiera.
             gap_mm: 2.0,
-            bleed_mm: 1.0,
+            bleed_mm: 0.0,
             bleed_on_backs: true,
             bleed_mode: BleedMode::Clamp,
             cut_guides: CutGuides::default(),
@@ -488,7 +493,9 @@ mod tests {
         let s = PrintSettings::default();
         assert_eq!(s.paper, PaperFormat::A4);
         assert_eq!(s.gap_mm, 2.0);
-        assert_eq!(s.bleed_mm, 1.0);
+        // Hueco en blanco entre cartas; guías apagadas (Pablo, 13/10/2026).
+        assert_eq!(s.bleed_mm, 0.0);
+        assert!(!s.cut_guides.enabled);
         assert_eq!(s.quality.dpi(), 600.0);
         assert_eq!(s.encoding.jpeg_quality, 95);
         assert_eq!(s.edge_darkening.amount, 80.0);

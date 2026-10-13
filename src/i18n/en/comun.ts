@@ -25,6 +25,7 @@ export const COMUN: Record<string, string> = {
 	"Interrumpir y salir": "Stop and leave",
 	"Salir sin guardar": "Leave without saving",
 	Cerrar: "Close",
+	Cancelar: "Cancel",
 	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.":
 		"If you leave now, it stops. Anything already sent finishes on its own, but nothing else is done and half-finished work isn't saved.",
 };

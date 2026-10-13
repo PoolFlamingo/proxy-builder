@@ -353,6 +353,39 @@ pub fn export_calibration(
     Ok(path.to_string_lossy().to_string())
 }
 
+/// Solo se abren ficheros que exporta la app (PDF y paquetes) y que existen.
+fn exportado(path: &str) -> AppResult<PathBuf> {
+    let p = PathBuf::from(path);
+    let ext = p
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(str::to_ascii_lowercase);
+    if !matches!(ext.as_deref(), Some("pdf" | "pbdeck")) || !p.is_file() {
+        return Err(AppError::new(ErrorCode::InvalidInput));
+    }
+    Ok(p)
+}
+
+/// Abre un PDF exportado con el visor del sistema.
+#[tauri::command]
+pub fn export_open(app: AppHandle, path: String) -> AppResult<()> {
+    use tauri_plugin_opener::OpenerExt;
+    let p = exportado(&path)?;
+    app.opener()
+        .open_path(p.to_string_lossy(), None::<&str>)
+        .map_err(|e| AppError::new(ErrorCode::Io).with("detalle", e))
+}
+
+/// Enseña un fichero exportado en su carpeta.
+#[tauri::command]
+pub fn export_reveal(app: AppHandle, path: String) -> AppResult<()> {
+    use tauri_plugin_opener::OpenerExt;
+    let p = exportado(&path)?;
+    app.opener()
+        .reveal_item_in_dir(p)
+        .map_err(|e| AppError::new(ErrorCode::Io).with("detalle", e))
+}
+
 #[tauri::command]
 pub fn export_cancel(state: State<'_, AppState>, job_id: u32) -> bool {
     state.jobs.cancelar(job_id)

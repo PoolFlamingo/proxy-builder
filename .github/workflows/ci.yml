@@ -1,0 +1,35 @@
+# Las mismas puertas que en local (CLAUDE.md), en cada push y pull request.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Librerías de Tauri
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm check:rust-fmt
+      - run: pnpm check:clippy
+      - run: pnpm test:rust
+      - name: Sin OpenSSL en el árbol
+        run: "! cargo tree --manifest-path src-tauri/Cargo.toml -i openssl 2>/dev/null"

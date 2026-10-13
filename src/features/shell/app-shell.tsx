@@ -1,14 +1,15 @@
 import { BookOpen, Layers, Settings } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { useDefaultLayout } from "react-resizable-panels";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { SettingsDialog } from "@/features/settings/settings-dialog";
+import { useDeck } from "@/stores/deck-store";
+import { useUi } from "@/stores/ui-store";
 import { SaveIndicator } from "./save-indicator";
-
-export type Vista = "deck" | "biblioteca";
 
 /**
  * El marco de la app, como fabricard: barra superior y, debajo, tres paneles
@@ -27,7 +28,8 @@ export function AppShell({
 	biblioteca: ReactNode;
 }) {
 	const { t } = useLang();
-	const [vista, setVista] = useState<Vista>("deck");
+	const vista = useUi((s) => s.vista);
+	const setVista = useUi((s) => s.setVista);
 	const [ajustes, setAjustes] = useState(false);
 	const layout = useDefaultLayout({ id: "proxybuilder.paneles", storage: localStorage });
 
@@ -47,7 +49,7 @@ export function AppShell({
 					type="single"
 					size="sm"
 					data-pestanas=""
-					className="ml-4"
+					className="ml-4 shrink-0"
 					value={vista}
 					onValueChange={(v) => (v === "deck" || v === "biblioteca") && setVista(v)}
 				>
@@ -60,6 +62,7 @@ export function AppShell({
 						{t("Biblioteca")}
 					</ToggleGroupItem>
 				</ToggleGroup>
+				{vista === "deck" && <NombreDeck />}
 				<div className="ml-auto flex items-center gap-2.5">
 					<SaveIndicator />
 					<Button
@@ -100,5 +103,31 @@ export function AppShell({
 
 			<SettingsDialog open={ajustes} onOpenChange={setAjustes} />
 		</div>
+	);
+}
+
+/** El nombre del deck abierto, editable en la barra (se guarda con el deck). */
+function NombreDeck() {
+	const { t } = useLang();
+	const nombre = useDeck((s) => s.deck?.name ?? "");
+	const [texto, setTexto] = useState(nombre);
+	useEffect(() => setTexto(nombre), [nombre]);
+	const confirmar = () => {
+		const limpio = texto.trim();
+		if (!limpio) return setTexto(nombre);
+		if (limpio !== nombre) useDeck.getState().setSinHistorial({ name: limpio });
+	};
+	return (
+		<Input
+			value={texto}
+			onChange={(e) => setTexto(e.target.value)}
+			onBlur={confirmar}
+			onKeyDown={(e) => {
+				if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+				if (e.key === "Escape") setTexto(nombre);
+			}}
+			aria-label={t("Nombre del deck")}
+			className="ml-2 h-7 w-64 border-transparent bg-transparent text-sm font-medium shadow-none hover:border-input focus-visible:border-input"
+		/>
 	);
 }

@@ -75,6 +75,8 @@ pub fn run() {
             commands::export::export_estimate,
             commands::export::export_calibration,
             commands::export::export_cancel,
+            commands::export::export_open,
+            commands::export::export_reveal,
             commands::library::cache_stats,
             commands::library::cache_clear,
             commands::library::deck_export_package,
@@ -83,6 +85,7 @@ pub fn run() {
             commands::library::preset_save,
             commands::library::preset_delete,
             commands::layout::arrange_cards,
+            commands::stats::deck_stats,
         ])
         .run(tauri::generate_context!());
 

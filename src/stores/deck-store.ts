@@ -180,3 +180,20 @@ export async function abrirDeckInicial(nombreNuevo: string): Promise<Deck> {
 	useDeck.getState().cargar(deck);
 	return deck;
 }
+
+/** Guarda ya lo que haya pendiente (antes de cambiar de deck). */
+export async function guardarAhora(): Promise<void> {
+	const { deck, guardado, version, _marcarGuardado } = useDeck.getState();
+	if (!deck || guardado === "saved") return;
+	await call("deck_save", { deck });
+	if (useDeck.getState().version === version) _marcarGuardado("saved");
+}
+
+/** Abre otro deck de la biblioteca (guardando antes el actual). */
+export async function abrirDeck(id: string): Promise<Deck> {
+	await guardarAhora();
+	const deck = await call("deck_open", { id });
+	await call("app_setting_set", { key: "last_deck_id", value: deck.id });
+	useDeck.getState().cargar(deck);
+	return deck;
+}

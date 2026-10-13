@@ -650,8 +650,20 @@ mod tests {
     }
 
     #[test]
-    fn dos_sangrados_contiguos_se_tocan_sin_pisarse() {
+    fn con_los_valores_de_fabrica_queda_hueco_en_blanco() {
         let p = plan(&deck(n(9), PrintSettings::default())).unwrap();
+        let s = &p.pages[0].slots;
+        assert!(cerca(s[1].bleed.x - s[0].bleed.right(), 2.0));
+        assert!(cerca(s[0].bleed.w, s[0].trim.w));
+    }
+
+    #[test]
+    fn dos_sangrados_contiguos_se_tocan_sin_pisarse() {
+        let s = PrintSettings {
+            bleed_mm: 1.0,
+            ..Default::default()
+        };
+        let p = plan(&deck(n(9), s)).unwrap();
         let s = &p.pages[0].slots;
         assert!(cerca(s[0].bleed.right(), s[1].bleed.x));
         assert!(cerca(s[0].bleed.bottom(), s[3].bleed.y));
@@ -663,6 +675,7 @@ mod tests {
     fn sin_hueco_no_hay_sangrado_interior() {
         let s = PrintSettings {
             gap_mm: 0.0,
+            bleed_mm: 1.0,
             ..Default::default()
         };
         let p = plan(&deck(n(9), s)).unwrap();

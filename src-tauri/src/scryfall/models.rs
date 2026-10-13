@@ -20,6 +20,8 @@ pub struct CardFace {
     pub name: String,
     pub image_uris: Option<ImageUris>,
     pub type_line: Option<String>,
+    #[serde(default)]
+    pub colors: Vec<String>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]

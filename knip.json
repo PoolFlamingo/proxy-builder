@@ -10,15 +10,8 @@
 		"enumMembers": "off",
 		"duplicates": "off"
 	},
-	"ignore": ["src/bindings/**", "src/components/ui/**"],
-	"ignoreDependencies": [
-		"tw-animate-css",
-		"tailwindcss",
-		"@dnd-kit/core",
-		"@dnd-kit/sortable",
-		"@tauri-apps/plugin-dialog",
-		"@tauri-apps/plugin-opener"
-	],
+	"ignore": ["src/bindings/**"],
+	"ignoreDependencies": ["tw-animate-css", "tailwindcss"],
 	"ignoreBinaries": ["rustfmt"],
 	"ignoreExportsUsedInFile": {
 		"interface": true,
