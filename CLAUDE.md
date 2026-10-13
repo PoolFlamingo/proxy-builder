@@ -58,8 +58,11 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
 | Rust: tests | `pnpm test:rust` |
 | Tipos de Rust a TypeScript | `pnpm bindings` |
 
-- **pnpm, no npm** (Pablo, 12/10/2026). `esbuild` está autorizado en
-  `package.json → pnpm.onlyBuiltDependencies`.
+- **pnpm 11, no npm** (Pablo, 12/10/2026). Su configuración va en
+  `pnpm-workspace.yaml`: `minimumReleaseAge: 1440` (solo versiones de hace más
+  de un día, el valor de pnpm 11) y `allowBuilds` (esbuild). Regenerar el
+  lockfile siempre con pnpm 11: uno hecho con pnpm 10 sin esa espera trajo
+  versiones recién publicadas y el `pnpm install` de Pablo lo rechazó.
 - Tabulador en todo salvo Rust (cuatro espacios, `rustfmt`). En lint-staged va
   `rustfmt --edition 2021` a pelo, nunca `cargo fmt`.
 - Clippy con `-D warnings`; nada de `unwrap()`/`expect()` fuera de tests
