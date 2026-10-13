@@ -4,6 +4,7 @@ import {
 	Copy,
 	Hash,
 	ImageUp,
+	Link2,
 	Lock,
 	LockOpen,
 	Palette,
@@ -63,7 +64,7 @@ export function SlotMenu({ id, children }: { id: string; children: ReactNode }) 
 	return (
 		<ContextMenu onOpenChange={abrirMenu}>
 			<ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-			<ContextMenuContent className="w-60 text-xs">
+			<ContextMenuContent className="w-72 text-xs">
 				<ContextMenuItem onSelect={() => duplicarCartas(ids())}>
 					<Copy />
 					{t("Duplicar")}
@@ -83,6 +84,17 @@ export function SlotMenu({ id, children }: { id: string; children: ReactNode }) 
 					<Palette />
 					{t("Cambiar variante")}
 				</ContextMenuItem>
+				{carta?.source.kind === "custom" && (
+					<ContextMenuItem
+						disabled={varias || !carta.front}
+						onSelect={() => useUi.getState().abrir({ tipo: "vincular", id })}
+					>
+						<Link2 />
+						{carta.source.scryfallId
+							? t("Cambiar el vínculo con Scryfall…")
+							: t("Vincular con Scryfall…")}
+					</ContextMenuItem>
+				)}
 				<ContextMenuItem disabled={varias} onSelect={intentar(() => reemplazarImagen(id, t))}>
 					<ImageUp />
 					{t("Reemplazar imagen…")}

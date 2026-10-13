@@ -70,6 +70,7 @@ export async function resolver(
 
 export function cancelarTrabajo() {
 	const a = useTrabajo.getState().actual;
+	if (a?.tipo === "vincular") return useTrabajo.getState().pedirParada();
 	if (!a?.jobId) return;
 	void call(a.tipo === "exportar" ? "export_cancel" : "job_cancel", { jobId: a.jobId });
 }

@@ -1,18 +1,17 @@
-import { Check, Monitor, Moon, Sun } from "lucide-react";
+import { Check, Minus, Monitor, Moon, Plus, Sun } from "lucide-react";
 import type { ReactNode } from "react";
+import { CampoNumero } from "@/components/campos";
 import { useLang } from "@/components/language-provider";
 import { useTheme } from "@/components/theme-provider";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { THEMES } from "@/lib/themes";
 import { cn } from "@/lib/utils";
 
-const SCALES = [
-	{ v: 0.8, label: "80%" },
-	{ v: 0.9, label: "90%" },
-	{ v: 1, label: "100%" },
-	{ v: 1.1, label: "110%" },
-];
+/** Tamaño de la interfaz, en %: de 5 en 5 entre estos topes. */
+const ESCALA_MIN = 70;
+const ESCALA_MAX = 150;
 
 function SettingCard({
 	title,
@@ -178,19 +177,41 @@ export function Appearance() {
 						/>
 					}
 				>
-					<ToggleGroup
-						type="single"
-						variant="outline"
-						size="sm"
-						value={String(scale)}
-						onValueChange={(v) => v && setScale(Number(v))}
-					>
-						{SCALES.map((s) => (
-							<ToggleGroupItem key={s.v} value={String(s.v)} className="px-3 text-xs tabular-nums">
-								{s.label}
-							</ToggleGroupItem>
-						))}
-					</ToggleGroup>
+					<div className="flex items-center gap-1.5">
+						<Button
+							size="icon-sm"
+							variant="outline"
+							className="size-7"
+							disabled={Math.round(scale * 100) <= ESCALA_MIN}
+							onClick={() => setScale(Math.max(ESCALA_MIN, Math.round(scale * 100) - 5) / 100)}
+							aria-label={t("Reducir")}
+						>
+							<Minus />
+						</Button>
+						<CampoNumero
+							valor={Math.round(scale * 100)}
+							onChange={(v) => setScale((v ?? 100) / 100)}
+							min={ESCALA_MIN}
+							max={ESCALA_MAX}
+							paso={5}
+							sufijo="%"
+							ancho="w-20"
+							ariaLabel={t("Tamaño de la interfaz")}
+						/>
+						<Button
+							size="icon-sm"
+							variant="outline"
+							className="size-7"
+							disabled={Math.round(scale * 100) >= ESCALA_MAX}
+							onClick={() => setScale(Math.min(ESCALA_MAX, Math.round(scale * 100) + 5) / 100)}
+							aria-label={t("Ampliar")}
+						>
+							<Plus />
+						</Button>
+						<Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setScale(1)}>
+							100 %
+						</Button>
+					</div>
 				</SettingCard>
 
 				<SettingCard

@@ -22,8 +22,6 @@ export const EXTRAS: Record<string, string> = {
 	"Añadir a la lista": "Add to list",
 	"Cargar cartas": "Load cards",
 	"Estadísticas del deck": "Deck stats",
-	"Datos y precios de Scryfall. Las cartas propias no cuentan.":
-		"Data and prices from Scryfall. Custom cards aren't counted.",
 	Cartas: "Cards",
 	"Coste medio": "Average cost",
 	"Precio estimado": "Estimated price",

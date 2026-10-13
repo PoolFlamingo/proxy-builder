@@ -222,7 +222,7 @@ mod tests {
         let mut d = decks::create(db, "Mi deck", Some(b.clone())).unwrap();
         d.cards.push(DeckCard {
             id: "c1".into(),
-            source: CardSource::Custom,
+            source: CardSource::Custom { scryfall_id: None },
             front: Some(a),
             back: BackSpec::DeckDefault,
             edits: CardEdits::default(),

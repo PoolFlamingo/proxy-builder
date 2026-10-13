@@ -678,3 +678,14 @@ input[type="range"].macup-range:disabled {
   opacity: 0.82;
 }
 
+
+/* ── Modales 100 % opacos (Pablo, 13/10/2026) ────────────────────────────
+   Con material mate o cristal, y con el skin Hera, el diálogo dejaba ver lo
+   de detrás y se leía mal. Va al final y con !important para ganar a las
+   reglas de material y de skin; el grano y la filigrana (imágenes encima) se
+   quedan, el color de fondo ya no deja pasar nada. */
+[data-slot="dialog-content"] {
+  background-color: var(--card) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}

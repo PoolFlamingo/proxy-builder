@@ -17,13 +17,24 @@ use crate::state::AppState;
 /// Los precios se refrescan si tienen más de un día.
 const PRECIOS_MS: i64 = 24 * 60 * 60 * 1000;
 
+/// La carta de Scryfall que cuenta para las estadísticas: la de Scryfall, la
+/// del token o la vinculada a una imagen propia.
+fn id_scryfall(c: &DeckCard) -> Option<&str> {
+    match &c.source {
+        CardSource::Scryfall { scryfall_id } | CardSource::Token { scryfall_id } => {
+            Some(scryfall_id)
+        }
+        CardSource::Custom { scryfall_id } => scryfall_id.as_deref(),
+        CardSource::Blank => None,
+    }
+}
+
 #[tauri::command]
 pub async fn deck_stats(state: State<'_, AppState>, cards: Vec<DeckCard>) -> AppResult<DeckStats> {
     let mut datos: HashMap<String, Option<ScryCard>> = HashMap::new();
     let ahora = crate::store::ahora_ms();
     for c in &cards {
-        let (CardSource::Scryfall { scryfall_id } | CardSource::Token { scryfall_id }) = &c.source
-        else {
+        let Some(scryfall_id) = id_scryfall(c) else {
             continue;
         };
         if datos.contains_key(scryfall_id) {
@@ -45,14 +56,14 @@ pub async fn deck_stats(state: State<'_, AppState>, cards: Vec<DeckCard>) -> App
                 _ => en_cache.map(|(c, _)| c),
             }
         };
-        datos.insert(scryfall_id.clone(), carta);
+        datos.insert(scryfall_id.to_string(), carta);
     }
 
     let entrada: Vec<StatInput> = cards
         .iter()
         .filter(|c| !matches!(c.source, CardSource::Blank))
-        .map(|c| match &c.source {
-            CardSource::Scryfall { scryfall_id } | CardSource::Token { scryfall_id } => {
+        .map(|c| match id_scryfall(c) {
+            Some(scryfall_id) => {
                 let es_token = matches!(c.source, CardSource::Token { .. });
                 match datos.get(scryfall_id).and_then(Option::as_ref) {
                     Some(s) => StatInput {
@@ -80,8 +91,8 @@ pub async fn deck_stats(state: State<'_, AppState>, cards: Vec<DeckCard>) -> App
                     },
                 }
             }
-            // Las propias cuentan como «sin datos».
-            _ => StatInput {
+            // Las propias sin vincular cuentan como «sin datos».
+            None => StatInput {
                 name: c.meta.name.clone(),
                 ..StatInput::default()
             },

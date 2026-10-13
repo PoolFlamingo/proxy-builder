@@ -2,6 +2,8 @@ import { invoke } from "@tauri-apps/api/core";
 import type { ArchidektImport } from "@/bindings/ArchidektImport";
 import type { CacheStats } from "@/bindings/CacheStats";
 import type { CalibrationTextsInput } from "@/bindings/CalibrationTextsInput";
+import type { CardIdentify } from "@/bindings/CardIdentify";
+import type { CardMeta } from "@/bindings/CardMeta";
 import type { CardSummary } from "@/bindings/CardSummary";
 import type { Deck } from "@/bindings/Deck";
 import type { DeckCard } from "@/bindings/DeckCard";
@@ -62,6 +64,12 @@ export interface Commands {
 	import_archidekt: { args: { url: string; includeSideboard: boolean }; result: ArchidektImport };
 	arrange_cards: { args: { cards: DeckCard[] }; result: string[] };
 	deck_stats: { args: { cards: DeckCard[] }; result: DeckStats };
+	ocr_ready: { args: Record<string, never>; result: boolean };
+	card_identify: {
+		args: { blob: string; hint: string | null; ocr: boolean };
+		result: CardIdentify;
+	};
+	card_link: { args: { scryfallId: string }; result: CardMeta };
 	export_pdf: { args: { deck: Deck; path: string }; result: number };
 	export_estimate: { args: { deck: Deck }; result: ExportEstimate };
 	export_calibration: {

@@ -18,7 +18,7 @@ fn clave(c: &DeckCard) -> String {
             format!("s:{}", c.meta.name.to_lowercase())
         }
         // Las propias se agrupan por la imagen: el nombre es el del fichero.
-        CardSource::Custom => match &c.front {
+        CardSource::Custom { .. } => match &c.front {
             Some(img) => format!("u:{}", img.blob),
             None => format!("u:{}", c.id),
         },

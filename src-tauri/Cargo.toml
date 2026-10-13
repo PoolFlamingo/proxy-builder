@@ -54,6 +54,11 @@ tracing-subscriber = { version = "0.3", default-features = false, features = ["f
 # Paquetes `.pbdeck`. Solo deflate (en Rust puro); nada de cifrado ni de los
 # demás compresores.
 zip = { version = "9", default-features = false, features = ["deflate-flate2-zlib-rs"] }
+# OCR opcional del nombre de las cartas propias (Rust puro; los modelos se
+# descargan la primera vez que se usa, ver `ocr.rs`).
+ocrs = { version = "0.13", default-features = false, features = ["rten"] }
+rten = { version = "0.26", default-features = false }
+image = { version = "0.25.10", default-features = false }
 
 [dev-dependencies]
 tempfile = "3"

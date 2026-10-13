@@ -10,6 +10,7 @@ import { EXPORTAR } from "./exportar";
 import { EXTRAS } from "./extras";
 import { LISTA } from "./lista";
 import { SHELL } from "./shell";
+import { VINCULAR } from "./vincular";
 import { VISTA } from "./vista";
 
 export const EN: Record<string, string> = {
@@ -22,4 +23,5 @@ export const EN: Record<string, string> = {
 	...BIBLIOTECA,
 	...CARTAS,
 	...EXTRAS,
+	...VINCULAR,
 };

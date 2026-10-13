@@ -36,7 +36,15 @@ export type Insignia = { texto: string; tono: "info" | "aviso" | "error"; ayuda:
 export function insignias(c: DeckCard): Insignia[] {
 	const out: Insignia[] = [];
 	if (c.source.kind === "custom")
-		out.push({ texto: "CUSTOM", tono: "info", ayuda: paraTraducir("Imagen propia") });
+		out.push(
+			c.source.scryfallId
+				? {
+						texto: "CUSTOM ↔",
+						tono: "info",
+						ayuda: paraTraducir("Imagen propia vinculada a su carta de Scryfall"),
+					}
+				: { texto: "CUSTOM", tono: "info", ayuda: paraTraducir("Imagen propia") },
+		);
 	if (c.meta.langFallback)
 		out.push({
 			texto: "↩ EN",

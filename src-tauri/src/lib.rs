@@ -11,6 +11,7 @@ pub mod archidekt;
 pub mod commands;
 pub mod error;
 pub mod jobs;
+pub mod ocr;
 pub mod package;
 pub mod protocol;
 pub mod registro;
@@ -86,6 +87,9 @@ pub fn run() {
             commands::library::preset_delete,
             commands::layout::arrange_cards,
             commands::stats::deck_stats,
+            commands::identify::ocr_ready,
+            commands::identify::card_identify,
+            commands::identify::card_link,
         ])
         .run(tauri::generate_context!());
 

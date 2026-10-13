@@ -1,6 +1,12 @@
 //! **Encuadre**: llevar cualquier imagen al tamaño exacto de la carta.
-//! Giro (sin pérdidas) → recorte «cubrir» con zoom y desplazamiento →
-//! remuestreo Lanczos3.
+//! Giro (sin pérdidas) → caja de recorte (zoom y desplazamiento) →
+//! remuestreo Lanczos3 al hueco exacto.
+//!
+//! 🛑 **La carta se estira para llenar el hueco** (Pablo, 13/10/2026): una
+//! imagen de proporción algo distinta a 63×88 se deforma un poco en vez de
+//! perder la línea del nombre o el pie por un recorte. Solo si la proporción
+//! se aleja más de [`MAX_ESTIRADO`] (una foto apaisada sin girar, por
+//! ejemplo) se recorta para cubrir, porque estirarla la destrozaría.
 
 use fast_image_resize::images::{Image, ImageRef};
 use fast_image_resize::{FilterType, PixelType, ResizeAlg, ResizeOptions, Resizer};
@@ -43,11 +49,25 @@ pub fn rotar(img: RgbaImage, r: Rotation) -> RgbaImage {
     }
 }
 
-/// La caja de recorte (left, top, w, h) en píxeles de origen.
+/// Diferencia de proporción (relativa) hasta la que se estira en vez de recortar.
+pub const MAX_ESTIRADO: f64 = 0.15;
+
+/// ¿Se estira esta imagen al hueco (en vez de recortarla para cubrirlo)?
+pub fn se_estira(src_w: u32, src_h: u32, dst_w: u32, dst_h: u32) -> bool {
+    let a = f64::from(src_w) / f64::from(src_h.max(1));
+    let b = f64::from(dst_w) / f64::from(dst_h.max(1));
+    (a / b - 1.0).abs() <= MAX_ESTIRADO
+}
+
+/// La caja de recorte (left, top, w, h) en píxeles de origen. Sin zoom es la
+/// imagen entera (que luego se estira al hueco); si la proporción está muy
+/// lejos, la mayor caja con la proporción del hueco.
 pub fn caja(src_w: u32, src_h: u32, dst_w: u32, dst_h: u32, crop: Crop) -> (f64, f64, f64, f64) {
     let (sw, sh) = (f64::from(src_w), f64::from(src_h));
     let aspecto = f64::from(dst_w) / f64::from(dst_h);
-    let (mut cw, mut ch) = if sw / sh > aspecto {
+    let (mut cw, mut ch) = if se_estira(src_w, src_h, dst_w, dst_h) {
+        (sw, sh)
+    } else if sw / sh > aspecto {
         (sh * aspecto, sh)
     } else {
         (sw, sw / aspecto)
@@ -136,6 +156,38 @@ mod tests {
             assert!(l >= -1e-9 && t >= -1e-9);
             assert!(l + w <= 1000.0 + 1e-9 && t + h <= 1000.0 + 1e-9);
         }
+    }
+
+    #[test]
+    fn una_proporcion_parecida_se_estira_entera() {
+        // 700×1040 es más estrecha que 63×88: no se corta nada, se estira.
+        let (l, t, w, h) = caja(700, 1040, 630, 880, Crop::default());
+        assert_eq!((l, t, w, h), (0.0, 0.0, 700.0, 1040.0));
+        // Con zoom, la caja conserva la proporción de la imagen.
+        let (_, _, w, h) = caja(
+            700,
+            1040,
+            630,
+            880,
+            Crop {
+                zoom: 2.0,
+                ..Crop::default()
+            },
+        );
+        assert!((w - 350.0).abs() < 1e-9 && (h - 520.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn la_linea_del_nombre_no_se_pierde() {
+        // Una imagen más alta que la carta: arriba una franja roja (el nombre).
+        let mut img = RgbaImage::from_pixel(700, 1100, Rgba([0, 0, 0, 255]));
+        for y in 0..20 {
+            for x in 0..700 {
+                img.put_pixel(x, y, Rgba([255, 0, 0, 255]));
+            }
+        }
+        let r = fit(img, Rotation::R0, Crop::default(), 630, 880).unwrap();
+        assert!(r.get_pixel(315, 3).0[0] > 200, "la franja de arriba sigue");
     }
 
     #[test]

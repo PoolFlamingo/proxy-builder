@@ -23,6 +23,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { Page } from "@/bindings/Page";
 import type { RectMm } from "@/bindings/RectMm";
+import { CampoNumero } from "@/components/campos";
 import { Confirmar } from "@/components/confirmar";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,47 @@ import { useArrastrarFicheros } from "./arrastrar-ficheros";
 import { PageView } from "./page-view";
 import { RaizScroll } from "./visibilidad";
 
+/** Lo que sube o baja el zoom con cada paso (botones y rueda): 5 %. */
+const PASO_ZOOM = 0.05;
+
+/**
+ * Ctrl (o Cmd) + rueda sobre la vista previa: acerca o aleja de 5 en 5 y
+ * deja quieto lo que hay bajo el ratón. El escuchador no es pasivo para poder
+ * cancelar el zoom propio del navegador.
+ */
+function useZoomConRueda(viewport: HTMLDivElement | null) {
+	useEffect(() => {
+		if (!viewport) return;
+		let acumulado = 0;
+		const alRodar = (e: WheelEvent) => {
+			if (!(e.ctrlKey || e.metaKey)) return;
+			e.preventDefault();
+			// Ratón: un golpe de rueda es un paso. Panel táctil: se acumula.
+			acumulado += e.deltaMode === 1 ? e.deltaY * 40 : e.deltaY;
+			if (Math.abs(acumulado) < 40) return;
+			const dir = acumulado > 0 ? -1 : 1;
+			acumulado = 0;
+			const ui = useUi.getState();
+			const antes = ui.zoom;
+			ui.setZoom(antes + dir * PASO_ZOOM);
+			const despues = useUi.getState().zoom;
+			if (despues === antes) return;
+			const r = viewport.getBoundingClientRect();
+			const y = e.clientY - r.top;
+			const x = e.clientX - r.left;
+			const top = viewport.scrollTop;
+			const left = viewport.scrollLeft;
+			requestAnimationFrame(() => {
+				const k = despues / antes;
+				viewport.scrollTop = (top + y) * k - y;
+				viewport.scrollLeft = (left + x) * k - x;
+			});
+		};
+		viewport.addEventListener("wheel", alRodar, { passive: false });
+		return () => viewport.removeEventListener("wheel", alRodar);
+	}, [viewport]);
+}
+
 /** Píxeles CSS por milímetro a zoom 100 %. */
 const PX_POR_MM = 96 / 25.4;
 
@@ -82,6 +124,7 @@ export function PreviewPane() {
 	const [arrastrando, setArrastrando] = useState<string[] | null>(null);
 	useArrastrarFicheros();
 	useTeclado();
+	useZoomConRueda(viewport);
 
 	const escala = zoom * PX_POR_MM;
 	const ajustes = deck?.settings;
@@ -121,7 +164,7 @@ export function PreviewPane() {
 	const papel = ajustes.landscape ? t("{papel} apaisado", { papel: ajustes.paper }) : ajustes.paper;
 
 	return (
-		<section className="flex h-full min-h-0 flex-col bg-muted/30 [&_[data-slot=button]]:text-xs">
+		<section className="flex h-full min-h-0 flex-col bg-muted/30 [&_[data-slot=button]]:text-xs [&_button[data-slot=tooltip-trigger]]:text-xs">
 			<div className="flex flex-wrap items-center gap-1.5 border-b bg-background px-2.5 py-1.5">
 				<WithTooltip content={t("La vista es aproximada; el resultado exacto es el del PDF.")}>
 					<span className="mr-1 flex items-center gap-1.5 text-xs font-medium">
@@ -196,23 +239,30 @@ export function PreviewPane() {
 					<Button
 						size="icon-xs"
 						variant="ghost"
-						onClick={() => setZoom(zoom - 0.1)}
+						onClick={() => setZoom(zoom - PASO_ZOOM)}
 						disabled={zoom <= ZOOM_MIN}
 						aria-label={t("Alejar")}
 					>
 						<Minus />
 					</Button>
-					<button
-						type="button"
-						onClick={() => setZoom(1)}
-						className="w-11 text-center font-mono text-[11px] text-muted-foreground hover:text-foreground"
-					>
-						{Math.round(zoom * 100)} %
-					</button>
+					<WithTooltip content={t("Ctrl + rueda del ratón para acercar o alejar")}>
+						<div>
+							<CampoNumero
+								valor={Math.round(zoom * 100)}
+								onChange={(v) => setZoom((v ?? 100) / 100)}
+								min={ZOOM_MIN * 100}
+								max={ZOOM_MAX * 100}
+								paso={5}
+								sufijo="%"
+								ancho="w-[4.5rem]"
+								ariaLabel={t("Zoom de la vista previa")}
+							/>
+						</div>
+					</WithTooltip>
 					<Button
 						size="icon-xs"
 						variant="ghost"
-						onClick={() => setZoom(zoom + 0.1)}
+						onClick={() => setZoom(zoom + PASO_ZOOM)}
 						disabled={zoom >= ZOOM_MAX}
 						aria-label={t("Acercar")}
 					>
