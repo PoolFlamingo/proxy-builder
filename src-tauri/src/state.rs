@@ -31,6 +31,8 @@ pub struct AppState {
     /// Miniaturas de resultados de búsqueda: huella de la URL → URL. Lo rellenan
     /// las búsquedas y lo lee el protocolo de imágenes (ruta `/t/`).
     pub miniaturas: Mutex<HashMap<String, String>>,
+    /// Cuántas miniaturas se procesan a la vez (una por núcleo).
+    pub renders: tokio::sync::Semaphore,
     /// Trabajos de resolución/exportación en marcha (la limpieza de imágenes
     /// no corre mientras haya alguno).
     trabajos: AtomicUsize,
@@ -49,6 +51,11 @@ impl AppState {
             scryfall: Arc::new(Scryfall::new()?),
             jobs: Jobs::default(),
             miniaturas: Mutex::new(HashMap::new()),
+            renders: tokio::sync::Semaphore::new(
+                std::thread::available_parallelism()
+                    .map(|n| n.get())
+                    .unwrap_or(4),
+            ),
             trabajos: AtomicUsize::new(0),
         })
     }

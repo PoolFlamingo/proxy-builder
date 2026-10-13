@@ -3,6 +3,7 @@
 
 pub mod cards;
 pub mod decklist;
+pub mod export;
 pub mod layout;
 pub mod library;
 pub mod sistema;

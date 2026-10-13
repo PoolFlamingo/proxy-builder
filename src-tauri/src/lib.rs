@@ -11,7 +11,10 @@ pub mod archidekt;
 pub mod commands;
 pub mod error;
 pub mod jobs;
+pub mod package;
+pub mod protocol;
 pub mod registro;
+pub mod render;
 pub mod scryfall;
 pub mod state;
 pub mod store;
@@ -24,6 +27,10 @@ pub fn run() {
 
     #[cfg(desktop)]
     let constructor = constructor.plugin(tauri_plugin_window_state::Builder::new().build());
+
+    // El protocolo de imágenes: la vista previa pide aquí cada miniatura.
+    let constructor = constructor
+        .register_asynchronous_uri_scheme_protocol(protocol::ESQUEMA, protocol::manejador);
 
     let resultado = constructor
         .setup(|app| {
@@ -64,6 +71,18 @@ pub fn run() {
             commands::cards::sets_list,
             commands::cards::set_cards,
             commands::cards::import_archidekt,
+            commands::export::export_pdf,
+            commands::export::export_estimate,
+            commands::export::export_calibration,
+            commands::export::export_cancel,
+            commands::library::cache_stats,
+            commands::library::cache_clear,
+            commands::library::deck_export_package,
+            commands::library::deck_import_package,
+            commands::library::preset_list,
+            commands::library::preset_save,
+            commands::library::preset_delete,
+            commands::layout::arrange_cards,
         ])
         .run(tauri::generate_context!());
 

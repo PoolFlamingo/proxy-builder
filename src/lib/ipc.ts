@@ -1,13 +1,19 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { ArchidektImport } from "@/bindings/ArchidektImport";
+import type { CacheStats } from "@/bindings/CacheStats";
+import type { CalibrationTextsInput } from "@/bindings/CalibrationTextsInput";
 import type { CardSummary } from "@/bindings/CardSummary";
 import type { Deck } from "@/bindings/Deck";
 import type { DeckCard } from "@/bindings/DeckCard";
 import type { DeckSummary } from "@/bindings/DeckSummary";
+import type { ExportEstimate } from "@/bindings/ExportEstimate";
 import type { FaceImage } from "@/bindings/FaceImage";
 import type { GcReport } from "@/bindings/GcReport";
 import type { PagePlan } from "@/bindings/PagePlan";
 import type { ParsedDecklist } from "@/bindings/ParsedDecklist";
+import type { Preset } from "@/bindings/Preset";
+import type { PresetKind } from "@/bindings/PresetKind";
+import type { PrintSettings } from "@/bindings/PrintSettings";
 import type { ResolveOptions } from "@/bindings/ResolveOptions";
 import type { SaveResult } from "@/bindings/SaveResult";
 import type { SetInfo } from "@/bindings/SetInfo";
@@ -53,6 +59,21 @@ export interface Commands {
 	sets_list: { args: Record<string, never>; result: SetInfo[] };
 	set_cards: { args: { code: string; typeFilter: string | null }; result: CardSummary[] };
 	import_archidekt: { args: { url: string; includeSideboard: boolean }; result: ArchidektImport };
+	arrange_cards: { args: { cards: DeckCard[] }; result: string[] };
+	export_pdf: { args: { deck: Deck; path: string }; result: number };
+	export_estimate: { args: { deck: Deck }; result: ExportEstimate };
+	export_calibration: {
+		args: { settings: PrintSettings; path: string; texts: CalibrationTextsInput };
+		result: string;
+	};
+	export_cancel: { args: { jobId: number }; result: boolean };
+	cache_stats: { args: Record<string, never>; result: CacheStats };
+	cache_clear: { args: Record<string, never>; result: CacheStats };
+	deck_export_package: { args: { id: string; path: string }; result: number };
+	deck_import_package: { args: { path: string }; result: Deck };
+	preset_list: { args: { kind: PresetKind }; result: Preset[] };
+	preset_save: { args: { kind: PresetKind; name: string; json: string }; result: Preset };
+	preset_delete: { args: { id: string }; result: null };
 }
 
 export function call<C extends keyof Commands>(
@@ -66,6 +87,8 @@ export function call<C extends keyof Commands>(
 export interface Events {
 	"resolve://progress": import("@/bindings/ResolveProgressEvent").ResolveProgressEvent;
 	"resolve://done": import("@/bindings/ResolveDoneEvent").ResolveDoneEvent;
+	"export://progress": import("@/bindings/ExportProgressEvent").ExportProgressEvent;
+	"export://done": import("@/bindings/ExportDoneEvent").ExportDoneEvent;
 }
 
 /** Escucha un evento de Rust. Devuelve la función que deja de escuchar. */

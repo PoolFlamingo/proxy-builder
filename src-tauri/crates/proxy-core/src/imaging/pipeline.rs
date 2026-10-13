@@ -9,7 +9,7 @@ use super::{bleed, corners, decode::decode, edges, encode, ImagingError};
 use crate::model::{BleedMode, CardEdits, CardSize, EdgeDarkening, ImageFormat, ImageOrigin};
 
 /// Subirla invalida todas las cachés de renders (cambió algún resultado).
-pub const PIPELINE_VERSION: u32 = 1;
+pub const PIPELINE_VERSION: u32 = 2;
 
 /// Todo lo que cambia el resultado de un render.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

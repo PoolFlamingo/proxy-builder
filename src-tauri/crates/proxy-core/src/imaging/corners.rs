@@ -57,13 +57,50 @@ pub fn color_de_borde(img: &RgbaImage) -> [u8; 4] {
     [mediana(r), mediana(g), mediana(bb), 255]
 }
 
+/// Radio de la esquina redondeada, medido en la diagonal de la esquina
+/// superior izquierda: el primer píxel opaco está a `r·(1 − 1/√2)` del vértice.
+fn radio_por_alfa(img: &RgbaImage) -> Option<u32> {
+    let (w, h) = img.dimensions();
+    if img.get_pixel(0, 0).0[3] == 255 {
+        return None;
+    }
+    let tope = (w.min(h) / 8).max(1);
+    let d = (0..tope).find(|&d| img.get_pixel(d, d).0[3] == 255)?;
+    let r = (d as f32 / (1.0 - std::f32::consts::FRAC_1_SQRT_2)).round() as u32;
+    Some(r.clamp(1, tope))
+}
+
 /// Rellena esquinas transparentes y, en imágenes opacas, las esquinas claras
 /// que no casan con el borde. Devuelve el color de borde usado.
 pub fn fill(img: &mut RgbaImage) -> [u8; 4] {
     let borde = color_de_borde(img);
     let (w, h) = img.dimensions();
 
-    // (1) Lo transparente se compone sobre el color del borde.
+    // (0) Esquinas redondeadas con alfa (los PNG de Scryfall): todo lo que
+    // queda fuera del círculo de la esquina —y un píxel y medio hacia dentro,
+    // donde está el borde suavizado, que trae RGB claro y dejaba un arco gris
+    // al imprimir— se pinta del color del borde.
+    if let Some(r) = radio_por_alfa(img) {
+        let r_f = r as f32;
+        let limite = (r_f - 1.5).max(0.0);
+        for (cx, cy, x0, y0) in [
+            (r_f, r_f, 0u32, 0u32),
+            (w as f32 - 1.0 - r_f, r_f, w - r, 0),
+            (r_f, h as f32 - 1.0 - r_f, 0, h - r),
+            (w as f32 - 1.0 - r_f, h as f32 - 1.0 - r_f, w - r, h - r),
+        ] {
+            for y in y0..(y0 + r).min(h) {
+                for x in x0..(x0 + r).min(w) {
+                    let d = ((x as f32 - cx).powi(2) + (y as f32 - cy).powi(2)).sqrt();
+                    if d > limite {
+                        img.put_pixel(x, y, Rgba(borde));
+                    }
+                }
+            }
+        }
+    }
+
+    // (1) Lo transparente que quede se compone sobre el color del borde.
     let mut hubo_alfa = false;
     for p in img.pixels_mut() {
         let a = u32::from(p.0[3]);
@@ -161,6 +198,32 @@ pub(crate) mod tests {
         assert!(img.pixels().all(|p| p.0[3] == 255));
         assert!(img.get_pixel(0, 0).0[0] < 20);
         assert!(img.get_pixel(744, 1039).0[0] < 20);
+    }
+
+    #[test]
+    fn el_borde_suavizado_de_la_esquina_no_deja_un_arco_claro() {
+        // Esquina transparente con un anillo semitransparente BLANCO, como el
+        // suavizado de los PNG de Scryfall.
+        let mut img = carta(745, 1040, [10, 10, 10, 255], [0, 0, 0, 0]);
+        let r = 30.0f32;
+        for y in 0..31u32 {
+            for x in 0..31u32 {
+                let d = ((x as f32 - r).powi(2) + (y as f32 - r).powi(2)).sqrt();
+                if (r - 0.8..=r + 0.8).contains(&d) {
+                    img.put_pixel(x, y, Rgba([255, 255, 255, 120]));
+                }
+            }
+        }
+        fill(&mut img);
+        for y in 0..31u32 {
+            for x in 0..31u32 {
+                assert!(
+                    img.get_pixel(x, y).0[0] < 40,
+                    "({x},{y}) = {:?}",
+                    img.get_pixel(x, y)
+                );
+            }
+        }
     }
 
     #[test]
