@@ -2,11 +2,13 @@ import {
 	ChevronLeft,
 	ChevronRight,
 	Hash,
+	ImageDown,
 	Loader2,
 	Save,
 	SlidersHorizontal,
 	Trash2,
 	Undo2,
+	Wand2,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDefaultLayout } from "react-resizable-panels";
@@ -185,6 +187,23 @@ export function DisenarScreen() {
 							{t("Renumerar")}
 						</Button>
 					</WithTooltip>
+					<Button
+						size="sm"
+						variant="ghost"
+						onClick={() => useUi.getState().abrir({ tipo: "disenarDeck" })}
+					>
+						<Wand2 />
+						{t("Diseñar el deck")}
+					</Button>
+					<Button
+						size="sm"
+						variant="ghost"
+						onClick={() => useUi.getState().abrir({ tipo: "exportarPng" })}
+						disabled={!cartas?.some((c) => c.design)}
+					>
+						<ImageDown />
+						{t("Exportar imágenes")}
+					</Button>
 					<Button
 						size="sm"
 						variant="ghost"

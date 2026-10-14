@@ -1,5 +1,24 @@
 // Diseñar: el editor de cartas proxy (vista, formulario, colecciones y recursos).
 export const DISENAR: Record<string, string> = {
+	"Diseñar el deck": "Design the deck",
+	"Exportar imágenes": "Export images",
+	"{n} borradores hechos": "{n} drafts made",
+	"Un borrador para cada carta sin diseño: textos de la carta real, el arte de Scryfall de momento y su número por el orden del deck. Luego se revisan una a una.":
+		"A draft for every card without a design: the real card's texts, Scryfall's art for now and its number in deck order. Then you review them one by one.",
+	"Todo el deck": "The whole deck",
+	"Solo las seleccionadas": "Only the selected ones",
+	"No hay cartas sin diseño que se puedan diseñar.":
+		"There are no cards without a design that can be designed.",
+	"{n} cartas sin diseño": "{n} cards without a design",
+	"{hechas} de {total}": "{hechas} of {total}",
+	"Hacer los borradores": "Make the drafts",
+	"{n} imágenes exportadas": "{n} images exported",
+	"Cada carta diseñada como PNG, a la medida exacta del corte. Se guardan en las carpetas «es» y «en» de la carpeta que elijas, con el nombre «número - nombre».":
+		"Each designed card as a PNG, at the exact trim size. They're saved in the “es” and “en” folders of the folder you choose, named “number - name”.",
+	"Los dos": "Both",
+	"No hay cartas diseñadas.": "There are no designed cards.",
+	"{n} cartas diseñadas": "{n} designed cards",
+	"Elegir carpeta y exportar": "Choose folder and export",
 	"Cómo se reparte el texto en la carta": "How the text is laid out on the card",
 	"Maquetación": "Layout",
 	"Ficha": "Token",

@@ -374,4 +374,68 @@ mod tests {
             nueva.design.as_ref().unwrap().thumb_key
         );
     }
+
+    /// Paso 6.1: 3 cartas y 2 fichas numeradas como en «Diseñar el deck»;
+    /// mover no cambia nada hasta «Renumerar»; un número a mano sobrevive.
+    #[test]
+    fn numeros_de_un_deck_y_renumerar() {
+        let (_dir, s) = estado();
+        let (base, _) = carta(&s);
+        let hacer = |id: &str, ficha: bool, usados: &[String]| {
+            let mut c = base.clone();
+            c.id = id.into();
+            let datos = CardData {
+                scryfall_id: format!("s-{id}"),
+                layout: if ficha { "token" } else { "normal" }.into(),
+                rarity: "common".into(),
+                set: "tst".into(),
+                collector_number: "1".into(),
+                faces: vec![FaceData {
+                    name: id.into(),
+                    type_line: ByLang {
+                        es: if ficha { "Criatura ficha" } else { "Artefacto" }.into(),
+                        en: if ficha { "Token Creature" } else { "Artifact" }.into(),
+                    },
+                    ..FaceData::default()
+                }],
+                ..CardData::default()
+            };
+            let d = crate::diseno::borrador::montar(&c, datos, None, usados).design;
+            aplicar(&s, &c, &d, DesignLang::Es).unwrap()
+        };
+        let mut usados = Vec::new();
+        let mut deck = Vec::new();
+        for (id, ficha) in [
+            ("a", false),
+            ("t1", true),
+            ("b", false),
+            ("t2", true),
+            ("c", false),
+        ] {
+            let c = hacer(id, ficha, &usados);
+            usados.push(c.design.as_ref().unwrap().footer.number.clone());
+            deck.push(c);
+        }
+        let nums = |d: &[DeckCard]| -> Vec<String> {
+            d.iter()
+                .map(|c| c.design.as_ref().unwrap().footer.number.clone())
+                .collect()
+        };
+        assert_eq!(nums(&deck), ["0001", "T001", "0002", "T002", "0003"]);
+        // Mover la última al principio no cambia ningún número...
+        let ultima = deck.pop().unwrap();
+        deck.insert(0, ultima);
+        assert_eq!(nums(&deck), ["0003", "0001", "T001", "0002", "T002"]);
+        // ...hasta renumerar. Con un número a mano en «b», que se queda.
+        if let Some(d) = deck[3].design.as_mut() {
+            d.footer.number = "0099".into();
+            d.footer.number_manual = true;
+        }
+        let cambiadas = renumerar(&s, &deck, DesignLang::Es).unwrap();
+        for c in cambiadas {
+            let i = deck.iter().position(|x| x.id == c.id).unwrap();
+            deck[i] = c;
+        }
+        assert_eq!(nums(&deck), ["0001", "0002", "T001", "0099", "T002"]);
+    }
 }

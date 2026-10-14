@@ -2,6 +2,8 @@ import { CardEditorDialog } from "@/features/card-editor/card-editor-dialog";
 import { DecklistPanel } from "@/features/decklist/decklist-panel";
 import { ColeccionesDialog } from "@/features/disenar/colecciones-dialog";
 import { DisenarScreen } from "@/features/disenar/disenar-screen";
+import { LoteDialog } from "@/features/disenar/lote-dialog";
+import { PngDialog } from "@/features/disenar/png-dialog";
 import { RecursosDialog } from "@/features/disenar/recursos-dialog";
 import { ExportPanel } from "@/features/export/export-panel";
 import { LibraryScreen } from "@/features/library/library-screen";
@@ -37,6 +39,8 @@ export default function App() {
 			<SetBrowserDialog />
 			<ColeccionesDialog />
 			<RecursosDialog />
+			<LoteDialog />
+			<PngDialog />
 		</>
 	);
 }

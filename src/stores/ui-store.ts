@@ -32,7 +32,9 @@ export type Dialogo =
 	| { tipo: "estadisticas" }
 	/** Editor de cartas: colecciones; letras, packs y símbolos; recortar arte. */
 	| { tipo: "colecciones" }
-	| { tipo: "recursosDiseno" };
+	| { tipo: "recursosDiseno" }
+	| { tipo: "disenarDeck" }
+	| { tipo: "exportarPng" };
 
 export type Vista = "deck" | "biblioteca" | "disenar";
 
