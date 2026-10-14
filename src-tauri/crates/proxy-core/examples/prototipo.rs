@@ -201,7 +201,9 @@ fn mm(k: f32, v: f32) -> f32 {
 }
 
 fn premultiplicar(rgba: &[u8]) -> Vec<u8> {
-    rgba.chunks_exact(4)
+    rgba.as_chunks::<4>()
+        .0
+        .iter()
         .flat_map(|p| {
             let a = p[3] as u16;
             [
