@@ -414,7 +414,11 @@ pub struct CardDesign {
     #[ts(optional)]
     pub collection: Option<String>,
     pub style: DesignStyle,
-    pub frame: FrameOptions,
+    /// El marco propio de esta carta; `None` = el de la colección (y si no
+    /// hay, el de fábrica). Así, cambiar la colección cambia sus cartas.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub frame: Option<FrameOptions>,
     /// Una por cara o mitad (1 en las normales).
     pub faces: Vec<FaceDesign>,
     pub before: BeforeDesign,
@@ -454,6 +458,56 @@ impl CardDesign {
         v.dedup();
         v
     }
+}
+
+/// Un aviso sobre un diseño. Rust nunca escribe prosa: la pantalla lo
+/// traduce por su `kind`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+#[ts(export)]
+pub enum Aviso {
+    /// No hay impresión en español: las reglas `es` son el Oracle en inglés.
+    SinTextoOficial,
+    /// El texto no cabe ni a la letra mínima (`sobra` en mm).
+    TextoNoCabe {
+        hueco: String,
+        sobra: f64,
+    },
+    /// El título o el tipo no cabían ni estrechados y se ha bajado la letra.
+    TituloReducido {
+        hueco: String,
+    },
+    /// Reglas escritas a mano en esa cara e idioma.
+    ReglasEditadas {
+        cara: u32,
+        lang: DesignLang,
+    },
+    /// Falta el nombre temático en un idioma.
+    FaltaNombre {
+        cara: u32,
+        lang: DesignLang,
+    },
+    LetraNoEncontrada {
+        familia: String,
+    },
+    FaltanSimbolos {
+        simbolos: Vec<String>,
+    },
+    PackSinLayout {
+        layout: String,
+    },
+    LayoutDesconocido {
+        layout: String,
+    },
+}
+
+/// Lo que devuelve un borrador: el diseño y sus avisos.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DesignDraft {
+    pub design: CardDesign,
+    pub avisos: Vec<Aviso>,
 }
 
 /// Una colección: lo compartido por un grupo de diseños (marco, emblema,
@@ -499,7 +553,7 @@ pub struct Collection {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use crate::model::{DeckCard, ImageOrigin};
 
@@ -532,7 +586,7 @@ mod tests {
             status: DesignStatus::Draft,
             collection: Some("c1".into()),
             style: DesignStyle::Borderless,
-            frame: FrameOptions::default(),
+            frame: None,
             faces: vec![
                 FaceDesign {
                     art: Some(ArtRef {
