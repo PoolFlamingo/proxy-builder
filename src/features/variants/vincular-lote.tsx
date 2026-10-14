@@ -1,7 +1,8 @@
 import { Link2, Loader2, ScanText, X } from "lucide-react";
-import { memo, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { CardIdentify } from "@/bindings/CardIdentify";
+import type { CardSummary } from "@/bindings/CardSummary";
 import type { Confidence } from "@/bindings/Confidence";
 import type { DeckCard } from "@/bindings/DeckCard";
 import { type Opcion, Selector } from "@/components/campos";
@@ -26,6 +27,7 @@ import { lanzarTrabajo } from "@/lib/trabajos";
 import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
+import { AmpliarCartas } from "./ampliar-cartas";
 import { estaVinculada, propiasPorImagen, vincular } from "./vincular";
 
 /**
@@ -81,10 +83,11 @@ function restante(
 
 function Contenido({ ids, soloSeleccion }: { ids?: string[]; soloSeleccion: boolean }) {
 	const { t, mensaje } = useLang();
-	const haySeleccion = !!ids && ids.length > 0;
-	const [enSeleccion, setEnSeleccion] = useState(haySeleccion && soloSeleccion);
 	const delDeck = useMemo(() => propiasPorImagen(), []);
 	const deSeleccion = useMemo(() => (ids ? propiasPorImagen(ids) : []), [ids]);
+	// Solo cuenta la selección si tiene alguna carta propia.
+	const haySeleccion = deSeleccion.length > 0;
+	const [enSeleccion, setEnSeleccion] = useState(haySeleccion && soloSeleccion);
 	const propias = enSeleccion ? deSeleccion : delDeck;
 	const faltan = useMemo(() => propias.filter((c) => !estaVinculada(c)), [propias]);
 	const [eleccion, setAlcance] = useState<"faltan" | "todas">("faltan");
@@ -96,6 +99,13 @@ function Contenido({ ids, soloSeleccion }: { ids?: string[]; soloSeleccion: bool
 	const [progreso, setProgreso] = useState({ hechas: 0, total: 0 });
 	const [filtro, setFiltro] = useState<"todas" | "revisar">("todas");
 	const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
+	const [ampliada, setAmpliada] = useState<{ blob: string; original: CardSummary | null } | null>(
+		null,
+	);
+	const ampliar = useCallback(
+		(blob: string, original: CardSummary | null) => setAmpliada({ blob, original }),
+		[],
+	);
 	const inicio = useRef(0);
 	const jobId = useRef<number | null>(null);
 	const parar = useRef(false);
@@ -313,6 +323,7 @@ function Contenido({ ids, soloSeleccion }: { ids?: string[]; soloSeleccion: bool
 									key={f.carta.front?.blob ?? f.carta.id}
 									fila={f}
 									bloqueada={fase === "aplicando"}
+									onAmpliar={ampliar}
 									onCambiar={(c) => f.carta.front && cambiar(f.carta.front.blob, c)}
 								/>
 							))}
@@ -347,6 +358,11 @@ function Contenido({ ids, soloSeleccion }: { ids?: string[]; soloSeleccion: bool
 					</Button>
 				)}
 			</DialogFooter>
+			<AmpliarCartas
+				blob={ampliada?.blob ?? null}
+				original={ampliada?.original ?? null}
+				onCerrar={() => setAmpliada(null)}
+			/>
 		</DialogContent>
 	);
 }
@@ -384,10 +400,12 @@ function Eleccion({
 const FilaVinculo = memo(function FilaVinculo({
 	fila,
 	bloqueada,
+	onAmpliar,
 	onCambiar,
 }: {
 	fila: Fila;
 	bloqueada: boolean;
+	onAmpliar: (blob: string, original: CardSummary | null) => void;
 	onCambiar: (c: Partial<Fila>) => void;
 }) {
 	const { t } = useLang();
@@ -405,6 +423,9 @@ const FilaVinculo = memo(function FilaVinculo({
 		})),
 	];
 	const leido = [carta.meta.name, ...(r?.lines ?? [])].filter(Boolean).join(" · ");
+	const ampliar = () => carta.front && onAmpliar(carta.front.blob, elegida);
+	const miniatura =
+		"h-14 w-10 shrink-0 cursor-zoom-in overflow-hidden rounded-[3px] bg-muted outline-none transition hover:ring-2 hover:ring-primary/60 focus-visible:ring-2 focus-visible:ring-ring";
 
 	return (
 		<div ref={setEl} className="flex items-center gap-2.5 py-1.5">
@@ -414,7 +435,7 @@ const FilaVinculo = memo(function FilaVinculo({
 				onCheckedChange={(v) => onCambiar({ marcada: v === true })}
 				aria-label={t("Vincular esta")}
 			/>
-			<div className="h-14 w-10 shrink-0 overflow-hidden rounded-[3px] bg-muted">
+			<button type="button" className={miniatura} onClick={ampliar} aria-label={t("Ver en grande")}>
 				{visible && carta.front && ajustes && (
 					<img
 						src={urlMiniatura(carta.front.blob, parametros(ajustes, EDICION_NEUTRA, false, 0), 146)}
@@ -423,7 +444,7 @@ const FilaVinculo = memo(function FilaVinculo({
 						className="size-full object-cover"
 					/>
 				)}
-			</div>
+			</button>
 			<div className="min-w-0 flex-1">
 				<div className="truncate text-[11px] text-muted-foreground">{leido || "—"}</div>
 				<div className="mt-1 flex items-center gap-1.5">
@@ -448,7 +469,7 @@ const FilaVinculo = memo(function FilaVinculo({
 					</span>
 				</div>
 			</div>
-			<div className="h-14 w-10 shrink-0 overflow-hidden rounded-[3px] bg-muted">
+			<button type="button" className={miniatura} onClick={ampliar} aria-label={t("Ver en grande")}>
 				{visible && elegida?.thumb && (
 					<img
 						src={urlBusqueda(elegida.thumb)}
@@ -457,7 +478,7 @@ const FilaVinculo = memo(function FilaVinculo({
 						className="size-full object-cover"
 					/>
 				)}
-			</div>
+			</button>
 		</div>
 	);
 });

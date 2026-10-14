@@ -1,4 +1,3 @@
-import { open } from "@tauri-apps/plugin-dialog";
 import type { DeckCard } from "@/bindings/DeckCard";
 import type { ParsedDecklist } from "@/bindings/ParsedDecklist";
 import type { ResolvePhase } from "@/bindings/ResolvePhase";
@@ -6,6 +5,7 @@ import type { ResolveResult } from "@/bindings/ResolveResult";
 import { paraTraducir } from "@/components/language-provider";
 import { aplicarReaplicado, cartaPropia, listaParaReaplicar, nombreDeFichero } from "@/lib/cartas";
 import { insertar } from "@/lib/deck-ops";
+import { abrirParaImportar, recordar } from "@/lib/dialogos";
 import { call } from "@/lib/ipc";
 import { lanzarTrabajo } from "@/lib/trabajos";
 import { useDeck } from "@/stores/deck-store";
@@ -145,21 +145,20 @@ export async function reaplicarIdioma(t: T): Promise<string | null> {
 
 /** Pide imágenes con el diálogo del sistema y las mete en el almacén. */
 export async function elegirImagenes(t: T, varias = true) {
-	const elegidas = await open({
+	const rutas = await abrirParaImportar({
 		multiple: varias,
 		directory: false,
 		title: t("Elegir imágenes"),
 		filters: [{ name: t("Imágenes"), extensions: EXTENSIONES_IMAGEN }],
 	});
-	if (!elegidas) return null;
-	const rutas = Array.isArray(elegidas) ? elegidas : [elegidas];
-	if (rutas.length === 0) return null;
+	if (!rutas || rutas.length === 0) return null;
 	const imagenes = await call("blob_import_files", { paths: rutas });
 	return { rutas, imagenes };
 }
 
 /** Crea cartas propias a partir de rutas del disco (diálogo o arrastre). */
 export async function anadirPropias(rutas: string[], t: T, en?: number) {
+	if (rutas[0]) recordar("importar", rutas[0]);
 	const imagenes = await call("blob_import_files", { paths: rutas });
 	const nuevas: DeckCard[] = imagenes.map((img, i) => cartaPropia(img, nombreDeFichero(rutas[i])));
 	useDeck.getState().setCartas((c) => insertar(c, nuevas, en));

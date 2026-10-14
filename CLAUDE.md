@@ -81,6 +81,9 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
   diálogos, preferencias), `trabajo-store` (el trabajo largo en marcha).
 - `src/lib/trabajos.ts`: lanzar un trabajo de Rust con eventos de progreso
   (escucha antes de lanzar). `src/lib/image-url.ts`: URLs de `pbimg://`.
+- Diálogos de ficheros SOLO por `src/lib/dialogos.ts` (`abrirParaImportar`,
+  `guardarParaExportar`): recuerdan en Rust (`commands/carpetas.rs`,
+  `app_settings`) la última carpeta de importar y la de exportar, por separado.
 - Rust: `commands/{cards,decklist,export,identify,layout,library,stats}.rs`,
   `package.rs` (.pbdeck), `render.rs` + `protocol.rs` (miniaturas),
   `ocr.rs` (OCR opcional de la carta entera con `ocrs`, a la resolución

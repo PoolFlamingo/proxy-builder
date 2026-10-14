@@ -1,5 +1,10 @@
 // Vincular cartas propias con Scryfall, zoom con la rueda y escala de la interfaz.
 export const VINCULAR: Record<string, string> = {
+	Comparar: "Compare",
+	"Sin carta de Scryfall elegida.": "No Scryfall card chosen.",
+	"Tu carta": "Your card",
+	Scryfall: "Scryfall",
+	"Ver en grande": "View large",
 	"Todo el deck ({n})": "Whole deck ({n})",
 	"Solo las seleccionadas ({n})": "Selected only ({n})",
 	"Vincular con Scryfall": "Link to Scryfall",

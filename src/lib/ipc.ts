@@ -22,6 +22,7 @@ import type { PrintSettings } from "@/bindings/PrintSettings";
 import type { ResolveOptions } from "@/bindings/ResolveOptions";
 import type { SaveResult } from "@/bindings/SaveResult";
 import type { SetInfo } from "@/bindings/SetInfo";
+import type { TipoCarpeta } from "@/bindings/TipoCarpeta";
 
 /**
  * **La única puerta a Rust.** Cada comando de `src-tauri/src/commands/` tiene
@@ -65,6 +66,8 @@ export interface Commands {
 	set_cards: { args: { code: string; typeFilter: string | null }; result: CardSummary[] };
 	import_archidekt: { args: { url: string; includeSideboard: boolean }; result: ArchidektImport };
 	arrange_cards: { args: { cards: DeckCard[] }; result: string[] };
+	carpeta_recordar: { args: { tipo: TipoCarpeta; ruta: string }; result: null };
+	carpeta_inicial: { args: { tipo: TipoCarpeta; nombre: string | null }; result: string | null };
 	deck_stats: { args: { cards: DeckCard[]; kind: DeckKind | null }; result: DeckStats };
 	ocr_ready: { args: Record<string, never>; result: boolean };
 	card_identify: {

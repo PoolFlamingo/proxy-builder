@@ -2,6 +2,7 @@
 //! solo los registra.
 
 pub mod cards;
+pub mod carpetas;
 pub mod decklist;
 pub mod export;
 pub mod identify;
