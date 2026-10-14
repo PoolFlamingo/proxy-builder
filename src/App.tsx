@@ -17,9 +17,12 @@ import { AddCardDialog } from "@/features/variants/add-card-dialog";
 import { VariantDialog } from "@/features/variants/variant-dialog";
 import { VincularDialog } from "@/features/variants/vincular-dialog";
 import { VincularLoteDialog } from "@/features/variants/vincular-lote";
+import { useUi } from "@/stores/ui-store";
 
 export default function App() {
 	useDeckInicial();
+	// El editor de cartas es experimental: sin encenderlo en Ajustes no se monta nada suyo.
+	const editor = useUi((s) => s.editorCartas);
 	return (
 		<>
 			<AppShell
@@ -27,7 +30,7 @@ export default function App() {
 				centro={<PreviewPane />}
 				derecha={<ExportPanel />}
 				biblioteca={<LibraryScreen />}
-				disenar={<DisenarScreen />}
+				disenar={editor ? <DisenarScreen /> : null}
 			/>
 			<AddCardDialog />
 			<VariantDialog />
@@ -37,10 +40,14 @@ export default function App() {
 			<MoverADialog />
 			<StatsDialog />
 			<SetBrowserDialog />
-			<ColeccionesDialog />
-			<RecursosDialog />
-			<LoteDialog />
-			<PngDialog />
+			{editor && (
+				<>
+					<ColeccionesDialog />
+					<RecursosDialog />
+					<LoteDialog />
+					<PngDialog />
+				</>
+			)}
 		</>
 	);
 }

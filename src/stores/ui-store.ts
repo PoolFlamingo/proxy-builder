@@ -15,6 +15,8 @@ type Preferencias = {
 	pedirConfirmacionAlCargar: boolean;
 	zoom: number;
 	infoCarta: boolean;
+	/** El editor de cartas (experimental): apagado de fábrica, se enciende en Ajustes. */
+	editorCartas: boolean;
 };
 
 /** Los diálogos que se abren desde las cartas o las barras. */
@@ -54,6 +56,8 @@ type UiStore = Preferencias & {
 	setZoom: (z: number) => void;
 	setVerReversos: (b: boolean) => void;
 	setInfoCarta: (b: boolean) => void;
+	/** Enciende o apaga el editor; al apagarlo se sale de «Diseñar» y de sus diálogos. */
+	setEditorCartas: (b: boolean) => void;
 	seleccionar: (ids: string[], ancla?: string | null) => void;
 	abrir: (d: Dialogo | null) => void;
 	anunciar: (texto: string | null) => void;
@@ -61,6 +65,14 @@ type UiStore = Preferencias & {
 };
 
 const CLAVE = "proxybuilder.preferencias";
+
+/** Los diálogos que solo existen con el editor de cartas encendido. */
+const DIALOGOS_DEL_EDITOR = new Set<Dialogo["tipo"]>([
+	"colecciones",
+	"recursosDiseno",
+	"disenarDeck",
+	"exportarPng",
+]);
 export const ZOOM_MIN = 0.4;
 export const ZOOM_MAX = 2.5;
 
@@ -72,6 +84,7 @@ const PREDETERMINADAS: Preferencias = {
 	pedirConfirmacionAlCargar: true,
 	zoom: 0.8,
 	infoCarta: false,
+	editorCartas: false,
 };
 
 function leer(): Preferencias {
@@ -93,6 +106,7 @@ function guardar(s: Preferencias) {
 		pedirConfirmacionAlCargar: s.pedirConfirmacionAlCargar,
 		zoom: s.zoom,
 		infoCarta: s.infoCarta,
+		editorCartas: s.editorCartas,
 	};
 	try {
 		localStorage.setItem(CLAVE, JSON.stringify(p));
@@ -106,7 +120,10 @@ export const useUi = create<UiStore>((set, get) => ({
 	vista: "deck",
 	setVista: (vista) => set({ vista }),
 	disenando: null,
-	disenar: (id) => set({ disenando: id, ...(id ? { vista: "disenar" as const } : {}) }),
+	disenar: (id) => {
+		if (id && !get().editorCartas) return;
+		set({ disenando: id, ...(id ? { vista: "disenar" as const } : {}) });
+	},
 	verReversos: false,
 	seleccion: [],
 	ancla: null,
@@ -119,6 +136,20 @@ export const useUi = create<UiStore>((set, get) => ({
 	setVerReversos: (verReversos) => set({ verReversos }),
 	setInfoCarta: (infoCarta) => {
 		set({ infoCarta });
+		guardar(get());
+	},
+	setEditorCartas: (editorCartas) => {
+		const { vista, dialogo } = get();
+		set({
+			editorCartas,
+			...(editorCartas
+				? {}
+				: {
+						disenando: null,
+						vista: vista === "disenar" ? "deck" : vista,
+						dialogo: dialogo && DIALOGOS_DEL_EDITOR.has(dialogo.tipo) ? null : dialogo,
+					}),
+		});
 		guardar(get());
 	},
 	seleccionar: (seleccion, ancla) =>
