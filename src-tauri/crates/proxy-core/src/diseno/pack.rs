@@ -494,6 +494,13 @@ mod tests {
         p.ficheros
     }
 
+    /// Cambia el `pack.json` como JSON (no como texto: el formato da igual).
+    fn con_json(f: &mut BTreeMap<String, String>, cambio: impl FnOnce(&mut serde_json::Value)) {
+        let mut v: serde_json::Value = serde_json::from_str(&f["pack.json"]).unwrap();
+        cambio(&mut v);
+        f.insert("pack.json".into(), serde_json::to_string(&v).unwrap());
+    }
+
     #[test]
     fn cada_error_da_su_codigo() {
         let mut f = minimo();
@@ -504,17 +511,27 @@ mod tests {
         );
 
         let mut f = minimo();
-        let j = f["pack.json"].replacen("\"titulo\": { \"x\"", "\"tituloX\": { \"x\"", 1);
-        f.insert("pack.json".into(), j);
-        assert!(matches!(
+        con_json(&mut f, |v| {
+            v["estilos"]["borderless"]["huecos"]
+                .as_object_mut()
+                .unwrap()
+                .remove("titulo");
+        });
+        assert_eq!(
             Pack::cargar(f).unwrap_err(),
-            PackError::FaltaHueco { .. }
-        ));
+            PackError::FaltaHueco {
+                estilo: "borderless".into(),
+                hueco: "titulo".into()
+            }
+        );
 
         let mut f = minimo();
-        let j = f["pack.json"].replacen("\"claro\": \"#", "\"claro\": \"#zz", 1);
-        f.insert("pack.json".into(), j);
+        con_json(&mut f, |v| v["paletas"]["W"]["claro"] = "#zzzzzz".into());
         assert!(matches!(Pack::cargar(f).unwrap_err(), PackError::Color(_)));
+
+        let mut f = minimo();
+        con_json(&mut f, |v| v["version"] = 99.into());
+        assert_eq!(Pack::cargar(f).unwrap_err(), PackError::Version(99));
 
         let mut f = minimo();
         f.insert("pack.json".into(), "{".into());

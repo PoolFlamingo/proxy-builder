@@ -1,11 +1,12 @@
 //! **Editor de cartas** (la 2.0): borradores desde Scryfall y colecciones.
 //! El motor de render y la vista previa llegan en las fases siguientes.
 
-use proxy_core::diseno::modelo::{Collection, DesignDraft};
+use proxy_core::diseno::modelo::{Aviso, CardDesign, Collection, DesignDraft, DesignLang};
 use proxy_core::model::DeckCard;
-use tauri::State;
+use tauri::{AppHandle, Manager, State};
 
 use crate::diseno::borrador;
+use crate::diseno::recursos::{LetraInfo, PackInfo, SimbolosInfo};
 use crate::error::{AppError, AppResult, ErrorCode};
 use crate::state::AppState;
 use crate::store::colecciones;
@@ -50,4 +51,115 @@ pub fn collection_save(
 #[tauri::command]
 pub fn collection_delete(state: State<'_, AppState>, id: String) -> AppResult<()> {
     colecciones::delete(&state.db, &id)
+}
+
+// ── Letras, packs y símbolos ───────────────────────────────────────────────
+
+#[tauri::command]
+pub fn fonts_list(state: State<'_, AppState>) -> AppResult<Vec<LetraInfo>> {
+    state.diseno.letras()
+}
+
+#[tauri::command]
+pub fn font_import(state: State<'_, AppState>, path: String) -> AppResult<LetraInfo> {
+    state.diseno.importar_letra(std::path::Path::new(&path))
+}
+
+#[tauri::command]
+pub fn font_remove(state: State<'_, AppState>, id: String) -> AppResult<()> {
+    state.diseno.quitar_letra(&id)
+}
+
+#[tauri::command]
+pub fn packs_list(state: State<'_, AppState>) -> AppResult<Vec<PackInfo>> {
+    state.diseno.packs()
+}
+
+#[tauri::command]
+pub fn pack_import(state: State<'_, AppState>, path: String) -> AppResult<PackInfo> {
+    state.diseno.importar_pack(std::path::Path::new(&path))
+}
+
+#[tauri::command]
+pub fn pack_remove(state: State<'_, AppState>, id: String) -> AppResult<()> {
+    state.diseno.quitar_pack(&id)
+}
+
+/// Cómo están los símbolos; si faltan o son viejos, los descarga antes.
+#[tauri::command]
+pub async fn symbols_status(state: State<'_, AppState>, refresh: bool) -> AppResult<SimbolosInfo> {
+    state
+        .diseno
+        .asegurar_simbolos(state.scryfall.as_ref(), refresh)
+        .await?;
+    state.diseno.simbolos_info()
+}
+
+// ── Vista previa, guardar y quitar ─────────────────────────────────────────
+
+/// Corre `f` en un hilo aparte con el estado de la app (los renders pesan).
+async fn en_hilo<T: Send + 'static>(
+    app: AppHandle,
+    f: impl FnOnce(&AppState) -> AppResult<T> + Send + 'static,
+) -> AppResult<T> {
+    tauri::async_runtime::spawn_blocking(move || f(&app.state::<AppState>()))
+        .await
+        .map_err(|e| AppError::new(ErrorCode::Internal).with("detalle", e))?
+}
+
+/// Registra el diseño que se edita para la vista previa (`/d/<huella>/<ancho>`).
+#[tauri::command]
+pub async fn design_register(
+    app: AppHandle,
+    design: CardDesign,
+    cara: u32,
+    lang: DesignLang,
+) -> AppResult<String> {
+    en_hilo(app, move |s| {
+        crate::diseno::vista::registrar(s, &design, cara, lang)
+    })
+    .await
+}
+
+/// Los avisos de un diseño: texto que no cabe, reglas a mano, símbolos o
+/// letras que faltan…
+#[tauri::command]
+pub async fn design_fit_report(
+    app: AppHandle,
+    design: CardDesign,
+    lang: DesignLang,
+) -> AppResult<Vec<Aviso>> {
+    en_hilo(app, move |s| crate::diseno::vista::avisos(s, &design, lang)).await
+}
+
+/// Aplica el diseño a la carta (miniatura en el almacén) y la devuelve; la
+/// pantalla la pone en el deck.
+#[tauri::command]
+pub async fn design_save(
+    app: AppHandle,
+    card: DeckCard,
+    design: CardDesign,
+    lang: DesignLang,
+) -> AppResult<DeckCard> {
+    en_hilo(app, move |s| {
+        crate::diseno::vista::aplicar(s, &card, &design, lang)
+    })
+    .await
+}
+
+/// Deja la carta como estaba antes del diseño.
+#[tauri::command]
+pub fn design_remove(card: DeckCard) -> DeckCard {
+    crate::diseno::vista::quitar(&card)
+}
+
+/// Rehace las miniaturas desfasadas del deck abierto; devuelve las cartas
+/// que cambian (la pantalla las aplica de una vez).
+#[tauri::command]
+pub async fn design_rerender(
+    app: AppHandle,
+    cards: Vec<DeckCard>,
+    lang: DesignLang,
+) -> AppResult<Vec<DeckCard>> {
+    en_hilo(app, move |s| crate::diseno::vista::rehacer(s, &cards, lang)).await
 }

@@ -1,9 +1,15 @@
 //! **Paquetes `.pbdeck`**: un deck con todas sus imágenes en un ZIP, para
 //! llevárselo a otro equipo.
 //!
-//! - `manifest.json`: `{ format: "proxy-builder-deck", version: 1, deck }`.
-//! - `blobs/<sha256>.<ext>`: cada imagen que usa el deck (frentes, reversos y
-//!   reverso por defecto), una vez.
+//! - `manifest.json`: `{ format: "proxy-builder-deck", version: 2, deck,
+//!   colecciones }`.
+//! - `blobs/<sha256>.<ext>`: cada imagen que usa el deck (frentes, reversos,
+//!   reverso por defecto y, desde la 2, arte, emblemas e imágenes de «antes»
+//!   de los diseños), una vez.
+//!
+//! La versión 2 lleva diseños del editor de cartas y las colecciones que
+//! usan; una app 1.x la rechaza (`version > VERSION`). Las letras y los packs
+//! importados no viajan: en el otro equipo se usan los de la casa.
 //!
 //! 🛑 Al importar no se confía en nada: se ignoran las entradas con rutas
 //! raras (zip-slip), cada imagen tiene que dar la huella que dice su nombre y
@@ -13,6 +19,7 @@ use std::collections::BTreeSet;
 use std::io::{Read, Seek, Write};
 use std::path::Path;
 
+use proxy_core::diseno::modelo::Collection;
 use proxy_core::model::{BackSpec, Deck};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -22,10 +29,10 @@ use zip::{CompressionMethod, ZipArchive, ZipWriter};
 use crate::error::{AppError, AppResult, ErrorCode};
 use crate::store::blobs::{es_huella, escribir_atomico, BlobStore};
 use crate::store::db::Db;
-use crate::store::decks;
+use crate::store::{colecciones, decks};
 
 pub const FORMATO: &str = "proxy-builder-deck";
-pub const VERSION: u32 = 1;
+pub const VERSION: u32 = 2;
 /// Tope por entrada al descomprimir (una imagen de 12.000 px en PNG cabe de sobra).
 const MAX_ENTRADA: u64 = 512 * 1024 * 1024;
 
@@ -34,6 +41,9 @@ struct Manifiesto {
     format: String,
     version: u32,
     deck: Deck,
+    /// Las colecciones que usan los diseños del deck.
+    #[serde(default)]
+    colecciones: Vec<Collection>,
 }
 
 fn mal(motivo: &str) -> AppError {
@@ -60,16 +70,42 @@ pub fn blobs_del_deck(deck: &Deck) -> BTreeSet<String> {
         if let BackSpec::Dfc { image } | BackSpec::Custom { image } = &c.back {
             s.insert(image.blob.clone());
         }
+        if let Some(d) = &c.design {
+            s.extend(d.blobs().into_iter().map(str::to_string));
+        }
     }
     s
 }
 
+/// Las colecciones que usan los diseños de un deck.
+fn colecciones_del_deck(deck: &Deck, db: &Db) -> AppResult<Vec<Collection>> {
+    let usadas: BTreeSet<&str> = deck
+        .cards
+        .iter()
+        .filter_map(|c| c.design.as_ref()?.collection.as_deref())
+        .collect();
+    if usadas.is_empty() {
+        return Ok(Vec::new());
+    }
+    Ok(colecciones::list(db)?
+        .into_iter()
+        .filter(|c| usadas.contains(c.id.as_str()))
+        .collect())
+}
+
 fn escribir<W: Write + Seek>(w: W, deck: &Deck, blobs: &BlobStore, db: &Db) -> AppResult<W> {
     let mut zip = ZipWriter::new(w);
+    let cols = colecciones_del_deck(deck, db)?;
+    let mut todas = blobs_del_deck(deck);
+    todas.extend(
+        cols.iter()
+            .filter_map(|c| c.emblem.as_ref().map(|e| e.blob.clone())),
+    );
     let json = serde_json::to_vec_pretty(&Manifiesto {
         format: FORMATO.into(),
         version: VERSION,
         deck: deck.clone(),
+        colecciones: cols,
     })
     .map_err(|e| AppError::new(ErrorCode::Internal).with("detalle", e))?;
     // Fecha fija: el mismo deck da el mismo fichero.
@@ -82,7 +118,7 @@ fn escribir<W: Write + Seek>(w: W, deck: &Deck, blobs: &BlobStore, db: &Db) -> A
         .last_modified_time(fecha);
     zip.start_file("manifest.json", deflate).map_err(de_zip)?;
     zip.write_all(&json)?;
-    for hash in blobs_del_deck(deck) {
+    for hash in todas {
         let (ruta, _) = blobs
             .locate(db, &hash)?
             .ok_or_else(|| AppError::new(ErrorCode::NotFound).with("blob", &hash))?;
@@ -163,6 +199,15 @@ pub fn import<R: Read + Seek>(r: R, blobs: &BlobStore, db: &Db) -> AppResult<Dec
     for (_, bytes) in &imagenes {
         let origen = deck_origen(&deck, bytes);
         blobs.put_bytes(db, bytes, origen)?;
+    }
+
+    // Las colecciones: si ya hay una con el mismo id, se queda la de este
+    // equipo.
+    let ya: BTreeSet<String> = colecciones::list(db)?.into_iter().map(|c| c.id).collect();
+    for col in m.colecciones {
+        if !ya.contains(&col.id) {
+            colecciones::save(db, &col)?;
+        }
     }
 
     deck.id = uuid::Uuid::new_v4().to_string();
@@ -254,6 +299,56 @@ mod tests {
         // Importar otra vez en el mismo sitio le cambia el nombre.
         let otro = import(std::fs::File::open(&ruta).unwrap(), &s2, &db2).unwrap();
         assert_eq!(otro.name, "Mi deck (importado)");
+    }
+
+    #[test]
+    fn un_deck_disenado_viaja_con_su_arte_y_su_coleccion() {
+        use proxy_core::diseno::modelo::*;
+        let (dir, db, s) = entorno();
+        let mut d = deck_con_imagenes(&db, &s);
+        let arte = s
+            .put_bytes(&db, &png(30, 20, 7), ImageOrigin::Upload)
+            .unwrap();
+        let slime = s
+            .put_bytes(&db, &png(8, 6, 8), ImageOrigin::Upload)
+            .unwrap();
+        let mut col = colecciones::tests::nueva("Tensura 2");
+        col.emblem = Some(slime.clone());
+        let col = colecciones::save(&db, &col).unwrap();
+        let c = d.cards[0].clone();
+        let datos = CardData {
+            scryfall_id: "x".into(),
+            layout: "normal".into(),
+            faces: vec![FaceData::default()],
+            ..CardData::default()
+        };
+        let mut diseno = crate::diseno::borrador::montar(&c, datos, Some(&col), &[]).design;
+        diseno.faces[0].art = Some(ArtRef {
+            image: arte.clone(),
+            source: ArtSource::Upload,
+            framing: ArtFraming::default(),
+        });
+        d.cards[0].design = Some(diseno);
+        decks::save(&db, &d).unwrap();
+        let ruta = dir.path().join("x.pbdeck");
+        export(&d, &ruta, &s, &db).unwrap();
+
+        let (_dir2, db2, s2) = entorno();
+        let nuevo = import(std::fs::File::open(&ruta).unwrap(), &s2, &db2).unwrap();
+        assert!(nuevo.cards[0].design.is_some());
+        assert!(s2.locate(&db2, &arte.blob).unwrap().is_some());
+        assert!(s2.locate(&db2, &slime.blob).unwrap().is_some());
+        let cols = colecciones::list(&db2).unwrap();
+        assert_eq!(cols.len(), 1);
+        assert_eq!(cols[0].id, col.id);
+        // El arte queda protegido de la limpieza en el equipo nuevo.
+        db2.conn()
+            .unwrap()
+            .execute("UPDATE blobs SET created_at = 0", [])
+            .unwrap();
+        s2.gc(&db2, false).unwrap();
+        assert!(s2.locate(&db2, &arte.blob).unwrap().is_some());
+        assert!(s2.locate(&db2, &slime.blob).unwrap().is_some());
     }
 
     #[test]

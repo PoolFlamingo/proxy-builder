@@ -65,6 +65,7 @@ pub fn spec_de_casilla(
         target: SpecTarget::Dpi(s.quality.dpi()),
         format: s.encoding.format,
         jpeg_quality: s.encoding.jpeg_quality,
+        diseno: None,
     }
 }
 
@@ -81,6 +82,7 @@ pub fn spec_de_miniatura(blob: &str, img: &FaceImage, p: &PreviewParams, ancho: 
         target: SpecTarget::Width(ancho),
         format: ImageFormat::Jpeg,
         jpeg_quality: 85,
+        diseno: None,
     }
 }
 

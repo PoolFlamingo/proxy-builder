@@ -132,6 +132,7 @@ fn diseno(
             ..DesignOptions::default()
         },
         emblem: EmblemChoice::Inherit,
+        thumb_key: None,
     }
 }
 

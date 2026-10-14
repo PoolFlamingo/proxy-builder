@@ -426,6 +426,12 @@ pub struct CardDesign {
     pub footer: FooterOptions,
     pub options: DesignOptions,
     pub emblem: EmblemChoice,
+    /// La huella con la que se pintó la miniatura `front` de la carta. Si la
+    /// de ahora es otra (cambió la colección, una letra, el pack…), la
+    /// miniatura está desfasada y se rehace (`design_rerender`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub thumb_key: Option<String>,
 }
 
 impl CardDesign {
@@ -499,6 +505,8 @@ pub enum Aviso {
     LayoutDesconocido {
         layout: String,
     },
+    /// La colección del diseño ya no existe: se usan los valores de fábrica.
+    ColeccionPerdida,
 }
 
 /// Lo que devuelve un borrador: el diseño y sus avisos.
@@ -630,6 +638,7 @@ pub(crate) mod tests {
             },
             options: DesignOptions::default(),
             emblem: EmblemChoice::Own { image: imagen("e") },
+            thumb_key: None,
         }
     }
 

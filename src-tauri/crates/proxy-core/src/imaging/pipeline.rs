@@ -7,9 +7,10 @@ use super::frame::{fit, px_por_mm, trim_px, Target};
 use super::probe::{probe, Kind};
 use super::{bleed, corners, decode::decode, edges, encode, ImagingError};
 use crate::model::{BleedMode, CardEdits, CardSize, EdgeDarkening, ImageFormat, ImageOrigin};
+use image::RgbaImage;
 
 /// Subirla invalida todas las cachés de renders (cambió algún resultado).
-pub const PIPELINE_VERSION: u32 = 4;
+pub const PIPELINE_VERSION: u32 = 5;
 
 /// Todo lo que cambia el resultado de un render.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -30,6 +31,21 @@ pub struct RenderSpec {
     pub target: SpecTarget,
     pub format: ImageFormat,
     pub jpeg_quality: u8,
+    /// La casilla es de una carta diseñada: la imagen no sale del blob sino
+    /// del motor de diseño, a la medida exacta del corte (§3.3 del plan de
+    /// la 2.0). `blob` lleva entonces la miniatura, que no se usa.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub diseno: Option<DisenoRef>,
+}
+
+/// Qué diseño pintar en una casilla: su huella (diseño efectivo + recursos),
+/// la cara y el idioma.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DisenoRef {
+    pub huella: String,
+    pub cara: u32,
+    pub lang: crate::diseno::modelo::DesignLang,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -108,6 +124,27 @@ fn passthrough(bytes: &[u8], s: &RenderSpec) -> bool {
     }
 }
 
+/// Lo que queda de la tubería cuando la imagen ya viene a la medida del
+/// corte (las cartas diseñadas): sangrado y codificación. Sin esquinas,
+/// encuadre, retoques ni oscurecido.
+pub fn render_desde_imagen(img: &RgbaImage, s: &RenderSpec) -> Result<Rendered, ImagingError> {
+    let (tw, _) = img.dimensions();
+    let px_mm = px_por_mm(s.card, tw);
+    let b = (s.bleed_mm * px_mm).round().max(0.0) as u32;
+    let img = bleed::extend(img, b, s.bleed_mode);
+    let (width, height) = img.dimensions();
+    let bytes = match s.format {
+        ImageFormat::Jpeg => encode::jpeg(&img, s.jpeg_quality)?,
+        ImageFormat::Png => encode::png(&img)?,
+    };
+    Ok(Rendered::Encoded {
+        bytes,
+        format: s.format,
+        width,
+        height,
+    })
+}
+
 /// Procesa una imagen según la especificación.
 pub fn render(bytes: &[u8], s: &RenderSpec) -> Result<Rendered, ImagingError> {
     if passthrough(bytes, s) {
@@ -177,6 +214,7 @@ mod tests {
             target: SpecTarget::Dpi(300.0),
             format: ImageFormat::Jpeg,
             jpeg_quality: 95,
+            diseno: None,
         }
     }
 
