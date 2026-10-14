@@ -11,7 +11,9 @@ use ts_rs::TS;
 use crate::paper::PaperFormat;
 
 /// Versión del esquema de `Deck` (base de datos y paquetes `.pbdeck`).
-pub const DECK_SCHEMA_VERSION: u32 = 1;
+/// La 2 añade `DeckCard.design` (el editor de cartas): una 1.x que guardara
+/// un deck v2 perdería los diseños, por eso sube.
+pub const DECK_SCHEMA_VERSION: u32 = 2;
 
 // ── Imágenes ────────────────────────────────────────────────────────────────
 
@@ -29,6 +31,9 @@ pub enum ImageOrigin {
     Upload,
     /// Generada por la app (el reverso genérico).
     Generated,
+    /// La miniatura de un diseño del editor de cartas (la 2.0). El PDF no la
+    /// usa: pinta desde el diseño a la resolución de exportación.
+    Designed,
 }
 
 /// Una imagen guardada en el almacén de blobs.
@@ -211,6 +216,11 @@ pub struct DeckCard {
     /// Fijada: «Auto ordenar» y «Reaplicar idioma» no la tocan.
     pub locked: bool,
     pub meta: CardMeta,
+    /// El diseño del editor de cartas, si lo tiene (la 2.0). Opcional: los
+    /// decks 1.x se leen igual y las cartas subidas a mano no lo llevan.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub design: Option<crate::diseno::modelo::CardDesign>,
 }
 
 // ── Ajustes de impresión ────────────────────────────────────────────────────
@@ -451,6 +461,9 @@ pub struct PrintSettings {
     pub row_offsets: RowOffsets,
     /// Partir el PDF cada N hojas (`None` = un solo fichero).
     pub split_every: Option<u32>,
+    /// En qué idioma salen las cartas diseñadas (español de fábrica).
+    #[serde(default)]
+    pub design_lang: crate::diseno::modelo::DesignLang,
 }
 
 impl Default for PrintSettings {
@@ -478,6 +491,7 @@ impl Default for PrintSettings {
             encoding: Encoding::default(),
             row_offsets: RowOffsets::default(),
             split_every: None,
+            design_lang: crate::diseno::modelo::DesignLang::Es,
         }
     }
 }

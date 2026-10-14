@@ -56,6 +56,7 @@ pub fn calibration(
                 edits: CardEdits::default(),
                 locked: false,
                 meta: CardMeta::default(),
+                design: None,
             })
             .collect(),
         ..base
@@ -251,6 +252,7 @@ mod tests {
                     edits: CardEdits::default(),
                     locked: false,
                     meta: CardMeta::default(),
+                    design: None,
                 }],
                 settings: s,
                 default_back: None,

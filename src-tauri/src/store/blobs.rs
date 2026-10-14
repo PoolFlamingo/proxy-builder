@@ -47,6 +47,7 @@ fn origen_texto(o: ImageOrigin) -> &'static str {
         ImageOrigin::ScryfallLarge => "scryfallLarge",
         ImageOrigin::Upload => "upload",
         ImageOrigin::Generated => "generated",
+        ImageOrigin::Designed => "designed",
     }
 }
 
@@ -55,6 +56,7 @@ fn origen_de(s: &str) -> ImageOrigin {
         "scryfallPng" => ImageOrigin::ScryfallPng,
         "scryfallLarge" => ImageOrigin::ScryfallLarge,
         "generated" => ImageOrigin::Generated,
+        "designed" => ImageOrigin::Designed,
         _ => ImageOrigin::Upload,
     }
 }

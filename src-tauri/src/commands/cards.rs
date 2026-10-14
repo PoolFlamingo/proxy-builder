@@ -268,6 +268,7 @@ pub async fn card_fetch(state: State<'_, AppState>, scryfall_id: String) -> AppR
             highres: c.highres_image,
             type_line: c.type_line.clone(),
         },
+        design: None,
     })
 }
 

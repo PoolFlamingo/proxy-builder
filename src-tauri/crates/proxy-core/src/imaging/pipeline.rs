@@ -145,13 +145,14 @@ pub fn render(bytes: &[u8], s: &RenderSpec) -> Result<Rendered, ImagingError> {
 
 /// ¿Se oscurece esta imagen? Según el origen y si es un dorso.
 pub fn edge_for(e: &EdgeDarkening, origin: ImageOrigin, es_dorso: bool) -> Option<EdgeDarkening> {
-    if !e.enabled {
+    // Las cartas diseñadas ya traen su marco: nunca se oscurecen.
+    if !e.enabled || origin == ImageOrigin::Designed {
         return None;
     }
     let por_origen = match origin {
         ImageOrigin::ScryfallPng | ImageOrigin::ScryfallLarge => e.apply_scryfall,
         ImageOrigin::Upload => e.apply_uploads,
-        ImageOrigin::Generated => false,
+        ImageOrigin::Generated | ImageOrigin::Designed => false,
     };
     let ok = if es_dorso { e.apply_backs } else { por_origen };
     ok.then_some(*e)
@@ -227,6 +228,8 @@ mod tests {
             ..Default::default()
         };
         assert!(edge_for(&e, ImageOrigin::ScryfallPng, false).is_some());
+        assert!(edge_for(&e, ImageOrigin::Designed, false).is_none());
+        assert!(edge_for(&e, ImageOrigin::Designed, true).is_none());
         assert!(edge_for(&e, ImageOrigin::Upload, false).is_none());
         assert!(edge_for(&e, ImageOrigin::ScryfallPng, true).is_none());
         e.apply_backs = true;
