@@ -15,10 +15,12 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { WithTooltip } from "@/components/ui/with-tooltip";
 import { cartaPorId } from "@/features/preview/acciones-carta";
 import { EDICION_NEUTRA, parametros, urlMiniatura } from "@/lib/image-url";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
+import { type Alcance, aplicarEdicion, copiasDe } from "./propagar";
 
 /** Los once retoques, en el orden de fabricard. */
 const RETOQUES: { k: keyof Adjustments; nombre: string; min: number }[] = [
@@ -64,6 +66,7 @@ function filtroAproximado(borrador: Adjustments, pintado: Adjustments): string {
 function Contenido({ carta }: { carta: DeckCard }) {
 	const { t } = useLang();
 	const ajustes = useDeck((s) => s.deck?.settings);
+	const copias = useDeck((s) => (s.deck ? copiasDe(s.deck.cards, carta).length : 0));
 	const [borrador, setBorrador] = useState<CardEdits>(carta.edits);
 	const [pintado, setPintado] = useState<CardEdits>(carta.edits);
 	const [cargando, setCargando] = useState(true);
@@ -98,18 +101,17 @@ function Contenido({ carta }: { carta: DeckCard }) {
 	const girar = (paso: 1 | -1) =>
 		setBorrador((b) => ({ ...b, rotation: GIROS[(GIROS.indexOf(b.rotation) + paso + 4) % 4] }));
 
-	const guardar = (todas: boolean) => {
-		useDeck.getState().setCartas((cs) =>
-			cs.map((c) => {
-				if (c.id === carta.id) return { ...c, edits: borrador };
-				// «Aplicar a todas»: los retoques de color, no el giro ni el encuadre.
-				if (todas && c.front) return { ...c, edits: { ...c.edits, adjust: borrador.adjust } };
-				return c;
-			}),
-		);
+	const guardar = (alcance: Alcance) => {
+		useDeck.getState().setCartas((cs) => aplicarEdicion(cs, carta, borrador, alcance));
 		useUi
 			.getState()
-			.anunciar(todas ? t("Retoques aplicados a todas las cartas") : t("Carta retocada"));
+			.anunciar(
+				alcance === "todas"
+					? t("Retoques aplicados a todas las cartas")
+					: alcance === "copias"
+						? t("Carta y sus {n} copias retocadas", { n: copias })
+						: t("Carta retocada"),
+			);
 		useUi.getState().abrir(null);
 	};
 
@@ -255,11 +257,26 @@ function Contenido({ carta }: { carta: DeckCard }) {
 					<Undo2 />
 					{t("Restablecer todo")}
 				</Button>
-				<div className="flex gap-2">
-					<Button size="sm" variant="outline" onClick={() => guardar(true)}>
-						{t("Aplicar a todas las cartas")}
-					</Button>
-					<Button size="sm" onClick={() => guardar(false)} disabled={!cambiado}>
+				<div className="flex flex-wrap justify-end gap-2">
+					<WithTooltip
+						content={t(
+							"Solo los retoques de color; el giro y el encuadre se quedan en esta carta.",
+						)}
+					>
+						<Button size="sm" variant="outline" onClick={() => guardar("todas")}>
+							{t("Aplicar a todas las cartas")}
+						</Button>
+					</WithTooltip>
+					{copias > 0 && (
+						<WithTooltip
+							content={t("Las que llevan la misma imagen: giro, encuadre y retoques, todo igual.")}
+						>
+							<Button size="sm" variant="outline" onClick={() => guardar("copias")}>
+								{t("Aplicar también a sus copias ({n})", { n: copias })}
+							</Button>
+						</WithTooltip>
+					)}
+					<Button size="sm" onClick={() => guardar("carta")} disabled={!cambiado}>
 						{t("Aplicar")}
 					</Button>
 				</div>
