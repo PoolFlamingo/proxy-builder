@@ -129,8 +129,9 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
     `PagePlan` (`big_grid`, `big_cells`, `Page.big`).
 - «Editar carta» aplica a la carta, a sus copias (misma imagen: todo) o a
   todas (solo el color): `features/card-editor/propagar.ts`.
-- Presentación de la app con capturas: `docs/presentacion.md` (las imágenes en
-  `docs/presentacion/`, sacadas de la app en Xvfb con un deck de ejemplo).
+- El `README.md` es la presentación de la app (Pablo, 14/10/2026): qué hace,
+  con capturas en `docs/presentacion/` sacadas de la app en Xvfb con un deck
+  de ejemplo; lo de desarrollar va al final.
 - Releases: los hace Pablo (o Claude Code en su VS Code), no esta sesión.
 - Valores de fábrica (Pablo, 13/10/2026): 2 mm de separación en blanco,
   sangrado 0, guías de corte apagadas y «Rellenar las esquinas» apagado (lo
