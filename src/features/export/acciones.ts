@@ -1,9 +1,9 @@
-import { save } from "@tauri-apps/plugin-dialog";
 import { toast } from "sonner";
 import type { ExportPhase } from "@/bindings/ExportPhase";
 import type { ExportResult } from "@/bindings/ExportResult";
 import { paraTraducir } from "@/components/language-provider";
 import type { T } from "@/features/decklist/acciones";
+import { guardarParaExportar } from "@/lib/dialogos";
 import { call } from "@/lib/ipc";
 import { lanzarTrabajo } from "@/lib/trabajos";
 import { useDeck } from "@/stores/deck-store";
@@ -33,11 +33,10 @@ export function nombreSeguro(nombre: string, ext: string) {
 export async function pedirDestino(t: T): Promise<string | null> {
 	const deck = useDeck.getState().deck;
 	if (!deck) return null;
-	return save({
-		title: t("Exportar PDF"),
-		defaultPath: nombreSeguro(deck.name, "pdf"),
-		filters: [{ name: "PDF", extensions: ["pdf"] }],
-	});
+	return guardarParaExportar(
+		{ title: t("Exportar PDF"), filters: [{ name: "PDF", extensions: ["pdf"] }] },
+		nombreSeguro(deck.name, "pdf"),
+	);
 }
 
 /**
@@ -97,11 +96,10 @@ function avisarHecho(r: ExportResult, t: T) {
 export async function exportarCalibracion(t: T) {
 	const deck = useDeck.getState().deck;
 	if (!deck) return;
-	const destino = await save({
-		title: t("Hoja de calibración"),
-		defaultPath: nombreSeguro(t("calibracion-duplex"), "pdf"),
-		filters: [{ name: "PDF", extensions: ["pdf"] }],
-	});
+	const destino = await guardarParaExportar(
+		{ title: t("Hoja de calibración"), filters: [{ name: "PDF", extensions: ["pdf"] }] },
+		nombreSeguro(t("calibracion-duplex"), "pdf"),
+	);
 	if (!destino) return;
 	const ruta = await call("export_calibration", {
 		settings: deck.settings,

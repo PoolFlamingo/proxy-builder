@@ -1,4 +1,3 @@
-import { open, save } from "@tauri-apps/plugin-dialog";
 import {
 	Copy,
 	FolderOpen,
@@ -43,6 +42,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { megas, nombreSeguro } from "@/features/export/acciones";
 import { RaizScroll, useVisible } from "@/features/preview/visibilidad";
+import { abrirParaImportar, guardarParaExportar } from "@/lib/dialogos";
 import { EDICION_NEUTRA, urlMiniatura } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
@@ -121,11 +121,13 @@ export function LibraryScreen() {
 
 	const exportarPaquete = intentar(async (d: DeckSummary) => {
 		await guardarAhora();
-		const destino = await save({
-			title: t("Exportar deck con sus imágenes"),
-			defaultPath: nombreSeguro(d.name, "pbdeck"),
-			filters: [{ name: "Proxy Builder", extensions: ["pbdeck"] }],
-		});
+		const destino = await guardarParaExportar(
+			{
+				title: t("Exportar deck con sus imágenes"),
+				filters: [{ name: "Proxy Builder", extensions: ["pbdeck"] }],
+			},
+			nombreSeguro(d.name, "pbdeck"),
+		);
 		if (!destino) return;
 		const bytes = await call("deck_export_package", { id: d.id, path: destino });
 		toast.success(t("Deck exportado ({mb})", { mb: megas(bytes) }), {
@@ -137,13 +139,15 @@ export function LibraryScreen() {
 	});
 
 	const importarPaquete = intentar(async () => {
-		const ruta = await open({
-			title: t("Importar deck"),
-			multiple: false,
-			directory: false,
-			filters: [{ name: "Proxy Builder", extensions: ["pbdeck"] }],
-		});
-		if (!ruta || Array.isArray(ruta)) return;
+		const ruta = (
+			await abrirParaImportar({
+				title: t("Importar deck"),
+				multiple: false,
+				directory: false,
+				filters: [{ name: "Proxy Builder", extensions: ["pbdeck"] }],
+			})
+		)?.[0];
+		if (!ruta) return;
 		const d = await call("deck_import_package", { path: ruta });
 		toast.success(t("«{n}» importado", { n: d.name }));
 		await refrescar();

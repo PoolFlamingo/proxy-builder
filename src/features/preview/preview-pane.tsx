@@ -22,7 +22,9 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import type { DeckCard } from "@/bindings/DeckCard";
 import type { Page } from "@/bindings/Page";
+import type { PrintSettings } from "@/bindings/PrintSettings";
 import type { RectMm } from "@/bindings/RectMm";
 import { CampoNumero } from "@/components/campos";
 import { Confirmar } from "@/components/confirmar";
@@ -39,7 +41,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Toggle } from "@/components/ui/toggle";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { WithTooltip } from "@/components/ui/with-tooltip";
-import { ANCHOS, type AnchoMiniatura } from "@/lib/image-url";
+import { ANCHOS, type AnchoMiniatura, parametros, urlMiniatura } from "@/lib/image-url";
 import { useDeck } from "@/stores/deck-store";
 import { usePlan } from "@/stores/plan-store";
 import { useUi, ZOOM_MAX, ZOOM_MIN } from "@/stores/ui-store";
@@ -362,11 +364,12 @@ export function PreviewPane() {
 							)}
 							<DragOverlay dropAnimation={null}>
 								{arrastrando && (
-									<div className="rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground shadow-lg">
-										{arrastrando.length === 1
-											? cartas.get(arrastrando[0])?.meta.name || t("Hueco")
-											: t("{n} cartas", { n: arrastrando.length })}
-									</div>
+									<Arrastrada
+										carta={cartas.get(arrastrando[0])}
+										total={arrastrando.length}
+										ajustes={ajustes}
+										ancho={ancho}
+									/>
 								)}
 							</DragOverlay>
 						</DndContext>
@@ -428,4 +431,47 @@ function useTeclado() {
 		window.addEventListener("keydown", alTeclear);
 		return () => window.removeEventListener("keydown", alTeclear);
 	}, []);
+}
+
+/**
+ * Lo que va pegado al ratón al arrastrar: la propia carta, del tamaño de su
+ * casilla (dnd-kit le da el de la que se arrastra) y algo inclinada; con
+ * varias, una pila con el número.
+ */
+function Arrastrada({
+	carta,
+	total,
+	ajustes,
+	ancho,
+}: {
+	carta: DeckCard | undefined;
+	total: number;
+	ajustes: PrintSettings;
+	ancho: AnchoMiniatura;
+}) {
+	const { t } = useLang();
+	const url = carta?.front
+		? urlMiniatura(carta.front.blob, parametros(ajustes, carta.edits, false, 0), ancho)
+		: null;
+	return (
+		<div className="relative size-full rotate-2 cursor-grabbing">
+			{total > 1 && (
+				<div className="absolute inset-0 translate-x-1.5 translate-y-1.5 rotate-3 rounded-[4.5%] bg-muted shadow-lg ring-1 ring-black/20" />
+			)}
+			<div className="relative size-full overflow-hidden rounded-[4.5%] bg-muted opacity-95 shadow-2xl ring-2 ring-primary">
+				{url ? (
+					<img src={url} alt="" draggable={false} className="size-full object-cover" />
+				) : (
+					<div className="flex size-full items-center justify-center text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+						{carta?.meta.name || t("Hueco")}
+					</div>
+				)}
+			</div>
+			{total > 1 && (
+				<span className="absolute -top-2 -right-2 rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground shadow">
+					{total}
+				</span>
+			)}
+		</div>
+	);
 }
