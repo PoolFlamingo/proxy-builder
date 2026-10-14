@@ -105,6 +105,11 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
   en Rust con progreso, puntúa cada propuesta exacta/probable/ninguna y la
   pantalla la deja revisar antes de vincular; con selección, solo esas).
 - **Editor de cartas (2.0).** El plan es `plans/20261014 - editor-de-cartas/`.
+  - 🛑 Experimental y **apagado de fábrica** (Pablo, 14/10/2026): se enciende en
+    Ajustes (`ui-store.editorCartas`, `setEditorCartas`). Apagado no se monta
+    nada suyo: ni la pestaña «Diseñar», ni sus diálogos (`App.tsx`), ni sus
+    entradas del menú de la casilla. Las cartas ya diseñadas se siguen
+    imprimiendo desde su diseño.
   - Motor en `proxy-core::diseno`: `modelo` (CardDesign, CardData, Collection),
     `efectivo` (carta > colección > fábrica y la huella), `pack` (formato de
     marcos, ver `docs/packs-de-marcos.md`), `texto` y `pintar` (parley +
@@ -122,6 +127,10 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
     El PDF pinta cada carta diseñada desde el diseño a su medida y PPP.
   - Cartas grandes (planos, planes, Vanguard): hojas propias al final del
     `PagePlan` (`big_grid`, `big_cells`, `Page.big`).
+- «Editar carta» aplica a la carta, a sus copias (misma imagen: todo) o a
+  todas (solo el color): `features/card-editor/propagar.ts`.
+- Presentación de la app con capturas: `docs/presentacion.md` (las imágenes en
+  `docs/presentacion/`, sacadas de la app en Xvfb con un deck de ejemplo).
 - Releases: los hace Pablo (o Claude Code en su VS Code), no esta sesión.
 - Valores de fábrica (Pablo, 13/10/2026): 2 mm de separación en blanco,
   sangrado 0, guías de corte apagadas y «Rellenar las esquinas» apagado (lo
@@ -139,15 +148,19 @@ instalado para compilar el crate de la app), se sincroniza a
 `/home/estigio/Projects/Tauri/proxy-builder` y Pablo arranca la app en su
 equipo. Los planes (`plans/`) no se versionan.
 
-- Sincronizar: `git bundle` en la nube → `tmp/` de Pablo → `git fetch` del
-  bundle y `git merge --ff-only`.
+- 🛑 **Los cambios llegan como ediciones sin commit** (Pablo, 14/10/2026): él
+  quiere verlos en su árbol de trabajo y hacer los commits él. En la nube no
+  se hace commit: se saca un parche (`git diff --binary` desde lo último que
+  se le mandó), se copia a su `tmp/` y se aplica allí con `git apply` (sin
+  commit). Su equipo no tiene cargo ni pnpm: todo se compila y se prueba
+  aquí antes de mandarlo.
 - 🛑 **No subir a GitHub desde la nube** (Pablo, 14/10/2026): cada push lanza
-  el CI y le llegan correos si falla. Los cambios llegan a su repo local por
-  bundle; él decide cuándo subir y cuándo sacar versión. Antes de cada commit,
-  lo mismo que el CI (`pnpm bindings`, `pnpm check`, `pnpm check:rust-fmt`,
-  `pnpm check:clippy` con el clippy de la última estable y `pnpm test:rust`),
-  y `pnpm test:rust` otra vez después del commit (lint-staged formatea JSON y
-  TS al hacerlo).
+  el CI y le llegan correos si falla. Él decide cuándo hacer commit, subir y
+  sacar versión. Antes de mandar un parche, lo mismo que el CI
+  (`pnpm bindings`, `pnpm check`, `pnpm check:rust-fmt`, `pnpm check:clippy`
+  con el clippy de la última estable y `pnpm test:rust`), con
+  `biome check --write` y `cargo fmt` pasados antes (lint-staged lo haría al
+  hacer commit).
 - Probar la ventana en la nube: `Xvfb :99` y la app con
   `WEBKIT_DISABLE_COMPOSITING_MODE=1 WEBKIT_DISABLE_DMABUF_RENDERER=1`. Sin
   eso, en una pantalla sin GPU las animaciones de entrada de los diálogos no
