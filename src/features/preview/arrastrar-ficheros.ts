@@ -2,8 +2,37 @@ import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { useLang } from "@/components/language-provider";
-import { anadirPropias, EXTENSIONES_IMAGEN } from "@/features/decklist/acciones";
+import { anadirPropias, EXTENSIONES_IMAGEN, type T } from "@/features/decklist/acciones";
 import { reemplazarConFichero } from "./acciones-carta";
+
+/** De lo que se arrastra, solo las imágenes que la app sabe leer. */
+export function soloImagenes(rutas: string[]): string[] {
+	return rutas.filter((p) => EXTENSIONES_IMAGEN.includes(p.split(".").pop()?.toLowerCase() ?? ""));
+}
+
+/**
+ * Suelta ficheros en `posicion` (píxeles físicos, como los da Tauri): sobre
+ * una carta (`cartaEn`, en píxeles CSS) la reemplaza con la primera imagen;
+ * fuera de las cartas, las añade todas como propias. `null` si no hay
+ * ninguna imagen.
+ */
+export function soltarFicheros(
+	rutas: string[],
+	posicion: { x: number; y: number },
+	dpr: number,
+	cartaEn: (x: number, y: number) => string | undefined,
+	t: T,
+): Promise<void> | null {
+	const imagenes = soloImagenes(rutas);
+	if (imagenes.length === 0) return null;
+	const id = cartaEn(posicion.x / dpr, posicion.y / dpr);
+	return id ? reemplazarConFichero(id, imagenes[0]) : anadirPropias(imagenes, t);
+}
+
+/** El id de la carta que hay en (x, y) de la ventana, si hay alguna. */
+function cartaEnPantalla(x: number, y: number): string | undefined {
+	return document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-carta]")?.dataset.carta;
+}
 
 /**
  * Arrastrar imágenes desde el gestor de ficheros: sobre una carta, la
@@ -18,16 +47,14 @@ export function useArrastrarFicheros() {
 		getCurrentWebview()
 			.onDragDropEvent((ev) => {
 				if (ev.payload.type !== "drop") return;
-				const rutas = ev.payload.paths.filter((p) =>
-					EXTENSIONES_IMAGEN.includes(p.split(".").pop()?.toLowerCase() ?? ""),
+				const hecho = soltarFicheros(
+					ev.payload.paths,
+					ev.payload.position,
+					window.devicePixelRatio || 1,
+					cartaEnPantalla,
+					t,
 				);
-				if (rutas.length === 0) return;
-				const dpr = window.devicePixelRatio || 1;
-				const { x, y } = ev.payload.position;
-				const el = document.elementFromPoint(x / dpr, y / dpr);
-				const id = el?.closest<HTMLElement>("[data-carta]")?.dataset.carta;
-				const hecho = id ? reemplazarConFichero(id, rutas[0]) : anadirPropias(rutas, t);
-				hecho.catch((e) => toast.error(mensaje(e)));
+				hecho?.catch((e) => toast.error(mensaje(e)));
 			})
 			.then((f) => {
 				if (vivo) dejar = f;
