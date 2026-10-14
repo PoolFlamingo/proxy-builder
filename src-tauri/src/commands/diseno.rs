@@ -136,6 +136,98 @@ pub async fn design_fit_report(
     en_hilo(app, move |s| crate::diseno::vista::avisos(s, &design, lang)).await
 }
 
+/// «Diseñar el deck»: borradores de las cartas sin diseño, en orden. Cada
+/// carta hecha llega por `design://progress`; el final, por
+/// `design://done`. Se cancela con `job_cancel`.
+#[tauri::command]
+pub fn design_drafts_for_deck(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    cards: Vec<DeckCard>,
+    usados: Vec<String>,
+    collection: Option<String>,
+    lang: DesignLang,
+) -> AppResult<u32> {
+    let coleccion = match &collection {
+        Some(c) => colecciones::get(&state.db, c)?,
+        None => None,
+    };
+    let (job_id, cancelado) = state.jobs.alta();
+    tauri::async_runtime::spawn(async move {
+        let estado = app.state::<AppState>();
+        let _marca = estado.trabajo();
+        let r = crate::diseno::lote::borradores(
+            &app, job_id, cards, usados, coleccion, lang, &cancelado,
+        )
+        .await;
+        estado.jobs.baja(job_id);
+        let _ = tauri::Emitter::emit(
+            &app,
+            "design://done",
+            crate::diseno::lote::DesignDoneEvent {
+                job_id,
+                error: r.err(),
+            },
+        );
+    });
+    Ok(job_id)
+}
+
+/// Exporta las cartas diseñadas como PNG a una carpeta (`es/` y `en/`). El
+/// avance llega por `designpng://progress`; el final, por `designpng://done`.
+#[tauri::command]
+pub fn design_export_png(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    cards: Vec<DeckCard>,
+    folder: String,
+    dpi: u32,
+    langs: Vec<DesignLang>,
+) -> AppResult<u32> {
+    if !matches!(dpi, 300 | 600 | 900) || langs.is_empty() {
+        return Err(AppError::new(ErrorCode::InvalidInput).with("motivo", "png"));
+    }
+    let (job_id, cancelado) = state.jobs.alta();
+    tauri::async_runtime::spawn_blocking(move || {
+        let estado = app.state::<AppState>();
+        let _marca = estado.trabajo();
+        let r = crate::diseno::png::exportar(
+            &estado,
+            &cards,
+            std::path::Path::new(&folder),
+            dpi,
+            &langs,
+            &cancelado,
+            &|done, total| {
+                let _ = tauri::Emitter::emit(
+                    &app,
+                    "designpng://progress",
+                    crate::diseno::png::DesignPngProgressEvent {
+                        job_id,
+                        done,
+                        total,
+                    },
+                );
+            },
+        );
+        estado.jobs.baja(job_id);
+        let (files, error) = match r {
+            Ok(n) => (n, None),
+            Err(e) => (0, Some(e)),
+        };
+        let _ = tauri::Emitter::emit(
+            &app,
+            "designpng://done",
+            crate::diseno::png::DesignPngDoneEvent {
+                job_id,
+                files,
+                error,
+            },
+        );
+    });
+    Ok(job_id)
+}
+
 /// Cómo se maqueta una cara (layout y texto partido), para el editor.
 #[tauri::command]
 pub fn design_structure(
@@ -211,8 +303,9 @@ pub fn art_from_blob(state: State<'_, AppState>, blob: String) -> AppResult<ArtR
 pub async fn art_from_scryfall(
     state: State<'_, AppState>,
     scryfall_id: String,
+    cara: Option<u32>,
 ) -> AppResult<ArtRef> {
-    crate::diseno::arte::desde_scryfall(&state, &scryfall_id).await
+    crate::diseno::arte::desde_scryfall(&state, &scryfall_id, cara.unwrap_or(0) as usize).await
 }
 
 /// Recorta la ilustración de una carta ya hecha (fracciones de 0 a 1).

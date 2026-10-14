@@ -45,3 +45,16 @@ export async function guardarParaExportar(
 	if (r) recordar("exportar", r);
 	return r;
 }
+
+/** Elegir la carpeta donde exportar (imágenes sueltas); recuerda la carpeta. */
+export async function elegirCarpetaParaExportar(): Promise<string | null> {
+	const r = await open({
+		directory: true,
+		multiple: false,
+		defaultPath: await inicial("exportar"),
+	});
+	const ruta = Array.isArray(r) ? r[0] : r;
+	if (!ruta) return null;
+	recordar("exportar", ruta);
+	return ruta;
+}

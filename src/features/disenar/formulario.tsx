@@ -435,7 +435,7 @@ function PestanaArte({
 			return null;
 		});
 	const scryfall = () =>
-		intentar(() => call("art_from_scryfall", { scryfallId: design.card.scryfallId }));
+		intentar(() => call("art_from_scryfall", { scryfallId: design.card.scryfallId, cara }));
 	const encuadre = (c: Partial<ArtRef["framing"]>) =>
 		arte && poner({ ...arte, framing: { ...arte.framing, ...c } });
 	const origen =

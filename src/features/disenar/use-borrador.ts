@@ -92,6 +92,17 @@ export function useBorrador(
 			.finally(() => turno.current === mio && setCargando(false));
 	}, [clave, idPrincipal]);
 
+	// Si el diseño de la carta cambia por fuera (borradores en bloque,
+	// deshacer, renumerar) y aquí no hay nada sin guardar, se toma el nuevo.
+	const deFuera = principal?.design;
+	const sinTocar = JSON.stringify(design) === JSON.stringify(original);
+	useEffect(() => {
+		if (!deFuera || !sinTocar) return;
+		if (JSON.stringify(deFuera) === JSON.stringify(original)) return;
+		setDesign(deFuera);
+		setOriginal(deFuera);
+	}, [deFuera]);
+
 	// Vista previa.
 	useEffect(() => {
 		if (!design) return;

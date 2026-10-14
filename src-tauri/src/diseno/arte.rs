@@ -37,21 +37,21 @@ pub fn desde_blob(state: &AppState, blob: &str) -> AppResult<ArtRef> {
     Ok(arte(img, ArtSource::Upload))
 }
 
-/// El `art_crop` de Scryfall de una carta.
-pub async fn desde_scryfall(state: &AppState, scryfall_id: &str) -> AppResult<ArtRef> {
+/// El `art_crop` de Scryfall de una carta (el de la cara pedida en las de
+/// doble cara).
+pub async fn desde_scryfall(state: &AppState, scryfall_id: &str, cara: usize) -> AppResult<ArtRef> {
     let c =
         crate::diseno::borrador::carta_completa(&state.db, state.scryfall.as_ref(), scryfall_id)
             .await?;
-    let url = c
-        .image_uris
-        .as_ref()
-        .and_then(|u| u.art_crop.clone())
-        .or_else(|| {
-            c.card_faces
-                .first()
-                .and_then(|f| f.image_uris.as_ref())
-                .and_then(|u| u.art_crop.clone())
-        })
+    let de_cara = |i: usize| {
+        c.card_faces
+            .get(i)
+            .and_then(|f| f.image_uris.as_ref())
+            .and_then(|u| u.art_crop.clone())
+    };
+    let url = de_cara(cara)
+        .or_else(|| c.image_uris.as_ref().and_then(|u| u.art_crop.clone()))
+        .or_else(|| de_cara(0))
         .ok_or_else(|| AppError::new(ErrorCode::NotFound).with("motivo", "sin_arte"))?;
     let bytes = state.scryfall.download(&url).await?;
     let img = state

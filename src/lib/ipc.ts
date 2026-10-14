@@ -105,6 +105,14 @@ export interface Commands {
 		result: string;
 	};
 	design_fit_report: { args: { design: CardDesign; lang: DesignLang }; result: Aviso[] };
+	design_drafts_for_deck: {
+		args: { cards: DeckCard[]; usados: string[]; collection: string | null; lang: DesignLang };
+		result: number;
+	};
+	design_export_png: {
+		args: { cards: DeckCard[]; folder: string; dpi: number; langs: DesignLang[] };
+		result: number;
+	};
 	design_structure: {
 		args: { design: CardDesign; cara: number; lang: DesignLang };
 		result: Resumen;
@@ -118,7 +126,7 @@ export interface Commands {
 	design_renumber: { args: { cards: DeckCard[]; lang: DesignLang }; result: DeckCard[] };
 	art_from_clipboard: { args: { data: string }; result: ArtRef };
 	art_from_blob: { args: { blob: string }; result: ArtRef };
-	art_from_scryfall: { args: { scryfallId: string }; result: ArtRef };
+	art_from_scryfall: { args: { scryfallId: string; cara: number }; result: ArtRef };
 	art_from_card: {
 		args: { blob: string; x: number; y: number; w: number; h: number };
 		result: ArtRef;
@@ -156,6 +164,10 @@ export interface Events {
 	"export://done": import("@/bindings/ExportDoneEvent").ExportDoneEvent;
 	"identify://progress": import("@/bindings/IdentifyProgressEvent").IdentifyProgressEvent;
 	"identify://done": import("@/bindings/IdentifyDoneEvent").IdentifyDoneEvent;
+	"design://progress": import("@/bindings/DesignProgressEvent").DesignProgressEvent;
+	"design://done": import("@/bindings/DesignDoneEvent").DesignDoneEvent;
+	"designpng://progress": import("@/bindings/DesignPngProgressEvent").DesignPngProgressEvent;
+	"designpng://done": import("@/bindings/DesignPngDoneEvent").DesignPngDoneEvent;
 }
 
 /** Escucha un evento de Rust. Devuelve la función que deja de escuchar. */

@@ -108,6 +108,8 @@ pub fn run() {
             commands::diseno::design_register,
             commands::diseno::design_fit_report,
             commands::diseno::design_structure,
+            commands::diseno::design_drafts_for_deck,
+            commands::diseno::design_export_png,
             commands::diseno::design_save,
             commands::diseno::design_remove,
             commands::diseno::design_rerender,

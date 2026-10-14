@@ -6,6 +6,8 @@
 
 pub mod arte;
 pub mod borrador;
+pub mod lote;
 pub mod pintar;
+pub mod png;
 pub mod recursos;
 pub mod vista;
