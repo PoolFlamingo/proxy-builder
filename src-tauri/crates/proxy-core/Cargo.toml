@@ -23,6 +23,10 @@ sha2 = "0.11"
 # nativo. `raster-images` para incrustar las cartas (el JPEG va tal cual,
 # con DCTDecode); `simple-text` para las etiquetas de la hoja de calibración.
 krilla = { version = "0.8.2", default-features = false, features = ["raster-images", "simple-text"] }
+parley = { version = "0.12", default-features = false, features = ["std"] }
+tiny-skia = { version = "0.12", default-features = false, features = ["std", "simd"] }
+resvg = { version = "0.48", default-features = false }
+skrifa = { version = "0.44", default-features = false, features = ["std"] }
 
 [dev-dependencies]
 lopdf = "0.45"
