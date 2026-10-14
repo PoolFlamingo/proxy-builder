@@ -4,4 +4,4 @@
  * De dónde salió una imagen. Decide, entre otras cosas, si se le aplica el
  * oscurecido de bordes (`apply_scryfall` / `apply_uploads`).
  */
-export type ImageOrigin = "scryfallPng" | "scryfallLarge" | "upload" | "generated";
+export type ImageOrigin = "scryfallPng" | "scryfallLarge" | "upload" | "generated" | "designed";

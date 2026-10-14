@@ -2,6 +2,7 @@
 import type { BleedMode } from "./BleedMode";
 import type { CardSize } from "./CardSize";
 import type { CutGuides } from "./CutGuides";
+import type { DesignLang } from "./DesignLang";
 import type { DfcFilter } from "./DfcFilter";
 import type { Duplex } from "./Duplex";
 import type { EdgeDarkening } from "./EdgeDarkening";
@@ -23,4 +24,8 @@ fillCorners: boolean, cutGuides: CutGuides, edgeDarkening: EdgeDarkening, duplex
 /**
  * Partir el PDF cada N hojas (`None` = un solo fichero).
  */
-splitEvery: number | null, };
+splitEvery: number | null, 
+/**
+ * En qué idioma salen las cartas diseñadas (español de fábrica).
+ */
+designLang: DesignLang, };

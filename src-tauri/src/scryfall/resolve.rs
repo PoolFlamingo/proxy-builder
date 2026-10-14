@@ -397,6 +397,7 @@ pub async fn resolve<A: CardApi, G: Guardar>(
             edits: CardEdits::default(),
             locked: false,
             meta: meta_de(c, fallback),
+            design: None,
         }
     };
     let mut cards = Vec::new();

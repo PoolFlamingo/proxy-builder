@@ -427,6 +427,7 @@ mod tests {
                     edits: CardEdits::default(),
                     locked: false,
                     meta: CardMeta::default(),
+                    design: None,
                 })
                 .collect(),
             settings: ajustes,

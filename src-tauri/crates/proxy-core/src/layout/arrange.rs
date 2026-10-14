@@ -94,6 +94,7 @@ mod tests {
                 name: nombre.into(),
                 ..CardMeta::default()
             },
+            design: None,
         }
     }
 

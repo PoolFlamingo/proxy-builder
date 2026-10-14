@@ -12,6 +12,7 @@
 //! cargan aquí, para que el resultado sea igual en cualquier equipo.
 
 pub mod letras;
+pub mod modelo;
 pub mod pintar;
 pub mod simbolos;
 pub mod texto;

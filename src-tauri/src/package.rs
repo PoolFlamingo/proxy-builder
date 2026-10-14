@@ -228,6 +228,7 @@ mod tests {
             edits: CardEdits::default(),
             locked: false,
             meta: CardMeta::default(),
+            design: None,
         });
         decks::save(db, &d).unwrap();
         d

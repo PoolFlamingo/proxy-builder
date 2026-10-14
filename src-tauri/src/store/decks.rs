@@ -248,6 +248,7 @@ mod tests {
                 name: format!("Carta {i}"),
                 ..Default::default()
             },
+            design: None,
         }
     }
 

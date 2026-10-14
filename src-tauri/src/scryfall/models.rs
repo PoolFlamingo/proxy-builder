@@ -12,6 +12,9 @@ pub struct ImageUris {
     pub large: Option<String>,
     pub normal: Option<String>,
     pub small: Option<String>,
+    /// Solo la ilustración, recortada (para el editor de cartas).
+    #[serde(default)]
+    pub art_crop: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -26,6 +29,21 @@ pub struct CardFace {
     pub oracle_text: Option<String>,
     pub power: Option<String>,
     pub toughness: Option<String>,
+    // Para el editor de cartas (todos opcionales: la caché vieja no los tiene).
+    #[serde(default)]
+    pub printed_name: Option<String>,
+    #[serde(default)]
+    pub printed_type_line: Option<String>,
+    #[serde(default)]
+    pub printed_text: Option<String>,
+    #[serde(default)]
+    pub flavor_text: Option<String>,
+    #[serde(default)]
+    pub artist: Option<String>,
+    #[serde(default)]
+    pub loyalty: Option<String>,
+    #[serde(default)]
+    pub defense: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -93,9 +111,37 @@ pub struct ScryCard {
     pub toughness: Option<String>,
     #[serde(default)]
     pub game_changer: bool,
+    // Para el editor de cartas.
+    #[serde(default)]
+    pub printed_type_line: Option<String>,
+    #[serde(default)]
+    pub printed_text: Option<String>,
+    #[serde(default)]
+    pub flavor_text: Option<String>,
+    #[serde(default)]
+    pub artist: Option<String>,
+    #[serde(default)]
+    pub loyalty: Option<String>,
+    #[serde(default)]
+    pub defense: Option<String>,
+    /// `legendary`, `showcase`, `extendedart`… (Scryfall lo omite si está vacío).
+    #[serde(default)]
+    pub frame_effects: Vec<String>,
+    #[serde(default)]
+    pub border_color: Option<String>,
+    /// `None` = guardada en la caché antes de que la app leyera los campos del
+    /// editor (Scryfall siempre manda `full_art`): hay que pedirla otra vez.
+    #[serde(default)]
+    pub full_art: Option<bool>,
 }
 
 impl ScryCard {
+    /// ¿Trae los campos que necesita el editor de cartas? Las guardadas en la
+    /// caché antes de la 2.0 no, y se vuelven a pedir.
+    pub fn completa_para_disenar(&self) -> bool {
+        self.full_art.is_some()
+    }
+
     /// Imagen de la cara `i` (0 = frente). Las cartas de una cara tienen los
     /// `image_uris` arriba; las DFC, en cada `card_faces[i]`.
     pub fn face_uris(&self, i: usize) -> Option<&ImageUris> {
@@ -259,6 +305,28 @@ pub enum Identifier {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn dusk_dawn_en_espanol_trae_lo_del_editor() {
+        let c: ScryCard = serde_json::from_str(include_str!("fixtures/dusk-dawn-es.json")).unwrap();
+        assert_eq!(c.layout, "split");
+        assert!(c.completa_para_disenar());
+        assert_eq!(c.card_faces.len(), 2);
+        let alba = &c.card_faces[1];
+        assert_eq!(alba.printed_name.as_deref(), Some("Alba"));
+        assert_eq!(alba.printed_type_line.as_deref(), Some("Conjuro"));
+        assert!(alba
+            .printed_text
+            .as_deref()
+            .unwrap()
+            .starts_with("Secuela."));
+        assert_eq!(alba.artist.as_deref(), Some("Noah Bradley"));
+        assert!(c.image_uris.unwrap().art_crop.is_some());
+        // La caché vieja (sin `full_art`) se vuelve a pedir.
+        let vieja: ScryCard = serde_json::from_str(r#"{"id":"x","name":"Sol Ring"}"#).unwrap();
+        assert!(!vieja.completa_para_disenar());
+        assert!(vieja.frame_effects.is_empty());
+    }
 
     #[test]
     fn un_identificador_se_escribe_como_pide_scryfall() {
