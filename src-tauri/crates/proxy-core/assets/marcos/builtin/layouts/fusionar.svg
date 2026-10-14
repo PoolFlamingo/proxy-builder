@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 6" width="88" height="6">
+<defs>{{defs}}</defs>
+<!-- Fusionar: la franja común a las dos mitades. -->
+<rect x="1.0" y="0.4" width="86.0" height="5.2" rx="1.6" fill="url(#marco)" stroke="#000" stroke-opacity="0.55" stroke-width="0.12"/>
+<rect x="1.0" y="0.4" width="86.0" height="5.2" rx="1.6" fill="url(#brillo)"/>
+<rect x="2.1" y="0.8" width="83.8" height="4.4" rx="1.1" fill="url(#panel)"/>
+</svg>

@@ -74,7 +74,15 @@ export const SlotView = memo(function SlotView({
 		ediciones = null;
 	}
 	const url = imagen
-		? urlMiniatura(imagen.blob, parametros(ajustes, ediciones, esDorso, full), ancho)
+		? urlMiniatura(
+				imagen.blob,
+				// A la medida de la casilla (las cartas grandes llevan la suya).
+				{
+					...parametros(ajustes, ediciones, esDorso, full),
+					card: { widthMm: trim.w, heightMm: trim.h },
+				},
+				ancho,
+			)
 		: null;
 	const marcas = carta && !verReversos ? insignias(carta) : [];
 	const hueco = carta?.source.kind === "blank";

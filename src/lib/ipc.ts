@@ -28,6 +28,7 @@ import type { Preset } from "@/bindings/Preset";
 import type { PresetKind } from "@/bindings/PresetKind";
 import type { PrintSettings } from "@/bindings/PrintSettings";
 import type { ResolveOptions } from "@/bindings/ResolveOptions";
+import type { Resumen } from "@/bindings/Resumen";
 import type { SaveResult } from "@/bindings/SaveResult";
 import type { SetInfo } from "@/bindings/SetInfo";
 import type { SimbolosInfo } from "@/bindings/SimbolosInfo";
@@ -104,6 +105,10 @@ export interface Commands {
 		result: string;
 	};
 	design_fit_report: { args: { design: CardDesign; lang: DesignLang }; result: Aviso[] };
+	design_structure: {
+		args: { design: CardDesign; cara: number; lang: DesignLang };
+		result: Resumen;
+	};
 	design_save: {
 		args: { card: DeckCard; design: CardDesign; lang: DesignLang };
 		result: DeckCard;

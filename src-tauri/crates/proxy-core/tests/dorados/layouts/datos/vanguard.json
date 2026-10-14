@@ -1,0 +1,39 @@
+{
+	"scryfallId": "046f2416-c206-4344-aa39-ec42585e0d64",
+	"oracleId": "094f6b9c-a3f0-4bb4-9973-b234143f449d",
+	"layout": "vanguard",
+	"keywords": [],
+	"rarity": "rare",
+	"frameEffects": [],
+	"colors": [],
+	"colorIdentity": [],
+	"cmc": 0.0,
+	"set": "pvan",
+	"collectorNumber": "401",
+	"artist": "Ron Spencer",
+	"faces": [
+		{
+			"name": "Ashnod",
+			"manaCost": "",
+			"typeLine": {
+				"es": "Vanguard",
+				"en": "Vanguard"
+			},
+			"rules": {
+				"es": "Whenever a creature deals damage to you, destroy it.",
+				"en": "Whenever a creature deals damage to you, destroy it."
+			},
+			"printedNameEs": null,
+			"colors": [],
+			"power": null,
+			"toughness": null,
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": true,
+	"oversized": true,
+	"handModifier": "+1",
+	"lifeModifier": "-8",
+	"fetchedAt": 0
+}

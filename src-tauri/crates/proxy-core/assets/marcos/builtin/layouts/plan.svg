@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88.9 127" width="88.9" height="127">
+<defs>{{defs}}</defs>
+<!-- Plan de Archenemy (vertical, grande). -->
+<path fill-rule="evenodd" fill="#000" d="M-1,-1 H89.9 V128 H-1 Z M0,0 H88.9 V113.4 A8,8 0 0 1 80.9,121.4 H8 A8,8 0 0 1 0,113.4 Z"/>
+<rect x="5.0" y="79.0" width="78.9" height="41.2" fill="{{fondoCaja}}" fill-opacity="{{opacidadCaja}}" stroke="url(#marco)" stroke-width="0.38"/>
+<rect x="2.6" y="5.0" width="83.7" height="7.2" rx="1.6" fill="url(#marco)" stroke="#000" stroke-opacity="0.55" stroke-width="0.12"/>
+<rect x="2.6" y="5.0" width="83.7" height="7.2" rx="1.6" fill="url(#brillo)"/>
+<rect x="3.7" y="5.4" width="81.5" height="6.4" rx="1.1" fill="url(#panel)"/>
+<rect x="2.5" y="72.4" width="83.9" height="6.6" rx="1.25" fill="url(#marco)" stroke="#000" stroke-opacity="0.55" stroke-width="0.12"/>
+<rect x="2.5" y="72.4" width="83.9" height="6.6" rx="1.25" fill="url(#brillo)"/>
+<rect x="3.1" y="72.80000000000001" width="82.7" height="5.8" rx="0.9" fill="{{tinte}}" fill-opacity="0.94"/>
+</svg>

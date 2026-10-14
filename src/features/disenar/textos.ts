@@ -1,5 +1,6 @@
 import type { Aviso } from "@/bindings/Aviso";
 import type { DesignStyle } from "@/bindings/DesignStyle";
+import type { Maquetacion } from "@/bindings/Maquetacion";
 import type { OriginalName } from "@/bindings/OriginalName";
 import type { Palette } from "@/bindings/Palette";
 import { paraTraducir } from "@/components/language-provider";
@@ -87,3 +88,34 @@ export function textoAviso(a: Aviso, t: T): string {
 export function esGrave(a: Aviso): boolean {
 	return a.kind === "textoNoCabe" || a.kind === "faltanSimbolos";
 }
+
+/** Cómo se llama cada maquetación en el editor. */
+export const MAQUETACIONES: Record<Maquetacion, string> = {
+	normal: paraTraducir("Normal"),
+	ficha: paraTraducir("Ficha"),
+	planeswalker: paraTraducir("Planeswalker"),
+	saga: paraTraducir("Saga"),
+	clase: paraTraducir("Clase"),
+	caso: paraTraducir("Caso"),
+	partida: paraTraducir("Partida"),
+	fusionar: paraTraducir("Partida con Fusionar"),
+	secuela: paraTraducir("Secuela"),
+	habitacion: paraTraducir("Habitación"),
+	aventura: paraTraducir("Aventura"),
+	flip: paraTraducir("Flip (Kamigawa)"),
+	transformable: paraTraducir("Transformable (dos caras)"),
+	mdfc: paraTraducir("Doble cara modal"),
+	batalla: paraTraducir("Batalla (dos caras)"),
+	meld: paraTraducir("Meld (dos caras)"),
+	reversible: paraTraducir("Reversible (dos caras)"),
+	fichaDosCaras: paraTraducir("Ficha de dos caras"),
+	leveler: paraTraducir("Niveles (leveler)"),
+	prototipo: paraTraducir("Prototipo"),
+	mutar: paraTraducir("Mutar"),
+	estacion: paraTraducir("Estación"),
+	emblema: paraTraducir("Emblema"),
+	mazmorra: paraTraducir("Mazmorra"),
+	plano: paraTraducir("Plano (carta grande)"),
+	plan: paraTraducir("Plan (carta grande)"),
+	vanguard: paraTraducir("Vanguard (carta grande)"),
+};

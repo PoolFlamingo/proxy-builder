@@ -109,6 +109,9 @@ pub struct Page {
     pub height_mm: f64,
     pub slots: Vec<Slot>,
     pub guides: Vec<LineMm>,
+    /// Hoja de cartas grandes (planos, planes, Vanguard): su propia rejilla.
+    #[serde(default)]
+    pub big: bool,
 }
 
 /// Algo que conviene avisar al usuario.
@@ -135,6 +138,12 @@ pub struct PagePlan {
     /// Cartas colocadas (cada casilla frontal ocupada cuenta una).
     pub placed: u32,
     pub warnings: Vec<PlanWarning>,
+    /// La rejilla y las casillas de las hojas de cartas grandes, si las hay.
+    /// Van al final, sin mezclarse con las normales.
+    #[serde(default)]
+    pub big_grid: Option<Grid>,
+    #[serde(default)]
+    pub big_cells: Vec<RectMm>,
 }
 
 /// Lo que va en una casilla frontal antes de colocarlo.
@@ -146,6 +155,19 @@ struct Item {
     back: Option<FaceImage>,
     /// La carta tiene dorso que imprimir (los huecos en blanco no).
     has_back: bool,
+    /// Carta grande (va en sus propias hojas).
+    grande: bool,
+}
+
+/// ¿Es una carta grande? Solo las diseñadas lo saben (un plano de Scryfall
+/// sin diseño sale con la imagen a la medida normal).
+pub fn es_grande(c: &crate::model::DeckCard) -> bool {
+    c.design.as_ref().is_some_and(|d| {
+        d.card.oversized
+            && crate::diseno::maquetacion::maquetacion(&d.card)
+                .0
+                .es_grande()
+    })
 }
 
 /// Construye la secuencia de casillas frontales según la tabla de modos DFC.
@@ -187,25 +209,37 @@ fn items(deck: &Deck, warnings: &mut Vec<PlanWarning>) -> Vec<Item> {
                     apply_edits: edits,
                     back: dorso_normal.clone(),
                     has_back: true,
+                    grande: es_grande(c),
                 });
             }
             continue;
         }
 
+        let grande = es_grande(c);
+        // Una carta grande sin dorso propio no lleva el del deck salvo que
+        // se pida (sus reversos no son los de las cartas normales).
+        let dorso_normal =
+            if grande && !s.big_cards_back && !matches!(c.back, BackSpec::Custom { .. }) {
+                None
+            } else {
+                dorso_normal
+            };
         let back = if es_dfc { dfc_face } else { dorso_normal };
         if es_dfc && !duplex {
             dfc_sin_dorso += 1;
         }
-        if duplex && !es_hueco && back.is_none() {
+        if duplex && !es_hueco && back.is_none() && !grande {
             sin_reverso += 1;
         }
+        let has_back = !es_hueco && (back.is_some() || !grande);
         out.push(Item {
             card_id: c.id.clone(),
             face: SlotFace::Front,
             image: c.front.clone(),
             apply_edits: true,
             back,
-            has_back: !es_hueco,
+            has_back,
+            grande,
         });
     }
     if dfc_sin_dorso > 0 {
@@ -332,28 +366,25 @@ fn guias(
     out
 }
 
-/// Calcula el plan de páginas de un deck.
-pub fn plan(deck: &Deck) -> Result<PagePlan, LayoutError> {
-    let s: &PrintSettings = &deck.settings;
-    let (ancho, alto) = s.paper.oriented_mm(s.landscape);
-    let (cw, ch) = (s.card_size.width_mm, s.card_size.height_mm);
-    let g = grid(ancho, alto, cw, ch, s.gap_mm, s.min_margin_mm, s.bleed_mm)?;
+/// Las hojas de un tramo de casillas (normales o grandes) con su rejilla.
+#[allow(clippy::too_many_arguments)]
+fn paginar(
+    items: &[&Item],
+    g: &Grid,
+    cells: &[RectMm],
+    s: &PrintSettings,
+    ancho: f64,
+    alto: f64,
+    primera_hoja: u32,
+    big: bool,
+    pages: &mut Vec<Page>,
+) -> u32 {
     let cap = g.capacity() as usize;
-
-    let cells: Vec<RectMm> = (0..g.rows)
-        .flat_map(|r| (0..g.cols).map(move |c| (r, c)))
-        .map(|(r, c)| g.cell(r, c, cw, ch, s.gap_mm))
-        .collect();
-
-    let mut warnings = Vec::new();
-    let items = items(deck, &mut warnings);
     let duplex = s.duplex != Duplex::Off;
     let espejo_x = espejo_horizontal(s.duplex, s.landscape);
-
-    let mut pages = Vec::new();
-    let hojas: Vec<&[Item]> = items.chunks(cap.max(1)).collect();
-    for (hoja, trozo) in hojas.iter().enumerate() {
-        let hoja = hoja as u32;
+    let hojas: Vec<&[&Item]> = items.chunks(cap.max(1)).collect();
+    for (n, trozo) in hojas.iter().enumerate() {
+        let hoja = primera_hoja + n as u32;
         let mut frontales = Vec::with_capacity(trozo.len());
         let mut por_fila: Vec<Vec<RectMm>> = vec![Vec::new(); g.rows as usize];
         let mut traseras = Vec::new();
@@ -361,7 +392,7 @@ pub fn plan(deck: &Deck) -> Result<PagePlan, LayoutError> {
         for (i, it) in trozo.iter().enumerate() {
             let (row, col) = ((i as u32) / g.cols, (i as u32) % g.cols);
             let base = cells[i];
-            let lados = lados_de_sangrado(&g, row, col, s.bleed_mm, s.gap_mm);
+            let lados = lados_de_sangrado(g, row, col, s.bleed_mm, s.gap_mm);
 
             // Frente.
             let off = s.row_offsets.front_row(row as usize);
@@ -450,6 +481,7 @@ pub fn plan(deck: &Deck) -> Result<PagePlan, LayoutError> {
             height_mm: alto,
             slots: frontales,
             guides,
+            big,
         });
         if duplex {
             pages.push(Page {
@@ -462,17 +494,55 @@ pub fn plan(deck: &Deck) -> Result<PagePlan, LayoutError> {
                 // Las guías van solo en el frente: en el dorso, al trasluz, se
                 // confundirían con las del otro lado.
                 guides: Vec::new(),
+                big,
             });
         }
     }
+    hojas.len() as u32
+}
+
+fn celdas(g: &Grid, cw: f64, ch: f64, gap: f64) -> Vec<RectMm> {
+    (0..g.rows)
+        .flat_map(|r| (0..g.cols).map(move |c| (r, c)))
+        .map(|(r, c)| g.cell(r, c, cw, ch, gap))
+        .collect()
+}
+
+/// Calcula el plan de páginas de un deck. Las cartas grandes (planos,
+/// planes, Vanguard) van al final en hojas propias, con su rejilla y el
+/// mismo papel, márgenes y separación.
+pub fn plan(deck: &Deck) -> Result<PagePlan, LayoutError> {
+    let s: &PrintSettings = &deck.settings;
+    let (ancho, alto) = s.paper.oriented_mm(s.landscape);
+    let (cw, ch) = (s.card_size.width_mm, s.card_size.height_mm);
+    let g = grid(ancho, alto, cw, ch, s.gap_mm, s.min_margin_mm, s.bleed_mm)?;
+    let cells = celdas(&g, cw, ch, s.gap_mm);
+
+    let mut warnings = Vec::new();
+    let items = items(deck, &mut warnings);
+    let (grandes, normales): (Vec<&Item>, Vec<&Item>) = items.iter().partition(|i| i.grande);
+
+    let mut pages = Vec::new();
+    let mut hojas = paginar(&normales, &g, &cells, s, ancho, alto, 0, false, &mut pages);
+    let (mut big_grid, mut big_cells) = (None, Vec::new());
+    if !grandes.is_empty() {
+        let (gw, gh) = crate::diseno::maquetacion::medida_grande();
+        let g2 = grid(ancho, alto, gw, gh, s.gap_mm, s.min_margin_mm, s.bleed_mm)?;
+        let c2 = celdas(&g2, gw, gh, s.gap_mm);
+        hojas += paginar(&grandes, &g2, &c2, s, ancho, alto, hojas, true, &mut pages);
+        big_grid = Some(g2);
+        big_cells = c2;
+    }
 
     Ok(PagePlan {
-        sheets: hojas.len() as u32,
+        sheets: hojas,
         placed: items.len() as u32,
         grid: g,
         cells,
         pages,
         warnings,
+        big_grid,
+        big_cells,
     })
 }
 
@@ -863,5 +933,59 @@ mod tests {
         assert_eq!(p.pages[0].slots.len(), 3);
         assert_eq!(p.pages[1].slots.len(), 2);
         assert!(p.warnings.is_empty());
+    }
+
+    fn plano(id: &str) -> DeckCard {
+        let mut d = crate::diseno::modelo::tests::diseno_de_prueba();
+        d.card.layout = "planar".into();
+        d.card.oversized = true;
+        DeckCard {
+            design: Some(d),
+            ..carta(id)
+        }
+    }
+
+    /// 60 cartas normales y 10 planos (paso 5.11): las hojas normales y
+    /// después las de planos, con su medida exacta.
+    #[test]
+    fn las_cartas_grandes_van_al_final_en_sus_hojas() {
+        let mut cartas: Vec<DeckCard> = (0..60).map(|i| carta(&format!("n{i}"))).collect();
+        // Mezcladas en el deck: el plan las saca al final igual.
+        for i in 0..10 {
+            cartas.insert(i * 6, plano(&format!("p{i}")));
+        }
+        let s = PrintSettings::default();
+        let p = plan(&deck(cartas, s)).unwrap();
+        let g2 = p.big_grid.clone().unwrap();
+        assert_eq!((g2.cols, g2.rows), (2, 2), "A4: 4 planos por hoja");
+        let normales: Vec<_> = p.pages.iter().filter(|x| !x.big).collect();
+        let grandes: Vec<_> = p.pages.iter().filter(|x| x.big).collect();
+        assert_eq!(normales.len(), 7, "60 cartas de 9 en 9");
+        assert_eq!(grandes.len(), 3, "10 planos de 4 en 4");
+        assert!(
+            p.pages.iter().position(|x| x.big) == Some(7),
+            "las grandes, al final"
+        );
+        for pg in &grandes {
+            for sl in &pg.slots {
+                assert!(sl.card_id.starts_with('p'));
+                assert!((sl.trim.w - 88.9).abs() < 1e-9 && (sl.trim.h - 127.0).abs() < 1e-9);
+            }
+        }
+        for pg in &normales {
+            assert!(pg.slots.iter().all(|sl| sl.card_id.starts_with('n')));
+        }
+        assert_eq!(p.sheets, 10);
+        assert_eq!(p.placed, 70);
+    }
+
+    /// Sin cartas grandes, el plan es exactamente el de antes.
+    #[test]
+    fn sin_cartas_grandes_el_plan_no_cambia() {
+        let cartas: Vec<DeckCard> = (0..20).map(|i| carta(&format!("n{i}"))).collect();
+        let p = plan(&deck(cartas, PrintSettings::default())).unwrap();
+        assert!(p.big_grid.is_none() && p.big_cells.is_empty());
+        assert!(p.pages.iter().all(|x| !x.big));
+        assert_eq!(p.pages.len(), 3);
     }
 }

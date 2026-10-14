@@ -1,0 +1,37 @@
+{
+	"scryfallId": "efbb7256-9337-4183-8bda-a419f3f2c501",
+	"oracleId": "0ba134d8-ee7d-48ec-8dc6-57942b8e9261",
+	"layout": "normal",
+	"keywords": [],
+	"rarity": "mythic",
+	"frameEffects": [],
+	"colors": ["B"],
+	"colorIdentity": ["B"],
+	"cmc": 3.0,
+	"set": "inr",
+	"collectorNumber": "475",
+	"artist": "Steve Argyle",
+	"faces": [
+		{
+			"name": "Liliana of the Veil",
+			"manaCost": "{1}{B}{B}",
+			"typeLine": {
+				"es": "Planeswalker legendario — Liliana",
+				"en": "Legendary Planeswalker — Liliana"
+			},
+			"rules": {
+				"es": "+1: Cada jugador descarta una carta.\n−2: El jugador objetivo sacrifica una criatura.\n−6: Separa todos los permanentes que controla el jugador objetivo en dos montones. Ese jugador sacrifica todos los permanentes del montón que elija.",
+				"en": "+1: Each player discards a card.\n−2: Target player sacrifices a creature.\n−6: Separate all permanents target player controls into two piles. That player sacrifices all permanents in the pile of their choice."
+			},
+			"printedNameEs": "Liliana del Velo",
+			"colors": ["B"],
+			"power": null,
+			"toughness": null,
+			"loyalty": "3",
+			"defense": null
+		}
+	],
+	"sinTextoEs": false,
+	"oversized": false,
+	"fetchedAt": 0
+}

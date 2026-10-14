@@ -1,0 +1,37 @@
+{
+	"scryfallId": "0095245c-a30e-4e2a-88c9-632c678e9f03",
+	"oracleId": "3dfb0c0a-b68f-43b9-8475-28d0192fc4ed",
+	"layout": "mutate",
+	"keywords": ["Reach", "Mutate", "Trample"],
+	"rarity": "rare",
+	"frameEffects": [],
+	"colors": ["G"],
+	"colorIdentity": ["G"],
+	"cmc": 4.0,
+	"set": "iko",
+	"collectorNumber": "155",
+	"artist": "Svetlin Velinov",
+	"faces": [
+		{
+			"name": "Gemrazer",
+			"manaCost": "{3}{G}",
+			"typeLine": {
+				"es": "Criatura — Bestia",
+				"en": "Creature — Beast"
+			},
+			"rules": {
+				"es": "Mutación {1}{G}{G}. (Si lanzas este hechizo pagando su coste de mutación, ponlo sobre o bajo la criatura objetivo que no sea Humano de la cual eres propietario. Estas mutan en la criatura de la parte superior más todas las habilidades de debajo.)\nAlcance, arrolla.\nSiempre que esta criatura mute, destruye el artefacto o encantamiento objetivo que controla un oponente.",
+				"en": "Mutate {1}{G}{G} (If you cast this spell for its mutate cost, put it over or under target non-Human creature you own. They mutate into the creature on top plus all abilities from under it.)\nReach, trample\nWhenever this creature mutates, destroy target artifact or enchantment an opponent controls."
+			},
+			"printedNameEs": "Destruyegemas",
+			"colors": ["G"],
+			"power": "4",
+			"toughness": "4",
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": false,
+	"oversized": false,
+	"fetchedAt": 0
+}

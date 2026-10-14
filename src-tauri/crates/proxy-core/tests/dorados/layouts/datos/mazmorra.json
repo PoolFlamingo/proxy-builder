@@ -1,0 +1,37 @@
+{
+	"scryfallId": "6f509dbe-6ec7-4438-ab36-e20be46c9922",
+	"oracleId": "30d0398c-bf5a-4b30-936f-afdb5a109b4b",
+	"layout": "normal",
+	"keywords": ["Treasure", "Scry"],
+	"rarity": "common",
+	"frameEffects": [],
+	"colors": [],
+	"colorIdentity": [],
+	"cmc": 0.0,
+	"set": "tafr",
+	"collectorNumber": "20",
+	"artist": "",
+	"faces": [
+		{
+			"name": "Dungeon of the Mad Mage",
+			"manaCost": "",
+			"typeLine": {
+				"es": "Dungeon",
+				"en": "Dungeon"
+			},
+			"rules": {
+				"es": "Yawning Portal — You gain 1 life. (Leads to: Dungeon Level)\nDungeon Level — Scry 1. (Leads to: Goblin Bazaar, Twisted Caverns)\nGoblin Bazaar — Create a Treasure token. (Leads to: Lost Level)\nTwisted Caverns — Target creature can't attack until your next turn. (Leads to: Lost Level)\nLost Level — Scry 2. (Leads to: Runestone Caverns, Muiral's Graveyard)\nRunestone Caverns — Exile the top two cards of your library. You may play them. (Leads to: Deep Mines)\nMuiral's Graveyard — Create two 1/1 black Skeleton creature tokens. (Leads to: Deep Mines)\nDeep Mines — Scry 3. (Leads to: Mad Wizard's Lair)\nMad Wizard's Lair — Draw three cards and reveal them. You may cast one of them without paying its mana cost.",
+				"en": "Yawning Portal — You gain 1 life. (Leads to: Dungeon Level)\nDungeon Level — Scry 1. (Leads to: Goblin Bazaar, Twisted Caverns)\nGoblin Bazaar — Create a Treasure token. (Leads to: Lost Level)\nTwisted Caverns — Target creature can't attack until your next turn. (Leads to: Lost Level)\nLost Level — Scry 2. (Leads to: Runestone Caverns, Muiral's Graveyard)\nRunestone Caverns — Exile the top two cards of your library. You may play them. (Leads to: Deep Mines)\nMuiral's Graveyard — Create two 1/1 black Skeleton creature tokens. (Leads to: Deep Mines)\nDeep Mines — Scry 3. (Leads to: Mad Wizard's Lair)\nMad Wizard's Lair — Draw three cards and reveal them. You may cast one of them without paying its mana cost."
+			},
+			"printedNameEs": null,
+			"colors": [],
+			"power": null,
+			"toughness": null,
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": true,
+	"oversized": false,
+	"fetchedAt": 0
+}

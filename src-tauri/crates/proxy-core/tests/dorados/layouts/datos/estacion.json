@@ -1,0 +1,37 @@
+{
+	"scryfallId": "bf05e378-7a0c-49e3-8c6e-c0fd56796434",
+	"oracleId": "52c6afc6-aff1-46a8-b1ea-b183facec1ae",
+	"layout": "normal",
+	"keywords": ["Station"],
+	"rarity": "uncommon",
+	"frameEffects": [],
+	"colors": ["G"],
+	"colorIdentity": ["G"],
+	"cmc": 5.0,
+	"set": "eoe",
+	"collectorNumber": "171",
+	"artist": "Sergey Glushakov",
+	"faces": [
+		{
+			"name": "Atmospheric Greenhouse",
+			"manaCost": "{4}{G}",
+			"typeLine": {
+				"es": "Artifact — Spacecraft",
+				"en": "Artifact — Spacecraft"
+			},
+			"rules": {
+				"es": "When this Spacecraft enters, put a +1/+1 counter on each creature you control.\nStation (Tap another creature you control: Put charge counters equal to its power on this Spacecraft. Station only as a sorcery. It's an artifact creature at 8+.)\n8+ | Flying, trample",
+				"en": "When this Spacecraft enters, put a +1/+1 counter on each creature you control.\nStation (Tap another creature you control: Put charge counters equal to its power on this Spacecraft. Station only as a sorcery. It's an artifact creature at 8+.)\n8+ | Flying, trample"
+			},
+			"printedNameEs": "Invernadero atmosférico",
+			"colors": ["G"],
+			"power": "5",
+			"toughness": "4",
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": false,
+	"oversized": false,
+	"fetchedAt": 0
+}

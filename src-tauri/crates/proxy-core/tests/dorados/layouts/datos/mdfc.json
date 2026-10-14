@@ -1,0 +1,55 @@
+{
+	"scryfallId": "228e551e-023a-4c9a-8f32-58dae6ffdf7f",
+	"oracleId": "ff0ab867-b710-4b1a-baed-95fc3cf68f79",
+	"layout": "modal_dfc",
+	"keywords": [],
+	"rarity": "rare",
+	"frameEffects": [],
+	"colors": [],
+	"colorIdentity": ["R"],
+	"cmc": 3.0,
+	"set": "znr",
+	"collectorNumber": "174",
+	"artist": "Campbell White",
+	"faces": [
+		{
+			"name": "Valakut Awakening",
+			"manaCost": "{2}{R}",
+			"typeLine": {
+				"es": "Instantáneo",
+				"en": "Instant"
+			},
+			"rules": {
+				"es": "Pon cualquier cantidad de cartas de tu mano en el fondo de tu biblioteca, luego roba esa misma cantidad de cartas más una.",
+				"en": "Put any number of cards from your hand on the bottom of your library, then draw that many cards plus one."
+			},
+			"printedNameEs": "Despertar de Valakut",
+			"colors": ["R"],
+			"power": null,
+			"toughness": null,
+			"loyalty": null,
+			"defense": null
+		},
+		{
+			"name": "Valakut Stoneforge",
+			"manaCost": "",
+			"typeLine": {
+				"es": "Tierra",
+				"en": "Land"
+			},
+			"rules": {
+				"es": "La Fragua de piedra de Valakut entra al campo de batalla girada.\n{T}: Agrega {R}.",
+				"en": "This land enters tapped.\n{T}: Add {R}."
+			},
+			"printedNameEs": "Fragua de piedra de Valakut",
+			"colors": [],
+			"power": null,
+			"toughness": null,
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": false,
+	"oversized": false,
+	"fetchedAt": 0
+}

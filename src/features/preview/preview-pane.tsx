@@ -141,7 +141,7 @@ export function PreviewPane() {
 		const ultima = frentes.at(-1);
 		if (!plan || !ultima) return [];
 		const ocupadas = new Set(ultima.slots.map((s) => s.index));
-		return plan.cells.filter((_, i) => !ocupadas.has(i));
+		return (ultima.big ? plan.bigCells : plan.cells).filter((_, i) => !ocupadas.has(i));
 	}, [plan, frentes]);
 
 	const sensores = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));

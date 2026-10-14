@@ -295,6 +295,21 @@ pub struct CardData {
     /// No hay impresión en español: el texto `es` es el Oracle en inglés.
     #[serde(default)]
     pub sin_texto_es: bool,
+    /// Impresa en tamaño grande (planos, planes, Vanguard).
+    #[serde(default)]
+    pub oversized: bool,
+    /// Modificadores de mano y vida de una Vanguard (`+1`, `-3`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub hand_modifier: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub life_modifier: Option<String>,
+    /// Meld: la carta fundida va como segunda cara y aquí qué mitad de ella
+    /// lleva esta carta en el dorso (`true`, la de arriba).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub meld_arriba: Option<bool>,
     /// Cuándo se tomó la instantánea (ms desde 1970).
     #[ts(type = "number")]
     pub fetched_at: i64,

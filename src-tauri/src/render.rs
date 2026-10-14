@@ -58,7 +58,11 @@ pub fn spec_de_casilla(
             CardEdits::default()
         },
         edge: edge_for(&s.edge_darkening, img.origin, es_dorso),
-        card: s.card_size,
+        // La medida de la casilla: la de la carta, o la de una carta grande.
+        card: CardSize {
+            width_mm: slot.trim.w,
+            height_mm: slot.trim.h,
+        },
         bleed_mm: slot.bleed_full_mm,
         bleed_mode: s.bleed_mode,
         fill_corners: s.fill_corners,

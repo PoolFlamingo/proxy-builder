@@ -1,0 +1,37 @@
+{
+	"scryfallId": "c8817585-0d32-4d56-9142-0d29512e86a9",
+	"oracleId": "7f77a84e-5a4b-4834-aefa-3cecc175ae8e",
+	"layout": "normal",
+	"keywords": [],
+	"rarity": "mythic",
+	"frameEffects": [],
+	"colors": ["U"],
+	"colorIdentity": ["U"],
+	"cmc": 4.0,
+	"set": "2xm",
+	"collectorNumber": "56",
+	"artist": "Jason Chan",
+	"faces": [
+		{
+			"name": "Jace, the Mind Sculptor",
+			"manaCost": "{2}{U}{U}",
+			"typeLine": {
+				"es": "Planeswalker — Jace",
+				"en": "Legendary Planeswalker — Jace"
+			},
+			"rules": {
+				"es": "+2: Mira la primera carta de la biblioteca del jugador objetivo. Puedes poner esa carta en el fondo de la biblioteca de ese jugador.\n0: Roba tres cartas, luego pon dos cartas de tu mano en la parte superior de tu biblioteca en cualquier orden.\n-1: Regresa la criatura objetivo a la mano de su propietario.\n-12: Exilia todas las cartas de la biblioteca del jugador objetivo, luego ese jugador bajara su mano en su biblioteca.",
+				"en": "+2: Look at the top card of target player's library. You may put that card on the bottom of that player's library.\n0: Draw three cards, then put two cards from your hand on top of your library in any order.\n−1: Return target creature to its owner's hand.\n−12: Exile all cards from target player's library, then that player shuffles their hand into their library."
+			},
+			"printedNameEs": "Jace, el escultor mental",
+			"colors": ["U"],
+			"power": null,
+			"toughness": null,
+			"loyalty": "3",
+			"defense": null
+		}
+	],
+	"sinTextoEs": false,
+	"oversized": false,
+	"fetchedAt": 0
+}

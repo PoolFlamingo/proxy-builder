@@ -77,16 +77,45 @@
 		}
 	},
 	"letras": {
-		"titulo": { "familia": "Spectral", "peso": 700, "mayuscula": 0.66 },
-		"tipo": { "familia": "Spectral", "peso": 700, "mayuscula": 0.66 },
-		"reglas": { "familia": "Spectral", "peso": 400, "mayuscula": 0.66 },
-		"fr": { "familia": "Spectral", "peso": 700, "mayuscula": 0.66 },
-		"cinta": { "familia": "Spectral", "peso": 400, "mayuscula": 0.66 },
-		"pie": { "familia": "Montserrat", "peso": 500, "mayuscula": 0.7 }
+		"titulo": {
+			"familia": "Spectral",
+			"peso": 700,
+			"mayuscula": 0.66
+		},
+		"tipo": {
+			"familia": "Spectral",
+			"peso": 700,
+			"mayuscula": 0.66
+		},
+		"reglas": {
+			"familia": "Spectral",
+			"peso": 400,
+			"mayuscula": 0.66
+		},
+		"fr": {
+			"familia": "Spectral",
+			"peso": 700,
+			"mayuscula": 0.66
+		},
+		"cinta": {
+			"familia": "Spectral",
+			"peso": 400,
+			"mayuscula": 0.66
+		},
+		"pie": {
+			"familia": "Montserrat",
+			"peso": 500,
+			"mayuscula": 0.7
+		}
 	},
 	"estilos": {
 		"borderless": {
-			"arte": { "x": 0, "y": 0, "w": 63, "h": 83 },
+			"arte": {
+				"x": 0,
+				"y": 0,
+				"w": 63,
+				"h": 83
+			},
 			"caja": {
 				"fondo": 83.0,
 				"altoMin": 12.0,
@@ -97,11 +126,27 @@
 			},
 			"cajaPorDefecto": "tinte",
 			"capas": [
-				{ "svg": "despejado/mascara.svg" },
-				{ "svg": "despejado/corona.svg", "si": { "corona": true } },
-				{ "svg": "despejado/titulo.svg" },
-				{ "svg": "despejado/reglas.svg" },
-				{ "svg": "despejado/fr.svg", "si": { "fr": true } }
+				{
+					"svg": "despejado/mascara.svg"
+				},
+				{
+					"svg": "despejado/corona.svg",
+					"si": {
+						"corona": true
+					}
+				},
+				{
+					"svg": "despejado/titulo.svg"
+				},
+				{
+					"svg": "despejado/reglas.svg"
+				},
+				{
+					"svg": "despejado/fr.svg",
+					"si": {
+						"fr": true
+					}
+				}
 			],
 			"huecos": {
 				"titulo": {
@@ -114,7 +159,12 @@
 					"color": "#ffffff",
 					"sombra": true
 				},
-				"coste": { "x": 30.0, "y": 5.5, "w": 27.1, "h": 2.35 },
+				"coste": {
+					"x": 30.0,
+					"y": 5.5,
+					"w": 27.1,
+					"h": 2.35
+				},
 				"tipo": {
 					"x": 5.95,
 					"y": "yTipo+0.4",
@@ -125,7 +175,12 @@
 					"color": "#ffffff",
 					"sombra": true
 				},
-				"emblema": { "x": 52.1, "y": "yTipo+1.4", "w": 4.7, "h": 3.2 },
+				"emblema": {
+					"x": 52.1,
+					"y": "yTipo+1.4",
+					"w": 4.7,
+					"h": 3.2
+				},
 				"reglas": {
 					"x": 5.95,
 					"y": "yReglas",
@@ -183,17 +238,49 @@
 							"alinear": "centro"
 						}
 					}
+				},
+				"alto": {
+					"caja": {
+						"fondo": 83.0,
+						"altoMin": 12.0,
+						"altoMax": 40.0,
+						"barraTipo": 6.0,
+						"padArriba": 0.95,
+						"padAbajo": 0.75
+					}
 				}
 			}
 		},
 		"extended": {
-			"arte": { "x": 0, "y": 0, "w": 63, "h": 52.5 },
+			"arte": {
+				"x": 0,
+				"y": 0,
+				"w": 63,
+				"h": 52.5
+			},
 			"cajaPorDefecto": "clara",
 			"capas": [
-				{ "svg": "extendido/marco.svg" },
-				{ "svg": "extendido/corona.svg", "si": { "corona": true } },
-				{ "svg": "extendido/cinta.svg", "si": { "cinta": true } },
-				{ "svg": "extendido/fr.svg", "si": { "fr": true } }
+				{
+					"svg": "extendido/marco.svg"
+				},
+				{
+					"svg": "extendido/corona.svg",
+					"si": {
+						"corona": true
+					}
+				},
+				{
+					"svg": "extendido/cinta.svg",
+					"si": {
+						"cinta": true
+					}
+				},
+				{
+					"svg": "extendido/fr.svg",
+					"si": {
+						"fr": true
+					}
+				}
 			],
 			"huecos": {
 				"titulo": {
@@ -205,7 +292,12 @@
 					"mayuscula": 2.15,
 					"color": "{{tintaCrema}}"
 				},
-				"coste": { "x": 30.0, "y": 4.7, "w": 28.9, "h": 2.3 },
+				"coste": {
+					"x": 30.0,
+					"y": 4.7,
+					"w": 28.9,
+					"h": 2.3
+				},
 				"cinta": {
 					"x": 8.7,
 					"y": 9.0,
@@ -225,7 +317,12 @@
 					"mayuscula": 1.85,
 					"color": "#ffffff"
 				},
-				"emblema": { "x": 54.4, "y": 52.35, "w": 4.6, "h": 3.0 },
+				"emblema": {
+					"x": 54.4,
+					"y": 52.35,
+					"w": 4.6,
+					"h": 3.0
+				},
 				"reglas": {
 					"x": 5.9,
 					"y": 57.25,
@@ -282,17 +379,96 @@
 							"alinear": "centro"
 						}
 					}
+				},
+				"alto": {
+					"arte": {
+						"x": 0,
+						"y": 0,
+						"w": 63,
+						"h": 40.5
+					},
+					"capas": [
+						{
+							"svg": "extendido/marco-alto.svg"
+						},
+						{
+							"svg": "extendido/corona.svg",
+							"si": {
+								"corona": true
+							}
+						},
+						{
+							"svg": "extendido/cinta.svg",
+							"si": {
+								"cinta": true
+							}
+						},
+						{
+							"svg": "extendido/fr.svg",
+							"si": {
+								"fr": true
+							}
+						}
+					],
+					"huecos": {
+						"tipo": {
+							"x": 4.5,
+							"y": 39.85,
+							"w": 49.0,
+							"h": 3.95,
+							"rol": "tipo",
+							"mayuscula": 1.85,
+							"color": "#ffffff"
+						},
+						"emblema": {
+							"x": 54.4,
+							"y": 40.35,
+							"w": 4.6,
+							"h": 3.0
+						},
+						"reglas": {
+							"x": 5.9,
+							"y": 45.25,
+							"w": 51.7,
+							"h": 34.6,
+							"rol": "reglas",
+							"mayuscula": 1.72,
+							"color": "{{tintaCaja}}"
+						}
+					}
 				}
 			}
 		},
 		"classic": {
-			"arte": { "x": 3.57, "y": 8.6, "w": 55.83, "h": 39.7 },
+			"arte": {
+				"x": 3.57,
+				"y": 8.6,
+				"w": 55.83,
+				"h": 39.7
+			},
 			"cajaPorDefecto": "clara",
 			"capas": [
-				{ "svg": "clasico/marco.svg" },
-				{ "svg": "clasico/corona.svg", "si": { "corona": true } },
-				{ "svg": "clasico/cinta.svg", "si": { "cinta": true } },
-				{ "svg": "clasico/fr.svg", "si": { "fr": true } }
+				{
+					"svg": "clasico/marco.svg"
+				},
+				{
+					"svg": "clasico/corona.svg",
+					"si": {
+						"corona": true
+					}
+				},
+				{
+					"svg": "clasico/cinta.svg",
+					"si": {
+						"cinta": true
+					}
+				},
+				{
+					"svg": "clasico/fr.svg",
+					"si": {
+						"fr": true
+					}
+				}
 			],
 			"huecos": {
 				"titulo": {
@@ -304,7 +480,12 @@
 					"mayuscula": 2.1,
 					"color": "{{tintaCrema}}"
 				},
-				"coste": { "x": 30.0, "y": 4.18, "w": 29.3, "h": 2.3 },
+				"coste": {
+					"x": 30.0,
+					"y": 4.18,
+					"w": 29.3,
+					"h": 2.3
+				},
 				"cinta": {
 					"x": 11.0,
 					"y": 7.65,
@@ -324,7 +505,12 @@
 					"mayuscula": 1.85,
 					"color": "{{tintaCrema}}"
 				},
-				"emblema": { "x": 55.0, "y": 50.1, "w": 4.4, "h": 3.0 },
+				"emblema": {
+					"x": 55.0,
+					"y": 50.1,
+					"w": 4.4,
+					"h": 3.0
+				},
 				"reglas": {
 					"x": 4.9,
 					"y": 55.4,
@@ -381,12 +567,78 @@
 							"alinear": "centro"
 						}
 					}
+				},
+				"alto": {
+					"arte": {
+						"x": 3.57,
+						"y": 8.6,
+						"w": 55.83,
+						"h": 27.7
+					},
+					"capas": [
+						{
+							"svg": "clasico/marco-alto.svg"
+						},
+						{
+							"svg": "clasico/corona.svg",
+							"si": {
+								"corona": true
+							}
+						},
+						{
+							"svg": "clasico/cinta.svg",
+							"si": {
+								"cinta": true
+							}
+						},
+						{
+							"svg": "clasico/fr.svg",
+							"si": {
+								"fr": true
+							}
+						}
+					],
+					"huecos": {
+						"tipo": {
+							"x": 3.9,
+							"y": 37.2,
+							"w": 50.6,
+							"h": 4.8,
+							"rol": "tipo",
+							"mayuscula": 1.85,
+							"color": "{{tintaCrema}}"
+						},
+						"emblema": {
+							"x": 55.0,
+							"y": 38.1,
+							"w": 4.4,
+							"h": 3.0
+						},
+						"reglas": {
+							"x": 4.9,
+							"y": 43.4,
+							"w": 53.2,
+							"h": 36.6,
+							"rol": "reglas",
+							"mayuscula": 1.72,
+							"color": "{{tintaCaja}}"
+						}
+					}
 				}
 			}
 		},
 		"fullArt": {
-			"arte": { "x": 0, "y": 0, "w": 63, "h": 81.4 },
-			"capas": [{ "svg": "paisaje/franja.svg" }],
+			"arte": {
+				"x": 0,
+				"y": 0,
+				"w": 63,
+				"h": 81.4
+			},
+			"capas": [
+				{
+					"svg": "paisaje/franja.svg"
+				}
+			],
 			"huecos": {
 				"titulo": {
 					"x": 10.5,
@@ -399,10 +651,30 @@
 					"sombra": true,
 					"alinear": "centro"
 				},
-				"simbolo": { "x": 3.25, "y": 74.2, "w": 5.4, "h": 5.4 },
-				"emblema": { "x": 53.4, "y": 75.4, "w": 4.6, "h": 3.0 },
-				"tipo": { "x": 0, "y": 0, "w": 0, "h": 0 },
-				"reglas": { "x": 0, "y": 0, "w": 0, "h": 0 },
+				"simbolo": {
+					"x": 3.25,
+					"y": 74.2,
+					"w": 5.4,
+					"h": 5.4
+				},
+				"emblema": {
+					"x": 53.4,
+					"y": 75.4,
+					"w": 4.6,
+					"h": 3.0
+				},
+				"tipo": {
+					"x": 0,
+					"y": 0,
+					"w": 0,
+					"h": 0
+				},
+				"reglas": {
+					"x": 0,
+					"y": 0,
+					"w": 0,
+					"h": 0
+				},
 				"pie": {
 					"x": 4.05,
 					"y": 82.05,
@@ -413,6 +685,658 @@
 					"color": "#ebebeb",
 					"tabs": [7.85, 10.25],
 					"interlinea": 1.6
+				}
+			}
+		}
+	},
+	"layouts": {
+		"saga": {
+			"arte": {
+				"x": 32.2,
+				"y": 9.9,
+				"w": 28.2,
+				"h": 66.9
+			},
+			"cajaPorDefecto": "tinte",
+			"capas": [
+				{
+					"svg": "layouts/saga.svg"
+				}
+			],
+			"huecos": {
+				"titulo": {
+					"x": 4.55,
+					"y": 4.3,
+					"w": 52.55,
+					"h": 4.75,
+					"rol": "titulo",
+					"mayuscula": 2.15,
+					"color": "#ffffff",
+					"sombra": true
+				},
+				"coste": {
+					"x": 30.0,
+					"y": 5.5,
+					"w": 27.1,
+					"h": 2.35
+				},
+				"tipo": {
+					"x": 3.3,
+					"y": 77.0,
+					"w": 50.6,
+					"h": 5.2,
+					"rol": "tipo",
+					"mayuscula": 1.9,
+					"color": "#ffffff",
+					"sombra": true
+				},
+				"emblema": {
+					"x": 53.9,
+					"y": 78.0,
+					"w": 4.7,
+					"h": 3.2
+				},
+				"reglas": {
+					"x": 3.4,
+					"y": 10.5,
+					"w": 28.0,
+					"h": 65.8,
+					"rol": "reglas",
+					"mayuscula": 1.6,
+					"color": "{{tintaCaja}}"
+				},
+				"pie": {
+					"x": 2.1,
+					"y": 83.55,
+					"w": 58.0,
+					"h": 3.4,
+					"rol": "pie",
+					"mayuscula": 1.1,
+					"color": "#ebebeb",
+					"tabs": [9.8, 12.2],
+					"interlinea": 1.6
+				}
+			}
+		},
+		"mazmorra": {
+			"arte": {
+				"x": 0,
+				"y": 9.5,
+				"w": 63,
+				"h": 16.0
+			},
+			"cajaPorDefecto": "tinte",
+			"capas": [
+				{
+					"svg": "layouts/mazmorra.svg"
+				}
+			],
+			"huecos": {
+				"titulo": {
+					"x": 4.55,
+					"y": 4.3,
+					"w": 52.55,
+					"h": 4.75,
+					"rol": "titulo",
+					"mayuscula": 2.15,
+					"color": "#ffffff",
+					"sombra": true
+				},
+				"coste": {
+					"x": 30.0,
+					"y": 5.5,
+					"w": 27.1,
+					"h": 2.35
+				},
+				"tipo": {
+					"x": 3.3,
+					"y": 25.7,
+					"w": 50.6,
+					"h": 5.2,
+					"rol": "tipo",
+					"mayuscula": 1.9,
+					"color": "#ffffff",
+					"sombra": true
+				},
+				"emblema": {
+					"x": 53.9,
+					"y": 26.7,
+					"w": 4.7,
+					"h": 3.2
+				},
+				"reglas": {
+					"x": 3.2,
+					"y": 32.3,
+					"w": 56.6,
+					"h": 49.2,
+					"rol": "reglas",
+					"mayuscula": 1.25,
+					"color": "{{tintaCaja}}"
+				},
+				"pie": {
+					"x": 2.1,
+					"y": 83.55,
+					"w": 58.0,
+					"h": 3.4,
+					"rol": "pie",
+					"mayuscula": 1.1,
+					"color": "#ebebeb",
+					"tabs": [9.8, 12.2],
+					"interlinea": 1.6
+				}
+			}
+		},
+		"secuelaArriba": {
+			"tamano": [63, 51],
+			"arte": {
+				"x": 0,
+				"y": 9.5,
+				"w": 63,
+				"h": 23.6
+			},
+			"cajaPorDefecto": "tinte",
+			"capas": [
+				{
+					"svg": "layouts/secuela-arriba.svg"
+				}
+			],
+			"huecos": {
+				"titulo": {
+					"x": 4.55,
+					"y": 4.3,
+					"w": 52.55,
+					"h": 4.75,
+					"rol": "titulo",
+					"mayuscula": 2.15,
+					"color": "#ffffff",
+					"sombra": true
+				},
+				"coste": {
+					"x": 30.0,
+					"y": 5.5,
+					"w": 27.1,
+					"h": 2.35
+				},
+				"tipo": {
+					"x": 3.3,
+					"y": 32.8,
+					"w": 50.6,
+					"h": 5.2,
+					"rol": "tipo",
+					"mayuscula": 1.9,
+					"color": "#ffffff",
+					"sombra": true
+				},
+				"emblema": {
+					"x": 53.9,
+					"y": 33.8,
+					"w": 4.7,
+					"h": 3.2
+				},
+				"reglas": {
+					"x": 4.1,
+					"y": 38.9,
+					"w": 54.8,
+					"h": 11.0,
+					"rol": "reglas",
+					"mayuscula": 1.6,
+					"color": "{{tintaCaja}}"
+				}
+			}
+		},
+		"secuelaAbajo": {
+			"tamano": [33, 63],
+			"arte": {
+				"x": 0,
+				"y": 0,
+				"w": 0,
+				"h": 0
+			},
+			"cajaPorDefecto": "tinte",
+			"capas": [
+				{
+					"svg": "layouts/secuela-abajo.svg"
+				}
+			],
+			"huecos": {
+				"titulo": {
+					"x": 2.3,
+					"y": 1.55,
+					"w": 28.4,
+					"h": 4.5,
+					"rol": "titulo",
+					"mayuscula": 1.75,
+					"color": "#ffffff",
+					"sombra": true
+				},
+				"coste": {
+					"x": 16.0,
+					"y": 2.7,
+					"w": 14.6,
+					"h": 2.1
+				},
+				"tipo": {
+					"x": 1.9,
+					"y": 7.2,
+					"w": 29.2,
+					"h": 4.6,
+					"rol": "tipo",
+					"mayuscula": 1.55,
+					"color": "#ffffff",
+					"sombra": true
+				},
+				"reglas": {
+					"x": 2.4,
+					"y": 13.2,
+					"w": 28.2,
+					"h": 47.6,
+					"rol": "reglas",
+					"mayuscula": 1.55,
+					"color": "{{tintaCaja}}"
+				}
+			}
+		},
+		"fusionar": {
+			"tamano": [88, 6],
+			"arte": {
+				"x": 0,
+				"y": 0,
+				"w": 0,
+				"h": 0
+			},
+			"cajaPorDefecto": "tinte",
+			"capas": [
+				{
+					"svg": "layouts/fusionar.svg"
+				}
+			],
+			"huecos": {
+				"reglas": {
+					"x": 4.0,
+					"y": 1.0,
+					"w": 80.0,
+					"h": 4.0,
+					"rol": "reglas",
+					"mayuscula": 1.35,
+					"color": "#ffffff",
+					"alinear": "centro"
+				}
+			}
+		},
+		"pie": {
+			"arte": {
+				"x": 0,
+				"y": 0,
+				"w": 0,
+				"h": 0
+			},
+			"capas": [],
+			"huecos": {
+				"pie": {
+					"x": 2.1,
+					"y": 84.3,
+					"w": 58.0,
+					"h": 3.4,
+					"rol": "pie",
+					"mayuscula": 1.1,
+					"color": "#ebebeb",
+					"tabs": [9.8, 12.2],
+					"interlinea": 1.6
+				}
+			}
+		},
+		"flip": {
+			"arte": {
+				"x": 0,
+				"y": 30.4,
+				"w": 63,
+				"h": 27.2
+			},
+			"cajaPorDefecto": "tinte",
+			"capas": [
+				{
+					"svg": "layouts/flip.svg"
+				}
+			],
+			"huecos": {
+				"titulo": {
+					"x": 4.55,
+					"y": 4.3,
+					"w": 52.55,
+					"h": 4.75,
+					"rol": "titulo",
+					"mayuscula": 2.15,
+					"color": "#ffffff",
+					"sombra": true
+				},
+				"coste": {
+					"x": 30.0,
+					"y": 5.5,
+					"w": 27.1,
+					"h": 2.35
+				},
+				"tipo": {
+					"x": 3.3,
+					"y": 24.8,
+					"w": 44.0,
+					"h": 5.2,
+					"rol": "tipo",
+					"mayuscula": 1.85,
+					"color": "#ffffff",
+					"sombra": true
+				},
+				"emblema": {
+					"x": 0,
+					"y": 0,
+					"w": 0,
+					"h": 0
+				},
+				"reglas": {
+					"x": 4.1,
+					"y": 10.4,
+					"w": 54.8,
+					"h": 13.6,
+					"rol": "reglas",
+					"mayuscula": 1.62,
+					"color": "{{tintaCaja}}"
+				},
+				"fr": {
+					"x": 50.15,
+					"y": 25.25,
+					"w": 9.1,
+					"h": 3.45,
+					"rol": "fr",
+					"mayuscula": 2.3,
+					"color": "{{tintaFr}}",
+					"alinear": "centro"
+				}
+			}
+		},
+		"batalla": {
+			"tamano": [88, 63],
+			"arte": {
+				"x": 0,
+				"y": 0,
+				"w": 88,
+				"h": 58.6
+			},
+			"cajaPorDefecto": "tinte",
+			"capas": [
+				{
+					"svg": "layouts/batalla.svg"
+				}
+			],
+			"huecos": {
+				"titulo": {
+					"x": 4.55,
+					"y": 4.3,
+					"w": 79.5,
+					"h": 4.75,
+					"rol": "titulo",
+					"mayuscula": 2.15,
+					"color": "#ffffff",
+					"sombra": true
+				},
+				"coste": {
+					"x": 55.0,
+					"y": 5.5,
+					"w": 27.1,
+					"h": 2.35
+				},
+				"tipo": {
+					"x": 3.3,
+					"y": 34.0,
+					"w": 61.0,
+					"h": 5.2,
+					"rol": "tipo",
+					"mayuscula": 1.9,
+					"color": "#ffffff",
+					"sombra": true
+				},
+				"emblema": {
+					"x": 65.0,
+					"y": 35.0,
+					"w": 4.7,
+					"h": 3.2
+				},
+				"reglas": {
+					"x": 4.4,
+					"y": 40.0,
+					"w": 65.8,
+					"h": 17.8,
+					"rol": "reglas",
+					"mayuscula": 1.62,
+					"color": "{{tintaCaja}}"
+				},
+				"fr": {
+					"x": 75.0,
+					"y": 47.6,
+					"w": 8.8,
+					"h": 5.6,
+					"rol": "fr",
+					"mayuscula": 2.6,
+					"color": "{{tintaFr}}",
+					"alinear": "centro"
+				},
+				"pie": {
+					"x": 3.0,
+					"y": 58.85,
+					"w": 82.0,
+					"h": 3.4,
+					"rol": "pie",
+					"mayuscula": 1.1,
+					"color": "#ebebeb",
+					"tabs": [9.8, 12.2],
+					"interlinea": 1.6
+				}
+			}
+		},
+		"plano": {
+			"tamano": [127, 88.9],
+			"arte": {
+				"x": 0,
+				"y": 0,
+				"w": 127,
+				"h": 83.6
+			},
+			"cajaPorDefecto": "tinte",
+			"capas": [
+				{
+					"svg": "layouts/plano.svg"
+				}
+			],
+			"huecos": {
+				"titulo": {
+					"x": 5.0,
+					"y": 4.8,
+					"w": 117.0,
+					"h": 5.4,
+					"rol": "titulo",
+					"mayuscula": 2.6,
+					"color": "#ffffff",
+					"sombra": true
+				},
+				"tipo": {
+					"x": 4.0,
+					"y": 54.0,
+					"w": 112.0,
+					"h": 5.8,
+					"rol": "tipo",
+					"mayuscula": 2.2,
+					"color": "#ffffff",
+					"sombra": true
+				},
+				"emblema": {
+					"x": 116.5,
+					"y": 55.1,
+					"w": 5.6,
+					"h": 3.6
+				},
+				"reglas": {
+					"x": 6.6,
+					"y": 61.0,
+					"w": 113.8,
+					"h": 21.2,
+					"rol": "reglas",
+					"mayuscula": 2.0,
+					"color": "{{tintaCaja}}"
+				},
+				"pie": {
+					"x": 4.0,
+					"y": 84.0,
+					"w": 110.0,
+					"h": 4.0,
+					"rol": "pie",
+					"mayuscula": 1.2,
+					"color": "#ebebeb",
+					"tabs": [11.0, 13.6],
+					"interlinea": 1.8
+				}
+			}
+		},
+		"plan": {
+			"tamano": [88.9, 127],
+			"arte": {
+				"x": 0,
+				"y": 0,
+				"w": 88.9,
+				"h": 121.4
+			},
+			"cajaPorDefecto": "tinte",
+			"capas": [
+				{
+					"svg": "layouts/plan.svg"
+				}
+			],
+			"huecos": {
+				"titulo": {
+					"x": 5.2,
+					"y": 5.6,
+					"w": 78.4,
+					"h": 6.0,
+					"rol": "titulo",
+					"mayuscula": 2.8,
+					"color": "#ffffff",
+					"sombra": true
+				},
+				"tipo": {
+					"x": 4.0,
+					"y": 72.8,
+					"w": 74.0,
+					"h": 5.8,
+					"rol": "tipo",
+					"mayuscula": 2.3,
+					"color": "#ffffff",
+					"sombra": true
+				},
+				"emblema": {
+					"x": 78.2,
+					"y": 73.9,
+					"w": 5.6,
+					"h": 3.6
+				},
+				"reglas": {
+					"x": 7.0,
+					"y": 80.2,
+					"w": 74.9,
+					"h": 38.8,
+					"rol": "reglas",
+					"mayuscula": 2.3,
+					"color": "{{tintaCaja}}"
+				},
+				"pie": {
+					"x": 4.0,
+					"y": 122.0,
+					"w": 80.0,
+					"h": 4.0,
+					"rol": "pie",
+					"mayuscula": 1.25,
+					"color": "#ebebeb",
+					"tabs": [11.0, 13.6],
+					"interlinea": 1.8
+				}
+			}
+		},
+		"vanguard": {
+			"tamano": [88.9, 127],
+			"arte": {
+				"x": 0,
+				"y": 0,
+				"w": 88.9,
+				"h": 121.4
+			},
+			"cajaPorDefecto": "tinte",
+			"capas": [
+				{
+					"svg": "layouts/vanguard.svg"
+				}
+			],
+			"huecos": {
+				"titulo": {
+					"x": 5.2,
+					"y": 5.6,
+					"w": 78.4,
+					"h": 6.0,
+					"rol": "titulo",
+					"mayuscula": 2.8,
+					"color": "#ffffff",
+					"sombra": true
+				},
+				"tipo": {
+					"x": 4.0,
+					"y": 72.8,
+					"w": 74.0,
+					"h": 5.8,
+					"rol": "tipo",
+					"mayuscula": 2.3,
+					"color": "#ffffff",
+					"sombra": true
+				},
+				"emblema": {
+					"x": 78.2,
+					"y": 73.9,
+					"w": 5.6,
+					"h": 3.6
+				},
+				"reglas": {
+					"x": 7.0,
+					"y": 80.2,
+					"w": 74.9,
+					"h": 29.6,
+					"rol": "reglas",
+					"mayuscula": 2.3,
+					"color": "{{tintaCaja}}"
+				},
+				"mano": {
+					"x": 5.55,
+					"y": 112.1,
+					"w": 22.9,
+					"h": 5.4,
+					"rol": "fr",
+					"mayuscula": 2.1,
+					"color": "{{tintaFr}}",
+					"alinear": "centro"
+				},
+				"vida": {
+					"x": 60.45,
+					"y": 112.1,
+					"w": 22.9,
+					"h": 5.4,
+					"rol": "fr",
+					"mayuscula": 2.1,
+					"color": "{{tintaFr}}",
+					"alinear": "centro"
+				},
+				"pie": {
+					"x": 4.0,
+					"y": 122.0,
+					"w": 80.0,
+					"h": 4.0,
+					"rol": "pie",
+					"mayuscula": 1.25,
+					"color": "#ebebeb",
+					"tabs": [11.0, 13.6],
+					"interlinea": 1.8
 				}
 			}
 		}

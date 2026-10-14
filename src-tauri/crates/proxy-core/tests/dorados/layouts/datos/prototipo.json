@@ -1,0 +1,37 @@
+{
+	"scryfallId": "62d37423-3445-412a-9abd-0480da404637",
+	"oracleId": "d3a5a830-cd14-49da-9412-c50049c74c92",
+	"layout": "prototype",
+	"keywords": ["Lifelink", "Menace", "Ward", "Prototype"],
+	"rarity": "mythic",
+	"frameEffects": [],
+	"colors": [],
+	"colorIdentity": ["B"],
+	"cmc": 7.0,
+	"set": "bro",
+	"collectorNumber": "121",
+	"artist": "Steve Prescott",
+	"faces": [
+		{
+			"name": "Phyrexian Fleshgorger",
+			"manaCost": "{7}",
+			"typeLine": {
+				"es": "Criatura artefacto — Sierpe pirexiano",
+				"en": "Artifact Creature — Phyrexian Wurm"
+			},
+			"rules": {
+				"es": "Amenaza, vínculo vital.\nRebatir—Pagar una cantidad de vidas igual a la fuerza del Engullecarnes pirexiano.\n{1}{B}{B}\nPrototipo. (Puedes lanzar este hechizo con un coste de maná, color y tamaño distintos. Sus habilidades y tipos no cambian.)\n3/3",
+				"en": "Prototype {1}{B}{B} — 3/3 (You may cast this spell with different mana cost, color, and size. It keeps its abilities and types.)\nMenace, lifelink\nWard—Pay life equal to this creature's power."
+			},
+			"printedNameEs": "Engullecarnes pirexiano",
+			"colors": [],
+			"power": "7",
+			"toughness": "5",
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": false,
+	"oversized": false,
+	"fetchedAt": 0
+}

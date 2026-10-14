@@ -1,0 +1,55 @@
+{
+	"scryfallId": "6904ea20-e504-47da-95a0-08739fdde260",
+	"oracleId": "edd531b9-f615-4399-8c8c-1c5e18c4acbf",
+	"layout": "transform",
+	"keywords": ["Flying", "Transform"],
+	"rarity": "common",
+	"frameEffects": [],
+	"colors": [],
+	"colorIdentity": ["U"],
+	"cmc": 1.0,
+	"set": "inr",
+	"collectorNumber": "60",
+	"artist": "Nils Hamm",
+	"faces": [
+		{
+			"name": "Delver of Secrets",
+			"manaCost": "{U}",
+			"typeLine": {
+				"es": "Criatura — Hechicero humano",
+				"en": "Creature — Human Wizard"
+			},
+			"rules": {
+				"es": "Al comienzo de tu mantenimiento, mira la primera carta de tu biblioteca. Puedes mostrar esa carta. Si se muestra una carta de instantáneo o de conjuro de esta manera, transforma al Indagador de secretos.",
+				"en": "At the beginning of your upkeep, look at the top card of your library. You may reveal that card. If an instant or sorcery card is revealed this way, transform this creature."
+			},
+			"printedNameEs": "Delver of Secrets",
+			"colors": ["U"],
+			"power": "1",
+			"toughness": "1",
+			"loyalty": null,
+			"defense": null
+		},
+		{
+			"name": "Insectile Aberration",
+			"manaCost": "",
+			"typeLine": {
+				"es": "Criatura — Insecto humano",
+				"en": "Creature — Human Insect"
+			},
+			"rules": {
+				"es": "Vuela.",
+				"en": "Flying"
+			},
+			"printedNameEs": "Insectile Aberration",
+			"colors": ["U"],
+			"power": "3",
+			"toughness": "2",
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": false,
+	"oversized": false,
+	"fetchedAt": 0
+}

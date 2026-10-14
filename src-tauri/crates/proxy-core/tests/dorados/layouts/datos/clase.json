@@ -1,0 +1,37 @@
+{
+	"scryfallId": "cf4e9335-06e3-4b27-8fd8-3e44ece89a36",
+	"oracleId": "6dccf583-1045-4058-86cc-ebbcc8de080e",
+	"layout": "class",
+	"keywords": [],
+	"rarity": "rare",
+	"frameEffects": [],
+	"colors": ["U"],
+	"colorIdentity": ["U"],
+	"cmc": 2.0,
+	"set": "clb",
+	"collectorNumber": "663",
+	"artist": "Jim Nelson",
+	"faces": [
+		{
+			"name": "Artificer Class",
+			"manaCost": "{1}{U}",
+			"typeLine": {
+				"es": "Encantamiento — Clase",
+				"en": "Enchantment — Class"
+			},
+			"rules": {
+				"es": "(Gana un nivel como un conjuro para agregar su habilidad.)\nTe cuesta {1} menos lanzar el primer hechizo de artefacto que lances cada turno.\n{1}{U}: Nivel 2\nCuando esta Clase alcance el nivel 2, muestra cartas de la parte superior de tu biblioteca hasta que muestres una carta de artefacto. Pon esa carta en tu mano y el resto en el fondo de tu biblioteca en un orden aleatorio.\n{5}{U}: Nivel 3\nAl comienzo de tu paso final, crea una ficha que es una copia del artefacto objetivo que controlas.",
+				"en": "(Gain the next level as a sorcery to add its ability.)\nThe first artifact spell you cast each turn costs {1} less to cast.\n{1}{U}: Level 2\nWhen this Class becomes level 2, reveal cards from the top of your library until you reveal an artifact card. Put that card into your hand and the rest on the bottom of your library in a random order.\n{5}{U}: Level 3\nAt the beginning of your end step, create a token that's a copy of target artifact you control."
+			},
+			"printedNameEs": "Clase: artífice",
+			"colors": ["U"],
+			"power": null,
+			"toughness": null,
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": false,
+	"oversized": false,
+	"fetchedAt": 0
+}
