@@ -181,6 +181,7 @@ pub fn design_export_png(
     state: State<'_, AppState>,
     cards: Vec<DeckCard>,
     folder: String,
+    card_size: proxy_core::model::CardSize,
     dpi: u32,
     langs: Vec<DesignLang>,
 ) -> AppResult<u32> {
@@ -195,6 +196,7 @@ pub fn design_export_png(
             &estado,
             &cards,
             std::path::Path::new(&folder),
+            card_size,
             dpi,
             &langs,
             &cancelado,

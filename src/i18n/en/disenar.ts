@@ -1,5 +1,8 @@
 // Diseñar: el editor de cartas proxy (vista, formulario, colecciones y recursos).
 export const DISENAR: Record<string, string> = {
+	"{n} cartas no se pudieron preparar.": "{n} cards couldn't be prepared.",
+	"{n} cartas grandes no caben en este papel y no se imprimen.":
+		"{n} large cards don't fit on this paper and won't be printed.",
 	"Traducción sugerida (experimental)": "Suggested translation (experimental)",
 	"Buscar frases oficiales": "Look up official phrases",
 	"Busca en Scryfall las mismas frases en otras cartas que sí están en español y propone su texto oficial. Tarda un poco: una búsqueda por frase.":

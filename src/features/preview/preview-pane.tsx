@@ -307,9 +307,11 @@ export function PreviewPane() {
 										"{n} cartas de doble cara sin dúplex: su otra cara no se imprime (activa «Pares DFC intercalados» o el dúplex).",
 										{ n: w.count },
 									)
-								: t("{n} cartas sin reverso: el deck no tiene reverso por defecto.", {
-										n: w.count,
-									})}
+								: w.kind === "bigCardsDoNotFit"
+									? t("{n} cartas grandes no caben en este papel y no se imprimen.", { n: w.count })
+									: t("{n} cartas sin reverso: el deck no tiene reverso por defecto.", {
+											n: w.count,
+										})}
 						</span>
 					))}
 				</div>

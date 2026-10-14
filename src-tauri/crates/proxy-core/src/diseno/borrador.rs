@@ -145,10 +145,11 @@ pub fn reglas_efectivas(d: &CardDesign, cara: usize, lang: DesignLang) -> String
         return String::new();
     };
     let textos = d.faces.get(cara).map(|f| f.texts.get(lang));
-    if let Some(manual) = textos.and_then(|t| t.rules_override.as_ref()) {
-        return manual.clone();
-    }
-    let base = datos.rules.get(lang);
+    // Las reglas a mano mandan, pero el nombre original se cambia igual por
+    // el propio (la traducción sugerida lo deja con el original).
+    let base = textos
+        .and_then(|t| t.rules_override.as_ref())
+        .unwrap_or_else(|| datos.rules.get(lang));
     let propio = textos.map(|t| t.name.as_str()).unwrap_or("");
     sustituir_nombre(
         base,
@@ -318,6 +319,12 @@ mod tests {
         // Las reglas a mano mandan.
         d.faces[1].texts.es.rules_override = Some("A mano.".into());
         assert_eq!(reglas_efectivas(&d, 1, DesignLang::Es), "A mano.");
+        // ...pero el nombre original también se cambia en ellas.
+        d.faces[1].texts.es.rules_override = Some("Regresa a Alba a tu mano.".into());
+        assert_eq!(
+            reglas_efectivas(&d, 1, DesignLang::Es),
+            "Regresa a Amanecer de Ciel a tu mano."
+        );
         // Sin nombre temático, el impreso.
         d.faces[0].texts.es.name.clear();
         assert_eq!(nombre_efectivo(&d, 0, DesignLang::Es), "Ocaso");

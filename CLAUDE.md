@@ -75,7 +75,8 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
 - `src/features/<área>/`: `decklist` (panel izquierdo y sus acciones),
   `preview` (hojas, casillas, menú, arrastre), `export` (panel derecho,
   alinear filas, presets), `variants` (añadir carta, variantes, rejilla de
-  Scryfall), `card-editor`, `library`, `stats`, `set-browser`, `shell`.
+  Scryfall), `card-editor`, `library`, `stats`, `set-browser`, `shell`,
+  `disenar` (la vista «Diseñar» del editor de cartas de la 2.0).
 - `src/stores/`: `deck-store` (deck, historial, autoguardado), `plan-store`
   (el `PagePlan` de Rust con 100 ms de espera), `ui-store` (zoom, selección,
   diálogos, preferencias), `trabajo-store` (el trabajo largo en marcha).
@@ -103,6 +104,24 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
   Una a una (`vincular-dialog`) o en bloque (`vincular-lote`: `identify_batch`
   en Rust con progreso, puntúa cada propuesta exacta/probable/ninguna y la
   pantalla la deja revisar antes de vincular; con selección, solo esas).
+- **Editor de cartas (2.0).** El plan es `plans/20261014 - editor-de-cartas/`.
+  - Motor en `proxy-core::diseno`: `modelo` (CardDesign, CardData, Collection),
+    `efectivo` (carta > colección > fábrica y la huella), `pack` (formato de
+    marcos, ver `docs/packs-de-marcos.md`), `texto` y `pintar` (parley +
+    tiny-skia), `render` (una cara sobre un lienzo de cualquier medida),
+    `componer` (partidas, secuela, flip, batalla, meld, grandes),
+    `maquetacion` (layout de la carta y cuerpo de cada cara), `estructura`
+    (habilidades, capítulos, niveles… del texto) y `cuerpos` (secciones con
+    insignias). Pack de la casa en `assets/marcos/builtin/`; letras en
+    `assets/fuentes/`. Dorados en `tests/dorados/` y `tests/dorados/layouts/`
+    (con datos reales en `layouts/datos/`, bajados por
+    `borrador::en_vivo::datos_de_layouts`).
+  - App: `diseno/{borrador,recursos,pintar,vista,arte,lote,png,traduccion}.rs`
+    y `commands/diseno.rs`. Las imágenes de los diseños se protegen del gc
+    con `blob_refs`; la vista previa va por `pbimg://…/d/<huella>/<ancho>`.
+    El PDF pinta cada carta diseñada desde el diseño a su medida y PPP.
+  - Cartas grandes (planos, planes, Vanguard): hojas propias al final del
+    `PagePlan` (`big_grid`, `big_cells`, `Page.big`).
 - Releases: los hace Pablo (o Claude Code en su VS Code), no esta sesión.
 - Valores de fábrica (Pablo, 13/10/2026): 2 mm de separación en blanco,
   sangrado 0, guías de corte apagadas y «Rellenar las esquinas» apagado (lo

@@ -123,6 +123,8 @@ pub enum PlanWarning {
     DfcWithoutBack { count: u32 },
     /// Dúplex sin reverso por defecto: estas cartas salen con el dorso en blanco.
     MissingDefaultBack { count: u32 },
+    /// Las cartas grandes no caben en este papel: se quedan fuera.
+    BigCardsDoNotFit { count: u32 },
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
@@ -525,18 +527,27 @@ pub fn plan(deck: &Deck) -> Result<PagePlan, LayoutError> {
     let mut pages = Vec::new();
     let mut hojas = paginar(&normales, &g, &cells, s, ancho, alto, 0, false, &mut pages);
     let (mut big_grid, mut big_cells) = (None, Vec::new());
+    let mut colocadas = normales.len() as u32;
     if !grandes.is_empty() {
         let (gw, gh) = crate::diseno::maquetacion::medida_grande();
-        let g2 = grid(ancho, alto, gw, gh, s.gap_mm, s.min_margin_mm, s.bleed_mm)?;
-        let c2 = celdas(&g2, gw, gh, s.gap_mm);
-        hojas += paginar(&grandes, &g2, &c2, s, ancho, alto, hojas, true, &mut pages);
-        big_grid = Some(g2);
-        big_cells = c2;
+        match grid(ancho, alto, gw, gh, s.gap_mm, s.min_margin_mm, s.bleed_mm) {
+            Ok(g2) => {
+                let c2 = celdas(&g2, gw, gh, s.gap_mm);
+                hojas += paginar(&grandes, &g2, &c2, s, ancho, alto, hojas, true, &mut pages);
+                colocadas += grandes.len() as u32;
+                big_grid = Some(g2);
+                big_cells = c2;
+            }
+            // En un papel pequeño no caben: las normales salen igual.
+            Err(_) => warnings.push(PlanWarning::BigCardsDoNotFit {
+                count: grandes.len() as u32,
+            }),
+        }
     }
 
     Ok(PagePlan {
         sheets: hojas,
-        placed: items.len() as u32,
+        placed: colocadas,
         grid: g,
         cells,
         pages,
@@ -987,5 +998,21 @@ mod tests {
         assert!(p.big_grid.is_none() && p.big_cells.is_empty());
         assert!(p.pages.iter().all(|x| !x.big));
         assert_eq!(p.pages.len(), 3);
+    }
+
+    /// En un papel donde no cabe una carta grande, las normales salen igual.
+    #[test]
+    fn si_las_grandes_no_caben_las_normales_salen() {
+        let s = PrintSettings {
+            paper: PaperFormat::Photo4x6,
+            landscape: true,
+            ..Default::default()
+        };
+        let p = plan(&deck(vec![carta("n0"), plano("p0")], s)).unwrap();
+        assert!(p
+            .warnings
+            .contains(&PlanWarning::BigCardsDoNotFit { count: 1 }));
+        assert_eq!(p.placed, 1);
+        assert!(p.pages.iter().all(|x| !x.big));
     }
 }

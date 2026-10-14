@@ -219,8 +219,12 @@ fn partida(
         let est = estilo(rec, e, None, &mut av)?;
         let o = Opciones::de(cara, cu, pw.round() as u32, ph.round() as u32);
         let mut p = pintar_cara(motor, e_mitades, lang, rec, est, av, &o)?;
-        // Las reglas puestas aquí no son «editadas a mano».
-        if sin_fusionar.is_some() {
+        // Las reglas puestas aquí no son «editadas a mano» (salvo que ya lo
+        // estuvieran).
+        let a_mano = e.design.faces.get(cara).is_some_and(|f| {
+            f.texts.es.rules_override.is_some() || f.texts.en.rules_override.is_some()
+        });
+        if sin_fusionar.is_some() && !a_mano {
             p.avisos
                 .retain(|a| !matches!(a, Aviso::ReglasEditadas { .. }));
         }
@@ -544,7 +548,7 @@ pub fn render(
     let (w_mm, h_mm) = medida(e, card);
     let ancho = ancho_px.max(16);
     let alto = (ancho as f64 * h_mm / w_mm).round() as u32;
-    let cara = cara.min(maq.caras_impresas() - 1);
+    let cara = cara.min(super::maquetacion::caras_impresas(&d.card) - 1);
     let pieza = match maq {
         m if m.es_partida() => partida(motor, e, lang, rec, m, ancho, alto)?,
         Maquetacion::Secuela => secuela(motor, e, lang, rec, ancho, alto)?,

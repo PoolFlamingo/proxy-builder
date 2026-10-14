@@ -949,6 +949,15 @@ impl Carta<'_> {
                 centro.tam * 0.6,
                 self.l.x(0.1 * super::MM_POR_PT),
             );
+            if a.sobra > 0.0 {
+                let aviso = super::modelo::Aviso::TextoNoCabe {
+                    hueco: "reglas".into(),
+                    sobra: f64::from(a.sobra / self.l.ky),
+                };
+                if !self.avisos.contains(&aviso) {
+                    self.avisos.push(aviso);
+                }
+            }
             let libre = ((disponible - a.caja.alto) / 2.0).max(0.0);
             let simbolos = self.rec.simbolos;
             self.faltan.extend(pintar_caja(

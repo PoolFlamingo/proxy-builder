@@ -121,7 +121,16 @@ fn alinear(c: &ScryCard, frase: &str) -> Option<String> {
 /// escapadas.
 fn consulta(frase: &str) -> String {
     let f = frase.trim_end_matches('.').replace('"', "\\\"");
-    format!("o:\"{f}\" lang:es")
+    format!("o:\"{f}\" lang:es order:released")
+}
+
+/// Scryfall no entendió la búsqueda (un 4xx): esa frase se queda en inglés.
+fn rechazada(e: &crate::error::AppError) -> bool {
+    e.code == ErrorCode::Network
+        && e.params
+            .get("estado")
+            .and_then(|x| x.parse::<u16>().ok())
+            .is_some_and(|x| (400..500).contains(&x))
 }
 
 /// Busca la traducción oficial de una frase en otras cartas.
@@ -129,7 +138,7 @@ async fn traducir_frase<A: CardApi>(api: &A, frase: &str) -> AppResult<Option<St
     // Una frase muy corta («Vuela.») está en miles de cartas: igual vale.
     let r = match api.search(&consulta(frase), true, 30).await {
         Ok(r) => r,
-        Err(e) if e.code == ErrorCode::NotFound => return Ok(None),
+        Err(e) if e.code == ErrorCode::NotFound || rechazada(&e) => return Ok(None),
         Err(e) => return Err(e),
     };
     let mut candidatas: Vec<&ScryCard> = r
@@ -143,10 +152,10 @@ async fn traducir_frase<A: CardApi>(api: &A, frase: &str) -> AppResult<Option<St
 
 /// La línea de tipo en español de una carta con la misma línea en inglés.
 async fn traducir_tipo<A: CardApi>(api: &A, tipo: &str) -> AppResult<Option<String>> {
-    let q = format!("t:\"{}\" lang:es", tipo.replace('"', "\\\""));
+    let q = format!("t:\"{}\" lang:es order:released", tipo.replace('"', "\\\""));
     let r = match api.search(&q, true, 40).await {
         Ok(r) => r,
-        Err(e) if e.code == ErrorCode::NotFound => return Ok(None),
+        Err(e) if e.code == ErrorCode::NotFound || rechazada(&e) => return Ok(None),
         Err(e) => return Err(e),
     };
     Ok(r.into_iter()
@@ -234,8 +243,8 @@ pub async fn sugerir<A: CardApi>(
             if es.is_some() {
                 ok += 1;
             }
-            // El `~` vuelve a ser el nombre original (el motor lo cambia por
-            // el propio al pintar).
+            // El `~` vuelve a ser el nombre original: `reglas_efectivas` lo
+            // cambia por el propio también en las reglas a mano.
             let sale = es.clone().unwrap_or_else(|| f.clone()).replace('~', nombre);
             partes.push(sale);
             lista.push(FraseSugerida {
