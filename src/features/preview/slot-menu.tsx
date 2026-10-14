@@ -65,6 +65,7 @@ export function SlotMenu({ id, children }: { id: string; children: ReactNode }) 
 	const esScryfall = carta?.source.kind === "scryfall" || carta?.source.kind === "token";
 	const fijada = carta?.locked ?? false;
 	const disenable = !!carta && scryfallDe(carta) !== null;
+	const editor = useUi((s) => s.editorCartas);
 	const quitarDisenos = () => {
 		const quitar = new Set(ids());
 		useDeck.getState().setCartas((cs) => quitarDiseno(cs, quitar));
@@ -93,14 +94,16 @@ export function SlotMenu({ id, children }: { id: string; children: ReactNode }) 
 					<Palette />
 					{t("Cambiar variante")}
 				</ContextMenuItem>
-				<ContextMenuItem
-					disabled={varias || !disenable}
-					onSelect={() => useUi.getState().disenar(id)}
-				>
-					<Brush />
-					{carta?.design ? t("Editar diseño") : t("Diseñar proxy")}
-				</ContextMenuItem>
-				{carta?.design && (
+				{editor && (
+					<ContextMenuItem
+						disabled={varias || !disenable}
+						onSelect={() => useUi.getState().disenar(id)}
+					>
+						<Brush />
+						{carta?.design ? t("Editar diseño") : t("Diseñar proxy")}
+					</ContextMenuItem>
+				)}
+				{editor && carta?.design && (
 					<ContextMenuItem onSelect={quitarDisenos}>
 						<Eraser />
 						{varias ? t("Quitar el diseño de las seleccionadas") : t("Quitar diseño")}

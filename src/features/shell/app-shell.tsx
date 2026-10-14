@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { SettingsDialog } from "@/features/settings/settings-dialog";
+import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
 import { SaveIndicator } from "./save-indicator";
@@ -32,6 +33,7 @@ export function AppShell({
 	const { t } = useLang();
 	const vista = useUi((s) => s.vista);
 	const setVista = useUi((s) => s.setVista);
+	const editor = useUi((s) => s.editorCartas);
 	const [ajustes, setAjustes] = useState(false);
 	const layout = useDefaultLayout({ id: "proxybuilder.paneles", storage: localStorage });
 
@@ -54,17 +56,30 @@ export function AppShell({
 					className="ml-4 shrink-0"
 					value={vista}
 					onValueChange={(v) =>
-						(v === "deck" || v === "disenar" || v === "biblioteca") && setVista(v)
+						(v === "deck" || (v === "disenar" && editor) || v === "biblioteca") && setVista(v)
 					}
 				>
 					<ToggleGroupItem value="deck" className="gap-1.5 px-3 text-xs">
 						<Layers className="size-3.5" />
 						{t("Deck")}
 					</ToggleGroupItem>
-					<ToggleGroupItem value="disenar" className="gap-1.5 px-3 text-xs">
-						<Brush className="size-3.5" />
-						{t("Diseñar")}
-					</ToggleGroupItem>
+					{editor && (
+						<ToggleGroupItem value="disenar" className="gap-1.5 px-3 text-xs">
+							<Brush className="size-3.5" />
+							{t("Diseñar")}
+							<span
+								className={cn(
+									"rounded-full border px-1.5 text-[9px] leading-4 font-medium uppercase",
+									// En la pestaña activa (fondo de color) va del color del texto.
+									vista === "disenar"
+										? "border-current/50"
+										: "border-amber-500/50 text-amber-600 dark:text-amber-400",
+								)}
+							>
+								{t("Experimental")}
+							</span>
+						</ToggleGroupItem>
+					)}
 					<ToggleGroupItem value="biblioteca" className="gap-1.5 px-3 text-xs">
 						<BookOpen className="size-3.5" />
 						{t("Biblioteca")}
@@ -104,7 +119,7 @@ export function AppShell({
 							{derecha}
 						</ResizablePanel>
 					</ResizablePanelGroup>
-				) : vista === "disenar" ? (
+				) : vista === "disenar" && editor ? (
 					disenar
 				) : (
 					biblioteca

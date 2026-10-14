@@ -1,4 +1,9 @@
 export const AJUSTES: Record<string, string> = {
+	"Editor de cartas": "Card editor",
+	"Diseña tus propias versiones de las cartas: marco, textos en español o inglés y arte nuevo. Añade la pestaña «Diseñar» y las opciones de diseño al menú de cada carta.":
+		"Design your own versions of cards: frame, text in Spanish or English and new art. Adds the “Design” tab and the design options to each card's menu.",
+	"Está en pruebas: puede tener fallos y cambiar entre versiones. Los diseños se guardan con el deck, pero revisa el PDF antes de imprimir.":
+		"It's still being tested: it may have bugs and change between versions. Designs are saved with the deck, but check the PDF before printing.",
 	Ajustes: "Settings",
 	"Idioma y aspecto de la aplicación.": "Language and look of the app.",
 	Idioma: "Language",

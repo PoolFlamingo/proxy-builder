@@ -1,4 +1,5 @@
 export const COMUN: Record<string, string> = {
+	Experimental: "Experimental",
 	"No hay conexión o el servidor no responde.": "No connection, or the server isn't responding.",
 	"El servicio pide ir más despacio. Vuelve a intentarlo en un momento.":
 		"The service is asking us to slow down. Try again in a moment.",
