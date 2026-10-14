@@ -1,0 +1,55 @@
+{
+	"scryfallId": "4ac2b852-92b2-4daf-9d1f-f71d3b27c241",
+	"oracleId": "01fbdd79-5c23-43d5-8e95-492f8e994956",
+	"layout": "double_faced_token",
+	"keywords": ["Flying"],
+	"rarity": "common",
+	"frameEffects": [],
+	"colors": [],
+	"colorIdentity": ["B", "W"],
+	"cmc": 0.0,
+	"set": "phel",
+	"collectorNumber": "1★",
+	"artist": "James Ryman & Karl Kopinski",
+	"faces": [
+		{
+			"name": "Angel",
+			"manaCost": "",
+			"typeLine": {
+				"es": "Token Creature — Angel",
+				"en": "Token Creature — Angel"
+			},
+			"rules": {
+				"es": "Flying",
+				"en": "Flying"
+			},
+			"printedNameEs": null,
+			"colors": ["W"],
+			"power": "4",
+			"toughness": "4",
+			"loyalty": null,
+			"defense": null
+		},
+		{
+			"name": "Demon",
+			"manaCost": "",
+			"typeLine": {
+				"es": "Token Creature — Demon",
+				"en": "Token Creature — Demon"
+			},
+			"rules": {
+				"es": "Flying",
+				"en": "Flying"
+			},
+			"printedNameEs": null,
+			"colors": ["B"],
+			"power": "5",
+			"toughness": "5",
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": true,
+	"oversized": false,
+	"fetchedAt": 0
+}

@@ -6,6 +6,7 @@
 //! en español. Sin ninguna, el Oracle con el aviso `sinTextoOficial`.
 
 use proxy_core::diseno::borrador::siguiente_numero;
+use proxy_core::diseno::estructura::limpiar;
 use proxy_core::diseno::modelo::*;
 use proxy_core::model::{CardSource, DeckCard};
 
@@ -118,12 +119,15 @@ fn cara_de(en: &ScryCard, es: Option<&ScryCard>, i: Option<usize>) -> FaceData {
         Some(es) => match i {
             Some(_) => (
                 fs.and_then(|f| f.printed_type_line.clone()),
-                fs.and_then(|f| f.printed_text.clone()),
-                fs.and_then(|f| f.printed_name.clone()),
+                fs.and_then(|f| f.printed_text.as_deref().map(limpiar)),
+                // Alguna impresión trae en cada cara el nombre de la carta
+                // entera («Dusk // Dawn»): ese no vale para la cara.
+                fs.and_then(|f| f.printed_name.clone())
+                    .filter(|n| !n.contains(" // ")),
             ),
             None => (
                 es.printed_type_line.clone(),
-                es.printed_text.clone(),
+                es.printed_text.as_deref().map(limpiar),
                 es.printed_name.clone(),
             ),
         },
@@ -162,9 +166,13 @@ fn cara_de(en: &ScryCard, es: Option<&ScryCard>, i: Option<usize>) -> FaceData {
 /// La instantánea mecánica.
 pub fn datos(en: &ScryCard, es: Option<&ScryCard>, ahora: i64) -> CardData {
     let caras = if por_caras(&en.layout) && en.card_faces.len() >= 2 {
-        (0..en.card_faces.len())
+        let mut caras: Vec<FaceData> = (0..en.card_faces.len())
             .map(|i| cara_de(en, es, Some(i)))
-            .collect()
+            .collect();
+        if en.layout == "modal_dfc" {
+            sin_pestana_mdfc(&mut caras);
+        }
+        caras
     } else {
         vec![cara_de(en, es, None)]
     };
@@ -190,8 +198,66 @@ pub fn datos(en: &ScryCard, es: Option<&ScryCard>, ahora: i64) -> CardData {
             .or_else(|| en.card_faces.first().and_then(|f| f.artist.clone())),
         faces: caras,
         sin_texto_es: sin_es,
+        oversized: en.oversized.unwrap_or(false),
+        hand_modifier: en.hand_modifier.clone(),
+        life_modifier: en.life_modifier.clone(),
+        meld_arriba: None,
         fetched_at: ahora,
     }
+}
+
+/// Las impresiones españolas de las MDFC traen al final de cada cara la
+/// pestaña de la otra («Tierra / {T}: Agrega {R}.»); el motor ya la pinta.
+fn sin_pestana_mdfc(caras: &mut [FaceData]) {
+    let tipos: Vec<String> = caras.iter().map(|c| c.type_line.es.clone()).collect();
+    for (i, c) in caras.iter_mut().enumerate() {
+        let Some(otro) = tipos.get(1 - i.min(1)) else {
+            continue;
+        };
+        let lineas: Vec<&str> = c.rules.es.lines().collect();
+        if let Some(j) = lineas.iter().position(|l| l.trim() == otro.trim()) {
+            if j > 0 {
+                c.rules.es = lineas[..j].join("\n");
+            }
+        }
+    }
+}
+
+/// Meld: la carta fundida de esta parte (de Scryfall, con su española si la
+/// hay) y si su mitad de arriba va en el dorso de esta.
+pub async fn fundida<A: CardApi>(
+    db: &Db,
+    api: &A,
+    en: &ScryCard,
+) -> AppResult<Option<(ScryCard, Option<ScryCard>, bool)>> {
+    if en.layout != "meld" {
+        return Ok(None);
+    }
+    let Some(parte) = en.all_parts.iter().find(|p| p.component == "meld_result") else {
+        return Ok(None);
+    };
+    if parte.id == en.id {
+        return Ok(None);
+    }
+    let res = carta_completa(db, api, &parte.id).await?;
+    let res_es = impresion_es(db, api, &res).await?;
+    // La parte que comparte número con la fundida (15a ↔ 15b) lleva la
+    // mitad de arriba.
+    let num = |s: &str| {
+        s.trim_end_matches(|c: char| c.is_ascii_alphabetic())
+            .to_string()
+    };
+    let arriba = num(&res.collector_number) == num(&en.collector_number);
+    Ok(Some((res, res_es, arriba)))
+}
+
+/// Añade la carta fundida como segunda cara.
+pub fn con_fundida(mut d: CardData, f: Option<(ScryCard, Option<ScryCard>, bool)>) -> CardData {
+    if let Some((res, res_es, arriba)) = f {
+        d.faces.push(cara_de(&res, res_es.as_ref(), None));
+        d.meld_arriba = Some(arriba);
+    }
+    d
 }
 
 /// El estilo de partida: paisaje para las tierras básicas; si no, el de la
@@ -337,6 +403,69 @@ mod tests {
 mod en_vivo {
     use super::*;
     use crate::scryfall::client::Scryfall;
+
+    /// Las cartas de prueba de los dorados de layouts (Fase 5): baja sus
+    /// datos de Scryfall y los deja en `proxy-core/tests/dorados/layouts/datos`.
+    /// `cargo test --lib borrador::en_vivo::datos_de_layouts -- --ignored`.
+    #[tokio::test]
+    #[ignore]
+    async fn datos_de_layouts() {
+        let db = Db::in_memory().unwrap();
+        let api = Scryfall::new().unwrap();
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("crates/proxy-core/tests/dorados/layouts/datos");
+        std::fs::create_dir_all(&dir).unwrap();
+        let cartas = [
+            ("pw-3", "!\"Liliana of the Veil\""),
+            ("pw-4", "!\"Jace, the Mind Sculptor\""),
+            ("saga-urza", "!\"Urza's Saga\""),
+            ("saga", "!\"The Eldest Reborn\""),
+            ("clase", "!\"Artificer Class\""),
+            ("caso", "!\"Case of the Locked Hothouse\""),
+            ("partida", "!\"Fire // Ice\""),
+            ("fusionar", "!\"Turn // Burn\""),
+            ("secuela", "!\"Dusk // Dawn\""),
+            ("habitacion", "!\"Bottomless Pool // Locker Room\""),
+            ("aventura", "!\"Bonecrusher Giant\""),
+            ("presagio", "!\"Bloomvine Regent\""),
+            ("flip", "!\"Akki Lavarunner\""),
+            ("transform", "!\"Delver of Secrets\""),
+            ("mdfc", "!\"Valakut Awakening\""),
+            ("batalla", "!\"Invasion of Zendikar\""),
+            ("meld", "!\"Bruna, the Fading Light\""),
+            ("reversible", "!\"Ajani Goldmane\" layout:reversible_card"),
+            (
+                "ficha2",
+                "layout:double_faced_token t:angel t:demon include:extras",
+            ),
+            ("leveler", "!\"Student of Warfare\""),
+            ("prototipo", "!\"Phyrexian Fleshgorger\""),
+            ("mutar", "!\"Gemrazer\""),
+            ("estacion", "!\"Atmospheric Greenhouse\""),
+            (
+                "emblema",
+                "!\"Ajani, Adversary of Tyrants Emblem\" include:extras",
+            ),
+            ("mazmorra", "!\"Dungeon of the Mad Mage\""),
+            ("plano", "!\"Akoum\" is:oversized"),
+            ("plan", "!\"All in Good Time\" include:extras"),
+            ("vanguard", "!\"Ashnod\" layout:vanguard"),
+        ];
+        for (archivo, q) in cartas {
+            let r = api.search(q, false, 1).await.unwrap();
+            let Some(c) = r.first() else {
+                println!("{archivo}: no está");
+                continue;
+            };
+            let en = carta_completa(&db, &api, &c.id).await.unwrap();
+            let es = impresion_es(&db, &api, &en).await.unwrap();
+            let f = fundida(&db, &api, &en).await.unwrap();
+            let d = con_fundida(datos(&en, es.as_ref(), 0), f);
+            let json = serde_json::to_string_pretty(&d).unwrap();
+            std::fs::write(dir.join(format!("{archivo}.json")), json).unwrap();
+            println!("{archivo}: {} ({} caras)", d.layout, d.faces.len());
+        }
+    }
 
     #[tokio::test]
     #[ignore]

@@ -1,0 +1,55 @@
+{
+	"scryfallId": "10e0a9a3-f63a-4f92-a083-9d181580e498",
+	"oracleId": "da1e019c-2ffb-412d-90d7-f2e5e5c44c4b",
+	"layout": "adventure",
+	"keywords": ["Flying"],
+	"rarity": "rare",
+	"frameEffects": [],
+	"colors": ["G"],
+	"colorIdentity": ["G"],
+	"cmc": 5.0,
+	"set": "tdm",
+	"collectorNumber": "136",
+	"artist": "Johann Bodin",
+	"faces": [
+		{
+			"name": "Bloomvine Regent",
+			"manaCost": "{3}{G}{G}",
+			"typeLine": {
+				"es": "Creature — Dragon",
+				"en": "Creature — Dragon"
+			},
+			"rules": {
+				"es": "Flying\nWhenever this creature or another Dragon you control enters, you gain 3 life.",
+				"en": "Flying\nWhenever this creature or another Dragon you control enters, you gain 3 life."
+			},
+			"printedNameEs": null,
+			"colors": ["G"],
+			"power": "4",
+			"toughness": "5",
+			"loyalty": null,
+			"defense": null
+		},
+		{
+			"name": "Claim Territory",
+			"manaCost": "{2}{G}",
+			"typeLine": {
+				"es": "Sorcery — Omen",
+				"en": "Sorcery — Omen"
+			},
+			"rules": {
+				"es": "Search your library for up to two basic Forest cards, reveal them, put one onto the battlefield tapped and the other into your hand, then shuffle. (Also shuffle this card.)",
+				"en": "Search your library for up to two basic Forest cards, reveal them, put one onto the battlefield tapped and the other into your hand, then shuffle. (Also shuffle this card.)"
+			},
+			"printedNameEs": null,
+			"colors": ["G"],
+			"power": "4",
+			"toughness": "5",
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": true,
+	"oversized": false,
+	"fetchedAt": 0
+}

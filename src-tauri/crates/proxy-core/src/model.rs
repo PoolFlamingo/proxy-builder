@@ -464,6 +464,10 @@ pub struct PrintSettings {
     /// En qué idioma salen las cartas diseñadas (español de fábrica).
     #[serde(default)]
     pub design_lang: crate::diseno::modelo::DesignLang,
+    /// Las cartas grandes (planos, planes, Vanguard) llevan en dúplex el
+    /// reverso del deck; si no, el dorso va en blanco (sus reversos son otros).
+    #[serde(default)]
+    pub big_cards_back: bool,
 }
 
 impl Default for PrintSettings {
@@ -492,6 +496,7 @@ impl Default for PrintSettings {
             row_offsets: RowOffsets::default(),
             split_every: None,
             design_lang: crate::diseno::modelo::DesignLang::Es,
+            big_cards_back: false,
         }
     }
 }

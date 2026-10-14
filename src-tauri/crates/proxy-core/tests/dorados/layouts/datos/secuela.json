@@ -1,0 +1,55 @@
+{
+	"scryfallId": "5f2facfb-dfde-4e5b-8f6d-4fabb4c85519",
+	"oracleId": "7bc3f92f-68a2-4934-afc4-89f6d0e8cf98",
+	"layout": "split",
+	"keywords": ["Aftermath"],
+	"rarity": "rare",
+	"frameEffects": [],
+	"colors": ["W"],
+	"colorIdentity": ["W"],
+	"cmc": 9.0,
+	"set": "mkc",
+	"collectorNumber": "61",
+	"artist": "Kasia 'Kafis' Zielińska",
+	"faces": [
+		{
+			"name": "Dusk",
+			"manaCost": "{2}{W}{W}",
+			"typeLine": {
+				"es": "Conjuro",
+				"en": "Sorcery"
+			},
+			"rules": {
+				"es": "Destruye todas las criaturas con fuerza de 3 o más.",
+				"en": "Destroy all creatures with power 3 or greater."
+			},
+			"printedNameEs": null,
+			"colors": ["W"],
+			"power": null,
+			"toughness": null,
+			"loyalty": null,
+			"defense": null
+		},
+		{
+			"name": "Dawn",
+			"manaCost": "{3}{W}{W}",
+			"typeLine": {
+				"es": "Conjuro",
+				"en": "Sorcery"
+			},
+			"rules": {
+				"es": "Secuela. (Lanza este hechizo solo desde tu cementerio. Luego exílialo.)\nRegresa todas las cartas de criatura con fuerza de 2 o menos de tu cementerio a tu mano.",
+				"en": "Aftermath (Cast this spell only from your graveyard. Then exile it.)\nReturn all creature cards with power 2 or less from your graveyard to your hand."
+			},
+			"printedNameEs": null,
+			"colors": ["W"],
+			"power": null,
+			"toughness": null,
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": false,
+	"oversized": false,
+	"fetchedAt": 0
+}

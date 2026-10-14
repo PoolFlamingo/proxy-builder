@@ -67,6 +67,7 @@ export function ExportPanel() {
 	const s = useDeck((st) => st.deck?.settings);
 	const setAjustes = useDeck((st) => st.setAjustes);
 	const filas = usePlan((st) => st.plan?.grid.rows ?? 3);
+	const hayGrandes = usePlan((st) => !!st.plan?.bigGrid);
 	const trabajo = useTrabajo((st) => st.actual);
 	const [aviso, setAviso] = useState<{ destino: string; estimacion: ExportEstimate } | null>(null);
 	if (!s) return <section className="h-full" />;
@@ -233,6 +234,16 @@ export function ExportPanel() {
 							valor={s.interleaveDfc}
 							onChange={(v) => poner("interleaveDfc", v)}
 						/>
+						{hayGrandes && (
+							<FilaInterruptor
+								etiqueta={t("Reverso del deck en las cartas grandes")}
+								ayuda={t(
+									"Planos, planes y Vanguard van en sus propias hojas al final. Apagado, su dorso sale en blanco.",
+								)}
+								valor={s.bigCardsBack}
+								onChange={(v) => poner("bigCardsBack", v)}
+							/>
+						)}
 						<Button size="sm" variant="outline" onClick={intentar(() => exportarCalibracion(t))}>
 							<Crosshair />
 							{t("Hoja de calibración")}

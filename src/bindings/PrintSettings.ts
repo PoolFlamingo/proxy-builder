@@ -28,4 +28,9 @@ splitEvery: number | null,
 /**
  * En qué idioma salen las cartas diseñadas (español de fábrica).
  */
-designLang: DesignLang, };
+designLang: DesignLang, 
+/**
+ * Las cartas grandes (planos, planes, Vanguard) llevan en dúplex el
+ * reverso del deck; si no, el dorso va en blanco (sus reversos son otros).
+ */
+bigCardsBack: boolean, };

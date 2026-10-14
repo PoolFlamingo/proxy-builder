@@ -1,0 +1,37 @@
+{
+	"scryfallId": "17b941e9-5dcc-473e-a461-709d74e32a3c",
+	"oracleId": "402ba90d-6c41-49ee-ab50-7f0a466f66fe",
+	"layout": "scheme",
+	"keywords": [],
+	"rarity": "common",
+	"frameEffects": [],
+	"colors": [],
+	"colorIdentity": [],
+	"cmc": 0.0,
+	"set": "oarc",
+	"collectorNumber": "1★",
+	"artist": "Nic Klein",
+	"faces": [
+		{
+			"name": "All in Good Time",
+			"manaCost": "",
+			"typeLine": {
+				"es": "Scheme",
+				"en": "Scheme"
+			},
+			"rules": {
+				"es": "When you set this scheme in motion, take an extra turn after this one. Schemes can't be set in motion that turn.",
+				"en": "When you set this scheme in motion, take an extra turn after this one. Schemes can't be set in motion that turn."
+			},
+			"printedNameEs": null,
+			"colors": [],
+			"power": null,
+			"toughness": null,
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": true,
+	"oversized": true,
+	"fetchedAt": 0
+}

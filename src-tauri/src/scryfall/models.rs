@@ -133,13 +133,22 @@ pub struct ScryCard {
     /// editor (Scryfall siempre manda `full_art`): hay que pedirla otra vez.
     #[serde(default)]
     pub full_art: Option<bool>,
+    /// Impresa en tamaño grande (planos, planes, Vanguard). `None` = de la
+    /// caché de antes de las cartas grandes: hay que pedirla otra vez.
+    #[serde(default)]
+    pub oversized: Option<bool>,
+    /// Vanguard: modificadores de mano y vida.
+    #[serde(default)]
+    pub hand_modifier: Option<String>,
+    #[serde(default)]
+    pub life_modifier: Option<String>,
 }
 
 impl ScryCard {
     /// ¿Trae los campos que necesita el editor de cartas? Las guardadas en la
     /// caché antes de la 2.0 no, y se vuelven a pedir.
     pub fn completa_para_disenar(&self) -> bool {
-        self.full_art.is_some()
+        self.full_art.is_some() && self.oversized.is_some()
     }
 
     /// Imagen de la cara `i` (0 = frente). Las cartas de una cara tienen los

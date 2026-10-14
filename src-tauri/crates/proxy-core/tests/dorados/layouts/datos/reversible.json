@@ -1,0 +1,55 @@
+{
+	"scryfallId": "9cd6a16f-1eff-4624-8f7f-4d9e70a694bb",
+	"oracleId": null,
+	"layout": "reversible_card",
+	"keywords": [],
+	"rarity": "mythic",
+	"frameEffects": ["fullart"],
+	"colors": [],
+	"colorIdentity": ["W"],
+	"cmc": 0.0,
+	"set": "sld",
+	"collectorNumber": "745",
+	"artist": "Fay Dalton & Scott Okumura",
+	"faces": [
+		{
+			"name": "Ajani Goldmane",
+			"manaCost": "{2}{W}{W}",
+			"typeLine": {
+				"es": "Legendary Planeswalker — Ajani",
+				"en": "Legendary Planeswalker — Ajani"
+			},
+			"rules": {
+				"es": "+1: You gain 2 life.\n−1: Put a +1/+1 counter on each creature you control. Those creatures gain vigilance until end of turn.\n−6: Create a white Avatar creature token. It has \"This token's power and toughness are each equal to your life total.\"",
+				"en": "+1: You gain 2 life.\n−1: Put a +1/+1 counter on each creature you control. Those creatures gain vigilance until end of turn.\n−6: Create a white Avatar creature token. It has \"This token's power and toughness are each equal to your life total.\""
+			},
+			"printedNameEs": null,
+			"colors": ["W"],
+			"power": null,
+			"toughness": null,
+			"loyalty": "4",
+			"defense": null
+		},
+		{
+			"name": "Ajani Goldmane",
+			"manaCost": "{2}{W}{W}",
+			"typeLine": {
+				"es": "Legendary Planeswalker — Ajani",
+				"en": "Legendary Planeswalker — Ajani"
+			},
+			"rules": {
+				"es": "+1: You gain 2 life.\n−1: Put a +1/+1 counter on each creature you control. Those creatures gain vigilance until end of turn.\n−6: Create a white Avatar creature token. It has \"This token's power and toughness are each equal to your life total.\"",
+				"en": "+1: You gain 2 life.\n−1: Put a +1/+1 counter on each creature you control. Those creatures gain vigilance until end of turn.\n−6: Create a white Avatar creature token. It has \"This token's power and toughness are each equal to your life total.\""
+			},
+			"printedNameEs": null,
+			"colors": ["W"],
+			"power": null,
+			"toughness": null,
+			"loyalty": "4",
+			"defense": null
+		}
+	],
+	"sinTextoEs": true,
+	"oversized": false,
+	"fetchedAt": 0
+}

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 63" width="88" height="63">
+<defs>{{defs}}</defs>
+<!-- Batalla: la cara de delante, apaisada (se pega girada). -->
+<path fill-rule="evenodd" fill="#000" d="M-1,-1 H89 V64 H-1 Z M0,0 H88 V53.6 A5,5 0 0 1 83,58.6 H5 A5,5 0 0 1 0,53.6 Z"/>
+<rect x="3.4" y="39.4" width="67.6" height="18.7" fill="{{fondoCaja}}" fill-opacity="{{opacidadCaja}}" stroke="url(#marco)" stroke-width="0.38"/>
+<rect x="2.0" y="3.9" width="84.0" height="5.55" rx="1.6" fill="url(#marco)" stroke="#000" stroke-opacity="0.55" stroke-width="0.12"/>
+<rect x="2.0" y="3.9" width="84.0" height="5.55" rx="1.6" fill="url(#brillo)"/>
+<rect x="3.1" y="4.3" width="81.8" height="4.75" rx="1.1" fill="url(#panel)"/>
+<rect x="1.9" y="33.6" width="70.0" height="6.0" rx="1.25" fill="url(#marco)" stroke="#000" stroke-opacity="0.55" stroke-width="0.12"/>
+<rect x="1.9" y="33.6" width="70.0" height="6.0" rx="1.25" fill="url(#brillo)"/>
+<rect x="2.5" y="34.0" width="68.8" height="5.2" rx="0.9" fill="{{tinte}}" fill-opacity="0.94"/>
+<path d="M74.2,46.4 H84.6 V54.0 L79.4,58.0 L74.2,54.0 Z" fill="url(#marco)" stroke="#000" stroke-opacity="0.6" stroke-width="0.14"/>
+<path d="M75.0,47.2 H83.8 V53.6 L79.4,56.9 L75.0,53.6 Z" fill="url(#panelfr)"/>
+</svg>

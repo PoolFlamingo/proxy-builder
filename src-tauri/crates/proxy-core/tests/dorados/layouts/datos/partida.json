@@ -1,0 +1,55 @@
+{
+	"scryfallId": "18303862-4726-4136-814f-157aa7006579",
+	"oracleId": "ae92942b-919c-4ea9-b693-85fcef765d5a",
+	"layout": "split",
+	"keywords": [],
+	"rarity": "uncommon",
+	"frameEffects": [],
+	"colors": ["R", "U"],
+	"colorIdentity": ["R", "U"],
+	"cmc": 4.0,
+	"set": "dmr",
+	"collectorNumber": "215",
+	"artist": "David Martin & Franz Vohwinkel",
+	"faces": [
+		{
+			"name": "Fire",
+			"manaCost": "{1}{R}",
+			"typeLine": {
+				"es": "Instantáneo",
+				"en": "Instant"
+			},
+			"rules": {
+				"es": "Fuego hace 2 puntos de daño divididos como elijas entre una o dos criaturas y/o jugadores objetivo.",
+				"en": "Fire deals 2 damage divided as you choose among one or two targets."
+			},
+			"printedNameEs": "Fuego",
+			"colors": ["R", "U"],
+			"power": null,
+			"toughness": null,
+			"loyalty": null,
+			"defense": null
+		},
+		{
+			"name": "Ice",
+			"manaCost": "{1}{U}",
+			"typeLine": {
+				"es": "Gira el permanente objetivo.",
+				"en": "Instant"
+			},
+			"rules": {
+				"es": "Roba una carta.\nFranz Vohwinkel",
+				"en": "Tap target permanent.\nDraw a card."
+			},
+			"printedNameEs": "Hielo",
+			"colors": ["R", "U"],
+			"power": null,
+			"toughness": null,
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": false,
+	"oversized": false,
+	"fetchedAt": 0
+}

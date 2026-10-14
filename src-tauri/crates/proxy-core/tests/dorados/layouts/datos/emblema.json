@@ -1,0 +1,37 @@
+{
+	"scryfallId": "1c97e5b2-a024-4aa7-a9b8-45f441aad138",
+	"oracleId": "7c0edef3-5346-4001-87ae-11157be58031",
+	"layout": "emblem",
+	"keywords": [],
+	"rarity": "common",
+	"frameEffects": [],
+	"colors": [],
+	"colorIdentity": [],
+	"cmc": 0.0,
+	"set": "tm19",
+	"collectorNumber": "15",
+	"artist": "Victor Adame Minguez",
+	"faces": [
+		{
+			"name": "Ajani, Adversary of Tyrants Emblem",
+			"manaCost": "",
+			"typeLine": {
+				"es": "Emblem — Ajani",
+				"en": "Emblem — Ajani"
+			},
+			"rules": {
+				"es": "At the beginning of your end step, create three 1/1 white Cat creature tokens with lifelink.",
+				"en": "At the beginning of your end step, create three 1/1 white Cat creature tokens with lifelink."
+			},
+			"printedNameEs": null,
+			"colors": [],
+			"power": null,
+			"toughness": null,
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": true,
+	"oversized": false,
+	"fetchedAt": 0
+}

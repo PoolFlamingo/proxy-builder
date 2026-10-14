@@ -1,0 +1,55 @@
+{
+	"scryfallId": "b5b71cd2-de35-451f-b16e-2e3936169407",
+	"oracleId": "d6d72f5f-8f5d-4180-b514-f22ff5482902",
+	"layout": "adventure",
+	"keywords": [],
+	"rarity": "rare",
+	"frameEffects": [],
+	"colors": ["R"],
+	"colorIdentity": ["R"],
+	"cmc": 3.0,
+	"set": "clb",
+	"collectorNumber": "781",
+	"artist": "Victor Adame Minguez",
+	"faces": [
+		{
+			"name": "Bonecrusher Giant",
+			"manaCost": "{2}{R}",
+			"typeLine": {
+				"es": "Criatura — Gigante",
+				"en": "Creature — Giant"
+			},
+			"rules": {
+				"es": "Siempre que el Gigante aplastahuesos sea objetivo de un hechizo, el Gigante aplastahuesos hace 2 puntos de daño al controlador de ese hechizo.",
+				"en": "Whenever this creature becomes the target of a spell, this creature deals 2 damage to that spell's controller."
+			},
+			"printedNameEs": "Gigante aplastahuesos",
+			"colors": ["R"],
+			"power": "4",
+			"toughness": "3",
+			"loyalty": null,
+			"defense": null
+		},
+		{
+			"name": "Stomp",
+			"manaCost": "{1}{R}",
+			"typeLine": {
+				"es": "Instantáneo — Aventura",
+				"en": "Instant — Adventure"
+			},
+			"rules": {
+				"es": "El daño no puede ser prevenido este turno. El Pisotón hace 2 puntos de daño a cualquier objetivo.",
+				"en": "Damage can't be prevented this turn. Stomp deals 2 damage to any target."
+			},
+			"printedNameEs": "Pisotón",
+			"colors": ["R"],
+			"power": "4",
+			"toughness": "3",
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": false,
+	"oversized": false,
+	"fetchedAt": 0
+}

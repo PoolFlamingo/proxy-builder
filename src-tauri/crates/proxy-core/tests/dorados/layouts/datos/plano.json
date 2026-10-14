@@ -1,0 +1,37 @@
+{
+	"scryfallId": "a1c7f2eb-0654-46f9-ae3d-11efcac837b8",
+	"oracleId": "25650a32-4014-4065-ad01-7357c3ad3995",
+	"layout": "planar",
+	"keywords": [],
+	"rarity": "common",
+	"frameEffects": [],
+	"colors": [],
+	"colorIdentity": [],
+	"cmc": 0.0,
+	"set": "opca",
+	"collectorNumber": "12",
+	"artist": "Rob Alexander",
+	"faces": [
+		{
+			"name": "Akoum",
+			"manaCost": "",
+			"typeLine": {
+				"es": "Plano — Zendikar",
+				"en": "Plane — Zendikar"
+			},
+			"rules": {
+				"es": "Los jugadores pueden lanzar cartas de encantamiento como si tuvieran la habilidad de destello.\nSiempre que lances caos, destruye la criatura objetivo que no está encantada.",
+				"en": "Players may cast enchantment spells as though they had flash.\nWhenever chaos ensues, destroy target creature that isn't enchanted."
+			},
+			"printedNameEs": "Akoum",
+			"colors": [],
+			"power": null,
+			"toughness": null,
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": false,
+	"oversized": true,
+	"fetchedAt": 0
+}

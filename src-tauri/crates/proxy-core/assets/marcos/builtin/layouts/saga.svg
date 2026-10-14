@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 63 88" width="63" height="88">
+<defs>{{defs}}</defs>
+<!-- Saga: título arriba, capítulos a la izquierda, arte a la derecha y tipo abajo. -->
+<path fill-rule="evenodd" fill="#000" d="M-1,-1 H64 V89 H-1 Z M0,0 H63 V77 A6,6 0 0 1 57,83 H6 A6,6 0 0 1 0,77 Z"/>
+<rect x="2.6" y="9.9" width="29.6" height="66.9" fill="{{fondoCaja}}" fill-opacity="{{opacidadCaja}}" stroke="url(#marco)" stroke-width="0.38"/>
+<rect x="32.2" y="9.9" width="28.2" height="66.9" fill="none" stroke="url(#marco)" stroke-width="0.5"/>
+<rect x="2.0" y="3.9" width="57.0" height="5.55" rx="1.6" fill="url(#marco)" stroke="#000" stroke-opacity="0.55" stroke-width="0.12"/>
+<rect x="2.0" y="3.9" width="57.0" height="5.55" rx="1.6" fill="url(#brillo)"/>
+<rect x="3.1" y="4.3" width="54.8" height="4.75" rx="1.1" fill="url(#panel)"/>
+<rect x="1.9" y="76.6" width="59.2" height="6.0" rx="1.25" fill="url(#marco)" stroke="#000" stroke-opacity="0.55" stroke-width="0.12"/>
+<rect x="1.9" y="76.6" width="59.2" height="6.0" rx="1.25" fill="url(#brillo)"/>
+<rect x="2.5" y="77.0" width="58.0" height="5.2" rx="0.9" fill="{{tinte}}" fill-opacity="0.94"/>
+</svg>

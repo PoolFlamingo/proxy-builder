@@ -1,0 +1,37 @@
+{
+	"scryfallId": "0929a1bd-e35c-4ca5-8c8c-dd304cf4b830",
+	"oracleId": "2380fd04-6d19-4f5a-8a9e-c17d9ae09fb6",
+	"layout": "case",
+	"keywords": ["Solved"],
+	"rarity": "rare",
+	"frameEffects": [],
+	"colors": ["G"],
+	"colorIdentity": ["G"],
+	"cmc": 4.0,
+	"set": "mkm",
+	"collectorNumber": "155",
+	"artist": "Leanna Crossan",
+	"faces": [
+		{
+			"name": "Case of the Locked Hothouse",
+			"manaCost": "{3}{G}",
+			"typeLine": {
+				"es": "Encantamiento — Caso",
+				"en": "Enchantment — Case"
+			},
+			"rules": {
+				"es": "Puedes jugar una tierra adicional en cada uno de tus turnos.\nResolver — Controlas siete o más tierras. (Si el Caso no está resuelto, resuélvelo al comienzo de tu paso final.)\nResuelto — Puedes mirar la primera carta de tu biblioteca en cualquier momento y puedes jugar tierras y lanzar hechizos de criatura y encantamiento desde la parte superior de tu biblioteca.",
+				"en": "You may play an additional land on each of your turns.\nTo solve — You control seven or more lands. (If unsolved, solve at the beginning of your end step.)\nSolved — You may look at the top card of your library any time, and you may play lands and cast creature and enchantment spells from the top of your library."
+			},
+			"printedNameEs": "Caso del invernadero cerrado",
+			"colors": ["G"],
+			"power": null,
+			"toughness": null,
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": false,
+	"oversized": false,
+	"fetchedAt": 0
+}

@@ -17,8 +17,11 @@ use resvg::usvg;
 use tiny_skia::{FillRule, FilterQuality, Mask, PathBuilder, Pixmap, PixmapPaint, Rect, Transform};
 
 use super::borrador::{nombre_efectivo, nombre_original, reglas_efectivas};
+use super::cuerpos::{self, Contenido, Hecho};
 use super::efectivo::DisenoEfectivo;
+use super::estructura;
 use super::letras::Letras;
+use super::maquetacion::Cuerpo;
 use super::modelo::{
     Aviso, DesignLang, DesignStyle, FrameColor, OnOffAuto, OriginalName, Palette, RulesBox,
 };
@@ -26,13 +29,12 @@ use super::pack::{
     rellenar, rgba, Alineacion, CajaPorDefecto, Capa, Condicion, EstiloDef, Hueco, LetraDef, Pack,
     PaletaDef,
 };
-use super::pintar::{pintar_bloque, pintar_caja, Pincel};
+use super::pintar::{pintar_bloque, Pincel};
 use super::simbolos::{secuencia, Simbolos};
-use super::texto::{
-    self, ajustar_reglas, linea_ajustada, Alinear, CajaTexto, Estilo, Maquetador, Parrafo,
-};
+use super::texto::{self, linea_ajustada, Alinear, Estilo, Maquetador, Parrafo};
 use super::{Color, DisenoError, MM_POR_PT};
-use crate::model::CardSize;
+
+pub use super::componer::render;
 
 /// Las imágenes del almacén (arte, emblemas), ya decodificadas. El núcleo no
 /// lee disco: se las da quien llama.
@@ -59,7 +61,7 @@ pub struct Recursos<'a> {
 /// Lo que cada hilo necesita para maquetar (las letras y su caché).
 pub struct Motor {
     pub letras: Letras,
-    m: Maquetador,
+    pub(super) m: Maquetador,
 }
 
 impl Motor {
@@ -100,7 +102,7 @@ pub struct Render {
 
 // ── Colores ────────────────────────────────────────────────────────────────
 
-fn hex(c: [u8; 4]) -> String {
+pub(super) fn hex(c: [u8; 4]) -> String {
     format!("#{:02x}{:02x}{:02x}", c[0], c[1], c[2])
 }
 
@@ -300,27 +302,44 @@ pub fn vars_de_ejemplo() -> BTreeMap<String, String> {
 
 // ── Lienzo ─────────────────────────────────────────────────────────────────
 
-struct Lienzo {
-    px: Pixmap,
-    kx: f32,
-    ky: f32,
+/// Un lienzo en píxeles con sus medidas en mm.
+pub(super) struct Lienzo {
+    pub(super) px: Pixmap,
+    pub(super) kx: f32,
+    pub(super) ky: f32,
+    pub(super) w_mm: f32,
+    pub(super) h_mm: f32,
 }
 
 impl Lienzo {
-    fn x(&self, mm: f32) -> f32 {
+    pub(super) fn nuevo(w_mm: f32, h_mm: f32, ancho: u32, alto: u32) -> Option<Lienzo> {
+        Some(Lienzo {
+            px: Pixmap::new(ancho.max(1), alto.max(1))?,
+            kx: ancho.max(1) as f32 / w_mm,
+            ky: alto.max(1) as f32 / h_mm,
+            w_mm,
+            h_mm,
+        })
+    }
+
+    pub(super) fn x(&self, mm: f32) -> f32 {
         mm * self.kx
     }
-    fn y(&self, mm: f32) -> f32 {
+    pub(super) fn y(&self, mm: f32) -> f32 {
         mm * self.ky
     }
 
-    fn svg(&mut self, svg: &str) -> Result<(), String> {
+    /// Pinta un SVG que cubre el lienzo entero (su `viewBox` son los mm).
+    pub(super) fn svg(&mut self, svg: &str) -> Result<(), String> {
         let arbol =
             usvg::Tree::from_str(svg, &usvg::Options::default()).map_err(|e| e.to_string())?;
         let t = arbol.size();
         resvg::render(
             &arbol,
-            Transform::from_scale(self.kx * 63.0 / t.width(), self.ky * 88.0 / t.height()),
+            Transform::from_scale(
+                self.kx * self.w_mm / t.width(),
+                self.ky * self.h_mm / t.height(),
+            ),
             &mut self.px.as_mut(),
         );
         Ok(())
@@ -341,7 +360,7 @@ fn premultiplicar(rgba: &[u8]) -> Vec<u8> {
     v
 }
 
-fn a_pixmap(img: &RgbaImage) -> Option<Pixmap> {
+pub(super) fn a_pixmap(img: &RgbaImage) -> Option<Pixmap> {
     Pixmap::from_vec(
         premultiplicar(img.as_raw()),
         tiny_skia::IntSize::from_wh(img.width(), img.height())?,
@@ -368,7 +387,7 @@ fn reescalar(
 }
 
 /// La ilustración cubriendo su hueco, con zoom, desplazamiento y giro.
-fn pintar_arte(
+pub(super) fn pintar_arte(
     l: &mut Lienzo,
     img: &RgbaImage,
     hueco: (f32, f32, f32, f32),
@@ -414,16 +433,7 @@ fn pintar_arte(
                 t,
                 None,
             );
-            let datos = out.take();
-            // `out` está premultiplicada; para pegarla da igual: se pega tal cual.
-            Pixmap::from_vec(datos, tiny_skia::IntSize::from_wh(tw, th)?).map(|p| {
-                let mut img = RgbaImage::new(tw, th);
-                for (d, s) in img.pixels_mut().zip(p.pixels()) {
-                    let c = s.demultiply();
-                    *d = image::Rgba([c.red(), c.green(), c.blue(), c.alpha()]);
-                }
-                img
-            })
+            Some(de_pixmap(&out))
         })
     };
     if let Some(p) = pieza.as_ref().and_then(a_pixmap) {
@@ -439,10 +449,10 @@ fn pintar_arte(
 }
 
 /// Sin ilustración: un degradado oscuro neutro (borradores).
-fn sin_arte(l: &mut Lienzo, hueco: (f32, f32, f32, f32)) {
+pub(super) fn sin_arte(l: &mut Lienzo, hueco: (f32, f32, f32, f32)) {
     let svg = format!(
-        r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 63 88" width="63" height="88"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a3f47"/><stop offset="1" stop-color="#15181c"/></linearGradient></defs><rect x="{}" y="{}" width="{}" height="{}" fill="url(#g)"/></svg>"##,
-        hueco.0, hueco.1, hueco.2, hueco.3
+        r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {} {}" width="{}" height="{}"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a3f47"/><stop offset="1" stop-color="#15181c"/></linearGradient></defs><rect x="{}" y="{}" width="{}" height="{}" fill="url(#g)"/></svg>"##,
+        l.w_mm, l.h_mm, l.w_mm, l.h_mm, hueco.0, hueco.1, hueco.2, hueco.3
     );
     let _ = l.svg(&svg);
 }
@@ -467,32 +477,42 @@ fn pintar_imagen(l: &mut Lienzo, img: &RgbaImage, hueco: (f32, f32, f32, f32)) {
     }
 }
 
+/// Un pixmap (premultiplicado) a imagen RGBA.
+pub(super) fn de_pixmap(p: &Pixmap) -> RgbaImage {
+    let mut img = RgbaImage::new(p.width(), p.height());
+    for (d, s) in img.pixels_mut().zip(p.pixels()) {
+        let c = s.demultiply();
+        *d = image::Rgba([c.red(), c.green(), c.blue(), c.alpha()]);
+    }
+    img
+}
+
 // ── Contexto de una carta ──────────────────────────────────────────────────
 
-struct Carta<'a> {
-    l: Lienzo,
-    motor: &'a mut Motor,
-    rec: &'a Recursos<'a>,
-    estilo: EstiloDef,
-    vars: BTreeMap<String, String>,
-    nums: BTreeMap<&'static str, f32>,
-    avisos: Vec<Aviso>,
-    faltan: Vec<String>,
+pub(super) struct Carta<'a> {
+    pub(super) l: Lienzo,
+    pub(super) motor: &'a mut Motor,
+    pub(super) rec: &'a Recursos<'a>,
+    pub(super) estilo: EstiloDef,
+    pub(super) vars: BTreeMap<String, String>,
+    pub(super) nums: BTreeMap<&'static str, f32>,
+    pub(super) avisos: Vec<Aviso>,
+    pub(super) faltan: Vec<String>,
     letra_titulo: Option<String>,
     letra_reglas: Option<String>,
 }
 
 /// Un hueco ya evaluado (mm).
 #[derive(Debug, Clone, Copy)]
-struct Caja {
-    x: f32,
-    y: f32,
-    w: f32,
-    h: f32,
+pub(super) struct Caja {
+    pub(super) x: f32,
+    pub(super) y: f32,
+    pub(super) w: f32,
+    pub(super) h: f32,
 }
 
 impl Carta<'_> {
-    fn hueco(&self, nombre: &str) -> Option<(Hueco, Caja)> {
+    pub(super) fn hueco(&self, nombre: &str) -> Option<(Hueco, Caja)> {
         let h = self.estilo.huecos.get(nombre)?.clone();
         let ev = |v: &super::pack::Valor| v.evaluar(&self.nums).unwrap_or(0.0);
         let c = Caja {
@@ -568,8 +588,101 @@ impl Carta<'_> {
         )
     }
 
+    /// Un trozo de SVG en mm del lienzo, con los degradados de la carta.
+    pub(super) fn forma(&mut self, cuerpo: &str) {
+        let defs = self.vars.get("defs").cloned().unwrap_or_default();
+        let (w, h) = (self.l.w_mm, self.l.h_mm);
+        let svg = format!(
+            r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" width="{w}" height="{h}"><defs>{defs}</defs>{cuerpo}</svg>"#
+        );
+        let _ = self.l.svg(&svg);
+    }
+
+    /// Un texto corto centrado en `(cx, cy)` mm, estrechado si no cabe.
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn texto_centrado(
+        &mut self,
+        texto: &str,
+        rol: &str,
+        cap_mm: f32,
+        color: Color,
+        cx: f32,
+        cy: f32,
+        ancho_max: f32,
+    ) {
+        let letra = self.letra(rol);
+        let e = Estilo {
+            familia: letra.familia,
+            peso: letra.peso,
+            tam: self.l.x(cap_mm) / letra.mayuscula.max(0.3),
+            interlinea: 1.06,
+            color,
+            alinear: Alinear::Inicio,
+            versalitas: false,
+        };
+        let p = texto::con_simbolos(texto);
+        let (b, f, _) = linea_ajustada(
+            &mut self.motor.m,
+            &mut self.motor.letras,
+            &p,
+            &e,
+            self.l.x(ancho_max),
+            0.6,
+        );
+        let w = b.ancho * f;
+        let x0 = self.l.x(cx) - w / 2.0;
+        let y0 = self.l.y(cy) - b.base + e.tam * letra.mayuscula / 2.0;
+        self.faltan.extend(pintar_bloque(
+            &mut self.l.px.as_mut(),
+            &b,
+            x0,
+            y0,
+            Pincel {
+                escala_x: f,
+                color: None,
+            },
+            self.rec.simbolos,
+        ));
+    }
+
+    /// Símbolos de un coste en fila, centrados en `(cx, cy)` mm.
+    pub(super) fn simbolos_en_fila(
+        &mut self,
+        coste: &str,
+        cx: f32,
+        cy: f32,
+        lado: f32,
+        ancho_max: f32,
+    ) {
+        let s = secuencia(coste);
+        if s.is_empty() {
+            return;
+        }
+        let n = s.len() as f32;
+        let lado = lado.min(ancho_max / (n * 1.05));
+        let total = n * lado + (n - 1.0) * lado * 0.05;
+        let mut x = cx - total / 2.0;
+        for sim in s {
+            let (sx, sy, sl) = (self.l.x(x), self.l.y(cy - lado / 2.0), self.l.x(lado));
+            if !self
+                .rec
+                .simbolos
+                .pintar(&sim, &mut self.l.px.as_mut(), sx, sy, sl)
+            {
+                self.faltan.push(sim);
+            }
+            x += lado * 1.05;
+        }
+    }
+
     /// Una línea centrada en vertical en su hueco, estrechada si no cabe.
-    fn linea(&mut self, nombre: &str, p: &Parrafo, ancho_max: Option<f32>, squeeze: f32) {
+    pub(super) fn linea(
+        &mut self,
+        nombre: &str,
+        p: &Parrafo,
+        ancho_max: Option<f32>,
+        squeeze: f32,
+    ) {
         let Some((h, c)) = self.hueco(nombre) else {
             return;
         };
@@ -667,7 +780,7 @@ impl Carta<'_> {
         }
     }
 
-    fn simbolo(&mut self, nombre: &str, codigo: &str) {
+    pub(super) fn simbolo(&mut self, nombre: &str, codigo: &str) {
         let Some((_, c)) = self.hueco(nombre) else {
             return;
         };
@@ -745,6 +858,48 @@ impl Carta<'_> {
             }
         }
     }
+
+    /// El indicador de cara a la izquierda del título (sol/luna de las
+    /// transformables, triángulos de las MDFC). Devuelve cuánto ocupa (mm).
+    fn indicador(&mut self, ind: Indicador) -> f32 {
+        let Some((_, t)) = self.hueco("titulo") else {
+            return 0.0;
+        };
+        let lado = (t.h * 0.72).min(3.6);
+        let (cx, cy) = (t.x + lado / 2.0 + 0.1, t.y + t.h / 2.0);
+        let r = lado / 2.0;
+        let cuerpo = match ind {
+            Indicador::Sol => format!(
+                r##"<circle cx="{cx}" cy="{cy}" r="{r}" fill="#f2f2f2" stroke="#000" stroke-opacity="0.6" stroke-width="0.12"/><circle cx="{cx}" cy="{cy}" r="{ri}" fill="#1a1a1a"/>"##,
+                ri = r * 0.45
+            ),
+            Indicador::Luna => format!(
+                r##"<circle cx="{cx}" cy="{cy}" r="{r}" fill="#1a1a1a" stroke="#f2f2f2" stroke-width="0.16"/><path d="M{a},{b} A{rl},{rl} 0 1 0 {c},{d} A{rm},{rm} 0 1 1 {a},{b} Z" fill="#f2f2f2"/>"##,
+                a = cx + r * 0.1,
+                b = cy - r * 0.62,
+                c = cx + r * 0.1,
+                d = cy + r * 0.62,
+                rl = r * 0.62,
+                rm = r * 0.5
+            ),
+            Indicador::Delante => format!(
+                r##"<circle cx="{cx}" cy="{cy}" r="{r}" fill="#1a1a1a" stroke="#f2f2f2" stroke-width="0.16"/><path d="M{x0},{y1} L{cx},{y0} L{x1},{y1} Z" fill="#f2f2f2"/>"##,
+                x0 = cx - r * 0.5,
+                x1 = cx + r * 0.5,
+                y0 = cy - r * 0.45,
+                y1 = cy + r * 0.38
+            ),
+            Indicador::Detras => format!(
+                r##"<circle cx="{cx}" cy="{cy}" r="{r}" fill="#1a1a1a" stroke="#f2f2f2" stroke-width="0.16"/><path d="M{x0},{y0} L{x1},{y0} L{cx},{y1} Z" fill="#f2f2f2"/>"##,
+                x0 = cx - r * 0.5,
+                x1 = cx + r * 0.5,
+                y0 = cy - r * 0.38,
+                y1 = cy + r * 0.45
+            ),
+        };
+        self.forma(&cuerpo);
+        lado + 0.7
+    }
 }
 
 fn nombre_estilo(s: DesignStyle) -> &'static str {
@@ -756,27 +911,49 @@ fn nombre_estilo(s: DesignStyle) -> &'static str {
     }
 }
 
-/// El estilo con los cambios del layout (ficha…) aplicados.
-fn estilo_con_layout(base: &EstiloDef, layout: Option<&str>, avisos: &mut Vec<Aviso>) -> EstiloDef {
+/// El estilo que toca: el del diseño con los cambios del layout que pide la
+/// carta (`ficha`) o un layout completo del pack (`saga`, `batalla`…). Si el
+/// pack no lo trae, el estilo normal con el aviso.
+pub(super) fn estilo_para(
+    rec: &Recursos<'_>,
+    style: DesignStyle,
+    layout: Option<&str>,
+    avisos: &mut Vec<Aviso>,
+) -> Result<EstiloDef, DisenoError> {
+    let base = rec
+        .pack
+        .estilo(nombre_estilo(style))
+        .or_else(|_| rec.pack.estilo("borderless"))
+        .map_err(|_| DisenoError::Lienzo)?;
     let mut e = base.clone();
     if let Some(l) = layout {
-        match base.layouts.get(l) {
-            Some(def) => {
-                if let Some(c) = &def.capas {
-                    e.capas = c.clone();
-                }
-                for (k, v) in &def.huecos {
-                    e.huecos.insert(k.clone(), v.clone());
-                }
+        if let Some(def) = base.layouts.get(l) {
+            if let Some(a) = &def.arte {
+                e.arte = a.clone();
             }
-            None => avisos.push(Aviso::PackSinLayout { layout: l.into() }),
+            if let Some(c) = &def.caja {
+                e.caja = Some(c.clone());
+            }
+            if let Some(c) = &def.capas {
+                e.capas = c.clone();
+            }
+            for (k, v) in &def.huecos {
+                e.huecos.insert(k.clone(), v.clone());
+            }
+        } else if let Some(completo) = rec.pack.layout(l) {
+            e = completo.clone();
+        } else {
+            // La variante alta es opcional: sin ella, la caja normal.
+            if l != "alto" {
+                avisos.push(Aviso::PackSinLayout { layout: l.into() });
+            }
         }
     }
-    e
+    Ok(e)
 }
 
 /// Rellena las fichas del pie.
-fn pie_texto(e: &DisenoEfectivo, lang: DesignLang, original: &str) -> String {
+pub(super) fn pie_texto(e: &DisenoEfectivo, lang: DesignLang, original: &str) -> String {
     let p = &e.pie;
     let idioma = match lang {
         DesignLang::Es => "ES",
@@ -809,43 +986,123 @@ fn fr_texto(f: &super::modelo::FaceData) -> Option<String> {
     }
 }
 
-/// ¿El último renglón de la caja choca con la caja de fuerza/resistencia?
-fn choca(caja: &CajaTexto, ancho_libre: f32) -> bool {
-    caja.bloques
-        .last()
-        .is_some_and(|(b, _)| b.ultima_linea_ancho() > ancho_libre)
+/// El indicador de cara de las cartas de doble cara.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Indicador {
+    Sol,
+    Luna,
+    Delante,
+    Detras,
 }
 
-/// Pinta una cara de una carta diseñada.
-#[allow(clippy::too_many_arguments)]
-pub fn render(
+/// Cómo se pinta una cara (o una pieza de una carta compuesta).
+pub(super) struct Opciones {
+    pub(super) cara: usize,
+    pub(super) cuerpo: Cuerpo,
+    /// Lienzo transparente (piezas que se pegan sobre otra cosa).
+    pub(super) transparente: bool,
+    pub(super) ancho_px: u32,
+    pub(super) alto_px: u32,
+    pub(super) indicador: Option<Indicador>,
+    /// MDFC: la franja con el tipo y el coste de la otra cara.
+    pub(super) otra_cara: Option<(String, String)>,
+    pub(super) sin_pie: bool,
+    pub(super) sin_arte: bool,
+    /// Aventura: la cara del libro (va dentro de la caja de reglas).
+    pub(super) aventura: Option<usize>,
+}
+
+impl Opciones {
+    pub(super) fn de(cara: usize, cuerpo: Cuerpo, ancho_px: u32, alto_px: u32) -> Opciones {
+        Opciones {
+            cara,
+            cuerpo,
+            transparente: false,
+            ancho_px,
+            alto_px,
+            indicador: None,
+            otra_cara: None,
+            sin_pie: false,
+            sin_arte: false,
+            aventura: None,
+        }
+    }
+}
+
+/// Una cara pintada.
+pub(super) struct Pieza {
+    pub(super) px: Pixmap,
+    pub(super) avisos: Vec<Aviso>,
+    pub(super) faltan: Vec<String>,
+}
+
+/// Las líneas de la caja de una mazmorra: salas en filas.
+fn contenido_de_la_cara(
+    d: &super::modelo::CardDesign,
+    o: &Opciones,
+    lang: DesignLang,
+    sabor: Vec<Parrafo>,
+) -> Contenido {
+    let reglas_txt = reglas_efectivas(d, o.cara, lang);
+    if let Some(av) = o.aventura {
+        let f = d.card.faces.get(av).cloned().unwrap_or_default();
+        return cuerpos::aventura(
+            &nombre_efectivo(d, av, lang),
+            &f.mana_cost,
+            f.type_line.get(lang),
+            &reglas_efectivas(d, av, lang),
+            &reglas_txt,
+            sabor,
+        );
+    }
+    let reglas_txt = if d.card.layout == "planar" {
+        con_caos(&reglas_txt)
+    } else {
+        reglas_txt
+    };
+    cuerpos::contenido(o.cuerpo, &reglas_txt, sabor, lang)
+}
+
+/// Los planos llevan el símbolo del caos delante de su habilidad de caos.
+fn con_caos(reglas: &str) -> String {
+    reglas
+        .lines()
+        .map(|l| {
+            let caos = [
+                "Whenever chaos ensues",
+                "Siempre que lances caos",
+                "Siempre que se desate el caos",
+            ]
+            .iter()
+            .any(|p| l.starts_with(p));
+            if caos && !l.starts_with('{') {
+                format!("{{CHAOS}} {l}")
+            } else {
+                l.to_string()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// Pinta una cara de una carta diseñada sobre el estilo dado (que ya trae
+/// sus huecos, capas y medida).
+pub(super) fn pintar_cara(
     motor: &mut Motor,
     e: &DisenoEfectivo,
-    cara: usize,
     lang: DesignLang,
     rec: &Recursos<'_>,
-    card: CardSize,
-    ancho_px: u32,
-    salida: Salida,
-) -> Result<Render, DisenoError> {
+    estilo: EstiloDef,
+    mut avisos: Vec<Aviso>,
+    o: &Opciones,
+) -> Result<Pieza, DisenoError> {
     let d = &e.design;
-    let mut avisos = Vec::new();
-    let ancho = ancho_px.max(16);
-    let alto = (ancho as f64 * card.height_mm / card.width_mm).round() as u32;
-    let mut px = Pixmap::new(ancho, alto).ok_or(DisenoError::Lienzo)?;
-    px.fill(tiny_skia::Color::BLACK);
-    let l = Lienzo {
-        px,
-        kx: ancho as f32 / 63.0,
-        ky: alto as f32 / 88.0,
-    };
-    let base = rec
-        .pack
-        .estilo(nombre_estilo(d.style))
-        .or_else(|_| rec.pack.estilo("borderless"))
-        .map_err(|_| DisenoError::Lienzo)?;
-    let layout = d.card.es_ficha().then_some("ficha");
-    let estilo = estilo_con_layout(base, layout, &mut avisos);
+    let cara = o.cara;
+    let [w_mm, h_mm] = estilo.tamano.unwrap_or([63.0, 88.0]);
+    let mut l = Lienzo::nuevo(w_mm, h_mm, o.ancho_px, o.alto_px).ok_or(DisenoError::Lienzo)?;
+    if !o.transparente {
+        l.px.fill(tiny_skia::Color::BLACK);
+    }
 
     let datos = d.card.faces.get(cara).cloned().unwrap_or_default();
     let (a, b) = colores_marco(e, cara, rec.pack);
@@ -898,14 +1155,14 @@ pub fn render(
         estilo,
         vars,
         nums: BTreeMap::new(),
-        avisos,
+        avisos: Vec::new(),
         faltan: Vec::new(),
         letra_titulo: e.font_title.clone(),
         letra_reglas: e.font_rules.clone(),
     };
+    c.avisos.append(&mut avisos);
 
     // ── Reglas: maquetar primero, porque la caja que crece mueve el resto.
-    let reglas_txt = reglas_efectivas(d, cara, lang);
     if d.faces
         .get(cara)
         .is_some_and(|f| f.texts.get(lang).rules_override.is_some())
@@ -921,20 +1178,40 @@ pub fn render(
         .map(|f| f.texts.get(lang).flavor.clone())
         .filter(|s| d.options.show_flavor && !s.trim().is_empty())
         .unwrap_or_default();
-    let reglas = texto::reglas(&reglas_txt);
     let sabor = texto::sabor(&sabor_txt);
-    let fr = fr_texto(&datos);
+    let salas = if o.cuerpo == Cuerpo::Mazmorra {
+        estructura::mazmorra(&reglas_efectivas(d, cara, lang))
+    } else {
+        Vec::new()
+    };
+    let contenido = if salas.is_empty() {
+        contenido_de_la_cara(d, o, lang, sabor)
+    } else {
+        Contenido::Texto {
+            reglas: Vec::new(),
+            sabor: Vec::new(),
+        }
+    };
+    let fr = if o.cuerpo == Cuerpo::Leveler || o.cuerpo == Cuerpo::Estacion {
+        // La F/R de cada tramo va en su franja; la de abajo, la de base.
+        fr_texto(&datos)
+    } else {
+        fr_texto(&datos)
+    };
+    // MDFC: la franja de la otra cara se lleva un poco de la caja.
+    let franja = if o.otra_cara.is_some() { 2.6 } else { 0.0 };
 
     let hueco_reglas = c.estilo.huecos.get("reglas").cloned();
     let caja_din = c.estilo.caja.clone();
-    let mut caja_txt: Option<(CajaTexto, Caja)> = None;
+    let mut caja_txt: Option<(Hecho, Caja)> = None;
+    let mut caja_reglas_mm: Option<Caja> = None;
     if let Some(h) = hueco_reglas {
         let (est, _) = c.estilo_texto(&h);
         // La letra mínima legible: 6 pt de cuerpo.
         let tam_min = c.l.x(6.0 * MM_POR_PT);
         let paso = c.l.x(0.1 * MM_POR_PT);
+        let k = c.l.kx;
         if let Some(din) = &caja_din {
-            let alto_max_txt = din.alto_max - din.pad_arriba - din.pad_abajo;
             let ancho = match &h.w {
                 super::pack::Valor::Num(n) => *n,
                 super::pack::Valor::Expr(_) => 50.0,
@@ -943,19 +1220,19 @@ pub fn render(
                 super::pack::Valor::Num(n) => *n,
                 super::pack::Valor::Expr(_) => 5.95,
             };
-            let mut aj = ajustar_reglas(
+            let mut pad_abajo = din.pad_abajo + franja;
+            let mut aj = cuerpos::ajustar(
+                &contenido,
                 &mut c.motor.m,
                 &mut c.motor.letras,
-                &reglas,
-                &sabor,
                 &est,
                 c.l.x(ancho),
-                c.l.y(alto_max_txt),
+                c.l.y(din.alto_max - din.pad_arriba - pad_abajo),
                 tam_min.min(est.tam),
                 paso,
+                k,
             );
-            let mut alto_txt = aj.caja.alto / c.l.ky;
-            let mut pad_abajo = din.pad_abajo;
+            let mut alto_txt = aj.0.alto() / c.l.ky;
             // Si el último renglón llega a la caja de fuerza/resistencia, se
             // deja ese hueco libre por abajo.
             if fr.is_some() {
@@ -964,27 +1241,27 @@ pub fn render(
                     let fr_y = frh.y.evaluar(&BTreeMap::new()).unwrap_or(80.0);
                     let libre = c.l.x(fr_x - 0.6 - x_txt);
                     let invade = din.fondo - fr_y + 0.4;
-                    if choca(&aj.caja, libre) && pad_abajo < invade {
+                    if aj.0.fin_ultima_linea() > libre && pad_abajo < invade {
                         pad_abajo = invade;
-                        aj = ajustar_reglas(
+                        aj = cuerpos::ajustar(
+                            &contenido,
                             &mut c.motor.m,
                             &mut c.motor.letras,
-                            &reglas,
-                            &sabor,
                             &est,
                             c.l.x(ancho),
                             c.l.y(din.alto_max - din.pad_arriba - pad_abajo),
                             tam_min.min(est.tam),
                             paso,
+                            k,
                         );
-                        alto_txt = aj.caja.alto / c.l.ky;
+                        alto_txt = aj.0.alto() / c.l.ky;
                     }
                 }
             }
-            if aj.sobra > 0.0 {
+            if aj.1 > 0.0 {
                 c.avisos.push(Aviso::TextoNoCabe {
                     hueco: "reglas".into(),
-                    sobra: f64::from(aj.sobra / c.l.ky),
+                    sobra: f64::from(aj.1 / c.l.ky),
                 });
             }
             let alto_caja =
@@ -999,8 +1276,14 @@ pub fn render(
             c.vars.insert("altoReglas".into(), format!("{alto_caja}"));
             c.vars.insert("yTipo".into(), format!("{y_tipo}"));
             c.vars.insert("yTipo04".into(), format!("{}", y_tipo + 0.4));
+            caja_reglas_mm = Some(Caja {
+                x: x_txt,
+                y: y_reglas,
+                w: ancho,
+                h: alto_caja,
+            });
             caja_txt = Some((
-                aj.caja,
+                aj.0,
                 Caja {
                     x: x_txt,
                     y: y_reglas + din.pad_arriba,
@@ -1010,50 +1293,56 @@ pub fn render(
             ));
         } else if let Some((h, caja)) = c.hueco("reglas") {
             let (est, _) = c.estilo_texto(&h);
-            let aj = ajustar_reglas(
+            let caja = Caja {
+                h: caja.h - franja,
+                ..caja
+            };
+            let aj = cuerpos::ajustar(
+                &contenido,
                 &mut c.motor.m,
                 &mut c.motor.letras,
-                &reglas,
-                &sabor,
                 &est,
                 c.l.x(caja.w),
                 c.l.y(caja.h),
                 tam_min.min(est.tam),
                 paso,
+                k,
             );
-            if aj.sobra > 0.0 {
+            if aj.1 > 0.0 {
                 c.avisos.push(Aviso::TextoNoCabe {
                     hueco: "reglas".into(),
-                    sobra: f64::from(aj.sobra / c.l.ky),
+                    sobra: f64::from(aj.1 / c.l.ky),
                 });
             }
-            caja_txt = Some((aj.caja, caja));
+            caja_reglas_mm = Some(Caja {
+                h: caja.h + franja,
+                ..caja
+            });
+            caja_txt = Some((aj.0, caja));
         }
     }
 
     // ── Ilustración.
-    if let Some((_, arte)) = {
+    if !o.sin_arte {
         let h = c.estilo.arte.clone();
         let ev = |v: &super::pack::Valor| v.evaluar(&c.nums).unwrap_or(0.0);
-        Some((
-            h.clone(),
-            Caja {
-                x: ev(&h.x),
-                y: ev(&h.y),
-                w: ev(&h.w),
-                h: ev(&h.h),
-            },
-        ))
-    } {
-        let r = (arte.x, arte.y, arte.w, arte.h);
-        let img = d
-            .faces
-            .get(cara)
-            .and_then(|f| f.art.as_ref())
-            .and_then(|a| rec.imagenes.imagen(&a.image.blob).map(|i| (i, a.framing)));
-        match img {
-            Some((i, f)) => pintar_arte(&mut c.l, &i, r, &f),
-            None => sin_arte(&mut c.l, r),
+        let arte = Caja {
+            x: ev(&h.x),
+            y: ev(&h.y),
+            w: ev(&h.w),
+            h: ev(&h.h),
+        };
+        if arte.w > 0.0 && arte.h > 0.0 {
+            let r = (arte.x, arte.y, arte.w, arte.h);
+            let img = d
+                .faces
+                .get(cara)
+                .and_then(|f| f.art.as_ref())
+                .and_then(|a| rec.imagenes.imagen(&a.image.blob).map(|i| (i, a.framing)));
+            match img {
+                Some((i, f)) => pintar_arte(&mut c.l, &i, r, &f),
+                None => sin_arte(&mut c.l, r),
+            }
         }
     }
 
@@ -1091,6 +1380,16 @@ pub fn render(
             lang,
         });
     }
+    // El indicador de cara empuja el título a la derecha.
+    if let Some(ind) = o.indicador {
+        let corre = c.indicador(ind);
+        if let Some(t) = c.estilo.huecos.get_mut("titulo") {
+            if let (super::pack::Valor::Num(x), super::pack::Valor::Num(w)) = (&mut t.x, &mut t.w) {
+                *x += corre;
+                *w -= corre;
+            }
+        }
+    }
     let ancho_titulo = c
         .hueco("titulo")
         .map(|(_, t)| fin_coste.map_or(t.w, |x0| x0 - 0.6 - t.x));
@@ -1107,7 +1406,7 @@ pub fn render(
     if let Some(em) = &e.emblem {
         c.imagen("emblema", &em.blob);
     }
-    if d.style == DesignStyle::FullArt {
+    if d.style == DesignStyle::FullArt && c.estilo.huecos.contains_key("simbolo") {
         let s = d
             .card
             .color_identity
@@ -1116,75 +1415,160 @@ pub fn render(
             .unwrap_or_else(|| "C".into());
         c.simbolo("simbolo", &s);
     }
-    if let Some((caja, sitio)) = &caja_txt {
-        // En las cajas fijas, el texto va centrado en vertical.
-        let libre = if caja_din.is_some() {
+    let tinta = c
+        .vars
+        .get("tintaCaja")
+        .and_then(|t| rgba(t))
+        .unwrap_or(BLANCO);
+    if let Some((hecho, sitio)) = &caja_txt {
+        // En las cajas fijas, el texto normal va centrado en vertical; las
+        // secciones que reparten llenan la caja.
+        let reparte = matches!(contenido, Contenido::Secciones { repartir: true, .. });
+        let libre = if caja_din.is_some() || reparte {
             0.0
         } else {
-            (sitio.h - caja.alto / c.l.ky).max(0.0) / 2.0
+            (sitio.h - hecho.alto() / c.l.ky).max(0.0) / 2.0
         };
-        let tinta = c
-            .vars
-            .get("tintaCaja")
-            .and_then(|t| rgba(t))
-            .unwrap_or(BLANCO);
-        let raya = [tinta[0], tinta[1], tinta[2], 110];
-        let (x, y, w) = (c.l.x(sitio.x), c.l.y(sitio.y + libre), c.l.x(sitio.w));
-        c.faltan.extend(pintar_caja(
-            &mut c.l.px.as_mut(),
-            caja,
-            x,
-            y,
-            w,
-            raya,
-            rec.simbolos,
-        ));
+        c.pintar_contenido(
+            &contenido,
+            hecho,
+            sitio.x,
+            sitio.y + libre,
+            sitio.w,
+            sitio.h - libre,
+            tinta,
+        );
+    }
+    if !salas.is_empty() {
+        if let Some((h, caja)) = c.hueco("reglas") {
+            let (est, _) = c.estilo_texto(&h);
+            c.pintar_mazmorra(&salas, caja, &est, tinta);
+        }
+    }
+    // Vanguard: los modificadores de mano y vida.
+    for (hueco, valor, es, en) in [
+        ("mano", &d.card.hand_modifier, "Mano", "Hand"),
+        ("vida", &d.card.life_modifier, "Vida", "Life"),
+    ] {
+        if let Some(v) = valor {
+            let palabra = if lang == DesignLang::Es { es } else { en };
+            c.linea(
+                hueco,
+                &texto::llano(&format!("{palabra} {v}")),
+                None,
+                squeeze,
+            );
+        }
+    }
+    if let (Some((tipo_otra, coste_otra)), Some(caja)) = (&o.otra_cara, caja_reglas_mm) {
+        c.franja_otra_cara(tipo_otra, coste_otra, caja, tinta);
     }
     if let Some(fr) = &fr {
         c.linea("fr", &texto::llano(fr), None, squeeze);
     }
-    let original_pie = if en_cinta || e.original_name == OriginalName::Hidden {
-        String::new()
-    } else {
-        original
-    };
-    let pie = pie_texto(e, lang, &original_pie);
-    c.pie(&pie);
+    if !o.sin_pie {
+        let original_pie = if en_cinta || e.original_name == OriginalName::Hidden {
+            String::new()
+        } else {
+            original
+        };
+        let pie = pie_texto(e, lang, &original_pie);
+        c.pie(&pie);
+    }
 
     // ── Avisos.
-    if lang == DesignLang::Es && d.card.sin_texto_es {
+    if lang == DesignLang::Es && d.card.sin_texto_es && !c.avisos.contains(&Aviso::SinTextoOficial)
+    {
         c.avisos.push(Aviso::SinTextoOficial);
     }
-    c.faltan
-        .retain(|s| !matches!(s.as_str(), "PINCEL" | "ESTRELLA"));
-    c.faltan.sort();
-    c.faltan.dedup();
-    if !c.faltan.is_empty() {
-        c.avisos.push(Aviso::FaltanSimbolos {
-            simbolos: c.faltan.clone(),
-        });
-    }
-
-    // ── Salida.
-    let mut px = c.l.px;
-    if salida == Salida::Pantalla {
-        let r = c.estilo.radio * (ancho as f32 / 63.0);
-        if let Some(m) = mascara_redondeada(ancho, alto, r) {
-            px.apply_mask(&m);
-        }
-    }
-    let mut img = RgbaImage::new(ancho, alto);
-    for (d, s) in img.pixels_mut().zip(px.pixels()) {
-        let c = s.demultiply();
-        *d = image::Rgba([c.red(), c.green(), c.blue(), c.alpha()]);
-    }
-    Ok(Render {
-        imagen: img,
+    Ok(Pieza {
+        px: c.l.px,
         avisos: c.avisos,
+        faltan: c.faltan,
     })
 }
 
-fn mascara_redondeada(w: u32, h: u32, r: f32) -> Option<Mask> {
+impl Carta<'_> {
+    /// MDFC: la pestaña de abajo a la izquierda con el tipo y el coste de la
+    /// otra cara.
+    fn franja_otra_cara(&mut self, tipo: &str, coste: &str, caja: Caja, tinta: Color) {
+        let (h, y) = (2.2, caja.y + caja.h - 2.45);
+        let w = (caja.w * 0.62).min(34.0);
+        let x = caja.x - 0.3;
+        self.forma(&format!(
+            r##"<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="0.5" fill="#101010" fill-opacity="0.85" stroke="url(#marco)" stroke-width="0.2"/><path d="M{a},{b} L{c},{d} L{a},{e} Z" fill="#f2f2f2"/>"##,
+            a = x + 0.7,
+            b = y + 0.55,
+            c = x + 1.7,
+            d = y + h / 2.0,
+            e = y + h - 0.55
+        ));
+        let _ = tinta;
+        let texto = if coste.is_empty() {
+            tipo.to_string()
+        } else {
+            format!("{tipo}  {coste}")
+        };
+        let ancho = w - 2.6;
+        self.texto_izquierda(
+            &texto,
+            "reglas",
+            0.95,
+            [242, 242, 242, 255],
+            x + 2.2,
+            y + h / 2.0,
+            ancho,
+        );
+    }
+
+    /// Un texto corto alineado a la izquierda en `x`, centrado en `cy` (mm).
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn texto_izquierda(
+        &mut self,
+        texto: &str,
+        rol: &str,
+        cap_mm: f32,
+        color: Color,
+        x: f32,
+        cy: f32,
+        ancho_max: f32,
+    ) {
+        let letra = self.letra(rol);
+        let e = Estilo {
+            familia: letra.familia,
+            peso: letra.peso,
+            tam: self.l.x(cap_mm) / letra.mayuscula.max(0.3),
+            interlinea: 1.06,
+            color,
+            alinear: Alinear::Inicio,
+            versalitas: false,
+        };
+        let p = texto::con_simbolos(texto);
+        let (b, f, _) = linea_ajustada(
+            &mut self.motor.m,
+            &mut self.motor.letras,
+            &p,
+            &e,
+            self.l.x(ancho_max),
+            0.6,
+        );
+        let y0 = self.l.y(cy) - b.base + e.tam * letra.mayuscula / 2.0;
+        let x0 = self.l.x(x);
+        self.faltan.extend(pintar_bloque(
+            &mut self.l.px.as_mut(),
+            &b,
+            x0,
+            y0,
+            Pincel {
+                escala_x: f,
+                color: None,
+            },
+            self.rec.simbolos,
+        ));
+    }
+}
+
+pub(super) fn mascara_redondeada(w: u32, h: u32, r: f32) -> Option<Mask> {
     let mut m = Mask::new(w, h)?;
     let rect = Rect::from_xywh(0.0, 0.0, w as f32, h as f32)?;
     let mut pb = PathBuilder::new();

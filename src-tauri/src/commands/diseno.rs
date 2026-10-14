@@ -27,7 +27,11 @@ pub async fn design_draft(
     let api = state.scryfall.clone();
     let en = borrador::carta_completa(&state.db, api.as_ref(), &id).await?;
     let es = borrador::impresion_es(&state.db, api.as_ref(), &en).await?;
-    let datos = borrador::datos(&en, es.as_ref(), crate::store::ahora_ms());
+    let fundida = borrador::fundida(&state.db, api.as_ref(), &en).await?;
+    let datos = borrador::con_fundida(
+        borrador::datos(&en, es.as_ref(), crate::store::ahora_ms()),
+        fundida,
+    );
     let coleccion = match &collection {
         Some(c) => colecciones::get(&state.db, c)?,
         None => None,
@@ -130,6 +134,16 @@ pub async fn design_fit_report(
     lang: DesignLang,
 ) -> AppResult<Vec<Aviso>> {
     en_hilo(app, move |s| crate::diseno::vista::avisos(s, &design, lang)).await
+}
+
+/// Cómo se maqueta una cara (layout y texto partido), para el editor.
+#[tauri::command]
+pub fn design_structure(
+    design: CardDesign,
+    cara: u32,
+    lang: DesignLang,
+) -> proxy_core::diseno::maquetacion::Resumen {
+    proxy_core::diseno::maquetacion::resumen(&design, cara as usize, lang)
 }
 
 /// Aplica el diseño a la carta (miniatura en el almacén) y la devuelve; la

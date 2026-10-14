@@ -213,6 +213,12 @@ pub enum CajaPorDefecto {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LayoutDef {
+    /// Otra ventana para el arte (la variante alta la acorta).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub arte: Option<Hueco>,
+    /// Otra caja de reglas que crece (la variante alta la deja crecer más).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub caja: Option<CajaDinamica>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub capas: Option<Vec<Capa>>,
     #[serde(default)]
@@ -222,6 +228,10 @@ pub struct LayoutDef {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EstiloDef {
+    /// Medida del lienzo en mm (`[ancho, alto]`); sin ella, 63×88. Los
+    /// layouts apaisados (batalla, plano) llevan la suya.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tamano: Option<[f32; 2]>,
     /// Dónde va la ilustración.
     pub arte: Hueco,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -251,6 +261,10 @@ pub struct PackDef {
     pub paletas: BTreeMap<String, PaletaDef>,
     pub letras: BTreeMap<String, LetraDef>,
     pub estilos: BTreeMap<String, EstiloDef>,
+    /// Layouts completos que valen para cualquier estilo (saga, batalla,
+    /// plano…): se usan cuando el estilo no trae el suyo en `layouts`.
+    #[serde(default)]
+    pub layouts: BTreeMap<String, EstiloDef>,
 }
 
 /// Un pack cargado: la definición y sus ficheros.
@@ -355,6 +369,20 @@ impl Pack {
                 }
             }
         }
+        for (nombre, e) in &def.layouts {
+            for c in &e.capas {
+                if !ficheros.contains_key(&c.svg) {
+                    return Err(PackError::FaltaFichero(c.svg.clone()));
+                }
+            }
+            for h in e.huecos.values() {
+                if let Some(c) = &h.color {
+                    if !c.starts_with("{{") && !color_valido(c) {
+                        return Err(PackError::Color(format!("{nombre}: {c}")));
+                    }
+                }
+            }
+        }
         let mut h = Sha256::new();
         for (k, v) in &ficheros {
             h.update(k.as_bytes());
@@ -377,6 +405,11 @@ impl Pack {
             .map(|(k, v)| ((*k).to_string(), (*v).to_string()))
             .collect();
         Pack::cargar(ficheros)
+    }
+
+    /// Un layout completo del pack (`saga`, `batalla`…), si lo trae.
+    pub fn layout(&self, nombre: &str) -> Option<&EstiloDef> {
+        self.def.layouts.get(nombre)
     }
 
     pub fn estilo(&self, nombre: &str) -> Result<&EstiloDef, PackError> {
@@ -431,14 +464,26 @@ const BUILTIN: &[(&str, &str)] = &[
     fichero!("despejado/reglas.svg"),
     fichero!("despejado/fr.svg"),
     fichero!("extendido/marco.svg"),
+    fichero!("extendido/marco-alto.svg"),
     fichero!("extendido/cinta.svg"),
     fichero!("extendido/corona.svg"),
     fichero!("extendido/fr.svg"),
     fichero!("clasico/marco.svg"),
+    fichero!("clasico/marco-alto.svg"),
     fichero!("clasico/cinta.svg"),
     fichero!("clasico/corona.svg"),
     fichero!("clasico/fr.svg"),
     fichero!("paisaje/franja.svg"),
+    fichero!("layouts/saga.svg"),
+    fichero!("layouts/mazmorra.svg"),
+    fichero!("layouts/secuela-arriba.svg"),
+    fichero!("layouts/secuela-abajo.svg"),
+    fichero!("layouts/fusionar.svg"),
+    fichero!("layouts/flip.svg"),
+    fichero!("layouts/batalla.svg"),
+    fichero!("layouts/plano.svg"),
+    fichero!("layouts/plan.svg"),
+    fichero!("layouts/vanguard.svg"),
 ];
 
 #[cfg(test)]

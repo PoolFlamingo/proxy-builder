@@ -28,6 +28,7 @@ import { agrupar, type Grupo } from "./grupos";
 import { ListaCartas } from "./lista-cartas";
 import { renumerar } from "./renumerar";
 import { useBorrador } from "./use-borrador";
+import { useResumen } from "./use-resumen";
 import { VistaPrevia } from "./vista-previa";
 
 /**
@@ -57,6 +58,7 @@ export function DisenarScreen() {
 		[colecciones, packs, simbolos],
 	);
 	const b = useBorrador(grupo, cara, lang, recursos);
+	const resumen = useResumen(b.design, cara, lang);
 	const dialogo = useUi((s) => s.dialogo);
 
 	// Colecciones y packs (se releen al cerrar sus diálogos).
@@ -221,6 +223,7 @@ export function DisenarScreen() {
 						setCara={setCara}
 						onEncuadre={encuadre}
 						cargando={b.cargando}
+						carasImpresas={resumen?.carasImpresas ?? 1}
 					/>
 				</ResizablePanel>
 				<ResizableHandle withHandle />
@@ -234,6 +237,7 @@ export function DisenarScreen() {
 									cara={cara}
 									colecciones={colecciones}
 									packs={packs}
+									resumen={resumen}
 								/>
 							</div>
 							<div className="flex shrink-0 flex-col gap-2 border-t p-2.5">

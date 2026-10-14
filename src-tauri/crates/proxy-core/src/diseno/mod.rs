@@ -12,8 +12,12 @@
 //! cargan aquí, para que el resultado sea igual en cualquier equipo.
 
 pub mod borrador;
+pub mod componer;
+pub mod cuerpos;
 pub mod efectivo;
+pub mod estructura;
 pub mod letras;
+pub mod maquetacion;
 pub mod modelo;
 pub mod pack;
 pub mod pintar;
@@ -34,7 +38,7 @@ pub enum DisenoError {
 
 /// Versión del motor de render: entra en la huella, así que subirla rehace
 /// todos los renders de diseños.
-pub const VERSION_MOTOR: u32 = 1;
+pub const VERSION_MOTOR: u32 = 2;
 
 /// Puntos tipográficos a milímetros.
 pub const MM_POR_PT: f32 = 25.4 / 72.0;

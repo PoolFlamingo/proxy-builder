@@ -7,6 +7,7 @@ use std::collections::{HashMap, VecDeque};
 
 use image::RgbaImage;
 use proxy_core::diseno::efectivo::DisenoEfectivo;
+use proxy_core::diseno::maquetacion::maquetacion;
 use proxy_core::diseno::modelo::{Aviso, CardDesign, DesignLang, DesignStatus};
 use proxy_core::diseno::render::Salida;
 use proxy_core::model::{BackSpec, CardEdits, CardSize, CardSource, DeckCard, ImageOrigin};
@@ -139,11 +140,7 @@ pub fn aplicar(
         Salida::Impresion,
     )?;
     let front = guardar_miniatura(state, &frente.imagen)?;
-    let dos_caras = d.faces.len() >= 2
-        && matches!(
-            d.card.layout.as_str(),
-            "transform" | "modal_dfc" | "double_faced_token" | "reversible_card" | "battle"
-        );
+    let dos_caras = d.faces.len() >= 2 && maquetacion(&d.card).0.caras_impresas() == 2;
     let back = if dos_caras {
         let atras = pintar(
             state,

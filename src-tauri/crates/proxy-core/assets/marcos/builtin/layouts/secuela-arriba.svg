@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 63 51" width="63" height="51">
+<defs>{{defs}}</defs>
+<!-- Secuela, mitad de arriba: título, arte, tipo y reglas. -->
+<path fill-rule="evenodd" fill="#000" d="M-1,-1 H64 V52 H-1 Z M0,0 H63 V51 H0 Z"/>
+<rect x="3.0" y="38.4" width="57.0" height="12.0" fill="{{fondoCaja}}" fill-opacity="{{opacidadCaja}}" stroke="url(#marco)" stroke-width="0.38"/>
+<rect x="2.0" y="3.9" width="57.0" height="5.55" rx="1.6" fill="url(#marco)" stroke="#000" stroke-opacity="0.55" stroke-width="0.12"/>
+<rect x="2.0" y="3.9" width="57.0" height="5.55" rx="1.6" fill="url(#brillo)"/>
+<rect x="3.1" y="4.3" width="54.8" height="4.75" rx="1.1" fill="url(#panel)"/>
+<rect x="1.9" y="32.4" width="59.2" height="6.0" rx="1.25" fill="url(#marco)" stroke="#000" stroke-opacity="0.55" stroke-width="0.12"/>
+<rect x="1.9" y="32.4" width="59.2" height="6.0" rx="1.25" fill="url(#brillo)"/>
+<rect x="2.5" y="32.8" width="58.0" height="5.2" rx="0.9" fill="{{tinte}}" fill-opacity="0.94"/>
+</svg>

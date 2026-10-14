@@ -1,0 +1,55 @@
+{
+	"scryfallId": "8fed056f-a8f5-41ec-a7d2-a80a238872d1",
+	"oracleId": "4b1874af-4ea5-4e22-a4d4-e718d75fe95e",
+	"layout": "transform",
+	"keywords": ["Vigilance", "Transform", "Haste"],
+	"rarity": "uncommon",
+	"frameEffects": [],
+	"colors": [],
+	"colorIdentity": ["G"],
+	"cmc": 4.0,
+	"set": "mom",
+	"collectorNumber": "194",
+	"artist": "Diego Gisbert",
+	"faces": [
+		{
+			"name": "Invasion of Zendikar",
+			"manaCost": "{3}{G}",
+			"typeLine": {
+				"es": "Batalla — Asedio",
+				"en": "Battle — Siege"
+			},
+			"rules": {
+				"es": "(En cuanto un Asedio entre, elige un oponente para que lo proteja. Tú y otros jugadores pueden atacarlo. Cuando sea derrotado, exílialo y luego lánzalo transformado.)\nCuando la Invasión de Zendikar entre al campo de batalla, busca en tu biblioteca hasta dos cartas de tierra básica, ponlas en el campo de batalla giradas y luego baraja.",
+				"en": "(As a Siege enters, choose an opponent to protect it. You and others can attack it. When it's defeated, exile it, then cast it transformed.)\nWhen this Siege enters, search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle."
+			},
+			"printedNameEs": "Invasión de Zendikar",
+			"colors": ["G"],
+			"power": null,
+			"toughness": null,
+			"loyalty": null,
+			"defense": "3"
+		},
+		{
+			"name": "Awakened Skyclave",
+			"manaCost": "",
+			"typeLine": {
+				"es": "Criatura — Elemental",
+				"en": "Creature — Elemental"
+			},
+			"rules": {
+				"es": "Vigilancia, prisa.\nMientras la Aerorruina despertada esté en el campo de batalla, es una tierra además de sus otros tipos.\n{T}: Agrega un maná de cualquier color.",
+				"en": "Vigilance, haste\nAs long as this creature is on the battlefield, it's a land in addition to its other types.\n{T}: Add one mana of any color."
+			},
+			"printedNameEs": "Aerorruina despertada",
+			"colors": ["G"],
+			"power": "4",
+			"toughness": "4",
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": false,
+	"oversized": false,
+	"fetchedAt": 0
+}

@@ -26,6 +26,7 @@ export function VistaPrevia({
 	setCara,
 	onEncuadre,
 	cargando,
+	carasImpresas,
 }: {
 	design: CardDesign | null;
 	huella: string | null;
@@ -36,6 +37,9 @@ export function VistaPrevia({
 	setCara: (c: number) => void;
 	onEncuadre: (cambio: { dx?: number; dy?: number; zoom?: number }) => void;
 	cargando: boolean;
+	/** 2 en las de doble cara; en las partidas, aventuras… las caras son
+	 *  partes de una sola cara impresa. */
+	carasImpresas: number;
 }) {
 	const { t } = useLang();
 	const [seguro, setSeguro] = useState(false);
@@ -109,7 +113,7 @@ export function VistaPrevia({
 					>
 						{design?.faces.map((_, i) => (
 							<ToggleGroupItem key={i} value={String(i)} className="px-2.5 text-xs">
-								{t("Cara {n}", { n: i + 1 })}
+								{carasImpresas > 1 ? t("Cara {n}", { n: i + 1 }) : t("Parte {n}", { n: i + 1 })}
 							</ToggleGroupItem>
 						))}
 					</ToggleGroup>

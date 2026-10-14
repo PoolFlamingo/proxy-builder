@@ -19,6 +19,8 @@ import type { FaceTexts } from "@/bindings/FaceTexts";
 import type { FooterOptions } from "@/bindings/FooterOptions";
 import type { FrameOptions } from "@/bindings/FrameOptions";
 import type { PackInfo } from "@/bindings/PackInfo";
+import type { Parte } from "@/bindings/Parte";
+import type { Resumen } from "@/bindings/Resumen";
 import { Fila, FilaDeslizador, FilaInterruptor, Selector } from "@/components/campos";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
@@ -30,7 +32,7 @@ import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { useUi } from "@/stores/ui-store";
 import { RecortarDialog } from "./recortar-dialog";
-import { ESTILOS, NOMBRE_ORIGINAL, PALETAS, RAREZAS } from "./textos";
+import { ESTILOS, MAQUETACIONES, NOMBRE_ORIGINAL, PALETAS, RAREZAS } from "./textos";
 
 type Cambiar = (f: (d: CardDesign) => CardDesign) => void;
 
@@ -94,12 +96,14 @@ export function Formulario({
 	cara,
 	colecciones,
 	packs,
+	resumen,
 }: {
 	design: CardDesign;
 	cambiar: Cambiar;
 	cara: number;
 	colecciones: Collection[];
 	packs: PackInfo[];
+	resumen: Resumen | null;
 }) {
 	const { t } = useLang();
 	return (
@@ -116,7 +120,13 @@ export function Formulario({
 			<ScrollArea className="min-h-0 flex-1">
 				<div className="p-2.5">
 					<TabsContent value="carta">
-						<PestanaCarta design={design} cambiar={cambiar} cara={cara} colecciones={colecciones} />
+						<PestanaCarta
+							design={design}
+							cambiar={cambiar}
+							cara={cara}
+							colecciones={colecciones}
+							resumen={resumen}
+						/>
 					</TabsContent>
 					<TabsContent value="textos">
 						<PestanaTextos design={design} cambiar={cambiar} cara={cara} />
@@ -152,16 +162,48 @@ function Dato({ etiqueta, children }: { etiqueta: string; children: React.ReactN
 	);
 }
 
+/** Cómo ha partido el motor el texto: habilidades, capítulos, niveles… */
+function Partes({ partes }: { partes: Parte[] }) {
+	const { t } = useLang();
+	return (
+		<div className="flex flex-col gap-1.5 rounded-lg border p-2.5">
+			<div className="text-[11px] font-semibold text-muted-foreground">
+				{t("Cómo se reparte el texto en la carta")}
+			</div>
+			<ol className="flex flex-col gap-1.5">
+				{partes.map((p, i) => (
+					<li key={i} className="flex gap-2 text-[11px] leading-snug">
+						{p.marca && (
+							<span className="h-fit shrink-0 rounded bg-foreground/85 px-1.5 py-px font-mono text-[10px] text-background">
+								{p.marca}
+							</span>
+						)}
+						<span className="min-w-0 flex-1">
+							{p.cabecera && <span className="block font-semibold">{p.cabecera}</span>}
+							{p.texto}
+						</span>
+						{p.fr && (
+							<span className="shrink-0 font-mono text-[10px] text-muted-foreground">{p.fr}</span>
+						)}
+					</li>
+				))}
+			</ol>
+		</div>
+	);
+}
+
 function PestanaCarta({
 	design,
 	cambiar,
 	cara,
 	colecciones,
+	resumen,
 }: {
 	design: CardDesign;
 	cambiar: Cambiar;
 	cara: number;
 	colecciones: Collection[];
+	resumen: Resumen | null;
 }) {
 	const { t } = useLang();
 	const f = design.card.faces[cara] ?? design.card.faces[0];
@@ -194,7 +236,11 @@ function PestanaCarta({
 				<Dato etiqueta={t("Edición")}>
 					{design.card.set.toUpperCase()} {design.card.collectorNumber}
 				</Dato>
+				{resumen && (
+					<Dato etiqueta={t("Maquetación")}>{t(MAQUETACIONES[resumen.maquetacion])}</Dato>
+				)}
 			</div>
+			{resumen && resumen.partes.length > 0 && <Partes partes={resumen.partes} />}
 			<Fila etiqueta={t("Estilo")}>
 				<Selector
 					valor={design.style}

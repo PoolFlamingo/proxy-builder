@@ -11,4 +11,8 @@ index: number,
 /**
  * Hoja física a la que pertenece (0, 1, 2…).
  */
-sheet: number, side: SheetSide, widthMm: number, heightMm: number, slots: Array<Slot>, guides: Array<LineMm>, };
+sheet: number, side: SheetSide, widthMm: number, heightMm: number, slots: Array<Slot>, guides: Array<LineMm>, 
+/**
+ * Hoja de cartas grandes (planos, planes, Vanguard): su propia rejilla.
+ */
+big: boolean, };

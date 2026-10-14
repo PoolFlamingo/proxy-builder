@@ -590,6 +590,99 @@ mod tests {
         }
     }
 
+    /// Una transformable diseñada en dúplex: la casilla de delante pinta la
+    /// cara 0 y la de detrás (en la hoja de dorsos) la cara 1.
+    #[test]
+    fn una_dfc_disenada_sale_con_cada_cara_en_su_sitio() {
+        use proxy_core::diseno::modelo::{CardData, DesignLang};
+        use proxy_core::layout::SlotFace;
+        let (dir, s) = estado();
+        let mut d = deck(
+            &s,
+            1,
+            PrintSettings {
+                duplex: Duplex::LongEdge,
+                quality: Quality::Dpi300,
+                ..Default::default()
+            },
+        );
+        let datos: CardData = serde_json::from_str(include_str!(
+            "../../crates/proxy-core/tests/dorados/layouts/datos/transform.json"
+        ))
+        .unwrap();
+        let c = d.cards[0].clone();
+        let diseno = crate::diseno::borrador::montar(&c, datos, None, &[]).design;
+        d.cards[0] = crate::diseno::vista::aplicar(&s, &c, &diseno, DesignLang::Es).unwrap();
+        assert!(matches!(d.cards[0].back, BackSpec::Dfc { .. }));
+        let p = plan(&d).unwrap();
+        let disenos = DisenosDelDeck::de(&s, &d).unwrap();
+        let enc = encargo(&d, &p, Some((&s, &disenos))).unwrap();
+        let mut caras = Vec::new();
+        for (i, pagina) in p.pages.iter().enumerate() {
+            for (j, slot) in pagina.slots.iter().enumerate() {
+                let Some(k) = enc.por_casilla.get(&(i, j)) else {
+                    continue;
+                };
+                let cara = enc.especificaciones[k].diseno.as_ref().map(|r| r.cara);
+                caras.push((slot.face, cara));
+            }
+        }
+        assert!(caras.contains(&(SlotFace::Front, Some(0))), "{caras:?}");
+        assert!(
+            caras
+                .iter()
+                .any(|(f, c)| *f != SlotFace::Front && *c == Some(1)),
+            "{caras:?}"
+        );
+        let destino = dir.path().join("dfc.pdf");
+        let r = exportar(&s, &d, &destino, &AtomicBool::new(false), &|_, _, _| {}).unwrap();
+        assert_eq!(r.pages, 2);
+    }
+
+    /// Un plano diseñado va en su hoja al final y sale a 88,9 × 127 mm:
+    /// a 300 PPP, una imagen de 1050 × 1500.
+    #[test]
+    fn un_plano_disenado_sale_grande_en_su_hoja() {
+        use proxy_core::diseno::modelo::{CardData, DesignLang};
+        let (dir, s) = estado();
+        let mut d = deck(
+            &s,
+            2,
+            PrintSettings {
+                quality: Quality::Dpi300,
+                ..Default::default()
+            },
+        );
+        let datos: CardData = serde_json::from_str(include_str!(
+            "../../crates/proxy-core/tests/dorados/layouts/datos/plano.json"
+        ))
+        .unwrap();
+        let c = d.cards[0].clone();
+        let diseno = crate::diseno::borrador::montar(&c, datos, None, &[]).design;
+        d.cards[0] = crate::diseno::vista::aplicar(&s, &c, &diseno, DesignLang::Es).unwrap();
+        let p = plan(&d).unwrap();
+        assert_eq!(p.pages.len(), 2, "una hoja normal y una de planos");
+        assert!(p.pages[1].big && p.pages[1].slots[0].card_id == d.cards[0].id);
+        let destino = dir.path().join("plano.pdf");
+        exportar(&s, &d, &destino, &AtomicBool::new(false), &|_, _, _| {}).unwrap();
+        let doc = lopdf::Document::load(&destino).unwrap();
+        let medidas: Vec<(i64, i64)> = doc
+            .objects
+            .values()
+            .filter_map(|o| o.as_stream().ok())
+            .filter(|st| {
+                st.dict.get(b"Subtype").and_then(|v| v.as_name()).ok() == Some(&b"Image"[..])
+            })
+            .filter_map(|st| {
+                Some((
+                    st.dict.get(b"Width").and_then(|v| v.as_i64()).ok()?,
+                    st.dict.get(b"Height").and_then(|v| v.as_i64()).ok()?,
+                ))
+            })
+            .collect();
+        assert!(medidas.contains(&(1050, 1500)), "{medidas:?}");
+    }
+
     #[test]
     fn cancelar_no_toca_el_destino() {
         let (dir, s) = estado();

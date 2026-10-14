@@ -18,6 +18,19 @@ rarity: string, frameEffects: Array<string>, colors: Array<string>, colorIdentit
  */
 sinTextoEs: boolean, 
 /**
+ * Impresa en tamaño grande (planos, planes, Vanguard).
+ */
+oversized: boolean, 
+/**
+ * Modificadores de mano y vida de una Vanguard (`+1`, `-3`).
+ */
+handModifier?: string, lifeModifier?: string, 
+/**
+ * Meld: la carta fundida va como segunda cara y aquí qué mitad de ella
+ * lleva esta carta en el dorso (`true`, la de arriba).
+ */
+meldArriba?: boolean, 
+/**
  * Cuándo se tomó la instantánea (ms desde 1970).
  */
 fetchedAt: number, };

@@ -13,4 +13,9 @@ cells: Array<RectMm>, pages: Array<Page>, sheets: number,
 /**
  * Cartas colocadas (cada casilla frontal ocupada cuenta una).
  */
-placed: number, warnings: Array<PlanWarning>, };
+placed: number, warnings: Array<PlanWarning>, 
+/**
+ * La rejilla y las casillas de las hojas de cartas grandes, si las hay.
+ * Van al final, sin mezclarse con las normales.
+ */
+bigGrid: Grid | null, bigCells: Array<RectMm>, };

@@ -1,0 +1,55 @@
+{
+	"scryfallId": "8d7fdd59-6d76-4a0c-ac75-816345ef4a39",
+	"oracleId": "41841bbf-1c51-494b-b299-c997cce88e44",
+	"layout": "split",
+	"keywords": ["Fuse"],
+	"rarity": "uncommon",
+	"frameEffects": [],
+	"colors": ["R", "U"],
+	"colorIdentity": ["R", "U"],
+	"cmc": 5.0,
+	"set": "dgm",
+	"collectorNumber": "134",
+	"artist": "Ryan Barger",
+	"faces": [
+		{
+			"name": "Turn",
+			"manaCost": "{2}{U}",
+			"typeLine": {
+				"es": "Instantáneo",
+				"en": "Instant"
+			},
+			"rules": {
+				"es": "Hasta el final del turno, la criatura objetivo pierde todas sus habilidades y se convierte en un Extraño rojo con fuerza y resistencia base de 0/1.\nFusionar. (Puedes lanzar una o las dos mitades de esta carta desde tu mano.)",
+				"en": "Until end of turn, target creature loses all abilities and becomes a red Weird with base power and toughness 0/1.\nFuse (You may cast one or both halves of this card from your hand.)"
+			},
+			"printedNameEs": "Turn",
+			"colors": ["R", "U"],
+			"power": null,
+			"toughness": null,
+			"loyalty": null,
+			"defense": null
+		},
+		{
+			"name": "Burn",
+			"manaCost": "{1}{R}",
+			"typeLine": {
+				"es": "Instantáneo",
+				"en": "Instant"
+			},
+			"rules": {
+				"es": "Arder hace 2 puntos de daño a cualquier objetivo.\nFusionar. (Puedes lanzar una o las dos mitades de esta carta desde tu mano.)",
+				"en": "Burn deals 2 damage to any target.\nFuse (You may cast one or both halves of this card from your hand.)"
+			},
+			"printedNameEs": "Burn",
+			"colors": ["R", "U"],
+			"power": null,
+			"toughness": null,
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": false,
+	"oversized": false,
+	"fetchedAt": 0
+}

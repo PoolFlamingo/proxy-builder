@@ -1,0 +1,55 @@
+{
+	"scryfallId": "606fe87c-d17b-4fa7-8e82-e7002d8229ef",
+	"oracleId": "b9ac4856-5cdb-479f-b0f5-7fa0b232a5ff",
+	"layout": "split",
+	"keywords": [],
+	"rarity": "uncommon",
+	"frameEffects": [],
+	"colors": ["U"],
+	"colorIdentity": ["U"],
+	"cmc": 6.0,
+	"set": "dsk",
+	"collectorNumber": "43",
+	"artist": "Diana Franco",
+	"faces": [
+		{
+			"name": "Bottomless Pool",
+			"manaCost": "{U}",
+			"typeLine": {
+				"es": "Encantamiento — Sala",
+				"en": "Enchantment — Room"
+			},
+			"rules": {
+				"es": "Cuando abras esta puerta, regresa hasta una criatura objetivo a la mano de su propietario.\n(Puedes lanzar cualquier mitad. Esa puerta se abre en el campo de batalla. Puedes pagar el coste de maná de una puerta cerrada como un conjuro para abrirla.)",
+				"en": "When you unlock this door, return up to one target creature to its owner's hand.\n(You may cast either half. That door unlocks on the battlefield. As a sorcery, you may pay the mana cost of a locked door to unlock it.)"
+			},
+			"printedNameEs": "Piscina sin fondo",
+			"colors": ["U"],
+			"power": null,
+			"toughness": null,
+			"loyalty": null,
+			"defense": null
+		},
+		{
+			"name": "Locker Room",
+			"manaCost": "{4}{U}",
+			"typeLine": {
+				"es": "Encantamiento — Sala",
+				"en": "Enchantment — Room"
+			},
+			"rules": {
+				"es": "Vestuario\no4oU\nSiempre que una o más criaturas que controlas hagan daño de combate a un jugador, roba una carta.",
+				"en": "Whenever one or more creatures you control deal combat damage to a player, draw a card.\n(You may cast either half. That door unlocks on the battlefield. As a sorcery, you may pay the mana cost of a locked door to unlock it.)"
+			},
+			"printedNameEs": "Vestuario",
+			"colors": ["U"],
+			"power": null,
+			"toughness": null,
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": false,
+	"oversized": false,
+	"fetchedAt": 0
+}

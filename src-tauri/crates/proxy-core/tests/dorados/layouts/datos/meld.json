@@ -1,0 +1,56 @@
+{
+	"scryfallId": "6fccdb60-5fce-4a6e-a709-b986f9a4b653",
+	"oracleId": "bce7e45d-b2c5-43aa-91a6-3a3c24f30850",
+	"layout": "meld",
+	"keywords": ["Flying", "Vigilance"],
+	"rarity": "rare",
+	"frameEffects": ["legendary"],
+	"colors": ["W"],
+	"colorIdentity": ["W"],
+	"cmc": 7.0,
+	"set": "inr",
+	"collectorNumber": "14",
+	"artist": "Clint Cearley",
+	"faces": [
+		{
+			"name": "Bruna, the Fading Light",
+			"manaCost": "{5}{W}{W}",
+			"typeLine": {
+				"es": "Criatura legendaria — Horror ángel",
+				"en": "Legendary Creature — Angel Horror"
+			},
+			"rules": {
+				"es": "Cuando lances a Bruna, la Luz Mortecina, puedes regresar la carta de criatura Ángel o Humano objetivo de tu cementerio al campo de batalla.\nVuela, vigilancia.\n(Se combina con Gisela, la Espada Quebrada.)",
+				"en": "When you cast this spell, you may return target Angel or Human creature card from your graveyard to the battlefield.\nFlying, vigilance\n(Melds with Gisela, the Broken Blade.)"
+			},
+			"printedNameEs": "Bruna, la Luz Mortecina",
+			"colors": ["W"],
+			"power": "5",
+			"toughness": "7",
+			"loyalty": null,
+			"defense": null
+		},
+		{
+			"name": "Brisela, Voice of Nightmares",
+			"manaCost": "",
+			"typeLine": {
+				"es": "Criatura legendaria — Ángel eldrazi",
+				"en": "Legendary Creature — Eldrazi Angel"
+			},
+			"rules": {
+				"es": "Vuela, daña primero, vigilancia, vínculo vital.\nTus oponentes no pueden lanzar hechizos con coste de maná convertido de 3 o menos.",
+				"en": "Flying, first strike, vigilance, lifelink\nYour opponents can't cast spells with mana value 3 or less."
+			},
+			"printedNameEs": "Brisela, Voz de las Pesadillas",
+			"colors": [],
+			"power": "9",
+			"toughness": "10",
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": false,
+	"oversized": false,
+	"meldArriba": true,
+	"fetchedAt": 0
+}

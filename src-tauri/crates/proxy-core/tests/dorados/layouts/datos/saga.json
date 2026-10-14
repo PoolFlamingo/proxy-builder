@@ -1,0 +1,37 @@
+{
+	"scryfallId": "4d29351e-5608-40e8-8220-6c9635d48ad4",
+	"oracleId": "44ed4c0c-a012-4895-a547-b04150553bba",
+	"layout": "saga",
+	"keywords": [],
+	"rarity": "uncommon",
+	"frameEffects": [],
+	"colors": ["B"],
+	"colorIdentity": ["B"],
+	"cmc": 5.0,
+	"set": "dsc",
+	"collectorNumber": "139",
+	"artist": "Ravenna Tran",
+	"faces": [
+		{
+			"name": "The Eldest Reborn",
+			"manaCost": "{4}{B}",
+			"typeLine": {
+				"es": "Encantamiento — Saga",
+				"en": "Enchantment — Saga"
+			},
+			"rules": {
+				"es": "(En cuanto esta Saga entre y después de tu paso de robar, agrega un contador de sabiduría. Sacrifícala después de III.)\nI — Cada oponente sacrifica una criatura o un planeswalker.\nII — Cada oponente descarta una carta.\nIII — Pon en el campo de batalla bajo tu control la carta de criatura o planeswalker objetivo de un cementerio.",
+				"en": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)\nI — Each opponent sacrifices a creature or planeswalker of their choice.\nII — Each opponent discards a card.\nIII — Put target creature or planeswalker card from a graveyard onto the battlefield under your control."
+			},
+			"printedNameEs": "El gran anciano renacido",
+			"colors": ["B"],
+			"power": null,
+			"toughness": null,
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": false,
+	"oversized": false,
+	"fetchedAt": 0
+}

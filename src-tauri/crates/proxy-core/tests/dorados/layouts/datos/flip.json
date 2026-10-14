@@ -1,0 +1,55 @@
+{
+	"scryfallId": "6ee6cd34-c117-4d7e-97d1-8f8464bfaac8",
+	"oracleId": "47795817-73e5-4af6-bd1e-d69b193e8e9e",
+	"layout": "flip",
+	"keywords": ["Protection", "Haste"],
+	"rarity": "rare",
+	"frameEffects": [],
+	"colors": ["R"],
+	"colorIdentity": ["R"],
+	"cmc": 4.0,
+	"set": "chk",
+	"collectorNumber": "153",
+	"artist": "Matt Cavotta",
+	"faces": [
+		{
+			"name": "Akki Lavarunner",
+			"manaCost": "{3}{R}",
+			"typeLine": {
+				"es": "Creature — Goblin Warrior",
+				"en": "Creature — Goblin Warrior"
+			},
+			"rules": {
+				"es": "Haste\nWhenever this creature deals damage to an opponent, flip it.",
+				"en": "Haste\nWhenever this creature deals damage to an opponent, flip it."
+			},
+			"printedNameEs": null,
+			"colors": ["R"],
+			"power": "1",
+			"toughness": "1",
+			"loyalty": null,
+			"defense": null
+		},
+		{
+			"name": "Tok-Tok, Volcano Born",
+			"manaCost": "",
+			"typeLine": {
+				"es": "Legendary Creature — Goblin Shaman",
+				"en": "Legendary Creature — Goblin Shaman"
+			},
+			"rules": {
+				"es": "Protection from red\nIf a red source would deal damage to a player, it deals that much damage plus 1 to that player instead.",
+				"en": "Protection from red\nIf a red source would deal damage to a player, it deals that much damage plus 1 to that player instead."
+			},
+			"printedNameEs": null,
+			"colors": ["R"],
+			"power": "2",
+			"toughness": "2",
+			"loyalty": null,
+			"defense": null
+		}
+	],
+	"sinTextoEs": true,
+	"oversized": false,
+	"fetchedAt": 0
+}
