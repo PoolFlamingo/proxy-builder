@@ -9,7 +9,10 @@ use crate::error::{AppError, AppResult, ErrorCode};
 
 /// Migraciones en orden. 🛑 Solo se añaden al final; nunca se edita una que
 /// ya haya salido en una versión.
-const MIGRACIONES: &[(i64, &str)] = &[(1, include_str!("migrations/0001_init.sql"))];
+const MIGRACIONES: &[(i64, &str)] = &[
+    (1, include_str!("migrations/0001_init.sql")),
+    (2, include_str!("migrations/0002_blob_refs.sql")),
+];
 
 /// La conexión, protegida por un candado (rusqlite no es `Sync`). Los
 /// trabajos largos sueltan el candado entre pasos.

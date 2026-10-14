@@ -43,6 +43,8 @@ impl AppState {
         std::fs::create_dir_all(&paths.data)?;
         std::fs::create_dir_all(&paths.cache)?;
         let db = Db::open(&paths.data.join("library.db"))?;
+        // Una vez: apuntar las imágenes de los diseños que ya hubiera.
+        crate::store::decks::rellenar_refs(&db)?;
         let blobs = BlobStore::new(paths.data.join("blobs"));
         Ok(AppState {
             db,
