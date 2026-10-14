@@ -6,6 +6,7 @@ import { AJUSTES } from "./ajustes";
 import { BIBLIOTECA } from "./biblioteca";
 import { CARTAS } from "./cartas";
 import { COMUN } from "./comun";
+import { DISENAR } from "./disenar";
 import { ESTADISTICAS } from "./estadisticas";
 import { EXPORTAR } from "./exportar";
 import { EXTRAS } from "./extras";
@@ -26,4 +27,5 @@ export const EN: Record<string, string> = {
 	...EXTRAS,
 	...VINCULAR,
 	...ESTADISTICAS,
+	...DISENAR,
 };

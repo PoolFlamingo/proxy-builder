@@ -34,6 +34,21 @@ export type Insignia = { texto: string; tono: "info" | "aviso" | "error"; ayuda:
 
 /** Las marcas que se pintan sobre una carta (CUSTOM, ↩ EN, LOWRES…). */
 export function insignias(c: DeckCard): Insignia[] {
+	// Una carta diseñada se pinta aquí: lo de la imagen de Scryfall no aplica.
+	if (c.design)
+		return [
+			c.design.status === "ready"
+				? {
+						texto: "PROXY",
+						tono: "info",
+						ayuda: paraTraducir("Diseñada en la app, lista para imprimir"),
+					}
+				: {
+						texto: "BORRADOR",
+						tono: "aviso",
+						ayuda: paraTraducir("Diseñada en la app, todavía en borrador"),
+					},
+		];
 	const out: Insignia[] = [];
 	if (c.source.kind === "custom")
 		out.push(

@@ -4,6 +4,7 @@
 //! - `borrador`: de la carta de Scryfall (inglés + impresión española) a un
 //!   `CardDesign` con su instantánea mecánica.
 
+pub mod arte;
 pub mod borrador;
 pub mod pintar;
 pub mod recursos;

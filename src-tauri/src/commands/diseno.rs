@@ -1,7 +1,7 @@
 //! **Editor de cartas** (la 2.0): borradores desde Scryfall y colecciones.
 //! El motor de render y la vista previa llegan en las fases siguientes.
 
-use proxy_core::diseno::modelo::{Aviso, CardDesign, Collection, DesignDraft, DesignLang};
+use proxy_core::diseno::modelo::{ArtRef, Aviso, CardDesign, Collection, DesignDraft, DesignLang};
 use proxy_core::model::DeckCard;
 use tauri::{AppHandle, Manager, State};
 
@@ -153,6 +153,20 @@ pub fn design_remove(card: DeckCard) -> DeckCard {
     crate::diseno::vista::quitar(&card)
 }
 
+/// Vuelve a numerar los diseños por el orden del deck; devuelve las cartas
+/// que cambian, ya con su miniatura.
+#[tauri::command]
+pub async fn design_renumber(
+    app: AppHandle,
+    cards: Vec<DeckCard>,
+    lang: DesignLang,
+) -> AppResult<Vec<DeckCard>> {
+    en_hilo(app, move |s| {
+        crate::diseno::vista::renumerar(s, &cards, lang)
+    })
+    .await
+}
+
 /// Rehace las miniaturas desfasadas del deck abierto; devuelve las cartas
 /// que cambian (la pantalla las aplica de una vez).
 #[tauri::command]
@@ -162,4 +176,43 @@ pub async fn design_rerender(
     lang: DesignLang,
 ) -> AppResult<Vec<DeckCard>> {
     en_hilo(app, move |s| crate::diseno::vista::rehacer(s, &cards, lang)).await
+}
+
+// ── Ilustración ────────────────────────────────────────────────────────────
+
+/// Una imagen pegada del portapapeles (base64).
+#[tauri::command]
+pub async fn art_from_clipboard(app: AppHandle, data: String) -> AppResult<ArtRef> {
+    en_hilo(app, move |s| crate::diseno::arte::desde_bytes(s, &data)).await
+}
+
+/// Un fichero ya importado al almacén (`blob_import_files`).
+#[tauri::command]
+pub fn art_from_blob(state: State<'_, AppState>, blob: String) -> AppResult<ArtRef> {
+    crate::diseno::arte::desde_blob(&state, &blob)
+}
+
+/// El `art_crop` de Scryfall.
+#[tauri::command]
+pub async fn art_from_scryfall(
+    state: State<'_, AppState>,
+    scryfall_id: String,
+) -> AppResult<ArtRef> {
+    crate::diseno::arte::desde_scryfall(&state, &scryfall_id).await
+}
+
+/// Recorta la ilustración de una carta ya hecha (fracciones de 0 a 1).
+#[tauri::command]
+pub async fn art_from_card(
+    app: AppHandle,
+    blob: String,
+    x: f64,
+    y: f64,
+    w: f64,
+    h: f64,
+) -> AppResult<ArtRef> {
+    en_hilo(app, move |s| {
+        crate::diseno::arte::desde_carta(s, &blob, x, y, w, h)
+    })
+    .await
 }

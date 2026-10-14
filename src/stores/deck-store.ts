@@ -37,6 +37,13 @@ type DeckStore = {
 	setAjustes: (f: (s: PrintSettings) => PrintSettings) => void;
 	/** Cambios que no se deshacen (nombre, texto de la lista). */
 	setSinHistorial: (cambio: Partial<Pick<Deck, "name" | "decklistText">>) => void;
+	/**
+	 * Cambia cartas sin apuntarlo en el historial: para lo que no es un cambio
+	 * del usuario (miniaturas de diseño rehechas). Solo toca las cartas que
+	 * siguen siendo el mismo objeto que `antes` (si el usuario las cambió
+	 * entretanto, gana su cambio).
+	 */
+	refrescarCartas: (antes: DeckCard[], nuevas: DeckCard[]) => void;
 	deshacer: () => void;
 	rehacer: () => void;
 	_marcarGuardado: (estado: EstadoGuardado, error?: unknown) => void;
@@ -79,6 +86,22 @@ export const useDeck = create<DeckStore>((set, get) => ({
 		const { deck, version } = get();
 		if (!deck) return;
 		set({ deck: { ...deck, ...cambio }, guardado: "dirty", version: version + 1 });
+	},
+
+	refrescarCartas: (antes, nuevas) => {
+		const { deck, version } = get();
+		if (!deck || nuevas.length === 0) return;
+		const previas = new Map(antes.map((c) => [c.id, c]));
+		const porId = new Map(nuevas.map((c) => [c.id, c]));
+		let cambiadas = 0;
+		const cards = deck.cards.map((c) => {
+			const n = porId.get(c.id);
+			if (!n || previas.get(c.id) !== c) return c;
+			cambiadas++;
+			return n;
+		});
+		if (cambiadas === 0) return;
+		set({ deck: { ...deck, cards }, guardado: "dirty", version: version + 1 });
 	},
 
 	deshacer: () => {
