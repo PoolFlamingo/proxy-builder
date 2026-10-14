@@ -105,6 +105,9 @@ pub fn save(db: &Db, deck: &Deck) -> AppResult<i64> {
         if let Some(b) = &deck.default_back {
             huellas.push(&b.blob);
         }
+        // Las del editor de cartas: arte, emblemas, «antes».
+        let refs = refs_del_deck(deck);
+        huellas.extend(refs.iter().copied());
         for h in huellas {
             let ok: bool = existe.query_row([h], |r| r.get(0))?;
             if !ok {
@@ -134,6 +137,7 @@ pub fn save(db: &Db, deck: &Deck) -> AppResult<i64> {
         ],
     )?;
     tx.execute("DELETE FROM deck_cards WHERE deck_id = ?1", [&deck.id])?;
+    escribir_refs(&tx, &deck.id, &refs_del_deck(deck))?;
     {
         let mut ins = tx.prepare_cached(
             "INSERT INTO deck_cards (id, deck_id, position, front_blob, back_blob, card_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
@@ -207,8 +211,77 @@ pub fn duplicate(db: &Db, id: &str, name: &str) -> AppResult<Deck> {
 }
 
 pub fn delete(db: &Db, id: &str) -> AppResult<()> {
-    db.conn()?
-        .execute("DELETE FROM decks WHERE id = ?1", [id])?;
+    let mut c = db.conn()?;
+    let tx = c.transaction()?;
+    tx.execute("DELETE FROM decks WHERE id = ?1", [id])?;
+    tx.execute(
+        "DELETE FROM blob_refs WHERE owner_kind = 'deck' AND owner_id = ?1",
+        [id],
+    )?;
+    tx.commit()?;
+    Ok(())
+}
+
+/// Las imágenes del deck que no son ni frente ni dorso (las del editor de
+/// cartas), sin repetir.
+fn refs_del_deck(deck: &Deck) -> Vec<&str> {
+    let mut v: Vec<&str> = deck
+        .cards
+        .iter()
+        .filter_map(|c| c.design.as_ref())
+        .flat_map(|d| d.blobs())
+        .collect();
+    v.sort_unstable();
+    v.dedup();
+    v
+}
+
+fn escribir_refs(tx: &rusqlite::Transaction<'_>, deck: &str, blobs: &[&str]) -> AppResult<()> {
+    tx.execute(
+        "DELETE FROM blob_refs WHERE owner_kind = 'deck' AND owner_id = ?1",
+        [deck],
+    )?;
+    let mut ins = tx.prepare_cached(
+        "INSERT OR IGNORE INTO blob_refs (owner_kind, owner_id, blob) VALUES ('deck', ?1, ?2)",
+    )?;
+    for b in blobs {
+        ins.execute([deck, b])?;
+    }
+    Ok(())
+}
+
+/// Clave en `app_settings` que marca que `blob_refs` ya se rellenó desde
+/// los decks que había (una sola vez; «si está vacía» no vale, porque un
+/// deck sin diseños deja la tabla vacía).
+const MARCA_REFS: &str = "blob_refs_v1";
+
+/// Rellena `blob_refs` desde todos los decks guardados, una vez.
+pub fn rellenar_refs(db: &Db) -> AppResult<()> {
+    let hecha: bool = db.conn()?.query_row(
+        "SELECT EXISTS(SELECT 1 FROM app_settings WHERE key = ?1)",
+        [MARCA_REFS],
+        |r| r.get(0),
+    )?;
+    if hecha {
+        return Ok(());
+    }
+    let ids: Vec<String> = {
+        let c = db.conn()?;
+        let mut st = c.prepare("SELECT id FROM decks")?;
+        let v = st.query_map([], |r| r.get(0))?.collect::<Result<_, _>>()?;
+        v
+    };
+    for id in ids {
+        let deck = open(db, &id)?;
+        let mut c = db.conn()?;
+        let tx = c.transaction()?;
+        escribir_refs(&tx, &id, &refs_del_deck(&deck))?;
+        tx.commit()?;
+    }
+    db.conn()?.execute(
+        "INSERT OR REPLACE INTO app_settings (key, value) VALUES (?1, '1')",
+        [MARCA_REFS],
+    )?;
     Ok(())
 }
 
@@ -319,5 +392,129 @@ mod tests {
         deck.cards = vec![carta(0, &img), carta(0, &img)];
         let e = save(&db, &deck).unwrap_err();
         assert_eq!(e.params["motivo"], "duplicate_card_id");
+    }
+
+    fn con_diseno(card: &mut DeckCard, arte: &FaceImage) {
+        use proxy_core::diseno::modelo::*;
+        card.design = Some(CardDesign {
+            version: VERSION_DISENO,
+            status: DesignStatus::Draft,
+            collection: None,
+            style: DesignStyle::Borderless,
+            frame: FrameOptions::default(),
+            faces: vec![FaceDesign {
+                art: Some(ArtRef {
+                    image: arte.clone(),
+                    source: ArtSource::Upload,
+                    framing: ArtFraming::default(),
+                }),
+                texts: ByLang::default(),
+            }],
+            before: BeforeDesign {
+                source: card.source.clone(),
+                front: card.front.clone(),
+                back: card.back.clone(),
+                edits: card.edits,
+            },
+            card: CardData::default(),
+            footer: FooterOptions::default(),
+            options: DesignOptions::default(),
+            emblem: EmblemChoice::Inherit,
+        });
+    }
+
+    fn envejecer(db: &Db) {
+        db.conn()
+            .unwrap()
+            .execute("UPDATE blobs SET created_at = 0", [])
+            .unwrap();
+    }
+
+    #[test]
+    fn la_limpieza_respeta_el_arte_de_los_disenos() {
+        let (_d, db, s) = entorno();
+        let img = s
+            .put_bytes(&db, &png(3, 4, 1), ImageOrigin::Upload)
+            .unwrap();
+        let arte = s
+            .put_bytes(&db, &png(5, 4, 2), ImageOrigin::Upload)
+            .unwrap();
+        let mut deck = create(&db, "Uno", None).unwrap();
+        deck.cards = vec![carta(0, &img)];
+        con_diseno(&mut deck.cards[0], &arte);
+        save(&db, &deck).unwrap();
+        envejecer(&db);
+        // El arte no es ni frente ni dorso, pero el diseño lo usa.
+        assert_eq!(s.gc(&db, false).unwrap().removed, 0);
+
+        // Duplicar copia las referencias; borrar el original no las suelta.
+        let copia = duplicate(&db, &deck.id, "Dos").unwrap();
+        delete(&db, &deck.id).unwrap();
+        envejecer(&db);
+        assert_eq!(s.gc(&db, false).unwrap().removed, 0);
+
+        // Sin diseño, el arte queda huérfano y se limpia.
+        let mut copia = open(&db, &copia.id).unwrap();
+        copia.cards[0].design = None;
+        save(&db, &copia).unwrap();
+        let r = s.gc(&db, false).unwrap();
+        assert_eq!(r.removed, 1);
+        assert!(s.locate(&db, &arte.blob).unwrap().is_none());
+        assert!(s.locate(&db, &img.blob).unwrap().is_some());
+    }
+
+    #[test]
+    fn no_se_guarda_un_diseno_con_un_arte_que_no_existe() {
+        let (_d, db, s) = entorno();
+        let img = s
+            .put_bytes(&db, &png(3, 4, 1), ImageOrigin::Upload)
+            .unwrap();
+        let mut deck = create(&db, "x", None).unwrap();
+        deck.cards = vec![carta(0, &img)];
+        let falsa = FaceImage {
+            blob: "f".repeat(64),
+            ..img.clone()
+        };
+        con_diseno(&mut deck.cards[0], &falsa);
+        let e = save(&db, &deck).unwrap_err();
+        assert_eq!(e.params["motivo"], "blob_missing");
+    }
+
+    #[test]
+    fn el_relleno_de_referencias_se_hace_una_vez() {
+        let (_d, db, s) = entorno();
+        let img = s
+            .put_bytes(&db, &png(3, 4, 1), ImageOrigin::Upload)
+            .unwrap();
+        let arte = s
+            .put_bytes(&db, &png(5, 4, 2), ImageOrigin::Upload)
+            .unwrap();
+        let mut deck = create(&db, "Uno", None).unwrap();
+        deck.cards = vec![carta(0, &img)];
+        con_diseno(&mut deck.cards[0], &arte);
+        save(&db, &deck).unwrap();
+        // Como si el deck viniera de antes de la tabla.
+        db.conn()
+            .unwrap()
+            .execute("DELETE FROM blob_refs", [])
+            .unwrap();
+        rellenar_refs(&db).unwrap();
+        let n: i64 = db
+            .conn()
+            .unwrap()
+            .query_row("SELECT COUNT(*) FROM blob_refs", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(n, 2); // el arte y la imagen de «antes»
+        db.conn()
+            .unwrap()
+            .execute("DELETE FROM blob_refs", [])
+            .unwrap();
+        rellenar_refs(&db).unwrap(); // ya hecho: no vuelve a rellenar
+        let n: i64 = db
+            .conn()
+            .unwrap()
+            .query_row("SELECT COUNT(*) FROM blob_refs", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(n, 0);
     }
 }

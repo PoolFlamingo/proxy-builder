@@ -178,6 +178,7 @@ impl BlobStore {
                  WHERE created_at < ?1
                    AND NOT EXISTS (SELECT 1 FROM deck_cards WHERE front_blob = b.hash OR back_blob = b.hash)
                    AND NOT EXISTS (SELECT 1 FROM decks WHERE default_back_blob = b.hash)
+                   AND NOT EXISTS (SELECT 1 FROM blob_refs WHERE blob = b.hash)
                    AND NOT EXISTS (SELECT 1 FROM app_settings WHERE key = ?2 AND value = b.hash)",
             )?;
             let filas = st.query_map((limite, CLAVE_REVERSO), |r| {
