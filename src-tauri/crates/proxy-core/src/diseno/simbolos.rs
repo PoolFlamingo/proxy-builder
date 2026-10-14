@@ -21,8 +21,30 @@ pub fn codigo(texto: &str) -> String {
 }
 
 impl Simbolos {
+    /// Sin símbolos de Scryfall, solo los iconos propios del pie (`{PINCEL}`
+    /// y `{ESTRELLA}`), que van dentro de la app.
     pub fn nuevos() -> Simbolos {
-        Simbolos::default()
+        let mut s = Simbolos::default();
+        for (c, svg) in [
+            (
+                "PINCEL",
+                &include_bytes!("../../assets/iconos/pincel.svg")[..],
+            ),
+            (
+                "ESTRELLA",
+                &include_bytes!("../../assets/iconos/estrella.svg")[..],
+            ),
+        ] {
+            if let Ok(a) = usvg::Tree::from_data(svg, &usvg::Options::default()) {
+                s.arboles.insert(c.into(), a);
+            }
+        }
+        s
+    }
+
+    /// Los símbolos de Scryfall cargados (sin contar los iconos propios).
+    pub fn de_scryfall(&self) -> usize {
+        self.arboles.len().saturating_sub(2)
     }
 
     /// Carga un símbolo. `simbolo` puede venir con llaves («{T}») o sin ellas.
@@ -71,6 +93,20 @@ impl Simbolos {
     }
 }
 
+/// Los símbolos de un coste, en orden: `{2}{W}{U/B}` → `["2", "W", "U/B"]`.
+pub fn secuencia(coste: &str) -> Vec<String> {
+    let mut v = Vec::new();
+    let mut resto = coste;
+    while let Some(i) = resto.find('{') {
+        let Some(f) = resto[i..].find('}') else {
+            break;
+        };
+        v.push(codigo(&resto[i..=i + f]));
+        resto = &resto[i + f + 1..];
+    }
+    v
+}
+
 /// Un círculo relleno (también lo usa el pintado de cajas).
 pub fn circulo(lienzo: &mut PixmapMut, cx: f32, cy: f32, r: f32, color: super::Color) {
     let Some(ruta) = PathBuilder::from_circle(cx, cy, r) else {
@@ -97,6 +133,8 @@ mod tests {
     #[test]
     fn carga_y_pinta() {
         let mut s = Simbolos::nuevos();
+        assert!(s.tiene("PINCEL") && s.tiene("ESTRELLA"));
+        assert_eq!(s.de_scryfall(), 0);
         s.cargar("{T}", SVG).unwrap();
         assert!(s.tiene("t"));
         assert!(s.tiene("{T}"));
@@ -106,5 +144,7 @@ mod tests {
         // El que falta sale gris y lo dice.
         assert!(!s.pintar("Q", &mut p.as_mut(), 0.0, 0.0, 20.0));
         assert!(s.cargar("X", b"<nada").is_err());
+        assert_eq!(secuencia("{2}{W}{u/b}{G/P}"), ["2", "W", "U/B", "G/P"]);
+        assert!(secuencia("").is_empty());
     }
 }

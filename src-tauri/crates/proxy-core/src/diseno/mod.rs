@@ -15,7 +15,9 @@ pub mod borrador;
 pub mod efectivo;
 pub mod letras;
 pub mod modelo;
+pub mod pack;
 pub mod pintar;
+pub mod render;
 pub mod simbolos;
 pub mod texto;
 

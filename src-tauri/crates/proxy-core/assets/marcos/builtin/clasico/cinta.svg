@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 63 88" width="63" height="88">
+<defs>{{defs}}</defs>
+<!-- Cinta del nombre original, bajo el título. -->
+<path d="M9.5,7.6 H53.5 L52.4,9.7 H10.6 Z" fill="url(#marco)"/>
+<path d="M10.2,7.65 H52.8 L51.9,9.35 H11.1 Z" fill="#141414"/>
+</svg>

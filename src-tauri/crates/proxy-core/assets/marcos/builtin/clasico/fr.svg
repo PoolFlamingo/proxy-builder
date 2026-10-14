@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 63 88" width="63" height="88">
+<defs>{{defs}}</defs>
+<rect x="49.3" y="79.8" width="11.0" height="4.1" rx="1.1" fill="url(#marco)" stroke="#000" stroke-opacity="0.5" stroke-width="0.12"/>
+<rect x="49.3" y="79.8" width="11.0" height="4.1" rx="1.1" fill="url(#brillo)"/>
+<rect x="49.85" y="80.3" width="9.9" height="3.1" rx="0.75" fill="url(#crema)"/>
+</svg>

@@ -39,7 +39,7 @@ fn cambiar_palabra(texto: &str, buscado: &str, nuevo: &str) -> String {
 /// completos y después sus formas cortas (con la forma corta del temático,
 /// si la tiene). Es lo que hace Pablo: «Si Veldanava, Dragón de la Creación
 /// fuera a ir a un cementerio…».
-pub fn sustituir_nombre(texto: &str, originales: &[&str], propio: &str) -> String {
+pub fn sustituir_nombre(texto: &str, originales: &[&str], propio: &str, espanol: bool) -> String {
     let propio = propio.trim();
     if propio.is_empty() {
         return texto.to_string();
@@ -59,6 +59,9 @@ pub fn sustituir_nombre(texto: &str, originales: &[&str], propio: &str) -> Strin
     for o in &completos {
         t = cambiar_palabra(&t, o, &format!("{MARCA}0{MARCA}"));
     }
+    if espanol {
+        t = quitar_articulos(&t, &format!("{MARCA}0{MARCA}"));
+    }
     let corto_propio = nombre_corto(propio).unwrap_or(propio);
     for o in &completos {
         if let Some(c) = nombre_corto(o) {
@@ -67,6 +70,57 @@ pub fn sustituir_nombre(texto: &str, originales: &[&str], propio: &str) -> Strin
     }
     t.replace(&format!("{MARCA}0{MARCA}"), propio)
         .replace(&format!("{MARCA}1{MARCA}"), corto_propio)
+}
+
+/// En español, el texto impreso pone artículo delante de los nombres que no
+/// son de persona («sacrificar la Llave de plata lunar»). Con un nombre
+/// temático (casi siempre de personaje) sobra: «del» pasa a «de», «al» a
+/// «a» y «el/la/los/las» se quitan. Como hace Pablo: «sacrificar a Zegion».
+fn quitar_articulos(texto: &str, marca: &str) -> String {
+    let mut out = String::with_capacity(texto.len());
+    let mut resto = texto;
+    while let Some(i) = resto.find(marca) {
+        let antes = &resto[..i];
+        let recortado = antes.trim_end_matches(' ');
+        let palabra_ini = recortado
+            .rfind(|c: char| !c.is_alphabetic())
+            .map_or(0, |p| {
+                p + recortado[p..].chars().next().map_or(1, char::len_utf8)
+            });
+        let palabra = &recortado[palabra_ini..];
+        let hay_espacio = recortado.len() < antes.len();
+        let cambio = if hay_espacio {
+            match palabra.to_lowercase().as_str() {
+                "del" => Some("de "),
+                "al" => Some("a "),
+                "el" | "la" | "los" | "las" => Some(""),
+                _ => None,
+            }
+        } else {
+            None
+        };
+        match cambio {
+            Some(nuevo) => {
+                out.push_str(&recortado[..palabra_ini]);
+                // Mayúscula si el artículo empezaba frase.
+                let mayus = palabra.chars().next().is_some_and(char::is_uppercase);
+                if mayus && !nuevo.is_empty() {
+                    let mut c = nuevo.chars();
+                    if let Some(p) = c.next() {
+                        out.extend(p.to_uppercase());
+                        out.push_str(c.as_str());
+                    }
+                } else {
+                    out.push_str(nuevo);
+                }
+            }
+            None => out.push_str(antes),
+        }
+        out.push_str(marca);
+        resto = &resto[i + marca.len()..];
+    }
+    out.push_str(resto);
+    out
 }
 
 /// Los nombres originales de una cara en un idioma: el de la cara, el de la
@@ -96,7 +150,12 @@ pub fn reglas_efectivas(d: &CardDesign, cara: usize, lang: DesignLang) -> String
     }
     let base = datos.rules.get(lang);
     let propio = textos.map(|t| t.name.as_str()).unwrap_or("");
-    sustituir_nombre(base, &originales(&d.card, datos, lang), propio)
+    sustituir_nombre(
+        base,
+        &originales(&d.card, datos, lang),
+        propio,
+        lang == DesignLang::Es,
+    )
 }
 
 /// El nombre que se pinta: el temático, o el original si aún no hay.
@@ -165,7 +224,7 @@ mod tests {
     #[test]
     fn progenitus_en_espanol_se_sustituye_dos_veces() {
         let t = "Protección contra todo.\nSi Progenitus fuera a ir a un cementerio desde cualquier lugar, revela a Progenitus y barájalo en la biblioteca de su propietario en su lugar.";
-        let r = sustituir_nombre(t, &["Progenitus"], "Veldanava, Dragón de la Creación");
+        let r = sustituir_nombre(t, &["Progenitus"], "Veldanava, Dragón de la Creación", true);
         assert_eq!(r.matches("Veldanava, Dragón de la Creación").count(), 2);
         assert!(!r.contains("Progenitus"));
     }
@@ -177,6 +236,7 @@ mod tests {
             t,
             &["Arcades, the Strategist"],
             "Milim, Señora Demonio Dragonoide",
+            false,
         );
         assert_eq!(
             r,
@@ -187,16 +247,44 @@ mod tests {
             "Whenever Arcades attacks",
             &["Arcades, the Strategist"],
             "Milim",
+            false,
         );
         assert_eq!(r, "Whenever Milim attacks");
     }
 
     #[test]
     fn solo_palabras_enteras_y_sin_nombre_no_cambia_nada() {
-        let r = sustituir_nombre("Ira de Ira", &["Ira"], "Furia");
+        let r = sustituir_nombre("Ira de Ira", &["Ira"], "Furia", false);
         assert_eq!(r, "Furia de Furia");
-        assert_eq!(sustituir_nombre("Iracundo", &["Ira"], "Furia"), "Iracundo");
-        assert_eq!(sustituir_nombre("Ira", &["Ira"], "  "), "Ira");
+        assert_eq!(
+            sustituir_nombre("Iracundo", &["Ira"], "Furia", false),
+            "Iracundo"
+        );
+        assert_eq!(sustituir_nombre("Ira", &["Ira"], "  ", false), "Ira");
+    }
+
+    #[test]
+    fn en_espanol_sobran_los_articulos() {
+        let n = ["Llave de plata lunar"];
+        let z = "Zegion, General Insecto";
+        assert_eq!(
+            sustituir_nombre(
+                "{1}, {T}, sacrificar la Llave de plata lunar: Busca.",
+                &n,
+                z,
+                true
+            ),
+            "{1}, {T}, sacrificar Zegion, General Insecto: Busca."
+        );
+        assert_eq!(
+            sustituir_nombre("La Llave de plata lunar entra. Gira del Llave de plata lunar al Llave de plata lunar.", &n, "Zegion", true),
+            "Zegion entra. Gira de Zegion a Zegion."
+        );
+        // «dela» no es un artículo; y en inglés no se toca nada.
+        assert_eq!(
+            sustituir_nombre("sacrificar the Llave de plata lunar", &n, "Zegion", false),
+            "sacrificar the Zegion"
+        );
     }
 
     #[test]
