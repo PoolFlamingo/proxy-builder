@@ -1,6 +1,12 @@
 // Diálogos de cartas: añadir, variantes y editor.
 export const CARTAS: Record<string, string> = {
 	"Aplicar a todas las cartas": "Apply to all cards",
+	"Aplicar también a sus copias ({n})": "Also apply to its copies ({n})",
+	"Carta y sus {n} copias retocadas": "Card and its {n} copies edited",
+	"Solo los retoques de color; el giro y el encuadre se quedan en esta carta.":
+		"Only the colour adjustments; rotation and framing stay on this card.",
+	"Las que llevan la misma imagen: giro, encuadre y retoques, todo igual.":
+		"The ones with the same image: rotation, framing and adjustments, all the same.",
 	Aplicar: "Apply",
 	Brillo: "Brightness",
 	Calidez: "Warmth",

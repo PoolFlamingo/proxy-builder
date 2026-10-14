@@ -162,15 +162,18 @@ function Contenido({ carta }: { carta: DeckCard }) {
 				</div>
 			</div>
 			<DialogFooter>
-				<Button
-					size="sm"
-					variant="outline"
-					onClick={() => aplicar(true)}
-					disabled={!elegida || aplicando}
-				>
-					<ReplaceAll />
-					{t("Reemplazar las {n} copias", { n: copias })}
-				</Button>
+				{/* Con una sola copia, «todas» y «solo esta» son lo mismo. */}
+				{copias > 1 && (
+					<Button
+						size="sm"
+						variant="outline"
+						onClick={() => aplicar(true)}
+						disabled={!elegida || aplicando}
+					>
+						<ReplaceAll />
+						{t("Reemplazar las {n} copias", { n: copias })}
+					</Button>
+				)}
 				<Button size="sm" onClick={() => aplicar(false)} disabled={!elegida || aplicando}>
 					{aplicando ? <Loader2 className="animate-spin" /> : <Replace />}
 					{t("Reemplazar solo esta")}
