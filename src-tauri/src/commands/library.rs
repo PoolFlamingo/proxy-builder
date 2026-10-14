@@ -10,6 +10,7 @@ use ts_rs::TS;
 use crate::error::AppResult;
 use crate::state::AppState;
 use crate::store::blobs::GcReport;
+use crate::store::db::Db;
 use crate::store::decks::{self, DeckSummary};
 use crate::store::presets::{self, Preset, PresetKind};
 use crate::store::settings;
@@ -22,8 +23,12 @@ pub fn deck_list(state: State<'_, AppState>) -> AppResult<Vec<DeckSummary>> {
 /// Crea un deck vacío con el reverso genérico de la app.
 #[tauri::command]
 pub fn deck_create(state: State<'_, AppState>, name: String) -> AppResult<Deck> {
+    crear_deck(&state, &name)
+}
+
+fn crear_deck(state: &AppState, name: &str) -> AppResult<Deck> {
     let reverso = state.blobs.generic_back(&state.db)?;
-    decks::create(&state.db, &name, Some(reverso))
+    decks::create(&state.db, name, Some(reverso))
 }
 
 #[tauri::command]
@@ -116,23 +121,31 @@ fn recorrer(dir: &std::path::Path, out: &mut CacheStats) {
     }
 }
 
+fn medir(dir: &std::path::Path) -> CacheStats {
+    let mut s = CacheStats { files: 0, bytes: 0 };
+    recorrer(dir, &mut s);
+    s
+}
+
+/// Borra la carpeta y devuelve lo que ocupaba.
+fn vaciar(dir: &std::path::Path) -> AppResult<CacheStats> {
+    let antes = medir(dir);
+    if dir.exists() {
+        std::fs::remove_dir_all(dir)?;
+    }
+    Ok(antes)
+}
+
 /// Lo que ocupa la caché de miniaturas (se puede borrar sin perder nada).
 #[tauri::command]
 pub fn cache_stats(state: State<'_, AppState>) -> CacheStats {
-    let mut s = CacheStats { files: 0, bytes: 0 };
-    recorrer(&state.carpeta_renders(), &mut s);
-    s
+    medir(&state.carpeta_renders())
 }
 
 /// Borra la caché de miniaturas. 🛑 Nunca toca el almacén de imágenes de los decks.
 #[tauri::command]
 pub fn cache_clear(state: State<'_, AppState>) -> AppResult<CacheStats> {
-    let antes = cache_stats(state.clone());
-    let dir = state.carpeta_renders();
-    if dir.exists() {
-        std::fs::remove_dir_all(&dir)?;
-    }
-    Ok(antes)
+    vaciar(&state.carpeta_renders())
 }
 
 /// Guarda el deck con todas sus imágenes en un `.pbdeck`.
@@ -165,15 +178,111 @@ pub fn preset_save(
     name: String,
     json: String,
 ) -> AppResult<Preset> {
+    guardar_preset(&state.db, kind, &name, &json)
+}
+
+fn guardar_preset(db: &Db, kind: PresetKind, name: &str, json: &str) -> AppResult<Preset> {
     if name.trim().is_empty() {
         return Err(crate::error::AppError::new(
             crate::error::ErrorCode::InvalidInput,
         ));
     }
-    presets::save(&state.db, kind, &name, &json)
+    presets::save(db, kind, name, json)
 }
 
 #[tauri::command]
 pub fn preset_delete(state: State<'_, AppState>, id: String) -> AppResult<()> {
     presets::delete(&state.db, &id)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::error::ErrorCode;
+    use crate::state::Paths;
+    use crate::store::blobs::tests::png;
+    use proxy_core::model::ImageOrigin;
+
+    fn estado() -> (tempfile::TempDir, AppState) {
+        let dir = tempfile::tempdir().unwrap();
+        let s = AppState::open(Paths {
+            data: dir.path().join("data"),
+            cache: dir.path().join("cache"),
+        })
+        .unwrap();
+        (dir, s)
+    }
+
+    fn escribir(ruta: &std::path::Path, bytes: usize) {
+        std::fs::create_dir_all(ruta.parent().unwrap()).unwrap();
+        std::fs::write(ruta, vec![7u8; bytes]).unwrap();
+    }
+
+    #[test]
+    fn un_deck_nuevo_nace_vacio_con_el_reverso_generico() {
+        let (_dir, s) = estado();
+        let d = crear_deck(&s, "Mi deck").unwrap();
+        assert_eq!(d.name, "Mi deck");
+        assert!(d.cards.is_empty());
+        let reverso = s.blobs.generic_back(&s.db).unwrap();
+        assert_eq!(d.default_back.as_ref(), Some(&reverso));
+        assert_eq!(reverso.origin, ImageOrigin::Generated);
+        // El segundo deck comparte la misma imagen de reverso.
+        let otro = crear_deck(&s, "Otro").unwrap();
+        assert_eq!(otro.default_back, d.default_back);
+        assert_ne!(otro.id, d.id);
+        assert_eq!(decks::list(&s.db).unwrap().len(), 2);
+    }
+
+    #[test]
+    fn medir_la_cache_cuenta_ficheros_y_bytes_en_subcarpetas() {
+        let dir = tempfile::tempdir().unwrap();
+        escribir(&dir.path().join("a.jpg"), 10);
+        escribir(&dir.path().join("x/b.jpg"), 20);
+        escribir(&dir.path().join("x/y/c.jpg"), 30);
+        let m = medir(dir.path());
+        assert_eq!((m.files, m.bytes), (3, 60));
+        // Una carpeta que no existe ocupa cero, sin error.
+        let m = medir(&dir.path().join("no-existe"));
+        assert_eq!((m.files, m.bytes), (0, 0));
+    }
+
+    #[test]
+    fn vaciar_la_cache_no_toca_las_imagenes_de_los_decks() {
+        let (_dir, s) = estado();
+        let img = s
+            .blobs
+            .put_bytes(&s.db, &png(4, 4, 1), ImageOrigin::Upload)
+            .unwrap();
+        let renders = s.carpeta_renders();
+        // La caché vive en la carpeta de caché, lejos del almacén.
+        assert!(renders.starts_with(&s.paths.cache));
+        assert!(!renders.starts_with(&s.paths.data));
+        escribir(&renders.join("ab.jpg"), 100);
+        escribir(&renders.join("cd.jpg"), 50);
+
+        let antes = vaciar(&renders).unwrap();
+        assert_eq!((antes.files, antes.bytes), (2, 150));
+        assert!(!renders.exists());
+        // La imagen del almacén sigue ahí y se puede leer.
+        let (ruta, _) = s.blobs.locate(&s.db, &img.blob).unwrap().unwrap();
+        assert!(ruta.exists());
+        assert!(s.leer_blob(&img.blob).is_ok());
+        // Vaciar otra vez no falla y ya no hay nada.
+        let otra = vaciar(&renders).unwrap();
+        assert_eq!((otra.files, otra.bytes), (0, 0));
+    }
+
+    #[test]
+    fn un_preset_sin_nombre_no_se_guarda() {
+        let (_dir, s) = estado();
+        for nombre in ["", "   ", "\t"] {
+            let e = guardar_preset(&s.db, PresetKind::Print, nombre, "{}").unwrap_err();
+            assert_eq!(e.code, ErrorCode::InvalidInput);
+        }
+        assert!(presets::list(&s.db, PresetKind::Print).unwrap().is_empty());
+        let p = guardar_preset(&s.db, PresetKind::Print, "  A4 casa ", "{\"a\":1}").unwrap();
+        assert_eq!(p.name, "A4 casa");
+        assert_eq!(presets::list(&s.db, PresetKind::Print).unwrap(), vec![p]);
+    }
 }
