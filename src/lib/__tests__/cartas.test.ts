@@ -77,4 +77,25 @@ describe("marcas y nombres", () => {
 		expect(nombreDeFichero("/home/p/Mi carta.final.png")).toBe("Mi carta.final");
 		expect(nombreDeFichero("C:\\x\\dorso.jpg")).toBe("dorso");
 	});
+
+	it("quita la numeración de las carpetas de proxies y las marcas del final", () => {
+		expect(nombreDeFichero("/p/0001 - Atraxa, voz de los magistrados.png")).toBe(
+			"Atraxa, voz de los magistrados",
+		);
+		expect(nombreDeFichero("T003 - Goblin Shaman.png")).toBe("Goblin Shaman");
+		expect(nombreDeFichero("12. Sol Ring.jpg")).toBe("Sol Ring");
+		expect(nombreDeFichero("07_Cultivate.png")).toBe("Cultivate");
+		expect(nombreDeFichero("0013 - Fábula del rompe espejos (1).png")).toBe(
+			"Fábula del rompe espejos",
+		);
+		expect(nombreDeFichero("0002 - Anillo solar ~2.png")).toBe("Anillo solar");
+	});
+
+	it("no toca los nombres que empiezan por un número de verdad", () => {
+		expect(nombreDeFichero("1996 World Champion.png")).toBe("1996 World Champion");
+		expect(nombreDeFichero("Borrowing 100,000 Arrows.png")).toBe("Borrowing 100,000 Arrows");
+		// Si solo hay número, se queda el nombre tal cual.
+		expect(nombreDeFichero("0001 - .png")).toBe("0001 -");
+		expect(nombreDeFichero("0042.png")).toBe("0042");
+	});
 });
