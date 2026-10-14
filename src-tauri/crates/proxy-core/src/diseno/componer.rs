@@ -611,3 +611,326 @@ pub fn render(
     let imagen: RgbaImage = de_pixmap(&px);
     Ok(Render { imagen, avisos })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::diseno::efectivo::efectivo;
+    use crate::diseno::modelo::tests::diseno_de_prueba;
+    use crate::diseno::pack::Pack;
+    use crate::diseno::render::SinImagenes;
+    use crate::diseno::simbolos::Simbolos;
+
+    /// Una carta normal de una cara (la de prueba es partida).
+    fn normal() -> DisenoEfectivo {
+        let mut d = diseno_de_prueba();
+        d.card.layout = "normal".into();
+        d.card.faces.truncate(1);
+        d.faces.truncate(1);
+        efectivo(&d, None)
+    }
+
+    fn con_layout(layout: &str, caras: usize) -> DisenoEfectivo {
+        let mut e = normal();
+        e.design.card.layout = layout.into();
+        while e.design.card.faces.len() < caras {
+            let mut f = e.design.card.faces[0].clone();
+            f.name = format!("Cara {}", e.design.card.faces.len());
+            e.design.card.faces.push(f);
+            e.design.faces.push(Default::default());
+        }
+        e
+    }
+
+    fn simbolos(codigos: &[&str]) -> Simbolos {
+        let mut s = Simbolos::nuevos();
+        let svg = br##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#cccccc"/></svg>"##;
+        for c in codigos {
+            s.cargar(c, svg).unwrap();
+        }
+        s
+    }
+
+    fn pintar(e: &DisenoEfectivo, cara: usize, ancho: u32, s: &Simbolos, salida: Salida) -> Render {
+        let pack = Pack::de_fabrica().unwrap();
+        let rec = Recursos {
+            pack: &pack,
+            simbolos: s,
+            imagenes: &SinImagenes,
+        };
+        let mut motor = Motor::de_fabrica().unwrap();
+        render(
+            &mut motor,
+            e,
+            cara,
+            DesignLang::Es,
+            &rec,
+            CardSize::MTG,
+            ancho,
+            salida,
+        )
+        .unwrap()
+    }
+
+    // ── Medida ──
+
+    #[test]
+    fn una_carta_normal_sale_a_la_medida_del_deck() {
+        let e = normal();
+        let poker = CardSize {
+            width_mm: 63.5,
+            height_mm: 88.9,
+        };
+        assert_eq!(medida(&e, CardSize::MTG), (63.0, 88.0));
+        assert_eq!(medida(&e, poker), (63.5, 88.9));
+        // «oversized» solo cuenta en las cartas grandes.
+        let mut e = normal();
+        e.design.card.oversized = true;
+        assert_eq!(medida(&e, CardSize::MTG), (63.0, 88.0));
+    }
+
+    #[test]
+    fn las_grandes_salen_grandes_solo_si_se_imprimieron_grandes() {
+        for layout in ["planar", "scheme", "vanguard"] {
+            let mut e = con_layout(layout, 1);
+            assert_eq!(medida(&e, CardSize::MTG), (63.0, 88.0), "{layout}");
+            e.design.card.oversized = true;
+            assert_eq!(medida(&e, CardSize::MTG), medida_grande(), "{layout}");
+        }
+    }
+
+    // ── Qué layout pide cada cara ──
+
+    #[test]
+    fn el_layout_de_cada_cuerpo() {
+        let e = normal();
+        let l = |cu, m| layout_de_cara(&e, 0, cu, m);
+        assert_eq!(l(Cuerpo::Texto, Maquetacion::Normal), None);
+        assert_eq!(l(Cuerpo::Capitulos, Maquetacion::Saga), Some("saga"));
+        assert_eq!(l(Cuerpo::Mazmorra, Maquetacion::Mazmorra), Some("mazmorra"));
+        assert_eq!(l(Cuerpo::Texto, Maquetacion::Emblema), Some("ficha"));
+        assert_eq!(l(Cuerpo::Texto, Maquetacion::FichaDosCaras), Some("ficha"));
+        for cu in [
+            Cuerpo::Lealtad,
+            Cuerpo::Niveles,
+            Cuerpo::Caso,
+            Cuerpo::Leveler,
+            Cuerpo::Estacion,
+        ] {
+            assert_eq!(l(cu, Maquetacion::Normal), Some("alto"), "{cu:?}");
+        }
+        assert_eq!(l(Cuerpo::Prototipo, Maquetacion::Prototipo), None);
+        // Una ficha es ficha aunque su cuerpo pida caja alta, pero una saga
+        // sigue siendo saga.
+        let mut ficha = normal();
+        ficha.design.card.layout = "token".into();
+        assert_eq!(
+            layout_de_cara(&ficha, 0, Cuerpo::Lealtad, Maquetacion::Ficha),
+            Some("ficha")
+        );
+        assert_eq!(
+            layout_de_cara(&ficha, 0, Cuerpo::Capitulos, Maquetacion::Ficha),
+            Some("saga")
+        );
+    }
+
+    // ── Pegar piezas giradas ──
+
+    /// Una pieza de 40 × 20: arriba roja y abajo azul.
+    fn pieza() -> Pixmap {
+        let mut p = Pixmap::new(40, 20).unwrap();
+        p.fill(tiny_skia::Color::from_rgba8(0, 0, 255, 255));
+        let mut rojo = tiny_skia::Paint::default();
+        rojo.set_color_rgba8(255, 0, 0, 255);
+        p.fill_rect(
+            tiny_skia::Rect::from_xywh(0.0, 0.0, 40.0, 10.0).unwrap(),
+            &rojo,
+            Transform::identity(),
+            None,
+        );
+        p
+    }
+
+    fn rojo(p: &Pixmap, x: u32, y: u32) -> bool {
+        let c = p.pixel(x, y).unwrap();
+        c.red() > 200 && c.blue() < 50
+    }
+
+    fn azul(p: &Pixmap, x: u32, y: u32) -> bool {
+        let c = p.pixel(x, y).unwrap();
+        c.blue() > 200 && c.red() < 50
+    }
+
+    #[test]
+    fn girar_a_la_izquierda_deja_lo_de_arriba_a_la_izquierda() {
+        let mut d = Pixmap::new(20, 40).unwrap();
+        pegar(&mut d, &pieza(), 0.0, 0.0, 20.0, 40.0, Giro::Izquierda);
+        assert!(rojo(&d, 2, 20));
+        assert!(azul(&d, 17, 20));
+    }
+
+    #[test]
+    fn media_vuelta_deja_lo_de_arriba_abajo() {
+        let mut d = Pixmap::new(40, 20).unwrap();
+        pegar(&mut d, &pieza(), 0.0, 0.0, 40.0, 20.0, Giro::Media);
+        assert!(azul(&d, 20, 2));
+        assert!(rojo(&d, 20, 17));
+    }
+
+    #[test]
+    fn sin_giro_encaja_centrada_sin_deformar() {
+        // Hueco de 80 × 80: la pieza (2:1) se dobla a 80 × 40 y queda en medio.
+        let mut d = Pixmap::new(80, 80).unwrap();
+        pegar(&mut d, &pieza(), 0.0, 0.0, 80.0, 80.0, Giro::Nada);
+        assert_eq!(d.pixel(40, 5).unwrap().alpha(), 0, "franja libre arriba");
+        assert!(rojo(&d, 40, 25));
+        assert!(azul(&d, 40, 55));
+        assert_eq!(d.pixel(40, 75).unwrap().alpha(), 0, "franja libre abajo");
+    }
+
+    // ── El render entero ──
+
+    #[test]
+    fn el_alto_sale_de_la_proporcion_y_el_ancho_tiene_minimo() {
+        let s = simbolos(&["2", "W"]);
+        let r = pintar(&normal(), 0, 126, &s, Salida::Impresion);
+        assert_eq!(r.imagen.dimensions(), (126, 176));
+        let r = pintar(&normal(), 0, 3, &s, Salida::Impresion);
+        assert_eq!(r.imagen.dimensions(), (16, 22));
+    }
+
+    #[test]
+    fn una_cara_fuera_de_rango_pinta_la_ultima_que_hay() {
+        let s = simbolos(&["2", "W"]);
+        let a = pintar(&normal(), 0, 90, &s, Salida::Impresion);
+        let b = pintar(&normal(), 7, 90, &s, Salida::Impresion);
+        assert_eq!(a.imagen, b.imagen);
+        assert_eq!(a.avisos, b.avisos);
+    }
+
+    #[test]
+    fn un_meld_sin_la_carta_fundida_pinta_su_cara() {
+        let s = simbolos(&["2", "W"]);
+        let e = con_layout("meld", 1);
+        let delante = pintar(&e, 0, 90, &s, Salida::Impresion);
+        let detras = pintar(&e, 1, 90, &s, Salida::Impresion);
+        assert_eq!(delante.imagen, detras.imagen);
+    }
+
+    #[test]
+    fn el_dorso_de_un_meld_es_media_carta_fundida() {
+        let s = simbolos(&["2", "W"]);
+        let mut e = con_layout("meld", 2);
+        let delante = pintar(&e, 0, 90, &s, Salida::Impresion);
+        let arriba = pintar(&e, 1, 90, &s, Salida::Impresion);
+        assert_eq!(arriba.imagen.dimensions(), delante.imagen.dimensions());
+        assert_ne!(arriba.imagen, delante.imagen);
+        // La otra mitad de la fundida es otra imagen.
+        e.design.card.meld_arriba = Some(false);
+        let abajo = pintar(&e, 1, 90, &s, Salida::Impresion);
+        assert_ne!(abajo.imagen, arriba.imagen);
+    }
+
+    #[test]
+    fn una_carta_sin_caras_se_pinta_sin_romper() {
+        let mut e = normal();
+        e.design.card.faces.clear();
+        e.design.faces.clear();
+        let r = pintar(&e, 3, 90, &Simbolos::nuevos(), Salida::Impresion);
+        assert_eq!(r.imagen.dimensions(), (90, 126));
+        // Sin coste no falta ningún símbolo (el pincel del pie no cuenta).
+        assert!(!r
+            .avisos
+            .iter()
+            .any(|a| matches!(a, Aviso::FaltanSimbolos { .. })));
+    }
+
+    #[test]
+    fn un_coste_larguisimo_no_rompe_el_titulo() {
+        // 24 símbolos se comen todo el hueco del título (ancho negativo).
+        let mut e = normal();
+        e.design.card.faces[0].mana_cost = "{W}".repeat(24);
+        let r = pintar(&e, 0, 90, &simbolos(&["W"]), Salida::Impresion);
+        assert_eq!(r.imagen.dimensions(), (90, 126));
+    }
+
+    #[test]
+    fn un_layout_desconocido_avisa_y_se_pinta_como_normal() {
+        let s = simbolos(&["2", "W"]);
+        let e = con_layout("inventado", 1);
+        let r = pintar(&e, 0, 90, &s, Salida::Impresion);
+        assert!(r.avisos.contains(&Aviso::LayoutDesconocido {
+            layout: "inventado".into()
+        }));
+        assert_eq!(
+            r.imagen,
+            pintar(&normal(), 0, 90, &s, Salida::Impresion).imagen
+        );
+    }
+
+    #[test]
+    fn los_simbolos_que_faltan_salen_ordenados_y_sin_repetir() {
+        // {2}{W}{W}: el pincel del pie no cuenta como símbolo que falta.
+        let r = pintar(&normal(), 0, 90, &Simbolos::nuevos(), Salida::Impresion);
+        let faltan: Vec<_> = r
+            .avisos
+            .iter()
+            .filter_map(|a| match a {
+                Aviso::FaltanSimbolos { simbolos } => Some(simbolos.clone()),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(faltan, vec![vec!["2".to_string(), "W".to_string()]]);
+        // Con los símbolos cargados no hay aviso.
+        let r = pintar(&normal(), 0, 90, &simbolos(&["2", "W"]), Salida::Impresion);
+        assert!(!r
+            .avisos
+            .iter()
+            .any(|a| matches!(a, Aviso::FaltanSimbolos { .. })));
+    }
+
+    #[test]
+    fn una_partida_no_repite_avisos() {
+        let e = efectivo(&diseno_de_prueba(), None);
+        let r = pintar(&e, 0, 90, &Simbolos::nuevos(), Salida::Impresion);
+        for (i, a) in r.avisos.iter().enumerate() {
+            assert!(!r.avisos[i + 1..].contains(a), "repetido: {a:?}");
+        }
+        // La segunda mitad no tiene nombre temático: un aviso, una vez.
+        assert!(r.avisos.contains(&Aviso::FaltaNombre {
+            cara: 1,
+            lang: DesignLang::Es
+        }));
+    }
+
+    #[test]
+    fn en_pantalla_las_esquinas_son_transparentes_y_al_imprimir_no() {
+        let s = simbolos(&["2", "W"]);
+        let p = pintar(&normal(), 0, 90, &s, Salida::Pantalla);
+        let i = pintar(&normal(), 0, 90, &s, Salida::Impresion);
+        let (w, h) = p.imagen.dimensions();
+        for (x, y) in [(0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1)] {
+            assert_eq!(p.imagen.get_pixel(x, y).0[3], 0);
+            assert_eq!(i.imagen.get_pixel(x, y).0[3], 255);
+        }
+        assert_eq!(p.imagen.get_pixel(w / 2, h / 2).0[3], 255);
+    }
+
+    #[test]
+    fn un_plano_grande_sale_apaisado_girado_a_su_medida() {
+        let s = simbolos(&["2", "W"]);
+        let mut e = con_layout("planar", 1);
+        e.design.card.oversized = true;
+        let r = pintar(&e, 0, 89, &s, Salida::Impresion);
+        assert_eq!(r.imagen.dimensions(), (89, 127));
+    }
+
+    #[test]
+    fn el_mismo_diseno_da_los_mismos_pixeles() {
+        let s = simbolos(&["2", "W"]);
+        let e = efectivo(&diseno_de_prueba(), None);
+        let a = pintar(&e, 0, 90, &s, Salida::Pantalla);
+        let b = pintar(&e, 0, 90, &s, Salida::Pantalla);
+        assert_eq!(a.imagen, b.imagen);
+    }
+}

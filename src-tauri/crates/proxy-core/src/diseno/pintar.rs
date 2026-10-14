@@ -237,3 +237,213 @@ pub fn tiene_glifo(datos: &[u8], c: char) -> bool {
         .map(|f| f.charmap().map(c).is_some())
         .unwrap_or(false)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::diseno::render::Motor;
+    use crate::diseno::texto::{self, Alinear, Estilo};
+    use tiny_skia::Pixmap;
+
+    fn estilo() -> Estilo {
+        Estilo {
+            familia: "Spectral".into(),
+            peso: 400.0,
+            tam: 30.0,
+            interlinea: 1.06,
+            color: [0, 0, 0, 255],
+            alinear: Alinear::Inicio,
+            versalitas: false,
+        }
+    }
+
+    fn bloque(m: &mut Motor, t: &str) -> Bloque {
+        let p = texto::con_simbolos(t);
+        m.m.maquetar(&mut m.letras, &p, &estilo(), None)
+    }
+
+    fn simbolos(codigos: &[&str]) -> Simbolos {
+        let mut s = Simbolos::nuevos();
+        let svg = br##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#00ff00"/></svg>"##;
+        for c in codigos {
+            s.cargar(c, svg).unwrap();
+        }
+        s
+    }
+
+    /// El rectángulo (x0, y0, x1, y1) de lo pintado, si hay algo.
+    fn pintado(p: &Pixmap) -> Option<(u32, u32, u32, u32)> {
+        let mut r: Option<(u32, u32, u32, u32)> = None;
+        for y in 0..p.height() {
+            for x in 0..p.width() {
+                if p.pixel(x, y).is_some_and(|c| c.alpha() > 0) {
+                    r = Some(match r {
+                        None => (x, y, x, y),
+                        Some((a, b, c, d)) => (a.min(x), b.min(y), c.max(x), d.max(y)),
+                    });
+                }
+            }
+        }
+        r
+    }
+
+    fn pintar(b: &Bloque, x: f32, y: f32, pincel: Pincel, s: &Simbolos) -> (Pixmap, Vec<String>) {
+        let mut p = Pixmap::new(600, 120).unwrap();
+        let faltan = pintar_bloque(&mut p.as_mut(), b, x, y, pincel, s);
+        (p, faltan)
+    }
+
+    #[test]
+    fn un_bloque_se_pinta_donde_se_pide() {
+        let mut m = Motor::de_fabrica().unwrap();
+        let b = bloque(&mut m, "Ocaso");
+        let (p, faltan) = pintar(&b, 50.0, 20.0, Pincel::default(), &Simbolos::nuevos());
+        assert!(faltan.is_empty());
+        let (x0, y0, x1, y1) = pintado(&p).unwrap();
+        assert!(x0 >= 49, "empieza en x = {x0}");
+        assert!(y0 >= 19, "empieza en y = {y0}");
+        assert!(x1 as f32 <= 50.0 + b.ancho + 2.0);
+        assert!(y1 as f32 <= 20.0 + b.alto + 2.0);
+        // El color es el del estilo (negro).
+        let opacos: Vec<_> = p.pixels().iter().filter(|c| c.alpha() == 255).collect();
+        assert!(!opacos.is_empty());
+        assert!(opacos
+            .iter()
+            .all(|c| c.red() == 0 && c.green() == 0 && c.blue() == 0));
+    }
+
+    #[test]
+    fn el_estrechado_hace_el_texto_mas_estrecho() {
+        let mut m = Motor::de_fabrica().unwrap();
+        let b = bloque(&mut m, "Crepúsculo de Veldora");
+        let s = Simbolos::nuevos();
+        let (normal, _) = pintar(&b, 0.0, 10.0, Pincel::default(), &s);
+        let (estrecho, _) = pintar(
+            &b,
+            0.0,
+            10.0,
+            Pincel {
+                escala_x: 0.6,
+                color: None,
+            },
+            &s,
+        );
+        let ancho = |p: &Pixmap| pintado(p).map_or(0, |(a, _, c, _)| c - a);
+        let (a, e) = (ancho(&normal) as f32, ancho(&estrecho) as f32);
+        assert!((e / a - 0.6).abs() < 0.05, "{e} / {a}");
+        assert_eq!(ancho_pintado(&b, 0.6), b.ancho * 0.6);
+        assert_eq!(ancho_pintado(&b, 1.0), b.ancho);
+    }
+
+    #[test]
+    fn los_simbolos_que_faltan_se_devuelven_y_los_que_hay_no() {
+        let mut m = Motor::de_fabrica().unwrap();
+        let b = bloque(&mut m, "Agrega {G}{W}.");
+        let (_, faltan) = pintar(&b, 0.0, 10.0, Pincel::default(), &simbolos(&["G"]));
+        assert_eq!(faltan, ["W"]);
+        let (p, faltan) = pintar(&b, 0.0, 10.0, Pincel::default(), &simbolos(&["G", "W"]));
+        assert!(faltan.is_empty());
+        // Los símbolos se ven (verde del SVG de prueba).
+        let verde = p.pixels().iter().any(|c| c.green() > 200 && c.red() < 50);
+        assert!(verde);
+    }
+
+    #[test]
+    fn la_cola_tras_un_simbolo_tambien_se_pinta() {
+        // «{T}:» lleva los dos puntos pegados al símbolo (la cola del grupo).
+        let mut m = Motor::de_fabrica().unwrap();
+        let b = bloque(&mut m, "{T}: roba.");
+        let (p, faltan) = pintar(&b, 0.0, 10.0, Pincel::default(), &Simbolos::nuevos());
+        assert_eq!(faltan, ["T"]);
+        assert!(pintado(&p).is_some());
+    }
+
+    #[test]
+    fn la_sombra_pinta_todo_de_su_color_y_no_echa_en_falta_simbolos() {
+        let mut m = Motor::de_fabrica().unwrap();
+        let b = bloque(&mut m, "Agrega {G}.");
+        let sombra = Pincel {
+            escala_x: 1.0,
+            color: Some([255, 0, 0, 255]),
+        };
+        let (p, faltan) = pintar(&b, 0.0, 10.0, sombra, &Simbolos::nuevos());
+        assert!(faltan.is_empty(), "en la sombra el símbolo es un círculo");
+        let opacos: Vec<_> = p.pixels().iter().filter(|c| c.alpha() == 255).collect();
+        assert!(!opacos.is_empty());
+        assert!(opacos
+            .iter()
+            .all(|c| c.red() == 255 && c.green() == 0 && c.blue() == 0));
+    }
+
+    #[test]
+    fn la_caja_pinta_sus_bloques_y_la_raya_del_sabor() {
+        let mut m = Motor::de_fabrica().unwrap();
+        let caja = texto::caja_de_reglas(
+            &mut m.m,
+            &mut m.letras,
+            &texto::reglas("Vuela."),
+            &texto::sabor("«Hola.»"),
+            &estilo(),
+            500.0,
+            texto::Separaciones::default(),
+        );
+        let r = caja.raya.unwrap();
+        let mut p = Pixmap::new(600, 160).unwrap();
+        let faltan = pintar_caja(
+            &mut p.as_mut(),
+            &caja,
+            20.0,
+            10.0,
+            500.0,
+            [0, 0, 255, 255],
+            &Simbolos::nuevos(),
+        );
+        assert!(faltan.is_empty());
+        // La raya azul, centrada a lo ancho y con su margen.
+        let fila = (10.0 + r).round() as u32;
+        let azul = |x: u32| {
+            p.pixel(x, fila)
+                .is_some_and(|c| c.blue() > 200 && c.red() < 50)
+        };
+        assert!(azul(270));
+        assert!(!azul(22), "margen a la izquierda");
+        assert!(!azul(518), "margen a la derecha");
+    }
+
+    #[test]
+    fn una_caja_sin_sabor_no_lleva_raya() {
+        let mut m = Motor::de_fabrica().unwrap();
+        let caja = texto::caja_de_reglas(
+            &mut m.m,
+            &mut m.letras,
+            &texto::reglas("Vuela."),
+            &[],
+            &estilo(),
+            500.0,
+            texto::Separaciones::default(),
+        );
+        assert!(caja.raya.is_none());
+        let mut p = Pixmap::new(600, 160).unwrap();
+        pintar_caja(
+            &mut p.as_mut(),
+            &caja,
+            0.0,
+            0.0,
+            500.0,
+            [0, 0, 255, 255],
+            &Simbolos::nuevos(),
+        );
+        assert!(!p.pixels().iter().any(|c| c.blue() > 200 && c.red() < 50));
+    }
+
+    #[test]
+    fn saber_si_una_letra_tiene_un_glifo() {
+        let spectral = include_bytes!("../../assets/fuentes/Spectral-Regular.ttf");
+        assert!(tiene_glifo(spectral, 'A'));
+        assert!(tiene_glifo(spectral, 'ñ'));
+        // Un carácter de uso privado no está.
+        assert!(!tiene_glifo(spectral, '\u{E000}'));
+        // Unos bytes que no son una letra no revientan.
+        assert!(!tiene_glifo(b"no soy una letra", 'A'));
+    }
+}

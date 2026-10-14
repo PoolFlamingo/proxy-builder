@@ -592,4 +592,201 @@ mod tests {
     fn llaves_sin_cerrar_no_rompen() {
         assert_eq!(reglas("Coste {2"), vec![vec![t("Coste {2", false)]]);
     }
+
+    // ── Maquetación ──
+
+    use crate::diseno::render::Motor;
+
+    fn estilo(tam: f32) -> Estilo {
+        Estilo {
+            familia: "Spectral".into(),
+            peso: 400.0,
+            tam,
+            interlinea: 1.06,
+            color: [0, 0, 0, 255],
+            alinear: Alinear::Inicio,
+            versalitas: false,
+        }
+    }
+
+    #[test]
+    fn una_linea_que_cabe_no_se_toca() {
+        let mut m = Motor::de_fabrica().unwrap();
+        let (b, f, reducido) = linea_ajustada(
+            &mut m.m,
+            &mut m.letras,
+            &llano("Ocaso"),
+            &estilo(30.0),
+            1000.0,
+            0.6,
+        );
+        assert_eq!((f, reducido), (1.0, false));
+        assert!(b.ancho > 0.0 && b.ancho < 1000.0);
+    }
+
+    #[test]
+    fn una_linea_algo_larga_se_estrecha_sin_bajar_la_letra() {
+        let mut m = Motor::de_fabrica().unwrap();
+        let p = llano("Crepúsculo de Veldora");
+        let natural = m.m.maquetar(&mut m.letras, &p, &estilo(30.0), None).ancho;
+        let (b, f, reducido) = linea_ajustada(
+            &mut m.m,
+            &mut m.letras,
+            &p,
+            &estilo(30.0),
+            natural * 0.8,
+            0.6,
+        );
+        assert!(!reducido);
+        assert!((f - 0.8).abs() < 1e-3, "{f}");
+        assert!((b.ancho * f - natural * 0.8).abs() < 0.5);
+    }
+
+    #[test]
+    fn una_linea_muy_larga_baja_la_letra_y_cabe() {
+        let mut m = Motor::de_fabrica().unwrap();
+        let p = llano("Crepúsculo de Veldora, el dragón de la tormenta");
+        let e = estilo(30.0);
+        let natural = m.m.maquetar(&mut m.letras, &p, &e, None).ancho;
+        let ancho = natural * 0.3;
+        let (b, f, reducido) = linea_ajustada(&mut m.m, &mut m.letras, &p, &e, ancho, 0.6);
+        assert!(reducido);
+        assert!(f <= 1.0);
+        assert!(b.ancho * f <= ancho + 0.5, "{} > {ancho}", b.ancho * f);
+        assert!(b.alto < m.m.maquetar(&mut m.letras, &p, &e, None).alto);
+    }
+
+    #[test]
+    fn un_titulo_vacio_cabe_sin_estrechar() {
+        // Una carta sin nombre temático todavía: no se estrecha ni se avisa.
+        let mut m = Motor::de_fabrica().unwrap();
+        let (b, f, reducido) = linea_ajustada(
+            &mut m.m,
+            &mut m.letras,
+            &llano(""),
+            &estilo(30.0),
+            300.0,
+            0.6,
+        );
+        assert_eq!((f, reducido), (1.0, false));
+        assert!(b.ancho.is_finite() && b.ancho < 300.0);
+    }
+
+    #[test]
+    fn la_raya_del_sabor_solo_va_entre_reglas_y_sabor() {
+        let mut m = Motor::de_fabrica().unwrap();
+        let e = estilo(24.0);
+        let sep = Separaciones::default();
+        let r = reglas("Vuela.");
+        let s = sabor("«Hola.»");
+        let ambas = caja_de_reglas(&mut m.m, &mut m.letras, &r, &s, &e, 400.0, sep);
+        let raya = ambas.raya.unwrap();
+        // La raya cae entre el último bloque de reglas y el primero del sabor.
+        let (b0, y0) = &ambas.bloques[0];
+        assert!(raya > y0 + b0.alto && raya < ambas.bloques[1].1);
+        let solo_sabor = caja_de_reglas(&mut m.m, &mut m.letras, &[], &s, &e, 400.0, sep);
+        assert!(solo_sabor.raya.is_none());
+        assert_eq!(solo_sabor.bloques[0].1, 0.0, "sin hueco arriba");
+        let solo_reglas = caja_de_reglas(&mut m.m, &mut m.letras, &r, &[], &e, 400.0, sep);
+        assert!(solo_reglas.raya.is_none());
+        let nada = caja_de_reglas(&mut m.m, &mut m.letras, &[], &[], &e, 400.0, sep);
+        assert_eq!((nada.alto, nada.bloques.len()), (0.0, 0));
+    }
+
+    #[test]
+    fn los_parrafos_se_apilan_con_su_separacion() {
+        let mut m = Motor::de_fabrica().unwrap();
+        let e = estilo(20.0);
+        let r = reglas("Vuela.\nPrisa.\nVínculo vital.");
+        let c = caja_de_reglas(
+            &mut m.m,
+            &mut m.letras,
+            &r,
+            &[],
+            &e,
+            400.0,
+            Separaciones::default(),
+        );
+        assert_eq!(c.bloques.len(), 3);
+        for w in c.bloques.windows(2) {
+            let ((a, ya), (_, yb)) = (&w[0], &w[1]);
+            assert!((yb - (ya + a.alto + 0.32 * 20.0)).abs() < 1e-3);
+        }
+        let (u, yu) = c.bloques.last().unwrap();
+        assert!((c.alto - (yu + u.alto)).abs() < 1e-3);
+        assert_eq!(c.tam, 20.0);
+    }
+
+    #[test]
+    fn el_ultimo_renglon_de_un_parrafo_partido_es_mas_corto_que_la_caja() {
+        let mut m = Motor::de_fabrica().unwrap();
+        let p = &reglas(&"Roba una carta. ".repeat(10))[0];
+        let b = m.m.maquetar(&mut m.letras, p, &estilo(20.0), Some(300.0));
+        assert!(b.alto > 40.0, "ocupa varias líneas");
+        let fin = b.ultima_linea_ancho();
+        assert!(fin > 0.0 && fin <= 300.0 + 0.5, "{fin}");
+    }
+
+    #[test]
+    fn ajustar_las_reglas_baja_la_letra_hasta_que_caben() {
+        let mut m = Motor::de_fabrica().unwrap();
+        let e = estilo(26.0);
+        let r = reglas(&"Siempre que una criatura entre, roba una carta. ".repeat(5));
+        let s = sabor("«Saber es poder.»");
+        let natural = caja_de_reglas(
+            &mut m.m,
+            &mut m.letras,
+            &r,
+            &s,
+            &e,
+            400.0,
+            Separaciones::default(),
+        )
+        .alto;
+        // Cabe: igual.
+        let a = ajustar_reglas(
+            &mut m.m,
+            &mut m.letras,
+            &r,
+            &s,
+            &e,
+            400.0,
+            natural + 1.0,
+            10.0,
+            0.5,
+        );
+        assert_eq!((a.caja.tam, a.sobra), (26.0, 0.0));
+        // Apretado: baja, cabe y medio punto más ya no cabría.
+        let max = natural * 0.75;
+        let a = ajustar_reglas(&mut m.m, &mut m.letras, &r, &s, &e, 400.0, max, 10.0, 0.5);
+        assert_eq!(a.sobra, 0.0);
+        assert!(a.caja.alto <= max && a.caja.tam < 26.0 && a.caja.tam >= 10.0);
+        let mayor = caja_de_reglas(
+            &mut m.m,
+            &mut m.letras,
+            &r,
+            &s,
+            &e.con_tam(a.caja.tam + 0.5),
+            400.0,
+            Separaciones::default(),
+        );
+        assert!(mayor.alto > max);
+        // Imposible: al mínimo, apretado y diciendo cuánto sobra.
+        let a = ajustar_reglas(&mut m.m, &mut m.letras, &r, &s, &e, 400.0, 10.0, 14.0, 0.5);
+        assert_eq!(a.caja.tam, 14.0);
+        assert!((a.sobra - (a.caja.alto - 10.0)).abs() < 1e-3 && a.sobra > 0.0);
+        // Un mínimo por encima del tamaño no hace crecer el texto más de lo pedido.
+        let a = ajustar_reglas(
+            &mut m.m,
+            &mut m.letras,
+            &r,
+            &s,
+            &e,
+            400.0,
+            natural + 1.0,
+            40.0,
+            0.5,
+        );
+        assert_eq!(a.caja.tam, 26.0);
+    }
 }

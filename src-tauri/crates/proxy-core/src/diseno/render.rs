@@ -1596,3 +1596,456 @@ pub(super) fn mascara_redondeada(w: u32, h: u32, r: f32) -> Option<Mask> {
     m.fill_path(&ruta, FillRule::Winding, true, Transform::identity());
     Some(m)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::diseno::efectivo::efectivo;
+    use crate::diseno::modelo::tests::diseno_de_prueba;
+    use crate::diseno::modelo::{FaceData, FrameColor};
+
+    fn casa() -> Pack {
+        Pack::de_fabrica().unwrap()
+    }
+
+    /// El color medio de una paleta del pack.
+    fn medio(pack: &Pack, clave: &str) -> [u8; 4] {
+        rgba(&pack.def.paletas[clave].medio).unwrap()
+    }
+
+    /// Una carta normal de una cara con esos colores y ese tipo.
+    fn carta(colores: &[&str], tipo: &str) -> DisenoEfectivo {
+        let mut d = diseno_de_prueba();
+        d.card.layout = "normal".into();
+        d.card.faces.truncate(1);
+        d.faces.truncate(1);
+        d.card.colors.clear();
+        d.card.faces[0].colors = colores.iter().map(|c| c.to_string()).collect();
+        d.card.faces[0].type_line.en = tipo.into();
+        efectivo(&d, None)
+    }
+
+    fn marco(e: &DisenoEfectivo, pack: &Pack) -> ([u8; 4], Option<[u8; 4]>) {
+        let (a, b) = colores_marco(e, 0, pack);
+        (a.medio, b.map(|b| b.medio))
+    }
+
+    // ── Colores del marco ──
+
+    #[test]
+    fn un_color_da_su_paleta_sin_degradado() {
+        let p = casa();
+        let e = carta(&["U"], "Creature — Merfolk");
+        assert_eq!(marco(&e, &p), (medio(&p, "U"), None));
+    }
+
+    #[test]
+    fn dos_colores_dan_un_degradado_en_su_orden() {
+        let p = casa();
+        let e = carta(&["W", "U"], "Instant");
+        assert_eq!(marco(&e, &p), (medio(&p, "W"), Some(medio(&p, "U"))));
+        let e = carta(&["U", "W"], "Instant");
+        assert_eq!(marco(&e, &p), (medio(&p, "U"), Some(medio(&p, "W"))));
+    }
+
+    #[test]
+    fn tres_o_mas_colores_son_oro() {
+        let p = casa();
+        let e = carta(&["W", "U", "B"], "Sorcery");
+        assert_eq!(marco(&e, &p), (medio(&p, "gold"), None));
+        let e = carta(&["W", "U", "B", "R", "G"], "Sorcery");
+        assert_eq!(marco(&e, &p), (medio(&p, "gold"), None));
+    }
+
+    #[test]
+    fn una_tierra_sin_color_usa_su_identidad_o_la_paleta_de_tierra() {
+        let p = casa();
+        // Sin identidad: el marco de tierra.
+        let e = carta(&[], "Land");
+        assert_eq!(marco(&e, &p), (medio(&p, "land"), None));
+        // Con un color de identidad: ese color.
+        let mut e = carta(&[], "Land — Forest");
+        e.design.card.color_identity = vec!["G".into()];
+        assert_eq!(marco(&e, &p), (medio(&p, "G"), None));
+        // Con dos: degradado.
+        e.design.card.color_identity = vec!["G".into(), "W".into()];
+        assert_eq!(marco(&e, &p), (medio(&p, "G"), Some(medio(&p, "W"))));
+        // Una tierra artefacto sin identidad es tierra, no artefacto.
+        let e = carta(&[], "Artifact Land");
+        assert_eq!(marco(&e, &p), (medio(&p, "land"), None));
+    }
+
+    #[test]
+    fn sin_color_es_artefacto_o_incoloro() {
+        let p = casa();
+        let e = carta(&[], "Artifact — Equipment");
+        assert_eq!(marco(&e, &p), (medio(&p, "artifact"), None));
+        let e = carta(&[], "Creature — Eldrazi");
+        assert_eq!(marco(&e, &p), (medio(&p, "colorless"), None));
+        // Letras que no son colores se ignoran.
+        let e = carta(&["C", "X"], "Creature — Eldrazi");
+        assert_eq!(marco(&e, &p), (medio(&p, "colorless"), None));
+    }
+
+    #[test]
+    fn sin_colores_en_la_cara_se_usan_los_de_la_carta() {
+        let p = casa();
+        let mut e = carta(&[], "Instant");
+        e.design.card.colors = vec!["R".into()];
+        assert_eq!(marco(&e, &p), (medio(&p, "R"), None));
+        // Una cara que no existe también cae a los de la carta.
+        let (a, b) = colores_marco(&e, 5, &p);
+        assert_eq!((a.medio, b.is_none()), (medio(&p, "R"), true));
+    }
+
+    #[test]
+    fn el_color_pedido_pisa_al_automatico() {
+        let p = casa();
+        let mut e = carta(&["U"], "Instant");
+        e.frame.color = FrameColor::Palette {
+            palette: Palette::Gold,
+        };
+        assert_eq!(marco(&e, &p), (medio(&p, "gold"), None));
+        e.frame.color = FrameColor::Gradient {
+            a: Palette::R,
+            b: Palette::G,
+        };
+        assert_eq!(marco(&e, &p), (medio(&p, "R"), Some(medio(&p, "G"))));
+        e.frame.color = FrameColor::Custom {
+            hex: "#102030".into(),
+        };
+        assert_eq!(marco(&e, &p), ([16, 32, 48, 255], None));
+        // Un color propio mal escrito sale gris, sin romper.
+        e.frame.color = FrameColor::Custom { hex: "azul".into() };
+        assert_eq!(marco(&e, &p), ([128, 128, 128, 255], None));
+    }
+
+    #[test]
+    fn una_paleta_que_falta_en_el_pack_sale_gris() {
+        let mut p = casa();
+        p.def.paletas.remove("gold");
+        let t = paleta(&p, Palette::Gold);
+        assert_eq!(t.medio, [128, 128, 128, 255]);
+    }
+
+    #[test]
+    fn la_paleta_de_un_color_aclara_y_oscurece_el_suyo() {
+        let m = [200, 40, 40, 255];
+        let t = Tonos::de_color(m);
+        assert_eq!(t.medio, m);
+        assert!(luminancia(t.claro) > luminancia(m));
+        assert!(luminancia(t.oscuro) < luminancia(m));
+        assert!(luminancia(t.tinte) < luminancia(t.oscuro));
+        assert!(luminancia(t.caja) > luminancia(t.claro));
+        // Mezclar en los extremos da cada color.
+        assert_eq!(mezclar(m, BLANCO, 0.0), m);
+        assert_eq!(mezclar(m, BLANCO, 1.0), BLANCO);
+        assert!((luminancia(BLANCO) - 1.0).abs() < 1e-4);
+        assert_eq!(luminancia(NEGRO), 0.0);
+        assert_eq!(hex([255, 16, 0, 9]), "#ff1000");
+    }
+
+    #[test]
+    fn el_degradado_del_marco_es_vertical_con_un_color_y_horizontal_con_dos() {
+        let a = Tonos::de_color([200, 40, 40, 255]);
+        let b = Tonos::de_color([40, 40, 200, 255]);
+        let uno = defs(&a, None, &a);
+        assert!(uno.contains(r#"id="marco" x1="0" y1="0" x2="0" y2="1""#));
+        let dos = defs(&a, Some(&b), &Tonos::mezcla(&a, &b));
+        assert!(dos.contains(r#"id="marco" x1="0" y1="0" x2="1" y2="0""#));
+        assert!(dos.contains(&hex(b.medio)));
+        // Las variables de ejemplo traen todo lo que usan las capas.
+        let v = vars_de_ejemplo();
+        for k in ["defs", "tintaCaja", "yReglas", "altoReglas", "yTipo04"] {
+            assert!(v.contains_key(k), "falta {k}");
+        }
+    }
+
+    // ── Estilo según el layout ──
+
+    fn recursos<'a>(pack: &'a Pack, s: &'a Simbolos) -> Recursos<'a> {
+        Recursos {
+            pack,
+            simbolos: s,
+            imagenes: &SinImagenes,
+        }
+    }
+
+    #[test]
+    fn sin_layout_es_el_estilo_tal_cual() {
+        let p = casa();
+        let s = Simbolos::nuevos();
+        let mut avisos = Vec::new();
+        let e = estilo_para(&recursos(&p, &s), DesignStyle::Classic, None, &mut avisos).unwrap();
+        assert_eq!(&e, p.estilo("classic").unwrap());
+        assert!(avisos.is_empty());
+    }
+
+    #[test]
+    fn el_layout_del_estilo_cambia_solo_lo_que_trae() {
+        let p = casa();
+        let s = Simbolos::nuevos();
+        let base = p.estilo("borderless").unwrap();
+        let def = &base.layouts["ficha"];
+        let mut avisos = Vec::new();
+        let e = estilo_para(
+            &recursos(&p, &s),
+            DesignStyle::Borderless,
+            Some("ficha"),
+            &mut avisos,
+        )
+        .unwrap();
+        assert!(avisos.is_empty());
+        for (k, v) in &base.huecos {
+            let esperado = def.huecos.get(k).unwrap_or(v);
+            assert_eq!(&e.huecos[k], esperado, "hueco {k}");
+        }
+        assert_eq!(&e.arte, def.arte.as_ref().unwrap_or(&base.arte));
+        assert_eq!(&e.capas, def.capas.as_ref().unwrap_or(&base.capas));
+    }
+
+    #[test]
+    fn un_layout_completo_sale_del_pack() {
+        let p = casa();
+        let s = Simbolos::nuevos();
+        let mut avisos = Vec::new();
+        let e = estilo_para(
+            &recursos(&p, &s),
+            DesignStyle::Extended,
+            Some("saga"),
+            &mut avisos,
+        )
+        .unwrap();
+        assert_eq!(&e, p.layout("saga").unwrap());
+        assert!(avisos.is_empty());
+    }
+
+    #[test]
+    fn un_pack_de_antes_sin_el_layout_usa_el_de_la_casa() {
+        let mut p = casa();
+        p.def.layouts.clear();
+        let s = Simbolos::nuevos();
+        let mut avisos = Vec::new();
+        let e = estilo_para(
+            &recursos(&p, &s),
+            DesignStyle::Borderless,
+            Some("batalla"),
+            &mut avisos,
+        )
+        .unwrap();
+        assert_eq!(&e, casa().layout("batalla").unwrap());
+        assert!(avisos.is_empty());
+    }
+
+    #[test]
+    fn un_layout_que_no_hay_en_ningun_sitio_avisa_y_usa_el_estilo() {
+        let p = casa();
+        let s = Simbolos::nuevos();
+        let mut avisos = Vec::new();
+        let e = estilo_para(
+            &recursos(&p, &s),
+            DesignStyle::Borderless,
+            Some("inventado"),
+            &mut avisos,
+        )
+        .unwrap();
+        assert_eq!(&e, p.estilo("borderless").unwrap());
+        assert_eq!(
+            avisos,
+            vec![Aviso::PackSinLayout {
+                layout: "inventado".into()
+            }]
+        );
+        // El arte completo no trae «ficha»: aviso.
+        let mut avisos = Vec::new();
+        estilo_para(
+            &recursos(&p, &s),
+            DesignStyle::FullArt,
+            Some("ficha"),
+            &mut avisos,
+        )
+        .unwrap();
+        assert_eq!(
+            avisos,
+            vec![Aviso::PackSinLayout {
+                layout: "ficha".into()
+            }]
+        );
+    }
+
+    #[test]
+    fn la_variante_alta_que_falta_no_avisa() {
+        let p = casa();
+        let s = Simbolos::nuevos();
+        let mut avisos = Vec::new();
+        let e = estilo_para(
+            &recursos(&p, &s),
+            DesignStyle::FullArt,
+            Some("alto"),
+            &mut avisos,
+        )
+        .unwrap();
+        assert_eq!(&e, p.estilo("fullArt").unwrap());
+        assert!(avisos.is_empty());
+    }
+
+    #[test]
+    fn un_estilo_que_falta_cae_al_despejado_y_sin_ninguno_falla() {
+        let mut p = casa();
+        p.def.estilos.remove("classic");
+        let s = Simbolos::nuevos();
+        let e = estilo_para(
+            &recursos(&p, &s),
+            DesignStyle::Classic,
+            None,
+            &mut Vec::new(),
+        );
+        assert_eq!(&e.unwrap(), p.estilo("borderless").unwrap());
+        p.def.estilos.remove("borderless");
+        let e = estilo_para(
+            &recursos(&p, &s),
+            DesignStyle::Classic,
+            None,
+            &mut Vec::new(),
+        );
+        assert_eq!(e.unwrap_err(), DisenoError::Lienzo);
+    }
+
+    // ── Textos ──
+
+    #[test]
+    fn el_pie_rellena_todas_las_fichas() {
+        let mut e = carta(&["W"], "Instant");
+        e.pie.number = "007".into();
+        e.pie.rarity = "M".into();
+        e.pie.set_code = "RTS".into();
+        e.pie.artist = "S.J.".into();
+        e.pie.credit = "Pablo".into();
+        e.pie.universe = "Tensura".into();
+        e.pie.year = "2026".into();
+        let todas = "{num}|{rarity}|{original}|{set}|{lang}|{artist}|{credit}|{universe}|{year}|{brush}|{star}";
+        e.pie.template.es = todas.into();
+        e.pie.template.en = format!("{todas}|{{num}}|{{otra}}");
+        assert_eq!(
+            pie_texto(&e, DesignLang::Es, "Dusk"),
+            "007|M|Dusk|RTS|ES|S.J.|Pablo|Tensura|2026|{PINCEL}|{ESTRELLA}"
+        );
+        // Cada idioma con su plantilla; una ficha repetida se rellena las dos
+        // veces y una que no existe se queda tal cual.
+        assert_eq!(
+            pie_texto(&e, DesignLang::En, ""),
+            "007|M||RTS|EN|S.J.|Pablo|Tensura|2026|{PINCEL}|{ESTRELLA}|007|{otra}"
+        );
+    }
+
+    #[test]
+    fn el_pie_de_fabrica_va_en_dos_lineas() {
+        let e = carta(&["W"], "Instant");
+        let t = pie_texto(&e, DesignLang::Es, "Dusk");
+        assert_eq!(t, "0002\tR\tDusk\nAKH • ES\t{PINCEL} ");
+    }
+
+    fn cara(p: Option<&str>, t: Option<&str>, l: Option<&str>, d: Option<&str>) -> FaceData {
+        FaceData {
+            power: p.map(Into::into),
+            toughness: t.map(Into::into),
+            loyalty: l.map(Into::into),
+            defense: d.map(Into::into),
+            ..FaceData::default()
+        }
+    }
+
+    #[test]
+    fn fuerza_resistencia_lealtad_o_defensa() {
+        assert_eq!(
+            fr_texto(&cara(Some("2"), Some("3"), None, None)).as_deref(),
+            Some("2/3")
+        );
+        assert_eq!(
+            fr_texto(&cara(Some("*"), Some("1+*"), None, None)).as_deref(),
+            Some("*/1+*")
+        );
+        assert_eq!(
+            fr_texto(&cara(None, None, Some("4"), None)).as_deref(),
+            Some("4")
+        );
+        assert_eq!(
+            fr_texto(&cara(None, None, None, Some("5"))).as_deref(),
+            Some("5")
+        );
+        // La F/R manda sobre la lealtad.
+        assert_eq!(
+            fr_texto(&cara(Some("1"), Some("1"), Some("3"), None)).as_deref(),
+            Some("1/1")
+        );
+        // Solo la fuerza no vale: no se pinta media caja.
+        assert_eq!(fr_texto(&cara(Some("2"), None, None, None)), None);
+        assert_eq!(fr_texto(&FaceData::default()), None);
+    }
+
+    #[test]
+    fn el_caos_va_delante_de_su_habilidad_y_nada_mas() {
+        let r = "Cuando caminas a este plano, roba.\nSiempre que se desate el caos, gana 2 vidas.";
+        assert_eq!(
+            con_caos(r),
+            "Cuando caminas a este plano, roba.\n{CHAOS} Siempre que se desate el caos, gana 2 vidas."
+        );
+        assert_eq!(
+            con_caos("Whenever chaos ensues, draw."),
+            "{CHAOS} Whenever chaos ensues, draw."
+        );
+        assert_eq!(
+            con_caos("Siempre que lances caos, roba."),
+            "{CHAOS} Siempre que lances caos, roba."
+        );
+        // Ya con su símbolo, o con la frase en medio, no se toca.
+        assert_eq!(
+            con_caos("{CHAOS} Whenever chaos ensues, draw."),
+            "{CHAOS} Whenever chaos ensues, draw."
+        );
+        assert_eq!(
+            con_caos("Draw. Whenever chaos ensues, draw."),
+            "Draw. Whenever chaos ensues, draw."
+        );
+        assert_eq!(con_caos(""), "");
+    }
+
+    // ── Píxeles ──
+
+    #[test]
+    fn la_mascara_redondeada_deja_las_esquinas_fuera() {
+        let m = mascara_redondeada(40, 60, 8.0).unwrap();
+        let a = |x: u32, y: u32| m.data()[(y * 40 + x) as usize];
+        for (x, y) in [(0, 0), (39, 0), (0, 59), (39, 59)] {
+            assert_eq!(a(x, y), 0, "esquina ({x}, {y})");
+        }
+        assert_eq!(a(20, 30), 255);
+        assert_eq!(a(0, 30), 255);
+        assert_eq!(a(20, 0), 255);
+        assert!(mascara_redondeada(0, 10, 2.0).is_none());
+    }
+
+    #[test]
+    fn de_imagen_a_pixmap_y_vuelta() {
+        let img = RgbaImage::from_fn(5, 4, |x, y| {
+            let a = if x == 0 { 0 } else { 255 };
+            image::Rgba([(x * 40) as u8, (y * 50) as u8, 7, a])
+        });
+        let vuelta = de_pixmap(&a_pixmap(&img).unwrap());
+        for (p, q) in img.pixels().zip(vuelta.pixels()) {
+            if p.0[3] == 255 {
+                assert_eq!(p, q);
+            } else {
+                assert_eq!(q.0[3], 0);
+            }
+        }
+    }
+
+    #[test]
+    fn un_lienzo_de_cero_pixeles_tiene_al_menos_uno() {
+        let l = Lienzo::nuevo(63.0, 88.0, 0, 0).unwrap();
+        assert_eq!((l.px.width(), l.px.height()), (1, 1));
+        let l = Lienzo::nuevo(63.0, 88.0, 630, 880).unwrap();
+        assert_eq!((l.x(1.0), l.y(1.0)), (10.0, 10.0));
+    }
+}

@@ -972,3 +972,492 @@ impl Carta<'_> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::diseno::render::Motor;
+
+    /// Píxeles por milímetro de las pruebas.
+    const K: f32 = 10.0;
+    const ANCHO: f32 = 500.0;
+
+    fn estilo() -> Estilo {
+        Estilo {
+            familia: "Spectral".into(),
+            peso: 400.0,
+            tam: 26.0,
+            interlinea: 1.06,
+            color: [0, 0, 0, 255],
+            alinear: texto::Alinear::Inicio,
+            versalitas: false,
+        }
+    }
+
+    fn hacer(c: &Contenido) -> Hecho {
+        let mut m = Motor::de_fabrica().unwrap();
+        let e = estilo();
+        maquetar(
+            c,
+            &mut m.m,
+            &mut m.letras,
+            &e,
+            ANCHO,
+            e.tam,
+            Separaciones::default(),
+            K,
+        )
+    }
+
+    fn ajustado(c: &Contenido, alto_max: f32, tam_min: f32) -> (Hecho, f32) {
+        let mut m = Motor::de_fabrica().unwrap();
+        ajustar(
+            c,
+            &mut m.m,
+            &mut m.letras,
+            &estilo(),
+            ANCHO,
+            alto_max,
+            tam_min,
+            0.5,
+            K,
+        )
+    }
+
+    fn seccion(izq: Option<Insignia>, texto: &str, fr: Option<&str>) -> Seccion {
+        Seccion {
+            izq,
+            parrafos: texto::reglas(texto),
+            fr: fr.map(Into::into),
+            ..Seccion::default()
+        }
+    }
+
+    fn secciones(s: Vec<Seccion>, sabor: &str) -> Contenido {
+        Contenido::Secciones {
+            secciones: s,
+            sabor: texto::sabor(sabor),
+            repartir: false,
+            rayas: true,
+        }
+    }
+
+    fn lealtad() -> Contenido {
+        secciones(
+            vec![
+                seccion(
+                    Some(Insignia::Lealtad("+1".into())),
+                    "Roba una carta.",
+                    None,
+                ),
+                seccion(
+                    Some(Insignia::Lealtad("−3".into())),
+                    "Destruye la criatura objetivo. Su controlador gana 3 vidas y roba una carta por cada criatura que controle.",
+                    None,
+                ),
+            ],
+            "",
+        )
+    }
+
+    fn items(h: &Hecho) -> &[SeccionHecha] {
+        match h {
+            Hecho::Secciones { items, .. } => items,
+            _ => panic!("se esperaban secciones"),
+        }
+    }
+
+    // ── Insignias ──
+
+    #[test]
+    fn las_insignias_tienen_su_columna_y_su_alto_minimo() {
+        assert_eq!(Insignia::Lealtad("+1".into()).ancho(), 6.4);
+        assert_eq!(
+            Insignia::Prototipo {
+                coste: "{1}".into(),
+                fr: "1/1".into()
+            }
+            .ancho(),
+            9.6
+        );
+        // Un capítulo doble necesita sitio para las dos marcas.
+        let uno = Insignia::Capitulos(vec![1]).alto_min();
+        let dos = Insignia::Capitulos(vec![1, 2]).alto_min();
+        assert!((uno - 4.3).abs() < 1e-4);
+        assert!((dos - 8.2).abs() < 1e-4);
+    }
+
+    // ── Maquetar ──
+
+    #[test]
+    fn las_secciones_se_apilan_con_su_insignia_a_la_izquierda() {
+        let h = hacer(&lealtad());
+        let it = items(&h);
+        assert_eq!(it.len(), 2);
+        let izq = 6.4 * K + 0.8 * K;
+        for s in it {
+            assert!((s.x_txt - izq).abs() < 1e-3);
+            assert!((s.ancho_txt - (ANCHO - izq)).abs() < 1e-3);
+            assert!(s.alto >= 4.6 * K, "alto mínimo de la insignia");
+            assert!(s.alto >= s.alto_txt);
+            assert!(!s.con_fr);
+        }
+        assert_eq!(it[0].y, 0.0);
+        assert!((it[1].y - it[0].alto).abs() < 1e-3);
+        // El texto largo ocupa más que el corto.
+        assert!(it[1].alto_txt > it[0].alto_txt);
+        assert!((h.alto() - (it[0].alto + it[1].alto)).abs() < 1e-3);
+        assert_eq!(h.tam(), estilo().tam);
+    }
+
+    #[test]
+    fn una_seccion_sin_insignia_usa_todo_el_ancho() {
+        let h = hacer(&secciones(vec![seccion(None, "Vuela.", None)], ""));
+        let s = &items(&h)[0];
+        assert_eq!(s.x_txt, 0.0);
+        assert_eq!(s.ancho_txt, ANCHO);
+    }
+
+    #[test]
+    fn una_franja_con_fuerza_resistencia_deja_su_hueco_a_la_derecha() {
+        let h = hacer(&secciones(
+            vec![
+                seccion(None, "Subir de nivel {W}.", None),
+                seccion(
+                    Some(Insignia::Nivel {
+                        etiqueta: "NIVEL".into(),
+                        valor: "2-6".into(),
+                    }),
+                    "Daña primero.",
+                    Some("3/3"),
+                ),
+            ],
+            "",
+        ));
+        let s = &items(&h)[1];
+        assert!(s.con_fr);
+        let esperado = ANCHO - (6.4 * K + 0.8 * K) - (7.0 * K + 0.8 * K);
+        assert!((s.ancho_txt - esperado).abs() < 1e-3);
+        assert!(s.alto >= 5.2 * K);
+        // La última franja lleva F/R: el último renglón «llega» a la derecha.
+        assert_eq!(h.fin_ultima_linea(), f32::MAX);
+    }
+
+    #[test]
+    fn con_sabor_el_ultimo_renglon_es_el_del_sabor() {
+        let h = hacer(&secciones(
+            vec![seccion(None, "Daña primero.", Some("3/3"))],
+            "«Corto.»",
+        ));
+        let fin = h.fin_ultima_linea();
+        assert!(fin > 0.0 && fin < ANCHO / 2.0, "{fin}");
+        match &h {
+            Hecho::Secciones { sabor, alto, .. } => {
+                let (c, y) = sabor.as_ref().unwrap();
+                assert!((y + c.alto - alto).abs() < 1e-3, "el sabor va al final");
+                assert!(*y > items(&h)[0].alto, "con su separación");
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn el_fin_del_ultimo_renglon_en_texto_y_secciones() {
+        let corto = Contenido::Texto {
+            reglas: texto::reglas("Vuela."),
+            sabor: Vec::new(),
+        };
+        let largo = Contenido::Texto {
+            reglas: texto::reglas("Vuela, prisa, vínculo vital."),
+            sabor: Vec::new(),
+        };
+        let (a, b) = (
+            hacer(&corto).fin_ultima_linea(),
+            hacer(&largo).fin_ultima_linea(),
+        );
+        assert!(a > 0.0 && a < b && b <= ANCHO);
+        // Sin texto, no llega a ningún sitio.
+        let vacio = Contenido::Texto {
+            reglas: Vec::new(),
+            sabor: Vec::new(),
+        };
+        assert_eq!(hacer(&vacio).fin_ultima_linea(), 0.0);
+        // En secciones sin F/R se cuenta desde la columna de la insignia.
+        let h = hacer(&lealtad());
+        let ultima = &items(&h)[1];
+        assert!(h.fin_ultima_linea() > ultima.x_txt);
+        assert!(h.fin_ultima_linea() <= ANCHO);
+    }
+
+    #[test]
+    fn la_aventura_va_en_dos_columnas() {
+        let c = aventura(
+            "Robo en la torre",
+            "{1}{U}",
+            "Conjuro — Aventura",
+            "Roba dos cartas.",
+            "Vuela.",
+            Vec::new(),
+        );
+        let h = hacer(&c);
+        match &h {
+            Hecho::Aventura {
+                ancho_izq,
+                x_der,
+                alto,
+                alto_izq,
+                der,
+                ..
+            } => {
+                assert!((ancho_izq - ANCHO * 0.48).abs() < 1e-3);
+                assert!((x_der - (ancho_izq + 1.2 * K)).abs() < 1e-3);
+                assert_eq!(*alto, alto_izq.max(der.alto));
+                // El último renglón es el de la columna derecha.
+                assert!(h.fin_ultima_linea() > *x_der);
+            }
+            _ => panic!("se esperaba aventura"),
+        }
+    }
+
+    #[test]
+    fn la_cabecera_de_la_aventura_lleva_nombre_y_coste() {
+        let Contenido::Aventura { cabecera, tipo, .. } =
+            aventura("Robo", "{1}{U}", "Conjuro", "", "", Vec::new())
+        else {
+            panic!("se esperaba aventura");
+        };
+        assert_eq!(
+            cabecera,
+            vec![
+                Trozo::Texto {
+                    texto: "Robo  ".into(),
+                    cursiva: false
+                },
+                Trozo::Simbolo("1".into()),
+                Trozo::Simbolo("U".into()),
+            ]
+        );
+        assert!(matches!(&tipo[0], Trozo::Texto { cursiva: true, .. }));
+    }
+
+    // ── Ajustar ──
+
+    #[test]
+    fn lo_que_cabe_no_se_toca() {
+        let (h, sobra) = ajustado(&lealtad(), 10_000.0, 12.0);
+        assert_eq!(sobra, 0.0);
+        assert_eq!(h.tam(), estilo().tam);
+    }
+
+    #[test]
+    fn lo_que_no_cabe_baja_la_letra_lo_justo() {
+        let natural = hacer(&lealtad()).alto();
+        let alto_max = natural * 0.85;
+        let (h, sobra) = ajustado(&lealtad(), alto_max, 8.0);
+        assert_eq!(sobra, 0.0);
+        assert!(h.alto() <= alto_max);
+        assert!(h.tam() < estilo().tam && h.tam() >= 8.0);
+        // Medio punto más ya no cabría (se busca el mayor tamaño que cabe).
+        let mut m = Motor::de_fabrica().unwrap();
+        let mayor = maquetar(
+            &lealtad(),
+            &mut m.m,
+            &mut m.letras,
+            &estilo(),
+            ANCHO,
+            h.tam() + 0.5,
+            Separaciones::default(),
+            K,
+        );
+        assert!(mayor.alto() > alto_max);
+    }
+
+    #[test]
+    fn lo_que_no_cabe_ni_al_minimo_dice_cuanto_sobra() {
+        let (h, sobra) = ajustado(&lealtad(), 5.0, 14.0);
+        assert!((h.tam() - 14.0).abs() < 1e-4);
+        assert!(sobra > 0.0);
+        assert!((sobra - (h.alto() - 5.0)).abs() < 1e-3);
+    }
+
+    #[test]
+    fn el_texto_normal_se_ajusta_igual() {
+        let c = Contenido::Texto {
+            reglas: texto::reglas(&"Roba una carta y luego descarta una carta. ".repeat(6)),
+            sabor: texto::sabor("«Saber es poder.»"),
+        };
+        let natural = hacer(&c).alto();
+        let (h, sobra) = ajustado(&c, natural * 0.8, 8.0);
+        assert_eq!(sobra, 0.0);
+        assert!(h.tam() < estilo().tam);
+        assert!(matches!(h, Hecho::Texto(_)));
+        let (_, sobra) = ajustado(&c, 3.0, 20.0);
+        assert!(sobra > 0.0);
+    }
+
+    // ── Del texto de la carta al contenido ──
+
+    fn tipo_de(c: &Contenido) -> &'static str {
+        match c {
+            Contenido::Texto { .. } => "texto",
+            Contenido::Secciones { .. } => "secciones",
+            Contenido::Aventura { .. } => "aventura",
+        }
+    }
+
+    #[test]
+    fn un_planeswalker_va_por_habilidades_con_bandas_alternas() {
+        let c = contenido(
+            Cuerpo::Lealtad,
+            "Las criaturas tienen +1/+0.\n+1: Roba una carta.\n−2: Destruye una criatura.",
+            Vec::new(),
+            DesignLang::Es,
+        );
+        let Contenido::Secciones {
+            secciones,
+            repartir,
+            rayas,
+            ..
+        } = &c
+        else {
+            panic!("se esperaban secciones");
+        };
+        assert!(*repartir && !*rayas);
+        assert_eq!(secciones.len(), 3);
+        assert_eq!(secciones[0].izq, None, "la estática no lleva escudo");
+        assert_eq!(secciones[1].izq, Some(Insignia::Lealtad("+1".into())));
+        assert_eq!(
+            secciones.iter().map(|s| s.banda).collect::<Vec<_>>(),
+            [false, true, false]
+        );
+        // Sin ninguna habilidad de lealtad, texto normal.
+        let c = contenido(Cuerpo::Lealtad, "Vuela.", Vec::new(), DesignLang::Es);
+        assert_eq!(tipo_de(&c), "texto");
+    }
+
+    #[test]
+    fn una_saga_va_por_capitulos_con_su_introduccion() {
+        let c = contenido(
+            Cuerpo::Capitulos,
+            "(En cuanto esta Saga entre…)\nI, II — Roba una carta.\nIII — Gana 3 vidas.",
+            Vec::new(),
+            DesignLang::Es,
+        );
+        let Contenido::Secciones { secciones, .. } = &c else {
+            panic!("se esperaban secciones");
+        };
+        assert_eq!(secciones.len(), 3);
+        assert_eq!(secciones[0].izq, None);
+        assert_eq!(secciones[1].izq, Some(Insignia::Capitulos(vec![1, 2])));
+        assert_eq!(secciones[2].izq, Some(Insignia::Capitulos(vec![3])));
+        let c = contenido(
+            Cuerpo::Capitulos,
+            "Sin capítulos.",
+            Vec::new(),
+            DesignLang::Es,
+        );
+        assert_eq!(tipo_de(&c), "texto");
+    }
+
+    #[test]
+    fn el_leveler_pone_la_palabra_de_su_idioma() {
+        let reglas =
+            "Subir de nivel {W}.\nNIVEL 2-6\n3/3\nDaña primero.\nNIVEL 7+\n4/4\nDaña dos veces.";
+        for (lang, palabra) in [(DesignLang::Es, "NIVEL"), (DesignLang::En, "LEVEL")] {
+            let c = contenido(Cuerpo::Leveler, reglas, Vec::new(), lang);
+            let Contenido::Secciones {
+                secciones,
+                repartir,
+                ..
+            } = &c
+            else {
+                panic!("se esperaban secciones");
+            };
+            assert!(!*repartir);
+            assert_eq!(
+                secciones[1].izq,
+                Some(Insignia::Nivel {
+                    etiqueta: palabra.into(),
+                    valor: "2-6".into()
+                })
+            );
+            assert_eq!(secciones[1].fr.as_deref(), Some("3/3"));
+        }
+        // La estación va sin palabra.
+        let c = contenido(
+            Cuerpo::Estacion,
+            "When this enters…\nStation (Tap another creature…)\n8+ | Flying\n12+ | 5/5",
+            Vec::new(),
+            DesignLang::En,
+        );
+        let Contenido::Secciones { secciones, .. } = &c else {
+            panic!("se esperaban secciones");
+        };
+        assert!(matches!(
+            &secciones[1].izq,
+            Some(Insignia::Nivel { etiqueta, valor }) if etiqueta.is_empty() && valor == "8+"
+        ));
+    }
+
+    #[test]
+    fn el_prototipo_lleva_su_recuadro_y_el_resto_aparte() {
+        let c = contenido(
+            Cuerpo::Prototipo,
+            "Prototype {1}{B}{B} — 3/3 (You may cast…)\nMenace, lifelink",
+            Vec::new(),
+            DesignLang::En,
+        );
+        let Contenido::Secciones { secciones, .. } = &c else {
+            panic!("se esperaban secciones");
+        };
+        assert_eq!(secciones.len(), 2);
+        assert_eq!(
+            secciones[0].izq,
+            Some(Insignia::Prototipo {
+                coste: "{1}{B}{B}".into(),
+                fr: "3/3".into()
+            })
+        );
+        assert!(secciones[0].banda);
+        let c = contenido(Cuerpo::Prototipo, "Flying", Vec::new(), DesignLang::En);
+        assert_eq!(tipo_de(&c), "texto");
+    }
+
+    #[test]
+    fn una_clase_con_un_solo_tramo_es_texto_normal() {
+        let c = contenido(
+            Cuerpo::Niveles,
+            "Te cuesta {1} menos.",
+            Vec::new(),
+            DesignLang::Es,
+        );
+        assert_eq!(tipo_de(&c), "texto");
+        let c = contenido(
+            Cuerpo::Niveles,
+            "Te cuesta {1} menos.\n{1}{U}: Nivel 2\nCuando…",
+            Vec::new(),
+            DesignLang::Es,
+        );
+        let Contenido::Secciones { secciones, .. } = &c else {
+            panic!("se esperaban secciones");
+        };
+        assert!(secciones[1].cabecera.is_some());
+    }
+
+    #[test]
+    fn el_texto_y_la_mazmorra_son_texto_normal_con_su_sabor() {
+        for cu in [Cuerpo::Texto, Cuerpo::Mazmorra] {
+            let c = contenido(
+                cu,
+                "Vuela.\nPrisa.",
+                texto::sabor("«Hola.»"),
+                DesignLang::Es,
+            );
+            let Contenido::Texto { reglas, sabor } = &c else {
+                panic!("se esperaba texto");
+            };
+            assert_eq!(reglas.len(), 2);
+            assert_eq!(sabor.len(), 1);
+        }
+    }
+}
