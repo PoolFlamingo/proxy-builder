@@ -398,6 +398,14 @@ impl Pack {
         })
     }
 
+    /// El pack de la casa, cargado una vez (para lo que un pack importado no
+    /// trae: los layouts de la Fase 5 en packs de antes).
+    pub fn de_fabrica_compartido() -> Option<&'static Pack> {
+        static FABRICA: std::sync::LazyLock<Option<Pack>> =
+            std::sync::LazyLock::new(|| Pack::de_fabrica().ok());
+        FABRICA.as_ref()
+    }
+
     /// El pack de la casa, dentro de la app.
     pub fn de_fabrica() -> Result<Pack, PackError> {
         let ficheros = BUILTIN

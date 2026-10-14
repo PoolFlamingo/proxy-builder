@@ -68,6 +68,7 @@ function Contenido() {
 		const deck = useDeck.getState().deck;
 		if (!deck || elegidas.length === 0) return;
 		const hechas: DeckCard[] = [];
+		let fallidas = 0;
 		const col = coleccion || null;
 		recordarColeccion(col);
 		setProgreso({ hechas: 0, total: elegidas.length });
@@ -85,6 +86,7 @@ function Contenido() {
 				(p) => {
 					setProgreso({ hechas: p.done, total: p.total });
 					if (p.card) hechas.push(p.card);
+					if (p.failed) fallidas++;
 				},
 			);
 			jobId.current = id;
@@ -97,7 +99,9 @@ function Contenido() {
 			}
 			if (final.error && final.error.code !== "Cancelled") toast.error(mensaje(final.error));
 			useUi.getState().anunciar(t("{n} borradores hechos", { n: hechas.length }));
-			useUi.getState().abrir(null);
+			if (fallidas > 0) toast.warning(t("{n} cartas no se pudieron preparar.", { n: fallidas }));
+			// Solo se cierra si sigue abierto este diálogo.
+			if (useUi.getState().dialogo?.tipo === "disenarDeck") useUi.getState().abrir(null);
 		} catch (e) {
 			toast.error(mensaje(e));
 			setProgreso(null);

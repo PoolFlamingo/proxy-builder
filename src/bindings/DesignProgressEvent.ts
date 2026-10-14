@@ -5,4 +5,8 @@ export type DesignProgressEvent = { jobId: number, done: number, total: number,
 /**
  * La carta ya con su borrador; `None` si se saltó o falló.
  */
-card: DeckCard | null, };
+card: DeckCard | null, 
+/**
+ * Esta carta no se pudo preparar (se sigue con las demás).
+ */
+failed: boolean, };

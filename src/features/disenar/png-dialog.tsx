@@ -65,7 +65,13 @@ function Contenido() {
 				"designpng://progress",
 				"designpng://done",
 				() =>
-					call("design_export_png", { cards: elegidas, folder: carpeta, dpi: Number(ppp), langs }),
+					call("design_export_png", {
+						cards: elegidas,
+						folder: carpeta,
+						cardSize: useDeck.getState().deck?.settings.cardSize ?? { widthMm: 63, heightMm: 88 },
+						dpi: Number(ppp),
+						langs,
+					}),
 				(p) => setProgreso({ hechas: p.done, total: p.total }),
 			);
 			jobId.current = id;
@@ -77,7 +83,7 @@ function Contenido() {
 				return;
 			}
 			useUi.getState().anunciar(t("{n} imágenes exportadas", { n: final.files }));
-			useUi.getState().abrir(null);
+			if (useUi.getState().dialogo?.tipo === "exportarPng") useUi.getState().abrir(null);
 		} catch (e) {
 			toast.error(mensaje(e));
 			setProgreso(null);

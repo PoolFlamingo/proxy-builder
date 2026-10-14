@@ -3,4 +3,4 @@
 /**
  * Algo que conviene avisar al usuario.
  */
-export type PlanWarning = { "kind": "dfcWithoutBack", count: number, } | { "kind": "missingDefaultBack", count: number, };
+export type PlanWarning = { "kind": "dfcWithoutBack", count: number, } | { "kind": "missingDefaultBack", count: number, } | { "kind": "bigCardsDoNotFit", count: number, };

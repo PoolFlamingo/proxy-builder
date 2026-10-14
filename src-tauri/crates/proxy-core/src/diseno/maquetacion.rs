@@ -118,6 +118,12 @@ fn con_estacion(c: &CardData) -> bool {
         })
 }
 
+/// Las caras impresas de una carta concreta: las de su maquetación, pero no
+/// más de las que tiene (la carta fundida de un meld, diseñada sola, es una).
+pub fn caras_impresas(c: &CardData) -> usize {
+    maquetacion(c).0.caras_impresas().min(c.faces.len()).max(1)
+}
+
 /// La maquetación de una carta. El `bool` dice si el layout no se conoce
 /// (cae a `Normal` y se avisa).
 pub fn maquetacion(c: &CardData) -> (Maquetacion, bool) {
@@ -332,7 +338,7 @@ pub fn resumen(
     };
     Resumen {
         maquetacion: m,
-        caras_impresas: m.caras_impresas() as u32,
+        caras_impresas: caras_impresas(&d.card) as u32,
         partes,
     }
 }

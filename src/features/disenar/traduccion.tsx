@@ -1,5 +1,5 @@
 import { Languages, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { CardDesign } from "@/bindings/CardDesign";
 import type { Sugerencia } from "@/bindings/Sugerencia";
@@ -26,6 +26,13 @@ export function TraduccionSugerida({
 	const { t, mensaje } = useLang();
 	const [s, setS] = useState<Sugerencia | null>(null);
 	const [buscando, setBuscando] = useState(false);
+	const clave = `${design.card.scryfallId}:${cara}`;
+	const claveActual = useRef(clave);
+	// Al cambiar de carta o de cara, la sugerencia de antes ya no vale.
+	useEffect(() => {
+		claveActual.current = clave;
+		setS(null);
+	}, [clave]);
 	const datos = design.card.faces[cara];
 	if (!datos) return null;
 	const faltaTipo = datos.typeLine.es === datos.typeLine.en && datos.typeLine.en !== "";
@@ -33,8 +40,11 @@ export function TraduccionSugerida({
 
 	const buscar = async () => {
 		setBuscando(true);
+		const pedida = clave;
 		try {
-			setS(await call("design_suggest_translation", { design, cara }));
+			const r = await call("design_suggest_translation", { design, cara });
+			// Una respuesta de otra carta o de otra cara no vale.
+			if (claveActual.current === pedida) setS(r);
 		} catch (e) {
 			toast.error(mensaje(e));
 		} finally {

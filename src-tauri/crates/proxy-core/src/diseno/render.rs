@@ -813,7 +813,11 @@ impl Carta<'_> {
             if !pasa {
                 continue;
             }
-            let Some(svg) = self.rec.pack.ficheros.get(&capa.svg) else {
+            let Some(svg) =
+                self.rec.pack.ficheros.get(&capa.svg).or_else(|| {
+                    Pack::de_fabrica_compartido().and_then(|p| p.ficheros.get(&capa.svg))
+                })
+            else {
                 continue;
             };
             let s = rellenar(svg, &self.vars);
@@ -941,6 +945,10 @@ pub(super) fn estilo_para(
                 e.huecos.insert(k.clone(), v.clone());
             }
         } else if let Some(completo) = rec.pack.layout(l) {
+            e = completo.clone();
+        } else if let Some(completo) = Pack::de_fabrica_compartido().and_then(|p| p.layout(l)) {
+            // Un pack de antes sin este layout: el de la casa (sus capas se
+            // buscan también en el pack de la casa).
             e = completo.clone();
         } else {
             // La variante alta es opcional: sin ella, la caja normal.

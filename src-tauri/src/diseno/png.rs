@@ -7,7 +7,7 @@ use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use proxy_core::diseno::componer::medida;
-use proxy_core::diseno::maquetacion::maquetacion;
+use proxy_core::diseno::maquetacion::caras_impresas;
 use proxy_core::diseno::modelo::DesignLang;
 use proxy_core::diseno::render::Salida;
 use proxy_core::model::{CardSize, DeckCard};
@@ -71,11 +71,21 @@ fn tareas(cartas: &[DeckCard], langs: &[DesignLang]) -> Vec<Tarea> {
     let mut out = Vec::new();
     for c in cartas {
         let Some(d) = &c.design else { continue };
-        let clave = serde_json::to_string(d).unwrap_or_default();
+        // Lo que no cambia la imagen no cuenta: dos copias iguales salen una vez.
+        let mut solo = d.clone();
+        solo.thumb_key = None;
+        solo.status = proxy_core::diseno::modelo::DesignStatus::Draft;
+        solo.before = proxy_core::diseno::modelo::BeforeDesign {
+            source: proxy_core::model::CardSource::Blank,
+            front: None,
+            back: proxy_core::model::BackSpec::DeckDefault,
+            edits: proxy_core::model::CardEdits::default(),
+        };
+        let clave = serde_json::to_string(&solo).unwrap_or_default();
         if !vistos.insert(clave) {
             continue;
         }
-        let caras = maquetacion(&d.card).0.caras_impresas() as u32;
+        let caras = caras_impresas(&d.card) as u32;
         for &lang in langs {
             for cara in 0..caras {
                 out.push(Tarea {
@@ -90,10 +100,12 @@ fn tareas(cartas: &[DeckCard], langs: &[DesignLang]) -> Vec<Tarea> {
 }
 
 /// Escribe los PNG. `progreso(hechos, total)` tras cada fichero.
+#[allow(clippy::too_many_arguments)]
 pub fn exportar(
     state: &AppState,
     cartas: &[DeckCard],
     destino: &Path,
+    card: CardSize,
     ppp: u32,
     langs: &[DesignLang],
     cancelado: &AtomicBool,
@@ -107,30 +119,30 @@ pub fn exportar(
         std::fs::create_dir_all(destino.join(carpeta(*lang))).map_err(io)?;
     }
     let mut escritos = 0;
+    let mut usados: HashSet<String> = HashSet::new();
     for (i, t) in lista.iter().enumerate() {
         if cancelado.load(Ordering::SeqCst) {
             return Err(AppError::new(ErrorCode::Cancelled));
         }
         let Some(d) = &t.card.design else { continue };
         let e = efectivo_de(d, &cols);
-        let (w_mm, _) = medida(&e, CardSize::MTG);
+        let (w_mm, _) = medida(&e, card);
         let ancho = (w_mm / 25.4 * f64::from(ppp)).round() as u32;
-        let r = pintar(
-            state,
-            &e,
-            t.cara,
-            t.lang,
-            CardSize::MTG,
-            ancho,
-            Salida::Impresion,
-        )?;
+        let r = pintar(state, &e, t.cara, t.lang, card, ancho, Salida::Impresion)?;
         let nombre = proxy_core::diseno::borrador::nombre_efectivo(d, t.cara as usize, t.lang);
         let base = nombre_de_fichero(&format!("{} - {}", d.footer.number, nombre));
-        let fichero = if maquetacion(&d.card).0.caras_impresas() > 1 {
-            format!("{base} ({}).png", t.cara + 1)
+        let base = if caras_impresas(&d.card) > 1 {
+            format!("{base} ({})", t.cara + 1)
         } else {
-            format!("{base}.png")
+            base
         };
+        // Dos diseños distintos con el mismo número y nombre no se pisan.
+        let mut fichero = format!("{base}.png");
+        let mut n = 2;
+        while !usados.insert(format!("{}/{fichero}", carpeta(t.lang))) {
+            fichero = format!("{base} ~{n}.png");
+            n += 1;
+        }
         let bytes = proxy_core::imaging::encode::png(&r.imagen)
             .map_err(|e| AppError::new(ErrorCode::Internal).with("detalle", e))?;
         std::fs::write(destino.join(carpeta(t.lang)).join(fichero), bytes).map_err(io)?;
@@ -202,6 +214,7 @@ mod tests {
             &s,
             &cartas,
             &destino,
+            CardSize::MTG,
             300,
             &[DesignLang::Es, DesignLang::En],
             &AtomicBool::new(false),
@@ -219,6 +232,7 @@ mod tests {
             &s,
             &cartas,
             &destino,
+            CardSize::MTG,
             300,
             &[DesignLang::Es],
             &AtomicBool::new(false),

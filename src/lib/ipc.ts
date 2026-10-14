@@ -7,6 +7,7 @@ import type { CalibrationTextsInput } from "@/bindings/CalibrationTextsInput";
 import type { CardDesign } from "@/bindings/CardDesign";
 import type { CardIdentify } from "@/bindings/CardIdentify";
 import type { CardMeta } from "@/bindings/CardMeta";
+import type { CardSize } from "@/bindings/CardSize";
 import type { CardSummary } from "@/bindings/CardSummary";
 import type { Collection } from "@/bindings/Collection";
 import type { Deck } from "@/bindings/Deck";
@@ -111,7 +112,13 @@ export interface Commands {
 		result: number;
 	};
 	design_export_png: {
-		args: { cards: DeckCard[]; folder: string; dpi: number; langs: DesignLang[] };
+		args: {
+			cards: DeckCard[];
+			folder: string;
+			cardSize: CardSize;
+			dpi: number;
+			langs: DesignLang[];
+		};
 		result: number;
 	};
 	design_suggest_translation: {

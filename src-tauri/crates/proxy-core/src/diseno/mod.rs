@@ -38,7 +38,7 @@ pub enum DisenoError {
 
 /// Versión del motor de render: entra en la huella, así que subirla rehace
 /// todos los renders de diseños.
-pub const VERSION_MOTOR: u32 = 2;
+pub const VERSION_MOTOR: u32 = 3;
 
 /// Puntos tipográficos a milímetros.
 pub const MM_POR_PT: f32 = 25.4 / 72.0;

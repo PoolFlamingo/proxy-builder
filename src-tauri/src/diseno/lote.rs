@@ -26,6 +26,8 @@ pub struct DesignProgressEvent {
     pub total: u32,
     /// La carta ya con su borrador; `None` si se saltó o falló.
     pub card: Option<DeckCard>,
+    /// Esta carta no se pudo preparar (se sigue con las demás).
+    pub failed: bool,
 }
 
 #[derive(Debug, Clone, Serialize, TS)]
@@ -67,7 +69,9 @@ async fn borrador_de(
                     f.art = Some(a);
                 }
             }
-            Err(e) if e.code == ErrorCode::Network => return Err(e),
+            Err(e) if matches!(e.code, ErrorCode::Network | ErrorCode::RateLimited) => {
+                return Err(e)
+            }
             Err(_) => {}
         }
     }
@@ -118,13 +122,16 @@ pub async fn borradores(
             // Ya diseñada, o propia sin vincular: no se toca.
             _ => Ok(None),
         };
-        let card = match resultado {
-            Ok(c) => c,
-            // Sin red no tiene sentido seguir carta a carta.
-            Err(e) if e.code == ErrorCode::Network => return Err(e),
+        let (card, failed) = match resultado {
+            Ok(c) => (c, false),
+            // Sin red, o con Scryfall pidiendo calma, no tiene sentido seguir
+            // carta a carta.
+            Err(e) if matches!(e.code, ErrorCode::Network | ErrorCode::RateLimited) => {
+                return Err(e)
+            }
             Err(e) => {
                 tracing::warn!(codigo = ?e.code, "no se pudo hacer el borrador");
-                None
+                (None, true)
             }
         };
         let _ = app.emit(
@@ -134,6 +141,7 @@ pub async fn borradores(
                 done: i as u32 + 1,
                 total,
                 card,
+                failed,
             },
         );
     }
