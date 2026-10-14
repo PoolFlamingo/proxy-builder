@@ -98,6 +98,18 @@ pub fn run() {
             commands::diseno::collection_list,
             commands::diseno::collection_save,
             commands::diseno::collection_delete,
+            commands::diseno::fonts_list,
+            commands::diseno::font_import,
+            commands::diseno::font_remove,
+            commands::diseno::packs_list,
+            commands::diseno::pack_import,
+            commands::diseno::pack_remove,
+            commands::diseno::symbols_status,
+            commands::diseno::design_register,
+            commands::diseno::design_fit_report,
+            commands::diseno::design_save,
+            commands::diseno::design_remove,
+            commands::diseno::design_rerender,
         ])
         .run(tauri::generate_context!());
 

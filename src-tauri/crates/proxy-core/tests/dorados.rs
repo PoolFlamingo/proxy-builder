@@ -216,6 +216,7 @@ fn diseno(c: &Caso) -> CardDesign {
             ..DesignOptions::default()
         },
         emblem: EmblemChoice::Inherit,
+        thumb_key: None,
     }
 }
 
@@ -545,8 +546,9 @@ fn dos_renders_iguales_dan_los_mismos_bytes() {
 fn cambiar_un_color_del_pack_cambia_el_dorado() {
     let (pack, simbolos, artes) = entorno();
     let mut ficheros = pack.ficheros.clone();
-    let j = ficheros["pack.json"].replace("\"medio\": \"#d9ab3c\"", "\"medio\": \"#ff00ff\"");
-    ficheros.insert("pack.json".into(), j);
+    let mut v: serde_json::Value = serde_json::from_str(&ficheros["pack.json"]).unwrap();
+    v["paletas"]["gold"]["medio"] = "#ff00ff".into();
+    ficheros.insert("pack.json".into(), serde_json::to_string(&v).unwrap());
     let otro = Pack::cargar(ficheros).unwrap();
     assert_ne!(otro.huella, pack.huella);
     let mut motor = Motor::de_fabrica().unwrap();

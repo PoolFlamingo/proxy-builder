@@ -149,12 +149,31 @@ impl Scryfall {
         Ok(c.map(|c| c.data).unwrap_or_default())
     }
 
+    /// Los símbolos de maná y de texto (`/symbology`): código y SVG.
+    pub async fn symbology(&self) -> AppResult<Vec<Simbolo>> {
+        let url = format!("{API}/symbology");
+        let l: Option<ListaSimbolos> = self.json(|| self.http.get(&url)).await?;
+        Ok(l.map(|l| l.data).unwrap_or_default())
+    }
+
     pub async fn sets(&self) -> AppResult<Vec<SetInfo>> {
         let url = format!("{API}/sets");
         let l: Option<SetList> = self.json(|| self.http.get(&url)).await?;
         Ok(l.map(|l| l.data.into_iter().map(SetInfo::from).collect())
             .unwrap_or_default())
     }
+}
+
+/// Un símbolo de `/symbology`.
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq, Eq)]
+pub struct Simbolo {
+    pub symbol: String,
+    pub svg_uri: Option<String>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct ListaSimbolos {
+    data: Vec<Simbolo>,
 }
 
 impl CardApi for Scryfall {

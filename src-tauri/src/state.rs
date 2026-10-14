@@ -31,6 +31,12 @@ pub struct AppState {
     /// Miniaturas de resultados de búsqueda: huella de la URL → URL. Lo rellenan
     /// las búsquedas y lo lee el protocolo de imágenes (ruta `/t/`).
     pub miniaturas: Mutex<HashMap<String, String>>,
+    /// Letras, packs y símbolos del editor de cartas.
+    pub diseno: crate::diseno::recursos::Recursos,
+    /// Diseños registrados para la vista previa (`/d/`).
+    pub vistas: Mutex<crate::diseno::vista::Vistas>,
+    /// Ilustraciones decodificadas para el render de diseños.
+    pub imagenes: crate::diseno::recursos::CacheImagenes,
     /// Cuántas miniaturas se procesan a la vez (una por núcleo).
     pub renders: tokio::sync::Semaphore,
     /// Trabajos de resolución/exportación en marcha (la limpieza de imágenes
@@ -46,6 +52,7 @@ impl AppState {
         // Una vez: apuntar las imágenes de los diseños que ya hubiera.
         crate::store::decks::rellenar_refs(&db)?;
         let blobs = BlobStore::new(paths.data.join("blobs"));
+        let diseno = crate::diseno::recursos::Recursos::abrir(&paths.data);
         Ok(AppState {
             db,
             blobs,
@@ -53,6 +60,9 @@ impl AppState {
             scryfall: Arc::new(Scryfall::new()?),
             jobs: Jobs::default(),
             miniaturas: Mutex::new(HashMap::new()),
+            diseno,
+            vistas: Mutex::new(Default::default()),
+            imagenes: Default::default(),
             renders: tokio::sync::Semaphore::new(
                 std::thread::available_parallelism()
                     .map(|n| n.get())

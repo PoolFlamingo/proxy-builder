@@ -6,6 +6,8 @@
 //! Rutas (y ninguna más):
 //! - `/r/<sha256>/<params base64url>/<ancho>` → miniatura procesada de un blob.
 //! - `/t/<sha256 de URL>` → miniatura de un resultado de búsqueda de Scryfall.
+//! - `/d/<huella>/<ancho>` → vista previa de un diseño registrado
+//!   (`design_register`).
 
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
@@ -31,6 +33,10 @@ pub enum Ruta {
     },
     Miniatura {
         huella: String,
+    },
+    Diseno {
+        huella: String,
+        ancho: u32,
     },
 }
 
@@ -62,6 +68,16 @@ pub fn leer_ruta(ruta: &str) -> Result<Ruta, Fallo> {
         ["t", huella] if es_huella(huella) => Ok(Ruta::Miniatura {
             huella: (*huella).to_string(),
         }),
+        ["d", huella, ancho] if es_huella(huella) => {
+            let ancho: u32 = ancho.parse().map_err(|_| Fallo::Mala)?;
+            if !ANCHOS.contains(&ancho) {
+                return Err(Fallo::Mala);
+            }
+            Ok(Ruta::Diseno {
+                huella: (*huella).to_string(),
+                ancho,
+            })
+        }
         _ => Err(Fallo::NoEsta),
     }
 }
@@ -101,6 +117,21 @@ async fn atender<R: tauri::Runtime>(app: tauri::AppHandle<R>, ruta: String) -> R
             .await;
             match r {
                 Ok(Ok(bytes)) => respuesta(StatusCode::OK, "image/jpeg", bytes),
+                Ok(Err(e)) if e.code == crate::error::ErrorCode::NotFound => {
+                    vacia(StatusCode::NOT_FOUND)
+                }
+                _ => vacia(StatusCode::INTERNAL_SERVER_ERROR),
+            }
+        }
+        Ok(Ruta::Diseno { huella, ancho }) => {
+            let _permiso = estado.renders.acquire().await;
+            let app2 = app.clone();
+            let r = tauri::async_runtime::spawn_blocking(move || {
+                crate::diseno::vista::imagen(&app2.state::<AppState>(), &huella, ancho)
+            })
+            .await;
+            match r {
+                Ok(Ok(bytes)) => respuesta(StatusCode::OK, "image/png", bytes),
                 Ok(Err(e)) if e.code == crate::error::ErrorCode::NotFound => {
                     vacia(StatusCode::NOT_FOUND)
                 }
@@ -174,6 +205,13 @@ mod tests {
             leer_ruta(&format!("/t/{h}")),
             Ok(Ruta::Miniatura { .. })
         ));
+        assert_eq!(
+            leer_ruta(&format!("/d/{h}/745")),
+            Ok(Ruta::Diseno {
+                huella: h.clone(),
+                ancho: 745
+            })
+        );
     }
 
     #[test]
@@ -189,6 +227,9 @@ mod tests {
             format!("/r/../{p}/488"),
             format!("/t/{}", "g".repeat(64)),
             "/t/..".to_string(),
+            format!("/d/{h}/500"),
+            format!("/d/{}/745", "z".repeat(64)),
+            format!("/d/{h}"),
             "/home/estigio/secreto.png".to_string(),
             "/r/%2e%2e".to_string(),
         ] {

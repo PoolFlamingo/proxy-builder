@@ -21,4 +21,10 @@ frame?: FrameOptions,
 /**
  * Una por cara o mitad (1 en las normales).
  */
-faces: Array<FaceDesign>, before: BeforeDesign, card: CardData, footer: FooterOptions, options: DesignOptions, emblem: EmblemChoice, };
+faces: Array<FaceDesign>, before: BeforeDesign, card: CardData, footer: FooterOptions, options: DesignOptions, emblem: EmblemChoice, 
+/**
+ * La huella con la que se pintó la miniatura `front` de la carta. Si la
+ * de ahora es otra (cambió la colección, una letra, el pack…), la
+ * miniatura está desfasada y se rehace (`design_rerender`).
+ */
+thumbKey?: string, };

@@ -1,7 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { ArchidektImport } from "@/bindings/ArchidektImport";
+import type { Aviso } from "@/bindings/Aviso";
 import type { CacheStats } from "@/bindings/CacheStats";
 import type { CalibrationTextsInput } from "@/bindings/CalibrationTextsInput";
+import type { CardDesign } from "@/bindings/CardDesign";
 import type { CardIdentify } from "@/bindings/CardIdentify";
 import type { CardMeta } from "@/bindings/CardMeta";
 import type { CardSummary } from "@/bindings/CardSummary";
@@ -12,10 +14,13 @@ import type { DeckKind } from "@/bindings/DeckKind";
 import type { DeckStats } from "@/bindings/DeckStats";
 import type { DeckSummary } from "@/bindings/DeckSummary";
 import type { DesignDraft } from "@/bindings/DesignDraft";
+import type { DesignLang } from "@/bindings/DesignLang";
 import type { ExportEstimate } from "@/bindings/ExportEstimate";
 import type { FaceImage } from "@/bindings/FaceImage";
 import type { GcReport } from "@/bindings/GcReport";
 import type { IdentifyRequest } from "@/bindings/IdentifyRequest";
+import type { LetraInfo } from "@/bindings/LetraInfo";
+import type { PackInfo } from "@/bindings/PackInfo";
 import type { PagePlan } from "@/bindings/PagePlan";
 import type { ParsedDecklist } from "@/bindings/ParsedDecklist";
 import type { Preset } from "@/bindings/Preset";
@@ -24,6 +29,7 @@ import type { PrintSettings } from "@/bindings/PrintSettings";
 import type { ResolveOptions } from "@/bindings/ResolveOptions";
 import type { SaveResult } from "@/bindings/SaveResult";
 import type { SetInfo } from "@/bindings/SetInfo";
+import type { SimbolosInfo } from "@/bindings/SimbolosInfo";
 import type { TipoCarpeta } from "@/bindings/TipoCarpeta";
 
 /**
@@ -85,6 +91,24 @@ export interface Commands {
 	collection_list: { args: Record<string, never>; result: Collection[] };
 	collection_save: { args: { collection: Collection }; result: Collection };
 	collection_delete: { args: { id: string }; result: null };
+	fonts_list: { args: Record<string, never>; result: LetraInfo[] };
+	font_import: { args: { path: string }; result: LetraInfo };
+	font_remove: { args: { id: string }; result: null };
+	packs_list: { args: Record<string, never>; result: PackInfo[] };
+	pack_import: { args: { path: string }; result: PackInfo };
+	pack_remove: { args: { id: string }; result: null };
+	symbols_status: { args: { refresh: boolean }; result: SimbolosInfo };
+	design_register: {
+		args: { design: CardDesign; cara: number; lang: DesignLang };
+		result: string;
+	};
+	design_fit_report: { args: { design: CardDesign; lang: DesignLang }; result: Aviso[] };
+	design_save: {
+		args: { card: DeckCard; design: CardDesign; lang: DesignLang };
+		result: DeckCard;
+	};
+	design_remove: { args: { card: DeckCard }; result: DeckCard };
+	design_rerender: { args: { cards: DeckCard[]; lang: DesignLang }; result: DeckCard[] };
 	export_pdf: { args: { deck: Deck; path: string }; result: number };
 	export_estimate: { args: { deck: Deck }; result: ExportEstimate };
 	export_calibration: {

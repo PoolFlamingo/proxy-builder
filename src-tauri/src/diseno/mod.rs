@@ -5,3 +5,6 @@
 //!   `CardDesign` con su instantánea mecánica.
 
 pub mod borrador;
+pub mod pintar;
+pub mod recursos;
+pub mod vista;

@@ -420,6 +420,7 @@ mod tests {
             footer: FooterOptions::default(),
             options: DesignOptions::default(),
             emblem: EmblemChoice::Inherit,
+            thumb_key: None,
         });
     }
 

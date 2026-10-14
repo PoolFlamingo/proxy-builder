@@ -118,8 +118,12 @@ pub fn efectivo(d: &CardDesign, coleccion: Option<&Collection>) -> DisenoEfectiv
         .or_else(|| c.map(|c| c.title_squeeze_min))
         .unwrap_or(ESTRECHADO_DEFECTO)
         .clamp(ESTRECHADO_MIN, ESTRECHADO_MAX);
+    // Lo que no cambia los píxeles no entra en la huella.
+    let mut design = d.clone();
+    design.thumb_key = None;
+    design.status = DesignStatus::Draft;
     DisenoEfectivo {
-        design: d.clone(),
+        design,
         frame,
         emblem,
         original_name,

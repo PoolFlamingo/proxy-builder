@@ -19,10 +19,16 @@ use sha2::{Digest, Sha256};
 use tauri::{AppHandle, Emitter, Manager, State};
 use ts_rs::TS;
 
+use crate::diseno::pintar::{pintar, DisenosDelDeck};
 use crate::error::{AppError, AppResult, ErrorCode};
 use crate::render::{render_para_pdf, spec_de_casilla};
 use crate::state::AppState;
 use crate::store::blobs::escribir_atomico;
+use proxy_core::diseno::efectivo::DisenoEfectivo;
+use proxy_core::diseno::render::Salida;
+use proxy_core::imaging::frame::trim_px;
+use proxy_core::imaging::pipeline::{render_desde_imagen, DisenoRef};
+use proxy_core::model::DeckCard;
 
 impl From<PdfError> for AppError {
     fn from(e: PdfError) -> Self {
@@ -76,34 +82,47 @@ pub struct ExportDoneEvent {
 struct Encargo {
     especificaciones: HashMap<String, RenderSpec>,
     por_casilla: HashMap<(usize, usize), String>,
+    /// Huella → diseño efectivo, para las casillas de cartas diseñadas.
+    disenos: HashMap<String, DisenoEfectivo>,
 }
 
-fn encargo(deck: &Deck, p: &PagePlan) -> Encargo {
-    let ediciones: HashMap<&str, &CardEdits> = deck
-        .cards
-        .iter()
-        .map(|c| (c.id.as_str(), &c.edits))
-        .collect();
+fn encargo(
+    deck: &Deck,
+    p: &PagePlan,
+    disenos: Option<(&AppState, &DisenosDelDeck)>,
+) -> AppResult<Encargo> {
+    let cartas: HashMap<&str, &DeckCard> = deck.cards.iter().map(|c| (c.id.as_str(), c)).collect();
     let mut especificaciones = HashMap::new();
     let mut por_casilla = HashMap::new();
+    let mut efectivos = HashMap::new();
     let ninguna = CardEdits::default();
     for (i, pagina) in p.pages.iter().enumerate() {
         for (j, slot) in pagina.slots.iter().enumerate() {
             let Some(img) = &slot.image else { continue };
-            let ed = ediciones
-                .get(slot.card_id.as_str())
-                .copied()
-                .unwrap_or(&ninguna);
-            let spec = spec_de_casilla(slot, img, ed, &deck.settings);
+            let carta = cartas.get(slot.card_id.as_str()).copied();
+            let ed = carta.map_or(&ninguna, |c| &c.edits);
+            let mut spec = spec_de_casilla(slot, img, ed, &deck.settings);
+            if let (Some((state, d)), Some(c)) = (disenos, carta) {
+                if let Some(r) = d.referencia(state, c, slot)? {
+                    // La carta diseñada sale del motor: sin retoques ni oscurecido.
+                    spec.edits = CardEdits::default();
+                    spec.edge = None;
+                    if let Some(e) = d.efectivos.get(&c.id) {
+                        efectivos.insert(r.huella.clone(), e.clone());
+                    }
+                    spec.diseno = Some(r);
+                }
+            }
             let k = spec.key();
             especificaciones.entry(k.clone()).or_insert(spec);
             por_casilla.insert((i, j), k);
         }
     }
-    Encargo {
+    Ok(Encargo {
         especificaciones,
         por_casilla,
-    }
+        disenos: efectivos,
+    })
 }
 
 fn huella_documento(p: &PagePlan, claves: &HashMap<(usize, usize), String>) -> String {
@@ -148,6 +167,19 @@ fn ruta_trozo(base: &Path, i: usize, total: usize) -> PathBuf {
     base.with_file_name(format!("{tallo} ({}).pdf", i + 1))
 }
 
+/// Una casilla de carta diseñada: el motor la pinta a la medida exacta del
+/// corte y a los PPP de la exportación; después, sangrado y codificación.
+fn render_diseno_para_pdf(
+    state: &AppState,
+    e: &DisenoEfectivo,
+    d: &DisenoRef,
+    spec: &RenderSpec,
+) -> AppResult<Rendered> {
+    let (tw, _) = trim_px(spec.card, spec.target.into());
+    let r = pintar(state, e, d.cara, d.lang, spec.card, tw, Salida::Impresion)?;
+    Ok(render_desde_imagen(&r.imagen, spec)?)
+}
+
 /// El trabajo entero (síncrono: se lanza en un hilo aparte).
 pub fn exportar(
     state: &AppState,
@@ -157,7 +189,8 @@ pub fn exportar(
     progreso: &(dyn Fn(ExportPhase, u32, u32) + Sync),
 ) -> AppResult<ExportResult> {
     let p = plan(deck)?;
-    let enc = encargo(deck, &p);
+    let disenos = DisenosDelDeck::de(state, deck)?;
+    let enc = encargo(deck, &p, Some((state, &disenos)))?;
     let total = enc.especificaciones.len() as u32;
     let hechas = AtomicU32::new(0);
     progreso(ExportPhase::Prepare, 0, total);
@@ -179,7 +212,15 @@ pub fn exportar(
                 if cancelado.load(Ordering::SeqCst) {
                     return Err(AppError::new(ErrorCode::Cancelled));
                 }
-                let r = render_para_pdf(state, spec)?;
+                let r = match &spec.diseno {
+                    Some(d) => {
+                        let e = enc.disenos.get(&d.huella).ok_or_else(|| {
+                            AppError::new(ErrorCode::Internal).with("detalle", "diseño perdido")
+                        })?;
+                        render_diseno_para_pdf(state, e, d, spec)?
+                    }
+                    None => render_para_pdf(state, spec)?,
+                };
                 let n = hechas.fetch_add(1, Ordering::SeqCst) + 1;
                 progreso(ExportPhase::Prepare, n, total);
                 Ok(((*k).clone(), r))
@@ -311,7 +352,7 @@ pub struct ExportEstimate {
 #[tauri::command]
 pub fn export_estimate(deck: Deck) -> AppResult<ExportEstimate> {
     let p = plan(&deck)?;
-    let enc = encargo(&deck, &p);
+    let enc = encargo(&deck, &p, None)?;
     let s: &PrintSettings = &deck.settings;
     let por_imagen = bytes_por_imagen(
         s.card_size,
@@ -476,6 +517,77 @@ mod tests {
             std::fs::read(&destino).unwrap(),
             std::fs::read(&otro).unwrap()
         );
+    }
+
+    /// Tres cartas diseñadas: el PDF las pinta desde el diseño, a la medida
+    /// exacta del corte y a los PPP pedidos, y siempre igual.
+    #[test]
+    fn exportar_cartas_disenadas() {
+        use proxy_core::diseno::modelo::{ByLang, CardData, FaceData};
+        let (dir, s) = estado();
+        for (ppp, calidad, ancho) in [
+            (600, Quality::Dpi600, 1488i64),
+            (900, Quality::Dpi900, 2232),
+        ] {
+            let mut d = deck(
+                &s,
+                3,
+                PrintSettings {
+                    quality: calidad,
+                    ..Default::default()
+                },
+            );
+            for (i, c) in d.cards.iter_mut().enumerate() {
+                let datos = CardData {
+                    scryfall_id: format!("x{i}"),
+                    layout: "normal".into(),
+                    rarity: "rare".into(),
+                    set: "tst".into(),
+                    collector_number: "1".into(),
+                    faces: vec![FaceData {
+                        name: format!("Carta {i}"),
+                        mana_cost: "{2}".into(),
+                        type_line: ByLang {
+                            es: "Artefacto".into(),
+                            en: "Artifact".into(),
+                        },
+                        rules: ByLang {
+                            es: format!("Carta {i} hace cosas."),
+                            en: String::new(),
+                        },
+                        ..FaceData::default()
+                    }],
+                    ..CardData::default()
+                };
+                c.design = Some(crate::diseno::borrador::montar(c, datos, None, &[]).design);
+            }
+            let destino = dir.path().join(format!("disenadas-{ppp}.pdf"));
+            let n = std::sync::Mutex::new(0);
+            exportar(&s, &d, &destino, &AtomicBool::new(false), &|f, _, b| {
+                if f == ExportPhase::Prepare {
+                    *n.lock().unwrap() = b;
+                }
+            })
+            .unwrap();
+            assert_eq!(*n.lock().unwrap(), 3, "una imagen por diseño");
+            let doc = lopdf::Document::load(&destino).unwrap();
+            let anchos: Vec<i64> = doc
+                .objects
+                .values()
+                .filter_map(|o| o.as_stream().ok())
+                .filter(|st| {
+                    st.dict.get(b"Subtype").and_then(|v| v.as_name()).ok() == Some(&b"Image"[..])
+                })
+                .filter_map(|st| st.dict.get(b"Width").and_then(|v| v.as_i64()).ok())
+                .collect();
+            assert!(anchos.contains(&ancho), "{ppp} PPP: {anchos:?}");
+            let otro = dir.path().join(format!("otra-{ppp}.pdf"));
+            exportar(&s, &d, &otro, &AtomicBool::new(false), &|_, _, _| {}).unwrap();
+            assert_eq!(
+                std::fs::read(&destino).unwrap(),
+                std::fs::read(&otro).unwrap()
+            );
+        }
     }
 
     #[test]

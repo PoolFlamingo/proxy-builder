@@ -260,6 +260,7 @@ pub fn montar(
             ..DesignOptions::default()
         },
         emblem: EmblemChoice::Inherit,
+        thumb_key: None,
     };
     DesignDraft { design, avisos }
 }
