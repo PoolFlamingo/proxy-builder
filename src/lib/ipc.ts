@@ -32,6 +32,7 @@ import type { Resumen } from "@/bindings/Resumen";
 import type { SaveResult } from "@/bindings/SaveResult";
 import type { SetInfo } from "@/bindings/SetInfo";
 import type { SimbolosInfo } from "@/bindings/SimbolosInfo";
+import type { Sugerencia } from "@/bindings/Sugerencia";
 import type { TipoCarpeta } from "@/bindings/TipoCarpeta";
 
 /**
@@ -112,6 +113,10 @@ export interface Commands {
 	design_export_png: {
 		args: { cards: DeckCard[]; folder: string; dpi: number; langs: DesignLang[] };
 		result: number;
+	};
+	design_suggest_translation: {
+		args: { design: CardDesign; cara: number };
+		result: Sugerencia;
 	};
 	design_structure: {
 		args: { design: CardDesign; cara: number; lang: DesignLang };

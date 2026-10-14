@@ -33,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { useUi } from "@/stores/ui-store";
 import { RecortarDialog } from "./recortar-dialog";
 import { ESTILOS, MAQUETACIONES, NOMBRE_ORIGINAL, PALETAS, RAREZAS } from "./textos";
+import { TraduccionSugerida } from "./traduccion";
 
 type Cambiar = (f: (d: CardDesign) => CardDesign) => void;
 
@@ -363,6 +364,7 @@ function PestanaTextos({
 					</div>
 				);
 			})}
+			<TraduccionSugerida design={design} cara={cara} cambiar={cambiar} />
 			<p className="text-[11px] text-muted-foreground">
 				{t(
 					"En las reglas, el nombre original se cambia solo por el tuyo («Si Veldanava, Dragón de la Creación fuera a ir…»).",

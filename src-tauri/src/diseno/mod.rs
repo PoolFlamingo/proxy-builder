@@ -10,4 +10,5 @@ pub mod lote;
 pub mod pintar;
 pub mod png;
 pub mod recursos;
+pub mod traduccion;
 pub mod vista;
