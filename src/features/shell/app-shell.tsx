@@ -1,4 +1,4 @@
-import { BookOpen, Layers, Settings } from "lucide-react";
+import { BookOpen, Brush, Layers, Settings } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { useDefaultLayout } from "react-resizable-panels";
 import { useLang } from "@/components/language-provider";
@@ -21,11 +21,13 @@ export function AppShell({
 	centro,
 	derecha,
 	biblioteca,
+	disenar,
 }: {
 	izquierda: ReactNode;
 	centro: ReactNode;
 	derecha: ReactNode;
 	biblioteca: ReactNode;
+	disenar: ReactNode;
 }) {
 	const { t } = useLang();
 	const vista = useUi((s) => s.vista);
@@ -51,18 +53,24 @@ export function AppShell({
 					data-pestanas=""
 					className="ml-4 shrink-0"
 					value={vista}
-					onValueChange={(v) => (v === "deck" || v === "biblioteca") && setVista(v)}
+					onValueChange={(v) =>
+						(v === "deck" || v === "disenar" || v === "biblioteca") && setVista(v)
+					}
 				>
 					<ToggleGroupItem value="deck" className="gap-1.5 px-3 text-xs">
 						<Layers className="size-3.5" />
 						{t("Deck")}
+					</ToggleGroupItem>
+					<ToggleGroupItem value="disenar" className="gap-1.5 px-3 text-xs">
+						<Brush className="size-3.5" />
+						{t("Diseñar")}
 					</ToggleGroupItem>
 					<ToggleGroupItem value="biblioteca" className="gap-1.5 px-3 text-xs">
 						<BookOpen className="size-3.5" />
 						{t("Biblioteca")}
 					</ToggleGroupItem>
 				</ToggleGroup>
-				{vista === "deck" && <NombreDeck />}
+				{vista !== "biblioteca" && <NombreDeck />}
 				<div className="ml-auto flex items-center gap-2.5">
 					<SaveIndicator />
 					<Button
@@ -96,6 +104,8 @@ export function AppShell({
 							{derecha}
 						</ResizablePanel>
 					</ResizablePanelGroup>
+				) : vista === "disenar" ? (
+					disenar
 				) : (
 					biblioteca
 				)}

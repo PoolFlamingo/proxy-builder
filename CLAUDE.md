@@ -122,6 +122,13 @@ equipo. Los planes (`plans/`) no se versionan.
 
 - Sincronizar: `git bundle` en la nube → `tmp/` de Pablo → `git fetch` del
   bundle y `git merge --ff-only`.
+- 🛑 **No subir a GitHub desde la nube** (Pablo, 14/10/2026): cada push lanza
+  el CI y le llegan correos si falla. Los cambios llegan a su repo local por
+  bundle; él decide cuándo subir y cuándo sacar versión. Antes de cada commit,
+  lo mismo que el CI (`pnpm bindings`, `pnpm check`, `pnpm check:rust-fmt`,
+  `pnpm check:clippy` con el clippy de la última estable y `pnpm test:rust`),
+  y `pnpm test:rust` otra vez después del commit (lint-staged formatea JSON y
+  TS al hacerlo).
 - Probar la ventana en la nube: `Xvfb :99` y la app con
   `WEBKIT_DISABLE_COMPOSITING_MODE=1 WEBKIT_DISABLE_DMABUF_RENDERER=1`. Sin
   eso, en una pantalla sin GPU las animaciones de entrada de los diálogos no

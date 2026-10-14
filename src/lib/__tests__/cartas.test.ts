@@ -63,6 +63,16 @@ describe("marcas y nombres", () => {
 		expect(insignias({ ...c, source: { kind: "custom" } }).map((i) => i.texto)[0]).toBe("CUSTOM");
 	});
 
+	it("una carta diseñada solo lleva la marca de su diseño", () => {
+		const c = carta("a", "X", {
+			meta: { ...carta("a", "X").meta, langFallback: true, imageStatus: "lowres" },
+		});
+		const conDiseno = (status: "draft" | "ready") =>
+			({ ...c, design: { status } }) as unknown as DeckCard;
+		expect(insignias(conDiseno("draft")).map((i) => i.texto)).toEqual(["BORRADOR"]);
+		expect(insignias(conDiseno("ready")).map((i) => i.texto)).toEqual(["PROXY"]);
+	});
+
 	it("el nombre de un fichero sin carpeta ni extensión", () => {
 		expect(nombreDeFichero("/home/p/Mi carta.final.png")).toBe("Mi carta.final");
 		expect(nombreDeFichero("C:\\x\\dorso.jpg")).toBe("dorso");

@@ -1,0 +1,170 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import type { Aviso } from "@/bindings/Aviso";
+import type { CardDesign } from "@/bindings/CardDesign";
+import type { DesignLang } from "@/bindings/DesignLang";
+import { useLang } from "@/components/language-provider";
+import { call } from "@/lib/ipc";
+import { useDeck } from "@/stores/deck-store";
+import { aplicarAlDeck, type Grupo, numerosUsados, quitarDiseno } from "./grupos";
+
+const CLAVE_COLECCION = "proxybuilder.disenar.coleccion";
+
+/** La última colección usada para los borradores nuevos (en este equipo). */
+export function coleccionRecordada(): string | null {
+	try {
+		return localStorage.getItem(CLAVE_COLECCION);
+	} catch {
+		return null;
+	}
+}
+
+export function recordarColeccion(id: string | null) {
+	try {
+		if (id) localStorage.setItem(CLAVE_COLECCION, id);
+		else localStorage.removeItem(CLAVE_COLECCION);
+	} catch {
+		/* sin almacenamiento */
+	}
+}
+
+/**
+ * El diseño que se está editando: el de la carta si ya lo tiene; si no, un
+ * borrador que pide a Rust (datos de Scryfall en inglés y español). Vive aquí
+ * hasta «Guardar»: entonces Rust pinta la miniatura y la carta va al deck con
+ * un solo `setCartas` (deshacer sigue funcionando).
+ *
+ * La vista previa se registra en Rust con 120 ms de espera y los avisos
+ * (texto que no cabe, símbolos que faltan…) con 400 ms.
+ */
+export function useBorrador(
+	grupo: Grupo | null,
+	cara: number,
+	lang: DesignLang,
+	/** Cambia cuando cambian colecciones, letras o packs: se vuelve a pintar. */
+	recursos: unknown,
+) {
+	const { mensaje } = useLang();
+	const [design, setDesign] = useState<CardDesign | null>(null);
+	const [original, setOriginal] = useState<CardDesign | null>(null);
+	const [cargando, setCargando] = useState(false);
+	const [huella, setHuella] = useState<string | null>(null);
+	const [avisos, setAvisos] = useState<Aviso[]>([]);
+	const [guardando, setGuardando] = useState(false);
+	const principal = grupo?.cartas[0] ?? null;
+	const idPrincipal = principal?.id ?? null;
+	const clave = grupo?.clave ?? null;
+	// Para no pisar un borrador con la respuesta de una carta anterior.
+	const turno = useRef(0);
+
+	// Al cambiar de carta: su diseño, o un borrador nuevo.
+	useEffect(() => {
+		const mio = ++turno.current;
+		setHuella(null);
+		setAvisos([]);
+		if (!grupo || !principal || !grupo.scryfallId) {
+			setDesign(null);
+			setOriginal(null);
+			return;
+		}
+		if (principal.design) {
+			setDesign(principal.design);
+			setOriginal(principal.design);
+			return;
+		}
+		setDesign(null);
+		setOriginal(null);
+		setCargando(true);
+		const cartas = useDeck.getState().deck?.cards ?? [];
+		call("design_draft", {
+			card: principal,
+			usados: numerosUsados(cartas),
+			collection: coleccionRecordada(),
+		})
+			.then((b) => {
+				if (turno.current !== mio) return;
+				setDesign(b.design);
+				// Un borrador recién hecho no es un cambio: «Descartar» vuelve a él.
+				setOriginal(b.design);
+				for (const a of b.avisos) setAvisos((v) => [...v, a]);
+			})
+			.catch((e) => toast.error(mensaje(e)))
+			.finally(() => turno.current === mio && setCargando(false));
+	}, [clave, idPrincipal]);
+
+	// Vista previa.
+	useEffect(() => {
+		if (!design) return;
+		const id = setTimeout(() => {
+			call("design_register", { design, cara, lang })
+				.then(setHuella)
+				.catch((e) => toast.error(mensaje(e)));
+		}, 120);
+		return () => clearTimeout(id);
+	}, [design, cara, lang, mensaje, recursos]);
+
+	// Avisos.
+	useEffect(() => {
+		if (!design) return;
+		const id = setTimeout(() => {
+			call("design_fit_report", { design, lang })
+				.then(setAvisos)
+				.catch(() => {});
+		}, 400);
+		return () => clearTimeout(id);
+	}, [design, lang, recursos]);
+
+	const cambiar = useCallback((f: (d: CardDesign) => CardDesign) => {
+		setDesign((d) => (d ? f(d) : d));
+	}, []);
+
+	const guardar = useCallback(
+		async (todas: boolean, listo?: boolean) => {
+			if (!design || !grupo || !principal) return false;
+			const deck = useDeck.getState().deck;
+			if (!deck) return false;
+			setGuardando(true);
+			try {
+				const d: CardDesign =
+					listo === undefined ? design : { ...design, status: listo ? "ready" : "draft" };
+				const nueva = await call("design_save", {
+					card: principal,
+					design: d,
+					lang: deck.settings.designLang,
+				});
+				useDeck.getState().setCartas((cs) => aplicarAlDeck(cs, grupo, principal.id, nueva, todas));
+				if (d.collection !== undefined) recordarColeccion(d.collection ?? null);
+				setDesign(nueva.design ?? d);
+				setOriginal(nueva.design ?? d);
+				return true;
+			} catch (e) {
+				toast.error(mensaje(e));
+				return false;
+			} finally {
+				setGuardando(false);
+			}
+		},
+		[design, grupo, principal, mensaje],
+	);
+
+	const quitar = useCallback(() => {
+		if (!grupo) return;
+		const ids = new Set(grupo.cartas.map((c) => c.id));
+		useDeck.getState().setCartas((cs) => quitarDiseno(cs, ids));
+	}, [grupo]);
+
+	const cambiado = JSON.stringify(design) !== JSON.stringify(original);
+
+	return {
+		design,
+		cambiar,
+		cargando,
+		huella,
+		avisos,
+		guardar,
+		guardando,
+		quitar,
+		cambiado,
+		descartar: () => setDesign(original),
+	};
+}

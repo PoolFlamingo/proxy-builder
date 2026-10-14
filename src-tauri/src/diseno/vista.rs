@@ -199,6 +199,47 @@ pub fn rehacer(
     Ok(cambiadas)
 }
 
+/// Vuelve a numerar los diseños por el orden del deck (`0001…`; las fichas,
+/// `T001…`). Las copias de una carta comparten número y los escritos a mano
+/// no cambian. Devuelve solo las cartas que cambian, ya con su miniatura.
+pub fn renumerar(
+    state: &AppState,
+    cartas: &[DeckCard],
+    lang: DesignLang,
+) -> AppResult<Vec<DeckCard>> {
+    use proxy_core::diseno::borrador::numero;
+    let mut asignados: HashMap<String, String> = HashMap::new();
+    let (mut n, mut f) = (0u32, 0u32);
+    let mut cambiadas = Vec::new();
+    for c in cartas {
+        let Some(d) = &c.design else { continue };
+        if d.footer.number_manual {
+            continue;
+        }
+        let clave = d.card.scryfall_id.clone();
+        let num = match asignados.get(&clave) {
+            Some(x) => x.clone(),
+            None => {
+                let x = if d.card.es_ficha() {
+                    f += 1;
+                    numero(f, true)
+                } else {
+                    n += 1;
+                    numero(n, false)
+                };
+                asignados.insert(clave, x.clone());
+                x
+            }
+        };
+        if d.footer.number != num {
+            let mut nuevo = d.clone();
+            nuevo.footer.number = num;
+            cambiadas.push(aplicar(state, c, &nuevo, lang)?);
+        }
+    }
+    Ok(cambiadas)
+}
+
 /// Quita el diseño y deja la carta como estaba antes.
 pub fn quitar(card: &DeckCard) -> DeckCard {
     let mut c = card.clone();

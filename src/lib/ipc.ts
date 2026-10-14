@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { ArchidektImport } from "@/bindings/ArchidektImport";
+import type { ArtRef } from "@/bindings/ArtRef";
 import type { Aviso } from "@/bindings/Aviso";
 import type { CacheStats } from "@/bindings/CacheStats";
 import type { CalibrationTextsInput } from "@/bindings/CalibrationTextsInput";
@@ -109,6 +110,14 @@ export interface Commands {
 	};
 	design_remove: { args: { card: DeckCard }; result: DeckCard };
 	design_rerender: { args: { cards: DeckCard[]; lang: DesignLang }; result: DeckCard[] };
+	design_renumber: { args: { cards: DeckCard[]; lang: DesignLang }; result: DeckCard[] };
+	art_from_clipboard: { args: { data: string }; result: ArtRef };
+	art_from_blob: { args: { blob: string }; result: ArtRef };
+	art_from_scryfall: { args: { scryfallId: string }; result: ArtRef };
+	art_from_card: {
+		args: { blob: string; x: number; y: number; w: number; h: number };
+		result: ArtRef;
+	};
 	export_pdf: { args: { deck: Deck; path: string }; result: number };
 	export_estimate: { args: { deck: Deck }; result: ExportEstimate };
 	export_calibration: {

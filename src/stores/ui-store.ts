@@ -29,13 +29,19 @@ export type Dialogo =
 	| { tipo: "anadir"; en?: number }
 	| { tipo: "moverA"; ids: string[] }
 	| { tipo: "sets" }
-	| { tipo: "estadisticas" };
+	| { tipo: "estadisticas" }
+	/** Editor de cartas: colecciones; letras, packs y símbolos; recortar arte. */
+	| { tipo: "colecciones" }
+	| { tipo: "recursosDiseno" };
 
-export type Vista = "deck" | "biblioteca";
+export type Vista = "deck" | "biblioteca" | "disenar";
 
 type UiStore = Preferencias & {
 	vista: Vista;
 	setVista: (v: Vista) => void;
+	/** La carta que se está diseñando (id de una copia) en la vista «Diseñar». */
+	disenando: string | null;
+	disenar: (id: string | null) => void;
 	verReversos: boolean;
 	seleccion: string[];
 	/** Última carta pulsada, para seleccionar un tramo con Mayús. */
@@ -97,6 +103,8 @@ export const useUi = create<UiStore>((set, get) => ({
 	...leer(),
 	vista: "deck",
 	setVista: (vista) => set({ vista }),
+	disenando: null,
+	disenar: (id) => set({ disenando: id, ...(id ? { vista: "disenar" as const } : {}) }),
 	verReversos: false,
 	seleccion: [],
 	ancla: null,

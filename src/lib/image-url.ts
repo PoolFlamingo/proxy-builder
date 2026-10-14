@@ -81,3 +81,8 @@ export function urlMiniatura(blob: string, p: PreviewParams, ancho: AnchoMiniatu
 export function urlBusqueda(huella: string): string {
 	return `${raiz()}t/${huella}`;
 }
+
+/** La vista previa de un diseño registrado en Rust (`design_register`). */
+export function urlDiseno(huella: string, ancho: AnchoMiniatura): string {
+	return `${raiz()}d/${huella}/${ancho}`;
+}

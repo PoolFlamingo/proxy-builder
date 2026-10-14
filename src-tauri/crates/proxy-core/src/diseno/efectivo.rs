@@ -104,13 +104,17 @@ pub fn efectivo(d: &CardDesign, coleccion: Option<&Collection>) -> DisenoEfectiv
         credit: o(&f.credit, c.map(|c| &c.credit), ""),
         universe: o(&f.universe, c.map(|c| &c.universe), ""),
         year: o(&f.year, c.map(|c| &c.year), ""),
-        template: c
-            .map(|c| c.footer_template.clone())
-            .filter(|t| !t.es.trim().is_empty() || !t.en.trim().is_empty())
-            .unwrap_or_else(|| ByLang {
-                es: PIE_DEFECTO.into(),
-                en: PIE_DEFECTO.into(),
-            }),
+        // Cada idioma por su lado: el que se deja vacío usa el de fábrica.
+        template: {
+            let plantilla = |t: Option<&String>| match t {
+                Some(t) if !t.trim().is_empty() => t.clone(),
+                _ => PIE_DEFECTO.into(),
+            };
+            ByLang {
+                es: plantilla(c.map(|c| &c.footer_template.es)),
+                en: plantilla(c.map(|c| &c.footer_template.en)),
+            }
+        },
     };
     let squeeze_min = d
         .options

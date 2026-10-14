@@ -1,5 +1,8 @@
 import { CardEditorDialog } from "@/features/card-editor/card-editor-dialog";
 import { DecklistPanel } from "@/features/decklist/decklist-panel";
+import { ColeccionesDialog } from "@/features/disenar/colecciones-dialog";
+import { DisenarScreen } from "@/features/disenar/disenar-screen";
+import { RecursosDialog } from "@/features/disenar/recursos-dialog";
 import { ExportPanel } from "@/features/export/export-panel";
 import { LibraryScreen } from "@/features/library/library-screen";
 import { MoverADialog } from "@/features/preview/mover-a-dialog";
@@ -22,6 +25,7 @@ export default function App() {
 				centro={<PreviewPane />}
 				derecha={<ExportPanel />}
 				biblioteca={<LibraryScreen />}
+				disenar={<DisenarScreen />}
 			/>
 			<AddCardDialog />
 			<VariantDialog />
@@ -31,6 +35,8 @@ export default function App() {
 			<MoverADialog />
 			<StatsDialog />
 			<SetBrowserDialog />
+			<ColeccionesDialog />
+			<RecursosDialog />
 		</>
 	);
 }
