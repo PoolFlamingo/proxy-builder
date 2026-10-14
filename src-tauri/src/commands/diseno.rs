@@ -228,6 +228,29 @@ pub fn design_export_png(
     Ok(job_id)
 }
 
+/// Traducción sugerida (experimental) de una cara sin texto español: frases
+/// oficiales idénticas de otras cartas y su línea de tipo. Nunca se aplica
+/// sola: la pantalla la enseña y el usuario decide.
+#[tauri::command]
+pub async fn design_suggest_translation(
+    state: State<'_, AppState>,
+    design: CardDesign,
+    cara: u32,
+) -> AppResult<crate::diseno::traduccion::Sugerencia> {
+    let f = design
+        .card
+        .faces
+        .get(cara as usize)
+        .ok_or_else(|| AppError::new(ErrorCode::InvalidInput).with("motivo", "cara"))?;
+    crate::diseno::traduccion::sugerir(
+        state.scryfall.as_ref(),
+        &f.name,
+        &f.type_line.en,
+        &f.rules.en,
+    )
+    .await
+}
+
 /// Cómo se maqueta una cara (layout y texto partido), para el editor.
 #[tauri::command]
 pub fn design_structure(

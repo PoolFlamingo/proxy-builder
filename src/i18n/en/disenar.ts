@@ -1,5 +1,13 @@
 // Diseñar: el editor de cartas proxy (vista, formulario, colecciones y recursos).
 export const DISENAR: Record<string, string> = {
+	"Traducción sugerida (experimental)": "Suggested translation (experimental)",
+	"Buscar frases oficiales": "Look up official phrases",
+	"Busca en Scryfall las mismas frases en otras cartas que sí están en español y propone su texto oficial. Tarda un poco: una búsqueda por frase.":
+		"Looks up the same phrases on Scryfall in other cards printed in Spanish and suggests their official text. It takes a while: one search per phrase.",
+	"Usar": "Use",
+	"{n} de {total} frases encontradas; lo marcado se queda en inglés.":
+		"{n} of {total} phrases found; the highlighted ones stay in English.",
+	"Usar como reglas en español": "Use as the Spanish rules",
 	"Diseñar el deck": "Design the deck",
 	"Exportar imágenes": "Export images",
 	"{n} borradores hechos": "{n} drafts made",
