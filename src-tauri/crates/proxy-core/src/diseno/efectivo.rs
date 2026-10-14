@@ -12,7 +12,7 @@ use super::modelo::*;
 use crate::model::FaceImage;
 
 /// Plantilla del pie de fábrica (dos líneas): la de las cartas de Pablo.
-pub const PIE_DEFECTO: &str = "{num}  {rarity}  {original}\n{set} • {lang}  {brush} {artist}";
+pub const PIE_DEFECTO: &str = "{num}\t{rarity}\t{original}\n{set} • {lang}\t{brush} {artist}";
 
 /// El pie ya resuelto.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

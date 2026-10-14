@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 63 88" width="63" height="88">
+<defs>{{defs}}</defs>
+<!-- Marco completo del color de la carta, con su textura de brillos. -->
+<path fill-rule="evenodd" fill="#000" d="M-1,-1 H64 V89 H-1 Z M3.57,8.6 H59.4 V48.3 H3.57 Z"/>
+<path fill-rule="evenodd" fill="url(#marco)" d="M2.9,1.8 H60.1 A1.4,1.4 0 0 1 61.5,3.2 V81 A1.4,1.4 0 0 1 60.1,82.4 H2.9 A1.4,1.4 0 0 1 1.5,81 V3.2 A1.4,1.4 0 0 1 2.9,1.8 Z M3.57,8.6 H59.4 V48.3 H3.57 Z"/>
+<path fill-rule="evenodd" fill="url(#lateral)" d="M2.9,1.8 H60.1 A1.4,1.4 0 0 1 61.5,3.2 V81 A1.4,1.4 0 0 1 60.1,82.4 H2.9 A1.4,1.4 0 0 1 1.5,81 V3.2 A1.4,1.4 0 0 1 2.9,1.8 Z M3.57,8.6 H59.4 V48.3 H3.57 Z"/>
+<path fill-rule="evenodd" fill="url(#vetas)" d="M2.9,1.8 H60.1 A1.4,1.4 0 0 1 61.5,3.2 V81 A1.4,1.4 0 0 1 60.1,82.4 H2.9 A1.4,1.4 0 0 1 1.5,81 V3.2 A1.4,1.4 0 0 1 2.9,1.8 Z M3.57,8.6 H59.4 V48.3 H3.57 Z"/>
+<!-- Ventana del arte: el arte ya está pintado debajo; aquí, su filo. -->
+<rect x="3.57" y="8.6" width="55.83" height="39.7" fill="none" stroke="#000" stroke-opacity="0.75" stroke-width="0.3"/>
+<!-- Barra del título y barra de tipo, claras. -->
+<rect x="2.67" y="2.96" width="57.33" height="4.75" rx="1.3" fill="url(#crema)" stroke="{{oscuro}}" stroke-width="0.2"/>
+<rect x="2.67" y="49.2" width="57.33" height="4.8" rx="1.3" fill="url(#crema)" stroke="{{oscuro}}" stroke-width="0.2"/>
+<!-- Caja de reglas. -->
+<rect x="3.57" y="54.6" width="55.83" height="26.6" fill="{{fondoCaja}}" fill-opacity="{{opacidadCaja}}" stroke="{{oscuro}}" stroke-width="0.2"/>
+</svg>

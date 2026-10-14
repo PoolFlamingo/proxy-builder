@@ -211,6 +211,16 @@ pub struct Bloque {
     pub base: f32,
 }
 
+impl Bloque {
+    /// Hasta dónde llega el último renglón (px desde el borde izquierdo).
+    pub fn ultima_linea_ancho(&self) -> f32 {
+        self.layout
+            .lines()
+            .last()
+            .map_or(0.0, |l| l.metrics().offset + l.metrics().advance)
+    }
+}
+
 /// Contexto de maquetación (se reutiliza entre bloques).
 #[derive(Default)]
 pub struct Maquetador {

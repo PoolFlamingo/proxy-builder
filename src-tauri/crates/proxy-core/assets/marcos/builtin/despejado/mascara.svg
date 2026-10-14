@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 63 88" width="63" height="88">
+<!-- Fuera de la ventana del arte, negro: esquinas de abajo redondeadas y el pie. -->
+<path fill-rule="evenodd" fill="#000" d="M-1,-1 H64 V89 H-1 Z M0,0 H63 V77 A6,6 0 0 1 57,83 H6 A6,6 0 0 1 0,77 Z"/>
+</svg>
