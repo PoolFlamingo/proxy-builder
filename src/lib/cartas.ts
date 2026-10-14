@@ -24,10 +24,19 @@ export function cartaPropia(img: FaceImage, nombre: string): DeckCard {
 	};
 }
 
-/** El nombre de un fichero sin carpeta ni extensión. */
+/**
+ * El nombre de carta que da un fichero: sin carpeta ni extensión y sin la
+ * numeración que suelen llevar las carpetas de proxies («0001 - », «T003 - »,
+ * «12. ») ni las marcas de cara o de repetido del final («(1)», «~2»), como
+ * los que saca «Exportar imágenes». Si no queda nada, el nombre tal cual.
+ */
 export function nombreDeFichero(ruta: string): string {
-	const f = ruta.split(/[\\/]/).pop() ?? ruta;
-	return f.replace(/\.[^.]+$/, "");
+	const f = (ruta.split(/[\\/]/).pop() ?? ruta).replace(/\.[^.]+$/, "");
+	const limpio = f
+		.replace(/^[A-Za-z]?\d{1,4}\s*[-–._]\s*/, "")
+		.replace(/\s+(\(\d{1,2}\)|~\d+)$/, "")
+		.trim();
+	return limpio || f.trim();
 }
 
 export type Insignia = { texto: string; tono: "info" | "aviso" | "error"; ayuda: string };

@@ -114,23 +114,32 @@ pub fn puntuar(candidatas: &[CardSummary], textos: &[String]) -> (Option<String>
         .map(|t| normalizar(t))
         .filter(|t| t.len() >= 3)
         .collect();
-    let mut mejor: Option<(&CardSummary, f64)> = None;
+    // A igual parecido gana la carta que se llama así entera frente a la que
+    // solo tiene una cara con ese nombre: «Lightning Bolt» es Lightning Bolt,
+    // no «Emeritus of Conflict // Lightning Bolt».
+    let mut mejor: Option<(&CardSummary, f64, bool)> = None;
     for c in candidatas {
-        let mut nombres = vec![c.name.clone()];
-        nombres.extend(c.printed_name.clone());
-        nombres.extend(c.name.split("//").map(|s| s.trim().to_string()));
-        for n in nombres.iter().map(|n| normalizar(n)) {
+        let mut nombres: Vec<(String, bool)> = vec![(c.name.clone(), true)];
+        nombres.extend(c.printed_name.clone().map(|n| (n, true)));
+        if c.name.contains("//") {
+            nombres.extend(c.name.split("//").map(|s| (s.trim().to_string(), false)));
+        }
+        for (n, entero) in nombres.iter().map(|(n, e)| (normalizar(n), *e)) {
             for t in &textos {
                 let p = parecido(&n, t);
-                if mejor.is_none_or(|(_, m)| p > m) {
-                    mejor = Some((c, p));
+                let mejora = match mejor {
+                    None => true,
+                    Some((_, m, e)) => p > m + 1e-9 || ((p - m).abs() <= 1e-9 && entero && !e),
+                };
+                if mejora {
+                    mejor = Some((c, p, entero));
                 }
             }
         }
     }
     match mejor {
-        Some((c, p)) if p >= 0.999 => (Some(c.id.clone()), Confidence::Exact),
-        Some((c, p)) if p >= UMBRAL_PROBABLE => (Some(c.id.clone()), Confidence::Probable),
+        Some((c, p, _)) if p >= 0.999 => (Some(c.id.clone()), Confidence::Exact),
+        Some((c, p, _)) if p >= UMBRAL_PROBABLE => (Some(c.id.clone()), Confidence::Probable),
         _ => (None, Confidence::None),
     }
 }
@@ -483,6 +492,27 @@ mod tests {
         )];
         let t = vec!["Insectile Aberration".to_string()];
         assert_eq!(puntuar(&cs, &t).1, Confidence::Exact);
+    }
+
+    #[test]
+    fn a_igual_nombre_gana_la_carta_entera_y_no_la_cara_de_otra() {
+        let t = vec!["Lightning Bolt".to_string()];
+        // La de doble cara llega primero (así la devolvía Scryfall).
+        let cs = vec![
+            carta("dfc", "Emeritus of Conflict // Lightning Bolt", None),
+            carta("bolt", "Lightning Bolt", None),
+        ];
+        assert_eq!(puntuar(&cs, &t), (Some("bolt".into()), Confidence::Exact));
+        // Y en el otro orden, igual.
+        let cs: Vec<_> = cs.into_iter().rev().collect();
+        assert_eq!(puntuar(&cs, &t).0.as_deref(), Some("bolt"));
+        // Por su nombre impreso también cuenta como entera.
+        let cs = vec![
+            carta("dfc", "Emeritus of Conflict // Lightning Bolt", None),
+            carta("es", "Lightning Bolt", Some("Relámpago")),
+        ];
+        let t = vec!["Relámpago".to_string()];
+        assert_eq!(puntuar(&cs, &t).0.as_deref(), Some("es"));
     }
 }
 

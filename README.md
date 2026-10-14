@@ -68,11 +68,56 @@ Y además:
   **arrástralas** a la vista previa: sobre una carta la reemplazan y fuera se
   añaden.
 - **Reverso a tu gusto**: uno para todo el deck o uno distinto por carta.
-- **Vincular con Scryfall.** Una imagen propia puede vincularse a su carta real
-  para que cuente en las estadísticas y en los precios. Se hace una a una o
-  **en bloque con OCR**: la app lee el título y el pie de cada imagen (también
-  en otros idiomas), propone la carta con un grado de confianza (exacta,
-  probable o ninguna) y te deja revisarlo todo antes de vincular.
+
+### Vincular tus proxies con su carta real
+
+Una imagen propia es solo una imagen: la app no sabe qué carta es. Al
+vincularla con su carta de Scryfall, la imagen no cambia, pero la carta pasa a
+contar en las estadísticas, en los precios y en la legalidad, y la info de
+carta muestra su nombre y edición reales.
+
+Aquí, un deck de proxies en español recién subido. Cada carta se llama como su
+fichero y nada más:
+
+![Proxies propios sin vincular](docs/presentacion/vincular-antes.jpg)
+
+Para reconocerlas, la app lee cada imagen con **OCR**: el título, la línea de
+tipo y el pie, donde muchos proxies llevan el nombre original. Busca lo leído
+en el catálogo de Scryfall, en cualquier idioma, y propone la carta con un
+grado de confianza: exacta, probable o sin propuesta. La lectura se hace en tu
+equipo.
+
+Se puede vincular de tres maneras:
+
+**Una carta.** Clic derecho → «Vincular con Scryfall…». La búsqueda empieza
+con el nombre del fichero y «Detectar con OCR» lee la carta. Aquí acierta
+hasta la edición exacta.
+
+![Vincular una carta con OCR](docs/presentacion/vincular-una.jpg)
+
+**Las seleccionadas.** Selecciona varias con Ctrl o Mayús y, con el clic
+derecho, «Vincular con Scryfall las seleccionadas…». El diálogo deja elegir
+entre la selección y todo el deck, y entre leer solo las que faltan o todas
+otra vez.
+
+![Vincular las seleccionadas desde el menú](docs/presentacion/vincular-menu-seleccion.jpg)
+
+![Solo las seleccionadas](docs/presentacion/vincular-seleccion.jpg)
+
+![Propuestas para las seleccionadas](docs/presentacion/vincular-seleccion-resultado.jpg)
+
+**Todo el deck.** El botón «Vincular con Scryfall» del panel izquierdo lee de
+una vez todas las imágenes propias del deck, con barra de progreso y tiempo
+restante, y se puede parar a medias para revisar lo leído. Cada propuesta se
+puede cambiar en su desplegable o desmarcar antes de pulsar «Vincular». En este
+deck también reconoce un proxy con arte inventado (Rimuru) por el nombre
+original de su pie: Jodah, Archmage Eternal.
+
+![Vincular todo el deck de una vez](docs/presentacion/vincular-todo-el-deck.jpg)
+
+El resultado: las mismas imágenes, ahora con su carta real detrás.
+
+![Proxies vinculados](docs/presentacion/vincular-despues.jpg)
 
 ---
 
