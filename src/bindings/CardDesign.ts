@@ -12,7 +12,12 @@ import type { FrameOptions } from "./FrameOptions";
 /**
  * El diseño de una carta.
  */
-export type CardDesign = { version: number, status: DesignStatus, collection?: string, style: DesignStyle, frame: FrameOptions, 
+export type CardDesign = { version: number, status: DesignStatus, collection?: string, style: DesignStyle, 
+/**
+ * El marco propio de esta carta; `None` = el de la colección (y si no
+ * hay, el de fábrica). Así, cambiar la colección cambia sus cartas.
+ */
+frame?: FrameOptions, 
 /**
  * Una por cara o mitad (1 en las normales).
  */

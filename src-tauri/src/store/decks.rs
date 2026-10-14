@@ -401,7 +401,7 @@ mod tests {
             status: DesignStatus::Draft,
             collection: None,
             style: DesignStyle::Borderless,
-            frame: FrameOptions::default(),
+            frame: None,
             faces: vec![FaceDesign {
                 art: Some(ArtRef {
                     image: arte.clone(),

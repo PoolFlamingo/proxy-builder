@@ -9,6 +9,7 @@
 
 pub mod archidekt;
 pub mod commands;
+pub mod diseno;
 pub mod error;
 pub mod jobs;
 pub mod ocr;
@@ -93,6 +94,10 @@ pub fn run() {
             commands::identify::card_identify,
             commands::identify::card_link,
             commands::identify::identify_batch,
+            commands::diseno::design_draft,
+            commands::diseno::collection_list,
+            commands::diseno::collection_save,
+            commands::diseno::collection_delete,
         ])
         .run(tauri::generate_context!());
 

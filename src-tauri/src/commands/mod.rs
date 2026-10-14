@@ -4,6 +4,7 @@
 pub mod cards;
 pub mod carpetas;
 pub mod decklist;
+pub mod diseno;
 pub mod export;
 pub mod identify;
 pub mod layout;

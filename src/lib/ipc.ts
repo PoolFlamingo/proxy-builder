@@ -5,11 +5,13 @@ import type { CalibrationTextsInput } from "@/bindings/CalibrationTextsInput";
 import type { CardIdentify } from "@/bindings/CardIdentify";
 import type { CardMeta } from "@/bindings/CardMeta";
 import type { CardSummary } from "@/bindings/CardSummary";
+import type { Collection } from "@/bindings/Collection";
 import type { Deck } from "@/bindings/Deck";
 import type { DeckCard } from "@/bindings/DeckCard";
 import type { DeckKind } from "@/bindings/DeckKind";
 import type { DeckStats } from "@/bindings/DeckStats";
 import type { DeckSummary } from "@/bindings/DeckSummary";
+import type { DesignDraft } from "@/bindings/DesignDraft";
 import type { ExportEstimate } from "@/bindings/ExportEstimate";
 import type { FaceImage } from "@/bindings/FaceImage";
 import type { GcReport } from "@/bindings/GcReport";
@@ -76,6 +78,13 @@ export interface Commands {
 	};
 	card_link: { args: { scryfallId: string }; result: CardMeta };
 	identify_batch: { args: { items: IdentifyRequest[]; ocr: boolean }; result: number };
+	design_draft: {
+		args: { card: DeckCard; usados: string[]; collection: string | null };
+		result: DesignDraft;
+	};
+	collection_list: { args: Record<string, never>; result: Collection[] };
+	collection_save: { args: { collection: Collection }; result: Collection };
+	collection_delete: { args: { id: string }; result: null };
 	export_pdf: { args: { deck: Deck; path: string }; result: number };
 	export_estimate: { args: { deck: Deck }; result: ExportEstimate };
 	export_calibration: {

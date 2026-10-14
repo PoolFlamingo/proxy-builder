@@ -11,6 +11,8 @@
 //! milímetros con `px_por_mm`. Nada lee letras del sistema: solo las que se
 //! cargan aquí, para que el resultado sea igual en cualquier equipo.
 
+pub mod borrador;
+pub mod efectivo;
 pub mod letras;
 pub mod modelo;
 pub mod pintar;
@@ -27,6 +29,10 @@ pub enum DisenoError {
     #[error("lienzo de tamaño imposible")]
     Lienzo,
 }
+
+/// Versión del motor de render: entra en la huella, así que subirla rehace
+/// todos los renders de diseños.
+pub const VERSION_MOTOR: u32 = 1;
 
 /// Puntos tipográficos a milímetros.
 pub const MM_POR_PT: f32 = 25.4 / 72.0;

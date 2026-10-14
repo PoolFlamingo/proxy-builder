@@ -2,6 +2,7 @@
 //! huella (`blobs/`), los dos en `app_data_dir`.
 
 pub mod blobs;
+pub mod colecciones;
 pub mod db;
 pub mod decks;
 pub mod presets;

@@ -1,0 +1,7 @@
+//! **Editor de cartas en la app** (la 2.0): lo que necesita red, disco o
+//! base de datos alrededor del motor puro de `proxy_core::diseno`.
+//!
+//! - `borrador`: de la carta de Scryfall (inglés + impresión española) a un
+//!   `CardDesign` con su instantánea mecánica.
+
+pub mod borrador;
