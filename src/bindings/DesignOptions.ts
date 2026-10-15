@@ -9,4 +9,8 @@ rulesSizePt?: number, showFlavor: boolean,
 /**
  * Límite de estrechado del título (`None` = el de la colección).
  */
-titleSqueezeMin?: number, };
+titleSqueezeMin?: number, 
+/**
+ * Estrechado mínimo del título y el tipo (`None` = el de la colección).
+ */
+titleSqueezeBase?: number, };

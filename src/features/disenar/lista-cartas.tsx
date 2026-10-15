@@ -65,7 +65,7 @@ export function ListaCartas({
 				{t("{hechas} de {total} listas", { hechas, total: grupos.length })}
 			</p>
 			<ScrollArea className="min-h-0 flex-1">
-				<ul className="flex flex-col gap-1 pr-2">
+				<ul className="flex flex-col gap-1 p-1 pr-2.5">
 					{visibles.map((g) => {
 						const c = g.cartas[0];
 						if (!c) return null;

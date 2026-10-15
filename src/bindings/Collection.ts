@@ -17,4 +17,15 @@ emblem?: FaceImage, setCode: string, rarityLetter?: string, year?: string, artis
 /**
  * Plantillas del pie con fichas: `{num} {rarity} {original}` / `{set}{sep}{lang} {brush} {artist}`…
  */
-footerTemplate: ByLang<string>, fontTitle?: string, fontRules?: string, titleSqueezeMin: number, };
+footerTemplate: ByLang<string>, fontTitle?: string, fontRules?: string, titleSqueezeMin: number, 
+/**
+ * Estrechado mínimo: el título y el tipo van siempre al menos así de
+ * estrechos (1 = sin estrechar). No baja del límite de arriba.
+ */
+titleSqueezeBase: number, 
+/**
+ * Grosor (100–900) del título, la línea de tipo y las reglas. `None` =
+ * el del pack (negrita en el título y el tipo, normal en las reglas):
+ * una letra que ya es gruesa puede ir sin negrita.
+ */
+weightTitle?: number, weightType?: number, weightRules?: number, };

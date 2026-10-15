@@ -37,6 +37,8 @@ describe("URLs del protocolo de imágenes", () => {
 		const m = await modulo();
 		expect(m.urlBusqueda("abc")).toBe("pbimg://localhost/t/abc");
 		expect(m.urlDiseno("h1", 488)).toBe("pbimg://localhost/d/h1/488");
+		expect(m.urlCapa("h1", 745)).toBe("pbimg://localhost/c/h1/745");
+		expect(m.urlArte("b1", 2000)).toBe("pbimg://localhost/b/b1/2000");
 		expect(convertFileSrc).toHaveBeenCalledTimes(1);
 		expect(convertFileSrc).toHaveBeenCalledWith("", "pbimg");
 	});

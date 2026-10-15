@@ -48,7 +48,8 @@ export function useBorrador(
 	const [design, setDesign] = useState<CardDesign | null>(null);
 	const [original, setOriginal] = useState<CardDesign | null>(null);
 	const [cargando, setCargando] = useState(false);
-	const [huella, setHuella] = useState<string | null>(null);
+	// La huella registrada y el diseño del que es (para saber si está al día).
+	const [huella, setHuella] = useState<{ h: string; de: CardDesign } | null>(null);
 	const [avisos, setAvisos] = useState<Aviso[]>([]);
 	const [guardando, setGuardando] = useState(false);
 	const principal = grupo?.cartas[0] ?? null;
@@ -103,15 +104,31 @@ export function useBorrador(
 		setOriginal(deFuera);
 	}, [deFuera]);
 
-	// Vista previa.
+	// Vista previa, en tiempo real: cada cambio se registra en cuanto acaba
+	// el anterior (sin esperar a que se deje de arrastrar o de escribir); si
+	// llegan varios mientras tanto, solo el último.
+	const registro = useRef<{ enVuelo: boolean; pendiente: (() => void) | null }>({
+		enVuelo: false,
+		pendiente: null,
+	});
 	useEffect(() => {
 		if (!design) return;
-		const id = setTimeout(() => {
+		const mio = turno.current;
+		const r = registro.current;
+		const pedir = () => {
+			r.enVuelo = true;
 			call("design_register", { design, cara, lang })
-				.then(setHuella)
-				.catch((e) => toast.error(mensaje(e)));
-		}, 120);
-		return () => clearTimeout(id);
+				.then((h) => turno.current === mio && setHuella({ h, de: design }))
+				.catch((e) => toast.error(mensaje(e)))
+				.finally(() => {
+					r.enVuelo = false;
+					const p = r.pendiente;
+					r.pendiente = null;
+					p?.();
+				});
+		};
+		if (r.enVuelo) r.pendiente = pedir;
+		else pedir();
 	}, [design, cara, lang, mensaje, recursos]);
 
 	// Avisos.
@@ -170,7 +187,9 @@ export function useBorrador(
 		design,
 		cambiar,
 		cargando,
-		huella,
+		huella: huella?.h ?? null,
+		/** La huella es la del diseño de ahora (no de uno anterior). */
+		alDia: !!design && huella?.de === design,
 		avisos,
 		guardar,
 		guardando,

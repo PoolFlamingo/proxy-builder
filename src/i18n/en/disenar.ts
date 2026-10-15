@@ -1,5 +1,41 @@
 // Diseñar: el editor de cartas proxy (vista, formulario, colecciones y recursos).
 export const DISENAR: Record<string, string> = {
+	"Grosor del título": "Title weight",
+	"Grosor de la línea de tipo": "Type line weight",
+	"Grosor de las reglas": "Rules text weight",
+	"Una letra que ya es gruesa puede ir sin negrita. Si la letra no tiene ese grosor, sale el más parecido.":
+		"A font that's already heavy can go without bold. If the font doesn't have that weight, the closest one is used.",
+	"Media": "Medium",
+	"Seminegrita": "Semibold",
+	"Negrita": "Bold",
+	"Extranegrita": "Extra bold",
+	"Negra": "Black",
+	"El del pack": "The pack's",
+	"Letra «{n}» descargada": "Font “{n}” downloaded",
+	"Tus letras": "Your fonts",
+	"Para el título": "For the title",
+	"Para las reglas": "For the rules text",
+	"Letras libres (licencia OFL) para descargar. Se usan en las colecciones como cualquier letra tuya.":
+		"Free fonts (OFL licence) to download. Use them in collections like any of your own fonts.",
+	"También para las reglas": "Also for the rules text",
+	"Sin cursiva": "No italic",
+	"Descargada": "Downloaded",
+	"Estrechar siempre al menos": "Always condense at least",
+	"El título y la línea de tipo van siempre así de estrechos, quepan o no; si aun así no caben, se estrechan más hasta el límite de arriba. Al 100 %, sin estrechar.":
+		"The title and type line are always this condensed, whether they fit or not; if they still don't fit, they're condensed further down to the limit above. At 100%, no condensing.",
+	"Cuánto se estrechan el título y el tipo: siempre (el mínimo) y como mucho antes de reducir la letra (el límite).":
+		"How much the title and type line are condensed: always (the minimum) and at most before the text gets smaller (the limit).",
+	"Original (descargar)": "Original (download)",
+	"Descargando los marcos originales: {hechas} de {total}":
+		"Downloading the original frames: {hechas} of {total}",
+	"Marcos de imagen de Card Conjurer para los estilos Clásico y Despejado; los demás estilos usan los de la casa.":
+		"Card Conjurer image frames for the Classic and Borderless styles; the other styles use the built-in ones.",
+	"Original (Card Conjurer)": "Original (Card Conjurer)",
+	"Marcos de imagen para Clásico y Despejado (unos 22 MB). Se descargan de GitHub la primera vez.":
+		"Image frames for Classic and Borderless (about 22 MB). They're downloaded from GitHub the first time.",
+	"Descargar": "Download",
+	"El marco de este estilo no tiene cinta: el nombre original va en el pie.":
+		"This style's frame has no ribbon: the original name goes in the footer.",
 	"{n} cartas no se pudieron preparar.": "{n} cards couldn't be prepared.",
 	"{n} cartas grandes no caben en este papel y no se imprimen.":
 		"{n} large cards don't fit on this paper and won't be printed.",

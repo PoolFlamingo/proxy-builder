@@ -1,7 +1,17 @@
-import { FolderOpen, Loader2, Package, RefreshCw, Trash2, Type } from "lucide-react";
+import {
+	Check,
+	Download,
+	FolderOpen,
+	Loader2,
+	Package,
+	RefreshCw,
+	Trash2,
+	Type,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { LetraInfo } from "@/bindings/LetraInfo";
+import type { LetraLibre } from "@/bindings/LetraLibre";
 import type { PackInfo } from "@/bindings/PackInfo";
 import type { SimbolosInfo } from "@/bindings/SimbolosInfo";
 import { useLang } from "@/components/language-provider";
@@ -13,12 +23,14 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { abrirParaImportar } from "@/lib/dialogos";
 import { call } from "@/lib/ipc";
 import { useUi } from "@/stores/ui-store";
+import { ID_ORIGINAL, useMarcosOriginales } from "./marcos-originales";
 import { rehacerMiniaturas } from "./renumerar";
 import { ESTILOS } from "./textos";
 
@@ -166,6 +178,20 @@ function Contenido() {
 						</Button>
 					</div>
 					<ScrollArea className="min-h-0 flex-1 rounded-md border">
+						<LetrasLibres
+							ocupado={ocupado}
+							descargar={(id) =>
+								con(`libre-${id}`, () =>
+									call("font_free_download", { id }).then((l) => {
+										useUi.getState().anunciar(t("Letra «{n}» descargada", { n: l.familia }));
+									}),
+								)
+							}
+							version={letras}
+						/>
+						<div className="border-y bg-muted/40 px-3 py-1.5 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+							{t("Tus letras")}
+						</div>
 						<ul className="flex flex-col divide-y">
 							{letras === null && (
 								<Loader2 className="m-3 size-4 animate-spin text-muted-foreground" />
@@ -230,6 +256,9 @@ function Contenido() {
 						<ul className="flex flex-col divide-y">
 							{packs === null && (
 								<Loader2 className="m-3 size-4 animate-spin text-muted-foreground" />
+							)}
+							{packs !== null && !packs.some((p) => p.id === ID_ORIGINAL) && (
+								<FilaOriginales alTerminar={recargar} />
 							)}
 							{packs?.map((p) => (
 								<li key={p.id} className="flex items-center gap-2.5 px-3 py-2">
@@ -305,5 +334,146 @@ function Contenido() {
 				</TabsContent>
 			</Tabs>
 		</DialogContent>
+	);
+}
+
+/** Los marcos «Original» sin descargar: qué son y el botón para bajarlos. */
+function FilaOriginales({ alTerminar }: { alTerminar: () => void }) {
+	const { t, mensaje } = useLang();
+	const { info, progreso, cargar, descargar } = useMarcosOriginales();
+	useEffect(() => {
+		if (!info) void cargar();
+	}, [info, cargar]);
+	return (
+		<li className="flex flex-col gap-2 px-3 py-2">
+			<div className="flex items-center gap-2.5">
+				<div className="min-w-0 flex-1">
+					<div className="truncate text-xs font-medium">{t("Original (Card Conjurer)")}</div>
+					<div className="text-[10px] text-muted-foreground">
+						{t(
+							"Marcos de imagen para Clásico y Despejado (unos 22 MB). Se descargan de GitHub la primera vez.",
+						)}
+					</div>
+				</div>
+				<Button
+					size="sm"
+					variant="outline"
+					disabled={progreso !== null}
+					onClick={() =>
+						descargar()
+							.then(alTerminar)
+							.catch((e) => toast.error(mensaje(e)))
+					}
+				>
+					{progreso ? <Loader2 className="animate-spin" /> : <Download />}
+					{t("Descargar")}
+				</Button>
+			</div>
+			{progreso && <Progress value={(progreso.hechas * 100) / Math.max(1, progreso.total)} />}
+		</li>
+	);
+}
+
+/** Las muestras de cada letra libre (su nombre escrito con ella). */
+const MUESTRAS = import.meta.glob<string>("@/assets/letras/*.png", {
+	eager: true,
+	query: "?url",
+	import: "default",
+});
+const muestra = (id: string) =>
+	Object.entries(MUESTRAS).find(([ruta]) => ruta.endsWith(`/${id}.png`))?.[1];
+
+/**
+ * El catálogo de **letras libres** (OFL, de Google Fonts): de título, de
+ * aire clásico, medieval o de fantasía, y de reglas, legibles y sin trazos
+ * finos. Rust las descarga de una versión fija y las importa como las tuyas.
+ */
+function LetrasLibres({
+	ocupado,
+	descargar,
+	version,
+}: {
+	ocupado: string | null;
+	descargar: (id: string) => void;
+	/** Cambia cuando cambian las letras importadas: se relee el catálogo. */
+	version: unknown;
+}) {
+	const { t } = useLang();
+	const [lista, setLista] = useState<LetraLibre[] | null>(null);
+	useEffect(() => {
+		void version;
+		call("fonts_free_list", {})
+			.then(setLista)
+			.catch(() => setLista([]));
+	}, [version]);
+	if (!lista || lista.length === 0) return null;
+	const grupos: { titulo: string; letras: LetraLibre[] }[] = [
+		{ titulo: t("Para el título"), letras: lista.filter((l) => l.uso !== "reglas") },
+		{ titulo: t("Para las reglas"), letras: lista.filter((l) => l.uso === "reglas") },
+	];
+	return (
+		<div className="flex flex-col">
+			<p className="px-3 pt-2.5 pb-1.5 text-[11px] text-muted-foreground">
+				{t(
+					"Letras libres (licencia OFL) para descargar. Se usan en las colecciones como cualquier letra tuya.",
+				)}
+			</p>
+			{grupos.map((g) => (
+				<div key={g.titulo} className="flex flex-col">
+					<div className="border-y bg-muted/40 px-3 py-1.5 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+						{g.titulo}
+					</div>
+					<ul className="flex flex-col divide-y">
+						{g.letras.map((l) => {
+							const src = muestra(l.id);
+							return (
+								<li key={l.id} className="flex items-center gap-2.5 px-3 py-2">
+									<div className="flex min-w-0 flex-1 flex-col gap-1">
+										{src ? (
+											<img
+												src={src}
+												alt={l.familia}
+												className="h-5 max-w-full self-start object-contain object-left dark:invert"
+											/>
+										) : (
+											<span className="text-xs font-medium">{l.familia}</span>
+										)}
+										<span className="text-[10px] text-muted-foreground">
+											{[
+												l.uso === "ambos" ? t("También para las reglas") : null,
+												!l.cursiva ? t("Sin cursiva") : null,
+												kb(l.bytes),
+											]
+												.filter(Boolean)
+												.join(" · ")}
+										</span>
+									</div>
+									{l.descargada ? (
+										<span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+											<Check className="size-3.5" />
+											{t("Descargada")}
+										</span>
+									) : (
+										<Button
+											size="sm"
+											variant="outline"
+											disabled={ocupado !== null}
+											onClick={() => descargar(l.id)}
+										>
+											{ocupado === `libre-${l.id}` ? (
+												<Loader2 className="animate-spin" />
+											) : (
+												<Download />
+											)}
+											{t("Descargar")}
+										</Button>
+									)}
+								</li>
+							);
+						})}
+					</ul>
+				</div>
+			))}
+		</div>
 	);
 }

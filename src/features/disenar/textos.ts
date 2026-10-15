@@ -81,6 +81,8 @@ export function textoAviso(a: Aviso, t: T): string {
 			});
 		case "coleccionPerdida":
 			return t("La colección de esta carta ya no existe: se usan los valores de fábrica.");
+		case "sinCinta":
+			return t("El marco de este estilo no tiene cinta: el nombre original va en el pie.");
 	}
 }
 
@@ -119,3 +121,15 @@ export const MAQUETACIONES: Record<Maquetacion, string> = {
 	plan: paraTraducir("Plan (carta grande)"),
 	vanguard: paraTraducir("Vanguard (carta grande)"),
 };
+
+/** La letra de rareza que pone el motor si nadie la cambia (`efectivo::letra_rareza`). */
+export function letraRareza(rareza: string): string {
+	const letras: Record<string, string> = {
+		common: "C",
+		uncommon: "U",
+		rare: "R",
+		mythic: "M",
+		bonus: "B",
+	};
+	return letras[rareza] ?? "S";
+}

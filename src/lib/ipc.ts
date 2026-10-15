@@ -4,6 +4,7 @@ import type { ArtRef } from "@/bindings/ArtRef";
 import type { Aviso } from "@/bindings/Aviso";
 import type { CacheStats } from "@/bindings/CacheStats";
 import type { CalibrationTextsInput } from "@/bindings/CalibrationTextsInput";
+import type { CapaInfo } from "@/bindings/CapaInfo";
 import type { CardDesign } from "@/bindings/CardDesign";
 import type { CardIdentify } from "@/bindings/CardIdentify";
 import type { CardMeta } from "@/bindings/CardMeta";
@@ -22,6 +23,8 @@ import type { FaceImage } from "@/bindings/FaceImage";
 import type { GcReport } from "@/bindings/GcReport";
 import type { IdentifyRequest } from "@/bindings/IdentifyRequest";
 import type { LetraInfo } from "@/bindings/LetraInfo";
+import type { LetraLibre } from "@/bindings/LetraLibre";
+import type { OriginalInfo } from "@/bindings/OriginalInfo";
 import type { PackInfo } from "@/bindings/PackInfo";
 import type { PagePlan } from "@/bindings/PagePlan";
 import type { ParsedDecklist } from "@/bindings/ParsedDecklist";
@@ -101,10 +104,18 @@ export interface Commands {
 	packs_list: { args: Record<string, never>; result: PackInfo[] };
 	pack_import: { args: { path: string }; result: PackInfo };
 	pack_remove: { args: { id: string }; result: null };
+	fonts_free_list: { args: Record<string, never>; result: LetraLibre[] };
+	font_free_download: { args: { id: string }; result: LetraLibre };
+	original_info: { args: Record<string, never>; result: OriginalInfo };
+	original_download: { args: Record<string, never>; result: PackInfo };
 	symbols_status: { args: { refresh: boolean }; result: SimbolosInfo };
 	design_register: {
 		args: { design: CardDesign; cara: number; lang: DesignLang };
 		result: string;
+	};
+	design_overlay: {
+		args: { design: CardDesign; cara: number; lang: DesignLang; ancho: number };
+		result: CapaInfo | null;
 	};
 	design_fit_report: { args: { design: CardDesign; lang: DesignLang }; result: Aviso[] };
 	design_drafts_for_deck: {
@@ -180,6 +191,7 @@ export interface Events {
 	"design://done": import("@/bindings/DesignDoneEvent").DesignDoneEvent;
 	"designpng://progress": import("@/bindings/DesignPngProgressEvent").DesignPngProgressEvent;
 	"designpng://done": import("@/bindings/DesignPngDoneEvent").DesignPngDoneEvent;
+	"original://progress": import("@/bindings/OriginalProgressEvent").OriginalProgressEvent;
 }
 
 /** Escucha un evento de Rust. Devuelve la función que deja de escuchar. */
