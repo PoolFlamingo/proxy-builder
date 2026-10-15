@@ -59,6 +59,8 @@ zip = { version = "9", default-features = false, features = ["deflate-flate2-zli
 ocrs = { version = "0.13", default-features = false, features = ["rten"] }
 rten = { version = "0.26", default-features = false }
 image = { version = "0.25.10", default-features = false }
+# La memoria del equipo, para el tope de las búsquedas recordadas (solo eso).
+sysinfo = { version = "0.38.4", default-features = false, features = ["system"] }
 
 [dev-dependencies]
 tempfile = "3"

@@ -7,6 +7,7 @@
 //!   `Retry-After`.
 //! - Cada petición real queda en el registro (`tracing`), para poder comprobar
 //!   que un deck guardado no descarga nada.
+//! - Las búsquedas se recuerdan una hora en memoria (`busquedas`).
 //!
 //! El trait `CardApi` permite probar la resolución con un Scryfall de mentira.
 
@@ -18,6 +19,7 @@ use reqwest::{Client, StatusCode};
 use serde::de::DeserializeOwned;
 use tokio::sync::Semaphore;
 
+use super::busquedas::{self, Busquedas};
 use super::models::{Catalog, Collection, Identifier, ScryCard, SearchPage, SetInfo, SetList};
 use super::rate::Limitador;
 use crate::error::{AppError, AppResult, ErrorCode};
@@ -27,6 +29,8 @@ const MAX_REINTENTOS: u32 = 3;
 const DESCARGAS_A_LA_VEZ: usize = 6;
 /// Tope de resultados al seguir páginas de una búsqueda.
 const TOPE_BUSQUEDA: usize = 175;
+/// Cuánto se recuerda una búsqueda.
+const VIDA_BUSQUEDA: Duration = Duration::from_secs(60 * 60);
 
 /// Lo que la app necesita de Scryfall.
 pub trait CardApi: Send + Sync {
@@ -54,6 +58,7 @@ pub struct Scryfall {
     http: Client,
     limitador: Limitador,
     descargas: Arc<Semaphore>,
+    busquedas: Busquedas,
 }
 
 fn red(e: reqwest::Error) -> AppError {
@@ -72,6 +77,7 @@ impl Scryfall {
             http,
             limitador: Limitador::new(Duration::from_millis(100)),
             descargas: Arc::new(Semaphore::new(DESCARGAS_A_LA_VEZ)),
+            busquedas: Busquedas::new(VIDA_BUSQUEDA, busquedas::cartas_segun_memoria()),
         })
     }
 
@@ -128,6 +134,44 @@ impl Scryfall {
             None => Ok(None),
             Some(r) => Ok(Some(r.json::<T>().await.map_err(red)?)),
         }
+    }
+
+    /// Búsqueda en cualquier idioma pero una por carta (no todas sus
+    /// impresiones): `include_multilingual=true` sin `unique=prints`. Sin el
+    /// tope de `search`: sigue las páginas que haga falta hasta `limit`.
+    pub async fn search_multilingual(&self, q: &str, limit: usize) -> AppResult<Vec<ScryCard>> {
+        self.buscar_paginas(q, &[("include_multilingual", "true")], limit)
+            .await
+    }
+
+    /// `/cards/search` con estos parámetros, siguiendo las páginas hasta
+    /// `limit`. Si se hizo la misma hace poco, lo de entonces.
+    async fn buscar_paginas(
+        &self,
+        q: &str,
+        extra: &[(&str, &str)],
+        limit: usize,
+    ) -> AppResult<Vec<ScryCard>> {
+        let clave = format!("{q}\n{extra:?}\n{limit}");
+        if let Some(cartas) = self.busquedas.leer(&clave) {
+            return Ok(cartas);
+        }
+        let mut out = Vec::new();
+        let primera = format!("{API}/cards/search");
+        let mut pagina: Option<SearchPage> = self
+            .json(|| self.http.get(&primera).query(&[("q", q)]).query(extra))
+            .await?;
+        while let Some(p) = pagina {
+            out.extend(p.data);
+            if out.len() >= limit || !p.has_more {
+                break;
+            }
+            let Some(siguiente) = p.next_page else { break };
+            pagina = self.json(|| self.http.get(&siguiente)).await?;
+        }
+        out.truncate(limit);
+        self.busquedas.guardar(clave, out.clone());
+        Ok(out)
     }
 
     pub async fn autocomplete(&self, q: &str) -> AppResult<Vec<String>> {
@@ -202,29 +246,13 @@ impl CardApi for Scryfall {
     }
 
     async fn search(&self, q: &str, prints: bool, limit: usize) -> AppResult<Vec<ScryCard>> {
-        let limit = limit.min(TOPE_BUSQUEDA);
-        let mut out = Vec::new();
-        let primera = format!("{API}/cards/search");
-        let mut pagina: Option<SearchPage> = self
-            .json(|| {
-                let r = self.http.get(&primera).query(&[("q", q)]);
-                if prints {
-                    r.query(&[("unique", "prints"), ("include_multilingual", "true")])
-                } else {
-                    r
-                }
-            })
-            .await?;
-        while let Some(p) = pagina {
-            out.extend(p.data);
-            if out.len() >= limit || !p.has_more {
-                break;
-            }
-            let Some(siguiente) = p.next_page else { break };
-            pagina = self.json(|| self.http.get(&siguiente)).await?;
-        }
-        out.truncate(limit);
-        Ok(out)
+        let extra: &[(&str, &str)] = if prints {
+            &[("unique", "prints"), ("include_multilingual", "true")]
+        } else {
+            &[]
+        };
+        self.buscar_paginas(q, extra, limit.min(TOPE_BUSQUEDA))
+            .await
     }
 
     async fn download(&self, url: &str) -> AppResult<Vec<u8>> {
