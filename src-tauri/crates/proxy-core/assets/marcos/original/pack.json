@@ -231,14 +231,14 @@
 				},
 				"pie": {
 					"x": 4.3,
-					"y": 84.55,
+					"y": 82.08,
 					"w": 43.0,
 					"h": 3.0,
 					"rol": "pie",
 					"mayuscula": 1.0,
 					"color": "#f0f0f0",
 					"tabs": [7.85, 10.25],
-					"interlinea": 1.45
+					"interlinea": 1.75
 				}
 			},
 			"radio": 3,
@@ -361,14 +361,14 @@
 				},
 				"pie": {
 					"x": 4.3,
-					"y": 84.55,
+					"y": 82.08,
 					"w": 43.0,
 					"h": 3.0,
 					"rol": "pie",
 					"mayuscula": 1.0,
 					"color": "#f0f0f0",
 					"tabs": [7.85, 10.25],
-					"interlinea": 1.45
+					"interlinea": 1.75
 				}
 			},
 			"radio": 3,
