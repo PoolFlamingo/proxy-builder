@@ -8,6 +8,9 @@
 //! - `/t/<sha256 de URL>` → miniatura de un resultado de búsqueda de Scryfall.
 //! - `/d/<huella>/<ancho>` → vista previa de un diseño registrado
 //!   (`design_register`).
+//! - `/c/<huella>/<ancho>` → esa carta sin la ilustración (`design_overlay`),
+//!   para mover la ilustración por debajo mientras se arrastra.
+//! - `/b/<sha256>/<lado>` → una ilustración del almacén reducida.
 
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
@@ -37,6 +40,14 @@ pub enum Ruta {
     Diseno {
         huella: String,
         ancho: u32,
+    },
+    Capa {
+        huella: String,
+        ancho: u32,
+    },
+    Arte {
+        blob: String,
+        lado: u32,
     },
 }
 
@@ -76,6 +87,26 @@ pub fn leer_ruta(ruta: &str) -> Result<Ruta, Fallo> {
             Ok(Ruta::Diseno {
                 huella: (*huella).to_string(),
                 ancho,
+            })
+        }
+        ["c", huella, ancho] if es_huella(huella) => {
+            let ancho: u32 = ancho.parse().map_err(|_| Fallo::Mala)?;
+            if !ANCHOS.contains(&ancho) {
+                return Err(Fallo::Mala);
+            }
+            Ok(Ruta::Capa {
+                huella: (*huella).to_string(),
+                ancho,
+            })
+        }
+        ["b", blob, lado] if es_huella(blob) => {
+            let lado: u32 = lado.parse().map_err(|_| Fallo::Mala)?;
+            if !crate::diseno::vista::LADOS_ARTE.contains(&lado) {
+                return Err(Fallo::Mala);
+            }
+            Ok(Ruta::Arte {
+                blob: (*blob).to_string(),
+                lado,
             })
         }
         _ => Err(Fallo::NoEsta),
@@ -132,6 +163,36 @@ async fn atender<R: tauri::Runtime>(app: tauri::AppHandle<R>, ruta: String) -> R
             .await;
             match r {
                 Ok(Ok(bytes)) => respuesta(StatusCode::OK, "image/png", bytes),
+                Ok(Err(e)) if e.code == crate::error::ErrorCode::NotFound => {
+                    vacia(StatusCode::NOT_FOUND)
+                }
+                _ => vacia(StatusCode::INTERNAL_SERVER_ERROR),
+            }
+        }
+        Ok(Ruta::Capa { huella, ancho }) => {
+            let _permiso = estado.renders.acquire().await;
+            let app2 = app.clone();
+            let r = tauri::async_runtime::spawn_blocking(move || {
+                crate::diseno::vista::imagen_capa(&app2.state::<AppState>(), &huella, ancho)
+            })
+            .await;
+            match r {
+                Ok(Ok(bytes)) => respuesta(StatusCode::OK, "image/png", bytes),
+                Ok(Err(e)) if e.code == crate::error::ErrorCode::NotFound => {
+                    vacia(StatusCode::NOT_FOUND)
+                }
+                _ => vacia(StatusCode::INTERNAL_SERVER_ERROR),
+            }
+        }
+        Ok(Ruta::Arte { blob, lado }) => {
+            let _permiso = estado.renders.acquire().await;
+            let app2 = app.clone();
+            let r = tauri::async_runtime::spawn_blocking(move || {
+                crate::diseno::vista::arte_reducido(&app2.state::<AppState>(), &blob, lado)
+            })
+            .await;
+            match r {
+                Ok(Ok((bytes, tipo))) => respuesta(StatusCode::OK, tipo, bytes),
                 Ok(Err(e)) if e.code == crate::error::ErrorCode::NotFound => {
                     vacia(StatusCode::NOT_FOUND)
                 }
@@ -212,6 +273,22 @@ mod tests {
                 ancho: 745
             })
         );
+        assert_eq!(
+            leer_ruta(&format!("/c/{h}/488")),
+            Ok(Ruta::Capa {
+                huella: h.clone(),
+                ancho: 488
+            })
+        );
+        assert_eq!(
+            leer_ruta(&format!("/b/{h}/2000")),
+            Ok(Ruta::Arte {
+                blob: h.clone(),
+                lado: 2000
+            })
+        );
+        assert_eq!(leer_ruta(&format!("/b/{h}/1234")), Err(Fallo::Mala));
+        assert_eq!(leer_ruta(&format!("/c/{h}/7")), Err(Fallo::Mala));
     }
 
     #[test]

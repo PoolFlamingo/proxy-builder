@@ -1,0 +1,468 @@
+{
+	"commit": "b7c8331cf620346575487ef8db0e2c729f014675",
+	"base": "ofl/",
+	"familias": [
+		{
+			"id": "cinzel",
+			"familia": "Cinzel",
+			"uso": "titulo",
+			"cursiva": false,
+			"ficheros": [
+				{
+					"ruta": "cinzel/Cinzel[wght].ttf",
+					"sha256": "f4d83d34d1f6c741193e4acf4b3dff9531e5a67b6aa65228d00a7db72a4e0f34",
+					"bytes": 125468
+				}
+			],
+			"licencia": {
+				"ruta": "cinzel/OFL.txt",
+				"sha256": "f2b3029aba64c378bf0963b62945eee15e564fe4330b934c8f2eb058282b5e83"
+			}
+		},
+		{
+			"id": "almendra",
+			"familia": "Almendra",
+			"uso": "titulo",
+			"cursiva": true,
+			"ficheros": [
+				{
+					"ruta": "almendra/Almendra-Regular.ttf",
+					"sha256": "b127a6121209353b53da9ce73bf9d350f74190d8384c28ede179e4fb9440f946",
+					"bytes": 68684
+				},
+				{
+					"ruta": "almendra/Almendra-Bold.ttf",
+					"sha256": "5895ef04d0d56c60083ec302e72db99b952b044ab2b440ee12283649b5edc971",
+					"bytes": 36624
+				},
+				{
+					"ruta": "almendra/Almendra-Italic.ttf",
+					"sha256": "972eb95dd030592755064c35e8e394b75423973d0b7dbfd759c7e36ef80bb7cb",
+					"bytes": 35216
+				},
+				{
+					"ruta": "almendra/Almendra-BoldItalic.ttf",
+					"sha256": "10e0a7dd4b9f5ad7d51be7f8ee42d76919c322dcbb7733dbad48f4ac751cb105",
+					"bytes": 35380
+				}
+			],
+			"licencia": {
+				"ruta": "almendra/OFL.txt",
+				"sha256": "b7eae5e3c3447f70caa14e0c43f5e0d953f54ee59df406f6362863bcee1a0a95"
+			}
+		},
+		{
+			"id": "uncialantiqua",
+			"familia": "Uncial Antiqua",
+			"uso": "titulo",
+			"cursiva": false,
+			"ficheros": [
+				{
+					"ruta": "uncialantiqua/UncialAntiqua-Regular.ttf",
+					"sha256": "33a5128b59d1c95d4f3788164f4ab3a1196f0a982263cb2cd278c47418366766",
+					"bytes": 63404
+				}
+			],
+			"licencia": {
+				"ruta": "uncialantiqua/OFL.txt",
+				"sha256": "244ca4ef7b106d8c660e9a00cecf5d581b6a222f447d7d59a8f61711b2ad3400"
+			}
+		},
+		{
+			"id": "grenzegotisch",
+			"familia": "Grenze Gotisch",
+			"uso": "titulo",
+			"cursiva": false,
+			"ficheros": [
+				{
+					"ruta": "grenzegotisch/GrenzeGotisch[wght].ttf",
+					"sha256": "701b299d8dc002a2b4bea2ff0f1272c0e4081a2835914354804565c410d0c637",
+					"bytes": 193492
+				}
+			],
+			"licencia": {
+				"ruta": "grenzegotisch/OFL.txt",
+				"sha256": "bca29af2c3c9e142d11f523f414902ab8fb9ab8ffa3c34c63b6b72aa4e7d6acc"
+			}
+		},
+		{
+			"id": "grenze",
+			"familia": "Grenze",
+			"uso": "ambos",
+			"cursiva": true,
+			"ficheros": [
+				{
+					"ruta": "grenze/Grenze[wght].ttf",
+					"sha256": "04afa4836bcd41e1ff9867a0dc27d628d31ddec618ec67715c526ebc3cae92f4",
+					"bytes": 139860
+				},
+				{
+					"ruta": "grenze/Grenze-Italic[wght].ttf",
+					"sha256": "60e9821fff9603945d835a73257a743a8c6754fd3fda1e4329af50ea7e46f9c2",
+					"bytes": 148448
+				}
+			],
+			"licencia": {
+				"ruta": "grenze/OFL.txt",
+				"sha256": "55a21d1fcebfa5e02100db3ae4dcff2658e9ba63e0b64149203bf6a9d645db86"
+			}
+		},
+		{
+			"id": "eczar",
+			"familia": "Eczar",
+			"uso": "titulo",
+			"cursiva": false,
+			"ficheros": [
+				{
+					"ruta": "eczar/Eczar[wght].ttf",
+					"sha256": "b52af3a3b457f9b2278612b73c97eaf28270ffc91c99e4c90471cc15bb8748c6",
+					"bytes": 407304
+				}
+			],
+			"licencia": {
+				"ruta": "eczar/OFL.txt",
+				"sha256": "003e3a0675b0b5d38cb6a188039d33a8d747a84effec32e7f8aa6e25cf6d3e2d"
+			}
+		},
+		{
+			"id": "amarante",
+			"familia": "Amarante",
+			"uso": "titulo",
+			"cursiva": false,
+			"ficheros": [
+				{
+					"ruta": "amarante/Amarante-Regular.ttf",
+					"sha256": "de5eb7cc2b13632fe3f9fedbe4dc34571a76758cfb52b71fdace8fc4a7638a2f",
+					"bytes": 148116
+				}
+			],
+			"licencia": {
+				"ruta": "amarante/OFL.txt",
+				"sha256": "89bf0833b785c49b0f271273ab440bdc20c85bf0322537dc901df940bf1579da"
+			}
+		},
+		{
+			"id": "metamorphous",
+			"familia": "Metamorphous",
+			"uso": "titulo",
+			"cursiva": false,
+			"ficheros": [
+				{
+					"ruta": "metamorphous/Metamorphous-Regular.ttf",
+					"sha256": "55939a5664e06807e87fa4af64f52039ead12f002dda8317393fdce2f7ff57fe",
+					"bytes": 135740
+				}
+			],
+			"licencia": {
+				"ruta": "metamorphous/OFL.txt",
+				"sha256": "4fece81b541808b40293b0cd3f5b1990274e1100e1c20455dc2987cd96639d3f"
+			}
+		},
+		{
+			"id": "inknutantiqua",
+			"familia": "Inknut Antiqua",
+			"uso": "titulo",
+			"cursiva": false,
+			"ficheros": [
+				{
+					"ruta": "inknutantiqua/InknutAntiqua-Regular.ttf",
+					"sha256": "d46c7420b1e5fedc2086c8ce89275a6ed13c6778829c0617f56df8c3bddd686f",
+					"bytes": 393736
+				},
+				{
+					"ruta": "inknutantiqua/InknutAntiqua-Bold.ttf",
+					"sha256": "222a233da522553541938fa7780d3bcc008af009679797658885f0052ffb76ef",
+					"bytes": 398368
+				}
+			],
+			"licencia": {
+				"ruta": "inknutantiqua/OFL.txt",
+				"sha256": "3c6545e1923c7dbbe2103b93023e21514d005012ef6543f90ecf51ee45667a73"
+			}
+		},
+		{
+			"id": "caudex",
+			"familia": "Caudex",
+			"uso": "ambos",
+			"cursiva": true,
+			"ficheros": [
+				{
+					"ruta": "caudex/Caudex-Regular.ttf",
+					"sha256": "dbb493e1adc50aaec52071535e6fccf4176793c79545f54d95a812cbfb85169b",
+					"bytes": 466324
+				},
+				{
+					"ruta": "caudex/Caudex-Bold.ttf",
+					"sha256": "880fb67901ce94573ed0262d152b87115a08f928c72fc6c1101375a1223d390a",
+					"bytes": 471708
+				},
+				{
+					"ruta": "caudex/Caudex-Italic.ttf",
+					"sha256": "ffa47f625d746e7b75c2306b7572f22561e1d73312a375772325c98213e0a4f9",
+					"bytes": 559440
+				},
+				{
+					"ruta": "caudex/Caudex-BoldItalic.ttf",
+					"sha256": "78440e8ab6730581ac71fe780ad2fa15ba15d240313028678e404ace4e70eb20",
+					"bytes": 555156
+				}
+			],
+			"licencia": {
+				"ruta": "caudex/OFL.txt",
+				"sha256": "1e5bf8207a40678bc401e2e5456d0db1f2a183b550a30976b48dcdd6a4e4c46c"
+			}
+		},
+		{
+			"id": "cardo",
+			"familia": "Cardo",
+			"uso": "ambos",
+			"cursiva": true,
+			"ficheros": [
+				{
+					"ruta": "cardo/Cardo-Regular.ttf",
+					"sha256": "bcb81f376f1c3892c7026dabf2beafbd1a7ee8ae95d132ee7d4ff7d7c3988261",
+					"bytes": 400468
+				},
+				{
+					"ruta": "cardo/Cardo-Bold.ttf",
+					"sha256": "6c9383b1471936ee83b08b67bf79f0ed92bee3d5e8363ec3ba21309d5a272e36",
+					"bytes": 348320
+				},
+				{
+					"ruta": "cardo/Cardo-Italic.ttf",
+					"sha256": "52c51cfde3a827dd9428511c4a968699952b8a917c5f0e97be782cbfa1880f9c",
+					"bytes": 262388
+				}
+			],
+			"licencia": {
+				"ruta": "cardo/OFL.txt",
+				"sha256": "8e28b778b6e1a7ff9ca72f4dee2d53120aa2856dc1bfd0be44307e365b0e45bb"
+			}
+		},
+		{
+			"id": "vollkorn",
+			"familia": "Vollkorn",
+			"uso": "ambos",
+			"cursiva": true,
+			"ficheros": [
+				{
+					"ruta": "vollkorn/Vollkorn[wght].ttf",
+					"sha256": "4ebef434f76f80286204840354a84db79a0dc3c87deeeb791e015b70b2ade49d",
+					"bytes": 577864
+				},
+				{
+					"ruta": "vollkorn/Vollkorn-Italic[wght].ttf",
+					"sha256": "cd947ae49b5d46e812d8d09434fbe8ec452286cd5557ef6a762a3562e2c8d300",
+					"bytes": 441264
+				}
+			],
+			"licencia": {
+				"ruta": "vollkorn/OFL.txt",
+				"sha256": "53f9c99fa3d47f7d632a42ee7bab4a834a60a744f6026d676c3a223cef2b2ef3"
+			}
+		},
+		{
+			"id": "crimsonpro",
+			"familia": "Crimson Pro",
+			"uso": "reglas",
+			"cursiva": true,
+			"ficheros": [
+				{
+					"ruta": "crimsonpro/CrimsonPro[wght].ttf",
+					"sha256": "16aa9fb7300a93637da51fac03a071b2ff08b6bbf65f99c794c25f040b58af6a",
+					"bytes": 246324
+				},
+				{
+					"ruta": "crimsonpro/CrimsonPro-Italic[wght].ttf",
+					"sha256": "a74dc11dcf2fbb1452064e42395a40a907ca630b49cff86012223785e52b2559",
+					"bytes": 253176
+				}
+			],
+			"licencia": {
+				"ruta": "crimsonpro/OFL.txt",
+				"sha256": "1820869bd5baa1c2d88fa87c89eea532cf9442d841008acab720654b7f82823d"
+			}
+		},
+		{
+			"id": "librebaskerville",
+			"familia": "Libre Baskerville",
+			"uso": "ambos",
+			"cursiva": true,
+			"ficheros": [
+				{
+					"ruta": "librebaskerville/LibreBaskerville[wght].ttf",
+					"sha256": "05a95421961341c5b2556285e8415df9db27dab4f4abe22b446b3c6a8b916c5d",
+					"bytes": 171900
+				},
+				{
+					"ruta": "librebaskerville/LibreBaskerville-Italic[wght].ttf",
+					"sha256": "223959683dc73ec4437bd61fabaa4b3f22209e22855ffd3aee36ba61a5116e97",
+					"bytes": 167456
+				}
+			],
+			"licencia": {
+				"ruta": "librebaskerville/OFL.txt",
+				"sha256": "3624eddd4c8f8a908130a417ae7cd089c9da69899c4e0ca1a5217d0a6fae16fd"
+			}
+		},
+		{
+			"id": "sourceserif4",
+			"familia": "Source Serif 4",
+			"uso": "reglas",
+			"cursiva": true,
+			"ficheros": [
+				{
+					"ruta": "sourceserif4/SourceSerif4[opsz,wght].ttf",
+					"sha256": "97b2d4da6e3cb494b5a1e66ae176914d852ccabef49e0c02c0df25f3e39aca0b",
+					"bytes": 1209508
+				},
+				{
+					"ruta": "sourceserif4/SourceSerif4-Italic[opsz,wght].ttf",
+					"sha256": "15fbc7e4679489a501998c3669272637a6646388ef7e4bd77eebb5bf967a1f42",
+					"bytes": 855432
+				}
+			],
+			"licencia": {
+				"ruta": "sourceserif4/OFL.txt",
+				"sha256": "5f94c3fd3a23131a417ab5a0c8452de57e70c3cfb9f604d88241f7065ebf9fd9"
+			}
+		},
+		{
+			"id": "literata",
+			"familia": "Literata",
+			"uso": "ambos",
+			"cursiva": true,
+			"ficheros": [
+				{
+					"ruta": "literata/Literata[opsz,wght].ttf",
+					"sha256": "b41138c9373112f32abb589cc22e8674b06ed4048b0c513be922bdd26f274440",
+					"bytes": 955132
+				},
+				{
+					"ruta": "literata/Literata-Italic[opsz,wght].ttf",
+					"sha256": "d483dfaeba9cbf4ce71d32a52ee65df82f7e35b15fff8d1011cdb242d1fcd465",
+					"bytes": 902728
+				}
+			],
+			"licencia": {
+				"ruta": "literata/OFL.txt",
+				"sha256": "8742963604cd89dc81437811a850018fc03b2bfad686d7422c8235967c87614e"
+			}
+		},
+		{
+			"id": "merriweather",
+			"familia": "Merriweather",
+			"uso": "ambos",
+			"cursiva": true,
+			"ficheros": [
+				{
+					"ruta": "merriweather/Merriweather[opsz,wdth,wght].ttf",
+					"sha256": "d0ed0e359e396af7ad05e73dffd11a3a4c326ea0d0283c56bd9361cb2cc86a96",
+					"bytes": 4628080
+				},
+				{
+					"ruta": "merriweather/Merriweather-Italic[opsz,wdth,wght].ttf",
+					"sha256": "f68a8f4989258679e4fbaf50aa42400132b5373c2d9d2514ba82ef6e85947a0b",
+					"bytes": 4591168
+				}
+			],
+			"licencia": {
+				"ruta": "merriweather/OFL.txt",
+				"sha256": "715bd349bfa6116f99e351e1548321dcfa25b91df65502d22ca8d624557697d2"
+			}
+		},
+		{
+			"id": "lora",
+			"familia": "Lora",
+			"uso": "ambos",
+			"cursiva": true,
+			"ficheros": [
+				{
+					"ruta": "lora/Lora[wght].ttf",
+					"sha256": "822a6621ccbe8d97d20ac88c1c41f5615c9c2c202eaa75f272cd452aac6475a7",
+					"bytes": 212196
+				},
+				{
+					"ruta": "lora/Lora-Italic[wght].ttf",
+					"sha256": "22d8d8854b53807aa664ca34f2031a9ed57a1d0dea296b8b96cdd3aad937a2b3",
+					"bytes": 221232
+				}
+			],
+			"licencia": {
+				"ruta": "lora/OFL.txt",
+				"sha256": "1d9a970809ac804b582a6ce7f0ebc4e7fefcbfd7ff6299cad35ee656a21be716"
+			}
+		},
+		{
+			"id": "ptserif",
+			"familia": "PT Serif",
+			"uso": "reglas",
+			"cursiva": true,
+			"ficheros": [
+				{
+					"ruta": "ptserif/PT_Serif-Web-Regular.ttf",
+					"sha256": "a4951fade06ff8f09b7673aa81ffb65a8cd409e24d3289a6dc670bc4dda2557a",
+					"bytes": 359048
+				},
+				{
+					"ruta": "ptserif/PT_Serif-Web-Bold.ttf",
+					"sha256": "038ba7336bd7ea14f12ad155bed51a4345cac5153275d521dec3ba04021c526e",
+					"bytes": 339996
+				},
+				{
+					"ruta": "ptserif/PT_Serif-Web-Italic.ttf",
+					"sha256": "f57e95ff9dc85691a3b2e193f2028db36f6663939a46c0fc4f286d618b80b7ce",
+					"bytes": 375356
+				},
+				{
+					"ruta": "ptserif/PT_Serif-Web-BoldItalic.ttf",
+					"sha256": "f003788ba08981eb0988b3557a6f224a53dab49c20e283e8b74d5af3c466f8be",
+					"bytes": 337580
+				}
+			],
+			"licencia": {
+				"ruta": "ptserif/OFL.txt",
+				"sha256": "ddf311c28ddf5a5ad9747649837346b67bed9d356789c3072bb27dbce49e514d"
+			}
+		},
+		{
+			"id": "bitter",
+			"familia": "Bitter",
+			"uso": "titulo",
+			"cursiva": true,
+			"ficheros": [
+				{
+					"ruta": "bitter/Bitter[wght].ttf",
+					"sha256": "ef2b9a711fb02f1e5823b34da1b7450e0fc76793b7d733a8b41006e24916d4a7",
+					"bytes": 328636
+				},
+				{
+					"ruta": "bitter/Bitter-Italic[wght].ttf",
+					"sha256": "5e6e0af503171c9d7b4be7a22c16f474d7a638cf83a80051d825bcc58d664bc3",
+					"bytes": 317652
+				}
+			],
+			"licencia": {
+				"ruta": "bitter/OFL.txt",
+				"sha256": "152a1e283e23b42c4940da4c72f2f5bebaa17969cb77c76d7af05903846006f1"
+			}
+		},
+		{
+			"id": "domine",
+			"familia": "Domine",
+			"uso": "titulo",
+			"cursiva": false,
+			"ficheros": [
+				{
+					"ruta": "domine/Domine[wght].ttf",
+					"sha256": "c63552cb60c658e90c1da3e83f9e7cf203562c39cdbf5a78ba9df62d8e7a1ed7",
+					"bytes": 101904
+				}
+			],
+			"licencia": {
+				"ruta": "domine/OFL.txt",
+				"sha256": "4931b601cf50f9e6ee749ae76778a067fb2e0df4296f08d095ef38afc526a5e4"
+			}
+		}
+	]
+}
