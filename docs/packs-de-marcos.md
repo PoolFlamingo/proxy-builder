@@ -21,8 +21,8 @@ mi-pack/
 └── …
 ```
 
-Todo son ficheros de texto: `pack.json` y capas SVG. Si una capa necesita una
-imagen (una textura, un adorno), va dentro del SVG como `data:` en base64.
+Las capas son SVG (con variables, ver abajo) o PNG (marcos de imagen, uno
+por color, ver «Capas PNG»). Un pack puede mezclar las dos.
 
 ## Medidas
 
@@ -116,6 +116,43 @@ Los estilos que la app conoce son `borderless` (despejado), `extended`,
   (paisaje), `mano` y `vida` (Vanguard).
 - **`radio`**: el de las esquinas en pantalla (para imprimir salen
   cuadradas: el corte las redondea).
+- **`coronaLegendaria`** (opcional): `true` para que las legendarias lleven
+  corona sin pedirla. Sin decirlo, solo en el despejado.
+
+Si a un pack le falta un estilo, ese estilo sale del pack de la casa (con las
+paletas del pack). Lo mismo con las fichas: un estilo sin layout `ficha`
+usa el de la casa.
+
+### Capas PNG
+
+En vez de `svg`, una capa puede llevar `png`: una imagen que se estira a la
+carta entera o a la zona `en` (en mm). `{color}` en la ruta se cambia por la
+letra del color del marco:
+
+```json
+{ "png": "m15/m15Frame{color}.png" },
+{ "png": "m15/m15PT{color}.png", "en": { "x": 47.7, "y": 77.9, "w": 11.8, "h": 6.5 },
+  "colores": { "land": "A" }, "si": { "fr": true } }
+```
+
+Las letras de fábrica son las de Card Conjurer: `W U B R G`, `M` (oro),
+`A` (artefacto), `L` (tierra) y `C` (incoloro). `colores` en la raíz del
+pack o en una capa cambia la de alguna paleta. Tiene que haber un PNG para
+cada paleta (el pack no carga si falta uno). Las cartas de dos colores y las
+de color propio usan el de oro.
+
+Los PNG se decodifican al usarlos y se guardan un rato ya a la medida, así
+que repintar con el mismo marco (al arrastrar el arte) no cuesta.
+
+### Los marcos «Original»
+
+El pack `original` (`crates/proxy-core/assets/marcos/original/`) son los
+marcos M15 de Card Conjurer: normal (clásico) y despejado, con sus coronas y
+cajas de F/R por color. En el repositorio solo va su `pack.json`, tres SVG
+propios y `imagenes.json` (la lista de PNG con la huella SHA-256 de cada
+uno y el commit fijo del que salen). La app los descarga la primera vez que
+se eligen (`diseno/original.rs`), comprueba cada huella y los deja en
+`app_data_dir/marcos/original/`. No se distribuyen con la app.
 
 ### Huecos
 

@@ -263,8 +263,14 @@ nuevo y los textos traducidos:
   traducción sugerida a partir de frases oficiales.
 - **Arte** de Scryfall, subido, pegado o recortado de otra carta, con zoom,
   encuadre y giro.
-- **Marcos y estilos** de un pack de marcos (el de la casa u otros), con color,
-  corona de legendaria y caja de reglas automáticos o a mano.
+- **Marcos y estilos** de un pack de marcos, con color, corona de legendaria
+  y caja de reglas automáticos o a mano. Además del pack de la casa están los
+  **marcos originales** de imagen (los M15 de Card Conjurer, normal y
+  despejado), que se descargan la primera vez que se eligen.
+- **Letras libres** para descargar desde la app: de aire clásico, medieval o
+  de fantasía para el título (Cinzel, Almendra, Uncial Antiqua, Grenze
+  Gotisch…) y muy legibles para las reglas. Además, la colección decide
+  cuánto se estrechan el título y el tipo, siempre y como mucho.
 - **Colecciones** con su símbolo y numeración, para que todo el deck parezca de
   la misma edición.
 - Casi todas las maquetaciones de Magic: planeswalkers, sagas, clases, casos,
@@ -354,5 +360,8 @@ sesión iniciada.
 ## Créditos
 
 Los datos y las imágenes de las cartas vienen de [Scryfall](https://scryfall.com).
+Los marcos originales del editor vienen de
+[Card Conjurer](https://github.com/Investigamer/cardconjurer): la app los
+descarga al usarlos y no los distribuye.
 Magic: The Gathering es una marca de Wizards of the Coast. Esta aplicación no está
 afiliada ni respaldada por ninguna de las dos.

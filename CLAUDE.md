@@ -41,7 +41,8 @@ Sistema de temas de judlex tal cual: `src/themes.css` (tweakcn),
 `src/lib/themes.ts`, `components/theme-provider.tsx`, skins Hera/Zeus,
 materiales. Radio 14 px, densidad 10 px (`p-2.5`/`gap-2.5`), texto base
 `text-xs`, scroll siempre con el `ScrollArea` compartido (nunca
-`overflow-auto`), nada de `title=` nativo (va con `<Tooltip>`; lo vigila
+`overflow-auto`), las listas cuyos items llevan borde o anillo con padding
+(`p-1`) para que no se corten, nada de `title=` nativo (va con `<Tooltip>`; lo vigila
 `pnpm check:title`), y el scroll se prueba en WebKitGTK, no en Chrome.
 
 Textos: siempre por `t()` con la cadena fuente en español; la traducción al
@@ -127,6 +128,27 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
     El PDF pinta cada carta diseñada desde el diseño a su medida y PPP.
   - Cartas grandes (planos, planes, Vanguard): hojas propias al final del
     `PagePlan` (`big_grid`, `big_cells`, `Page.big`).
+  - 🛑 **Marcos «Original»** (Pablo, 15/10/2026): marcos de imagen M15 de
+    Card Conjurer (capas PNG del pack). No van en el repo ni en los
+    instaladores: se descargan al elegirlos (`diseno/original.rs`, commit
+    fijo y SHA-256 de cada PNG en `assets/marcos/original/imagenes.json`).
+  - **Letras libres para descargar** (Pablo, 15/10/2026): catálogo OFL de
+    Google Fonts en `src-tauri/assets/letras-libres.json` (commit fijo y
+    SHA-256 de cada fichero; de título, de aire clásico/medieval/fantasía, y
+    de reglas, todas legibles y sin trazos finos). `diseno/letras_libres.rs`
+    las baja y las importa como letras propias; las muestras de la pantalla
+    son PNG en `src/assets/letras/`.
+  - Estrechado del título y el tipo: límite (`title_squeeze_min`, 55–75 %) y
+    mínimo que se aplica siempre (`title_squeeze_base`, 100 % = nada), en la
+    colección o en la carta (`texto::linea_ajustada_con_base`).
+  - Vista previa en tiempo real: `lib/imagen-viva.ts` (se pide al ritmo del
+    cambio, la última gana, más pequeña mientras se arrastra).
+  - Mover la ilustración (arrastre, rueda, deslizadores del encuadre) no
+    espera a Rust: `design_overlay` pinta una vez la carta sin ilustración
+    (`render_capa`, solo caras normales) y dice dónde va el hueco;
+    `disenar/arte-en-vivo.tsx` pone debajo la ilustración (`pbimg://…/b/`)
+    con la misma cuenta que `pintar_arte` (`disenar/encuadre.ts`). Al parar
+    entra la carta exacta. Las compuestas y grandes siguen por el camino normal.
 - «Editar carta» aplica a la carta, a sus copias (misma imagen: todo) o a
   todas (solo el color): `features/card-editor/propagar.ts`.
 - El `README.md` es la presentación de la app (Pablo, 14/10/2026): qué hace,
