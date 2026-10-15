@@ -129,6 +129,7 @@ pub(crate) mod tests {
             weight_title: None,
             weight_type: None,
             weight_rules: None,
+            fine_tuning: None,
         }
     }
 

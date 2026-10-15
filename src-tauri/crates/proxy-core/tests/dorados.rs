@@ -150,6 +150,7 @@ fn coleccion() -> Collection {
         weight_title: None,
         weight_type: None,
         weight_rules: None,
+        fine_tuning: None,
     }
 }
 
@@ -565,6 +566,33 @@ fn original_con_sus_imagenes() {
                 .save(std::env::temp_dir().join(format!("original-{}-{estilo:?}.png", c.archivo)))
                 .unwrap();
         }
+    }
+    // Con ajustes finos: radios y caja más opaca.
+    for radio in [0.0, 4.0, 12.0] {
+        let c = &casos()[0];
+        let mut d = diseno(c);
+        d.style = DesignStyle::Borderless;
+        d.options.fine_tuning = Some(proxy_core::diseno::modelo::FineTuning {
+            art_radius: Some(radio),
+            card_radius: Some(0.0),
+            rules_box_opacity: 0.5,
+            ..Default::default()
+        });
+        let e = efectivo(&d, Some(&col));
+        let r = render(
+            &mut motor,
+            &e,
+            0,
+            DesignLang::Es,
+            &rec,
+            CardSize::MTG,
+            745,
+            Salida::Pantalla,
+        )
+        .unwrap();
+        r.imagen
+            .save(std::env::temp_dir().join(format!("original-radio-{radio}.png")))
+            .unwrap();
     }
 }
 

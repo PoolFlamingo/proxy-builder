@@ -189,6 +189,11 @@ fn leer_packs(dir: &Path) -> BTreeMap<String, Arc<Pack>> {
     }
     if let Ok(entradas) = std::fs::read_dir(dir.join("marcos")) {
         for e in entradas.flatten() {
+            // Los marcos «Original» llevan la definición de esta versión de
+            // la app (posiciones, capas), aunque se bajaran con otra.
+            if e.file_name() == super::original::ID {
+                super::original::definicion_al_dia(&e.path());
+            }
             if let Ok(f) = leer_carpeta(&e.path()) {
                 if let Ok(p) = cargar_pack(f) {
                     m.insert(p.def.id.clone(), Arc::new(p));

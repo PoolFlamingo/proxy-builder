@@ -89,6 +89,17 @@ pub fn info(state: &AppState) -> AppResult<OriginalInfo> {
     })
 }
 
+/// Reescribe la definición del pack (`pack.json` y sus SVG) en `dir` si la
+/// de disco no es la de esta versión de la app. Las imágenes no se tocan.
+pub fn definicion_al_dia(dir: &Path) {
+    for (rel, texto) in ORIGINAL {
+        let ruta = dir.join(rel);
+        if std::fs::read(&ruta).ok().as_deref() != Some(texto.as_bytes()) {
+            let _ = escribir_atomico(&ruta, texto.as_bytes());
+        }
+    }
+}
+
 /// Escribe la definición del pack y descarga lo que falte. `progreso(hechas,
 /// total)` tras cada imagen. Al terminar, el pack queda cargado.
 pub async fn descargar(
@@ -165,6 +176,24 @@ mod tests {
         assert!(bueno(&f, &huella(b"hola")));
         assert!(!bueno(&f, &huella(b"adios")));
         assert!(!bueno(&dir.path().join("no.png"), &huella(b"hola")));
+    }
+
+    #[test]
+    fn una_definicion_vieja_se_pone_al_dia() {
+        let dir = tempfile::tempdir().unwrap();
+        let (rel, texto) = ORIGINAL[0];
+        std::fs::write(dir.path().join(rel), b"{\"viejo\": true}").unwrap();
+        definicion_al_dia(dir.path());
+        assert_eq!(
+            std::fs::read_to_string(dir.path().join(rel)).unwrap(),
+            texto
+        );
+        for (rel, texto) in ORIGINAL {
+            assert_eq!(
+                std::fs::read_to_string(dir.path().join(rel)).unwrap(),
+                *texto
+            );
+        }
     }
 
     #[test]

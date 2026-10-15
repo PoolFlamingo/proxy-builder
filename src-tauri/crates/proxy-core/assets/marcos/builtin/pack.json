@@ -125,10 +125,15 @@
 				"padAbajo": 0.75
 			},
 			"cajaPorDefecto": "tinte",
+			"ventanaArte": {
+				"x": 0,
+				"y": 0,
+				"w": 63,
+				"h": 83,
+				"radio": 6,
+				"soloAbajo": true
+			},
 			"capas": [
-				{
-					"svg": "despejado/mascara.svg"
-				},
 				{
 					"svg": "despejado/corona.svg",
 					"si": {

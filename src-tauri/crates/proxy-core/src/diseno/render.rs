@@ -488,6 +488,159 @@ pub(super) fn pintar_arte(
     }
 }
 
+/// La ilustración (o lo que haya) y lo de dentro de la ventana, otra vez,
+/// en las zonas `repintar` de la ventana: dentro de la ventana con el radio
+/// pedido, la ilustración; fuera, negro. En la capa de la vista en directo
+/// (`capa`), lo de dentro se deja transparente (la ilustración va debajo).
+type ArtePintado = (
+    Option<(Arc<RgbaImage>, super::modelo::ArtFraming)>,
+    (f32, f32, f32, f32),
+);
+
+fn repintar_ventana(
+    l: &mut Lienzo,
+    v: &super::pack::VentanaArte,
+    radio: f32,
+    arte: Option<&ArtePintado>,
+    capa: bool,
+) {
+    let (w, h) = (l.px.width(), l.px.height());
+    let r = radio.clamp(0.0, v.w.min(v.h) / 2.0);
+    let (Some(mut zonas), Some(mut dentro)) = (Mask::new(w, h), Mask::new(w, h)) else {
+        return;
+    };
+    for z in &v.repintar {
+        if let Some(rc) = Rect::from_xywh(l.x(z[0]), l.y(z[1]), l.x(z[2]), l.y(z[3])) {
+            zonas.fill_path(
+                &PathBuilder::from_rect(rc),
+                FillRule::Winding,
+                false,
+                Transform::identity(),
+            );
+        }
+    }
+    let (x0, y0, x1, y1) = (l.x(v.x), l.y(v.y), l.x(v.x + v.w), l.y(v.y + v.h));
+    let Some(ventana) = ruta_redondeada(x0, y0, x1, y1, l.x(r), v.solo_abajo) else {
+        return;
+    };
+    dentro.fill_path(&ventana, FillRule::Winding, true, Transform::identity());
+    // Dentro y fuera de la ventana, solo en las zonas.
+    let mut fuera = zonas.clone();
+    for ((d, f), z) in dentro
+        .data_mut()
+        .iter_mut()
+        .zip(fuera.data_mut().iter_mut())
+        .zip(zonas.data())
+    {
+        let (vd, vz) = (u16::from(*d), u16::from(*z));
+        *f = (vz * (255 - vd) / 255) as u8;
+        *d = (vz * vd / 255) as u8;
+    }
+    let Some(todo) = Rect::from_xywh(0.0, 0.0, w as f32, h as f32) else {
+        return;
+    };
+    let mut negro = tiny_skia::Paint::default();
+    negro.set_color(tiny_skia::Color::BLACK);
+    l.px.fill_rect(todo, &negro, Transform::identity(), Some(&fuera));
+    if capa {
+        let borrar = tiny_skia::Paint {
+            blend_mode: tiny_skia::BlendMode::Clear,
+            ..Default::default()
+        };
+        l.px.fill_rect(todo, &borrar, Transform::identity(), Some(&dentro));
+        return;
+    }
+    let Some((img, hueco)) = arte else {
+        return;
+    };
+    let Some(mut otro) = Lienzo::nuevo(l.w_mm, l.h_mm, w, h) else {
+        return;
+    };
+    match img {
+        Some((i, f)) => pintar_arte(&mut otro, i, *hueco, f),
+        None => sin_arte(&mut otro, *hueco),
+    }
+    l.px.draw_pixmap(
+        0,
+        0,
+        otro.px.as_ref(),
+        &PixmapPaint::default(),
+        Transform::identity(),
+        Some(&dentro),
+    );
+}
+
+/// Un rectángulo (px) con las esquinas redondeadas (o solo las de abajo).
+fn ruta_redondeada(
+    x0: f32,
+    y0: f32,
+    x1: f32,
+    y1: f32,
+    r: f32,
+    solo_abajo: bool,
+) -> Option<tiny_skia::Path> {
+    let k = 0.552_284_8 * r;
+    let mut pb = PathBuilder::new();
+    let ra = if solo_abajo { 0.0 } else { r };
+    let ka = if solo_abajo { 0.0 } else { k };
+    pb.move_to(x0 + ra, y0);
+    pb.line_to(x1 - ra, y0);
+    pb.cubic_to(x1 - ra + ka, y0, x1, y0 + ra - ka, x1, y0 + ra);
+    pb.line_to(x1, y1 - r);
+    pb.cubic_to(x1, y1 - r + k, x1 - r + k, y1, x1 - r, y1);
+    pb.line_to(x0 + r, y1);
+    pb.cubic_to(x0 + r - k, y1, x0, y1 - r + k, x0, y1 - r);
+    pb.line_to(x0, y0 + ra);
+    pb.cubic_to(x0, y0 + ra - ka, x0 + ra - ka, y0, x0 + ra, y0);
+    pb.close();
+    pb.finish()
+}
+
+/// Negro fuera de la ventana de la ilustración, con sus esquinas redondeadas.
+pub(super) fn ventana_svg(
+    w_mm: f32,
+    h_mm: f32,
+    v: &super::pack::VentanaArte,
+    radio: f32,
+) -> String {
+    let r = radio.clamp(0.0, v.w.min(v.h) / 2.0);
+    let (x0, y0, x1, y1) = (v.x, v.y, v.x + v.w, v.y + v.h);
+    let arco = |x: f32, y: f32| {
+        if r > 0.0 {
+            format!("A{r},{r} 0 0 1 {x},{y}")
+        } else {
+            format!("L{x},{y}")
+        }
+    };
+    let ventana = if v.solo_abajo {
+        format!(
+            "M{x0},{y0} H{x1} V{} {} H{} {} Z",
+            y1 - r,
+            arco(x1 - r, y1),
+            x0 + r,
+            arco(x0, y1 - r)
+        )
+    } else {
+        format!(
+            "M{} {y0} H{} {} V{} {} H{} {} V{} {} Z",
+            x0 + r,
+            x1 - r,
+            arco(x1, y0 + r),
+            y1 - r,
+            arco(x1 - r, y1),
+            x0 + r,
+            arco(x0, y1 - r),
+            y0 + r,
+            arco(x0 + r, y0)
+        )
+    };
+    format!(
+        r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w_mm} {h_mm}" width="{w_mm}" height="{h_mm}"><path fill-rule="evenodd" fill="#000" d="M-1,-1 H{} V{} H-1 Z {ventana}"/></svg>"##,
+        w_mm + 1.0,
+        h_mm + 1.0
+    )
+}
+
 /// Sin ilustración: un degradado oscuro neutro (borradores).
 pub(super) fn sin_arte(l: &mut Lienzo, hueco: (f32, f32, f32, f32)) {
     let svg = format!(
@@ -625,6 +778,8 @@ pub(super) struct Carta<'a> {
     pub(super) estrechado_base: f32,
     /// Grosores pedidos por la colección.
     pub(super) pesos: super::efectivo::Pesos,
+    /// Ajustes finos de posición (los huecos de texto se mueven con ellos).
+    pub(super) retoques: super::modelo::FineTuning,
     letra_titulo: Option<String>,
     letra_reglas: Option<String>,
 }
@@ -642,9 +797,21 @@ impl Carta<'_> {
     pub(super) fn hueco(&self, nombre: &str) -> Option<(Hueco, Caja)> {
         let h = self.estilo.huecos.get(nombre)?.clone();
         let ev = |v: &super::pack::Valor| v.evaluar(&self.nums).unwrap_or(0.0);
+        let r = &self.retoques;
+        // Los ajustes finos bajan (o suben) cada texto; las reglas se mueven
+        // al pintarlas, no aquí (su hueco también mide la caja).
+        let dy = match nombre {
+            "titulo" => r.title,
+            "coste" => r.cost,
+            "tipo" => r.type_line,
+            "emblema" => r.emblem,
+            "fr" => r.pt,
+            "pie" => r.footer,
+            _ => 0.0,
+        } as f32;
         let c = Caja {
             x: ev(&h.x),
-            y: ev(&h.y),
+            y: ev(&h.y) + dy,
             w: ev(&h.w),
             h: ev(&h.h),
         };
@@ -1329,6 +1496,9 @@ pub(super) fn pintar_cara(
         RulesBox::Light => ([242, 236, 220, 255], 0.92),
         RulesBox::Tint { hex } => (rgba(hex).unwrap_or(mezcla.tinte), 0.80),
     };
+    // Más opaca si se pide en los ajustes finos.
+    let refuerzo = e.retoques.rules_box_opacity as f32;
+    let modo_caja = (modo_caja.0, modo_caja.1 + (1.0 - modo_caja.1) * refuerzo);
     let tinta_caja = if luminancia(modo_caja.0) * modo_caja.1 + (1.0 - modo_caja.1) * 0.2 > 0.5 {
         mezcla.tinta
     } else {
@@ -1358,6 +1528,8 @@ pub(super) fn pintar_cara(
         vars.insert(k.to_string(), hex(c));
     }
     vars.insert("opacidadCaja".into(), format!("{}", modo_caja.1));
+    // Para los marcos con la caja en la imagen (Original): cuánto oscurecerla.
+    vars.insert("refuerzoCaja".into(), format!("{refuerzo}"));
 
     let mut c = Carta {
         l,
@@ -1371,6 +1543,7 @@ pub(super) fn pintar_cara(
         clave_color: clave_marco(e, cara),
         estrechado_base: e.squeeze_base as f32,
         pesos: e.pesos,
+        retoques: e.retoques,
         letra_titulo: e.font_title.clone(),
         letra_reglas: e.font_rules.clone(),
     };
@@ -1538,6 +1711,7 @@ pub(super) fn pintar_cara(
 
     // ── Ilustración.
     let mut hueco_arte = None;
+    let mut arte_pintado = None;
     {
         let h = c.estilo.arte.clone();
         let ev = |v: &super::pack::Valor| v.evaluar(&c.nums).unwrap_or(0.0);
@@ -1557,11 +1731,16 @@ pub(super) fn pintar_cara(
                 .get(cara)
                 .and_then(|f| f.art.as_ref())
                 .and_then(|a| rec.imagenes.imagen(&a.image.blob).map(|i| (i, a.framing)));
-            match img {
-                Some((i, f)) => pintar_arte(&mut c.l, &i, r, &f),
+            match &img {
+                Some((i, f)) => pintar_arte(&mut c.l, i, r, f),
                 None => sin_arte(&mut c.l, r),
             }
+            arte_pintado = Some((img, r));
         }
+    }
+    if let Some(v) = c.estilo.ventana_arte.clone() {
+        let radio = e.retoques.art_radius.map_or(v.radio, |r| r as f32);
+        let _ = c.l.svg(&ventana_svg(c.l.w_mm, c.l.h_mm, &v, radio));
     }
 
     // ── Capas.
@@ -1587,7 +1766,22 @@ pub(super) fn pintar_cara(
         emblema: Some(e.emblem.is_some()),
     };
     let capas = c.estilo.capas.clone();
-    c.capas(&capas, &cond);
+    // La curva de la ventana dibujada en una capa de imagen: con un radio
+    // propio, se rehace encima de esa capa (y debajo de las siguientes).
+    let repinta = match (c.estilo.ventana_arte.clone(), e.retoques.art_radius) {
+        (Some(v), Some(radio)) if !v.repintar.is_empty() => Some((v, radio as f32)),
+        _ => None,
+    };
+    let corte = repinta
+        .as_ref()
+        .and_then(|(v, _)| v.repintar_tras)
+        .unwrap_or(capas.len())
+        .min(capas.len());
+    c.capas(&capas[..corte], &cond);
+    if let Some((v, radio)) = &repinta {
+        repintar_ventana(&mut c.l, v, *radio, arte_pintado.as_ref(), o.sin_arte);
+    }
+    c.capas(&capas[corte..], &cond);
 
     // ── Textos.
     let squeeze = e.squeeze_min as f32;
@@ -1659,14 +1853,15 @@ pub(super) fn pintar_cara(
             &contenido,
             hecho,
             sitio.x,
-            sitio.y + libre,
+            sitio.y + libre + e.retoques.rules as f32,
             sitio.w,
             sitio.h - libre,
             tinta,
         );
     }
     if !salas.is_empty() {
-        if let Some((h, caja)) = c.hueco("reglas") {
+        if let Some((h, mut caja)) = c.hueco("reglas") {
+            caja.y += e.retoques.rules as f32;
             let (est, _) = c.estilo_texto(&h);
             c.pintar_mazmorra(&salas, caja, &est, tinta);
         }
