@@ -249,7 +249,7 @@ interfaz.
 
 ---
 
-## Editor de cartas (experimental)
+## Editor de cartas (beta)
 
 > Viene **apagado**. Se enciende en *Ajustes → Editor de cartas*. Está en
 > pruebas: puede tener fallos y cambiar entre versiones.

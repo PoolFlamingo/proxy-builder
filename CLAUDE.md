@@ -106,7 +106,7 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
   en Rust con progreso, puntúa cada propuesta exacta/probable/ninguna y la
   pantalla la deja revisar antes de vincular; con selección, solo esas).
 - **Editor de cartas (2.0).** El plan es `plans/20261014 - editor-de-cartas/`.
-  - 🛑 Experimental y **apagado de fábrica** (Pablo, 14/10/2026): se enciende en
+  - 🛑 Beta y **apagado de fábrica** (Pablo, 14/10/2026): se enciende en
     Ajustes (`ui-store.editorCartas`, `setEditorCartas`). Apagado no se monta
     nada suyo: ni la pestaña «Diseñar», ni sus diálogos (`App.tsx`), ni sus
     entradas del menú de la casilla. Las cartas ya diseñadas se siguen
@@ -141,6 +141,11 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
   - Estrechado del título y el tipo: límite (`title_squeeze_min`, 55–75 %) y
     mínimo que se aplica siempre (`title_squeeze_base`, 100 % = nada), en la
     colección o en la carta (`texto::linea_ajustada_con_base`).
+  - Ajustes finos (`FineTuning`, en la colección o propios de la carta):
+    altura de cada texto, caja de reglas más opaca, radio de la ventana de la
+    ilustración (`ventanaArte` del pack) y de la carta (sin él, redondeada en
+    pantalla y recta al imprimir). La definición de los marcos Original en
+    disco se pone al día al cargar (`original::definicion_al_dia`).
   - Vista previa en tiempo real: `lib/imagen-viva.ts` (se pide al ritmo del
     cambio, la última gana, más pequeña mientras se arrastra).
   - Mover la ilustración (arrastre, rueda, deslizadores del encuadre) no
