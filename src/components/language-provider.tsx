@@ -28,11 +28,12 @@ export function paraTraducir<T extends string>(es: T): T {
 	return es;
 }
 
+/** El idioma elegido; sin elegir, inglés. */
 function leerIdioma(): Lang {
 	try {
-		return localStorage.getItem(LANG_KEY) === "en" ? "en" : "es";
+		return localStorage.getItem(LANG_KEY) === "es" ? "es" : "en";
 	} catch {
-		return "es";
+		return "en";
 	}
 }
 

@@ -164,7 +164,7 @@ export const SlotView = memo(function SlotView({
 										TONOS[m.tono],
 									)}
 								>
-									{m.texto}
+									{t(m.texto)}
 								</span>
 							</WithTooltip>
 						))}
