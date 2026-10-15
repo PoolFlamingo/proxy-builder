@@ -18,6 +18,7 @@ const TODOS: Aviso[] = [
 	{ kind: "packSinLayout", layout: "saga" },
 	{ kind: "layoutDesconocido", layout: "reversible_card" },
 	{ kind: "coleccionPerdida" },
+	{ kind: "sinCinta" },
 ];
 
 describe("textoAviso", () => {

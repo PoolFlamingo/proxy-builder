@@ -1,5 +1,5 @@
 import { AlertTriangle, Loader2, RotateCcw, RotateCw, Undo2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { Adjustments } from "@/bindings/Adjustments";
 import type { CardEdits } from "@/bindings/CardEdits";
 import type { DeckCard } from "@/bindings/DeckCard";
@@ -18,6 +18,7 @@ import {
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { cartaPorId } from "@/features/preview/acciones-carta";
 import { EDICION_NEUTRA, parametros, urlMiniatura } from "@/lib/image-url";
+import { useAlRitmo, useImagenViva, useRafaga } from "@/lib/imagen-viva";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
 import { type Alcance, aplicarEdicion, copiasDe } from "./propagar";
@@ -68,29 +69,31 @@ function Contenido({ carta }: { carta: DeckCard }) {
 	const ajustes = useDeck((s) => s.deck?.settings);
 	const copias = useDeck((s) => (s.deck ? copiasDe(s.deck.cards, carta).length : 0));
 	const [borrador, setBorrador] = useState<CardEdits>(carta.edits);
-	const [pintado, setPintado] = useState<CardEdits>(carta.edits);
-	const [cargando, setCargando] = useState(true);
 	const arrastre = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
 	const marco = useRef<HTMLDivElement>(null);
 
-	// Tras 150 ms sin cambios, lo pintado alcanza al borrador.
-	useEffect(() => {
-		if (borrador === pintado) return;
-		const id = setTimeout(() => setPintado(borrador), 150);
-		return () => clearTimeout(id);
-	}, [borrador, pintado]);
+	// Lo pintado sigue al borrador en tiempo real: como mucho cada 60 ms
+	// mientras se arrastra o se mueve un deslizador, y más pequeño entretanto.
+	const pintado = useAlRitmo(borrador, 60);
+	const rafaga = useRafaga(pintado);
 
 	const front = carta.front;
 	const url = useMemo(
 		() =>
 			front && ajustes
-				? urlMiniatura(front.blob, parametros(ajustes, pintado, false, 0), 745)
+				? urlMiniatura(front.blob, parametros(ajustes, pintado, false, 0), rafaga ? 488 : 745)
 				: null,
-		[front, ajustes, pintado],
+		[front, ajustes, pintado, rafaga],
 	);
-	useEffect(() => {
-		if (url) setCargando(true);
-	}, [url]);
+	const { mostrada, cargando } = useImagenViva(url);
+	// Los retoques que aún no se ven se aproximan con CSS sobre la imagen que
+	// hay: para eso se recuerda con qué retoques se pidió cada URL.
+	const porUrl = useRef(new Map<string, CardEdits>());
+	if (url && !porUrl.current.has(url)) {
+		if (porUrl.current.size > 64) porUrl.current.clear();
+		porUrl.current.set(url, pintado);
+	}
+	const enPantalla = (mostrada && porUrl.current.get(mostrada)) || pintado;
 
 	if (!ajustes || !url) return null;
 
@@ -163,15 +166,15 @@ function Contenido({ carta }: { carta: DeckCard }) {
 						onPointerUp={alSoltar}
 						onPointerCancel={alSoltar}
 					>
-						<img
-							src={url}
-							alt=""
-							draggable={false}
-							onLoad={() => setCargando(false)}
-							onError={() => setCargando(false)}
-							className="size-full select-none object-cover"
-							style={{ filter: filtroAproximado(borrador.adjust, pintado.adjust) }}
-						/>
+						{mostrada && (
+							<img
+								src={mostrada}
+								alt=""
+								draggable={false}
+								className="size-full select-none object-cover"
+								style={{ filter: filtroAproximado(borrador.adjust, enPantalla.adjust) }}
+							/>
+						)}
 						{cargando && (
 							<Loader2 className="absolute top-2 right-2 size-4 animate-spin text-white drop-shadow" />
 						)}
@@ -241,7 +244,6 @@ function Contenido({ carta }: { carta: DeckCard }) {
 								min={r.min}
 								max={100}
 								onChange={(v) => ajustar(r.k, v)}
-								onSoltar={() => setPintado((p) => ({ ...p, adjust: { ...borrador.adjust } }))}
 							/>
 						))}
 					</div>

@@ -7,4 +7,8 @@ export type PackInfo = { id: string, nombre: string,
 /**
  * `false` para el de la casa (no se puede quitar).
  */
-importado: boolean, estilos: Array<string>, };
+importado: boolean, estilos: Array<string>, 
+/**
+ * De dónde salen sus imágenes, si lo dice.
+ */
+origen: string | null, };

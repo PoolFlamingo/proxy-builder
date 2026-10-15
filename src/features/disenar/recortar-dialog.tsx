@@ -143,7 +143,7 @@ export function RecortarDialog({
 						</div>
 					) : (
 						<ScrollArea className="min-h-0 flex-1">
-							<div className="grid grid-cols-5 gap-2 pr-2">
+							<div className="grid grid-cols-5 gap-2 p-1 pr-2.5">
 								{conImagen.map((c) =>
 									c.front && ajustes ? (
 										<button

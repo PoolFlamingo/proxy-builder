@@ -86,3 +86,16 @@ export function urlBusqueda(huella: string): string {
 export function urlDiseno(huella: string, ancho: AnchoMiniatura): string {
 	return `${raiz()}d/${huella}/${ancho}`;
 }
+
+/** Ese diseño sin la ilustración (`design_overlay`). */
+export function urlCapa(huella: string, ancho: AnchoMiniatura): string {
+	return `${raiz()}c/${huella}/${ancho}`;
+}
+
+/** Lados de la ilustración reducida que acepta el protocolo. */
+export type LadoArte = 1000 | 2000;
+
+/** Una ilustración del almacén reducida a `lado` px (el lado más largo). */
+export function urlArte(blob: string, lado: LadoArte): string {
+	return `${raiz()}b/${blob}/${lado}`;
+}

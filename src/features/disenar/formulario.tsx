@@ -25,14 +25,16 @@ import { Fila, FilaDeslizador, FilaInterruptor, Selector } from "@/components/ca
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { abrirParaImportar } from "@/lib/dialogos";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { useUi } from "@/stores/ui-store";
+import { ID_ORIGINAL, useMarcosOriginales } from "./marcos-originales";
 import { RecortarDialog } from "./recortar-dialog";
-import { ESTILOS, MAQUETACIONES, NOMBRE_ORIGINAL, PALETAS, RAREZAS } from "./textos";
+import { ESTILOS, letraRareza, MAQUETACIONES, NOMBRE_ORIGINAL, PALETAS, RAREZAS } from "./textos";
 import { TraduccionSugerida } from "./traduccion";
 
 type Cambiar = (f: (d: CardDesign) => CardDesign) => void;
@@ -157,7 +159,7 @@ export function Formulario({
 function Dato({ etiqueta, children }: { etiqueta: string; children: React.ReactNode }) {
 	return (
 		<div className="flex gap-2.5 text-xs">
-			<span className="w-24 shrink-0 text-muted-foreground">{etiqueta}</span>
+			<span className="w-28 shrink-0 text-muted-foreground">{etiqueta}</span>
 			<span className="min-w-0 flex-1 break-words">{children}</span>
 		</div>
 	);
@@ -571,22 +573,53 @@ export function EditorMarco({
 	onChange: (m: FrameOptions) => void;
 	packs: PackInfo[];
 }) {
-	const { t } = useLang();
+	const { t, mensaje } = useLang();
 	const paletas = PALETAS.map((p) => ({ valor: p.valor, etiqueta: t(p.etiqueta) }));
 	const color = marco.color;
+	const originales = useMarcosOriginales();
+	useEffect(() => {
+		if (!originales.info) void originales.cargar();
+	}, [originales.info, originales.cargar]);
+	const hayOriginal = packs.some((p) => p.id === ID_ORIGINAL);
+	const opciones = packs.map((p) => ({
+		valor: p.id,
+		etiqueta: p.importado ? p.nombre : t("Proxy Builder (de la casa)"),
+	}));
+	// Los originales se ofrecen siempre; si no están, elegirlos los descarga.
+	if (!hayOriginal) opciones.push({ valor: ID_ORIGINAL, etiqueta: t("Original (descargar)") });
+	const elegirPack = (pack: string) => {
+		if (pack !== ID_ORIGINAL || hayOriginal) return onChange({ ...marco, pack });
+		originales
+			.descargar()
+			.then(() => onChange({ ...marco, pack }))
+			.catch((e) => toast.error(mensaje(e)));
+	};
 	return (
 		<div className="flex flex-col gap-2.5">
 			<Fila etiqueta={t("Pack de marcos")}>
-				<Selector
-					valor={marco.pack}
-					opciones={packs.map((p) => ({
-						valor: p.id,
-						etiqueta: p.importado ? p.nombre : t("Proxy Builder (de la casa)"),
-					}))}
-					onChange={(pack) => onChange({ ...marco, pack })}
-					ancho="w-44"
-				/>
+				<Selector valor={marco.pack} opciones={opciones} onChange={elegirPack} ancho="w-52" />
 			</Fila>
+			{originales.progreso ? (
+				<div className="flex flex-col gap-1.5">
+					<Progress
+						value={(originales.progreso.hechas * 100) / Math.max(1, originales.progreso.total)}
+					/>
+					<span className="text-[11px] text-muted-foreground">
+						{t("Descargando los marcos originales: {hechas} de {total}", {
+							hechas: originales.progreso.hechas,
+							total: originales.progreso.total,
+						})}
+					</span>
+				</div>
+			) : (
+				marco.pack === ID_ORIGINAL && (
+					<p className="text-[11px] text-muted-foreground">
+						{t(
+							"Marcos de imagen de Card Conjurer para los estilos Clásico y Despejado; los demás estilos usan los de la casa.",
+						)}
+					</p>
+				)
+			)}
 			<Fila
 				etiqueta={t("Color del marco")}
 				ayuda={t("Automático: un color, el suyo; dos colores, degradado; tres o más, oro.")}
@@ -780,7 +813,9 @@ function PestanaMarco({
 			)}
 			<FilaInterruptor
 				etiqueta={t("Estrechado del título propio")}
-				ayuda={t("Cuánto se puede estrechar un título largo antes de reducir la letra.")}
+				ayuda={t(
+					"Cuánto se estrechan el título y el tipo: siempre (el mínimo) y como mucho antes de reducir la letra (el límite).",
+				)}
 				valor={design.options.titleSqueezeMin !== undefined}
 				onChange={(v) =>
 					cambiar((d) => ({
@@ -788,21 +823,41 @@ function PestanaMarco({
 						options: {
 							...d.options,
 							titleSqueezeMin: v ? (col?.titleSqueezeMin ?? 0.65) : undefined,
+							titleSqueezeBase: v ? (col?.titleSqueezeBase ?? 1) : undefined,
 						},
 					}))
 				}
 			/>
 			{design.options.titleSqueezeMin !== undefined && (
-				<FilaDeslizador
-					etiqueta={t("Estrechar hasta")}
-					valor={Math.round(design.options.titleSqueezeMin * 100)}
-					min={55}
-					max={75}
-					sufijo="%"
-					onChange={(v) =>
-						cambiar((d) => ({ ...d, options: { ...d.options, titleSqueezeMin: v / 100 } }))
-					}
-				/>
+				<>
+					<FilaDeslizador
+						etiqueta={t("Estrechar hasta")}
+						valor={Math.round(design.options.titleSqueezeMin * 100)}
+						min={55}
+						max={75}
+						sufijo="%"
+						onChange={(v) =>
+							cambiar((d) => ({
+								...d,
+								options: {
+									...d.options,
+									titleSqueezeMin: v / 100,
+									titleSqueezeBase: Math.max(d.options.titleSqueezeBase ?? 1, v / 100),
+								},
+							}))
+						}
+					/>
+					<FilaDeslizador
+						etiqueta={t("Estrechar siempre al menos")}
+						valor={Math.round((design.options.titleSqueezeBase ?? 1) * 100)}
+						min={Math.round(design.options.titleSqueezeMin * 100)}
+						max={100}
+						sufijo="%"
+						onChange={(v) =>
+							cambiar((d) => ({ ...d, options: { ...d.options, titleSqueezeBase: v / 100 } }))
+						}
+					/>
+				</>
 			)}
 		</div>
 	);
@@ -821,16 +876,14 @@ function CampoTexto({
 	defecto?: string;
 	onChange: (v: string | undefined) => void;
 }) {
-	const [texto, setTexto] = useState(valor ?? "");
-	useEffect(() => setTexto(valor ?? ""), [valor]);
+	// Se aplica al escribir (la carta se repinta en tiempo real); vacío es «el
+	// de la colección», que se ve en gris.
 	return (
 		<Fila etiqueta={etiqueta}>
 			<Input
-				value={texto}
+				value={valor ?? ""}
 				placeholder={defecto}
-				onChange={(e) => setTexto(e.target.value)}
-				onBlur={() => onChange(texto.trim() ? texto : undefined)}
-				onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+				onChange={(e) => onChange(e.target.value.trim() ? e.target.value : undefined)}
 				aria-label={etiqueta}
 				className="h-7 w-44 text-xs"
 			/>
@@ -864,7 +917,7 @@ function PestanaPie({
 					value={pie.number}
 					onChange={(e) => poner({ number: e.target.value, numberManual: true })}
 					aria-label={t("Número de colección")}
-					className="h-7 w-24 font-mono text-xs"
+					className="h-7 w-44 text-xs"
 				/>
 			</Fila>
 			{pie.numberManual && (
@@ -880,7 +933,7 @@ function PestanaPie({
 			<CampoTexto
 				etiqueta={t("Rareza (letra)")}
 				valor={pie.rarity}
-				defecto={col?.rarityLetter ?? undefined}
+				defecto={col?.rarityLetter ?? letraRareza(design.card.rarity)}
 				onChange={(rarity) => poner({ rarity })}
 			/>
 			<CampoTexto

@@ -13,6 +13,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDefaultLayout } from "react-resizable-panels";
 import { toast } from "sonner";
+import type { ArtFraming } from "@/bindings/ArtFraming";
 import type { Collection } from "@/bindings/Collection";
 import type { DesignLang } from "@/bindings/DesignLang";
 import type { PackInfo } from "@/bindings/PackInfo";
@@ -28,6 +29,7 @@ import { useUi } from "@/stores/ui-store";
 import { Formulario } from "./formulario";
 import { agrupar, type Grupo } from "./grupos";
 import { ListaCartas } from "./lista-cartas";
+import { useMarcosOriginales } from "./marcos-originales";
 import { renumerar } from "./renumerar";
 import { useBorrador } from "./use-borrador";
 import { useResumen } from "./use-resumen";
@@ -63,16 +65,17 @@ export function DisenarScreen() {
 	const resumen = useResumen(b.design, cara, lang);
 	const dialogo = useUi((s) => s.dialogo);
 
-	// Colecciones y packs (se releen al cerrar sus diálogos).
+	// Colecciones y packs (se releen al cerrar sus diálogos y al descargar los
+	// marcos originales).
+	const versionOriginales = useMarcosOriginales((s) => s.version);
 	useEffect(() => {
-		if (dialogo) return;
 		call("collection_list", {})
 			.then(setColecciones)
 			.catch(() => {});
 		call("packs_list", {})
 			.then(setPacks)
 			.catch(() => {});
-	}, [dialogo]);
+	}, [dialogo, versionOriginales]);
 
 	// La primera vez, los símbolos de maná (se descargan si no están).
 	useEffect(() => {
@@ -129,19 +132,10 @@ export function DisenarScreen() {
 		if (siguiente) pasar(1);
 	};
 
-	const encuadre = (c: { dx?: number; dy?: number; zoom?: number }) =>
+	const encuadre = (framing: ArtFraming) =>
 		b.cambiar((d) => {
 			const arte = d.faces[cara]?.art;
 			if (!arte) return d;
-			const f = arte.framing;
-			// Arrastrar a la derecha enseña lo que hay a la izquierda.
-			const k = 2 / Math.max(0.15, 1 - 1 / f.zoom + 0.15);
-			const framing = {
-				...f,
-				zoom: Math.min(3, Math.max(1, f.zoom + (c.zoom ?? 0))),
-				offsetX: Math.min(1, Math.max(-1, f.offsetX - (c.dx ?? 0) * k)),
-				offsetY: Math.min(1, Math.max(-1, f.offsetY - (c.dy ?? 0) * k)),
-			};
 			return {
 				...d,
 				faces: d.faces.map((x, i) => (i === cara ? { ...x, art: { ...arte, framing } } : x)),
@@ -235,6 +229,8 @@ export function DisenarScreen() {
 					<VistaPrevia
 						design={b.design}
 						huella={b.huella}
+						alDia={b.alDia}
+						recursos={recursos}
 						avisos={b.avisos}
 						lang={lang}
 						setLang={setLang}

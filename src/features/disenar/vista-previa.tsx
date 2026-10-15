@@ -1,6 +1,8 @@
 import { AlertTriangle, Info, Loader2, Move } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { ArtFraming } from "@/bindings/ArtFraming";
 import type { Aviso } from "@/bindings/Aviso";
+import type { CapaInfo } from "@/bindings/CapaInfo";
 import type { CardDesign } from "@/bindings/CardDesign";
 import type { DesignLang } from "@/bindings/DesignLang";
 import { useLang } from "@/components/language-provider";
@@ -8,17 +10,32 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { WithTooltip } from "@/components/ui/with-tooltip";
-import { type AnchoMiniatura, urlDiseno } from "@/lib/image-url";
+import { type AnchoMiniatura, urlArte, urlCapa, urlDiseno } from "@/lib/image-url";
+import { useImagenViva, useRafaga } from "@/lib/imagen-viva";
+import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
+import { ArteEnVivo } from "./arte-en-vivo";
+import { type CambioEncuadre, claveCapa, moverEncuadre } from "./encuadre";
 import { esGrave, textoAviso } from "./textos";
+
+/** Cada cuánto se pasa al diseño el encuadre mientras se arrastra. */
+const EMPUJE_MS = 100;
+/** Tras el último giro de rueda, cuándo se da por acabado. */
+const FIN_RUEDA_MS = 200;
 
 /**
  * La carta tal como saldrá, pintada por Rust (el mismo motor que el PDF).
  * Arrastrar sobre ella mueve la ilustración; la rueda la acerca o aleja.
+ *
+ * Mientras solo cambia el encuadre, la ilustración se mueve en la pantalla
+ * (`ArteEnVivo`, por debajo de la carta sin ilustración) y Rust no pinta
+ * nada hasta que se para; entonces entra la carta exacta.
  */
 export function VistaPrevia({
 	design,
 	huella,
+	alDia,
+	recursos,
 	avisos,
 	lang,
 	setLang,
@@ -30,12 +47,16 @@ export function VistaPrevia({
 }: {
 	design: CardDesign | null;
 	huella: string | null;
+	/** `huella` es la del diseño de ahora. */
+	alDia: boolean;
+	/** Cambia con colecciones, letras o packs: la capa ya no vale. */
+	recursos: unknown;
 	avisos: Aviso[];
 	lang: DesignLang;
 	setLang: (l: DesignLang) => void;
 	cara: number;
 	setCara: (c: number) => void;
-	onEncuadre: (cambio: { dx?: number; dy?: number; zoom?: number }) => void;
+	onEncuadre: (framing: ArtFraming) => void;
 	cargando: boolean;
 	/** 2 en las de doble cara; en las partidas, aventuras… las caras son
 	 *  partes de una sola cara impresa. */
@@ -43,7 +64,6 @@ export function VistaPrevia({
 }) {
 	const { t } = useLang();
 	const [seguro, setSeguro] = useState(false);
-	const [pintando, setPintando] = useState(false);
 	const marco = useRef<HTMLDivElement>(null);
 	const arrastre = useRef<{ x: number; y: number } | null>(null);
 	const [ancho, setAncho] = useState<AnchoMiniatura>(745);
@@ -60,14 +80,107 @@ export function VistaPrevia({
 		return () => ro.disconnect();
 	}, []);
 
-	const url = huella ? urlDiseno(huella, ancho) : null;
+	// ── Capa para mover la ilustración en la pantalla.
+	const arte = design?.faces[cara]?.art ?? null;
+	const tieneArte = !!arte;
+	const clave = useMemo(
+		() => (design ? claveCapa(design, cara, lang) : null),
+		[design, cara, lang],
+	);
+	const [capa, setCapa] = useState<(CapaInfo & { clave: string; ancho: AnchoMiniatura }) | null>(
+		null,
+	);
+	const pedida = useRef<string | null>(null);
 	useEffect(() => {
-		if (url) setPintando(true);
-	}, [url]);
+		// Otras colecciones, letras o packs: la que hay ya no vale.
+		setCapa(null);
+		pedida.current = null;
+	}, [recursos]);
+	const pedirCapa = useCallback(() => {
+		if (!design || !clave || !tieneArte) return;
+		const k = `${clave}|${ancho}`;
+		if (pedida.current === k) return;
+		pedida.current = k;
+		call("design_overlay", { design, cara, lang, ancho })
+			.then((c) => {
+				if (pedida.current !== k) return;
+				setCapa(c ? { ...c, clave, ancho } : null);
+			})
+			.catch(() => {
+				if (pedida.current === k) pedida.current = null;
+			});
+	}, [design, clave, tieneArte, cara, lang, ancho]);
+	const capaVale = !!capa && capa.clave === clave && capa.cara === cara;
 
-	const tieneArte = !!design?.faces[cara]?.art;
+	// El encuadre mientras se arrastra o se gira la rueda: aquí, al momento;
+	// al diseño, cada `EMPUJE_MS` y al acabar.
+	const [vivo, setVivo] = useState<ArtFraming | null>(null);
+	const vivoRef = useRef<ArtFraming | null>(null);
+	const empuje = useRef<{ t: ReturnType<typeof setTimeout> | null; f: ArtFraming | null }>({
+		t: null,
+		f: null,
+	});
+	const finRueda = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const mover = (c: CambioEncuadre) => {
+		const base = vivoRef.current ?? arte?.framing;
+		if (!base) return;
+		const f = moverEncuadre(base, c);
+		vivoRef.current = f;
+		setVivo(f);
+		const e = empuje.current;
+		if (e.t) {
+			e.f = f;
+			return;
+		}
+		onEncuadre(f);
+		e.t = setTimeout(() => {
+			e.t = null;
+			if (e.f) onEncuadre(e.f);
+			e.f = null;
+		}, EMPUJE_MS);
+	};
+	const acabar = () => {
+		const e = empuje.current;
+		if (e.t) clearTimeout(e.t);
+		e.t = null;
+		e.f = null;
+		const f = vivoRef.current;
+		if (f) onEncuadre(f);
+		vivoRef.current = null;
+		setVivo(null);
+	};
+	useEffect(
+		() => () => {
+			if (empuje.current.t) clearTimeout(empuje.current.t);
+			if (finRueda.current) clearTimeout(finRueda.current);
+		},
+		[],
+	);
+	// Si cambia el encuadre (los deslizadores del formulario), se pide la capa.
+	const framingClave = arte ? JSON.stringify(arte.framing) : null;
+	useEffect(() => {
+		if (framingClave) pedirCapa();
+	}, [framingClave]);
+
+	// Mientras cambia seguido (escribir, mover un deslizador) se pide más
+	// pequeña para que siga al ratón; al parar, la buena.
+	const rafaga = useRafaga(huella);
+	const url = huella
+		? urlDiseno(huella, rafaga ? (Math.min(ancho, 488) as AnchoMiniatura) : ancho)
+		: null;
+	const exacta = huella && alDia ? urlDiseno(huella, ancho) : null;
+	const [capaLista, setCapaLista] = useState(false);
+	const enVivo = capaVale && capaLista && !!arte;
+	// Con la ilustración moviéndose en la pantalla, Rust no pinta los pasos
+	// intermedios: solo la buena al parar.
+	const congelada = useRef<string | null>(null);
+	if (!(enVivo && (rafaga || vivo !== null))) congelada.current = url;
+	const { mostrada, cargando: pintando } = useImagenViva(congelada.current);
+	const componer = enVivo && (vivo !== null || mostrada !== exacta);
+
 	const alBajar = (e: React.PointerEvent) => {
 		if (!tieneArte) return;
+		pedirCapa();
 		(e.target as HTMLElement).setPointerCapture(e.pointerId);
 		arrastre.current = { x: e.clientX, y: e.clientY };
 	};
@@ -76,15 +189,23 @@ export function VistaPrevia({
 		const m = marco.current;
 		if (!a || !m) return;
 		const r = m.getBoundingClientRect();
-		onEncuadre({ dx: (e.clientX - a.x) / r.width, dy: (e.clientY - a.y) / r.height });
+		mover({ dx: (e.clientX - a.x) / r.width, dy: (e.clientY - a.y) / r.height });
 		arrastre.current = { x: e.clientX, y: e.clientY };
 	};
 	const alSoltar = () => {
+		if (!arrastre.current) return;
 		arrastre.current = null;
+		acabar();
 	};
 	const alRodar = (e: React.WheelEvent) => {
 		if (!tieneArte || e.ctrlKey) return;
-		onEncuadre({ zoom: e.deltaY < 0 ? 0.04 : -0.04 });
+		pedirCapa();
+		mover({ zoom: e.deltaY < 0 ? 0.04 : -0.04 });
+		if (finRueda.current) clearTimeout(finRueda.current);
+		finRueda.current = setTimeout(() => {
+			finRueda.current = null;
+			if (!arrastre.current) acabar();
+		}, FIN_RUEDA_MS);
 	};
 
 	const caras = design?.faces.length ?? 0;
@@ -130,19 +251,18 @@ export function VistaPrevia({
 						"relative aspect-[63/88] h-full max-h-full max-w-full touch-none select-none",
 						tieneArte && "cursor-grab active:cursor-grabbing",
 					)}
+					onPointerEnter={pedirCapa}
 					onPointerDown={alBajar}
 					onPointerMove={alMover}
 					onPointerUp={alSoltar}
 					onPointerCancel={alSoltar}
 					onWheel={alRodar}
 				>
-					{url ? (
+					{mostrada ? (
 						<img
-							src={url}
+							src={mostrada}
 							alt=""
 							draggable={false}
-							onLoad={() => setPintando(false)}
-							onError={() => setPintando(false)}
 							className="size-full rounded-[4.5%] object-contain shadow-lg"
 						/>
 					) : (
@@ -156,16 +276,26 @@ export function VistaPrevia({
 							)}
 						</div>
 					)}
-					{seguro && url && (
+					{capaVale && capa && arte && (
+						<ArteEnVivo
+							capa={capa}
+							urlCapa={urlCapa(capa.huella, capa.ancho)}
+							urlArte={urlArte(arte.image.blob, ancho >= 745 ? 2000 : 1000)}
+							framing={vivo ?? arte.framing}
+							visible={componer}
+							onLista={setCapaLista}
+						/>
+					)}
+					{seguro && mostrada && (
 						<div
 							className="pointer-events-none absolute rounded-[3%] border border-dashed border-cyan-400/90"
 							style={{ inset: `${(3 / 88) * 100}% ${(3 / 63) * 100}%` }}
 						/>
 					)}
-					{pintando && (
+					{pintando && !componer && (
 						<Loader2 className="absolute top-2 right-2 size-4 animate-spin text-white drop-shadow" />
 					)}
-					{tieneArte && url && (
+					{tieneArte && mostrada && (
 						<WithTooltip
 							content={t("Arrastra para mover la ilustración; la rueda la acerca o aleja.")}
 						>

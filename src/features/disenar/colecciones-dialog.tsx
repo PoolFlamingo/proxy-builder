@@ -6,7 +6,7 @@ import type { LetraInfo } from "@/bindings/LetraInfo";
 import type { PackInfo } from "@/bindings/PackInfo";
 import { Fila, FilaDeslizador, Selector } from "@/components/campos";
 import { Confirmar } from "@/components/confirmar";
-import { useLang } from "@/components/language-provider";
+import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
 import { EditorMarco } from "./formulario";
+import { useMarcosOriginales } from "./marcos-originales";
 import { rehacerMiniaturas } from "./renumerar";
 import { ESTILOS, NOMBRE_ORIGINAL } from "./textos";
 
@@ -43,6 +44,7 @@ function nueva(nombre: string): Collection {
 		originalName: "auto",
 		footerTemplate: { es: "", en: "" },
 		titleSqueezeMin: 0.65,
+		titleSqueezeBase: 1,
 	};
 }
 
@@ -90,13 +92,19 @@ function Contenido() {
 				setBorrador(primera);
 			}
 		});
-		call("packs_list", {})
-			.then(setPacks)
-			.catch(() => {});
 		call("fonts_list", {})
 			.then(setLetras)
 			.catch(() => {});
 	}, [recargar]);
+
+	// Los packs, también al descargar los marcos originales.
+	const versionOriginales = useMarcosOriginales((s) => s.version);
+	useEffect(() => {
+		void versionOriginales;
+		call("packs_list", {})
+			.then(setPacks)
+			.catch(() => {});
+	}, [versionOriginales]);
 
 	// Al cerrar, si se guardó algo, se rehacen las miniaturas viejas.
 	useEffect(() => {
@@ -170,7 +178,7 @@ function Contenido() {
 						{t("Nueva colección")}
 					</Button>
 					<ScrollArea className="min-h-0 flex-1">
-						<ul className="flex flex-col gap-1 pr-2">
+						<ul className="flex flex-col gap-1 p-1 pr-2.5">
 							{lista === null && (
 								<Loader2 className="mx-auto size-4 animate-spin text-muted-foreground" />
 							)}
@@ -406,14 +414,47 @@ function Editor({
 					ancho="w-52"
 				/>
 			</Fila>
+			<Fila
+				etiqueta={t("Grosor del título")}
+				ayuda={t(
+					"Una letra que ya es gruesa puede ir sin negrita. Si la letra no tiene ese grosor, sale el más parecido.",
+				)}
+			>
+				<SelectorGrosor valor={c.weightTitle} onChange={(weightTitle) => poner({ weightTitle })} />
+			</Fila>
+			<Fila etiqueta={t("Grosor de la línea de tipo")}>
+				<SelectorGrosor valor={c.weightType} onChange={(weightType) => poner({ weightType })} />
+			</Fila>
+			<Fila etiqueta={t("Grosor de las reglas")}>
+				<SelectorGrosor valor={c.weightRules} onChange={(weightRules) => poner({ weightRules })} />
+			</Fila>
 			<FilaDeslizador
 				etiqueta={t("Estrechar los títulos largos hasta")}
 				valor={Math.round(c.titleSqueezeMin * 100)}
 				min={55}
 				max={75}
 				sufijo="%"
-				onChange={(v) => poner({ titleSqueezeMin: v / 100 })}
+				onChange={(v) =>
+					poner({
+						titleSqueezeMin: v / 100,
+						// El mínimo no puede ser más estrecho que el límite.
+						titleSqueezeBase: Math.max(c.titleSqueezeBase, v / 100),
+					})
+				}
 			/>
+			<FilaDeslizador
+				etiqueta={t("Estrechar siempre al menos")}
+				valor={Math.round(c.titleSqueezeBase * 100)}
+				min={Math.round(c.titleSqueezeMin * 100)}
+				max={100}
+				sufijo="%"
+				onChange={(v) => poner({ titleSqueezeBase: v / 100 })}
+			/>
+			<p className="-mt-1 text-[11px] text-muted-foreground">
+				{t(
+					"El título y la línea de tipo van siempre así de estrechos, quepan o no; si aun así no caben, se estrechan más hasta el límite de arriba. Al 100 %, sin estrechar.",
+				)}
+			</p>
 
 			<Titulo>{t("Pie")}</Titulo>
 			<Fila etiqueta={t("Nombre original")}>
@@ -455,12 +496,7 @@ function Editor({
 				valor={c.universe}
 				onChange={(universe) => poner({ universe })}
 			/>
-			<CampoOpcional
-				etiqueta={t("Año")}
-				valor={c.year}
-				onChange={(year) => poner({ year })}
-				ancho="w-24"
-			/>
+			<CampoOpcional etiqueta={t("Año")} valor={c.year} onChange={(year) => poner({ year })} />
 			<PlantillaPie
 				etiqueta={t("Plantilla del pie en español")}
 				valor={c.footerTemplate.es}
@@ -503,5 +539,39 @@ function PlantillaPie({
 				className="w-full resize-none rounded-md border border-input bg-transparent px-2.5 py-1.5 font-mono text-[11px] shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
 			/>
 		</div>
+	);
+}
+
+/** Los grosores que se pueden pedir (la letra da el más parecido que tenga). */
+const GROSORES = [
+	{ valor: 400, etiqueta: paraTraducir("Normal") },
+	{ valor: 500, etiqueta: paraTraducir("Media") },
+	{ valor: 600, etiqueta: paraTraducir("Seminegrita") },
+	{ valor: 700, etiqueta: paraTraducir("Negrita") },
+	{ valor: 800, etiqueta: paraTraducir("Extranegrita") },
+	{ valor: 900, etiqueta: paraTraducir("Negra") },
+];
+
+function SelectorGrosor({
+	valor,
+	onChange,
+}: {
+	valor: number | undefined;
+	onChange: (v: number | undefined) => void;
+}) {
+	const { t } = useLang();
+	return (
+		<Selector
+			valor={valor === undefined ? "__pack" : String(valor)}
+			opciones={[
+				{ valor: "__pack", etiqueta: t("El del pack") },
+				...GROSORES.map((g) => ({
+					valor: String(g.valor),
+					etiqueta: `${t(g.etiqueta)} (${g.valor})`,
+				})),
+			]}
+			onChange={(v) => onChange(v === "__pack" ? undefined : Number(v))}
+			ancho="w-52"
+		/>
 	);
 }
