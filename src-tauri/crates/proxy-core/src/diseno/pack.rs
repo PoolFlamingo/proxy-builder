@@ -297,6 +297,35 @@ pub struct EstiloDef {
     /// despejado (como el pack de la casa).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub corona_legendaria: Option<bool>,
+    /// La ventana de la ilustración: fuera de ella, negro, con las esquinas
+    /// redondeadas a su radio (o al de los ajustes finos). Se pinta encima
+    /// de la ilustración y debajo de las capas.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ventana_arte: Option<VentanaArte>,
+}
+
+/// La ventana de la ilustración (mm).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VentanaArte {
+    pub x: f32,
+    pub y: f32,
+    pub w: f32,
+    pub h: f32,
+    pub radio: f32,
+    /// Solo las esquinas de abajo (las de arriba son las de la carta).
+    #[serde(default)]
+    pub solo_abajo: bool,
+    /// Zonas (mm: `[x, y, ancho, alto]`) donde la curva de la ventana viene
+    /// dibujada en una capa de imagen: con un radio en los ajustes finos, ahí
+    /// se vuelve a pintar la ilustración (o el negro) encima de las capas,
+    /// para que la esquina quede con ese radio, mayor o menor.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub repintar: Vec<[f32; 4]>,
+    /// Tras cuántas capas se repinta (para no tapar las de encima, como la
+    /// caja de F/R). Sin decirlo, tras todas.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub repintar_tras: Option<usize>,
 }
 
 fn radio_defecto() -> f32 {
@@ -615,6 +644,10 @@ pub const ORIGINAL: &[(&str, &str)] = &[
     (
         "sombra-pie.svg",
         include_str!("../../assets/marcos/original/sombra-pie.svg"),
+    ),
+    (
+        "refuerzo-caja.svg",
+        include_str!("../../assets/marcos/original/refuerzo-caja.svg"),
     ),
 ];
 

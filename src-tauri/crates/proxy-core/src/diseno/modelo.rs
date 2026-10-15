@@ -22,6 +22,8 @@ pub const ESTRECHADO_MAX: f64 = 0.75;
 /// Estrechado mínimo (el que se aplica siempre al título y al tipo, quepan o
 /// no): 1 = sin estrechar, como hasta ahora.
 pub const ESTRECHADO_BASE_DEFECTO: f64 = 1.0;
+/// Hasta dónde se mueve cada texto con los ajustes finos (mm, arriba o abajo).
+pub const AJUSTE_MAX_MM: f64 = 3.0;
 
 /// En qué idioma sale un diseño.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize, TS)]
@@ -423,6 +425,59 @@ pub struct DesignOptions {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub title_squeeze_base: Option<f64>,
+    /// Ajustes finos propios de esta carta (`None` = los de la colección).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub fine_tuning: Option<FineTuning>,
+}
+
+/// Ajustes finos de la carta: cuánto se baja cada texto o símbolo (mm;
+/// negativo, sube), lo opaco que es el fondo de la caja de reglas y el radio
+/// de las esquinas de la ilustración y de la carta. Todo a cero, como viene
+/// en el marco.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", default)]
+#[ts(export)]
+pub struct FineTuning {
+    pub title: f64,
+    pub cost: f64,
+    pub type_line: f64,
+    pub emblem: f64,
+    pub rules: f64,
+    pub pt: f64,
+    pub footer: f64,
+    /// Cuánto más opaco el fondo de la caja de reglas: 0 = el del marco,
+    /// 1 = del todo opaco.
+    pub rules_box_opacity: f64,
+    /// Radio (mm) de las esquinas de la ventana de la ilustración (`None` =
+    /// el del marco). Solo en los marcos que la dibujan (despejado).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub art_radius: Option<f64>,
+    /// Radio (mm) de las esquinas de la carta (`None` = redondeadas en
+    /// pantalla y en ángulo recto al imprimir). Con él, igual en las dos.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub card_radius: Option<f64>,
+}
+
+impl FineTuning {
+    /// Dentro de los límites.
+    pub fn limitado(self) -> FineTuning {
+        let m = |v: f64| v.clamp(-AJUSTE_MAX_MM, AJUSTE_MAX_MM);
+        FineTuning {
+            title: m(self.title),
+            cost: m(self.cost),
+            type_line: m(self.type_line),
+            emblem: m(self.emblem),
+            rules: m(self.rules),
+            pt: m(self.pt),
+            footer: m(self.footer),
+            rules_box_opacity: self.rules_box_opacity.clamp(0.0, 1.0),
+            art_radius: self.art_radius.map(|r| r.clamp(0.0, 20.0)),
+            card_radius: self.card_radius.map(|r| r.clamp(0.0, 6.0)),
+        }
+    }
 }
 
 /// El diseño de una carta.
@@ -599,6 +654,10 @@ pub struct Collection {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub weight_rules: Option<f64>,
+    /// Ajustes finos de sus cartas (posición de los textos, caja, radios).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub fine_tuning: Option<FineTuning>,
 }
 
 fn estrechado_base_defecto() -> f64 {

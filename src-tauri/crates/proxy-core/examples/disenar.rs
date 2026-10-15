@@ -161,6 +161,7 @@ fn coleccion(original: OriginalName, pie: &str) -> Collection {
         weight_title: None,
         weight_type: None,
         weight_rules: None,
+        fine_tuning: None,
     }
 }
 

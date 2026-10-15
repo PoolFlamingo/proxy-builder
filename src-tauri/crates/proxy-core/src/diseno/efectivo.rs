@@ -51,6 +51,7 @@ pub struct DisenoEfectivo {
     /// Estrechado que llevan siempre el título y el tipo (1 = ninguno).
     pub squeeze_base: f64,
     pub pesos: Pesos,
+    pub retoques: FineTuning,
     /// La colección pedida no existe (se borró): se usa la fábrica y se avisa.
     pub coleccion_perdida: bool,
 }
@@ -163,6 +164,12 @@ pub fn efectivo(d: &CardDesign, coleccion: Option<&Collection>) -> DisenoEfectiv
                 .and_then(|c| c.weight_rules)
                 .map(|p| p.clamp(100.0, 900.0)),
         },
+        retoques: d
+            .options
+            .fine_tuning
+            .or_else(|| c.and_then(|c| c.fine_tuning))
+            .unwrap_or_default()
+            .limitado(),
         coleccion_perdida: perdida,
     }
 }
@@ -211,6 +218,7 @@ mod tests {
             weight_title: None,
             weight_type: None,
             weight_rules: None,
+            fine_tuning: None,
         }
     }
 

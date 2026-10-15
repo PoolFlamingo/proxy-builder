@@ -579,10 +579,15 @@ pub fn render_capa(
         return Ok(None);
     };
     let mut px = pieza.px;
-    let radio = estilo_para(rec, d.style, None, &mut Vec::new()).map_or(3.0, |s| s.radio);
-    let r = radio * (ancho as f32 / 63.0);
-    if let Some(m) = mascara_redondeada(ancho, alto, r) {
-        px.apply_mask(&m);
+    let radio = e.retoques.card_radius.map_or_else(
+        || estilo_para(rec, d.style, None, &mut Vec::new()).map_or(3.0, |s| s.radio),
+        |r| r as f32,
+    );
+    let r = radio * (ancho as f32 / w_mm as f32);
+    if radio > 0.0 {
+        if let Some(m) = mascara_redondeada(ancho, alto, r) {
+            px.apply_mask(&m);
+        }
     }
     Ok(Some(CapaVista {
         imagen: de_pixmap(&px),
@@ -678,9 +683,17 @@ pub fn render(
     });
 
     let mut px = pieza.px;
-    if salida == Salida::Pantalla {
-        let radio = estilo_para(rec, d.style, None, &mut Vec::new()).map_or(3.0, |s| s.radio);
-        let r = radio * (ancho as f32 / 63.0);
+    // Las esquinas: las del ajuste fino (en pantalla y al imprimir) o, sin
+    // él, las del marco en pantalla y en ángulo recto al imprimir.
+    let radio = match e.retoques.card_radius {
+        Some(r) => Some(r as f32),
+        None if salida == Salida::Pantalla => {
+            Some(estilo_para(rec, d.style, None, &mut Vec::new()).map_or(3.0, |s| s.radio))
+        }
+        None => None,
+    };
+    if let Some(radio) = radio.filter(|r| *r > 0.0) {
+        let r = radio * (ancho as f32 / w_mm as f32);
         if let Some(m) = mascara_redondeada(ancho, alto, r) {
             px.apply_mask(&m);
         }
@@ -747,6 +760,188 @@ mod tests {
             salida,
         )
         .unwrap()
+    }
+
+    // ── Ajustes finos ──
+
+    /// Las filas (en mm) donde dos renders se diferencian.
+    fn filas_distintas(a: &RgbaImage, b: &RgbaImage) -> Option<(f32, f32)> {
+        let k = a.height() as f32 / 88.0;
+        let mut r: Option<(f32, f32)> = None;
+        for (x, y, p) in a.enumerate_pixels() {
+            let q = b.get_pixel(x, y);
+            if (0..4).any(|i| p[i].abs_diff(q[i]) > 8) {
+                let mm = y as f32 / k;
+                r = Some(r.map_or((mm, mm), |(a, b)| (a.min(mm), b.max(mm))));
+            }
+        }
+        r
+    }
+
+    #[test]
+    fn los_ajustes_finos_mueven_solo_lo_suyo() {
+        use crate::diseno::modelo::FineTuning;
+        let s = simbolos(&["2", "W"]);
+        let base = normal();
+        let con = |f: FineTuning| {
+            let mut e = base.clone();
+            e.retoques = f.limitado();
+            pintar(&e, 0, 315, &s, Salida::Impresion).imagen
+        };
+        let antes = pintar(&base, 0, 315, &s, Salida::Impresion).imagen;
+        // El título, 1 mm abajo: cambia solo arriba.
+        let (a, b) = filas_distintas(
+            &antes,
+            &con(FineTuning {
+                title: 1.0,
+                ..FineTuning::default()
+            }),
+        )
+        .unwrap();
+        assert!(a > 2.0 && b < 12.0, "título: {a}–{b}");
+        // El pie, 1 mm arriba: solo abajo.
+        let (a, _) = filas_distintas(
+            &antes,
+            &con(FineTuning {
+                footer: -1.0,
+                ..FineTuning::default()
+            }),
+        )
+        .unwrap();
+        assert!(a > 80.0, "pie desde {a}");
+        // Las reglas: dentro de la caja.
+        let (a, b) = filas_distintas(
+            &antes,
+            &con(FineTuning {
+                rules: 0.5,
+                ..FineTuning::default()
+            }),
+        )
+        .unwrap();
+        assert!(a > 55.0 && b < 84.0, "reglas: {a}–{b}");
+        // La caja (clara, para que se note sobre el fondo oscuro) más opaca:
+        // solo cambia la caja.
+        let clara = |f: FineTuning| {
+            let mut e = base.clone();
+            e.frame.rules_box = crate::diseno::modelo::RulesBox::Light;
+            e.retoques = f;
+            pintar(&e, 0, 315, &s, Salida::Impresion).imagen
+        };
+        let (a, b) = filas_distintas(
+            &clara(FineTuning::default()),
+            &clara(FineTuning {
+                rules_box_opacity: 1.0,
+                ..FineTuning::default()
+            }),
+        )
+        .unwrap();
+        assert!(a > 50.0 && b < 84.0, "caja: {a}–{b}");
+        // Más radio en la ventana de la ilustración: las esquinas de abajo.
+        let (a, b) = filas_distintas(
+            &antes,
+            &con(FineTuning {
+                art_radius: Some(14.0),
+                ..FineTuning::default()
+            }),
+        )
+        .unwrap();
+        assert!(a > 68.0 && b < 83.5, "ventana: {a}–{b}");
+        // Lo que se pase de los límites se queda en ellos.
+        let f = FineTuning {
+            title: 50.0,
+            rules_box_opacity: 7.0,
+            card_radius: Some(-2.0),
+            ..FineTuning::default()
+        }
+        .limitado();
+        assert_eq!(
+            (f.title, f.rules_box_opacity, f.card_radius),
+            (3.0, 1.0, Some(0.0))
+        );
+    }
+
+    /// Un marco con la curva de la ventana pintada en una capa (como los
+    /// Original): con un radio propio, en las zonas `repintar` vuelve la
+    /// ilustración por encima de esa capa.
+    #[test]
+    fn el_radio_de_la_ilustracion_rehace_la_curva_de_una_capa() {
+        use crate::diseno::modelo::FineTuning;
+        let mut pack = Pack::de_fabrica().unwrap();
+        pack.ficheros.insert(
+            "prueba/curva.svg".into(),
+            r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 63 88" width="63" height="88"><rect x="0" y="70" width="8" height="13" fill="#000"/></svg>"##.into(),
+        );
+        let est = pack.def.estilos.get_mut("borderless").unwrap();
+        est.capas.insert(
+            0,
+            serde_json::from_str(r#"{"svg":"prueba/curva.svg"}"#).unwrap(),
+        );
+        let v = est.ventana_arte.as_mut().unwrap();
+        v.repintar = vec![[0.0, 60.0, 8.0, 23.0]];
+        v.repintar_tras = Some(1);
+        let s = simbolos(&["2", "W"]);
+        let rec = Recursos {
+            pack: &pack,
+            simbolos: &s,
+            imagenes: &Roja,
+        };
+        let mut motor = Motor::de_fabrica().unwrap();
+        let mut pinta = |radio: Option<f64>, capa: bool| {
+            let mut e = normal();
+            e.retoques = FineTuning {
+                art_radius: radio,
+                ..FineTuning::default()
+            };
+            let img = if capa {
+                render_capa(&mut motor, &e, 0, DesignLang::Es, &rec, CardSize::MTG, 630)
+                    .unwrap()
+                    .unwrap()
+                    .imagen
+            } else {
+                render(
+                    &mut motor,
+                    &e,
+                    0,
+                    DesignLang::Es,
+                    &rec,
+                    CardSize::MTG,
+                    630,
+                    Salida::Impresion,
+                )
+                .unwrap()
+                .imagen
+            };
+            // En la esquina de abajo a la izquierda de la ventana (1, 82 mm).
+            *img.get_pixel(10, 820)
+        };
+        // Sin radio propio: la curva de la capa (negro).
+        assert_eq!(pinta(None, false).0[..3], [0, 0, 0]);
+        // A 0 mm: la ilustración llega a la esquina.
+        assert_eq!(pinta(Some(0.0), false).0[..3], [220, 30, 30]);
+        // En la capa de la vista en directo, ahí queda hueco para la ilustración.
+        assert_eq!(pinta(Some(0.0), true).0[3], 0);
+        // Con un radio grande, negro otra vez.
+        assert_eq!(pinta(Some(10.0), false).0[..3], [0, 0, 0]);
+    }
+
+    #[test]
+    fn el_radio_de_la_carta_vale_en_pantalla_y_al_imprimir() {
+        use crate::diseno::modelo::FineTuning;
+        let s = simbolos(&["2", "W"]);
+        let esquina = |radio: Option<f64>, salida: Salida| {
+            let mut e = normal();
+            e.retoques = FineTuning {
+                card_radius: radio,
+                ..FineTuning::default()
+            };
+            pintar(&e, 0, 200, &s, salida).imagen.get_pixel(0, 0)[3]
+        };
+        // Sin pedirlo: redondeada en pantalla, en ángulo recto al imprimir.
+        assert_eq!(esquina(None, Salida::Pantalla), 0);
+        assert_eq!(esquina(None, Salida::Impresion), 255);
+        // Con 0 mm, recta en las dos; con 3 mm, redondeada en las dos.
+        assert_eq!(esquina(Some(0.0), Salida::Pantalla), 255);
+        assert_eq!(esquina(Some(3.0), Salida::Impresion), 0);
     }
 
     // ── Capa para mover la ilustración ──
