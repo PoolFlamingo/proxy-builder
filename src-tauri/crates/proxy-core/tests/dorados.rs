@@ -38,6 +38,8 @@ struct Caso {
     legendaria: bool,
     layout: &'static str,
     arte: u32,
+    /// El nombre original en la cinta en vez de en el pie.
+    cinta: bool,
 }
 
 fn diseno(c: &Caso) -> CardDesign {
@@ -114,6 +116,11 @@ fn diseno(c: &Caso) -> CardDesign {
         },
         options: DesignOptions {
             show_flavor: true,
+            original_name: if c.cinta {
+                OriginalName::Ribbon
+            } else {
+                OriginalName::Auto
+            },
             ..DesignOptions::default()
         },
         emblem: EmblemChoice::Inherit,
@@ -139,6 +146,10 @@ fn coleccion() -> Collection {
         font_title: None,
         font_rules: None,
         title_squeeze_min: ESTRECHADO_DEFECTO,
+        title_squeeze_base: ESTRECHADO_BASE_DEFECTO,
+        weight_title: None,
+        weight_type: None,
+        weight_rules: None,
     }
 }
 
@@ -165,9 +176,14 @@ fn casos() -> Vec<Caso> {
         legendaria: true,
         layout: "normal",
         arte: 1,
+        cinta: false,
     };
     vec![
         base("despejado-legendaria", DesignStyle::Borderless),
+        Caso {
+            cinta: true,
+            ..base("despejado-cinta", DesignStyle::Borderless)
+        },
         base("extendido-legendaria", DesignStyle::Extended),
         Caso {
             colores: &["G", "U"],
@@ -496,5 +512,111 @@ fn tiempos() {
             .unwrap();
         }
         println!("{ancho} px: {:?} por carta", t.elapsed() / n);
+    }
+}
+
+/// Prueba a ojo del pack «Original» con sus imágenes de verdad:
+/// `PB_ORIGINAL=<carpeta img/frames de Card Conjurer> cargo test -p proxy-core
+/// --test dorados original -- --ignored`. Deja las cartas en el temporal.
+#[test]
+#[ignore]
+fn original_con_sus_imagenes() {
+    use proxy_core::diseno::pack::{ORIGINAL, ORIGINAL_IMAGENES};
+    let base = PathBuf::from(std::env::var("PB_ORIGINAL").expect("PB_ORIGINAL"));
+    let lista: serde_json::Value = serde_json::from_str(ORIGINAL_IMAGENES).unwrap();
+    let imagenes = lista["imagenes"]
+        .as_object()
+        .unwrap()
+        .keys()
+        .map(|r| (r.clone(), Arc::new(std::fs::read(base.join(r)).unwrap())))
+        .collect();
+    let ficheros = ORIGINAL
+        .iter()
+        .map(|(k, v)| ((*k).to_string(), (*v).to_string()))
+        .collect();
+    let pack = Pack::cargar_con_imagenes(ficheros, imagenes).unwrap();
+    let (_, simbolos, artes) = entorno();
+    let rec = Recursos {
+        pack: &pack,
+        simbolos: &simbolos,
+        imagenes: &artes,
+    };
+    let mut motor = Motor::de_fabrica().unwrap();
+    let col = coleccion();
+    for c in casos() {
+        for estilo in [DesignStyle::Classic, DesignStyle::Borderless] {
+            let mut d = diseno(&c);
+            d.style = estilo;
+            let e = efectivo(&d, Some(&col));
+            let t = std::time::Instant::now();
+            let r = render(
+                &mut motor,
+                &e,
+                0,
+                DesignLang::Es,
+                &rec,
+                CardSize::MTG,
+                745,
+                Salida::Pantalla,
+            )
+            .unwrap();
+            println!("{} {estilo:?}: {:?} {:?}", c.archivo, t.elapsed(), r.avisos);
+            r.imagen
+                .save(std::env::temp_dir().join(format!("original-{}-{estilo:?}.png", c.archivo)))
+                .unwrap();
+        }
+    }
+}
+
+/// Prueba a ojo de las letras libres del catálogo de la app: `PB_GF=<copia
+/// de google/fonts/ofl> cargo test -p proxy-core --test dorados letras_libres
+/// -- --ignored`. Deja una carta por letra en el temporal.
+#[test]
+#[ignore]
+fn letras_libres_a_ojo() {
+    let base = PathBuf::from(std::env::var("PB_GF").expect("PB_GF"));
+    let catalogo: serde_json::Value =
+        serde_json::from_str(include_str!("../../../assets/letras-libres.json")).unwrap();
+    let (pack, simbolos, artes) = entorno();
+    let rec = Recursos {
+        pack: &pack,
+        simbolos: &simbolos,
+        imagenes: &artes,
+    };
+    let mut motor = Motor::de_fabrica().unwrap();
+    for f in catalogo["familias"].as_array().unwrap() {
+        for x in f["ficheros"].as_array().unwrap() {
+            let ruta = x["ruta"].as_str().unwrap();
+            motor
+                .letras
+                .cargar(std::fs::read(base.join(ruta)).unwrap())
+                .unwrap();
+        }
+    }
+    let c = &casos()[0];
+    for f in catalogo["familias"].as_array().unwrap() {
+        let familia = f["familia"].as_str().unwrap();
+        let mut col = coleccion();
+        col.font_title = Some(familia.into());
+        // Las de título solo van en el título; las demás, en las dos.
+        if f["uso"] != "titulo" {
+            col.font_rules = Some(familia.into());
+        }
+        let e = efectivo(&diseno(c), Some(&col));
+        let r = render(
+            &mut motor,
+            &e,
+            0,
+            DesignLang::Es,
+            &rec,
+            CardSize::MTG,
+            600,
+            Salida::Pantalla,
+        )
+        .unwrap();
+        println!("{familia}: {:?}", r.avisos);
+        r.imagen
+            .save(std::env::temp_dir().join(format!("letra-{}.png", f["id"].as_str().unwrap())))
+            .unwrap();
     }
 }

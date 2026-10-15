@@ -116,13 +116,16 @@ fn cara_simple(
     cara: usize,
     ancho: u32,
     alto: u32,
-    avisos: Vec<Aviso>,
+    capa: bool,
 ) -> Result<Pieza, DisenoError> {
     let d = &e.design;
     let cu = cuerpo(&d.card, cara);
-    let mut avisos = avisos;
+    let mut avisos = Vec::new();
     let est = estilo(rec, e, layout_de_cara(e, cara, cu, maq), &mut avisos)?;
     let mut o = Opciones::de(cara, cu, ancho, alto);
+    // La capa: todo menos la ilustración, sobre transparente.
+    o.transparente = capa;
+    o.sin_arte = capa;
     match maq {
         Maquetacion::Transformable | Maquetacion::Batalla | Maquetacion::Meld => {
             o.indicador = Some(if cara == 0 {
@@ -261,6 +264,7 @@ fn partida(
         px: lienzo,
         avisos,
         faltan,
+        arte: None,
     })
 }
 
@@ -360,6 +364,7 @@ fn secuela(
         px: lienzo,
         avisos,
         faltan,
+        arte: None,
     })
 }
 
@@ -428,6 +433,7 @@ fn flip(
         px: lienzo,
         avisos,
         faltan,
+        arte: None,
     })
 }
 
@@ -466,6 +472,7 @@ fn apaisada(
         px: lienzo,
         avisos: p.avisos,
         faltan: p.faltan,
+        arte: None,
     })
 }
 
@@ -512,7 +519,77 @@ fn meld_dorso(
         px: lienzo,
         avisos: p.avisos,
         faltan: p.faltan,
+        arte: None,
     })
+}
+
+/// ¿La cara `cara` se pinta como una cara normal (sin piezas giradas ni
+/// medidas grandes)?
+fn es_simple(e: &DisenoEfectivo, maq: Maquetacion, cara: usize) -> bool {
+    !(maq.es_partida()
+        || matches!(
+            maq,
+            Maquetacion::Secuela
+                | Maquetacion::Flip
+                | Maquetacion::Plano
+                | Maquetacion::Plan
+                | Maquetacion::Vanguard
+        )
+        || (maq == Maquetacion::Batalla && cara == 0)
+        || (maq == Maquetacion::Meld && cara == 1 && e.design.card.faces.len() > 1))
+}
+
+/// La carta sin la ilustración, sobre transparente, y dónde va la
+/// ilustración: la vista previa la mueve ella sola por debajo mientras se
+/// arrastra, sin esperar a un render entero por cada paso.
+pub struct CapaVista {
+    pub imagen: RgbaImage,
+    /// El hueco de la ilustración, en fracciones de la carta (x, y, ancho,
+    /// alto).
+    pub arte: [f32; 4],
+    /// El radio de las esquinas, en fracciones del ancho y del alto.
+    pub radio: [f32; 2],
+    /// La cara del diseño cuya ilustración va en el hueco.
+    pub cara: usize,
+}
+
+/// La [`CapaVista`] de una cara, si es una cara normal con hueco para la
+/// ilustración (las compuestas y las grandes, no: esas se pintan enteras).
+#[allow(clippy::too_many_arguments)]
+pub fn render_capa(
+    motor: &mut Motor,
+    e: &DisenoEfectivo,
+    cara: usize,
+    lang: DesignLang,
+    rec: &Recursos<'_>,
+    card: CardSize,
+    ancho_px: u32,
+) -> Result<Option<CapaVista>, DisenoError> {
+    let d = &e.design;
+    let (maq, _) = maquetacion(&d.card);
+    let cara = cara.min(super::maquetacion::caras_impresas(&d.card) - 1);
+    if !es_simple(e, maq, cara) {
+        return Ok(None);
+    }
+    let (w_mm, h_mm) = medida(e, card);
+    let ancho = ancho_px.max(16);
+    let alto = (ancho as f64 * h_mm / w_mm).round() as u32;
+    let pieza = cara_simple(motor, e, lang, rec, maq, cara, ancho, alto, true)?;
+    let Some(arte) = pieza.arte else {
+        return Ok(None);
+    };
+    let mut px = pieza.px;
+    let radio = estilo_para(rec, d.style, None, &mut Vec::new()).map_or(3.0, |s| s.radio);
+    let r = radio * (ancho as f32 / 63.0);
+    if let Some(m) = mascara_redondeada(ancho, alto, r) {
+        px.apply_mask(&m);
+    }
+    Ok(Some(CapaVista {
+        imagen: de_pixmap(&px),
+        arte,
+        radio: [r / ancho as f32, r / alto as f32],
+        cara,
+    }))
 }
 
 /// La medida (mm) a la que sale la carta.
@@ -579,7 +656,7 @@ pub fn render(
             let o = Opciones::de(0, Cuerpo::Texto, ancho, alto);
             pintar_cara(motor, e, lang, rec, est, av, &o)?
         }
-        _ => cara_simple(motor, e, lang, rec, maq, cara, ancho, alto, Vec::new())?,
+        _ => cara_simple(motor, e, lang, rec, maq, cara, ancho, alto, false)?,
     };
     avisos.extend(pieza.avisos);
     let mut faltan = pieza.faltan;
@@ -670,6 +747,123 @@ mod tests {
             salida,
         )
         .unwrap()
+    }
+
+    // ── Capa para mover la ilustración ──
+
+    /// Una ilustración de un solo color, para cualquier blob.
+    struct Roja;
+    impl crate::diseno::render::Imagenes for Roja {
+        fn imagen(&self, _: &str) -> Option<std::sync::Arc<RgbaImage>> {
+            Some(std::sync::Arc::new(RgbaImage::from_pixel(
+                300,
+                200,
+                image::Rgba([220, 30, 30, 255]),
+            )))
+        }
+    }
+
+    #[test]
+    fn la_capa_sobre_negro_y_la_ilustracion_es_la_carta_entera() {
+        use crate::diseno::modelo::DesignStyle;
+        for estilo in [
+            DesignStyle::Borderless,
+            DesignStyle::Extended,
+            DesignStyle::Classic,
+            DesignStyle::FullArt,
+        ] {
+            let mut e = normal();
+            e.design.style = estilo;
+            assert!(e.design.faces[0].art.is_some());
+            let pack = Pack::de_fabrica().unwrap();
+            let s = simbolos(&["2", "W"]);
+            let rec = Recursos {
+                pack: &pack,
+                simbolos: &s,
+                imagenes: &Roja,
+            };
+            let mut motor = Motor::de_fabrica().unwrap();
+            let ancho = 400;
+            let entera = render(
+                &mut motor,
+                &e,
+                0,
+                DesignLang::Es,
+                &rec,
+                CardSize::MTG,
+                ancho,
+                Salida::Pantalla,
+            )
+            .unwrap()
+            .imagen;
+            let capa = render_capa(
+                &mut motor,
+                &e,
+                0,
+                DesignLang::Es,
+                &rec,
+                CardSize::MTG,
+                ancho,
+            )
+            .unwrap()
+            .unwrap();
+            assert_eq!(capa.cara, 0);
+            assert_eq!(capa.imagen.dimensions(), entera.dimensions());
+            let (w, h) = entera.dimensions();
+            let [ax, ay, aw, ah] = capa.arte;
+            assert!(
+                aw > 0.5 && ah > 0.2 && ax >= 0.0 && ay >= 0.0,
+                "{:?}",
+                capa.arte
+            );
+            // Montada como la monta la pantalla: negro, la ilustración (roja) en
+            // su hueco y la capa encima.
+            let (x0, y0) = ((ax * w as f32).round(), (ay * h as f32).round());
+            let (x1, y1) = (x0 + (aw * w as f32).round(), y0 + (ah * h as f32).round());
+            let mut dif = 0u64;
+            for (x, y, p) in capa.imagen.enumerate_pixels() {
+                let (fx, fy) = (x as f32, y as f32);
+                let fondo = if fx >= x0 && fx < x1 && fy >= y0 && fy < y1 {
+                    [220.0, 30.0, 30.0]
+                } else {
+                    [0.0, 0.0, 0.0]
+                };
+                let a = p[3] as f32 / 255.0;
+                let q = entera.get_pixel(x, y);
+                // Las esquinas: transparentes en las dos.
+                if q[3] == 0 {
+                    continue;
+                }
+                for k in 0..3 {
+                    let m = p[k] as f32 * a + fondo[k] * (1.0 - a);
+                    dif += (m - q[k] as f32).abs() as u64;
+                }
+            }
+            let media = dif as f64 / (w * h * 3) as f64;
+            assert!(media < 1.0, "{estilo:?}: diferencia media {media}");
+        }
+        let pack = Pack::de_fabrica().unwrap();
+        let s = simbolos(&["2", "W"]);
+        let rec = Recursos {
+            pack: &pack,
+            simbolos: &s,
+            imagenes: &Roja,
+        };
+        let mut motor = Motor::de_fabrica().unwrap();
+        let ancho = 400;
+        // En las compuestas no hay capa: se pintan enteras.
+        let partida = con_layout("split", 2);
+        assert!(render_capa(
+            &mut motor,
+            &partida,
+            0,
+            DesignLang::Es,
+            &rec,
+            CardSize::MTG,
+            ancho
+        )
+        .unwrap()
+        .is_none());
     }
 
     // ── Medida ──

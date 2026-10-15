@@ -19,6 +19,9 @@ pub const VERSION_DISENO: u32 = 1;
 pub const ESTRECHADO_DEFECTO: f64 = 0.65;
 pub const ESTRECHADO_MIN: f64 = 0.55;
 pub const ESTRECHADO_MAX: f64 = 0.75;
+/// Estrechado mínimo (el que se aplica siempre al título y al tipo, quepan o
+/// no): 1 = sin estrechar, como hasta ahora.
+pub const ESTRECHADO_BASE_DEFECTO: f64 = 1.0;
 
 /// En qué idioma sale un diseño.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize, TS)]
@@ -416,6 +419,10 @@ pub struct DesignOptions {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub title_squeeze_min: Option<f64>,
+    /// Estrechado mínimo del título y el tipo (`None` = el de la colección).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub title_squeeze_base: Option<f64>,
 }
 
 /// El diseño de una carta.
@@ -522,6 +529,9 @@ pub enum Aviso {
     },
     /// La colección del diseño ya no existe: se usan los valores de fábrica.
     ColeccionPerdida,
+    /// Se pidió el nombre original en una cinta, pero el marco de este estilo
+    /// no la tiene: va en el pie.
+    SinCinta,
 }
 
 /// Lo que devuelve un borrador: el diseño y sus avisos.
@@ -573,6 +583,26 @@ pub struct Collection {
     #[ts(optional)]
     pub font_rules: Option<String>,
     pub title_squeeze_min: f64,
+    /// Estrechado mínimo: el título y el tipo van siempre al menos así de
+    /// estrechos (1 = sin estrechar). No baja del límite de arriba.
+    #[serde(default = "estrechado_base_defecto")]
+    pub title_squeeze_base: f64,
+    /// Grosor (100–900) del título, la línea de tipo y las reglas. `None` =
+    /// el del pack (negrita en el título y el tipo, normal en las reglas):
+    /// una letra que ya es gruesa puede ir sin negrita.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub weight_title: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub weight_type: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub weight_rules: Option<f64>,
+}
+
+fn estrechado_base_defecto() -> f64 {
+    ESTRECHADO_BASE_DEFECTO
 }
 
 #[cfg(test)]
