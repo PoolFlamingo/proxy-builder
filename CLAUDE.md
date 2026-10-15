@@ -156,9 +156,11 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
     entra la carta exacta. Las compuestas y grandes siguen por el camino normal.
 - «Editar carta» aplica a la carta, a sus copias (misma imagen: todo) o a
   todas (solo el color): `features/card-editor/propagar.ts`.
-- El `README.md` es la presentación de la app (Pablo, 14/10/2026): qué hace,
-  con capturas en `docs/presentacion/` sacadas de la app en Xvfb con un deck
-  de ejemplo; lo de desarrollar va al final.
+- El `README.md` (en inglés) es la presentación de la app (Pablo, 14/10/2026):
+  qué hace, con capturas en `docs/presentacion/` sacadas de la app en Xvfb con
+  un deck de ejemplo; lo de desarrollar va al final. `README.es.md` es su copia
+  en español (Pablo, 15/10/2026): cualquier cambio va a los dos, con las mismas
+  secciones y capturas.
 - Releases: los hace Pablo (o Claude Code en su VS Code), no esta sesión.
 - Valores de fábrica (Pablo, 13/10/2026): 2 mm de separación en blanco,
   sangrado 0, guías de corte apagadas y «Rellenar las esquinas» apagado (lo
