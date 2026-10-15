@@ -160,7 +160,11 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
   qué hace, con capturas en `docs/presentacion/` sacadas de la app en Xvfb con
   un deck de ejemplo; lo de desarrollar va al final. `README.es.md` es su copia
   en español (Pablo, 15/10/2026): cualquier cambio va a los dos, con las mismas
-  secciones y capturas.
+  secciones y capturas. Las del inglés salen de la app en inglés y van en
+  `docs/presentacion/en/` con los mismos nombres; las del español, en
+  `docs/presentacion/`.
+- Idioma de fábrica de la app: inglés (Pablo, 15/10/2026); el español se elige
+  en Ajustes y se recuerda (`language-provider`, `proxybuilder.lang`).
 - Releases: los hace Pablo (o Claude Code en su VS Code), no esta sesión.
 - Valores de fábrica (Pablo, 13/10/2026): 2 mm de separación en blanco,
   sangrado 0, guías de corte apagadas y «Rellenar las esquinas» apagado (lo

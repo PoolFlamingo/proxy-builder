@@ -11,7 +11,7 @@ faces. All the work is done on your computer, fast, with no accounts and no ads.
 
 For Linux, Windows and macOS, in Spanish and in English.
 
-![Proxy Builder with a deck loaded](docs/presentacion/vista-principal.jpg)
+![Proxy Builder with a deck loaded](docs/presentacion/en/vista-principal.jpg)
 
 <!-- Vídeo de presentación: sustituir esta línea por el enlace o el reproductor. -->
 
@@ -29,7 +29,7 @@ For Linux, Windows and macOS, in Spanish and in English.
    PDF come from the same calculation, down to the millimetre.
 4. **Export the PDF.** Print at 100 %, cut and play.
 
-![The deck's sheets, exactly as they will come out on paper](docs/presentacion/hojas.jpg)
+![The deck's sheets, exactly as they will come out on paper](docs/presentacion/en/hojas.jpg)
 
 ---
 
@@ -39,18 +39,18 @@ For Linux, Windows and macOS, in Spanish and in English.
 language, with the option to show only the high-resolution ones. You can change
 a single copy or all of them at once.
 
-![Choosing a card's printing](docs/presentacion/variantes.jpg)
+![Choosing a card's printing](docs/presentacion/en/variantes.jpg)
 
 **Search and add cards** by name (with autocomplete) or with Scryfall syntax:
 `t:dragon c:r r:m` finds the red mythic dragons. Double-click and it goes into
 the deck.
 
-![Searching with Scryfall syntax](docs/presentacion/anadir-carta.jpg)
+![Searching with Scryfall syntax](docs/presentacion/en/anadir-carta.jpg)
 
 **Browse entire sets**, with all their cards, and load the ones you choose (or
 the whole set) to replace the list or add them to the end.
 
-![The set browser](docs/presentacion/explorar-sets.jpg)
+![The set browser](docs/presentacion/en/explorar-sets.jpg)
 
 And also:
 
@@ -80,7 +80,7 @@ its real name and edition.
 Here, a freshly uploaded deck of Spanish proxies. Each card is named like its
 file and nothing more:
 
-![Unlinked custom proxies](docs/presentacion/vincular-antes.jpg)
+![Unlinked custom proxies](docs/presentacion/en/vincular-antes.jpg)
 
 To recognise them, the app reads each image with **OCR**: the title, the type
 line and the bottom text, where many proxies carry the original name. It searches
@@ -94,18 +94,18 @@ You can link in three ways:
 search starts with the file name and «Detectar con OCR» (Detect with OCR) reads
 the card. Here it gets the exact edition right.
 
-![Linking one card with OCR](docs/presentacion/vincular-una.jpg)
+![Linking one card with OCR](docs/presentacion/en/vincular-una.jpg)
 
 **The selected ones.** Select several with Ctrl or Shift and, with the right
 click, «Vincular con Scryfall las seleccionadas…» (Link the selected ones with
 Scryfall…). The dialog lets you choose between the selection and the whole deck,
 and between reading only the missing ones or all of them again.
 
-![Linking the selected cards from the menu](docs/presentacion/vincular-menu-seleccion.jpg)
+![Linking the selected cards from the menu](docs/presentacion/en/vincular-menu-seleccion.jpg)
 
-![Only the selected ones](docs/presentacion/vincular-seleccion.jpg)
+![Only the selected ones](docs/presentacion/en/vincular-seleccion.jpg)
 
-![Proposals for the selected ones](docs/presentacion/vincular-seleccion-resultado.jpg)
+![Proposals for the selected ones](docs/presentacion/en/vincular-seleccion-resultado.jpg)
 
 **The whole deck.** The «Vincular con Scryfall» (Link with Scryfall) button in the
 left panel reads all the deck's custom images in one go, with a progress bar and
@@ -114,17 +114,17 @@ can be changed in its dropdown or unticked before pressing «Vincular» (Link).
 In this deck it also recognises a proxy with invented art (Rimuru) by its
 original name at the bottom: Jodah, Archmage Eternal.
 
-![Linking the whole deck at once](docs/presentacion/vincular-todo-el-deck.jpg)
+![Linking the whole deck at once](docs/presentacion/en/vincular-todo-el-deck.jpg)
 
 The result: the same images, now with their real card behind them.
 
-![Linked proxies](docs/presentacion/vincular-despues.jpg)
+![Linked proxies](docs/presentacion/en/vincular-despues.jpg)
 
 ---
 
 ## Sheets, as on a workbench
 
-![Each card's menu](docs/presentacion/menu-de-carta.jpg)
+![Each card's menu](docs/presentacion/en/menu-de-carta.jpg)
 
 - **Drag** cards to reorder them, or use «Mover antes / después / a la posición…»
   (Move before / after / to position…). Select several with Ctrl or Shift and act
@@ -137,7 +137,7 @@ The result: the same images, now with their real card behind them.
 - **Zoom** with Ctrl + wheel, and the sheets that are out of view don't use up
   memory: decks of hundreds of cards move smoothly.
 
-![Name and edition of each card](docs/presentacion/info-de-carta.jpg)
+![Name and edition of each card](docs/presentacion/en/info-de-carta.jpg)
 
 ---
 
@@ -148,7 +148,7 @@ contrast, saturation, warmth, intensity, sharpness, clarity, noise reduction,
 vignette and fade. The view updates instantly and what you see is the same render
 that will go into the PDF.
 
-![Editing a card](docs/presentacion/editar-carta.jpg)
+![Editing a card](docs/presentacion/en/editar-carta.jpg)
 
 When you're done, decide where the change goes:
 
@@ -159,13 +159,13 @@ When you're done, decide where the change goes:
 - **Apply to all cards**: the colour adjustments to the whole deck (rotation and
   framing stay on the card).
 
-![The four Islands retouched at once](docs/presentacion/copias-retocadas.jpg)
+![The four Islands retouched at once](docs/presentacion/en/copias-retocadas.jpg)
 
 ---
 
 ## A PDF made for home printing
 
-![A sheet from the exported PDF, with cut guides](docs/presentacion/pdf-resultado.jpg)
+![A sheet from the exported PDF, with cut guides](docs/presentacion/en/pdf-resultado.jpg)
 
 - **Quality** at 300, 600 or 900 DPI, in JPEG (with adjustable quality) or PNG.
 - **Paper**: A3, A4, A5, Letter, Legal, Tabloid and photo paper (4×6″, 5×7″,
@@ -187,7 +187,7 @@ When you're done, decide where the change goes:
   use them in any deck.
 - Exporting shows a progress bar and can be cancelled at any moment.
 
-![Exporting](docs/presentacion/exportando.jpg)
+![Exporting](docs/presentacion/en/exportando.jpg)
 
 ### Double-faced cards and large cards
 
@@ -196,7 +196,7 @@ is single-sided, as **interleaved pairs**: both faces in consecutive slots, read
 to go in the same sleeve. Large cards (planes, schemes, Vanguard) go on their own
 sheets at the end, at their size.
 
-![Interleaved double-faced pairs and cut guides](docs/presentacion/pares-dfc-y-guias.jpg)
+![Interleaved double-faced pairs and cut guides](docs/presentacion/en/pares-dfc-y-guias.jpg)
 
 ---
 
@@ -217,13 +217,13 @@ A full panel with data and prices from Scryfall:
 - **Legality** by format and estimated Commander bracket. The format is detected
   automatically or chosen by hand.
 
-![Statistics summary](docs/presentacion/estadisticas-resumen.jpg)
+![Statistics summary](docs/presentacion/en/estadisticas-resumen.jpg)
 
-![Probability calculator](docs/presentacion/estadisticas-probabilidades.jpg)
+![Probability calculator](docs/presentacion/en/estadisticas-probabilidades.jpg)
 
-![Each card's functions](docs/presentacion/estadisticas-funciones.jpg)
+![Each card's functions](docs/presentacion/en/estadisticas-funciones.jpg)
 
-![Deck prices](docs/presentacion/estadisticas-precios.jpg)
+![Deck prices](docs/presentacion/en/estadisticas-precios.jpg)
 
 ---
 
@@ -234,7 +234,7 @@ you work. You can duplicate them, rename them and **export them as `.pbdeck`** w
 all their images inside to pass them to another computer or a friend. «Liberar
 espacio» (Free up space) deletes the images that no deck uses any more.
 
-![The library](docs/presentacion/biblioteca.jpg)
+![The library](docs/presentacion/en/biblioteca.jpg)
 
 ---
 
@@ -243,7 +243,7 @@ espacio» (Free up space) deletes the images that no deck uses any more.
 Spanish or English, light or dark theme, more than forty colour themes, three
 surface styles (flat, embossed and glass), materials, effects and interface size.
 
-![Settings](docs/presentacion/ajustes.jpg)
+![Settings](docs/presentacion/en/ajustes.jpg)
 
 ---
 
@@ -279,9 +279,9 @@ a card, with a new frame and translated text:
 
 Designed cards are printed to the PDF from their design, at the export resolution.
 
-![The card editor](docs/presentacion/editor-de-cartas.jpg)
+![The card editor](docs/presentacion/en/editor-de-cartas.jpg)
 
-![The same card in English](docs/presentacion/editor-en-ingles.jpg)
+![The same card in English](docs/presentacion/en/editor-en-ingles.jpg)
 
 ---
 
