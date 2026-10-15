@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 use proxy_core::diseno::efectivo::{efectivo, huella, DisenoEfectivo};
 use proxy_core::diseno::modelo::{CardDesign, Collection, DesignLang};
-use proxy_core::diseno::render::{render, Recursos, Render, Salida};
+use proxy_core::diseno::render::{render, render_capa, CapaVista, Recursos, Render, Salida};
 use proxy_core::imaging::pipeline::DisenoRef;
 use proxy_core::layout::{Slot, SlotFace};
 use proxy_core::model::{BackSpec, CardSize, Deck, DeckCard};
@@ -64,6 +64,32 @@ pub fn pintar(
     state
         .diseno
         .con_motor(|m| render(m, e, cara as usize, lang, &rec, card, ancho, salida))?
+        .map_err(|e| AppError::new(ErrorCode::Image).with("detalle", e))
+}
+
+/// La carta sin la ilustración y dónde va (ver [`render_capa`]); `None` en
+/// las compuestas y las grandes.
+pub fn pintar_capa(
+    state: &AppState,
+    e: &DisenoEfectivo,
+    cara: u32,
+    lang: DesignLang,
+    ancho: u32,
+) -> AppResult<Option<CapaVista>> {
+    let inst = state.diseno.instantanea(&e.frame.pack)?;
+    let imagenes = ImagenesDelAlmacen {
+        db: &state.db,
+        blobs: &state.blobs,
+        cache: &state.imagenes,
+    };
+    let rec = Recursos {
+        pack: &inst.pack,
+        simbolos: &inst.simbolos,
+        imagenes: &imagenes,
+    };
+    state
+        .diseno
+        .con_motor(|m| render_capa(m, e, cara as usize, lang, &rec, CardSize::MTG, ancho))?
         .map_err(|e| AppError::new(ErrorCode::Image).with("detalle", e))
 }
 

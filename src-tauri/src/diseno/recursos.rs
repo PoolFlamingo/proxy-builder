@@ -57,6 +57,8 @@ pub struct PackInfo {
     /// `false` para el de la casa (no se puede quitar).
     pub importado: bool,
     pub estilos: Vec<String>,
+    /// De dónde salen sus imágenes, si lo dice.
+    pub origen: Option<String>,
 }
 
 /// Cómo están los símbolos.
@@ -129,30 +131,55 @@ fn leer_letras(dir: &Path) -> Vec<(LetraInfo, Arc<Vec<u8>>)> {
     v
 }
 
-/// Lee los ficheros de texto de una carpeta de pack (ruta relativa → texto).
-fn leer_carpeta(base: &Path) -> AppResult<BTreeMap<String, String>> {
-    let mut out = BTreeMap::new();
+/// Los ficheros de un pack: los de texto (`pack.json`, SVG) y los PNG.
+#[derive(Default)]
+struct Ficheros {
+    textos: BTreeMap<String, String>,
+    imagenes: BTreeMap<String, Arc<Vec<u8>>>,
+}
+
+/// Lo que se lee de un pack (y su tope por fichero).
+fn tipo_de(nombre: &str) -> Option<(bool, u64)> {
+    let ext = nombre.rsplit('.').next()?.to_ascii_lowercase();
+    match ext.as_str() {
+        "json" | "svg" => Some((true, 8 << 20)),
+        "png" => Some((false, 32 << 20)),
+        _ => None,
+    }
+}
+
+/// Lee los ficheros de una carpeta de pack (ruta relativa → contenido).
+fn leer_carpeta(base: &Path) -> AppResult<Ficheros> {
+    let mut out = Ficheros::default();
     let mut pila = vec![base.to_path_buf()];
     while let Some(d) = pila.pop() {
         for e in std::fs::read_dir(&d)?.flatten() {
             let p = e.path();
             if p.is_dir() {
                 pila.push(p);
-            } else if p
-                .extension()
-                .and_then(|x| x.to_str())
-                .is_some_and(|x| matches!(x, "json" | "svg"))
-            {
-                let rel = p
-                    .strip_prefix(base)
-                    .map_err(|_| AppError::new(ErrorCode::Io))?
-                    .to_string_lossy()
-                    .replace('\\', "/");
-                out.insert(rel, std::fs::read_to_string(&p)?);
+                continue;
+            }
+            let rel = p
+                .strip_prefix(base)
+                .map_err(|_| AppError::new(ErrorCode::Io))?
+                .to_string_lossy()
+                .replace('\\', "/");
+            match tipo_de(&rel) {
+                Some((true, _)) => {
+                    out.textos.insert(rel, std::fs::read_to_string(&p)?);
+                }
+                Some((false, _)) => {
+                    out.imagenes.insert(rel, Arc::new(std::fs::read(&p)?));
+                }
+                None => {}
             }
         }
     }
     Ok(out)
+}
+
+fn cargar_pack(f: Ficheros) -> Result<Pack, PackError> {
+    Pack::cargar_con_imagenes(f.textos, f.imagenes)
 }
 
 fn leer_packs(dir: &Path) -> BTreeMap<String, Arc<Pack>> {
@@ -163,7 +190,7 @@ fn leer_packs(dir: &Path) -> BTreeMap<String, Arc<Pack>> {
     if let Ok(entradas) = std::fs::read_dir(dir.join("marcos")) {
         for e in entradas.flatten() {
             if let Ok(f) = leer_carpeta(&e.path()) {
-                if let Ok(p) = Pack::cargar(f) {
+                if let Ok(p) = cargar_pack(f) {
                     m.insert(p.def.id.clone(), Arc::new(p));
                 }
             }
@@ -201,6 +228,16 @@ fn nombre_fichero(codigo: &str) -> String {
         .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })
         .collect();
     format!("{limpio}-{}.svg", &huella(codigo.as_bytes())[..8])
+}
+
+fn info_de(p: &Pack) -> PackInfo {
+    PackInfo {
+        id: p.def.id.clone(),
+        nombre: p.def.nombre.clone(),
+        importado: p.def.id != "builtin",
+        estilos: p.def.estilos.keys().cloned().collect(),
+        origen: p.def.origen.clone(),
+    }
 }
 
 fn de_pack(e: PackError) -> AppError {
@@ -340,6 +377,11 @@ impl Recursos {
             .map(str::to_lowercase)
             .filter(|e| matches!(e.as_str(), "ttf" | "otf"))
             .ok_or_else(|| AppError::new(ErrorCode::Unsupported))?;
+        self.importar_letra_datos(datos, &ext)
+    }
+
+    /// Importa una letra ya leída (`ext`: `ttf` u `otf`).
+    pub fn importar_letra_datos(&self, datos: Vec<u8>, ext: &str) -> AppResult<LetraInfo> {
         let mut l = Letras::nuevas();
         let familias = l
             .cargar(datos.clone())
@@ -378,17 +420,7 @@ impl Recursos {
     // ── Packs ──────────────────────────────────────────────────────────────
 
     pub fn packs(&self) -> AppResult<Vec<PackInfo>> {
-        Ok(self
-            .leer()?
-            .packs
-            .values()
-            .map(|p| PackInfo {
-                id: p.def.id.clone(),
-                nombre: p.def.nombre.clone(),
-                importado: p.def.id != "builtin",
-                estilos: p.def.estilos.keys().cloned().collect(),
-            })
-            .collect())
+        Ok(self.leer()?.packs.values().map(|p| info_de(p)).collect())
     }
 
     /// Importa un pack desde una carpeta o un `.zip`.
@@ -398,7 +430,8 @@ impl Recursos {
         } else {
             leer_zip(ruta)?
         };
-        let p = Pack::cargar(ficheros.clone()).map_err(de_pack)?;
+        let p = Pack::cargar_con_imagenes(ficheros.textos.clone(), ficheros.imagenes.clone())
+            .map_err(de_pack)?;
         let id: String = p
             .def
             .id
@@ -412,20 +445,34 @@ impl Recursos {
         if destino.exists() {
             std::fs::remove_dir_all(&destino)?;
         }
-        for (rel, texto) in &ficheros {
+        let bytes = ficheros
+            .textos
+            .iter()
+            .map(|(k, v)| (k, v.as_bytes()))
+            .chain(ficheros.imagenes.iter().map(|(k, v)| (k, v.as_slice())));
+        for (rel, b) in bytes {
             if rel.contains("..") {
                 continue;
             }
-            escribir_atomico(&destino.join(rel), texto.as_bytes())?;
+            escribir_atomico(&destino.join(rel), b)?;
         }
-        let info = PackInfo {
-            id: id.clone(),
-            nombre: p.def.nombre.clone(),
-            importado: true,
-            estilos: p.def.estilos.keys().cloned().collect(),
-        };
+        let info = info_de(&p);
         self.escribir()?.packs.insert(id, Arc::new(p));
         Ok(info)
+    }
+
+    /// Vuelve a leer de disco el pack `marcos/<id>/` (tras descargarlo).
+    pub fn recargar_pack(&self, id: &str) -> AppResult<PackInfo> {
+        let f = leer_carpeta(&self.dir.join("marcos").join(id))?;
+        let p = cargar_pack(f).map_err(de_pack)?;
+        let info = info_de(&p);
+        self.escribir()?.packs.insert(id.to_string(), Arc::new(p));
+        Ok(info)
+    }
+
+    /// La carpeta de datos de los recursos.
+    pub fn dir(&self) -> &Path {
+        &self.dir
     }
 
     pub fn quitar_pack(&self, id: &str) -> AppResult<()> {
@@ -468,13 +515,11 @@ thread_local! {
     static MOTOR: RefCell<Option<(u64, Motor)>> = const { RefCell::new(None) };
 }
 
-fn leer_zip(ruta: &Path) -> AppResult<BTreeMap<String, String>> {
+fn leer_zip(ruta: &Path) -> AppResult<Ficheros> {
     use std::io::Read;
     let f = std::fs::File::open(ruta)?;
     let mut z = zip::ZipArchive::new(f).map_err(|_| AppError::new(ErrorCode::Unsupported))?;
-    let mut out = BTreeMap::new();
-    // Si todo va dentro de una carpeta, se quita ese prefijo.
-    let mut nombres = Vec::new();
+    let mut leidos: Vec<(String, Vec<u8>, bool)> = Vec::new();
     for i in 0..z.len() {
         let mut e = z
             .by_index(i)
@@ -486,27 +531,40 @@ fn leer_zip(ruta: &Path) -> AppResult<BTreeMap<String, String>> {
             .name()
             .map_err(|_| AppError::new(ErrorCode::Unsupported))?
             .replace('\\', "/");
-        if !(n.ends_with(".json") || n.ends_with(".svg")) || n.contains("..") {
+        let Some((texto, tope)) = tipo_de(&n) else {
+            continue;
+        };
+        if n.contains("..") {
             continue;
         }
-        if e.size() > 8 * 1024 * 1024 {
+        if e.size() > tope {
             return Err(AppError::new(ErrorCode::InvalidInput).with("motivo", "pack_grande"));
         }
-        let mut s = String::new();
-        e.read_to_string(&mut s)
+        let mut b = Vec::new();
+        e.read_to_end(&mut b)
             .map_err(|_| AppError::new(ErrorCode::Unsupported))?;
-        nombres.push(n.clone());
-        out.insert(n, s);
+        leidos.push((n, b, texto));
     }
-    let prefijo = nombres
+    // Si todo va dentro de una carpeta, se quita ese prefijo.
+    let prefijo = leidos
         .iter()
+        .map(|(n, _, _)| n)
         .find(|n| n.ends_with("pack.json"))
         .map(|n| n.trim_end_matches("pack.json").to_string())
         .unwrap_or_default();
-    Ok(out
-        .into_iter()
-        .filter_map(|(k, v)| k.strip_prefix(&prefijo).map(|k| (k.to_string(), v)))
-        .collect())
+    let mut out = Ficheros::default();
+    for (n, b, texto) in leidos {
+        let Some(k) = n.strip_prefix(&prefijo) else {
+            continue;
+        };
+        if texto {
+            let s = String::from_utf8(b).map_err(|_| AppError::new(ErrorCode::Unsupported))?;
+            out.textos.insert(k.to_string(), s);
+        } else {
+            out.imagenes.insert(k.to_string(), Arc::new(b));
+        }
+    }
+    Ok(out)
 }
 
 /// Las imágenes del almacén para el render, con una caché pequeña (las

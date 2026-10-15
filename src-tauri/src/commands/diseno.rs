@@ -3,9 +3,11 @@
 
 use proxy_core::diseno::modelo::{ArtRef, Aviso, CardDesign, Collection, DesignDraft, DesignLang};
 use proxy_core::model::DeckCard;
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 
 use crate::diseno::borrador;
+use crate::diseno::letras_libres::{self, LetraLibre};
+use crate::diseno::original::{self, OriginalInfo, OriginalProgressEvent};
 use crate::diseno::recursos::{LetraInfo, PackInfo, SimbolosInfo};
 use crate::error::{AppError, AppResult, ErrorCode};
 use crate::state::AppState;
@@ -89,6 +91,33 @@ pub fn pack_remove(state: State<'_, AppState>, id: String) -> AppResult<()> {
     state.diseno.quitar_pack(&id)
 }
 
+/// Las letras libres que se pueden descargar y si ya están.
+#[tauri::command]
+pub fn fonts_free_list(state: State<'_, AppState>) -> AppResult<Vec<LetraLibre>> {
+    letras_libres::lista(&state)
+}
+
+/// Descarga e importa una letra libre del catálogo.
+#[tauri::command]
+pub async fn font_free_download(state: State<'_, AppState>, id: String) -> AppResult<LetraLibre> {
+    letras_libres::descargar(&state, &id).await
+}
+
+/// Cómo están los marcos «Original» (descargados o no).
+#[tauri::command]
+pub fn original_info(state: State<'_, AppState>) -> AppResult<OriginalInfo> {
+    original::info(&state)
+}
+
+/// Descarga los marcos «Original» que falten; avisa por `original://progress`.
+#[tauri::command]
+pub async fn original_download(app: AppHandle, state: State<'_, AppState>) -> AppResult<PackInfo> {
+    original::descargar(&state, &|done, total| {
+        let _ = app.emit("original://progress", OriginalProgressEvent { done, total });
+    })
+    .await
+}
+
 /// Cómo están los símbolos; si faltan o son viejos, los descarga antes.
 #[tauri::command]
 pub async fn symbols_status(state: State<'_, AppState>, refresh: bool) -> AppResult<SimbolosInfo> {
@@ -121,6 +150,25 @@ pub async fn design_register(
 ) -> AppResult<String> {
     en_hilo(app, move |s| {
         crate::diseno::vista::registrar(s, &design, cara, lang)
+    })
+    .await
+}
+
+/// La carta sin la ilustración y dónde va, para moverla en directo
+/// (`pbimg://…/c/<huella>/<ancho>`). `None` en las compuestas y las grandes.
+#[tauri::command]
+pub async fn design_overlay(
+    app: AppHandle,
+    design: CardDesign,
+    cara: u32,
+    lang: DesignLang,
+    ancho: u32,
+) -> AppResult<Option<crate::diseno::vista::CapaInfo>> {
+    if !crate::protocol::ANCHOS.contains(&ancho) {
+        return Err(AppError::new(ErrorCode::InvalidInput).with("ancho", ancho));
+    }
+    en_hilo(app, move |s| {
+        crate::diseno::vista::capa(s, &design, cara, lang, ancho)
     })
     .await
 }

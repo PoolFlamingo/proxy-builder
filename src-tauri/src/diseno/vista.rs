@@ -8,11 +8,14 @@ use std::collections::{HashMap, VecDeque};
 use image::RgbaImage;
 use proxy_core::diseno::efectivo::DisenoEfectivo;
 use proxy_core::diseno::maquetacion::maquetacion;
-use proxy_core::diseno::modelo::{Aviso, CardDesign, DesignLang, DesignStatus};
+use proxy_core::diseno::modelo::{ArtFraming, Aviso, CardDesign, DesignLang, DesignStatus};
 use proxy_core::diseno::render::Salida;
 use proxy_core::model::{BackSpec, CardEdits, CardSize, CardSource, DeckCard, ImageOrigin};
 
-use super::pintar::{colecciones_por_id, efectivo_de, huella_de, pintar};
+use serde::{Deserialize, Serialize};
+use ts_rs::TS;
+
+use super::pintar::{colecciones_por_id, efectivo_de, huella_de, pintar, pintar_capa};
 use crate::error::{AppError, AppResult, ErrorCode};
 use crate::state::AppState;
 
@@ -90,6 +93,152 @@ pub fn imagen(state: &AppState, huella: &str, ancho: u32) -> AppResult<Vec<u8>> 
     let bytes = proxy_core::imaging::encode::png(&r.imagen)?;
     let _ = crate::store::blobs::escribir_atomico(&ruta, &bytes);
     Ok(bytes)
+}
+
+/// Para mover la ilustración sin esperar a Rust: la carta sin ilustración
+/// (`pbimg://…/c/<huella>/<ancho>`) y dónde va la ilustración. La huella no
+/// depende del encuadre, así que vale mientras solo cambia el encuadre.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct CapaInfo {
+    pub huella: String,
+    /// El hueco de la ilustración en fracciones de la carta: x, y, ancho, alto.
+    pub arte: [f32; 4],
+    /// El radio de las esquinas en fracciones del ancho y del alto.
+    pub radio: [f32; 2],
+    /// La cara del diseño cuya ilustración va en el hueco.
+    pub cara: u32,
+}
+
+/// Lados aceptados de la ilustración reducida (`/b/<blob>/<lado>`).
+pub const LADOS_ARTE: [u32; 2] = [1000, 2000];
+
+fn ruta_capa(state: &AppState, huella: &str, ancho: u32) -> std::path::PathBuf {
+    state
+        .carpeta_renders()
+        .join("c")
+        .join(format!("{huella}-{ancho}.png"))
+}
+
+fn ruta_info_capa(state: &AppState, huella: &str) -> std::path::PathBuf {
+    state
+        .carpeta_renders()
+        .join("c")
+        .join(format!("{huella}.json"))
+}
+
+/// Pinta (o saca de la caché) la capa de un diseño. `None` si la cara no la
+/// tiene (compuestas, grandes) o no lleva ilustración.
+pub fn capa(
+    state: &AppState,
+    d: &CardDesign,
+    cara: u32,
+    lang: DesignLang,
+    ancho: u32,
+) -> AppResult<Option<CapaInfo>> {
+    let cols = colecciones_por_id(state)?;
+    let mut e = efectivo_de(d, &cols);
+    for f in &mut e.design.faces {
+        if let Some(a) = f.art.as_mut() {
+            a.framing = ArtFraming::default();
+        }
+    }
+    let h = huella_de(state, &e, cara, lang)?;
+    state
+        .vistas
+        .lock()
+        .map_err(|_| AppError::new(ErrorCode::Internal))?
+        .meter(h.clone(), (e.clone(), cara, lang));
+    let (ruta, ruta_info) = (ruta_capa(state, &h, ancho), ruta_info_capa(state, &h));
+    if ruta.exists() {
+        if let Some(i) = std::fs::read(&ruta_info)
+            .ok()
+            .and_then(|b| serde_json::from_slice::<CapaInfo>(&b).ok())
+        {
+            return Ok(Some(i));
+        }
+    }
+    let Some(c) = pintar_capa(state, &e, cara, lang, ancho)? else {
+        return Ok(None);
+    };
+    let tiene_arte = e.design.faces.get(c.cara).is_some_and(|f| f.art.is_some());
+    if !tiene_arte {
+        return Ok(None);
+    }
+    let info = CapaInfo {
+        huella: h,
+        arte: c.arte,
+        radio: c.radio,
+        cara: c.cara as u32,
+    };
+    let _ =
+        crate::store::blobs::escribir_atomico(&ruta, &proxy_core::imaging::encode::png(&c.imagen)?);
+    if let Ok(b) = serde_json::to_vec(&info) {
+        let _ = crate::store::blobs::escribir_atomico(&ruta_info, &b);
+    }
+    Ok(Some(info))
+}
+
+/// La imagen de una capa ya pedida con [`capa`] (PNG), de la caché si está.
+pub fn imagen_capa(state: &AppState, huella: &str, ancho: u32) -> AppResult<Vec<u8>> {
+    let ruta = ruta_capa(state, huella, ancho);
+    if let Ok(b) = std::fs::read(&ruta) {
+        return Ok(b);
+    }
+    let (e, cara, lang) = state
+        .vistas
+        .lock()
+        .map_err(|_| AppError::new(ErrorCode::Internal))?
+        .get(huella)
+        .ok_or_else(|| AppError::new(ErrorCode::NotFound).with("diseno", huella))?;
+    let c = pintar_capa(state, &e, cara, lang, ancho)?
+        .ok_or_else(|| AppError::new(ErrorCode::NotFound).with("diseno", huella))?;
+    let bytes = proxy_core::imaging::encode::png(&c.imagen)?;
+    let _ = crate::store::blobs::escribir_atomico(&ruta, &bytes);
+    Ok(bytes)
+}
+
+/// Una ilustración del almacén reducida a `lado` px (el lado más largo), para
+/// moverla en la vista previa. JPEG, o PNG si tiene transparencias. Devuelve
+/// los bytes y el tipo.
+pub fn arte_reducido(
+    state: &AppState,
+    blob: &str,
+    lado: u32,
+) -> AppResult<(Vec<u8>, &'static str)> {
+    use proxy_core::diseno::render::Imagenes;
+    let dir = state.carpeta_renders().join("b");
+    let (jpg, png) = (
+        dir.join(format!("{blob}-{lado}.jpg")),
+        dir.join(format!("{blob}-{lado}.png")),
+    );
+    if let Ok(b) = std::fs::read(&jpg) {
+        return Ok((b, "image/jpeg"));
+    }
+    if let Ok(b) = std::fs::read(&png) {
+        return Ok((b, "image/png"));
+    }
+    let imagenes = super::recursos::ImagenesDelAlmacen {
+        db: &state.db,
+        blobs: &state.blobs,
+        cache: &state.imagenes,
+    };
+    let img = imagenes
+        .imagen(blob)
+        .ok_or_else(|| AppError::new(ErrorCode::NotFound).with("blob", blob))?;
+    let r = proxy_core::diseno::render::reducida(&img, lado);
+    let (bytes, tipo, ruta) = if r.pixels().any(|p| p[3] < 255) {
+        (proxy_core::imaging::encode::png(&r)?, "image/png", png)
+    } else {
+        (
+            proxy_core::imaging::encode::jpeg(&r, 88)?,
+            "image/jpeg",
+            jpg,
+        )
+    };
+    let _ = crate::store::blobs::escribir_atomico(&ruta, &bytes);
+    Ok((bytes, tipo))
 }
 
 /// Los avisos de un diseño (texto que no cabe, símbolos que faltan…), sin
@@ -373,6 +522,53 @@ mod tests {
             r[0].design.as_ref().unwrap().thumb_key,
             nueva.design.as_ref().unwrap().thumb_key
         );
+    }
+
+    #[test]
+    fn capa_para_mover_la_ilustracion() {
+        use proxy_core::diseno::modelo::{ArtRef, ArtSource};
+        let (_dir, s) = estado();
+        let (c, mut d) = carta(&s);
+        // Sin ilustración no hay capa.
+        assert!(capa(&s, &d, 0, DesignLang::Es, 488).unwrap().is_none());
+        let img = s
+            .blobs
+            .put_bytes(
+                &s.db,
+                &crate::store::blobs::tests::png(1500, 900, 7),
+                ImageOrigin::Upload,
+            )
+            .unwrap();
+        d.faces[0].art = Some(ArtRef {
+            image: img.clone(),
+            source: ArtSource::Upload,
+            framing: ArtFraming::default(),
+        });
+        let a = capa(&s, &d, 0, DesignLang::Es, 488).unwrap().unwrap();
+        assert_eq!(a.cara, 0);
+        assert!(a.arte[2] > 0.5 && a.arte[3] > 0.2);
+        // Otro encuadre: la misma capa (y de la caché).
+        if let Some(x) = d.faces[0].art.as_mut() {
+            x.framing.zoom = 2.0;
+            x.framing.offset_x = 0.5;
+        }
+        assert_eq!(capa(&s, &d, 0, DesignLang::Es, 488).unwrap().unwrap(), a);
+        let png = imagen_capa(&s, &a.huella, 488).unwrap();
+        assert_eq!(image::load_from_memory(&png).unwrap().width(), 488);
+        // A otro ancho la pinta al pedirla.
+        let png = imagen_capa(&s, &a.huella, 745).unwrap();
+        assert_eq!(image::load_from_memory(&png).unwrap().width(), 745);
+        // La ilustración reducida: el lado largo, como mucho el pedido.
+        let (b, tipo) = arte_reducido(&s, &img.blob, 1000).unwrap();
+        assert_eq!(tipo, "image/jpeg");
+        let r = image::load_from_memory(&b).unwrap();
+        assert_eq!((r.width(), r.height()), (1000, 600));
+        assert_eq!(arte_reducido(&s, &img.blob, 1000).unwrap().0, b);
+        assert_eq!(
+            arte_reducido(&s, &"f".repeat(64), 1000).unwrap_err().code,
+            ErrorCode::NotFound
+        );
+        let _ = c;
     }
 
     /// Paso 6.1: 3 cartas y 2 fichas numeradas como en «Diseñar el deck»;
