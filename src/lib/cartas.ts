@@ -53,7 +53,7 @@ export function insignias(c: DeckCard): Insignia[] {
 						ayuda: paraTraducir("Diseñada en la app, lista para imprimir"),
 					}
 				: {
-						texto: "BORRADOR",
+						texto: paraTraducir("BORRADOR"),
 						tono: "aviso",
 						ayuda: paraTraducir("Diseñada en la app, todavía en borrador"),
 					},

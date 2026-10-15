@@ -146,6 +146,7 @@ export const DISENAR: Record<string, string> = {
 		"Planes, schemes and Vanguard go on their own sheets at the end. Off, their back is left blank.",
 	"Diseñada en la app, lista para imprimir": "Designed in the app, ready to print",
 	"Diseñada en la app, todavía en borrador": "Designed in the app, still a draft",
+	BORRADOR: "DRAFT",
 	"Descartar los cambios": "Discard the changes",
 	"Carta anterior": "Previous card",
 	"Carta siguiente": "Next card",
