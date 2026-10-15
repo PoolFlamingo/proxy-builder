@@ -15,13 +15,15 @@ import { useImagenViva, useRafaga } from "@/lib/imagen-viva";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { ArteEnVivo } from "./arte-en-vivo";
-import { type CambioEncuadre, claveCapa, moverEncuadre } from "./encuadre";
+import { CARTA_MM, type CambioEncuadre, claveCapa, moverEncuadre } from "./encuadre";
 import { esGrave, textoAviso } from "./textos";
 
 /** Cada cuánto se pasa al diseño el encuadre mientras se arrastra. */
 const EMPUJE_MS = 100;
 /** Tras el último giro de rueda, cuándo se da por acabado. */
 const FIN_RUEDA_MS = 200;
+/** El hueco de la ilustración (fracciones de la carta) si aún no hay capa. */
+const HUECO_TIPICO = [0.08, 0.12, 0.84, 0.45] as const;
 
 /**
  * La carta tal como saldrá, pintada por Rust (el mismo motor que el PDF).
@@ -123,8 +125,16 @@ export function VistaPrevia({
 	const finRueda = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const mover = (c: CambioEncuadre) => {
 		const base = vivoRef.current ?? arte?.framing;
-		if (!base) return;
-		const f = moverEncuadre(base, c);
+		if (!base || !arte) return;
+		// El hueco de la última capa (cambia poco aunque cambien los textos);
+		// sin capa (compuestas), uno típico.
+		const [, , cw, ch] = capa?.arte ?? HUECO_TIPICO;
+		const f = moverEncuadre(base, c, {
+			w: cw * CARTA_MM.w,
+			h: ch * CARTA_MM.h,
+			iw: Math.max(1, arte.image.width),
+			ih: Math.max(1, arte.image.height),
+		});
 		vivoRef.current = f;
 		setVivo(f);
 		const e = empuje.current;
