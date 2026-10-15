@@ -25,6 +25,13 @@ use crate::state::AppState;
 const MAX_TEXTOS: usize = 6;
 /// Cuántas cartas se proponen.
 const MAX_CANDIDATAS: usize = 12;
+/// Cuántas trae como mucho la búsqueda de lo escrito en el diálogo («waste» →
+/// todas las que lo llevan en el nombre): cuatro páginas de Scryfall.
+const MAX_ESCRITO: usize = 700;
+/// Lo que se añade a cada búsqueda: los tokens (Scryfall no los da sin
+/// `include:extras`), pero no las cartas de ilustración (art series) ni las
+/// portadas de los sobres de Jumpstart.
+const EXTRAS: &str = "include:extras -layout:art_series -layout:front_card";
 
 /// Lo seguro que es la carta propuesta.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, TS)]
@@ -156,17 +163,52 @@ async fn buscar(state: &AppState, texto: &str) -> AppResult<Vec<ScryCard>> {
     let limpio = texto.replace('"', "");
     let exacta = state
         .scryfall
-        .search(&format!("!\"{limpio}\""), false, 4)
+        .search(&format!("!\"{limpio}\" {EXTRAS}"), false, 4)
         .await
         .unwrap_or_default();
     if !exacta.is_empty() {
         return Ok(exacta);
     }
-    Ok(state
+    Ok(buscar_en_el_nombre(state, &limpio, 6).await)
+}
+
+/// Las cartas que llevan el texto en el nombre, en inglés o impreso en
+/// cualquier idioma: una por carta (con impresiones, las de la primera por
+/// orden alfabético llenaban la lista: «waste» daba seis Adarkar Wastes).
+async fn buscar_en_el_nombre(state: &AppState, texto: &str, max: usize) -> Vec<ScryCard> {
+    let limpio = texto.replace('"', "");
+    state
         .scryfall
-        .search(&format!("lang:any \"{limpio}\""), true, 6)
+        .search_multilingual(&format!("lang:any \"{limpio}\" {EXTRAS}"), max)
         .await
-        .unwrap_or_default())
+        .unwrap_or_default()
+}
+
+/// Lo que más se parece a lo escrito, primero: el nombre igual, luego el que
+/// empieza así, luego el que tiene una palabra que empieza así y el resto
+/// (en cada grupo, el orden de Scryfall, alfabético). A igual parecido, la
+/// carta que se llama así entera antes que la que solo tiene una cara así:
+/// «Treasure» antes que «Dinosaur // Treasure».
+fn ordenar_por_lo_escrito(cartas: &mut [ScryCard], escrito: &str) {
+    let e = normalizar(escrito);
+    let rango = |nombre: &str| {
+        let n = normalizar(nombre);
+        if n == e {
+            0
+        } else if n.starts_with(&e) {
+            1
+        } else if n.split(' ').any(|p| p.starts_with(&e)) {
+            2
+        } else {
+            3
+        }
+    };
+    cartas.sort_by_key(|c| {
+        let impreso = c.printed_name.as_deref().map_or(3, rango);
+        let entera = rango(&c.name).min(impreso);
+        let cara = c.name.split("//").map(rango).min().unwrap_or(3);
+        (2 * entera).min(2 * cara + 1)
+    });
 }
 
 #[tauri::command]
@@ -176,14 +218,17 @@ pub async fn card_identify(
     hint: Option<String>,
     ocr: bool,
 ) -> AppResult<CardIdentify> {
-    identificar(&state, &blob, hint.as_deref(), ocr).await
+    identificar(&state, &blob, hint.as_deref(), ocr, true).await
 }
 
+/// `escrito`: la pista la ha escrito quien busca (el diálogo), así que además
+/// se buscan todas las cartas que la llevan en el nombre, no solo la exacta.
 async fn identificar(
     state: &AppState,
     blob: &str,
     hint: Option<&str>,
     ocr: bool,
+    escrito: bool,
 ) -> AppResult<CardIdentify> {
     let pista: Vec<String> = hint
         .map(ocr::limpiar)
@@ -282,6 +327,19 @@ async fn identificar(
         }
     }
     cartas.truncate(MAX_CANDIDATAS);
+    // Lo escrito, en todo el nombre: «waste» trae Wastes, Snow-Covered
+    // Wastes, Lay Waste…, lo más parecido primero.
+    if escrito {
+        for t in &pista {
+            let mut halladas = buscar_en_el_nombre(state, t, MAX_ESCRITO).await;
+            ordenar_por_lo_escrito(&mut halladas, t);
+            for c in halladas {
+                if vistas.insert(c.id.clone()) {
+                    cartas.push(c);
+                }
+            }
+        }
+    }
     let mut candidates = resumir(state, cartas);
     // Los aproximados no puntúan: la propuesta se mide contra lo leído, y así
     // una letra mal leída sale como «probable» para que se revise.
@@ -385,7 +443,7 @@ async fn lote(
         if cancelado.load(Ordering::SeqCst) {
             return Err(AppError::new(ErrorCode::Cancelled));
         }
-        let result = identificar(estado, &it.blob, it.hint.as_deref(), ocr).await;
+        let result = identificar(estado, &it.blob, it.hint.as_deref(), ocr, false).await;
         if let Err(e) = &result {
             // Sin red no tiene sentido seguir carta a carta.
             if e.code == ErrorCode::Network {
@@ -442,6 +500,40 @@ mod tests {
             is_dfc: false,
             type_line: None,
         }
+    }
+
+    #[test]
+    fn lo_escrito_ordena_por_parecido() {
+        let carta = |nombre: &str, impreso: Option<&str>| {
+            serde_json::from_value::<ScryCard>(serde_json::json!({
+                "id": nombre, "name": nombre, "printed_name": impreso, "lang": "en",
+                "set": "x", "set_name": "X", "collector_number": "1", "layout": "normal",
+            }))
+            .unwrap()
+        };
+        let mut cs = vec![
+            carta("Adarkar Wastes", None),
+            carta("Lay Waste", None),
+            carta("Wasteland", None),
+            carta("Biowaste Blob", None),
+            carta("Wastes", None),
+            carta("Ball Lightning", Some("Waste")),
+            carta("Dinosaur // Waste", None),
+        ];
+        ordenar_por_lo_escrito(&mut cs, "waste");
+        let nombres: Vec<_> = cs.iter().map(|c| c.name.as_str()).collect();
+        assert_eq!(
+            nombres,
+            [
+                "Ball Lightning",
+                "Dinosaur // Waste",
+                "Wasteland",
+                "Wastes",
+                "Adarkar Wastes",
+                "Lay Waste",
+                "Biowaste Blob"
+            ]
+        );
     }
 
     #[test]
@@ -548,7 +640,9 @@ mod en_vivo {
             .iter()
             .zip(state.blobs.import_files(&state.db, &rutas).unwrap())
         {
-            let r = identificar(&state, &img.blob, None, true).await.unwrap();
+            let r = identificar(&state, &img.blob, None, true, false)
+                .await
+                .unwrap();
             let elegida = r
                 .best
                 .as_ref()
