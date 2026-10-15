@@ -118,6 +118,18 @@ Los estilos que la app conoce son `borderless` (despejado), `extended`,
   cuadradas: el corte las redondea).
 - **`coronaLegendaria`** (opcional): `true` para que las legendarias lleven
   corona sin pedirla. Sin decirlo, solo en el despejado.
+- **`ventanaArte`** (opcional): `{ x, y, w, h, radio, soloAbajo }` en mm. Lo
+  que queda fuera se pinta de negro, con las esquinas a `radio` (o al de los
+  ajustes finos de la carta o la colección). Va encima del arte y debajo de
+  las capas. `soloAbajo` redondea solo las de abajo. Si la curva viene
+  dibujada en una capa de imagen (los marcos Original), `repintar` lleva las
+  zonas (`[x, y, ancho, alto]` en mm) donde, con un radio en los ajustes
+  finos, se vuelve a pintar la ilustración o el negro encima de esa capa;
+  `repintarTras` dice tras cuántas capas (para no tapar las de encima).
+
+Los ajustes finos de una colección o una carta mueven en vertical los huecos
+`titulo`, `coste`, `tipo`, `emblema`, `fr` y `pie`, y el texto de `reglas`;
+también hacen más opaca la caja de reglas y cambian los radios.
 
 Si a un pack le falta un estilo, ese estilo sale del pack de la casa (con las
 paletas del pack). Lo mismo con las fichas: un estilo sin layout `ficha`
@@ -185,6 +197,7 @@ Las capas SVG llevan `{{variables}}` que el motor rellena antes de pintar:
 | `{{defs}}` | Los degradados: `url(#marco)`, `#brillo`, `#panel`, `#panelfr`, `#crema`, `#lateral`, `#vetas`, `#bisel`, `#barra`. Va dentro de `<defs>`. |
 | `{{claro}}`, `{{medio}}`, `{{oscuro}}`, `{{tinte}}`, `{{caja}}` | Los colores de la paleta (o la mezcla de las dos). |
 | `{{fondoCaja}}`, `{{opacidadCaja}}`, `{{tintaCaja}}` | La caja de reglas y el color de su texto. |
+| `{{refuerzoCaja}}` | De 0 a 1, cuánto más opaca se ha pedido la caja (para los marcos con la caja en la imagen: un rectángulo negro debajo con esa opacidad). |
 | `{{tintaCrema}}`, `{{tintaFr}}` | Texto sobre crema y sobre la caja de F/R. |
 | `{{yReglas}}`, `{{altoReglas}}`, `{{yTipo}}`, `{{yTipo04}}` | La geometría de la caja que crece. |
 
