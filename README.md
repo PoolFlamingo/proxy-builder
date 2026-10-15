@@ -1,367 +1,361 @@
 # Proxy Builder
 
-**Pega tu lista de Magic y sal con un PDF listo para imprimir, recortar y jugar.**
+[**Español**](README.es.md) · **English**
 
-Proxy Builder es una aplicación de escritorio para montar decks proxy de
-*Magic: The Gathering*. Busca cada carta en Scryfall, descarga la mejor imagen,
-la coloca en hojas a tamaño real y genera un PDF con sangrado, guías de corte y
-doble cara bien alineada. Todo el trabajo se hace en tu equipo, rápido y sin
-cuentas ni anuncios.
+**Paste your Magic list and get a PDF ready to print, cut out and play.**
 
-Para Linux, Windows y macOS, en español y en inglés.
+Proxy Builder is a desktop app for building *Magic: The Gathering* proxy decks.
+It looks up each card on Scryfall, downloads the best image, places it on sheets
+at real size and generates a PDF with bleed, cut guides and well-aligned double
+faces. All the work is done on your computer, fast, with no accounts and no ads.
 
-![Proxy Builder con un deck cargado](docs/presentacion/vista-principal.jpg)
+For Linux, Windows and macOS, in Spanish and in English.
+
+![Proxy Builder with a deck loaded](docs/presentacion/vista-principal.jpg)
 
 <!-- Vídeo de presentación: sustituir esta línea por el enlace o el reproductor. -->
 
 ---
 
-## De la lista al papel en un minuto
+## From list to paper in a minute
 
-1. **Pega la lista** como la tengas: `4 Lightning Bolt`, `1 Sol Ring (CMM) 410`…
-   Vale el formato de Moxfield, Arena o MTGO. También se puede importar un deck de
-   Archidekt por su URL, con banquillo o sin él.
-2. **Pulsa «Cargar lista».** La app busca cada carta, elige la impresión,
-   descarga las imágenes y, si quieres, añade sola las fichas que crea el deck.
-3. **Revisa las hojas.** Lo que ves es lo que se imprime: la vista previa y el
-   PDF salen del mismo cálculo, al milímetro.
-4. **Exporta el PDF.** Imprime al 100 %, recorta y a jugar.
+1. **Paste the list** however you have it: `4 Lightning Bolt`, `1 Sol Ring (CMM) 410`…
+   The Moxfield, Arena or MTGO formats work. You can also import an Archidekt deck
+   by its URL, with or without the sideboard.
+2. **Press «Cargar lista» (Load list).** The app looks up each card, picks the
+   printing, downloads the images and, if you want, automatically adds the tokens
+   the deck creates.
+3. **Check the sheets.** What you see is what gets printed: the preview and the
+   PDF come from the same calculation, down to the millimetre.
+4. **Export the PDF.** Print at 100 %, cut and play.
 
-![Las hojas del deck, tal cual saldrán en papel](docs/presentacion/hojas.jpg)
-
----
-
-## Todo Scryfall a mano
-
-**Cambiar de impresión.** Cada carta tiene todas sus ediciones a un clic, en
-cualquier idioma, con opción de ver solo las de alta resolución. Puedes cambiar
-una sola copia o todas a la vez.
-
-![Elegir la impresión de una carta](docs/presentacion/variantes.jpg)
-
-**Buscar y añadir cartas** por nombre (con autocompletado) o con la sintaxis de
-Scryfall: `t:dragon c:r r:m` saca los dragones rojos míticos. Doble clic y
-entra en el deck.
-
-![Buscar con la sintaxis de Scryfall](docs/presentacion/anadir-carta.jpg)
-
-**Explorar sets enteros**, con todas sus cartas, y cargar las que elijas (o el
-set completo) para sustituir la lista o añadirlas al final.
-
-![El explorador de sets](docs/presentacion/explorar-sets.jpg)
-
-Y además:
-
-- **Idioma de las cartas.** Elige en qué idioma quieres las impresiones; si una
-  carta no existe en ese idioma, se queda en inglés y te avisa. «Reaplicar
-  idioma» cambia de golpe todas las que no estén fijadas.
-- **Fichas automáticas.** Las fichas, emblemas y copias que crean tus cartas se
-  añaden solas al final.
-- **Avisos honestos**: carta no encontrada, imagen de baja resolución, carta que
-  Scryfall aún no tiene escaneada… Cada casilla lo marca.
+![The deck's sheets, exactly as they will come out on paper](docs/presentacion/hojas.jpg)
 
 ---
 
-## Tus propias imágenes
+## All of Scryfall, by hand
 
-- **Sube cartas propias** (alters, cartas hechas por ti, escaneos) o
-  **arrástralas** a la vista previa: sobre una carta la reemplazan y fuera se
-  añaden.
-- **Reverso a tu gusto**: uno para todo el deck o uno distinto por carta.
+**Change the printing.** Every card has all its editions one click away, in any
+language, with the option to show only the high-resolution ones. You can change
+a single copy or all of them at once.
 
-### Vincular tus proxies con su carta real
+![Choosing a card's printing](docs/presentacion/variantes.jpg)
 
-Una imagen propia es solo una imagen: la app no sabe qué carta es. Al
-vincularla con su carta de Scryfall, la imagen no cambia, pero la carta pasa a
-contar en las estadísticas, en los precios y en la legalidad, y la info de
-carta muestra su nombre y edición reales.
+**Search and add cards** by name (with autocomplete) or with Scryfall syntax:
+`t:dragon c:r r:m` finds the red mythic dragons. Double-click and it goes into
+the deck.
 
-Aquí, un deck de proxies en español recién subido. Cada carta se llama como su
-fichero y nada más:
+![Searching with Scryfall syntax](docs/presentacion/anadir-carta.jpg)
 
-![Proxies propios sin vincular](docs/presentacion/vincular-antes.jpg)
+**Browse entire sets**, with all their cards, and load the ones you choose (or
+the whole set) to replace the list or add them to the end.
 
-Para reconocerlas, la app lee cada imagen con **OCR**: el título, la línea de
-tipo y el pie, donde muchos proxies llevan el nombre original. Busca lo leído
-en el catálogo de Scryfall, en cualquier idioma, y propone la carta con un
-grado de confianza: exacta, probable o sin propuesta. La lectura se hace en tu
-equipo.
+![The set browser](docs/presentacion/explorar-sets.jpg)
 
-Se puede vincular de tres maneras:
+And also:
 
-**Una carta.** Clic derecho → «Vincular con Scryfall…». La búsqueda empieza
-con el nombre del fichero y «Detectar con OCR» lee la carta. Aquí acierta
-hasta la edición exacta.
-
-![Vincular una carta con OCR](docs/presentacion/vincular-una.jpg)
-
-**Las seleccionadas.** Selecciona varias con Ctrl o Mayús y, con el clic
-derecho, «Vincular con Scryfall las seleccionadas…». El diálogo deja elegir
-entre la selección y todo el deck, y entre leer solo las que faltan o todas
-otra vez.
-
-![Vincular las seleccionadas desde el menú](docs/presentacion/vincular-menu-seleccion.jpg)
-
-![Solo las seleccionadas](docs/presentacion/vincular-seleccion.jpg)
-
-![Propuestas para las seleccionadas](docs/presentacion/vincular-seleccion-resultado.jpg)
-
-**Todo el deck.** El botón «Vincular con Scryfall» del panel izquierdo lee de
-una vez todas las imágenes propias del deck, con barra de progreso y tiempo
-restante, y se puede parar a medias para revisar lo leído. Cada propuesta se
-puede cambiar en su desplegable o desmarcar antes de pulsar «Vincular». En este
-deck también reconoce un proxy con arte inventado (Rimuru) por el nombre
-original de su pie: Jodah, Archmage Eternal.
-
-![Vincular todo el deck de una vez](docs/presentacion/vincular-todo-el-deck.jpg)
-
-El resultado: las mismas imágenes, ahora con su carta real detrás.
-
-![Proxies vinculados](docs/presentacion/vincular-despues.jpg)
+- **Card language.** Choose which language you want the printings in; if a card
+  doesn't exist in that language, it stays in English and tells you. «Reaplicar
+  idioma» (Reapply language) changes all the cards that aren't pinned at once.
+- **Automatic tokens.** The tokens, emblems and copies your cards create are
+  added to the end automatically.
+- **Honest warnings**: card not found, low-resolution image, card Scryfall
+  doesn't have scanned yet… Each slot marks it.
 
 ---
 
-## Las hojas, como en una mesa de trabajo
+## Your own images
 
-![Menú de cada carta](docs/presentacion/menu-de-carta.jpg)
+- **Upload custom cards** (alters, cards you made, scans) or **drag them** onto
+  the preview: over a card they replace it, outside they are added.
+- **Back to your taste**: one for the whole deck or a different one per card.
 
-- **Arrastra** las cartas para reordenarlas, o usa «Mover antes / después / a
-  la posición…». Selecciona varias con Ctrl o Mayús y actúa sobre todas.
-- **Fija** una carta en su casilla para que nada la mueva.
-- **Auto ordenar** junta las copias, quita los huecos y respeta las fijadas.
-- **Info de carta** muestra el nombre y la edición de cada casilla; **Ver
-  reversos** enseña la otra cara de la hoja.
-- **Deshacer y rehacer** con Ctrl+Z y Ctrl+Mayús+Z (los últimos cien cambios).
-- **Zoom** con Ctrl + rueda, y las hojas que no están a la vista no gastan
-  memoria: decks de cientos de cartas se mueven con soltura.
+### Linking your proxies to their real card
 
-![Nombre y edición de cada carta](docs/presentacion/info-de-carta.jpg)
+A custom image is just an image: the app doesn't know which card it is. When you
+link it to its Scryfall card, the image doesn't change, but the card starts
+counting in the statistics, the prices and the legality, and the card info shows
+its real name and edition.
 
----
+Here, a freshly uploaded deck of Spanish proxies. Each card is named like its
+file and nothing more:
 
-## Retoca cada carta
+![Unlinked custom proxies](docs/presentacion/vincular-antes.jpg)
 
-Giro, zoom, encuadre y **once ajustes de imagen**: brillo, exposición,
-contraste, saturación, calidez, intensidad, nitidez, claridad, reducción de
-ruido, viñeta y desvanecido. La vista se actualiza al instante y lo que ves es
-el mismo render que irá al PDF.
+To recognise them, the app reads each image with **OCR**: the title, the type
+line and the bottom text, where many proxies carry the original name. It searches
+what it reads in the Scryfall catalogue, in any language, and proposes the card
+with a confidence level: exact, probable or no proposal. The reading is done on
+your computer.
 
-![Editar una carta](docs/presentacion/editar-carta.jpg)
+You can link in three ways:
 
-Cuando termines, decide a qué llega el cambio:
+**One card.** Right click → «Vincular con Scryfall…» (Link with Scryfall…). The
+search starts with the file name and «Detectar con OCR» (Detect with OCR) reads
+the card. Here it gets the exact edition right.
 
-- **Aplicar**: solo a esta carta.
-- **Aplicar también a sus copias**: a todas las que llevan la misma imagen, con
-  giro, encuadre y retoques. Perfecto para las cuatro copias de una carta o
-  para todas las tierras básicas del mismo arte.
-- **Aplicar a todas las cartas**: los retoques de color a todo el deck (el giro
-  y el encuadre se quedan en la carta).
+![Linking one card with OCR](docs/presentacion/vincular-una.jpg)
 
-![Las cuatro Islas retocadas de una vez](docs/presentacion/copias-retocadas.jpg)
+**The selected ones.** Select several with Ctrl or Shift and, with the right
+click, «Vincular con Scryfall las seleccionadas…» (Link the selected ones with
+Scryfall…). The dialog lets you choose between the selection and the whole deck,
+and between reading only the missing ones or all of them again.
 
----
+![Linking the selected cards from the menu](docs/presentacion/vincular-menu-seleccion.jpg)
 
-## Un PDF hecho para imprenta casera
+![Only the selected ones](docs/presentacion/vincular-seleccion.jpg)
 
-![Una hoja del PDF exportado, con guías de corte](docs/presentacion/pdf-resultado.jpg)
+![Proposals for the selected ones](docs/presentacion/vincular-seleccion-resultado.jpg)
 
-- **Calidad** a 300, 600 o 900 PPP, en JPEG (con calidad ajustable) o PNG.
-- **Papeles**: A3, A4, A5, Letter, Legal, Tabloid y papel de foto (4×6″,
-  5×7″, 8×10″, 8×12″), en vertical o apaisado.
-- **Tamaño de carta** estándar de Magic (63 × 88 mm) o póquer
-  (63,5 × 88,9 mm), con margen mínimo y separación entre cartas.
-- **Sangrado** para que no quede filo blanco al cortar, repitiendo el borde o
-  en espejo, también en los reversos.
-- **Guías de corte** con el color, grosor y longitud que quieras.
-- **Oscurecer bordes** claros de escaneos viejos (por contraste, negro sólido o
-  umbral), sin tocar las cartas de borde blanco o arte completo.
-- **Doble cara**: una cara, dúplex por el borde largo o por el corto.
-  - La **hoja de calibración** dúplex y **«Alinear filas»** corrigen el
-    desplazamiento de tu impresora fila a fila, midiendo con una regla.
-- **Partir el PDF** cada N hojas.
-  - Si el fichero va a ser enorme, la app avisa antes y propone bajar la
-    calidad.
-- **Presets**: guarda todos los ajustes de impresión con un nombre («Brother
-  HL-L2350») y úsalos en cualquier deck.
-- La exportación va con barra de progreso y se puede cancelar en cualquier
-  momento.
+**The whole deck.** The «Vincular con Scryfall» (Link with Scryfall) button in the
+left panel reads all the deck's custom images in one go, with a progress bar and
+time remaining, and you can stop halfway to review what was read. Each proposal
+can be changed in its dropdown or unticked before pressing «Vincular» (Link).
+In this deck it also recognises a proxy with invented art (Rimuru) by its
+original name at the bottom: Jodah, Archmage Eternal.
 
-![Exportando](docs/presentacion/exportando.jpg)
+![Linking the whole deck at once](docs/presentacion/vincular-todo-el-deck.jpg)
 
-### Cartas de doble cara y cartas grandes
+The result: the same images, now with their real card behind them.
 
-Las cartas de doble cara se imprimen con su reverso real en dúplex o, si tu
-impresora es de una cara, como **pares intercalados**: las dos caras en
-casillas seguidas, listas para meter en la misma funda. Las cartas grandes
-(planos, planes, Vanguard) van en hojas propias al final, a su medida.
-
-![Pares de doble cara intercalados y guías de corte](docs/presentacion/pares-dfc-y-guias.jpg)
+![Linked proxies](docs/presentacion/vincular-despues.jpg)
 
 ---
 
-## Estadísticas del deck
+## Sheets, as on a workbench
 
-Un panel completo con datos y precios de Scryfall:
+![Each card's menu](docs/presentacion/menu-de-carta.jpg)
 
-- **Resumen**: cartas, tierras recomendadas, coste medio, precio estimado y
-  probabilidad de una buena mano inicial.
-- **Curva de maná** por tipo, colores, identidad de color y fichas que usa el
+- **Drag** cards to reorder them, or use «Mover antes / después / a la posición…»
+  (Move before / after / to position…). Select several with Ctrl or Shift and act
+  on all of them.
+- **Pin** a card to its slot so nothing moves it.
+- **Auto sort** groups the copies, removes the gaps and respects the pinned cards.
+- **Card info** shows the name and edition of each slot; **Ver reversos** (Show
+  backs) shows the other side of the sheet.
+- **Undo and redo** with Ctrl+Z and Ctrl+Shift+Z (the last hundred changes).
+- **Zoom** with Ctrl + wheel, and the sheets that are out of view don't use up
+  memory: decks of hundreds of cards move smoothly.
+
+![Name and edition of each card](docs/presentacion/info-de-carta.jpg)
+
+---
+
+## Retouch each card
+
+Rotation, zoom, framing and **eleven image adjustments**: brightness, exposure,
+contrast, saturation, warmth, intensity, sharpness, clarity, noise reduction,
+vignette and fade. The view updates instantly and what you see is the same render
+that will go into the PDF.
+
+![Editing a card](docs/presentacion/editar-carta.jpg)
+
+When you're done, decide where the change goes:
+
+- **Apply**: only to this card.
+- **Apply also to its copies**: to all the ones that use the same image, with
+  rotation, framing and adjustments. Perfect for the four copies of a card or for
+  all the basic lands with the same art.
+- **Apply to all cards**: the colour adjustments to the whole deck (rotation and
+  framing stay on the card).
+
+![The four Islands retouched at once](docs/presentacion/copias-retocadas.jpg)
+
+---
+
+## A PDF made for home printing
+
+![A sheet from the exported PDF, with cut guides](docs/presentacion/pdf-resultado.jpg)
+
+- **Quality** at 300, 600 or 900 DPI, in JPEG (with adjustable quality) or PNG.
+- **Paper**: A3, A4, A5, Letter, Legal, Tabloid and photo paper (4×6″, 5×7″,
+  8×10″, 8×12″), portrait or landscape.
+- **Standard Magic card size** (63 × 88 mm) or poker size (63.5 × 88.9 mm), with
+  minimal margin and spacing between cards.
+- **Bleed** so there is no white edge when cutting, repeating the border or
+  mirrored, also on the backs.
+- **Cut guides** with the colour, thickness and length you want.
+- **Darken edges**: light borders from old scans (by contrast, solid black or
+  threshold), without touching white-border cards or full-art cards.
+- **Double-sided**: one side, duplex along the long edge or the short edge.
+  - The duplex **calibration sheet** and **«Alinear filas»** (Align rows) correct
+    your printer's offset row by row, measuring with a ruler.
+- **Split the PDF** every N sheets.
+  - If the file is going to be huge, the app warns you first and suggests lowering
+    the quality.
+- **Presets**: save all your print settings under a name («Brother HL-L2350») and
+  use them in any deck.
+- Exporting shows a progress bar and can be cancelled at any moment.
+
+![Exporting](docs/presentacion/exportando.jpg)
+
+### Double-faced cards and large cards
+
+Double-faced cards are printed with their real back, duplex or, if your printer
+is single-sided, as **interleaved pairs**: both faces in consecutive slots, ready
+to go in the same sleeve. Large cards (planes, schemes, Vanguard) go on their own
+sheets at the end, at their size.
+
+![Interleaved double-faced pairs and cut guides](docs/presentacion/pares-dfc-y-guias.jpg)
+
+---
+
+## Deck statistics
+
+A full panel with data and prices from Scryfall:
+
+- **Summary**: cards, recommended lands, average cost, estimated price and the
+  probability of a good opening hand.
+- **Mana curve** by type, colours, colour identity and the tokens the deck uses.
+- **Functions**: ramp, card draw, removal, sweepers, counterspells, tutors,
+  tokens… deduced from each card's rules text, with a button to select them in the
   deck.
-- **Funciones**: rampa, robo, eliminación, barridos, contrahechizos, tutores,
-  fichas… deducidas del texto de reglas de cada carta, con un botón para
-  seleccionarlas en el deck.
-- **Probabilidades**: calculadora de robo (hipergeométrica), tierras en la mano
-  inicial y probabilidad de llegar a cada tierra por turno, empezando tú o el
-  rival.
-- **Precios** en euros (Cardmarket) o dólares (TCGplayer) de la impresión
-  elegida, por tipo y de la más cara a la más barata.
-- **Legalidad** por formato y bracket estimado de Commander. El formato se
-  detecta solo o se elige a mano.
+- **Probabilities**: draw calculator (hypergeometric), lands in the opening hand
+  and the probability of reaching each land drop, going first or second.
+- **Prices** in euros (Cardmarket) or dollars (TCGplayer) for the chosen printing,
+  by type and from most to least expensive.
+- **Legality** by format and estimated Commander bracket. The format is detected
+  automatically or chosen by hand.
 
-![Resumen de estadísticas](docs/presentacion/estadisticas-resumen.jpg)
+![Statistics summary](docs/presentacion/estadisticas-resumen.jpg)
 
-![Calculadora de probabilidades](docs/presentacion/estadisticas-probabilidades.jpg)
+![Probability calculator](docs/presentacion/estadisticas-probabilidades.jpg)
 
-![Funciones de cada carta](docs/presentacion/estadisticas-funciones.jpg)
+![Each card's functions](docs/presentacion/estadisticas-funciones.jpg)
 
-![Precios del deck](docs/presentacion/estadisticas-precios.jpg)
+![Deck prices](docs/presentacion/estadisticas-precios.jpg)
 
 ---
 
-## Tu biblioteca de decks
+## Your deck library
 
-Todos tus decks en un sitio, con su portada. Se **guardan solos** mientras
-trabajas. Puedes duplicarlos, renombrarlos y **exportarlos como `.pbdeck`** con
-todas sus imágenes dentro para pasarlos a otro equipo o a un amigo. «Liberar
-espacio» borra las imágenes que ya no usa ningún deck.
+All your decks in one place, with their cover. They **save automatically** while
+you work. You can duplicate them, rename them and **export them as `.pbdeck`** with
+all their images inside to pass them to another computer or a friend. «Liberar
+espacio» (Free up space) deletes the images that no deck uses any more.
 
-![La biblioteca](docs/presentacion/biblioteca.jpg)
-
----
-
-## A tu gusto
-
-Español o inglés, tema claro u oscuro, más de cuarenta temas de color, tres estilos
-de superficie (plano, relieve y cristal), materiales, efectos y tamaño de la
-interfaz.
-
-![Ajustes](docs/presentacion/ajustes.jpg)
+![The library](docs/presentacion/biblioteca.jpg)
 
 ---
 
-## Editor de cartas (beta)
+## To your taste
 
-> Viene **apagado**. Se enciende en *Ajustes → Editor de cartas*. Está en
-> pruebas: puede tener fallos y cambiar entre versiones.
+Spanish or English, light or dark theme, more than forty colour themes, three
+surface styles (flat, embossed and glass), materials, effects and interface size.
 
-Encendido, aparece la pestaña **Diseñar** y la opción «Diseñar proxy» en el
-menú de cada carta. Sirve para crear tu propia versión de una carta, con marco
-nuevo y los textos traducidos:
-
-- **Textos en español e inglés** sacados de la carta real, con la versión de
-  cada idioma a un clic. Para las cartas sin impresión en español hay una
-  traducción sugerida a partir de frases oficiales.
-- **Arte** de Scryfall, subido, pegado o recortado de otra carta, con zoom,
-  encuadre y giro.
-- **Marcos y estilos** de un pack de marcos, con color, corona de legendaria
-  y caja de reglas automáticos o a mano. Además del pack de la casa están los
-  **marcos originales** de imagen (los M15 de Card Conjurer, normal y
-  despejado), que se descargan la primera vez que se eligen.
-- **Letras libres** para descargar desde la app: de aire clásico, medieval o
-  de fantasía para el título (Cinzel, Almendra, Uncial Antiqua, Grenze
-  Gotisch…) y muy legibles para las reglas. Además, la colección decide
-  cuánto se estrechan el título y el tipo, siempre y como mucho.
-- **Colecciones** con su símbolo y numeración, para que todo el deck parezca de
-  la misma edición.
-- Casi todas las maquetaciones de Magic: planeswalkers, sagas, clases, casos,
-  niveles, aventuras, cartas partidas, flip, doble cara, batallas, meld,
-  mazmorras y cartas grandes.
-- **Diseñar el deck** entero de una vez (un borrador por carta, que luego se
-  revisa) y **exportar imágenes** PNG a 300, 600 o 900 PPP, en carpetas `es/` y
-  `en/`.
-
-Las cartas diseñadas se imprimen en el PDF desde el diseño, a la resolución de
-exportación.
-
-![El editor de cartas](docs/presentacion/editor-de-cartas.jpg)
-
-![La misma carta en inglés](docs/presentacion/editor-en-ingles.jpg)
+![Settings](docs/presentacion/ajustes.jpg)
 
 ---
 
-## Por dentro
+## Card editor (beta)
 
-- **Aplicación nativa** hecha con Tauri y Rust: todo lo pesado (búsquedas,
-  descargas, imágenes, PDF, estadísticas) va en Rust y aprovecha todos los
-  núcleos.
-- **Local y privada.** Tus decks y tus imágenes se quedan en tu equipo. La única
-  conexión es a Scryfall, para cartas, imágenes y precios, y lo ya descargado
-  queda en caché.
-- **Exacta al milímetro.** La vista previa y el PDF usan la misma geometría,
-  así que lo que ves en pantalla es lo que sale de la impresora.
+> It comes **turned off**. Turn it on in *Settings → Card editor*. It is still
+> being tested: it may have bugs and change between versions.
+
+When turned on, the **Design** tab appears, along with the «Diseñar proxy»
+(Design proxy) option in each card's menu. It lets you create your own version of
+a card, with a new frame and translated text:
+
+- **Text in Spanish and English** taken from the real card, with each language's
+  version one click away. For cards with no Spanish printing there is a suggested
+  translation based on official phrases.
+- **Art** from Scryfall, uploaded, pasted or cropped from another card, with zoom,
+  framing and rotation.
+- **Frames and styles** from a frame pack, with colour, legendary crown and rules
+  box automatic or manual. Besides the house pack there are the **original image
+  frames** (the Card Conjurer M15s, normal and borderless), which are downloaded
+  the first time they are chosen.
+- **Free fonts** to download from the app: classical, medieval or fantasy style
+  for the title (Cinzel, Almendra, Uncial Antiqua, Grenze Gotisch…) and very
+  legible ones for the rules text. In addition, the collection decides how much
+  the title and the type line are condensed, always and at most.
+- **Collections** with their set symbol and numbering, so the whole deck looks like
+  it's from the same edition.
+- Almost all of Magic's layouts: planeswalkers, sagas, classes, cases, levels,
+  adventures, split cards, flip, double-faced, battles, meld, dungeons and large
+  cards.
+- **Design the whole deck** at once (a draft per card, to be reviewed afterwards)
+  and **export PNG images** at 300, 600 or 900 DPI, into `es/` and `en/` folders.
+
+Designed cards are printed to the PDF from their design, at the export resolution.
+
+![The card editor](docs/presentacion/editor-de-cartas.jpg)
+
+![The same card in English](docs/presentacion/editor-en-ingles.jpg)
 
 ---
 
-## Descargar
+## Under the hood
 
-Los instaladores de cada versión están en la página de *Releases* del
-repositorio. No van firmados: Windows (SmartScreen) avisará de «editor
-desconocido» (Más información → Ejecutar de todas formas) y macOS (Gatekeeper)
-pedirá abrir la app con clic derecho → Abrir la primera vez.
-
-Los datos viven en la carpeta de datos de la app (`com.estigio.proxybuilder`):
-la biblioteca (`library.db`), las imágenes de los decks (`blobs/`) y el
-registro (`logs/proxy-builder.log`). La caché de miniaturas se puede borrar
-desde la app sin perder nada.
+- **Native application** built with Tauri and Rust: everything heavy (searches,
+  downloads, images, PDF, statistics) runs in Rust and uses all the cores.
+- **Local and private.** Your decks and images stay on your computer. The only
+  connection is to Scryfall, for cards, images and prices, and what has already
+  been downloaded is cached.
+- **Exact to the millimetre.** The preview and the PDF use the same geometry, so
+  what you see on screen is what comes out of the printer.
 
 ---
 
-## Para desarrollar
+## Download
+
+The installers for each version are on the *Releases* page of the repository.
+They are not signed: Windows (SmartScreen) will warn about an «unknown publisher»
+(More info → Run anyway) and macOS (Gatekeeper) will ask you to open the app with
+right click → Open the first time.
+
+The data lives in the app's data folder (`com.estigio.proxybuilder`): the library
+(`library.db`), the deck images (`blobs/`) and the log (`logs/proxy-builder.log`).
+The thumbnail cache can be cleared from the app without losing anything.
+
+---
+
+## For developers
 
 Tauri 2 + Rust + React/TypeScript.
 
-### Requisitos
+### Requirements
 
-- Node 22 y pnpm 12 o superior.
-- Rust estable (1.92 o superior).
-- En Linux, las librerías de Tauri:
+- Node 22 and pnpm 12 or later.
+- Stable Rust (1.92 or later).
+- On Linux, the Tauri libraries:
   `sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev`
 
-### Arrancar
+### Run
 
 ```bash
 pnpm install
 pnpm tauri dev
 ```
 
-La primera compilación de Rust tarda varios minutos.
+The first Rust build takes several minutes.
 
-### Comprobar
+### Check
 
 ```bash
-pnpm check            # TypeScript, tests, Biome, textos y Knip
-pnpm check:clippy     # avisos de Rust (bloqueantes)
-pnpm test:rust        # tests de Rust
+pnpm check            # TypeScript, tests, Biome, texts and Knip
+pnpm check:clippy     # Rust warnings (blocking)
+pnpm test:rust        # Rust tests
 ```
 
-### Instaladores
+### Installers
 
-`pnpm tauri build` genera los de la plataforma en la que se ejecuta. El
-workflow `.github/workflows/release.yml` genera los de Linux, Windows y macOS
-(Intel y Apple Silicon) en un borrador de release. Para sacar una versión:
-`pnpm release patch` (o `minor`, `major`, `X.Y.Z`; con `--dry` solo comprueba).
-Sube la versión en los cuatro sitios, la commitea y la sube, espera a la CI,
-lanza el workflow a mano (pestaña Actions → release) y, al terminar, pregunta si
-publicar el borrador. Al publicarlo se crea la etiqueta. Necesita `gh` con la
-sesión iniciada.
+`pnpm tauri build` produces the installers for the platform it runs on. The
+workflow `.github/workflows/release.yml` produces the ones for Linux, Windows and
+macOS (Intel and Apple Silicon) in a release draft. To ship a version:
+`pnpm release patch` (or `minor`, `major`, `X.Y.Z`; with `--dry` it only checks).
+It bumps the version in four places, commits and pushes it, waits for the CI,
+starts the workflow by hand (Actions tab → release) and, when it finishes, asks
+whether to publish the draft. Publishing creates the tag. It needs `gh` with an
+active session.
 
 ---
 
-## Créditos
+## Credits
 
-Los datos y las imágenes de las cartas vienen de [Scryfall](https://scryfall.com).
-Los marcos originales del editor vienen de
-[Card Conjurer](https://github.com/Investigamer/cardconjurer): la app los
-descarga al usarlos y no los distribuye.
-Magic: The Gathering es una marca de Wizards of the Coast. Esta aplicación no está
-afiliada ni respaldada por ninguna de las dos.
+The card data and images come from [Scryfall](https://scryfall.com).
+The editor's original frames come from
+[Card Conjurer](https://github.com/Investigamer/cardconjurer): the app downloads
+them when they are used and does not distribute them.
+Magic: The Gathering is a trademark of Wizards of the Coast. This application is
+not affiliated with or endorsed by either.
