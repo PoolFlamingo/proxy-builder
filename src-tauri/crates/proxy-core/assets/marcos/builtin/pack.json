@@ -136,6 +136,12 @@
 					}
 				},
 				{
+					"svg": "despejado/cinta.svg",
+					"si": {
+						"cinta": true
+					}
+				},
+				{
 					"svg": "despejado/titulo.svg"
 				},
 				{
@@ -164,6 +170,16 @@
 					"y": 5.5,
 					"w": 27.1,
 					"h": 2.35
+				},
+				"cinta": {
+					"x": 8.7,
+					"y": 9.4,
+					"w": 41.3,
+					"h": 2.1,
+					"rol": "cinta",
+					"mayuscula": 1.3,
+					"color": "#f0f0f0",
+					"alinear": "centro"
 				},
 				"tipo": {
 					"x": 5.95,

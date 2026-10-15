@@ -157,6 +157,10 @@ fn coleccion(original: OriginalName, pie: &str) -> Collection {
         font_title: None,
         font_rules: None,
         title_squeeze_min: ESTRECHADO_DEFECTO,
+        title_squeeze_base: ESTRECHADO_BASE_DEFECTO,
+        weight_title: None,
+        weight_type: None,
+        weight_rules: None,
     }
 }
 

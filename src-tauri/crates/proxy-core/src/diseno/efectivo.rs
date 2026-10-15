@@ -28,6 +28,14 @@ pub struct PieEfectivo {
     pub template: ByLang<String>,
 }
 
+/// Grosores pedidos por la colección (`None` = el del pack).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Serialize, Deserialize)]
+pub struct Pesos {
+    pub titulo: Option<f64>,
+    pub tipo: Option<f64>,
+    pub reglas: Option<f64>,
+}
+
 /// Lo que pinta el motor.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DisenoEfectivo {
@@ -40,6 +48,9 @@ pub struct DisenoEfectivo {
     pub font_title: Option<String>,
     pub font_rules: Option<String>,
     pub squeeze_min: f64,
+    /// Estrechado que llevan siempre el título y el tipo (1 = ninguno).
+    pub squeeze_base: f64,
+    pub pesos: Pesos,
     /// La colección pedida no existe (se borró): se usa la fábrica y se avisa.
     pub coleccion_perdida: bool,
 }
@@ -122,6 +133,13 @@ pub fn efectivo(d: &CardDesign, coleccion: Option<&Collection>) -> DisenoEfectiv
         .or_else(|| c.map(|c| c.title_squeeze_min))
         .unwrap_or(ESTRECHADO_DEFECTO)
         .clamp(ESTRECHADO_MIN, ESTRECHADO_MAX);
+    // El mínimo nunca pasa del límite (nunca más estrecho que él).
+    let squeeze_base = d
+        .options
+        .title_squeeze_base
+        .or_else(|| c.map(|c| c.title_squeeze_base))
+        .unwrap_or(ESTRECHADO_BASE_DEFECTO)
+        .clamp(squeeze_min, 1.0);
     // Lo que no cambia los píxeles no entra en la huella.
     let mut design = d.clone();
     design.thumb_key = None;
@@ -135,6 +153,16 @@ pub fn efectivo(d: &CardDesign, coleccion: Option<&Collection>) -> DisenoEfectiv
         font_title: c.and_then(|c| c.font_title.clone()),
         font_rules: c.and_then(|c| c.font_rules.clone()),
         squeeze_min,
+        squeeze_base,
+        pesos: Pesos {
+            titulo: c
+                .and_then(|c| c.weight_title)
+                .map(|p| p.clamp(100.0, 900.0)),
+            tipo: c.and_then(|c| c.weight_type).map(|p| p.clamp(100.0, 900.0)),
+            reglas: c
+                .and_then(|c| c.weight_rules)
+                .map(|p| p.clamp(100.0, 900.0)),
+        },
         coleccion_perdida: perdida,
     }
 }
@@ -179,6 +207,10 @@ mod tests {
             font_title: None,
             font_rules: None,
             title_squeeze_min: 0.6,
+            title_squeeze_base: ESTRECHADO_BASE_DEFECTO,
+            weight_title: None,
+            weight_type: None,
+            weight_rules: None,
         }
     }
 

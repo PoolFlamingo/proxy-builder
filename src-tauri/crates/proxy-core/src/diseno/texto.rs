@@ -375,9 +375,26 @@ pub fn linea_ajustada(
     ancho: f32,
     estrechado_min: f32,
 ) -> (Bloque, f32, bool) {
+    linea_ajustada_con_base(m, letras, parrafo, estilo, ancho, estrechado_min, 1.0)
+}
+
+/// Como `linea_ajustada`, pero la línea va siempre estrechada al menos
+/// hasta `base` (1 = sin estrechar), quepa o no: el «estrechado mínimo» de la
+/// colección, para un título más condensado. Si no cabe, se sigue
+/// estrechando hasta `estrechado_min` y después baja el tamaño.
+pub fn linea_ajustada_con_base(
+    m: &mut Maquetador,
+    letras: &mut Letras,
+    parrafo: &Parrafo,
+    estilo: &Estilo,
+    ancho: f32,
+    estrechado_min: f32,
+    base: f32,
+) -> (Bloque, f32, bool) {
+    let base = base.clamp(estrechado_min.min(1.0), 1.0);
     let b = m.maquetar(letras, parrafo, estilo, None);
-    if b.ancho <= ancho || b.ancho <= 0.0 {
-        return (b, 1.0, false);
+    if b.ancho <= 0.0 || b.ancho * base <= ancho {
+        return (b, base, false);
     }
     let factor = ancho / b.ancho;
     if factor >= estrechado_min {
@@ -386,7 +403,7 @@ pub fn linea_ajustada(
     // Ni estrechando al máximo cabe: se baja el tamaño lo justo.
     let tam = estilo.tam * factor / estrechado_min;
     let b = m.maquetar(letras, parrafo, &estilo.con_tam(tam), None);
-    let factor = (ancho / b.ancho).min(1.0);
+    let factor = (ancho / b.ancho).min(base);
     (b, factor, true)
 }
 
@@ -788,5 +805,29 @@ mod tests {
             0.5,
         );
         assert_eq!(a.caja.tam, 26.0);
+    }
+
+    #[test]
+    fn el_estrechado_minimo_se_aplica_aunque_quepa() {
+        let mut m = Motor::de_fabrica().unwrap();
+        let e = estilo(40.0);
+        let p = llano("Corto");
+        let (b, f, reducido) =
+            linea_ajustada_con_base(&mut m.m, &mut m.letras, &p, &e, 10_000.0, 0.65, 0.9);
+        assert_eq!(f, 0.9);
+        assert!(!reducido);
+        // Sin base, como siempre: sin estrechar.
+        let (_, f, _) = linea_ajustada(&mut m.m, &mut m.letras, &p, &e, 10_000.0, 0.65);
+        assert_eq!(f, 1.0);
+        // Si con la base no cabe, se estrecha más, hasta el límite.
+        let justo = b.ancho * 0.8;
+        let (_, f, reducido) =
+            linea_ajustada_con_base(&mut m.m, &mut m.letras, &p, &e, justo, 0.65, 0.9);
+        assert!((f - 0.8).abs() < 1e-3, "{f}");
+        assert!(!reducido);
+        // Una base más estrecha que el límite se queda en el límite.
+        let (_, f, _) =
+            linea_ajustada_con_base(&mut m.m, &mut m.letras, &p, &e, 10_000.0, 0.65, 0.3);
+        assert_eq!(f, 0.65);
     }
 }

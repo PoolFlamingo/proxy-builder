@@ -1,5 +1,5 @@
 //! **Packs de marcos**: cómo es cada estilo de carta. Un pack es un
-//! `pack.json` y sus capas SVG. El de la casa (`builtin`) va dentro de la app
+//! `pack.json` y sus capas, SVG o PNG (marcos de imagen, uno por color). El de la casa (`builtin`) va dentro de la app
 //! y se escribe en este mismo formato, así que un pack hecho por cualquiera
 //! funciona igual. El formato se documenta en `docs/packs-de-marcos.md`.
 //!
@@ -12,6 +12,7 @@
 //!   (`"yTipo+1.5"`).
 
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -134,13 +135,60 @@ pub struct Condicion {
     pub emblema: Option<bool>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+/// Un rectángulo en mm.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub struct Zona {
+    pub x: f32,
+    pub y: f32,
+    pub w: f32,
+    pub h: f32,
+}
+
+/// Una capa del marco: un SVG (con variables) o una imagen PNG.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Capa {
     /// Ruta del SVG dentro del pack.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub svg: String,
+    /// Ruta de un PNG dentro del pack. `{color}` se cambia por la letra del
+    /// color del marco (ver `colores`): `m15/m15Frame{color}.png`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub png: Option<String>,
+    /// Dónde va el PNG (estirado a esa zona); sin ella, la carta entera.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub en: Option<Zona>,
+    /// Letras de color propias de esta capa (paleta → texto de `{color}`);
+    /// lo que no diga, como el pack.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub colores: BTreeMap<String, String>,
     #[serde(default)]
     pub si: Condicion,
+}
+
+impl Capa {
+    /// La ruta del PNG para la paleta `clave` (`W`, `gold`…), si es de PNG.
+    pub fn png_para(&self, pack: &PackDef, clave: &str) -> Option<String> {
+        let plantilla = self.png.as_ref()?;
+        let letra = self
+            .colores
+            .get(clave)
+            .or_else(|| pack.colores.get(clave))
+            .map(String::as_str)
+            .unwrap_or_else(|| letra_por_defecto(clave));
+        Some(plantilla.replace("{color}", letra))
+    }
+}
+
+/// La letra de cada paleta si el pack no dice otra (la de Card Conjurer).
+pub fn letra_por_defecto(clave: &str) -> &str {
+    match clave {
+        "gold" => "M",
+        "artifact" => "A",
+        "land" => "L",
+        "colorless" => "C",
+        otra => otra,
+    }
 }
 
 /// Alineación de un texto en su hueco.
@@ -245,6 +293,10 @@ pub struct EstiloDef {
     /// Radio de las esquinas de la carta en pantalla (mm).
     #[serde(default = "radio_defecto")]
     pub radio: f32,
+    /// ¿Las legendarias llevan corona sin pedirla? Sin decirlo, solo en el
+    /// despejado (como el pack de la casa).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub corona_legendaria: Option<bool>,
 }
 
 fn radio_defecto() -> f32 {
@@ -265,6 +317,13 @@ pub struct PackDef {
     /// plano…): se usan cuando el estilo no trae el suyo en `layouts`.
     #[serde(default)]
     pub layouts: BTreeMap<String, EstiloDef>,
+    /// Qué se pone en `{color}` de las capas PNG para cada paleta (`W`,
+    /// `gold`…). Lo que no se diga: `W U B R G`, `M`, `A`, `L` y `C`.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub colores: BTreeMap<String, String>,
+    /// De dónde salen las imágenes, para decirlo en la app.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub origen: Option<String>,
 }
 
 /// Un pack cargado: la definición y sus ficheros.
@@ -272,6 +331,8 @@ pub struct PackDef {
 pub struct Pack {
     pub def: PackDef,
     pub ficheros: BTreeMap<String, String>,
+    /// Los PNG de las capas de imagen, tal cual (se decodifican al usarlos).
+    pub imagenes: BTreeMap<String, Arc<Vec<u8>>>,
     /// Huella de todo el pack (entra en la huella del render).
     pub huella: String,
 }
@@ -319,6 +380,14 @@ pub fn rgba(c: &str) -> Option<[u8; 4]> {
 impl Pack {
     /// Carga y valida un pack desde sus ficheros (ruta relativa → contenido).
     pub fn cargar(ficheros: BTreeMap<String, String>) -> Result<Pack, PackError> {
+        Pack::cargar_con_imagenes(ficheros, BTreeMap::new())
+    }
+
+    /// Como `cargar`, con los PNG de las capas de imagen.
+    pub fn cargar_con_imagenes(
+        ficheros: BTreeMap<String, String>,
+        imagenes: BTreeMap<String, Arc<Vec<u8>>>,
+    ) -> Result<Pack, PackError> {
         let json = ficheros
             .get("pack.json")
             .ok_or_else(|| PackError::FaltaFichero("pack.json".into()))?;
@@ -353,9 +422,7 @@ impl Pack {
                 .iter()
                 .chain(e.layouts.values().flat_map(|l| l.capas.iter().flatten()));
             for c in capas {
-                if !ficheros.contains_key(&c.svg) {
-                    return Err(PackError::FaltaFichero(c.svg.clone()));
-                }
+                comprobar_capa(c, &def, &ficheros, &imagenes)?;
             }
             for h in e
                 .huecos
@@ -371,9 +438,7 @@ impl Pack {
         }
         for (nombre, e) in &def.layouts {
             for c in &e.capas {
-                if !ficheros.contains_key(&c.svg) {
-                    return Err(PackError::FaltaFichero(c.svg.clone()));
-                }
+                comprobar_capa(c, &def, &ficheros, &imagenes)?;
             }
             for h in e.huecos.values() {
                 if let Some(c) = &h.color {
@@ -390,10 +455,17 @@ impl Pack {
             h.update(v.as_bytes());
             h.update([0]);
         }
+        for (k, v) in &imagenes {
+            h.update(k.as_bytes());
+            h.update([0]);
+            h.update(v.as_slice());
+            h.update([0]);
+        }
         let huella = h.finalize().iter().map(|b| format!("{b:02x}")).collect();
         Ok(Pack {
             def,
             ficheros,
+            imagenes,
             huella,
         })
     }
@@ -426,6 +498,35 @@ impl Pack {
             .get(nombre)
             .ok_or_else(|| PackError::FaltaEstilo(nombre.into()))
     }
+}
+
+/// Una capa es SVG o PNG, y lo que nombra está en el pack (los PNG, para
+/// cada color que puede tocar).
+fn comprobar_capa(
+    c: &Capa,
+    def: &PackDef,
+    ficheros: &BTreeMap<String, String>,
+    imagenes: &BTreeMap<String, Arc<Vec<u8>>>,
+) -> Result<(), PackError> {
+    match (&c.png, c.svg.is_empty()) {
+        (None, false) => {
+            if !ficheros.contains_key(&c.svg) {
+                return Err(PackError::FaltaFichero(c.svg.clone()));
+            }
+        }
+        (Some(_), true) => {
+            for clave in PALETAS {
+                if let Some(ruta) = c.png_para(def, clave) {
+                    if !imagenes.contains_key(&ruta) {
+                        return Err(PackError::FaltaFichero(ruta));
+                    }
+                }
+            }
+        }
+        // Las dos o ninguna: no se sabe qué pintar.
+        _ => return Err(PackError::Json("capa con svg y png, o sin ninguno".into())),
+    }
+    Ok(())
 }
 
 /// Rellena las variables `{{x}}` de una plantilla. Las que no están se
@@ -469,6 +570,7 @@ const BUILTIN: &[(&str, &str)] = &[
     fichero!("despejado/mascara.svg"),
     fichero!("despejado/corona.svg"),
     fichero!("despejado/titulo.svg"),
+    fichero!("despejado/cinta.svg"),
     fichero!("despejado/reglas.svg"),
     fichero!("despejado/fr.svg"),
     fichero!("extendido/marco.svg"),
@@ -494,8 +596,33 @@ const BUILTIN: &[(&str, &str)] = &[
     fichero!("layouts/vanguard.svg"),
 ];
 
+/// El pack **«Original»**: los marcos de imagen de Card Conjurer. Aquí van
+/// solo su definición y sus SVG; los PNG se descargan la primera vez que se
+/// usan (la lista, con la huella de cada uno, en `ORIGINAL_IMAGENES`).
+pub const ORIGINAL: &[(&str, &str)] = &[
+    (
+        "pack.json",
+        include_str!("../../assets/marcos/original/pack.json"),
+    ),
+    (
+        "cinta.svg",
+        include_str!("../../assets/marcos/original/cinta.svg"),
+    ),
+    (
+        "cubierta-corona.svg",
+        include_str!("../../assets/marcos/original/cubierta-corona.svg"),
+    ),
+    (
+        "sombra-pie.svg",
+        include_str!("../../assets/marcos/original/sombra-pie.svg"),
+    ),
+];
+
+/// `{ commit, base, imagenes: { ruta: sha256 } }` del pack «Original».
+pub const ORIGINAL_IMAGENES: &str = include_str!("../../assets/marcos/original/imagenes.json");
+
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
 
     #[test]
@@ -542,7 +669,7 @@ mod tests {
         }
     }
 
-    fn minimo() -> BTreeMap<String, String> {
+    pub(crate) fn minimo() -> BTreeMap<String, String> {
         let p = Pack::de_fabrica().unwrap();
         p.ficheros
     }
@@ -589,5 +716,130 @@ mod tests {
         let mut f = minimo();
         f.insert("pack.json".into(), "{".into());
         assert!(matches!(Pack::cargar(f).unwrap_err(), PackError::Json(_)));
+    }
+
+    /// Un PNG de 2×2 de un color.
+    fn png(c: [u8; 4]) -> Arc<Vec<u8>> {
+        let img = image::RgbaImage::from_pixel(2, 2, image::Rgba(c));
+        Arc::new(crate::imaging::encode::png(&img).unwrap())
+    }
+
+    /// El pack de la casa con una capa PNG por color en el despejado.
+    pub(crate) type Imagenes = BTreeMap<String, Arc<Vec<u8>>>;
+
+    pub(crate) fn con_png() -> (BTreeMap<String, String>, Imagenes) {
+        let mut f = minimo();
+        con_json(&mut f, |v| {
+            v["estilos"]["borderless"]["capas"] = serde_json::json!([
+                { "png": "marco{color}.png" },
+                { "png": "fr-{color}.png", "en": { "x": 40, "y": 70, "w": 10, "h": 5 },
+                  "colores": { "colorless": "c", "land": "c" }, "si": { "fr": true } }
+            ]);
+        });
+        let mut im = BTreeMap::new();
+        for l in ["W", "U", "B", "R", "G", "M", "A", "L", "C"] {
+            im.insert(format!("marco{l}.png"), png([10, 20, 30, 255]));
+        }
+        for l in ["W", "U", "B", "R", "G", "M", "A", "c"] {
+            im.insert(format!("fr-{l}.png"), png([200, 0, 0, 255]));
+        }
+        (f, im)
+    }
+
+    #[test]
+    fn capas_png_por_color() {
+        let (f, im) = con_png();
+        let p = Pack::cargar_con_imagenes(f, im).unwrap();
+        let capas = &p.estilo("borderless").unwrap().capas;
+        assert_eq!(
+            capas[0].png_para(&p.def, "gold").as_deref(),
+            Some("marcoM.png")
+        );
+        assert_eq!(
+            capas[0].png_para(&p.def, "U").as_deref(),
+            Some("marcoU.png")
+        );
+        assert_eq!(
+            capas[1].png_para(&p.def, "land").as_deref(),
+            Some("fr-c.png")
+        );
+        assert_eq!(
+            capas[1].png_para(&p.def, "artifact").as_deref(),
+            Some("fr-A.png")
+        );
+    }
+
+    #[test]
+    fn falta_el_png_de_un_color() {
+        let (f, mut im) = con_png();
+        im.remove("marcoL.png");
+        assert_eq!(
+            Pack::cargar_con_imagenes(f, im).unwrap_err(),
+            PackError::FaltaFichero("marcoL.png".into())
+        );
+    }
+
+    #[test]
+    fn una_capa_es_svg_o_png_pero_no_las_dos() {
+        let (mut f, im) = con_png();
+        con_json(&mut f, |v| {
+            v["estilos"]["borderless"]["capas"][0]["svg"] = "despejado/titulo.svg".into();
+        });
+        assert!(matches!(
+            Pack::cargar_con_imagenes(f, im.clone()).unwrap_err(),
+            PackError::Json(_)
+        ));
+        let (mut f, _) = con_png();
+        con_json(&mut f, |v| {
+            v["estilos"]["borderless"]["capas"][0] = serde_json::json!({});
+        });
+        assert!(Pack::cargar_con_imagenes(f, im).is_err());
+    }
+
+    #[test]
+    fn las_imagenes_entran_en_la_huella() {
+        let (f, im) = con_png();
+        let a = Pack::cargar_con_imagenes(f.clone(), im.clone()).unwrap();
+        let mut im2 = im;
+        im2.insert("marcoW.png".into(), png([1, 2, 3, 255]));
+        let b = Pack::cargar_con_imagenes(f, im2).unwrap();
+        assert_ne!(a.huella, b.huella);
+    }
+
+    #[test]
+    fn el_pack_original_es_valido_con_sus_imagenes() {
+        let ficheros: BTreeMap<String, String> = ORIGINAL
+            .iter()
+            .map(|(k, v)| ((*k).to_string(), (*v).to_string()))
+            .collect();
+        let lista: serde_json::Value = serde_json::from_str(ORIGINAL_IMAGENES).unwrap();
+        let rutas: Vec<String> = lista["imagenes"]
+            .as_object()
+            .unwrap()
+            .keys()
+            .cloned()
+            .collect();
+        let im: BTreeMap<String, Arc<Vec<u8>>> = rutas
+            .iter()
+            .map(|r| (r.clone(), png([0, 0, 0, 255])))
+            .collect();
+        let p = Pack::cargar_con_imagenes(ficheros.clone(), im.clone()).unwrap();
+        assert_eq!(p.def.id, "original");
+        for e in ["borderless", "classic"] {
+            p.estilo(e).unwrap();
+        }
+        // La lista trae justo las que piden las capas: ni una de más ni de menos.
+        let mut pedidas = std::collections::BTreeSet::new();
+        for e in p.def.estilos.values() {
+            for c in &e.capas {
+                for k in PALETAS {
+                    pedidas.extend(c.png_para(&p.def, k));
+                }
+            }
+        }
+        let lista: std::collections::BTreeSet<String> = rutas.into_iter().collect();
+        assert_eq!(pedidas, lista);
+        // Sin imágenes no carga.
+        assert!(Pack::cargar(ficheros).is_err());
     }
 }

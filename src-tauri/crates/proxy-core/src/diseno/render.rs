@@ -31,10 +31,12 @@ use super::pack::{
 };
 use super::pintar::{pintar_bloque, Pincel};
 use super::simbolos::{secuencia, Simbolos};
-use super::texto::{self, linea_ajustada, Alinear, Estilo, Maquetador, Parrafo};
+use super::texto::{
+    self, linea_ajustada, linea_ajustada_con_base, Alinear, Estilo, Maquetador, Parrafo,
+};
 use super::{Color, DisenoError, MM_POR_PT};
 
-pub use super::componer::render;
+pub use super::componer::{render, render_capa, CapaVista};
 
 /// Las imágenes del almacén (arte, emblemas), ya decodificadas. El núcleo no
 /// lee disco: se las da quien llama.
@@ -197,16 +199,39 @@ fn de_letra(c: &str) -> Option<Palette> {
     })
 }
 
+/// El color del marco que toca, antes de resolverlo a colores.
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum Eleccion {
+    Una(Palette),
+    Dos(Palette, Palette),
+    Propio([u8; 4]),
+}
+
 /// El color del marco: con `Auto`, un color el suyo, dos un degradado y tres
 /// o más oro; sin color, artefacto, tierra o incoloro (§3.7 del plan).
 fn colores_marco(e: &DisenoEfectivo, cara: usize, pack: &Pack) -> (Tonos, Option<Tonos>) {
+    match eleccion_marco(e, cara) {
+        Eleccion::Una(p) => (paleta(pack, p), None),
+        Eleccion::Dos(a, b) => (paleta(pack, a), Some(paleta(pack, b))),
+        Eleccion::Propio(c) => (Tonos::de_color(c), None),
+    }
+}
+
+/// La paleta de los marcos de imagen (`{color}` de las capas PNG): los de
+/// dos colores y los de color propio no tienen imagen propia y van en oro,
+/// como las cartas multicolor de verdad.
+pub(super) fn clave_marco(e: &DisenoEfectivo, cara: usize) -> &'static str {
+    match eleccion_marco(e, cara) {
+        Eleccion::Una(p) => clave_paleta(p),
+        Eleccion::Dos(..) | Eleccion::Propio(_) => "gold",
+    }
+}
+
+fn eleccion_marco(e: &DisenoEfectivo, cara: usize) -> Eleccion {
     match &e.frame.color {
-        FrameColor::Palette { palette } => (paleta(pack, *palette), None),
-        FrameColor::Gradient { a, b } => (paleta(pack, *a), Some(paleta(pack, *b))),
-        FrameColor::Custom { hex } => (
-            Tonos::de_color(rgba(hex).unwrap_or([128, 128, 128, 255])),
-            None,
-        ),
+        FrameColor::Palette { palette } => Eleccion::Una(*palette),
+        FrameColor::Gradient { a, b } => Eleccion::Dos(*a, *b),
+        FrameColor::Custom { hex } => Eleccion::Propio(rgba(hex).unwrap_or([128, 128, 128, 255])),
         FrameColor::Auto => {
             let card = &e.design.card;
             let f = card.faces.get(cara);
@@ -225,15 +250,15 @@ fn colores_marco(e: &DisenoEfectivo, cara: usize, pack: &Pack) -> (Tonos, Option
                     .filter_map(|c| de_letra(c))
                     .collect();
                 if colores.is_empty() {
-                    return (paleta(pack, Palette::Land), None);
+                    return Eleccion::Una(Palette::Land);
                 }
             }
             match colores.as_slice() {
-                [] if tipo.contains("Artifact") => (paleta(pack, Palette::Artifact), None),
-                [] => (paleta(pack, Palette::Colorless), None),
-                [c] => (paleta(pack, *c), None),
-                [a, b] => (paleta(pack, *a), Some(paleta(pack, *b))),
-                _ => (paleta(pack, Palette::Gold), None),
+                [] if tipo.contains("Artifact") => Eleccion::Una(Palette::Artifact),
+                [] => Eleccion::Una(Palette::Colorless),
+                [c] => Eleccion::Una(*c),
+                [a, b] => Eleccion::Dos(*a, *b),
+                _ => Eleccion::Una(Palette::Gold),
             }
         }
     }
@@ -386,6 +411,21 @@ fn reescalar(
     RgbaImage::from_raw(w.max(1), h.max(1), dst.into_vec())
 }
 
+/// La imagen con su lado más largo en `lado` px como mucho (sin deformar);
+/// si ya cabe, tal cual. Es la ilustración que mueve la vista previa.
+pub fn reducida(img: &RgbaImage, lado: u32) -> RgbaImage {
+    let (w, h) = img.dimensions();
+    let k = lado as f64 / w.max(h).max(1) as f64;
+    if k >= 1.0 {
+        return img.clone();
+    }
+    let (nw, nh) = (
+        ((w as f64 * k).round() as u32).max(1),
+        ((h as f64 * k).round() as u32).max(1),
+    );
+    reescalar(img, nw, nh, None).unwrap_or_else(|| img.clone())
+}
+
 /// La ilustración cubriendo su hueco, con zoom, desplazamiento y giro.
 pub(super) fn pintar_arte(
     l: &mut Lienzo,
@@ -477,6 +517,87 @@ fn pintar_imagen(l: &mut Lienzo, img: &RgbaImage, hueco: (f32, f32, f32, f32)) {
     }
 }
 
+/// Los PNG de los packs, decodificados y reescalados al pedirlos y guardados
+/// un rato: al arrastrar el arte se repinta la carta muchas veces seguidas
+/// con el mismo marco. Se guardan por la huella del pack, así que un pack
+/// cambiado no reutiliza lo viejo.
+pub(super) mod imagenes_png {
+    use std::sync::{Arc, LazyLock, Mutex};
+
+    use image::RgbaImage;
+
+    use super::reescalar;
+    use crate::diseno::pack::Pack;
+
+    /// Lo que se guarda como mucho (bytes RGBA) de cada tipo.
+    const MAX_ORIGINALES: usize = 160 << 20;
+    const MAX_A_MEDIDA: usize = 160 << 20;
+
+    type Lista = Vec<(String, Arc<RgbaImage>)>;
+    static ORIGINALES: LazyLock<Mutex<Lista>> = LazyLock::new(|| Mutex::new(Vec::new()));
+    static A_MEDIDA: LazyLock<Mutex<Lista>> = LazyLock::new(|| Mutex::new(Vec::new()));
+
+    fn tamano(i: &RgbaImage) -> usize {
+        i.as_raw().len()
+    }
+
+    /// Busca y sube al principio (lo más usado se queda).
+    fn buscar(lista: &Mutex<Lista>, clave: &str) -> Option<Arc<RgbaImage>> {
+        let mut l = lista.lock().ok()?;
+        let i = l.iter().position(|(k, _)| k == clave)?;
+        let e = l.remove(i);
+        let img = e.1.clone();
+        l.insert(0, e);
+        Some(img)
+    }
+
+    fn guardar(lista: &Mutex<Lista>, clave: String, img: Arc<RgbaImage>, max: usize) {
+        let Ok(mut l) = lista.lock() else {
+            return;
+        };
+        l.insert(0, (clave, img));
+        let mut total = 0;
+        let mut corte = l.len();
+        for (i, (_, im)) in l.iter().enumerate() {
+            total += tamano(im);
+            // Siempre se queda al menos la recién guardada.
+            if total > max && i > 0 {
+                corte = i;
+                break;
+            }
+        }
+        l.truncate(corte);
+    }
+
+    /// El PNG `ruta` del pack, decodificado.
+    pub fn original(pack: &Pack, ruta: &str) -> Option<Arc<RgbaImage>> {
+        let clave = format!("{}/{ruta}", pack.huella);
+        if let Some(i) = buscar(&ORIGINALES, &clave) {
+            return Some(i);
+        }
+        let bytes = pack.imagenes.get(ruta)?;
+        let img = Arc::new(image::load_from_memory(bytes).ok()?.to_rgba8());
+        guardar(&ORIGINALES, clave, img.clone(), MAX_ORIGINALES);
+        Some(img)
+    }
+
+    /// El PNG a `w`×`h` píxeles.
+    pub fn a_medida(pack: &Pack, ruta: &str, w: u32, h: u32) -> Option<Arc<RgbaImage>> {
+        let clave = format!("{}/{ruta}@{w}x{h}", pack.huella);
+        if let Some(i) = buscar(&A_MEDIDA, &clave) {
+            return Some(i);
+        }
+        let o = original(pack, ruta)?;
+        let img = if o.width() == w && o.height() == h {
+            o
+        } else {
+            Arc::new(reescalar(&o, w, h, None)?)
+        };
+        guardar(&A_MEDIDA, clave, img.clone(), MAX_A_MEDIDA);
+        Some(img)
+    }
+}
+
 /// Un pixmap (premultiplicado) a imagen RGBA.
 pub(super) fn de_pixmap(p: &Pixmap) -> RgbaImage {
     let mut img = RgbaImage::new(p.width(), p.height());
@@ -498,6 +619,12 @@ pub(super) struct Carta<'a> {
     pub(super) nums: BTreeMap<&'static str, f32>,
     pub(super) avisos: Vec<Aviso>,
     pub(super) faltan: Vec<String>,
+    /// La paleta de las capas PNG (`W`, `gold`…).
+    pub(super) clave_color: &'static str,
+    /// Estrechado mínimo del título y el tipo (1 = ninguno).
+    pub(super) estrechado_base: f32,
+    /// Grosores pedidos por la colección.
+    pub(super) pesos: super::efectivo::Pesos,
     letra_titulo: Option<String>,
     letra_reglas: Option<String>,
 }
@@ -549,6 +676,21 @@ impl Carta<'_> {
             "reglas" | "cinta" => self.letra_reglas.clone(),
             _ => None,
         };
+        // El grosor pedido por la colección pisa al del pack.
+        let peso = match rol {
+            "titulo" => self.pesos.titulo,
+            "tipo" => self.pesos.tipo,
+            "reglas" => self.pesos.reglas,
+            _ => None,
+        };
+        let mut l = self.letra_sin_peso(base, pedida);
+        if let Some(p) = peso {
+            l.peso = p as f32;
+        }
+        l
+    }
+
+    fn letra_sin_peso(&mut self, base: LetraDef, pedida: Option<String>) -> LetraDef {
         match pedida {
             Some(f) if self.motor.letras.tiene(&f) => LetraDef {
                 familia: f,
@@ -688,13 +830,20 @@ impl Carta<'_> {
         };
         let (e, cap) = self.estilo_texto(&h);
         let ancho = ancho_max.unwrap_or(c.w).min(c.w);
-        let (b, f, reducido) = linea_ajustada(
+        // El estrechado mínimo de la colección, solo en el título y el tipo.
+        let base = if matches!(nombre, "titulo" | "tipo") {
+            self.estrechado_base
+        } else {
+            1.0
+        };
+        let (b, f, reducido) = linea_ajustada_con_base(
             &mut self.motor.m,
             &mut self.motor.letras,
             p,
             &e,
             self.l.x(ancho),
             squeeze,
+            base,
         );
         if reducido {
             self.avisos.push(Aviso::TituloReducido {
@@ -813,6 +962,10 @@ impl Carta<'_> {
             if !pasa {
                 continue;
             }
+            if capa.png.is_some() {
+                self.capa_png(capa);
+                continue;
+            }
             let Some(svg) =
                 self.rec.pack.ficheros.get(&capa.svg).or_else(|| {
                     Pack::de_fabrica_compartido().and_then(|p| p.ficheros.get(&capa.svg))
@@ -822,6 +975,37 @@ impl Carta<'_> {
             };
             let s = rellenar(svg, &self.vars);
             let _ = self.l.svg(&s);
+        }
+    }
+
+    /// Una capa PNG: la imagen del color del marco, estirada a su zona (o a
+    /// la carta entera).
+    fn capa_png(&mut self, capa: &Capa) {
+        let pack = self.rec.pack;
+        let Some(ruta) = capa.png_para(&pack.def, self.clave_color) else {
+            return;
+        };
+        let z = capa.en.unwrap_or(super::pack::Zona {
+            x: 0.0,
+            y: 0.0,
+            w: self.l.w_mm,
+            h: self.l.h_mm,
+        });
+        let (x, y) = (self.l.x(z.x).round(), self.l.y(z.y).round());
+        let tw = (self.l.x(z.x + z.w).round() - x).max(1.0) as u32;
+        let th = (self.l.y(z.y + z.h).round() - y).max(1.0) as u32;
+        let Some(img) = imagenes_png::a_medida(pack, &ruta, tw, th) else {
+            return;
+        };
+        if let Some(p) = a_pixmap(&img) {
+            self.l.px.draw_pixmap(
+                x as i32,
+                y as i32,
+                p.as_ref(),
+                &PixmapPaint::default(),
+                Transform::identity(),
+                None,
+            );
         }
     }
 
@@ -924,11 +1108,27 @@ pub(super) fn estilo_para(
     layout: Option<&str>,
     avisos: &mut Vec<Aviso>,
 ) -> Result<EstiloDef, DisenoError> {
-    let base = rec
+    // Un estilo que el pack no trae sale del pack de la casa (sus capas se
+    // buscan allí); si tampoco, el despejado del pack.
+    let fabrica = Pack::de_fabrica_compartido();
+    let mut base = rec
         .pack
         .estilo(nombre_estilo(style))
+        .or_else(|e| {
+            fabrica
+                .and_then(|f| f.estilo(nombre_estilo(style)).ok())
+                .ok_or(e)
+        })
         .or_else(|_| rec.pack.estilo("borderless"))
         .map_err(|_| DisenoError::Lienzo)?;
+    // Las fichas de un pack sin marco de ficha: el de la casa, sin aviso.
+    if let Some("ficha") = layout {
+        if !base.layouts.contains_key("ficha") {
+            if let Some(f) = fabrica.and_then(|f| f.estilo(nombre_estilo(style)).ok()) {
+                base = f;
+            }
+        }
+    }
     let mut e = base.clone();
     if let Some(l) = layout {
         if let Some(def) = base.layouts.get(l) {
@@ -1042,6 +1242,9 @@ pub(super) struct Pieza {
     pub(super) px: Pixmap,
     pub(super) avisos: Vec<Aviso>,
     pub(super) faltan: Vec<String>,
+    /// El hueco de la ilustración en fracciones del lienzo (x, y, ancho,
+    /// alto), si lo tiene.
+    pub(super) arte: Option<[f32; 4]>,
 }
 
 /// Las líneas de la caja de una mazmorra: salas en filas.
@@ -1165,6 +1368,9 @@ pub(super) fn pintar_cara(
         nums: BTreeMap::new(),
         avisos: Vec::new(),
         faltan: Vec::new(),
+        clave_color: clave_marco(e, cara),
+        estrechado_base: e.squeeze_base as f32,
+        pesos: e.pesos,
         letra_titulo: e.font_title.clone(),
         letra_reglas: e.font_rules.clone(),
     };
@@ -1331,7 +1537,8 @@ pub(super) fn pintar_cara(
     }
 
     // ── Ilustración.
-    if !o.sin_arte {
+    let mut hueco_arte = None;
+    {
         let h = c.estilo.arte.clone();
         let ev = |v: &super::pack::Valor| v.evaluar(&c.nums).unwrap_or(0.0);
         let arte = Caja {
@@ -1341,6 +1548,9 @@ pub(super) fn pintar_cara(
             h: ev(&h.h),
         };
         if arte.w > 0.0 && arte.h > 0.0 {
+            hueco_arte = Some([arte.x / w_mm, arte.y / h_mm, arte.w / w_mm, arte.h / h_mm]);
+        }
+        if !o.sin_arte && arte.w > 0.0 && arte.h > 0.0 {
             let r = (arte.x, arte.y, arte.w, arte.h);
             let img = d
                 .faces
@@ -1358,10 +1568,18 @@ pub(super) fn pintar_cara(
     let corona = match e.frame.crown {
         OnOffAuto::On => true,
         OnOffAuto::Off => false,
-        OnOffAuto::Auto => d.style == DesignStyle::Borderless && d.card.es_legendaria(),
+        OnOffAuto::Auto => {
+            d.card.es_legendaria()
+                && c.estilo
+                    .corona_legendaria
+                    .unwrap_or(d.style == DesignStyle::Borderless)
+        }
     };
     let original = nombre_original(&d.card);
     let en_cinta = e.original_name == OriginalName::Ribbon && c.estilo.huecos.contains_key("cinta");
+    if e.original_name == OriginalName::Ribbon && !en_cinta {
+        c.avisos.push(Aviso::SinCinta);
+    }
     let cond = Condicion {
         corona: Some(corona),
         fr: Some(fr.is_some()),
@@ -1493,6 +1711,7 @@ pub(super) fn pintar_cara(
         px: c.l.px,
         avisos: c.avisos,
         faltan: c.faltan,
+        arte: hueco_arte,
     })
 }
 
@@ -1890,9 +2109,11 @@ mod tests {
     }
 
     #[test]
-    fn un_estilo_que_falta_cae_al_despejado_y_sin_ninguno_falla() {
+    fn un_estilo_que_falta_sale_del_pack_de_la_casa() {
         let mut p = casa();
+        let clasico = p.estilo("classic").unwrap().clone();
         p.def.estilos.remove("classic");
+        p.def.estilos.get_mut("borderless").unwrap().radio = 9.0;
         let s = Simbolos::nuevos();
         let e = estilo_para(
             &recursos(&p, &s),
@@ -1900,15 +2121,125 @@ mod tests {
             None,
             &mut Vec::new(),
         );
-        assert_eq!(&e.unwrap(), p.estilo("borderless").unwrap());
-        p.def.estilos.remove("borderless");
+        assert_eq!(e.unwrap(), clasico);
+    }
+
+    #[test]
+    fn las_fichas_de_un_pack_sin_marco_de_ficha_salen_de_la_casa_sin_aviso() {
+        let mut p = casa();
+        let ficha_casa = estilo_para(
+            &recursos(&p, &Simbolos::nuevos()),
+            DesignStyle::Borderless,
+            Some("ficha"),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        p.def
+            .estilos
+            .get_mut("borderless")
+            .unwrap()
+            .layouts
+            .remove("ficha");
+        let s = Simbolos::nuevos();
+        let mut avisos = Vec::new();
         let e = estilo_para(
             &recursos(&p, &s),
-            DesignStyle::Classic,
-            None,
-            &mut Vec::new(),
-        );
-        assert_eq!(e.unwrap_err(), DisenoError::Lienzo);
+            DesignStyle::Borderless,
+            Some("ficha"),
+            &mut avisos,
+        )
+        .unwrap();
+        assert_eq!(e, ficha_casa);
+        assert!(avisos.is_empty());
+    }
+
+    #[test]
+    fn el_grosor_de_la_coleccion_pisa_al_del_pack() {
+        let p = casa();
+        let s = Simbolos::nuevos();
+        let rec = recursos(&p, &s);
+        let mut motor = Motor::de_fabrica().unwrap();
+        let pinta = |motor: &mut Motor, e: &DisenoEfectivo| {
+            render(
+                motor,
+                e,
+                0,
+                DesignLang::Es,
+                &rec,
+                crate::model::CardSize::MTG,
+                300,
+                Salida::Impresion,
+            )
+            .unwrap()
+            .imagen
+        };
+        let mut e = carta(&["U"], "Instant");
+        let negrita = pinta(&mut motor, &e);
+        // Pedir 700 es lo mismo que el pack (que ya pone negrita).
+        e.pesos.titulo = Some(700.0);
+        assert_eq!(pinta(&mut motor, &e), negrita);
+        // Sin negrita, el título cambia.
+        e.pesos.titulo = Some(400.0);
+        assert_ne!(pinta(&mut motor, &e), negrita);
+    }
+
+    // ── Marcos de imagen ──
+
+    #[test]
+    fn la_paleta_de_los_marcos_de_imagen() {
+        assert_eq!(clave_marco(&carta(&["R"], "Instant"), 0), "R");
+        assert_eq!(clave_marco(&carta(&["R", "G"], "Instant"), 0), "gold");
+        assert_eq!(clave_marco(&carta(&["W", "U", "B"], "Instant"), 0), "gold");
+        assert_eq!(clave_marco(&carta(&[], "Artifact"), 0), "artifact");
+        let mut e = carta(&["R"], "Instant");
+        e.frame.color = FrameColor::Custom {
+            hex: "#123456".into(),
+        };
+        assert_eq!(clave_marco(&e, 0), "gold");
+    }
+
+    #[test]
+    fn una_capa_png_se_pinta_en_su_zona_y_del_color_de_la_carta() {
+        let (f, im) = crate::diseno::pack::tests::con_png();
+        let p = Pack::cargar_con_imagenes(f, im).unwrap();
+        let s = Simbolos::nuevos();
+        let rec = recursos(&p, &s);
+        let mut motor = Motor::de_fabrica().unwrap();
+        let mut e = carta(&["G"], "Creature — Elf");
+        e.design.style = DesignStyle::Borderless;
+        e.design.card.faces[0].power = Some("2".into());
+        e.design.card.faces[0].toughness = Some("2".into());
+        let r = render(
+            &mut motor,
+            &e,
+            0,
+            DesignLang::Es,
+            &rec,
+            crate::model::CardSize::MTG,
+            630,
+            Salida::Impresion,
+        )
+        .unwrap();
+        // 10 px por mm. El marco cubre la carta (no se ve el arte)…
+        assert_eq!(r.imagen.get_pixel(15, 400).0, [10, 20, 30, 255]);
+        // …y la caja de F/R va en su zona (40, 70, 10×5 mm).
+        assert_eq!(r.imagen.get_pixel(402, 702).0, [200, 0, 0, 255]);
+        assert_eq!(r.imagen.get_pixel(395, 702).0, [10, 20, 30, 255]);
+        // Sin fuerza/resistencia no hay caja.
+        e.design.card.faces[0].power = None;
+        e.design.card.faces[0].toughness = None;
+        let r = render(
+            &mut motor,
+            &e,
+            0,
+            DesignLang::Es,
+            &rec,
+            crate::model::CardSize::MTG,
+            630,
+            Salida::Impresion,
+        )
+        .unwrap();
+        assert_eq!(r.imagen.get_pixel(402, 702).0, [10, 20, 30, 255]);
     }
 
     // ── Textos ──
