@@ -252,6 +252,9 @@ export function DisenarScreen() {
 									cara={cara}
 									colecciones={colecciones}
 									packs={packs}
+									onColeccion={(c) =>
+										setColecciones((cs) => cs.map((x) => (x.id === c.id ? c : x)))
+									}
 									resumen={resumen}
 								/>
 							</div>

@@ -335,4 +335,30 @@ export const DISENAR: Record<string, string> = {
 	"Diseñar proxy": "Design proxy",
 	"Quitar el diseño de las seleccionadas": "Remove the design from the selected cards",
 	Diseñar: "Design",
+	Título: "Title",
+	"Coste de maná": "Mana cost",
+	"Línea de tipo": "Type line",
+	"Altura de cada cosa, en milímetros: en positivo baja y en negativo sube.":
+		"Height of each element, in millimetres: positive moves it down, negative moves it up.",
+	"Fondo de la caja de reglas más opaco": "More opaque rules box background",
+	"Radio propio de la ilustración": "Custom art corner radius",
+	"Las esquinas de abajo de la ventana de la ilustración, en el estilo despejado (también con los marcos Original). A 0 mm, rectas.":
+		"The bottom corners of the art window, in the borderless style (Original frames included). At 0 mm, square.",
+	"Radio de la ilustración": "Art corner radius",
+	"Esquinas de la carta a medida": "Custom card corners",
+	"Sin tocarlo, la carta se ve redondeada y se imprime en ángulo recto. A medida, se ve y se imprime igual: a 0 mm, con esquinas rectas (para fundas).":
+		"Left alone, the card shows rounded and prints with square corners. Custom, it shows and prints the same: at 0 mm, square corners (for sleeves).",
+	"Radio de las esquinas de la carta": "Card corner radius",
+	"Todo como viene en el marco": "Reset to the frame's defaults",
+	"Ajustes finos": "Fine tuning",
+	"Ajustes propios para esta carta": "Custom fine tuning for this card",
+	"Sin ellos, la carta usa los de su colección («{c}»).":
+		"Without it, the card uses its collection's («{c}»).",
+	"Sin ellos, la carta va como viene en el marco.":
+		"Without it, the card follows the frame's defaults.",
+	"Para mover a la vez todas las cartas de una colección, ajústalo en «Colecciones».":
+		"To move every card in a collection at once, adjust it in «Collections».",
+	"Ajustes guardados en la colección": "Fine tuning saved to the collection",
+	"Usar estos ajustes en toda la colección «{c}»":
+		"Use this fine tuning for the whole «{c}» collection",
 };

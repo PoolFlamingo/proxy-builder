@@ -273,7 +273,7 @@ export function VistaPrevia({
 							src={mostrada}
 							alt=""
 							draggable={false}
-							className="size-full rounded-[4.5%] object-contain shadow-lg"
+							className="size-full object-contain drop-shadow-lg"
 						/>
 					) : (
 						<div className="flex size-full items-center justify-center rounded-[4.5%] bg-muted">

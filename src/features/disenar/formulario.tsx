@@ -4,6 +4,7 @@ import {
 	ImagePlus,
 	Lock,
 	RotateCcw,
+	Save,
 	Sparkles,
 	Trash2,
 	Upload,
@@ -16,6 +17,7 @@ import type { Collection } from "@/bindings/Collection";
 import type { DesignLang } from "@/bindings/DesignLang";
 import type { EmblemChoice } from "@/bindings/EmblemChoice";
 import type { FaceTexts } from "@/bindings/FaceTexts";
+import type { FineTuning } from "@/bindings/FineTuning";
 import type { FooterOptions } from "@/bindings/FooterOptions";
 import type { FrameOptions } from "@/bindings/FrameOptions";
 import type { PackInfo } from "@/bindings/PackInfo";
@@ -32,8 +34,10 @@ import { abrirParaImportar } from "@/lib/dialogos";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { useUi } from "@/stores/ui-store";
+import { AJUSTES_CERO, AjustesFinos, hayAjustes } from "./ajustes-finos";
 import { ID_ORIGINAL, useMarcosOriginales } from "./marcos-originales";
 import { RecortarDialog } from "./recortar-dialog";
+import { rehacerMiniaturas } from "./renumerar";
 import { ESTILOS, letraRareza, MAQUETACIONES, NOMBRE_ORIGINAL, PALETAS, RAREZAS } from "./textos";
 import { TraduccionSugerida } from "./traduccion";
 
@@ -100,6 +104,7 @@ export function Formulario({
 	colecciones,
 	packs,
 	resumen,
+	onColeccion,
 }: {
 	design: CardDesign;
 	cambiar: Cambiar;
@@ -107,6 +112,8 @@ export function Formulario({
 	colecciones: Collection[];
 	packs: PackInfo[];
 	resumen: Resumen | null;
+	/** Una colección guardada desde aquí (para tenerla al día). */
+	onColeccion?: (c: Collection) => void;
 }) {
 	const { t } = useLang();
 	return (
@@ -118,6 +125,7 @@ export function Formulario({
 					<TabsTrigger value="arte">{t("Arte")}</TabsTrigger>
 					<TabsTrigger value="marco">{t("Marco")}</TabsTrigger>
 					<TabsTrigger value="pie">{t("Pie")}</TabsTrigger>
+					<TabsTrigger value="ajustes">{t("Ajustes finos")}</TabsTrigger>
 				</TabsList>
 			</div>
 			<ScrollArea className="min-h-0 flex-1">
@@ -147,6 +155,14 @@ export function Formulario({
 					</TabsContent>
 					<TabsContent value="pie">
 						<PestanaPie design={design} cambiar={cambiar} colecciones={colecciones} />
+					</TabsContent>
+					<TabsContent value="ajustes">
+						<PestanaAjustes
+							design={design}
+							cambiar={cambiar}
+							colecciones={colecciones}
+							onColeccion={onColeccion}
+						/>
 					</TabsContent>
 				</div>
 			</ScrollArea>
@@ -858,6 +874,81 @@ function PestanaMarco({
 						}
 					/>
 				</>
+			)}
+		</div>
+	);
+}
+
+// ── Ajustes finos ──────────────────────────────────────────────────────────
+
+function PestanaAjustes({
+	design,
+	cambiar,
+	colecciones,
+	onColeccion,
+}: {
+	design: CardDesign;
+	cambiar: Cambiar;
+	colecciones: Collection[];
+	onColeccion?: (c: Collection) => void;
+}) {
+	const { t, mensaje } = useLang();
+	const col = colecciones.find((c) => c.id === design.collection);
+	const propios = design.options.fineTuning;
+	const poner = (fineTuning: FineTuning | undefined) =>
+		cambiar((d) => ({ ...d, options: { ...d.options, fineTuning } }));
+	const [guardando, setGuardando] = useState(false);
+	// Los ajustes de esta carta pasan a ser los de su colección (y la carta
+	// deja de llevar los suyos: sigue a la colección).
+	const pasarAColeccion = async () => {
+		if (!col || !propios) return;
+		setGuardando(true);
+		try {
+			const guardada = await call("collection_save", {
+				collection: { ...col, fineTuning: hayAjustes(propios) ? propios : undefined },
+			});
+			onColeccion?.(guardada);
+			poner(undefined);
+			void rehacerMiniaturas();
+			useUi.getState().anunciar(t("Ajustes guardados en la colección"));
+		} catch (e) {
+			toast.error(mensaje(e));
+		} finally {
+			setGuardando(false);
+		}
+	};
+	return (
+		<div className="flex flex-col gap-2.5">
+			<FilaInterruptor
+				etiqueta={t("Ajustes propios para esta carta")}
+				ayuda={
+					col
+						? t("Sin ellos, la carta usa los de su colección («{c}»).", { c: col.name })
+						: t("Sin ellos, la carta va como viene en el marco.")
+				}
+				valor={propios !== undefined}
+				onChange={(v) => poner(v ? (col?.fineTuning ?? AJUSTES_CERO) : undefined)}
+			/>
+			{propios !== undefined ? (
+				<>
+					<AjustesFinos valor={propios} onChange={poner} />
+					{col && (
+						<Button
+							size="sm"
+							variant="outline"
+							className="self-start"
+							disabled={guardando}
+							onClick={pasarAColeccion}
+						>
+							<Save />
+							{t("Usar estos ajustes en toda la colección «{c}»", { c: col.name })}
+						</Button>
+					)}
+				</>
+			) : (
+				<p className="text-[11px] text-muted-foreground">
+					{t("Para mover a la vez todas las cartas de una colección, ajústalo en «Colecciones».")}
+				</p>
 			)}
 		</div>
 	);

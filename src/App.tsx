@@ -21,7 +21,7 @@ import { useUi } from "@/stores/ui-store";
 
 export default function App() {
 	useDeckInicial();
-	// El editor de cartas es experimental: sin encenderlo en Ajustes no se monta nada suyo.
+	// El editor de cartas está en beta: sin encenderlo en Ajustes no se monta nada suyo.
 	const editor = useUi((s) => s.editorCartas);
 	return (
 		<>
