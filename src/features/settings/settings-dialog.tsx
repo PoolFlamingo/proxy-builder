@@ -15,7 +15,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useUi } from "@/stores/ui-store";
 import { Appearance } from "./appearance";
 
-/** Ajustes de la app: idioma, editor de cartas (experimental) y apariencia. */
+/** Ajustes de la app: idioma, editor de cartas (beta) y apariencia. */
 export function SettingsDialog({
 	open,
 	onOpenChange,
@@ -61,7 +61,7 @@ export function SettingsDialog({
 								</ToggleGroupItem>
 							</ToggleGroup>
 						</div>
-						<EditorExperimental />
+						<EditorBeta />
 						<Appearance />
 					</div>
 				</DialogCuerpo>
@@ -72,10 +72,10 @@ export function SettingsDialog({
 
 /**
  * El interruptor del **editor de cartas**: apagado de fábrica porque aún es
- * experimental. Encendido, aparece la pestaña «Diseñar» y las opciones de
+ * beta. Encendido, aparece la pestaña «Diseñar» y las opciones de
  * diseño del menú de cada carta.
  */
-function EditorExperimental() {
+function EditorBeta() {
 	const { t } = useLang();
 	const id = useId();
 	const encendido = useUi((s) => s.editorCartas);
@@ -86,7 +86,7 @@ function EditorExperimental() {
 					<Brush className="size-3.5" />
 					{t("Editor de cartas")}
 					<span className="rounded-full border border-amber-500/50 px-1.5 text-[9px] leading-4 font-medium text-amber-600 uppercase dark:text-amber-400">
-						{t("Experimental")}
+						{t("Beta")}
 					</span>
 				</label>
 				<Switch

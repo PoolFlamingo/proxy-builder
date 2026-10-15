@@ -15,7 +15,7 @@ type Preferencias = {
 	pedirConfirmacionAlCargar: boolean;
 	zoom: number;
 	infoCarta: boolean;
-	/** El editor de cartas (experimental): apagado de fábrica, se enciende en Ajustes. */
+	/** El editor de cartas (beta): apagado de fábrica, se enciende en Ajustes. */
 	editorCartas: boolean;
 };
 

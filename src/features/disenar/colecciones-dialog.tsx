@@ -23,6 +23,7 @@ import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
+import { AJUSTES_CERO, AjustesFinos, hayAjustes } from "./ajustes-finos";
 import { EditorMarco } from "./formulario";
 import { useMarcosOriginales } from "./marcos-originales";
 import { rehacerMiniaturas } from "./renumerar";
@@ -512,6 +513,12 @@ function Editor({
 					"Fichas: {num} {rarity} {original} {set} {lang} {artist} {credit} {universe} {year} {brush} {star}. Un tabulador separa columnas; una línea nueva, filas. Vacía, la de fábrica.",
 				)}
 			</p>
+
+			<Titulo>{t("Ajustes finos")}</Titulo>
+			<AjustesFinos
+				valor={c.fineTuning ?? AJUSTES_CERO}
+				onChange={(f) => poner({ fineTuning: hayAjustes(f) ? f : undefined })}
+			/>
 		</div>
 	);
 }

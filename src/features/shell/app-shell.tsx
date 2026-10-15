@@ -76,7 +76,7 @@ export function AppShell({
 										: "border-amber-500/50 text-amber-600 dark:text-amber-400",
 								)}
 							>
-								{t("Experimental")}
+								{t("Beta")}
 							</span>
 						</ToggleGroupItem>
 					)}

@@ -2,6 +2,7 @@
 import type { ByLang } from "./ByLang";
 import type { DesignStyle } from "./DesignStyle";
 import type { FaceImage } from "./FaceImage";
+import type { FineTuning } from "./FineTuning";
 import type { FrameOptions } from "./FrameOptions";
 import type { OriginalName } from "./OriginalName";
 
@@ -28,4 +29,8 @@ titleSqueezeBase: number,
  * el del pack (negrita en el título y el tipo, normal en las reglas):
  * una letra que ya es gruesa puede ir sin negrita.
  */
-weightTitle?: number, weightType?: number, weightRules?: number, };
+weightTitle?: number, weightType?: number, weightRules?: number, 
+/**
+ * Ajustes finos de sus cartas (posición de los textos, caja, radios).
+ */
+fineTuning?: FineTuning, };
