@@ -2,21 +2,54 @@ import type { ArtFraming } from "@/bindings/ArtFraming";
 import type { CardDesign } from "@/bindings/CardDesign";
 import type { DesignLang } from "@/bindings/DesignLang";
 
-/** Un paso de arrastre (en fracciones de la carta) o de rueda. */
+/** Un paso de arrastre (en fracciones del ancho y del alto de la carta) o de rueda. */
 export type CambioEncuadre = { dx?: number; dy?: number; zoom?: number };
+
+/** Medidas de la carta (mm) con las que se cuentan los arrastres. */
+export const CARTA_MM = { w: 63, h: 88 };
+
+/** El hueco de la ilustración (mm) y la proporción de la imagen. */
+export type HuecoArte = { w: number; h: number; iw: number; ih: number };
+
+/**
+ * Cómo cubre la imagen el hueco (la cuenta de `pintar_arte` en Rust): su
+ * tamaño sin girar (`rw`, `rh`) y cuánto sobra a cada lado de su caja girada
+ * (`hx`, `hy`), que es lo que recorre el desplazamiento de -1 a 1.
+ */
+function cubrir(f: ArtFraming, { w, h, iw, ih }: HuecoArte) {
+	const a = (f.rotation * Math.PI) / 180;
+	const c = Math.abs(Math.cos(a));
+	const s = Math.abs(Math.sin(a));
+	const zoom = Math.max(1, f.zoom);
+	const cubre = Math.max((w * c + h * s) / iw, (w * s + h * c) / ih) * zoom;
+	const rw = iw * cubre;
+	const rh = ih * cubre;
+	return {
+		rw,
+		rh,
+		hx: Math.max(0, (rw * c + rh * s - w) / 2),
+		hy: Math.max(0, (rw * s + rh * c - h) / 2),
+	};
+}
+
+const limitar = (v: number) => Math.min(1, Math.max(-1, v));
 
 /**
  * El encuadre tras arrastrar `dx`/`dy` (fracciones del ancho y del alto de la
- * carta) o girar la rueda. Arrastrar a la derecha enseña lo que hay a la
- * izquierda, y con más zoom se mueve más despacio.
+ * carta) o girar la rueda. La ilustración sigue al ratón 1:1, tenga el zoom
+ * o el giro que tenga, hasta que llega a un borde.
  */
-export function moverEncuadre(f: ArtFraming, c: CambioEncuadre): ArtFraming {
-	const k = 2 / Math.max(0.15, 1 - 1 / f.zoom + 0.15);
+export function moverEncuadre(f: ArtFraming, c: CambioEncuadre, hueco: HuecoArte): ArtFraming {
+	const zoom = Math.min(3, Math.max(1, f.zoom + (c.zoom ?? 0)));
+	const { hx, hy } = cubrir({ ...f, zoom }, hueco);
+	// Lo que se mueve el ratón, en mm; el desplazamiento recorre la holgura.
+	const mx = (c.dx ?? 0) * CARTA_MM.w;
+	const my = (c.dy ?? 0) * CARTA_MM.h;
 	return {
 		...f,
-		zoom: Math.min(3, Math.max(1, f.zoom + (c.zoom ?? 0))),
-		offsetX: Math.min(1, Math.max(-1, f.offsetX - (c.dx ?? 0) * k)),
-		offsetY: Math.min(1, Math.max(-1, f.offsetY - (c.dy ?? 0) * k)),
+		zoom,
+		offsetX: hx > 1e-6 ? limitar(f.offsetX - mx / hx) : f.offsetX,
+		offsetY: hy > 1e-6 ? limitar(f.offsetY - my / hy) : f.offsetY,
 	};
 }
 
@@ -59,18 +92,9 @@ export function geometriaArte(
 	w: number,
 	h: number,
 ): GeometriaArte {
-	const a = (f.rotation * Math.PI) / 180;
-	const c = Math.abs(Math.cos(a));
-	const s = Math.abs(Math.sin(a));
-	const zoom = Math.max(1, f.zoom);
-	const cubre = Math.max((w * c + h * s) / iw, (w * s + h * c) / ih) * zoom;
-	const rw = iw * cubre;
-	const rh = ih * cubre;
-	const bw = rw * c + rh * s;
-	const bh = rw * s + rh * c;
-	const lim = (v: number) => Math.min(1, Math.max(-1, v));
-	const dx = lim(f.offsetX) * Math.max(0, (bw - w) / 2);
-	const dy = lim(f.offsetY) * Math.max(0, (bh - h) / 2);
+	const { rw, rh, hx, hy } = cubrir(f, { w, h, iw, ih });
+	const dx = limitar(f.offsetX) * hx;
+	const dy = limitar(f.offsetY) * hy;
 	// Centro de la imagen y, de ahí, su esquina (sin girar).
 	const izq = w / 2 - dx - rw / 2;
 	const arriba = h / 2 - dy - rh / 2;
