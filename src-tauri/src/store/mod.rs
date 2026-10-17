@@ -5,6 +5,7 @@ pub mod blobs;
 pub mod colecciones;
 pub mod db;
 pub mod decks;
+pub mod etiquetas;
 pub mod presets;
 pub mod settings;
 

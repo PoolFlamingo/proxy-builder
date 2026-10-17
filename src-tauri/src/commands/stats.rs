@@ -99,6 +99,39 @@ pub async fn deck_stats(
     calcular(&state.db, state.scryfall.as_ref(), &cards, kind).await
 }
 
+/// Un Scryfall que nunca contesta: las cuentas salen solo de la caché.
+struct SinRed;
+
+fn sin_red<T>() -> AppResult<T> {
+    Err(crate::error::AppError::new(
+        crate::error::ErrorCode::Network,
+    ))
+}
+
+impl CardApi for SinRed {
+    async fn collection(&self, _: &[Identifier]) -> AppResult<crate::scryfall::models::Collection> {
+        sin_red()
+    }
+    async fn card(&self, _: &str) -> AppResult<Option<ScryCard>> {
+        sin_red()
+    }
+    async fn card_lang(&self, _: &str, _: &str, _: &str) -> AppResult<Option<ScryCard>> {
+        sin_red()
+    }
+    async fn search(&self, _: &str, _: bool, _: usize) -> AppResult<Vec<ScryCard>> {
+        sin_red()
+    }
+    async fn download(&self, _: &str) -> AppResult<Vec<u8>> {
+        sin_red()
+    }
+}
+
+/// Las estadísticas con lo que haya en la caché, sin pedir nada (para la
+/// biblioteca: rápido y sin red).
+pub(crate) async fn calcular_sin_red(db: &Db, cards: &[DeckCard]) -> AppResult<DeckStats> {
+    calcular(db, &SinRed, cards, None).await
+}
+
 /// Lo que hace `deck_stats`, con la caché y el Scryfall que se le den.
 pub(crate) async fn calcular<A: CardApi>(
     db: &Db,
