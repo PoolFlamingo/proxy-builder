@@ -13,6 +13,7 @@ import type { CardSummary } from "@/bindings/CardSummary";
 import type { Collection } from "@/bindings/Collection";
 import type { Deck } from "@/bindings/Deck";
 import type { DeckCard } from "@/bindings/DeckCard";
+import type { DeckDetails } from "@/bindings/DeckDetails";
 import type { DeckKind } from "@/bindings/DeckKind";
 import type { DeckStats } from "@/bindings/DeckStats";
 import type { DeckSummary } from "@/bindings/DeckSummary";
@@ -37,6 +38,7 @@ import type { SaveResult } from "@/bindings/SaveResult";
 import type { SetInfo } from "@/bindings/SetInfo";
 import type { SimbolosInfo } from "@/bindings/SimbolosInfo";
 import type { Sugerencia } from "@/bindings/Sugerencia";
+import type { Tag } from "@/bindings/Tag";
 import type { TipoCarpeta } from "@/bindings/TipoCarpeta";
 
 /**
@@ -60,6 +62,16 @@ export interface Commands {
 	deck_rename: { args: { id: string; name: string }; result: null };
 	deck_duplicate: { args: { id: string; name: string }; result: Deck };
 	deck_delete: { args: { id: string }; result: null };
+	deck_peek: { args: { id: string }; result: Deck };
+	deck_details: { args: { ids: string[] }; result: DeckDetails[] };
+	tag_list: { args: Record<string, never>; result: Tag[] };
+	tag_create: { args: { name: string; color: string }; result: Tag };
+	tag_update: { args: { id: string; name: string; color: string }; result: Tag };
+	tag_delete: { args: { id: string }; result: null };
+	deck_tags_set: { args: { decks: string[]; add: string[]; remove: string[] }; result: null };
+	deck_pin: { args: { decks: string[]; pinned: boolean }; result: null };
+	deck_notes_set: { args: { id: string; notes: string }; result: null };
+	deck_cover_set: { args: { id: string; card: string | null }; result: null };
 	blob_import_files: { args: { paths: string[] }; result: FaceImage[] };
 	blob_generic_back: { args: Record<string, never>; result: FaceImage };
 	blob_gc: { args: Record<string, never>; result: GcReport };
