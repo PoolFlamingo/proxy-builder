@@ -154,6 +154,18 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
     `disenar/arte-en-vivo.tsx` pone debajo la ilustración (`pbimg://…/b/`)
     con la misma cuenta que `pintar_arte` (`disenar/encuadre.ts`). Al parar
     entra la carta exacta. Las compuestas y grandes siguen por el camino normal.
+- **Biblioteca** (`features/library/`): etiquetas del usuario (`store/etiquetas.rs`,
+  tablas `tags` y `deck_tags`), favoritos, notas y portada elegida
+  (`decks.pinned/notes/cover_card_id`, migración 0003; no tocan `updated_at`).
+  Los detalles de cada deck (colores, clase, precio, idiomas, formatos…) los
+  calcula `biblioteca.rs` sin red con la caché de Scryfall y los guarda en
+  memoria por `updated_at`. En pantalla: `organizar.ts` (filtrar, ordenar,
+  agrupar —por etiqueta un deck sale en cada una— y selección, con tests),
+  `store.ts`, `preferencias.ts` (vista, orden y grupos se recuerdan; los
+  filtros no), cuadrícula y lista (columnas según el ancho), barra lateral de
+  etiquetas, menú del deck compartido (desplegable y clic derecho; con varios
+  elegidos actúa sobre todos) y el diálogo de propiedades. El `.pbdeck` lleva
+  etiquetas y notas.
 - «Editar carta» aplica a la carta, a sus copias (misma imagen: todo) o a
   todas (solo el color): `features/card-editor/propagar.ts`.
 - El `README.md` (en inglés) es la presentación de la app (Pablo, 14/10/2026):

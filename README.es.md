@@ -237,7 +237,28 @@ trabajas. Puedes duplicarlos, renombrarlos y **exportarlos como `.pbdeck`** con
 todas sus imágenes dentro para pasarlos a otro equipo o a un amigo. «Liberar
 espacio» borra las imágenes que ya no usa ningún deck.
 
+- **Etiquetas tuyas**, con nombre y color: Commander, Por imprimir, Viernes de
+  juego… Se ponen a un deck o a varios a la vez, y se filtra por una o por
+  varias (los que tengan alguna o los que tengan todas).
+- **Favoritos** arriba, **notas** en cada deck y la **portada** que elijas
+  entre sus cartas.
+- **Búsqueda** por el nombre del deck, por las cartas que lleva, por sus notas o
+  por sus etiquetas. **Filtros** por identidad de color (los incluye, exactos o
+  como mucho), por clase (Commander, construido, limitado), por los formatos en
+  los que es legal, por el idioma de sus cartas y por si lleva cartas diseñadas
+  o imágenes propias.
+- **Orden** por fecha de modificado, abierto o creado, nombre, cartas, precio,
+  coste medio o colores, y **grupos** por etiqueta, colores, clase o idioma.
+  Agrupados por etiqueta, un deck con varias sale en cada una.
+- Dos vistas: la **cuadrícula**, en tres tamaños, y la **lista**, con los datos
+  técnicos de cada deck: colores, clase y bracket, cartas y fichas, coste
+  medio, precio estimado, idioma, imágenes propias y fechas.
+- Varios decks a la vez (Ctrl + clic, Mayús + clic, Ctrl + A) para etiquetarlos,
+  marcarlos como favoritos o borrarlos juntos.
+
 ![La biblioteca](docs/presentacion/biblioteca.jpg)
+
+![La biblioteca en lista, agrupada por etiqueta](docs/presentacion/biblioteca-lista.jpg)
 
 ---
 

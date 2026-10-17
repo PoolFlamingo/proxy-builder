@@ -234,7 +234,27 @@ you work. You can duplicate them, rename them and **export them as `.pbdeck`** w
 all their images inside to pass them to another computer or a friend. «Liberar
 espacio» (Free up space) deletes the images that no deck uses any more.
 
+- **Your own tags**, with a name and a colour: Commander, To print, Friday
+  night… Put them on one deck or on several at once, and filter by one or by
+  several (decks with any of them, or with all of them).
+- **Favourites** at the top, **notes** for each deck and the **cover** you pick
+  from its cards.
+- **Search** by deck name, by the cards it has, by its notes or by its tags.
+  **Filters** by colour identity (includes, exactly or at most), by class
+  (Commander, constructed, limited), by the formats it's legal in, by the
+  language of its cards, and by whether it has designed cards or custom images.
+- **Sort** by modified, opened or created date, name, cards, price, average cost
+  or colours, and **group** by tag, colours, class or language. Grouped by tag, a
+  deck with several tags shows up under each one.
+- Two views: the **grid**, in three sizes, and the **list**, with the technical
+  details of each deck: colours, class and bracket, cards and tokens, average
+  cost, estimated price, language, custom images and dates.
+- Select several decks (Ctrl + click, Shift + click, Ctrl + A) to tag them, mark
+  them as favourites or delete them together.
+
 ![The library](docs/presentacion/en/biblioteca.jpg)
+
+![The library as a list, grouped by tag](docs/presentacion/en/biblioteca-lista.jpg)
 
 ---
 
