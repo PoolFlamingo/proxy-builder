@@ -3,7 +3,7 @@
 	"private": true,
 	"version": "2.1.4",
 	"type": "module",
-	"packageManager": "pnpm@12.11.2",
+	"packageManager": "pnpm@12.14.0",
 	"scripts": {
 		"dev": "vite",
 		"build": "tsc && vite build",
