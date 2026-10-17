@@ -3923,7 +3923,7 @@ dependencies = [
 
 [[package]]
 name = "proxy-builder"
-version = "2.1.4"
+version = "2.2.0"
 dependencies = [
  "base64 0.22.1",
  "futures",
