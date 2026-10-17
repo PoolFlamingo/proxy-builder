@@ -29,7 +29,7 @@ use zip::{CompressionMethod, ZipArchive, ZipWriter};
 use crate::error::{AppError, AppResult, ErrorCode};
 use crate::store::blobs::{es_huella, escribir_atomico, BlobStore};
 use crate::store::db::Db;
-use crate::store::{colecciones, decks};
+use crate::store::{colecciones, decks, etiquetas};
 
 pub const FORMATO: &str = "proxy-builder-deck";
 pub const VERSION: u32 = 2;
@@ -44,6 +44,24 @@ struct Manifiesto {
     /// Las colecciones que usan los diseños del deck.
     #[serde(default)]
     colecciones: Vec<Collection>,
+    /// Desde la 2.2: etiquetas (nombre y color) y notas del deck. Una app
+    /// anterior lo ignora.
+    #[serde(default)]
+    biblioteca: Option<Biblioteca>,
+}
+
+#[derive(Serialize, Deserialize, Default)]
+struct Biblioteca {
+    #[serde(default)]
+    etiquetas: Vec<EtiquetaPaquete>,
+    #[serde(default)]
+    notas: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct EtiquetaPaquete {
+    nombre: String,
+    color: String,
 }
 
 fn mal(motivo: &str) -> AppError {
@@ -101,11 +119,22 @@ fn escribir<W: Write + Seek>(w: W, deck: &Deck, blobs: &BlobStore, db: &Db) -> A
         cols.iter()
             .filter_map(|c| c.emblem.as_ref().map(|e| e.blob.clone())),
     );
+    let biblioteca = Biblioteca {
+        etiquetas: etiquetas::de_deck(db, &deck.id)?
+            .into_iter()
+            .map(|t| EtiquetaPaquete {
+                nombre: t.name,
+                color: t.color,
+            })
+            .collect(),
+        notas: decks::notas_de(db, &deck.id)?,
+    };
     let json = serde_json::to_vec_pretty(&Manifiesto {
         format: FORMATO.into(),
         version: VERSION,
         deck: deck.clone(),
         colecciones: cols,
+        biblioteca: Some(biblioteca),
     })
     .map_err(|e| AppError::new(ErrorCode::Internal).with("detalle", e))?;
     // Fecha fija: el mismo deck da el mismo fichero.
@@ -219,6 +248,19 @@ pub fn import<R: Read + Seek>(r: R, blobs: &BlobStore, db: &Db) -> AppResult<Dec
         deck.name = format!("{} (importado)", deck.name);
     }
     decks::save(db, &deck)?;
+    // Las etiquetas: las de este equipo con el mismo nombre, o nuevas.
+    if let Some(b) = m.biblioteca {
+        let mut ids = Vec::new();
+        for e in &b.etiquetas {
+            if let Ok(t) = etiquetas::create(db, &e.nombre, &e.color) {
+                ids.push(t.id);
+            }
+        }
+        etiquetas::etiquetar(db, std::slice::from_ref(&deck.id), &ids, &[])?;
+        if !b.notas.is_empty() {
+            etiquetas::notas(db, &deck.id, &b.notas)?;
+        }
+    }
     Ok(deck)
 }
 
@@ -277,6 +319,27 @@ mod tests {
         });
         decks::save(db, &d).unwrap();
         d
+    }
+
+    #[test]
+    fn las_etiquetas_y_las_notas_viajan() {
+        let (dir, db, s) = entorno();
+        let d = deck_con_imagenes(&db, &s);
+        let t = etiquetas::create(&db, "Torneo", "red").unwrap();
+        etiquetas::etiquetar(&db, std::slice::from_ref(&d.id), &[t.id], &[]).unwrap();
+        etiquetas::notas(&db, &d.id, "Mazo del viernes").unwrap();
+        let ruta = dir.path().join("x.pbdeck");
+        export(&d, &ruta, &s, &db).unwrap();
+
+        // En el otro equipo ya hay una «torneo» (azul): se usa esa.
+        let (_dir2, db2, s2) = entorno();
+        let ya = etiquetas::create(&db2, "torneo", "blue").unwrap();
+        let nuevo = import(std::fs::File::open(&ruta).unwrap(), &s2, &db2).unwrap();
+        let r = decks::list(&db2).unwrap();
+        let r = r.iter().find(|x| x.id == nuevo.id).unwrap();
+        assert_eq!(r.tags, vec![ya.id]);
+        assert_eq!(r.notes, "Mazo del viernes");
+        assert_eq!(etiquetas::list(&db2).unwrap().len(), 1);
     }
 
     #[test]

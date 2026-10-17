@@ -37,6 +37,8 @@ pub struct AppState {
     pub vistas: Mutex<crate::diseno::vista::Vistas>,
     /// Ilustraciones decodificadas para el render de diseños.
     pub imagenes: crate::diseno::recursos::CacheImagenes,
+    /// Detalles de cada deck para la biblioteca, mientras no cambie.
+    pub detalles: crate::biblioteca::CacheDetalles,
     /// Cuántas miniaturas se procesan a la vez (una por núcleo).
     pub renders: tokio::sync::Semaphore,
     /// Trabajos de resolución/exportación en marcha (la limpieza de imágenes
@@ -63,6 +65,7 @@ impl AppState {
             diseno,
             vistas: Mutex::new(Default::default()),
             imagenes: Default::default(),
+            detalles: Default::default(),
             renders: tokio::sync::Semaphore::new(
                 std::thread::available_parallelism()
                     .map(|n| n.get())

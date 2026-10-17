@@ -8,6 +8,7 @@
 #![cfg_attr(not(test), deny(clippy::unwrap_used, clippy::expect_used))]
 
 pub mod archidekt;
+pub mod biblioteca;
 pub mod commands;
 pub mod diseno;
 pub mod error;
@@ -57,6 +58,16 @@ pub fn run() {
             commands::library::deck_list,
             commands::library::deck_create,
             commands::library::deck_open,
+            commands::library::deck_details,
+            commands::library::deck_peek,
+            commands::library::tag_list,
+            commands::library::tag_create,
+            commands::library::tag_update,
+            commands::library::tag_delete,
+            commands::library::deck_tags_set,
+            commands::library::deck_pin,
+            commands::library::deck_notes_set,
+            commands::library::deck_cover_set,
             commands::library::deck_save,
             commands::library::deck_rename,
             commands::library::deck_duplicate,

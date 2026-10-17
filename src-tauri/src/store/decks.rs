@@ -8,7 +8,8 @@ use ts_rs::TS;
 use super::db::Db;
 use crate::error::{AppError, AppResult, ErrorCode};
 
-/// Lo que se enseña de un deck en la Biblioteca.
+/// Lo que se enseña de un deck en la Biblioteca (lo barato: sale de la base
+/// sin leer las cartas; lo que hay que contar va en `DeckDetails`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
@@ -17,9 +18,22 @@ pub struct DeckSummary {
     pub name: String,
     pub card_count: u32,
     #[ts(type = "number")]
+    pub created_at: i64,
+    #[ts(type = "number")]
     pub updated_at: i64,
-    /// Huella de la imagen de la primera carta, para la miniatura.
+    /// Cuándo se abrió por última vez (`None`: nunca desde la 2.2).
+    #[ts(type = "number | null")]
+    pub opened_at: Option<i64>,
+    /// Huella de la imagen de la portada (la elegida o la primera carta).
     pub thumbnail: Option<String>,
+    /// El nombre de la carta de la portada.
+    pub cover_name: Option<String>,
+    /// La carta elegida como portada, si se eligió.
+    pub cover_card_id: Option<String>,
+    pub pinned: bool,
+    pub notes: String,
+    /// Las etiquetas del deck (ids de `tags`).
+    pub tags: Vec<String>,
 }
 
 fn json<T: Serialize>(v: &T) -> AppResult<String> {
@@ -169,22 +183,65 @@ pub fn save(db: &Db, deck: &Deck) -> AppResult<i64> {
 
 pub fn list(db: &Db) -> AppResult<Vec<DeckSummary>> {
     let c = db.conn()?;
+    // La portada: la carta elegida si sigue en el deck y tiene imagen; si
+    // no, la primera con imagen.
     let mut st = c.prepare(
-        "SELECT d.id, d.name, d.updated_at,
+        "SELECT d.id, d.name, d.created_at, d.updated_at, d.opened_at, d.pinned, d.notes, d.cover_card_id,
                 (SELECT COUNT(*) FROM deck_cards WHERE deck_id = d.id),
-                (SELECT front_blob FROM deck_cards WHERE deck_id = d.id AND front_blob IS NOT NULL ORDER BY position LIMIT 1)
-         FROM decks d ORDER BY d.updated_at DESC",
+                p.front_blob, json_extract(p.card_json, '$.meta.name')
+         FROM decks d
+         LEFT JOIN deck_cards p ON p.deck_id = d.id AND p.id = COALESCE(
+             (SELECT x.id FROM deck_cards x WHERE x.deck_id = d.id AND x.id = d.cover_card_id AND x.front_blob IS NOT NULL),
+             (SELECT x.id FROM deck_cards x WHERE x.deck_id = d.id AND x.front_blob IS NOT NULL ORDER BY x.position LIMIT 1))
+         ORDER BY d.updated_at DESC",
     )?;
     let filas = st.query_map([], |r| {
         Ok(DeckSummary {
             id: r.get(0)?,
             name: r.get(1)?,
-            updated_at: r.get(2)?,
-            card_count: r.get(3)?,
-            thumbnail: r.get(4)?,
+            created_at: r.get(2)?,
+            updated_at: r.get(3)?,
+            opened_at: r.get(4)?,
+            pinned: r.get::<_, i64>(5)? != 0,
+            notes: r.get(6)?,
+            cover_card_id: r.get(7)?,
+            card_count: r.get(8)?,
+            thumbnail: r.get(9)?,
+            cover_name: r.get(10)?,
+            tags: Vec::new(),
         })
     })?;
-    Ok(filas.collect::<Result<_, _>>()?)
+    let mut v: Vec<DeckSummary> = filas.collect::<Result<_, _>>()?;
+    let mut st = c.prepare("SELECT deck_id, tag_id FROM deck_tags")?;
+    let mut por_deck: std::collections::HashMap<String, Vec<String>> = Default::default();
+    for f in st.query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)))? {
+        let (d, t) = f?;
+        por_deck.entry(d).or_default().push(t);
+    }
+    for d in &mut v {
+        if let Some(t) = por_deck.remove(&d.id) {
+            d.tags = t;
+        }
+    }
+    Ok(v)
+}
+
+/// Las notas del deck.
+pub fn notas_de(db: &Db, id: &str) -> AppResult<String> {
+    Ok(db
+        .conn()?
+        .query_row("SELECT notes FROM decks WHERE id = ?1", [id], |r| r.get(0))
+        .optional()?
+        .unwrap_or_default())
+}
+
+/// Apunta que el deck se acaba de abrir.
+pub fn marcar_abierto(db: &Db, id: &str) -> AppResult<()> {
+    db.conn()?.execute(
+        "UPDATE decks SET opened_at = ?2 WHERE id = ?1",
+        (id, super::ahora_ms()),
+    )?;
+    Ok(())
 }
 
 pub fn rename(db: &Db, id: &str, name: &str) -> AppResult<()> {
@@ -199,14 +256,32 @@ pub fn rename(db: &Db, id: &str, name: &str) -> AppResult<()> {
 }
 
 /// Copia un deck con ids nuevos (las imágenes se comparten, no se copian).
+/// La copia se lleva también las etiquetas, las notas y la portada (no el
+/// favorito).
 pub fn duplicate(db: &Db, id: &str, name: &str) -> AppResult<Deck> {
     let mut d = open(db, id)?;
     d.id = uuid::Uuid::new_v4().to_string();
     d.name = name.trim().to_string();
+    let mut ids = std::collections::HashMap::new();
     for c in &mut d.cards {
-        c.id = uuid::Uuid::new_v4().to_string();
+        let nuevo = uuid::Uuid::new_v4().to_string();
+        ids.insert(std::mem::replace(&mut c.id, nuevo.clone()), nuevo);
     }
     save(db, &d)?;
+    let c = db.conn()?;
+    let (notas, portada): (String, Option<String>) = c.query_row(
+        "SELECT notes, cover_card_id FROM decks WHERE id = ?1",
+        [id],
+        |r| Ok((r.get(0)?, r.get(1)?)),
+    )?;
+    c.execute(
+        "UPDATE decks SET notes = ?2, cover_card_id = ?3 WHERE id = ?1",
+        (&d.id, notas, portada.and_then(|p| ids.get(&p).cloned())),
+    )?;
+    c.execute(
+        "INSERT INTO deck_tags (deck_id, tag_id) SELECT ?2, tag_id FROM deck_tags WHERE deck_id = ?1",
+        (id, &d.id),
+    )?;
     Ok(d)
 }
 
@@ -380,6 +455,65 @@ mod tests {
         delete(&db, &deck.id).unwrap();
         assert_eq!(open(&db, &deck.id).unwrap_err().code, ErrorCode::NotFound);
         assert_eq!(list(&db).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn la_portada_elegida_y_lo_que_se_lleva_la_copia() {
+        use crate::store::etiquetas;
+        let (_d, db, s) = entorno();
+        let imgs: Vec<FaceImage> = (0..3)
+            .map(|i| {
+                s.put_bytes(&db, &png(3, 4, i), ImageOrigin::Upload)
+                    .unwrap()
+            })
+            .collect();
+        let mut deck = create(&db, "Uno", None).unwrap();
+        deck.cards = (0..3).map(|i| carta(i, &imgs[i])).collect();
+        save(&db, &deck).unwrap();
+        let resumen = |id: &str| list(&db).unwrap().into_iter().find(|d| d.id == id).unwrap();
+        // Sin elegir: la primera.
+        assert_eq!(
+            resumen(&deck.id).thumbnail.as_deref(),
+            Some(imgs[0].blob.as_str())
+        );
+        assert_eq!(resumen(&deck.id).cover_name.as_deref(), Some("Carta 0"));
+        etiquetas::portada(&db, &deck.id, Some("c2")).unwrap();
+        assert_eq!(
+            resumen(&deck.id).thumbnail.as_deref(),
+            Some(imgs[2].blob.as_str())
+        );
+        assert_eq!(resumen(&deck.id).cover_name.as_deref(), Some("Carta 2"));
+
+        // La copia: etiquetas, notas y portada (con el id nuevo de la carta).
+        let t = etiquetas::create(&db, "Modern", "red").unwrap();
+        etiquetas::etiquetar(
+            &db,
+            std::slice::from_ref(&deck.id),
+            std::slice::from_ref(&t.id),
+            &[],
+        )
+        .unwrap();
+        etiquetas::notas(&db, &deck.id, "Notas").unwrap();
+        etiquetas::favorito(&db, std::slice::from_ref(&deck.id), true).unwrap();
+        let copia = duplicate(&db, &deck.id, "Dos").unwrap();
+        let r = resumen(&copia.id);
+        assert_eq!(r.tags, vec![t.id.clone()]);
+        assert_eq!(r.notes, "Notas");
+        assert!(!r.pinned);
+        assert_eq!(r.cover_card_id.as_deref(), Some(copia.cards[2].id.as_str()));
+        assert_eq!(r.thumbnail.as_deref(), Some(imgs[2].blob.as_str()));
+
+        // Si la carta de la portada se va del deck, vuelve la primera.
+        deck.cards.pop();
+        save(&db, &deck).unwrap();
+        assert_eq!(
+            resumen(&deck.id).thumbnail.as_deref(),
+            Some(imgs[0].blob.as_str())
+        );
+        // Abrir apunta la fecha.
+        assert_eq!(resumen(&deck.id).opened_at, None);
+        marcar_abierto(&db, &deck.id).unwrap();
+        assert!(resumen(&deck.id).opened_at.is_some());
     }
 
     #[test]

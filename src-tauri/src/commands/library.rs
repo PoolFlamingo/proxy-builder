@@ -12,6 +12,7 @@ use crate::state::AppState;
 use crate::store::blobs::GcReport;
 use crate::store::db::Db;
 use crate::store::decks::{self, DeckSummary};
+use crate::store::etiquetas::{self, Tag};
 use crate::store::presets::{self, Preset, PresetKind};
 use crate::store::settings;
 
@@ -33,7 +34,82 @@ fn crear_deck(state: &AppState, name: &str) -> AppResult<Deck> {
 
 #[tauri::command]
 pub fn deck_open(state: State<'_, AppState>, id: String) -> AppResult<Deck> {
+    let d = decks::open(&state.db, &id)?;
+    decks::marcar_abierto(&state.db, &id)?;
+    Ok(d)
+}
+
+/// El deck, para mirarlo desde la biblioteca (elegir la portada) sin
+/// apuntarlo como abierto.
+#[tauri::command]
+pub fn deck_peek(state: State<'_, AppState>, id: String) -> AppResult<Deck> {
     decks::open(&state.db, &id)
+}
+
+/// Colores, clase, precio, idiomas… de los decks (todos si `ids` va vacío),
+/// con la caché de Scryfall y sin red.
+#[tauri::command]
+pub async fn deck_details(
+    state: State<'_, AppState>,
+    ids: Vec<String>,
+) -> AppResult<Vec<crate::biblioteca::DeckDetails>> {
+    crate::biblioteca::detalles(&state.db, &state.detalles, &ids).await
+}
+
+#[tauri::command]
+pub fn tag_list(state: State<'_, AppState>) -> AppResult<Vec<Tag>> {
+    etiquetas::list(&state.db)
+}
+
+/// Crea una etiqueta (o devuelve la que ya se llama así).
+#[tauri::command]
+pub fn tag_create(state: State<'_, AppState>, name: String, color: String) -> AppResult<Tag> {
+    etiquetas::create(&state.db, &name, &color)
+}
+
+#[tauri::command]
+pub fn tag_update(
+    state: State<'_, AppState>,
+    id: String,
+    name: String,
+    color: String,
+) -> AppResult<Tag> {
+    etiquetas::update(&state.db, &id, &name, &color)
+}
+
+#[tauri::command]
+pub fn tag_delete(state: State<'_, AppState>, id: String) -> AppResult<()> {
+    etiquetas::delete(&state.db, &id)
+}
+
+/// Pone y quita etiquetas a varios decks a la vez.
+#[tauri::command]
+pub fn deck_tags_set(
+    state: State<'_, AppState>,
+    decks: Vec<String>,
+    add: Vec<String>,
+    remove: Vec<String>,
+) -> AppResult<()> {
+    etiquetas::etiquetar(&state.db, &decks, &add, &remove)
+}
+
+#[tauri::command]
+pub fn deck_pin(state: State<'_, AppState>, decks: Vec<String>, pinned: bool) -> AppResult<()> {
+    etiquetas::favorito(&state.db, &decks, pinned)
+}
+
+#[tauri::command]
+pub fn deck_notes_set(state: State<'_, AppState>, id: String, notes: String) -> AppResult<()> {
+    etiquetas::notas(&state.db, &id, &notes)
+}
+
+#[tauri::command]
+pub fn deck_cover_set(
+    state: State<'_, AppState>,
+    id: String,
+    card: Option<String>,
+) -> AppResult<()> {
+    etiquetas::portada(&state.db, &id, card.as_deref())
 }
 
 #[derive(Debug, Clone, Serialize, TS)]
