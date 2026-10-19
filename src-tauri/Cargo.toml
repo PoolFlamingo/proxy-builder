@@ -61,6 +61,11 @@ rten = { version = "0.26", default-features = false }
 image = { version = "0.25.10", default-features = false }
 # La memoria del equipo, para el tope de las búsquedas recordadas (solo eso).
 sysinfo = { version = "0.38.4", default-features = false, features = ["system"] }
+# Fuentes de cartas aparte de Scryfall (`fuentes/`): el catálogo de fichas de
+# Cockatrice es XML, y las imágenes de fuera se miden antes de decodificarlas.
+# Las dos ya venían en el árbol (por usvg y por proxy-core).
+roxmltree = "0.21"
+imagesize = "0.14"
 
 [dev-dependencies]
 tempfile = "3"

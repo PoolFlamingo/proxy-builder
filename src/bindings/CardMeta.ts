@@ -15,4 +15,11 @@ layout: string | null, isDfc: boolean,
 /**
  * `image_status` de Scryfall (`highres_scan`, `lowres`, `placeholder`, `missing`).
  */
-imageStatus: string | null, highres: boolean, typeLine: string | null, };
+imageStatus: string | null, highres: boolean, typeLine: string | null, 
+/**
+ * En las cartas propias, el idioma de **la imagen**, que no tiene por qué
+ * ser el de la carta vinculada (`lang`): una propia en español vinculada
+ * a la impresión inglesa. Lo pone quien vincula (el pie leído por el OCR)
+ * o se elige en «Editar carta».
+ */
+imageLang?: string, };

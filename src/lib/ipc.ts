@@ -17,14 +17,18 @@ import type { DeckDetails } from "@/bindings/DeckDetails";
 import type { DeckKind } from "@/bindings/DeckKind";
 import type { DeckStats } from "@/bindings/DeckStats";
 import type { DeckSummary } from "@/bindings/DeckSummary";
+import type { DescargableInfo } from "@/bindings/DescargableInfo";
 import type { DesignDraft } from "@/bindings/DesignDraft";
 import type { DesignLang } from "@/bindings/DesignLang";
 import type { ExportEstimate } from "@/bindings/ExportEstimate";
 import type { FaceImage } from "@/bindings/FaceImage";
+import type { FichaPropuesta } from "@/bindings/FichaPropuesta";
+import type { FuenteCarta } from "@/bindings/FuenteCarta";
 import type { GcReport } from "@/bindings/GcReport";
 import type { IdentifyRequest } from "@/bindings/IdentifyRequest";
 import type { LetraInfo } from "@/bindings/LetraInfo";
 import type { LetraLibre } from "@/bindings/LetraLibre";
+import type { NombresIdiomasInfo } from "@/bindings/NombresIdiomasInfo";
 import type { OriginalInfo } from "@/bindings/OriginalInfo";
 import type { PackInfo } from "@/bindings/PackInfo";
 import type { PagePlan } from "@/bindings/PagePlan";
@@ -39,6 +43,8 @@ import type { SetInfo } from "@/bindings/SetInfo";
 import type { SimbolosInfo } from "@/bindings/SimbolosInfo";
 import type { Sugerencia } from "@/bindings/Sugerencia";
 import type { Tag } from "@/bindings/Tag";
+import type { TemaCatalogo } from "@/bindings/TemaCatalogo";
+import type { TemaInstalado } from "@/bindings/TemaInstalado";
 import type { TipoCarpeta } from "@/bindings/TipoCarpeta";
 
 /**
@@ -72,6 +78,7 @@ export interface Commands {
 	deck_pin: { args: { decks: string[]; pinned: boolean }; result: null };
 	deck_notes_set: { args: { id: string; notes: string }; result: null };
 	deck_cover_set: { args: { id: string; card: string | null }; result: null };
+	deck_lang_set: { args: { decks: string[]; lang: string | null }; result: null };
 	blob_import_files: { args: { paths: string[] }; result: FaceImage[] };
 	blob_generic_back: { args: Record<string, never>; result: FaceImage };
 	blob_gc: { args: Record<string, never>; result: GcReport };
@@ -89,6 +96,8 @@ export interface Commands {
 		result: CardSummary[];
 	};
 	card_fetch: { args: { scryfallId: string }; result: DeckCard };
+	card_fetch_externa: { args: { fuente: FuenteCarta; id: string }; result: DeckCard };
+	deck_tokens_detect: { args: { cards: DeckCard[] }; result: FichaPropuesta[] };
 	sets_list: { args: Record<string, never>; result: SetInfo[] };
 	set_cards: { args: { code: string; typeFilter: string | null }; result: CardSummary[] };
 	import_archidekt: { args: { url: string; includeSideboard: boolean }; result: ArchidektImport };
@@ -102,6 +111,7 @@ export interface Commands {
 		result: CardIdentify;
 	};
 	card_link: { args: { scryfallId: string }; result: CardMeta };
+	card_link_externa: { args: { fuente: FuenteCarta; id: string }; result: CardMeta };
 	identify_batch: { args: { items: IdentifyRequest[]; ocr: boolean }; result: number };
 	design_draft: {
 		args: { card: DeckCard; usados: string[]; collection: string | null };
@@ -120,6 +130,18 @@ export interface Commands {
 	font_free_download: { args: { id: string }; result: LetraLibre };
 	original_info: { args: Record<string, never>; result: OriginalInfo };
 	original_download: { args: Record<string, never>; result: PackInfo };
+	packs_downloadable_list: { args: Record<string, never>; result: DescargableInfo[] };
+	pack_downloadable_download: { args: { id: string }; result: PackInfo };
+	pack_extra_use: { args: { id: string; ruta: string }; result: FaceImage };
+	names_index_info: { args: Record<string, never>; result: NombresIdiomasInfo };
+	names_index_download: { args: Record<string, never>; result: NombresIdiomasInfo };
+	names_index_remove: { args: Record<string, never>; result: null };
+	themes_catalog: { args: Record<string, never>; result: TemaCatalogo[] };
+	theme_fetch: { args: { id: string }; result: TemaCatalogo };
+	theme_install: { args: { id: string }; result: TemaInstalado };
+	themes_installed: { args: Record<string, never>; result: TemaInstalado[] };
+	theme_remove: { args: { id: string }; result: null };
+	themes_open_community: { args: Record<string, never>; result: null };
 	symbols_status: { args: { refresh: boolean }; result: SimbolosInfo };
 	design_register: {
 		args: { design: CardDesign; cara: number; lang: DesignLang };
@@ -204,6 +226,8 @@ export interface Events {
 	"designpng://progress": import("@/bindings/DesignPngProgressEvent").DesignPngProgressEvent;
 	"designpng://done": import("@/bindings/DesignPngDoneEvent").DesignPngDoneEvent;
 	"original://progress": import("@/bindings/OriginalProgressEvent").OriginalProgressEvent;
+	"packs://progress": import("@/bindings/DescargaProgressEvent").DescargaProgressEvent;
+	"names://progress": import("@/bindings/NombresProgressEvent").NombresProgressEvent;
 }
 
 /** Escucha un evento de Rust. Devuelve la función que deja de escuchar. */

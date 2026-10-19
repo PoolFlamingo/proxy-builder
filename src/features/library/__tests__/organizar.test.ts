@@ -9,6 +9,7 @@ import {
 	FILTROS_VACIOS,
 	filtrar,
 	hayFiltros,
+	idiomasDe,
 	normalizar,
 	ordenar,
 	seleccionar,
@@ -27,6 +28,7 @@ function deck(id: string, c: Partial<DeckSummary> = {}): DeckSummary {
 		coverCardId: null,
 		pinned: false,
 		notes: "",
+		langOverride: null,
 		tags: [],
 		...c,
 	};
@@ -131,6 +133,17 @@ describe("filtrar", () => {
 		expect(ids({ conDisenos: true })).toEqual(["rimuru"]);
 		expect(ids({ conPropias: true })).toEqual(["shion"]);
 	});
+
+	it("el idioma elegido a mano manda sobre el calculado", () => {
+		const con = decks.map((x) => (x.id === "rimuru" ? { ...x, langOverride: "es" } : x));
+		const f = { ...FILTROS_VACIOS, idioma: "es" };
+		expect(filtrar(con, d, tags, f).map((x) => x.id)).toEqual(["milim", "rimuru", "shion"]);
+		const en = { ...FILTROS_VACIOS, idioma: "en" };
+		expect(filtrar(con, d, tags, en).map((x) => x.id)).toEqual([]);
+		expect(idiomasDe(con[1], d.rimuru)).toEqual(["es"]);
+		expect(idiomasDe(decks[1], d.rimuru)).toEqual(["en"]);
+		expect(idiomasDe(decks[3], undefined)).toEqual([]);
+	});
 });
 
 describe("ordenar", () => {
@@ -167,6 +180,15 @@ describe("agrupar", () => {
 	it("por color, de menos a más colores, y los que no tienen datos al final", () => {
 		const g = agrupar(decks, d, tags, "color");
 		expect(g.map((x) => x.id)).toEqual(["c:13", "c:201", "c:213", "sin-datos"]);
+	});
+
+	it("por idioma: el elegido a mano, aunque falten los detalles", () => {
+		const con = decks.map((x) => (x.id === "coliseo" ? { ...x, langOverride: "es" } : x));
+		const g = agrupar(con, d, tags, "idioma");
+		expect(g.map((x) => [x.id, x.decks.map((y) => y.id)])).toEqual([
+			["l:en", ["rimuru"]],
+			["l:es", ["milim", "shion", "coliseo"]],
+		]);
 	});
 
 	it("por clase", () => {

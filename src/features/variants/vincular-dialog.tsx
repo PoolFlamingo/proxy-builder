@@ -46,6 +46,8 @@ function Contenido({ carta }: { carta: DeckCard }) {
 	const [q, setQ] = useState(carta.meta.name);
 	const [resultados, setResultados] = useState<CardSummary[] | null>(null);
 	const [leido, setLeido] = useState<string[]>([]);
+	// El idioma de la imagen leído en el pie con el OCR («NEO • SP» → es).
+	const [idiomaPie, setIdiomaPie] = useState<string | null>(null);
 	const [elegida, setElegida] = useState<CardSummary | null>(null);
 	const [ocupado, setOcupado] = useState<"buscar" | "ocr" | "vincular" | null>(null);
 	const [ocrListo, setOcrListo] = useState(true);
@@ -65,6 +67,7 @@ function Contenido({ carta }: { carta: DeckCard }) {
 			setResultados(r.candidates);
 			if (ocr) {
 				setLeido(r.lines);
+				setIdiomaPie(r.pie?.idioma ?? null);
 				setOcrListo(true);
 			}
 			setElegida(r.candidates.find((c) => c.id === r.best) ?? r.candidates[0] ?? null);
@@ -86,7 +89,7 @@ function Contenido({ carta }: { carta: DeckCard }) {
 		if (!c || ocupado !== null) return;
 		setOcupado("vincular");
 		try {
-			const nombre = await vincular(carta.id, c.id);
+			const nombre = await vincular(carta.id, c, idiomaPie);
 			useUi.getState().anunciar(t("Vinculada con {carta}", { carta: nombre }));
 			useUi.getState().abrir(null);
 		} catch (e) {
@@ -103,7 +106,7 @@ function Contenido({ carta }: { carta: DeckCard }) {
 	return (
 		<DialogContent className="flex max-h-[88vh] flex-col sm:max-w-5xl" ocupado={ocupado !== null}>
 			<DialogHeader>
-				<DialogTitle>{t("Vincular con Scryfall")}</DialogTitle>
+				<DialogTitle>{t("Vincular con una carta")}</DialogTitle>
 				<DialogDescription>
 					{t(
 						"Di qué carta real es esta imagen propia: la imagen no cambia, pero la carta cuenta en las estadísticas y en la info. Se aplica a todas las copias con la misma imagen.",

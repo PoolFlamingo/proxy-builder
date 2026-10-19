@@ -30,6 +30,28 @@ export function eliminarCartas(ids: string[]) {
 	useUi.getState().seleccionar([], null);
 }
 
+/**
+ * El idioma de la imagen de las cartas propias (y de sus copias con la misma
+ * imagen); `null` lo quita. Es el que cuenta en la Biblioteca, no el de la
+ * carta vinculada.
+ */
+export function idiomaDeImagen(ids: string[], lang: string | null) {
+	const cs = cartas();
+	const set = new Set(ids);
+	const blobs = new Set(
+		cs.filter((c) => set.has(c.id) && c.front).map((c) => c.front?.blob as string),
+	);
+	useDeck
+		.getState()
+		.setCartas((c) =>
+			c.map((x) =>
+				x.source.kind === "custom" && (set.has(x.id) || (x.front && blobs.has(x.front.blob)))
+					? { ...x, meta: { ...x.meta, imageLang: lang ?? undefined } }
+					: x,
+			),
+		);
+}
+
 export function fijarCartas(ids: string[], fijar: boolean) {
 	useDeck.getState().setCartas((c) => actualizar(c, ids, (x) => ({ ...x, locked: fijar })));
 }

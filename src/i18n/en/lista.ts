@@ -79,4 +79,14 @@ export const LISTA: Record<string, string> = {
 	"Scryfall aún no tiene la imagen real": "Scryfall doesn't have the real image yet",
 	"Scryfall no tiene imagen": "Scryfall has no image",
 	"Scryfall solo tiene un escaneo de baja resolución": "Scryfall only has a low-resolution scan",
+	"Detectar fichas": "Detect tokens",
+	"Busca las fichas que crean las cartas del deck ya cargado (también las propias vinculadas) y te deja elegir cuáles añadir.":
+		"Finds the tokens that the cards in the loaded deck create (linked custom cards too) and lets you pick which to add.",
+	"Las fichas que crean las cartas del deck (también las propias vinculadas) y que aún no tiene. Desmarca las que no quieras.":
+		"The tokens that the deck's cards create (linked custom cards too) and that it doesn't have yet. Untick the ones you don't want.",
+	"Buscando las fichas…": "Looking for tokens…",
+	"No falta ninguna ficha.": "No tokens are missing.",
+	"{ficha}: la crea {carta}": "{ficha}: created by {carta}",
+	"{n} fichas añadidas": "{n} tokens added",
+	"Añadir {n} fichas": "Add {n} tokens",
 };

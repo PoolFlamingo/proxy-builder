@@ -112,6 +112,7 @@ pub(crate) mod tests {
             id: String::new(),
             name: nombre.into(),
             default_style: DesignStyle::Borderless,
+            estilo_pack_defecto: None,
             frame: FrameOptions::default(),
             emblem: None,
             set_code: "RTS".into(),

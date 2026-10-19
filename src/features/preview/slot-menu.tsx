@@ -6,6 +6,7 @@ import {
 	Eraser,
 	Hash,
 	ImageUp,
+	Languages,
 	Link2,
 	Lock,
 	LockOpen,
@@ -22,6 +23,8 @@ import {
 	ContextMenu,
 	ContextMenuContent,
 	ContextMenuItem,
+	ContextMenuRadioGroup,
+	ContextMenuRadioItem,
 	ContextMenuSeparator,
 	ContextMenuShortcut,
 	ContextMenuSub,
@@ -30,6 +33,7 @@ import {
 	ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { quitarDiseno, scryfallDe } from "@/features/disenar/grupos";
+import { IDIOMAS } from "@/features/library/piezas";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
 import {
@@ -38,6 +42,7 @@ import {
 	duplicarCartas,
 	eliminarCartas,
 	fijarCartas,
+	idiomaDeImagen,
 	moverUno,
 	objetivo,
 	reemplazarImagen,
@@ -116,7 +121,7 @@ export function SlotMenu({ id, children }: { id: string; children: ReactNode }) 
 						}
 					>
 						<Link2 />
-						{t("Vincular con Scryfall las seleccionadas…")}
+						{t("Vincular las seleccionadas…")}
 					</ContextMenuItem>
 				)}
 				{carta?.source.kind === "custom" && !varias && (
@@ -125,10 +130,29 @@ export function SlotMenu({ id, children }: { id: string; children: ReactNode }) 
 						onSelect={() => useUi.getState().abrir({ tipo: "vincular", id })}
 					>
 						<Link2 />
-						{carta.source.scryfallId
-							? t("Cambiar el vínculo con Scryfall…")
-							: t("Vincular con Scryfall…")}
+						{carta.source.scryfallId ? t("Cambiar el vínculo…") : t("Vincular con una carta…")}
 					</ContextMenuItem>
+				)}
+				{carta?.source.kind === "custom" && (
+					<ContextMenuSub>
+						<ContextMenuSubTrigger>
+							<Languages />
+							{t("Idioma de la imagen")}
+						</ContextMenuSubTrigger>
+						<ContextMenuSubContent className="text-xs">
+							<ContextMenuRadioGroup
+								value={carta.meta.imageLang ?? ""}
+								onValueChange={(v) => idiomaDeImagen(ids(), v || null)}
+							>
+								<ContextMenuRadioItem value="">{t("Sin indicar")}</ContextMenuRadioItem>
+								{Object.entries(IDIOMAS).map(([codigo, nombre]) => (
+									<ContextMenuRadioItem key={codigo} value={codigo}>
+										{t(nombre)}
+									</ContextMenuRadioItem>
+								))}
+							</ContextMenuRadioGroup>
+						</ContextMenuSubContent>
+					</ContextMenuSub>
 				)}
 				<ContextMenuItem disabled={varias} onSelect={intentar(() => reemplazarImagen(id, t))}>
 					<ImageUp />

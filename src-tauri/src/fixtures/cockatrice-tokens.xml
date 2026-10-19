@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cockatrice_carddatabase version="4">
+    <cards>
+        <card>
+            <name>Goblin</name>
+            <text></text>
+            <prop>
+                <colors>R</colors>
+                <type>Token Creature — Goblin</type>
+                <maintype>Creature</maintype>
+                <cmc>0</cmc>
+                <pt>1/1</pt>
+            </prop>
+            <set picURL="https://cards.scryfall.io/large/front/a/b/goblin.jpg">TFDN</set>
+            <reverse-related>Dragon Fodder</reverse-related>
+            <token>1</token>
+            <tablerow>2</tablerow>
+        </card>
+        <card>
+            <name>Kelp</name>
+            <text>Defender</text>
+            <prop>
+                <colors>U</colors>
+                <type>Token Creature — Plant Wall</type>
+                <maintype>Creature</maintype>
+                <cmc>0</cmc>
+                <pt>0/1</pt>
+            </prop>
+            <set picURL="https://raw.githubusercontent.com/SlightlyCircuitous/image-storage/refs/heads/main/Kelp.jpeg">ME2</set>
+            <reverse-related>Wall of Kelp</reverse-related>
+            <token>1</token>
+            <tablerow>2</tablerow>
+        </card>
+        <card>
+            <name>Hechizo de prueba</name>
+            <text>Roba una carta.</text>
+            <prop>
+                <type>Sorcery</type>
+                <maintype>Sorcery</maintype>
+                <cmc>0</cmc>
+            </prop>
+            <set>TST</set>
+            <token>1</token>
+        </card>
+    </cards>
+</cockatrice_carddatabase>

@@ -103,6 +103,16 @@ pub fn deck_notes_set(state: State<'_, AppState>, id: String, notes: String) -> 
     etiquetas::notas(&state.db, &id, &notes)
 }
 
+/// El idioma de varios decks elegido a mano (`None`: el que se calcula).
+#[tauri::command]
+pub fn deck_lang_set(
+    state: State<'_, AppState>,
+    decks: Vec<String>,
+    lang: Option<String>,
+) -> AppResult<()> {
+    etiquetas::idioma(&state.db, &decks, lang.as_deref())
+}
+
 #[tauri::command]
 pub fn deck_cover_set(
     state: State<'_, AppState>,

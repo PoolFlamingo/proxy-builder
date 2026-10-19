@@ -1,10 +1,13 @@
+import { Lock } from "lucide-react";
+import type { DeckDetails } from "@/bindings/DeckDetails";
 import type { DeckKind } from "@/bindings/DeckKind";
+import type { DeckSummary } from "@/bindings/DeckSummary";
 import type { Tag } from "@/bindings/Tag";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { COLORES } from "@/features/stats/textos";
 import { cn } from "@/lib/utils";
-import { WUBRG } from "./organizar";
+import { idiomasDe, WUBRG } from "./organizar";
 
 /** Los colores de etiqueta (los mismos que acepta Rust). */
 export const COLORES_ETIQUETA: Record<string, { punto: string; chip: string; nombre: string }> = {
@@ -179,6 +182,24 @@ export const IDIOMAS: Record<string, string> = {
 	zht: paraTraducir("Chino tradicional"),
 	ph: paraTraducir("Phyrexiano"),
 };
+
+/** Los idiomas de un deck por su nombre; con un candado si se eligió a mano. */
+export function NombresIdiomas({ deck, det }: { deck: DeckSummary; det?: DeckDetails }) {
+	const { t } = useLang();
+	const texto = idiomasDe(deck, det)
+		.map((l) => t(IDIOMAS[l] ?? l.toUpperCase()))
+		.join(", ");
+	return (
+		<span className="inline-flex min-w-0 items-center justify-end gap-1">
+			<span className="truncate">{texto || "—"}</span>
+			{deck.langOverride && (
+				<WithTooltip content={t("Elegido a mano")}>
+					<Lock className="size-3 shrink-0 text-muted-foreground" />
+				</WithTooltip>
+			)}
+		</span>
+	);
+}
 
 /** Los formatos que se pueden filtrar (los de las estadísticas). */
 export const FORMATOS: Record<string, string> = {

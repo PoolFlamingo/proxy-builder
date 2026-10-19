@@ -196,6 +196,32 @@ pub fn notas(db: &Db, deck: &str, texto: &str) -> AppResult<()> {
     existe(n, deck)
 }
 
+/// Los idiomas que se pueden elegir para un deck (los de la Biblioteca).
+pub const IDIOMAS: [&str; 12] = [
+    "es", "en", "fr", "de", "it", "pt", "ja", "ko", "ru", "zhs", "zht", "ph",
+];
+
+/// El idioma de varios decks elegido a mano (`None`: el que se calcula).
+pub fn idioma(db: &Db, decks: &[String], lang: Option<&str>) -> AppResult<()> {
+    if let Some(l) = lang {
+        if !IDIOMAS.contains(&l) {
+            return Err(AppError::new(ErrorCode::InvalidInput)
+                .with("motivo", "idioma")
+                .with("idioma", l));
+        }
+    }
+    let mut c = db.conn()?;
+    let tx = c.transaction()?;
+    {
+        let mut st = tx.prepare_cached("UPDATE decks SET lang_override = ?2 WHERE id = ?1")?;
+        for d in decks {
+            st.execute(params![d, lang])?;
+        }
+    }
+    tx.commit()?;
+    Ok(())
+}
+
 /// La carta de la portada (`None`: la primera).
 pub fn portada(db: &Db, deck: &str, carta: Option<&str>) -> AppResult<()> {
     let n = db.conn()?.execute(
@@ -300,5 +326,38 @@ mod tests {
         assert_eq!(d.cover_card_id.as_deref(), Some("c3"));
         assert_eq!(d.updated_at, antes);
         assert_eq!(notas(&db, "x", "a").unwrap_err().code, ErrorCode::NotFound);
+    }
+
+    #[test]
+    fn el_idioma_elegido_no_cambia_la_fecha_y_se_quita() {
+        let (db, ids) = db_con_decks(2);
+        let fechas = |db: &Db| -> Vec<(String, i64)> {
+            let mut v: Vec<_> = decks::list(db)
+                .unwrap()
+                .into_iter()
+                .map(|d| (d.id, d.updated_at))
+                .collect();
+            v.sort();
+            v
+        };
+        let antes = fechas(&db);
+        idioma(&db, &ids, Some("es")).unwrap();
+        let l = decks::list(&db).unwrap();
+        assert!(l.iter().all(|d| d.lang_override.as_deref() == Some("es")));
+        assert_eq!(fechas(&db), antes);
+        idioma(&db, &ids[..1], None).unwrap();
+        assert_eq!(decks::idioma_de(&db, &ids[0]).unwrap(), None);
+        assert_eq!(
+            decks::idioma_de(&db, &ids[1]).unwrap().as_deref(),
+            Some("es")
+        );
+        let e = idioma(&db, &ids, Some("klingon")).unwrap_err();
+        assert_eq!(e.code, ErrorCode::InvalidInput);
+        // La copia se lleva el idioma.
+        let copia = decks::duplicate(&db, &ids[1], "Copia").unwrap();
+        assert_eq!(
+            decks::idioma_de(&db, &copia.id).unwrap().as_deref(),
+            Some("es")
+        );
     }
 }

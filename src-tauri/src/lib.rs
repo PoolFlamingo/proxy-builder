@@ -12,8 +12,10 @@ pub mod biblioteca;
 pub mod commands;
 pub mod diseno;
 pub mod error;
+pub mod fuentes;
 pub mod jobs;
 pub mod ocr;
+pub mod originales;
 pub mod package;
 pub mod protocol;
 pub mod registro;
@@ -21,6 +23,7 @@ pub mod render;
 pub mod scryfall;
 pub mod state;
 pub mod store;
+pub mod temas;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -29,7 +32,17 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init());
 
     #[cfg(desktop)]
-    let constructor = constructor.plugin(tauri_plugin_window_state::Builder::new().build());
+    // La ventana arranca oculta (sin el destello blanco del primer
+    // fotograma) y la enseña la pantalla cuando ya está pintada: el estado
+    // guardado no debe enseñarla antes.
+    let constructor = constructor.plugin(
+        tauri_plugin_window_state::Builder::new()
+            .with_state_flags(
+                tauri_plugin_window_state::StateFlags::all()
+                    & !tauri_plugin_window_state::StateFlags::VISIBLE,
+            )
+            .build(),
+    );
 
     // El protocolo de imágenes: la vista previa pide aquí cada miniatura.
     let constructor = constructor
@@ -46,6 +59,17 @@ pub fn run() {
             registro::iniciar(&rutas.app_log_dir()?);
             let estado = state::AppState::open(paths).map_err(|e| e.to_string())?;
             app.manage(estado);
+            // Por si la pantalla no llega a enseñar la ventana (un error al
+            // cargar): a los 3 segundos, se enseña igual.
+            let app2 = app.handle().clone();
+            std::thread::spawn(move || {
+                std::thread::sleep(std::time::Duration::from_secs(3));
+                if let Some(v) = app2.get_webview_window("main") {
+                    if !v.is_visible().unwrap_or(true) {
+                        let _ = v.show();
+                    }
+                }
+            });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -68,6 +92,7 @@ pub fn run() {
             commands::library::deck_pin,
             commands::library::deck_notes_set,
             commands::library::deck_cover_set,
+            commands::library::deck_lang_set,
             commands::library::deck_save,
             commands::library::deck_rename,
             commands::library::deck_duplicate,
@@ -83,6 +108,8 @@ pub fn run() {
             commands::cards::card_search,
             commands::cards::card_prints,
             commands::cards::card_fetch,
+            commands::cards::card_fetch_externa,
+            commands::cards::deck_tokens_detect,
             commands::cards::sets_list,
             commands::cards::set_cards,
             commands::cards::import_archidekt,
@@ -104,6 +131,16 @@ pub fn run() {
             commands::identify::ocr_ready,
             commands::identify::card_identify,
             commands::identify::card_link,
+            commands::identify::card_link_externa,
+            commands::fuentes::names_index_info,
+            commands::fuentes::names_index_download,
+            commands::fuentes::names_index_remove,
+            commands::temas::themes_catalog,
+            commands::temas::theme_fetch,
+            commands::temas::theme_install,
+            commands::temas::themes_installed,
+            commands::temas::theme_remove,
+            commands::temas::themes_open_community,
             commands::identify::identify_batch,
             commands::diseno::design_draft,
             commands::diseno::collection_list,
@@ -119,6 +156,9 @@ pub fn run() {
             commands::diseno::font_free_download,
             commands::diseno::original_info,
             commands::diseno::original_download,
+            commands::diseno::packs_downloadable_list,
+            commands::diseno::pack_downloadable_download,
+            commands::diseno::pack_extra_use,
             commands::diseno::symbols_status,
             commands::diseno::design_register,
             commands::diseno::design_overlay,
