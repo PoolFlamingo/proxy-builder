@@ -1,5 +1,5 @@
-import { Check, Minus, Monitor, Moon, Plus, Sun } from "lucide-react";
-import type { ReactNode } from "react";
+import { Check, Minus, Monitor, Moon, Palette, Plus, Sun } from "lucide-react";
+import { type ReactNode, useState } from "react";
 import { CampoNumero } from "@/components/campos";
 import { useLang } from "@/components/language-provider";
 import { useTheme } from "@/components/theme-provider";
@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { THEMES } from "@/lib/themes";
 import { cn } from "@/lib/utils";
+import { TemasTweakcn } from "./temas-tweakcn";
 
 /** Tamaño de la interfaz, en %: de 5 en 5 entre estos topes. */
 const ESCALA_MIN = 70;
@@ -137,6 +138,7 @@ export function Appearance() {
 		setSmoothScroll,
 	} = useTheme();
 	const { t } = useLang();
+	const [masTemas, setMasTemas] = useState(false);
 
 	const shadowNames = [t("Ninguna"), t("Suave"), t("Normal"), t("Fuerte"), t("Muy fuerte")];
 
@@ -340,7 +342,16 @@ export function Appearance() {
 					</div>
 				</SettingCard>
 
-				<SettingCard title={t("Tema de color")} span>
+				<SettingCard
+					title={t("Tema de color")}
+					span
+					headerRight={
+						<Button size="sm" variant="outline" onClick={() => setMasTemas(true)}>
+							<Palette />
+							{t("Más temas…")}
+						</Button>
+					}
+				>
 					<div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
 						{/* `tema` y no `t`: `t` es ya la función de traducción de esta
                 pantalla, y volver a llamar así al tema la tapaba dentro del
@@ -367,6 +378,7 @@ export function Appearance() {
 					</div>
 				</SettingCard>
 			</div>
+			<TemasTweakcn abierto={masTemas} onCerrar={() => setMasTemas(false)} />
 		</div>
 	);
 }
