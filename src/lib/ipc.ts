@@ -1,4 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
+import type { ActualizacionEstado } from "@/bindings/ActualizacionEstado";
+import type { ActualizacionInfo } from "@/bindings/ActualizacionInfo";
 import type { ArchidektImport } from "@/bindings/ArchidektImport";
 import type { ArtRef } from "@/bindings/ArtRef";
 import type { Aviso } from "@/bindings/Aviso";
@@ -59,6 +61,10 @@ import type { TipoCarpeta } from "@/bindings/TipoCarpeta";
 export interface Commands {
 	ping: { args: Record<string, never>; result: string };
 	ping_error: { args: Record<string, never>; result: null };
+	update_status: { args: Record<string, never>; result: ActualizacionEstado };
+	update_check: { args: Record<string, never>; result: ActualizacionInfo | null };
+	update_download: { args: { version: string }; result: null };
+	update_install: { args: { version: string }; result: null };
 	parse_decklist: { args: { text: string }; result: ParsedDecklist };
 	compute_page_plan: { args: { deck: Deck }; result: PagePlan };
 	deck_list: { args: Record<string, never>; result: DeckSummary[] };
@@ -228,6 +234,7 @@ export interface Events {
 	"original://progress": import("@/bindings/OriginalProgressEvent").OriginalProgressEvent;
 	"packs://progress": import("@/bindings/DescargaProgressEvent").DescargaProgressEvent;
 	"names://progress": import("@/bindings/NombresProgressEvent").NombresProgressEvent;
+	"update://progress": import("@/bindings/ActualizacionProgressEvent").ActualizacionProgressEvent;
 }
 
 /** Escucha un evento de Rust. Devuelve la función que deja de escuchar. */

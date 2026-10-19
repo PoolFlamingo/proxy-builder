@@ -10,6 +10,7 @@ import { SettingsDialog } from "@/features/settings/settings-dialog";
 import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
+import { BotonActualizar } from "./actualizacion-automatica";
 import { SaveIndicator } from "./save-indicator";
 
 /**
@@ -88,6 +89,7 @@ export function AppShell({
 				{vista !== "biblioteca" && <NombreDeck />}
 				<div className="ml-auto flex items-center gap-2.5">
 					<SaveIndicator />
+					<BotonActualizar />
 					<Button
 						size="sm"
 						variant="ghost"

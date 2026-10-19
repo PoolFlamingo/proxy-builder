@@ -80,6 +80,7 @@ describe("store de pantalla", () => {
 		expect(guardado.addTokens).toBe(true);
 		expect(Object.keys(guardado).sort()).toEqual(
 			[
+				"actualizarSola",
 				"addTokens",
 				"calidadVista",
 				"editorCartas",
