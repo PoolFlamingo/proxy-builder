@@ -24,6 +24,11 @@ function raiz(): string {
 	return base;
 }
 
+/** La raíz del protocolo (para las `@font-face` de los temas instalados). */
+export function raizProtocolo(): string {
+	return raiz();
+}
+
 /** base64url sin relleno de un texto ASCII (el JSON de los parámetros). */
 function b64url(texto: string): string {
 	const bytes = new TextEncoder().encode(texto);
@@ -98,4 +103,9 @@ export type LadoArte = 1000 | 2000;
 /** Una ilustración del almacén reducida a `lado` px (el lado más largo). */
 export function urlArte(blob: string, lado: LadoArte): string {
 	return `${raiz()}b/${blob}/${lado}`;
+}
+
+/** Una imagen extra de un pack de marcos descargable (reverso, carta hecha…). */
+export function urlExtra(pack: string, indice: number): string {
+	return `${raiz()}x/${encodeURIComponent(pack)}/${indice}`;
 }

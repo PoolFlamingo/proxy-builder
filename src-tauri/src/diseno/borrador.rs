@@ -38,7 +38,7 @@ pub fn id_scryfall(c: &DeckCard) -> Option<&str> {
         CardSource::Scryfall { scryfall_id } | CardSource::Token { scryfall_id } => {
             Some(scryfall_id)
         }
-        CardSource::Custom { scryfall_id } => scryfall_id.as_deref(),
+        CardSource::Custom { scryfall_id, .. } => scryfall_id.as_deref(),
         CardSource::Blank => None,
     }
 }
@@ -308,6 +308,12 @@ pub fn montar(
         status: DesignStatus::Draft,
         collection: coleccion.map(|c| c.id.clone()),
         style: estilo_inicial(&datos, coleccion),
+        // El estilo propio del pack de la colección (no en las básicas, que
+        // van en paisaje).
+        estilo_pack: (estilo_inicial(&datos, coleccion) != DesignStyle::FullArt)
+            .then(|| coleccion.and_then(|c| c.estilo_pack_defecto.clone()))
+            .flatten(),
+        variante_pack: None,
         frame: None,
         faces: caras,
         before: BeforeDesign {

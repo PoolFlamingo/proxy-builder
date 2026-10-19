@@ -196,6 +196,7 @@ mod tests {
             id: "c1".into(),
             name: "Tensura 2".into(),
             default_style: DesignStyle::Borderless,
+            estilo_pack_defecto: None,
             frame: FrameOptions {
                 color: FrameColor::Palette {
                     palette: Palette::Gold,

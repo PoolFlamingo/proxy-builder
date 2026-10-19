@@ -92,6 +92,8 @@ fn diseno(card: CardData, estilo: DesignStyle) -> CardDesign {
         status: DesignStatus::Ready,
         collection: None,
         style: estilo,
+        estilo_pack: None,
+        variante_pack: None,
         frame: None,
         faces: caras,
         before: BeforeDesign {
@@ -213,5 +215,118 @@ fn las_cartas_grandes_salen_a_su_medida() {
         maquetacion(&datos("partida")).0,
         Maquetacion::Partida,
         "Fire // Ice"
+    );
+}
+
+/// **Matriz de compatibilidad del pack Balatro** (Fase D): cada layout de
+/// arriba con cada estilo propio del pack y cada una de sus variantes, en
+/// español y en inglés. Falla si algo no se pinta o le falta marco
+/// (`PackSinLayout`, `LayoutDesconocido`, `EstiloNoEnElPack`); los textos que
+/// no caben solo se cuentan. Deja una hoja de contactos por estilo en
+/// `PB_SALIDA` (o la carpeta temporal) para revisarla a ojo.
+/// `PB_BALATRO=<carpeta del pack> cargo test -p proxy-core --test layouts
+/// balatro_matriz -- --ignored --nocapture`.
+#[test]
+#[ignore]
+fn balatro_matriz() {
+    let (base, salida, pack) = pack_balatro();
+    let (_, simbolos, artes) = entorno();
+    let simbolos = match &pack.simbolos {
+        Some(p) => simbolos.con_propios(p.clone()),
+        None => simbolos,
+    };
+    let rec = Recursos {
+        pack: &pack,
+        simbolos: &simbolos,
+        imagenes: &artes,
+    };
+    let mut motor = motor_balatro(&base);
+    let propios: Vec<(String, Vec<Option<String>>)> = pack
+        .def
+        .estilos
+        .iter()
+        .filter(|(k, _)| !proxy_core::diseno::pack::ESTILOS_DE_SERIE.contains(&k.as_str()))
+        .map(|(k, e)| {
+            let variantes = std::iter::once(None)
+                .chain(e.variantes.keys().cloned().map(Some))
+                .collect();
+            (k.clone(), variantes)
+        })
+        .collect();
+    assert!(!propios.is_empty(), "el pack no tiene estilos propios");
+    const LADO: u32 = 186;
+    let mut fallos = Vec::new();
+    let mut no_caben = 0;
+    for (estilo, variantes) in &propios {
+        let mut miniaturas = Vec::new();
+        for variante in variantes {
+            for (archivo, _) in CASOS {
+                let mut d = diseno(datos(archivo), DesignStyle::Classic);
+                d.estilo_pack = Some(estilo.clone());
+                d.variante_pack = variante.clone();
+                let (maq, _) = maquetacion(&d.card);
+                let e = efectivo(&d, None);
+                for cara in 0..maq.caras_impresas() {
+                    for lang in [DesignLang::Es, DesignLang::En] {
+                        let caso = format!("{estilo}/{variante:?}/{archivo}/{cara}/{lang:?}");
+                        let r = match render(
+                            &mut motor,
+                            &e,
+                            cara,
+                            lang,
+                            &rec,
+                            CardSize::MTG,
+                            ANCHO,
+                            Salida::Pantalla,
+                        ) {
+                            Ok(r) => r,
+                            Err(e) => {
+                                fallos.push(format!("{caso}: {e:?}"));
+                                continue;
+                            }
+                        };
+                        for a in &r.avisos {
+                            match a {
+                                Aviso::PackSinLayout { .. }
+                                | Aviso::LayoutDesconocido { .. }
+                                | Aviso::EstiloNoEnElPack { .. } => {
+                                    fallos.push(format!("{caso}: {a:?}"))
+                                }
+                                Aviso::TextoNoCabe { .. } => no_caben += 1,
+                                _ => {}
+                            }
+                        }
+                        if lang == DesignLang::Es {
+                            miniaturas.push(image::imageops::thumbnail(
+                                &r.imagen,
+                                LADO * r.imagen.width() / r.imagen.height().max(1),
+                                LADO,
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+        // La hoja: las miniaturas en filas de 10.
+        let ancho_celda = miniaturas.iter().map(|m| m.width()).max().unwrap_or(LADO);
+        let filas = miniaturas.len().div_ceil(10) as u32;
+        let mut hoja = image::RgbaImage::from_pixel(
+            ancho_celda * 10,
+            LADO * filas.max(1),
+            image::Rgba([40, 40, 40, 255]),
+        );
+        for (i, m) in miniaturas.iter().enumerate() {
+            let (x, y) = ((i % 10) as u32 * ancho_celda, (i / 10) as u32 * LADO);
+            image::imageops::overlay(&mut hoja, m, x.into(), y.into());
+        }
+        hoja.save(salida.join(format!("matriz-{estilo}.png")))
+            .unwrap();
+    }
+    println!("{no_caben} textos que no caben (ver las hojas)");
+    assert!(
+        fallos.is_empty(),
+        "{} fallos:\n{}",
+        fallos.len(),
+        fallos.join("\n")
     );
 }

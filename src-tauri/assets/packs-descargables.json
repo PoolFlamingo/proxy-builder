@@ -1,0 +1,973 @@
+{
+	"repo": "https://raw.githubusercontent.com/PoolFlamingo/proxy-builder-packs",
+	"packs": [
+		{
+			"id": "balatro",
+			"nombre": "Balatro",
+			"commit": "b3ce21312572ed6f19cc94ba41ef6339f73282ef",
+			"carpeta": "balatro/",
+			"ficheros": {
+				"labels/bonus.png": "6e21af4dd3d0b8fbe10ba6456e386ea9c0da0c7867522c5196e7d592e06bd030",
+				"labels/common.png": "f5c1862fdfe0837d03314700ec4a2a8ea3d3aeabd7f4df8401a2a8ba250ac450",
+				"labels/forest.png": "c08e8761a1204dc154e59c58cd6b6fab481a35df0f4cb623084cd3a28befe3ec",
+				"labels/island.png": "f5c1862fdfe0837d03314700ec4a2a8ea3d3aeabd7f4df8401a2a8ba250ac450",
+				"labels/legendary.png": "6e21af4dd3d0b8fbe10ba6456e386ea9c0da0c7867522c5196e7d592e06bd030",
+				"labels/mountain.png": "9ab9a1de9d3694304d17dc66d80f68e563b8b81b1fa3ac7bc130c8fe78618a72",
+				"labels/mythic.png": "6e21af4dd3d0b8fbe10ba6456e386ea9c0da0c7867522c5196e7d592e06bd030",
+				"labels/plains.png": "7528443ed99fa18aca7af8a52ccbfd2f88d85c673a3a752f607d48e4785e71f4",
+				"labels/rare.png": "9ab9a1de9d3694304d17dc66d80f68e563b8b81b1fa3ac7bc130c8fe78618a72",
+				"labels/special.png": "6e21af4dd3d0b8fbe10ba6456e386ea9c0da0c7867522c5196e7d592e06bd030",
+				"labels/swamp.png": "d85e2e09dc07b8bd5c4c11318d5f79b8e676eaf1c4fd82243bac9be3a64021ec",
+				"labels/uncommon.png": "b910b8b280e07a0a0cff33df0284f812cbf29af606eda58c194a5367fb84869e",
+				"labels/wastes.png": "f5c1862fdfe0837d03314700ec4a2a8ea3d3aeabd7f4df8401a2a8ba250ac450",
+				"layers/common/box-left-black.png": "5e5277ad288eb30c0e8e50f3fc0aaef2848a4bcbc29a0b2838d4529aee5aa872",
+				"layers/common/box-left-blue.png": "3e2e452d83eea2315ad2f388c6800d82f4934171273462a195eb4b89757043b9",
+				"layers/common/box-left-colorless.png": "82844772f37c2f1ceec88b774c616f4a6cb41b067c0232883de206c421ca090e",
+				"layers/common/box-left-gold.png": "f28b3dfc265fa357bf50f0aca32ed07901efbece99f97b5dc4cf0df7b094a79b",
+				"layers/common/box-left-green.png": "6fcee1e4d1f8c6b4ed0a5fb08180f82cec6611b23fbc59f1c22966c8773d5c17",
+				"layers/common/box-left-red.png": "45f6c968c3f11db6e4076f678a36f432cd75505e0b454a97bc92895d32a1831a",
+				"layers/common/box-left-white.png": "7ac93afd97402e0182711beaf06599dc1c330fc8fc792129eec0c55423cd03a8",
+				"layers/common/box-right-black.png": "faa55cb17df5fab2640eee6628079be8f027735ac626598b3f1b3c9c6b0f3ec1",
+				"layers/common/box-right-blue.png": "773a5b3b0af5ddaa59298939bd11becce6fca34c659af72f1fff3fc21e449fd5",
+				"layers/common/box-right-colorless.png": "56153de750c8c4976767a67ef5157befb6f696af7f36a1c4f63a8adc340fa8d0",
+				"layers/common/box-right-gold.png": "d272c86c814a80a598734abf1cc7396f6ca70daaa52da6b6949c130b21eca0bb",
+				"layers/common/box-right-green.png": "1649e8dc6d07e29e29d9dd941488cca75f8cb763bd2382c591ff0fc32503125c",
+				"layers/common/box-right-red.png": "65ee5261f8090c16087a184428997fbc7484d9791c96a4e9e61b1e62117a0689",
+				"layers/common/box-right-white.png": "5ca3db07772adcbe37f1810940f536dcb1e29fb8a08351c020412d817d072755",
+				"layers/joker/background.png": "b7f14a0444d240938c346ab22ed39549b45f0f8f752f4ec24ee30beaabe0b490",
+				"layers/joker/backgrounds__black.png": "8f311fc8a56f3d312793f74ced062457708ec05035db4edeaeda393d7e1b69cd",
+				"layers/joker/backgrounds__blue.png": "7fd8b1cf423098afc9527602f1042fcd79f9aa23b03a42e16bc89370eadedb9e",
+				"layers/joker/backgrounds__colorless.png": "9395758fbf0c4b967a50f01b24628032832f7e3fd44971734966aa4a3c1db6b1",
+				"layers/joker/backgrounds__gold.png": "d2adb5b7aa8e9e1adcd8b052e2f62f906795766e12396df6f9cad8d1b85a6931",
+				"layers/joker/backgrounds__green.png": "dfada5a64527535ece34742d0e46bfe58972859e9adac32709b3df1135231742",
+				"layers/joker/backgrounds__red.png": "507f6f591602aa9b392e79415163f78cbff4131c3a52509a86deadfea6a16891",
+				"layers/joker/backgrounds__white.png": "3367ccedea8099c46126b3f256662f1b55a761134bd9f4af3432e062327b95f3",
+				"layers/joker/frame__frame.png": "02638d19dafc6902c9eca1fd2acdcdf5e37ddac4e62b6c2479c70a562661326b",
+				"layers/joker/frame__mana-box__1-mana.png": "63d276d49f801cbafae3aa2c05f38eb379f0c347cac798369b6228c273d3dc39",
+				"layers/joker/frame__mana-box__2-mana.png": "f5d87737b03432bf64962bf6bb618406d5a1b06fa76bee93211273113aa680d6",
+				"layers/joker/frame__mana-box__3-mana.png": "7761090cc940d277f8f3217b9ad8870032d3d5ce9409859dfacf8f65fe15a447",
+				"layers/joker/frame__mana-box__4-mana.png": "b327c211f6dc03d6f63ca053d5ce10e93d6b9992f7b7771e9070f509b318ff48",
+				"layers/joker/frame__mana-box__5-mana.png": "b327c211f6dc03d6f63ca053d5ce10e93d6b9992f7b7771e9070f509b318ff48",
+				"layers/joker/frame__mana-box__6-mana.png": "b327c211f6dc03d6f63ca053d5ce10e93d6b9992f7b7771e9070f509b318ff48",
+				"layers/joker/frame__non-legendary.png": "f4d3a2bd547bfdfebe95d9b98756acb057035358ce42a67c8580ee1dbc460ed4",
+				"layers/joker/frame__p-t.png": "d523b007292c698a4755c50e8b2fc1d4ac2f69bc858b3593f83fa0e5d846b24f",
+				"layers/joker/frame__typeline.png": "126d4b3d84ed78f9957b03ff9976c174ce35f9ef68038ecc86ad5cb6d8daaa20",
+				"layers/joker/layer-37.png": "8a49867e51911d8373e53fc09705f19ae0b31affb18e74ece5506790769384a8",
+				"layers/joker/layer-40.png": "c084b800f82ae6f5dc2a4fe02cb4115867dea54a4207ebfcebf1f5ca0f103a81",
+				"layers/joker/small-scanlines__b.png": "324f1d7ff99485c2b1063c256aeac64d126784de9f5fcf97666c00eda72f0f4e",
+				"layers/joker/small-scanlines__g.png": "43e45002ca21879f2340e66be723d9a861331ca7d11523e4e2e8704aac9df65f",
+				"layers/joker/small-scanlines__r.png": "98fb634632f6e54fe05db0227ea0ebc571ad638739fa1310247232e12376a7e7",
+				"layers/joker/small-scanlines__vertical.png": "221bbf73ebdc9fb7b2730e8735fd75aeb4f4e208a4bcea32bd4f7ab91071b434",
+				"layers/land/background-copy.png": "ae13d265be31392502da3fead326c9420c2e521bef4ca261d05f7e3c83534fc1",
+				"layers/land/backgrounds__basic.png": "a21f26cafc675abf5574dc830227c2da33c5740009f6adc235a4ba3ab43aaf7e",
+				"layers/land/frame__basic-land-format__typeline.png": "37e6a69b44fe339a890a98981909bdc8cf8179dce89a65ed06dbc279a0e327f6",
+				"layers/land/frame__non-basic-land-format__box-extension.png": "236843721a3ea5c4de57975ca62df6182c117f0185108d7b52aea6e324f9fb57",
+				"layers/land/frame__non-basic-land-format__name-plate.png": "a31b48231d8f8f5f3a2e9146413dd173a5dd3eec505f9909142c40ee9f5641e7",
+				"layers/land/frame__non-basic-land-format__rules-box.png": "e7b4a4a372bb751229a3a62dfab0b9ef1a30527315231e3b573e7a6a0d96c175",
+				"layers/land/layer-39.png": "59a0f86206b381cd93f62ee062ed2ff069358f4fcfb91eb2dcdd17e7ebcd5ba1",
+				"layers/planeswalker/frame__frame.png": "c7b0674ac759fe73488dd87b36aaafbddbc25bea8a91d113e30b0d7b774b8bd1",
+				"layers/planeswalker/frame__mana-box__1-mana.png": "63d276d49f801cbafae3aa2c05f38eb379f0c347cac798369b6228c273d3dc39",
+				"layers/planeswalker/frame__mana-box__2-mana.png": "f5d87737b03432bf64962bf6bb618406d5a1b06fa76bee93211273113aa680d6",
+				"layers/planeswalker/frame__mana-box__3-mana.png": "7761090cc940d277f8f3217b9ad8870032d3d5ce9409859dfacf8f65fe15a447",
+				"layers/planeswalker/frame__mana-box__4-mana.png": "b327c211f6dc03d6f63ca053d5ce10e93d6b9992f7b7771e9070f509b318ff48",
+				"layers/planeswalker/frame__mana-box__5-mana.png": "b327c211f6dc03d6f63ca053d5ce10e93d6b9992f7b7771e9070f509b318ff48",
+				"layers/planeswalker/frame__mana-box__6-mana.png": "b327c211f6dc03d6f63ca053d5ce10e93d6b9992f7b7771e9070f509b318ff48",
+				"layers/planeswalker/frame__p-t.png": "d523b007292c698a4755c50e8b2fc1d4ac2f69bc858b3593f83fa0e5d846b24f",
+				"layers/planeswalker/frame__tick-1-box.png": "6dbb909701b3bb5c7d3d41ef147f420ed3bcebd84a986276bcc63104e8dbd025",
+				"layers/planeswalker/frame__tick-seperator.png": "3a89d4b482000fc113154e92d10be60bb54320d020042dfec47d9e4a545cff5b",
+				"layers/planet/background-copy.png": "6a6bff03e452b9639c0d0967c55342cc439ec2e555de354e8ba60d7adcf9dd73",
+				"layers/planet/frame__border.png": "6dda9b88542cfa2aaf2c06457355e58601887daaa1fe25aa6610617dd5e49859",
+				"layers/planet/frame__flare.png": "b5d19d0a802bc1432001cf0262b692763de02987e988e40e901821375462b1fb",
+				"layers/planet/frame__mana-box__1-mana.png": "ffef74a04d841b1a5575cd40a68b2157497dd12e4e3bf059237f11eee73f3d43",
+				"layers/planet/frame__mana-box__3-mana.png": "21a3d40e538c401c6cd8b02b9d7057ee22cf5b86cc490e2536e4f2c190d8c8c1",
+				"layers/planet/frame__nameplate.png": "a72a9016af3d02186acbbc8c5a5ca5da35c5a0fb60ea023a5d3ba2b01edd66f6",
+				"layers/planet/frame__textbox.png": "b5f097c2d2622393a6dc5c7b8d24afa30003bb84051b0f5a34cfa8ff43e6d86f",
+				"layers/planet/frame__typeline__expand-textbox__extra-textbox.png": "fbbbd650bbcb1c1e403457dcdbc1ff5aef9aedbb262714544dbfd06066de3ed0",
+				"layers/planet/frame__typeline__expand-textbox__typeline.png": "5eacf05c4b8928b2407dbc91f6eed4d4f192652d00bfe3ff8be421cbb9a58d39",
+				"layers/spectral/backgrounds__background.png": "899d8b03ee3f2bb2be3dc8e42275937aa709df5ede1b8893ce7a6a253b2e9c2e",
+				"layers/spectral/frame__blue-box.png": "1d392fd9a1838d002bbb16f53888148ff3e1c271869ba51d652bbabc6d3c7ab6",
+				"layers/spectral/frame__blue-frame.png": "1b71a2b09a03319d59c9dc45ad28712c46529b173dc51ab1142f71f7ae3d68a0",
+				"layers/spectral/frame__mana-box__mana-box-1-3.png": "e21c4ebae3acfb7c87839986e7d5d44cb7b47f8f580fb7def98ae3bd8c411dfc",
+				"layers/spectral/frame__typeline__blue-typeline.png": "37e6a69b44fe339a890a98981909bdc8cf8179dce89a65ed06dbc279a0e327f6",
+				"layers/tarot/background-copy.png": "c0924196b07264f57745ed86c853d39d5ea610660e3b3f56b5a742bc9dcbd1e4",
+				"layers/tarot/frame__frame.png": "0ecc5e0b44589013598533b5919fd9f0759e4700091a6ae072ddc1b28822d11c",
+				"layers/tarot/frame__rules-box.png": "f40510447f93f27d8fcd8a0f68e2a70e2ac0c805904ae9e6f9ccfb50d39ae4d3",
+				"layers/tarot/frame__typeline__rules-extender.png": "bfe89a32f07dfd0db629deef7d08041e7361e0e0509a829efe9de88c9ffafed2",
+				"layers/tarot/frame__typeline__typeline.png": "59167f639d24e0f5b06cbe8c67bba26a0df0cf171b67b638793fff0e653a6dd6",
+				"layers/voucher/background-copy.png": "59a0f86206b381cd93f62ee062ed2ff069358f4fcfb91eb2dcdd17e7ebcd5ba1",
+				"layers/voucher/frame__border.png": "d5133cedc92b9501a6a527a7d59ca34d065af0ca86ed43ad323a39a48edb50a9",
+				"layers/voucher/frame__color-match.png": "8a49a89e87b66ea4dce97de20b320bcdab99fdd79e11bd71bfb6210de13df6df",
+				"layers/voucher/frame__nameplate.png": "de2f7c9b5101c011dedf07bcb4bc03c8d67ec64814ea793ade65c691e01328f2",
+				"layers/voucher/frame__rules-box.png": "265b511e06f087dc84d0c15f7e98dd6072819d260fcba99e1e2dd334362e27a0",
+				"layers/voucher/frame__typeline__rules-extender.png": "265b511e06f087dc84d0c15f7e98dd6072819d260fcba99e1e2dd334362e27a0",
+				"layers/voucher/frame__typeline__typeline.png": "1939c29ba76080da5b12fd5345a113a3e4010115ee8de245d6b1f63f513e1119",
+				"layers/voucher/layer-26.png": "8d46edd9a013d70a586a707bd91903ef407530e07471d56f1b85538031f4bfd4",
+				"layers/voucher/layer-41.png": "a131a454240e5a96c02fda58457bf67fc366d1dd6655bfe0ee58dfd8e5720cdb",
+				"pack.json": "fdd63f0b09b4c1922ffe37066efdd1b75f3a8faaffb9d2e2ba01f349255f9b4c",
+				"symbols/0.png": "016b05bb50656d9cf24119d999ca8200472953e7e0a9e7a7e93958ece5fedb62",
+				"symbols/1.png": "b334ddfbe07e880e29182f14c9c18e13398613873a72c50d4d36cbe3bdc89d38",
+				"symbols/10.png": "845335ec4609edcd701ff22caed09e9f9712827793369332c32d4209889811fd",
+				"symbols/11.png": "a6d79b037dc84a53cc2fb8eb2f590edddfa296b7dbc358966d6f92519feb7f49",
+				"symbols/12.png": "99d49e82d878cfc5ecfd7a23fc965876e210b951670854a7833de4b2e94fb1b3",
+				"symbols/13.png": "fc2385bce72cf838518a93f2b1754eb0dad5f0fc19f79e1bc3a3ec1d5aa4ffdd",
+				"symbols/14.png": "38155bf3c930e468bfe45247258e2cfe60d7f2e4f25f829ec563ccf1bc371cf6",
+				"symbols/15.png": "9fe7e756b3d9fc9cbd402038a5aad95801969d4a332b4c28dda3f420cc07fdcc",
+				"symbols/16.png": "07d10c483790ee485e67d31666df1399515f2df0425fd2a0ba7b3bdc0a06fcc6",
+				"symbols/17.png": "d4027560178f57d49ffae297ea3946b0431e862db57c8d9edc0a82c9dfe4ce97",
+				"symbols/18.png": "ac323a08968a07a8c0c586883877d658af91438fd870f56da6417531932d85da",
+				"symbols/19.png": "82e947c04b3a59db5632673d5c4ec3cc569f453ad76bc66c77072c2a6d91627d",
+				"symbols/2.png": "ddbe11cbcb2c4adc0c86c426c0145e54307a80bba4d20a1e1872fc82d6a2bd42",
+				"symbols/20.png": "35bb2467226ee15286261310c762b9b8ad3d94379e7f9a9ac0b16f8fb3b1d9c0",
+				"symbols/3.png": "7c45f2f016943d4d56cf88676b9b979e80cbbd60c942c9f81b19ee7323bc0fba",
+				"symbols/4.png": "ad3f8fe6f4dd15339eb75453bfadd0d1b79014f1ed901872bc6f4dadaed1e42b",
+				"symbols/5.png": "c730ecff9a420d1f74e2dc29ba16963e2eb25d50e710c0151be335c2363bfef0",
+				"symbols/6.png": "b0c3c694784dd97c52719c47777611971623a442a15916c954a5a05ebf0d1b18",
+				"symbols/7.png": "46e40d11e576a6f600cb714d8a3ac7fae98108ae02b4bcc4b3c0c7d1974afd38",
+				"symbols/8.png": "7aa993c5d5be89b9547466104985c56a82dac677b2aebaa3c514637b890b5b1f",
+				"symbols/9.png": "3143506075f2deeb71d95200b5be08ff109da00f7369e759de01cbe5bab76a98",
+				"symbols/B.png": "9004d48f78c2e50e84fcf2ff206997d8f411180ac229c6d8a6a1e030c09ef4c8",
+				"symbols/C.png": "db572f971b1efb643437fa8da1e5c768180727f44753395f9c723df90f3c38de",
+				"symbols/G.png": "4a91c6332a1f290be429af9a78b546f8b6b0f1c9b3d5db2bce5ed9f461f4fbdd",
+				"symbols/R.png": "caff6b667c3d1add03b9565946ab51b5665b2b0eb8351a5f1a4188cb1dbf7b4a",
+				"symbols/T.png": "edfdc01d57a2bd652b51988b7242301d769268d1049371073a5dc14ea35e6662",
+				"symbols/U.png": "54991562bb1c627f6b726fd71e21e75960054f5c1b4d80b3129e1b3e9881a4b8",
+				"symbols/W.png": "6422258cc73d01368740f7e74f72eab03f95e8cf6b6834f26df05d838b42d02f",
+				"symbols/X.png": "c93db6d4f258a30ac269af28c40151834314b21241b732e6b1ac22c024038bac",
+				"symbols/Y.png": "1c40665c2855f7b050ccbd9628a90458080b04cd3de254afc40d51b8f57ed564",
+				"symbols/Z.png": "107c39fbc467d7b00243d6c6f1bb07ac12ebc8233bd8719a7fa774968b40e4e2"
+			},
+			"letras": [
+				{
+					"ruta": "fonts/m6x11plus.ttf",
+					"sha256": "57fb51f3b99d200989e701671fb7a8848dc7d466e353efca3c9af4901256fa1d",
+					"licencia": "fonts/m6x11plus-LICENSE.txt",
+					"licencia_sha256": "a0592a47b315e1b7225950da01e63e8ffe0881462289110f6b61e86c8c2ed8b8"
+				}
+			],
+			"extras": [
+				{
+					"ruta": "extras/backs/Balatro Card Back 1.png",
+					"tipo": "reverso",
+					"nombre": "Balatro Card Back 1",
+					"sha256": "ea8103fccd6d5effb85eb4fea46923ee149ad7be944adf5a6f6521f3f5e50b53"
+				},
+				{
+					"ruta": "extras/backs/Balatro Card Back 2.png",
+					"tipo": "reverso",
+					"nombre": "Balatro Card Back 2",
+					"sha256": "18dfa8729a2b38af1681ef4004fccf3663ca5cdd57194128abe9470d7d85d285"
+				},
+				{
+					"ruta": "extras/tokens/Goblin (1_1, Balatro).png",
+					"tipo": "ficha",
+					"nombre": "Goblin (1 1, Balatro)",
+					"sha256": "95024dc6da8c031b8281614ad9d8b681b2f2a139f676fc0241dd3ece83c1ca1c"
+				},
+				{
+					"ruta": "extras/tokens/Insect (1_1, Balatro).png",
+					"tipo": "ficha",
+					"nombre": "Insect (1 1, Balatro)",
+					"sha256": "e49f43b8471ccc429135d7b95204414c9d9ede4be49e8b46bd5ead6c99f1e0f9"
+				},
+				{
+					"ruta": "extras/tokens/Treasure (Balatro).png",
+					"tipo": "ficha",
+					"nombre": "Treasure (Balatro)",
+					"sha256": "238990175858761be9c06193e1fd4fb72efd96212ceef1861fec38b39a483973"
+				},
+				{
+					"ruta": "extras/cards/Edgar, King of Figaro.png",
+					"tipo": "carta",
+					"nombre": "Edgar, King of Figaro",
+					"sha256": "457b890f063377decb4db9d67fb90807da5f11f4474eb9a1204e8b90183517df"
+				},
+				{
+					"ruta": "extras/cards/Frenetic Efreet.png",
+					"tipo": "carta",
+					"nombre": "Frenetic Efreet",
+					"sha256": "a2546ed680c908c2b63bf092f421d013d2072250333722f3646e4384a4a64126"
+				},
+				{
+					"ruta": "extras/lands/Forests/10Forest.png",
+					"tipo": "tierra",
+					"nombre": "10Forest",
+					"sha256": "876e78399a0e31b0cd2e1f15e6266e795c6e2d8f73823a89014345c309472f4c"
+				},
+				{
+					"ruta": "extras/lands/Forests/1Forest.png",
+					"tipo": "tierra",
+					"nombre": "1Forest",
+					"sha256": "8d43c503a27f86db6138dc0bd70a37c18cd6c90ac3a7cf57bb9f44f23f0d7204"
+				},
+				{
+					"ruta": "extras/lands/Forests/2Forest.png",
+					"tipo": "tierra",
+					"nombre": "2Forest",
+					"sha256": "5d8da14f280606f29f5880657af2678e419a31d7cc140b145f14afb84ea39587"
+				},
+				{
+					"ruta": "extras/lands/Forests/3Forest.png",
+					"tipo": "tierra",
+					"nombre": "3Forest",
+					"sha256": "e1ae586fb3c9864fe07ecff3f9a38e7d48124dbd434ba904a2da3e469d9cda65"
+				},
+				{
+					"ruta": "extras/lands/Forests/4Forest.png",
+					"tipo": "tierra",
+					"nombre": "4Forest",
+					"sha256": "1b0f65c27d6a56712a779b5e776a826bb8a651d7cd36de474801aea79aa150d1"
+				},
+				{
+					"ruta": "extras/lands/Forests/5Forest.png",
+					"tipo": "tierra",
+					"nombre": "5Forest",
+					"sha256": "668052ab3935acc4ae1a4364374eb155f9b62b23f2ea863b705d7ac581966b23"
+				},
+				{
+					"ruta": "extras/lands/Forests/6Forest.png",
+					"tipo": "tierra",
+					"nombre": "6Forest",
+					"sha256": "9c4cfcc7652c89a8156db072e1e2761b76a287a4ce949126f9b978c72eddb064"
+				},
+				{
+					"ruta": "extras/lands/Forests/7Forest.png",
+					"tipo": "tierra",
+					"nombre": "7Forest",
+					"sha256": "9e495bb75dd25e3165b6b357f62626a43761bd013e07bd3ef99e03379d87210b"
+				},
+				{
+					"ruta": "extras/lands/Forests/8Forest.png",
+					"tipo": "tierra",
+					"nombre": "8Forest",
+					"sha256": "b3d134deb5bc7ae80c801a64f5c80f859b5530d6a436b7b5c9239130dbef2169"
+				},
+				{
+					"ruta": "extras/lands/Forests/9Forest.png",
+					"tipo": "tierra",
+					"nombre": "9Forest",
+					"sha256": "d44043184e894865f3fa3bd1d6ebd84f8ac8d75200c19372469124c3af7cc5ca"
+				},
+				{
+					"ruta": "extras/lands/Islands/Island(1 Balatro).png",
+					"tipo": "tierra",
+					"nombre": "Island(1 Balatro)",
+					"sha256": "d7309217c978735272470c3178f2ec365066d8d72bb312bc5d9ed7fcb066d2b2"
+				},
+				{
+					"ruta": "extras/lands/Islands/Island(10 Balatro).png",
+					"tipo": "tierra",
+					"nombre": "Island(10 Balatro)",
+					"sha256": "59a296a7bdeb03abbae97b95f7fad5e05b7ae75da1d43b63d1e77aeddab079e3"
+				},
+				{
+					"ruta": "extras/lands/Islands/Island(2 Balatro).png",
+					"tipo": "tierra",
+					"nombre": "Island(2 Balatro)",
+					"sha256": "23aade73c7cb4baa5ba3b9bf2d10876808531efc12c39f600343a9755c08e5bd"
+				},
+				{
+					"ruta": "extras/lands/Islands/Island(3 Balatro).png",
+					"tipo": "tierra",
+					"nombre": "Island(3 Balatro)",
+					"sha256": "76292bd031db034a3afe9869f559cf01fdb0ada36c20305526430435d2ba6e4a"
+				},
+				{
+					"ruta": "extras/lands/Islands/Island(4 Balatro).png",
+					"tipo": "tierra",
+					"nombre": "Island(4 Balatro)",
+					"sha256": "12630edeac5a362b59e29f1bb3709a69edd182a7d63f2d4ffcbbb71f4b92ee76"
+				},
+				{
+					"ruta": "extras/lands/Islands/Island(5 Balatro).png",
+					"tipo": "tierra",
+					"nombre": "Island(5 Balatro)",
+					"sha256": "1b8dc9a0d904ca6682d820e9e44f10205591d59cb7cab777a78637efffffada8"
+				},
+				{
+					"ruta": "extras/lands/Islands/Island(6 Balatro).png",
+					"tipo": "tierra",
+					"nombre": "Island(6 Balatro)",
+					"sha256": "0280bf88fcbaac63fb57e00e02b47279d408a2443b599be140f333c5ab36077c"
+				},
+				{
+					"ruta": "extras/lands/Islands/Island(7 Balatro).png",
+					"tipo": "tierra",
+					"nombre": "Island(7 Balatro)",
+					"sha256": "c7988d5347638eaa140e10a2487e65303a2910c664e79abf038056ac82415e39"
+				},
+				{
+					"ruta": "extras/lands/Islands/Island(8 Balatro).png",
+					"tipo": "tierra",
+					"nombre": "Island(8 Balatro)",
+					"sha256": "5690919e291eefac5ee7771b7f86b6bb0cb1be2175b7d3ff7133f30a26d0815b"
+				},
+				{
+					"ruta": "extras/lands/Islands/Island(9 Balatro).png",
+					"tipo": "tierra",
+					"nombre": "Island(9 Balatro)",
+					"sha256": "3bf900bb07ec880ad65463aeb3735d3a778c8883f0555a85ea5bdb98a5520dee"
+				},
+				{
+					"ruta": "extras/lands/Mountains/Mountain(1 Balatro).png",
+					"tipo": "tierra",
+					"nombre": "Mountain(1 Balatro)",
+					"sha256": "3a4b030a7b3e455119d74b4cc5810c93017226b7f92fa6bc5375afe185844e72"
+				},
+				{
+					"ruta": "extras/lands/Mountains/Mountain(10 Balatro).png",
+					"tipo": "tierra",
+					"nombre": "Mountain(10 Balatro)",
+					"sha256": "3ef1cb945a4b99da86ff5fc1eb8ef2690aea3daa8e52289f95c6943c23cf50b9"
+				},
+				{
+					"ruta": "extras/lands/Mountains/Mountain(2 Balatro).png",
+					"tipo": "tierra",
+					"nombre": "Mountain(2 Balatro)",
+					"sha256": "71584906cf37cf804d462644f51b696f7f74341c2f3e108d442733278d98ec73"
+				},
+				{
+					"ruta": "extras/lands/Mountains/Mountain(3 Balatro).png",
+					"tipo": "tierra",
+					"nombre": "Mountain(3 Balatro)",
+					"sha256": "80886d785609918571d0a0d460cd8093e6c3d1afcfd0e6d8eeff07b9c9bd3e52"
+				},
+				{
+					"ruta": "extras/lands/Mountains/Mountain(4 Balatro).png",
+					"tipo": "tierra",
+					"nombre": "Mountain(4 Balatro)",
+					"sha256": "113d4ada1374cfbc2f26881a11e73adb55968faeec7963d8c0815210903ab459"
+				},
+				{
+					"ruta": "extras/lands/Mountains/Mountain(5 Balatro).png",
+					"tipo": "tierra",
+					"nombre": "Mountain(5 Balatro)",
+					"sha256": "75ec2993655400a4bce4f821e00ec9f92a29b4434f72fdeba22db0f72c2a7f6e"
+				},
+				{
+					"ruta": "extras/lands/Mountains/Mountain(6 Balatro).png",
+					"tipo": "tierra",
+					"nombre": "Mountain(6 Balatro)",
+					"sha256": "2ca3359c257421fa7b81ee89eadb344ecd50353cd8e0ccfdc5e6403b4a65b32f"
+				},
+				{
+					"ruta": "extras/lands/Mountains/Mountain(7 Balatro).png",
+					"tipo": "tierra",
+					"nombre": "Mountain(7 Balatro)",
+					"sha256": "e0340b1ad496359c4d1bea85762be5cff62afb3afb27b0b683ffd33f41bc5a1e"
+				},
+				{
+					"ruta": "extras/lands/Mountains/Mountain(8 Balatro).png",
+					"tipo": "tierra",
+					"nombre": "Mountain(8 Balatro)",
+					"sha256": "d708f80ee5b4d8d82e849e35694f614536e30291a6f50b66c97b40b1cc9eb903"
+				},
+				{
+					"ruta": "extras/lands/Mountains/Mountain(9 Balatro).png",
+					"tipo": "tierra",
+					"nombre": "Mountain(9 Balatro)",
+					"sha256": "11e25b0d4c28fca096dee40b9c523b328f0f8d25687771907defaa601951a93d"
+				},
+				{
+					"ruta": "extras/lands/Plains/10Plains.png",
+					"tipo": "tierra",
+					"nombre": "10Plains",
+					"sha256": "6f6dcc1fbc7633b8c50b8a546c41944ebd111b352b3a199cfeb2fc56f811a7a1"
+				},
+				{
+					"ruta": "extras/lands/Plains/1Plains.png",
+					"tipo": "tierra",
+					"nombre": "1Plains",
+					"sha256": "6b5f351e09e0f678f93c0220b4860e2e907110065d00e3e621a65f766f49ab72"
+				},
+				{
+					"ruta": "extras/lands/Plains/2Plains.png",
+					"tipo": "tierra",
+					"nombre": "2Plains",
+					"sha256": "12e45d23eb0e8622003f8a923b3b8657f1cdca64daf75dddc6d5d011bc34af15"
+				},
+				{
+					"ruta": "extras/lands/Plains/3Plains.png",
+					"tipo": "tierra",
+					"nombre": "3Plains",
+					"sha256": "d19a09286cdc92871f831e7a523e720044116e926418726aa0e5b842e7440d61"
+				},
+				{
+					"ruta": "extras/lands/Plains/4Plains.png",
+					"tipo": "tierra",
+					"nombre": "4Plains",
+					"sha256": "2f9873bf32ad1c6f13f07f7816cb6407810ba038bae0f991fc400612d144e4a9"
+				},
+				{
+					"ruta": "extras/lands/Plains/5Plains.png",
+					"tipo": "tierra",
+					"nombre": "5Plains",
+					"sha256": "07f2f045499f4f55e8cf9aa8df93bb4f98acdc6f0e68ce05739db7ac3d4896ac"
+				},
+				{
+					"ruta": "extras/lands/Plains/6Plains.png",
+					"tipo": "tierra",
+					"nombre": "6Plains",
+					"sha256": "648fb18a4a880a47d6f9709940898e59a8ec3d679faad156530d2583969de45e"
+				},
+				{
+					"ruta": "extras/lands/Plains/7Plains.png",
+					"tipo": "tierra",
+					"nombre": "7Plains",
+					"sha256": "6124f65e836675ba4c570a2929c794cc0d540b15554f1fb06d9c44ebeac24a9c"
+				},
+				{
+					"ruta": "extras/lands/Plains/8Plains.png",
+					"tipo": "tierra",
+					"nombre": "8Plains",
+					"sha256": "2f02dd590d70ade16c457ecd5bbe8427ea82a739925e8e1046b26bc28fa12071"
+				},
+				{
+					"ruta": "extras/lands/Plains/9Plains.png",
+					"tipo": "tierra",
+					"nombre": "9Plains",
+					"sha256": "0ecb443c5858ad7070ff169e970910d8944e1460b2d84979798a2e520894cba5"
+				},
+				{
+					"ruta": "extras/lands/Swamps/10Swamp.png",
+					"tipo": "tierra",
+					"nombre": "10Swamp",
+					"sha256": "513662380a8a8f7be068d328cfb4ea6af235b2a7a37db321db327e790913c753"
+				},
+				{
+					"ruta": "extras/lands/Swamps/1Swamp.png",
+					"tipo": "tierra",
+					"nombre": "1Swamp",
+					"sha256": "611c7decca48a9f36e41623384008ac73e0e424d1c1cab56c4055b56e2ada8ec"
+				},
+				{
+					"ruta": "extras/lands/Swamps/2Swamp.png",
+					"tipo": "tierra",
+					"nombre": "2Swamp",
+					"sha256": "2263abb32be9e0cfc9b82d7d0a228bd4f15eb254d1625385c3679ce0b0767c89"
+				},
+				{
+					"ruta": "extras/lands/Swamps/3Swamp.png",
+					"tipo": "tierra",
+					"nombre": "3Swamp",
+					"sha256": "b539b7c9b38098eae30056d36451938b0fbbbb963f14e06c79230afc1e4d5b80"
+				},
+				{
+					"ruta": "extras/lands/Swamps/4Swamp.png",
+					"tipo": "tierra",
+					"nombre": "4Swamp",
+					"sha256": "82049f1d33b6b4ab15f7c3783c59f1a6831922f32ee21abcab9724e818a7a4dd"
+				},
+				{
+					"ruta": "extras/lands/Swamps/5Swamp.png",
+					"tipo": "tierra",
+					"nombre": "5Swamp",
+					"sha256": "a07ed6c1e66b7a1590bb692629b13007916dacf729640231c168d1b3e3c5bdb4"
+				},
+				{
+					"ruta": "extras/lands/Swamps/6Swamp.png",
+					"tipo": "tierra",
+					"nombre": "6Swamp",
+					"sha256": "dd8b242cd796d598e8818b3c558a548a9546f32b1c0bcd802e0ffbd799e382bd"
+				},
+				{
+					"ruta": "extras/lands/Swamps/7Swamp.png",
+					"tipo": "tierra",
+					"nombre": "7Swamp",
+					"sha256": "dcd2acdf823992fd01cd3dbfe524f644386e8c20f07d87e4753c0b8a8a9d1c19"
+				},
+				{
+					"ruta": "extras/lands/Swamps/8Swamp.png",
+					"tipo": "tierra",
+					"nombre": "8Swamp",
+					"sha256": "0bcdd92a1bb9774d67ebe48bdc89f61e5557f656f119c5ac846b1b999b3d2c32"
+				},
+				{
+					"ruta": "extras/lands/Swamps/9Swamp.png",
+					"tipo": "tierra",
+					"nombre": "9Swamp",
+					"sha256": "aaf3fba3cfc058dd61e708e371b4f85356cdfc7fbd95b76596ac8395d26a85d9"
+				},
+				{
+					"ruta": "extras/cards/Academy Ruins.png",
+					"tipo": "carta",
+					"nombre": "Academy Ruins",
+					"sha256": "43e9c1bd7fa50bdd2e590ffa97889dd41675ef16c5599a9565d696298725257e"
+				},
+				{
+					"ruta": "extras/cards/Arcane Denial.png",
+					"tipo": "carta",
+					"nombre": "Arcane Denial",
+					"sha256": "21082e3b010d91fc10f05565193f9c7472f18b2fc41ea0dd6259e02005bae2f9"
+				},
+				{
+					"ruta": "extras/cards/Arcane Signet.png",
+					"tipo": "carta",
+					"nombre": "Arcane Signet",
+					"sha256": "0934e15b667228d1c729454dec29c2c83c35e40f8366890500ffe1b20f3b1e23"
+				},
+				{
+					"ruta": "extras/cards/Basilisk Collar.png",
+					"tipo": "carta",
+					"nombre": "Basilisk Collar",
+					"sha256": "e557558da2dfc303b9b24ff55bc1701bdb159255eb0e4588001dd42c93d2cb2a"
+				},
+				{
+					"ruta": "extras/cards/Blasphemous Act.png",
+					"tipo": "carta",
+					"nombre": "Blasphemous Act",
+					"sha256": "473c60d36d77bfb0592e3328e1d49d5f49e2ce4f37e5e70f45b2fefc503244f5"
+				},
+				{
+					"ruta": "extras/cards/Brainstorm.png",
+					"tipo": "carta",
+					"nombre": "Brainstorm",
+					"sha256": "8bdfaa4e21661749f4c6335f4ce0151259702f5f44e0945c848d54bdad7f8459"
+				},
+				{
+					"ruta": "extras/cards/Buried Ruin.png",
+					"tipo": "carta",
+					"nombre": "Buried Ruin",
+					"sha256": "291e63865a738c99601d4bcdac6ba002308f92c9d91125dc1ee66ca958305b86"
+				},
+				{
+					"ruta": "extras/cards/Cephalid Coliseum.png",
+					"tipo": "carta",
+					"nombre": "Cephalid Coliseum",
+					"sha256": "b67c7a0f4437ab3df6c74cfa82392d939a5adbf8b252b9b44bb1ac17489a400b"
+				},
+				{
+					"ruta": "extras/cards/Chance Encounter.png",
+					"tipo": "carta",
+					"nombre": "Chance Encounter",
+					"sha256": "e9dfeb1055ce9024b4bc0fb12d7e11f977b00d2bfe99be9753cd5931f5df34a2"
+				},
+				{
+					"ruta": "extras/cards/Chaos Warp.png",
+					"tipo": "carta",
+					"nombre": "Chaos Warp",
+					"sha256": "33dc9860d9d50c4686ecb46eabc5d946bea8796866e5856cad10d4189fc40937"
+				},
+				{
+					"ruta": "extras/cards/Command Tower.png",
+					"tipo": "carta",
+					"nombre": "Command Tower",
+					"sha256": "280e88bf33d07cd054fb44f9bb7e41f24beaed053a3f662a01c5ead92cf3ed0e"
+				},
+				{
+					"ruta": "extras/cards/Counterspell.png",
+					"tipo": "carta",
+					"nombre": "Counterspell",
+					"sha256": "225304c641268fc94011d73e9a763360da7d9c1d8ac5503d6c3e963f12eb1692"
+				},
+				{
+					"ruta": "extras/cards/Curiosity.png",
+					"tipo": "carta",
+					"nombre": "Curiosity",
+					"sha256": "e85fb5c89d382ecd62ba09ed1905fbcd6025dd698554a34e5ac0f57f3968a8e8"
+				},
+				{
+					"ruta": "extras/cards/Dig Through Time.png",
+					"tipo": "carta",
+					"nombre": "Dig Through Time",
+					"sha256": "6a8bd750424901881d01aef8c849fb04a12c5fff8dd4b6162853f7b0eb4def7a"
+				},
+				{
+					"ruta": "extras/cards/Dress Down.png",
+					"tipo": "carta",
+					"nombre": "Dress Down",
+					"sha256": "23934087fb47911a69a99e05cd7db65eb83eb093619eaf582c32e4851beb94ee"
+				},
+				{
+					"ruta": "extras/cards/Fabricate.png",
+					"tipo": "carta",
+					"nombre": "Fabricate",
+					"sha256": "83c593c8bfd1ed5b4928e311b7131e0e32ce46a08e2e14a84a54f76cc6f30dff"
+				},
+				{
+					"ruta": "extras/cards/Faithless Looting.png",
+					"tipo": "carta",
+					"nombre": "Faithless Looting",
+					"sha256": "962a6e40da0fe7c1cc66613e3e2c07458622e24a57c1e23e3d2c38ebf0cb3fe5"
+				},
+				{
+					"ruta": "extras/cards/Fellwar Stone.png",
+					"tipo": "carta",
+					"nombre": "Fellwar Stone",
+					"sha256": "22aacd3eda71d2695b3cb1d2bc6b8419f32027203320acfeb7f99e2ae635c2c1"
+				},
+				{
+					"ruta": "extras/cards/Fiery Gambit.png",
+					"tipo": "carta",
+					"nombre": "Fiery Gambit",
+					"sha256": "e9b98c53ebbb8a83a45c378888cfc7a753b67cabb4e06baf3f78c28e6eacda4b"
+				},
+				{
+					"ruta": "extras/cards/Fiery Islet.png",
+					"tipo": "carta",
+					"nombre": "Fiery Islet",
+					"sha256": "11fc5e49d05ccd1d040a7ed7e5421e9bd359f06460efaea966161c743bb7887d"
+				},
+				{
+					"ruta": "extras/cards/Frantic Search.png",
+					"tipo": "carta",
+					"nombre": "Frantic Search",
+					"sha256": "e81812b0d14c61318e14fa6dee68c727ecdf46f6df20e6e6521f93d5686f8451"
+				},
+				{
+					"ruta": "extras/cards/Gamble.png",
+					"tipo": "carta",
+					"nombre": "Gamble",
+					"sha256": "1c21035ee1c91c3d994a70fc95d9b38ebb7a4674ff1f38bb5e5b6cc2f853b7b8"
+				},
+				{
+					"ruta": "extras/cards/Gitaxian Probe.png",
+					"tipo": "carta",
+					"nombre": "Gitaxian Probe",
+					"sha256": "26cb78c40b7da3e0bf1835f39c797e5e3103f030f8b9f381cff088a92a640020"
+				},
+				{
+					"ruta": "extras/cards/Goblin Traprunner.png",
+					"tipo": "carta",
+					"nombre": "Goblin Traprunner",
+					"sha256": "6bd4ed4482cff88555a98fe8da086b08e34650153d57a06ace02854cff644e87"
+				},
+				{
+					"ruta": "extras/cards/Helm of the Host.png",
+					"tipo": "carta",
+					"nombre": "Helm of the Host",
+					"sha256": "6d6c1827673efab19f967c47ee789d1e10a401832b7697d87a648ff36b431bff"
+				},
+				{
+					"ruta": "extras/cards/Hullbreaker Horror.png",
+					"tipo": "carta",
+					"nombre": "Hullbreaker Horror",
+					"sha256": "23cd22ad8ff8a1bbae725d0abe3b2033b7985d4b2ac89e49f2745a1f8a88df04"
+				},
+				{
+					"ruta": "extras/cards/Imperial Recruiter.png",
+					"tipo": "carta",
+					"nombre": "Imperial Recruiter",
+					"sha256": "ab924bd372cea62620514b72a164a77a4fd9b168abd0f0c969cd411360140de2"
+				},
+				{
+					"ruta": "extras/cards/Invert Polarity.png",
+					"tipo": "carta",
+					"nombre": "Invert Polarity",
+					"sha256": "ff5ce6d950561647d4d9455c5a2a04b5421d9161b64ff19ba0dc0f93b9061478"
+				},
+				{
+					"ruta": "extras/cards/Izzet Charm.png",
+					"tipo": "carta",
+					"nombre": "Izzet Charm",
+					"sha256": "896bdf7fd1c186b9f09482487934c7457e885175d6b2be94f6ee9bc95eb1c3de"
+				},
+				{
+					"ruta": "extras/cards/Izzet Signet.png",
+					"tipo": "carta",
+					"nombre": "Izzet Signet",
+					"sha256": "25563cf13cd04bb72ac3547bcfe417a327a06e1d26339b33555d2f4f6639ffab"
+				},
+				{
+					"ruta": "extras/cards/Jin-Gitaxias, Core Augur.png",
+					"tipo": "carta",
+					"nombre": "Jin-Gitaxias, Core Augur",
+					"sha256": "ed9efd751ab5b511c67cce85e71e84b45c4c4f0515a9330f23ace00758a9fbb0"
+				},
+				{
+					"ruta": "extras/cards/Krark, the Thumbless.png",
+					"tipo": "carta",
+					"nombre": "Krark, the Thumbless",
+					"sha256": "7f63317c706f612f4b1e4e5a430b39096e4b0ecb595b061de9b319e445881969"
+				},
+				{
+					"ruta": "extras/cards/Krark_s Thumb.png",
+					"tipo": "carta",
+					"nombre": "Krark's Thumb",
+					"sha256": "0159e79a5d65635caa05c6a4534aca2435e5a88307e978f97b79b4a0b940488c"
+				},
+				{
+					"ruta": "extras/cards/Laboratory Maniac.png",
+					"tipo": "carta",
+					"nombre": "Laboratory Maniac",
+					"sha256": "24c789f60029bf1c7e5e97d5e8e4422c232bbdddc749a5b785c90af33369daa4"
+				},
+				{
+					"ruta": "extras/cards/Lier, Disciple of the Drowned.png",
+					"tipo": "carta",
+					"nombre": "Lier, Disciple of the Drowned",
+					"sha256": "ab4bb98639e8538039c5501f9ddbaf3cea679670c961b2d416a41eadabdeb03a"
+				},
+				{
+					"ruta": "extras/cards/Mirror Box.png",
+					"tipo": "carta",
+					"nombre": "Mirror Box",
+					"sha256": "e469bca56c4bbeb19ad744576e065e44042dd5bc07db808e8b122956a208b69b"
+				},
+				{
+					"ruta": "extras/cards/Mirrormade.png",
+					"tipo": "carta",
+					"nombre": "Mirrormade",
+					"sha256": "2eb62a6a01b0d2a6d9ce83a29bc9352e30f9bd66b22b57f3b2b243313860928f"
+				},
+				{
+					"ruta": "extras/cards/Muddle the Mixture.png",
+					"tipo": "carta",
+					"nombre": "Muddle the Mixture",
+					"sha256": "27a1827c00bf6de411c6f5f410bb4994bacd29c1a548cf2566d440c003c8b84a"
+				},
+				{
+					"ruta": "extras/cards/Myr Retriever.png",
+					"tipo": "carta",
+					"nombre": "Myr Retriever",
+					"sha256": "b1b0b1fc6c2a7361591ba89542e874de6a04e59bf2eecbbf0ed7c7931e0c41cc"
+				},
+				{
+					"ruta": "extras/cards/Mystic Sanctuary.png",
+					"tipo": "carta",
+					"nombre": "Mystic Sanctuary",
+					"sha256": "8d88c35eef987887ee493d5644e1420889694043b51a3229fc61c132e5948560"
+				},
+				{
+					"ruta": "extras/cards/Narset_s Reversal.png",
+					"tipo": "carta",
+					"nombre": "Narset's Reversal",
+					"sha256": "976e0aa85c831f7b4e70dfe3ed7387bdc144cdbfcdbc87c84a7d5fd1bf498f0e"
+				},
+				{
+					"ruta": "extras/cards/Negate.png",
+					"tipo": "carta",
+					"nombre": "Negate",
+					"sha256": "89072b396289538e7799a2b2231b74ce73652c296549835804f3e1f0922abbe4"
+				},
+				{
+					"ruta": "extras/cards/Niv-Mizzet, Parun.png",
+					"tipo": "carta",
+					"nombre": "Niv-Mizzet, Parun",
+					"sha256": "ffd388cc45de0250cf38be9bc581dd9c66e5ba32ae7bc8019e40fcd02b5e6b97"
+				},
+				{
+					"ruta": "extras/cards/Niv-Mizzet, the Firemind.png",
+					"tipo": "carta",
+					"nombre": "Niv-Mizzet, the Firemind",
+					"sha256": "305e286782ac1af505e8f0cd234a85761a93d58b240972171856c7993c0537bf"
+				},
+				{
+					"ruta": "extras/cards/Okaun, Eye of Chaos.png",
+					"tipo": "carta",
+					"nombre": "Okaun, Eye of Chaos",
+					"sha256": "66793d342ecb7b5c64cd7019c95a3efabff99748294f5b5a4c364ef8a786d650"
+				},
+				{
+					"ruta": "extras/cards/Ophidian Eye.png",
+					"tipo": "carta",
+					"nombre": "Ophidian Eye",
+					"sha256": "3fad2e842d9485ec91960399be78babb2429bc54835c806e2a6043495e775b3d"
+				},
+				{
+					"ruta": "extras/cards/Otawara, Soaring City.png",
+					"tipo": "carta",
+					"nombre": "Otawara, Soaring City",
+					"sha256": "a2792f4e810b24e9a4340682cf0ca2b3a193de4351e4b5285a5b59dc37adb8d1"
+				},
+				{
+					"ruta": "extras/cards/Phantasmal Image.png",
+					"tipo": "carta",
+					"nombre": "Phantasmal Image",
+					"sha256": "1c86119cf5cfbd02a6e5ab33661f96ed3063b2dcad8ea65183cd1a9c482c5454"
+				},
+				{
+					"ruta": "extras/cards/Phyrexian Metamorph.png",
+					"tipo": "carta",
+					"nombre": "Phyrexian Metamorph",
+					"sha256": "a5258fca608e9048f238216db8a5c4be82409b6f2aabefb51e5c97dd7109b771"
+				},
+				{
+					"ruta": "extras/cards/Planar Chaos.png",
+					"tipo": "carta",
+					"nombre": "Planar Chaos",
+					"sha256": "aa4b1904f0a074ee7b48ff0b1ed16ab1b7d53dcefff0de0e6a49c6324cc819e1"
+				},
+				{
+					"ruta": "extras/cards/Pyroblast.png",
+					"tipo": "carta",
+					"nombre": "Pyroblast",
+					"sha256": "2db3867469e27e22682ca92349039af51d9cd6fab7b3cf14345e28c32a3f213d"
+				},
+				{
+					"ruta": "extras/cards/Ral Zarek.png",
+					"tipo": "carta",
+					"nombre": "Ral Zarek",
+					"sha256": "e8e93fd6237a1f39a490b5107df85618f70f9b7a5a68603435fab0f1e2dbcb63"
+				},
+				{
+					"ruta": "extras/cards/Reliquary Tower.png",
+					"tipo": "carta",
+					"nombre": "Reliquary Tower",
+					"sha256": "f24e47be2bb54d38c006e74e19728409d7b9c89d8507ad54a055821b6211441b"
+				},
+				{
+					"ruta": "extras/cards/Rhystic Study.png",
+					"tipo": "carta",
+					"nombre": "Rhystic Study",
+					"sha256": "5113b48ffb7f2de7946dcb8a049617085c823a56fd064d48631880e06f4d8985"
+				},
+				{
+					"ruta": "extras/cards/Rogue_s Passage.png",
+					"tipo": "carta",
+					"nombre": "Rogue's Passage",
+					"sha256": "c505b9ed8f672b1b8ba22b83cd58537d8bc2c8c511a3c5590342af9822fab95f"
+				},
+				{
+					"ruta": "extras/cards/Sakashima of a Thousand Faces.png",
+					"tipo": "carta",
+					"nombre": "Sakashima of a Thousand Faces",
+					"sha256": "ac371f454c6d5caaacd363613814403aa39db045af50d59130c41c49ff6981a6"
+				},
+				{
+					"ruta": "extras/cards/Sculpting Steel.png",
+					"tipo": "carta",
+					"nombre": "Sculpting Steel",
+					"sha256": "9ca0e801da8f46c93bfa99df7aead10cb2907295aae99ae12ad47982d9933134"
+				},
+				{
+					"ruta": "extras/cards/Shivan Reef.png",
+					"tipo": "carta",
+					"nombre": "Shivan Reef",
+					"sha256": "fde179f216e22d209a232b3c31d968dd84cc5aa2348ab4101af232d0e0bb5178"
+				},
+				{
+					"ruta": "extras/cards/Sol Ring.png",
+					"tipo": "carta",
+					"nombre": "Sol Ring",
+					"sha256": "58a41ae917c40aff1519ab91cf870f28eafcd41629a742279828c4b652c04d04"
+				},
+				{
+					"ruta": "extras/cards/Squee_s Revenge.png",
+					"tipo": "carta",
+					"nombre": "Squee's Revenge",
+					"sha256": "21ee592deb358806773cd2928c04cc34cd26067b821376314914c8f07ea6e583"
+				},
+				{
+					"ruta": "extras/cards/Steam Vents.png",
+					"tipo": "carta",
+					"nombre": "Steam Vents",
+					"sha256": "196f22466bc2dcb22b51f109cf23a4ff7dcf25538929374b6793c7df9f36b928"
+				},
+				{
+					"ruta": "extras/cards/Stitch in Time.png",
+					"tipo": "carta",
+					"nombre": "Stitch in Time",
+					"sha256": "ef5a86a409d568d136e88d86c7588341545fe0ce9ca505764ffd9e3218323319"
+				},
+				{
+					"ruta": "extras/cards/Storm-Kiln Artist.png",
+					"tipo": "carta",
+					"nombre": "Storm-Kiln Artist",
+					"sha256": "00c42ee7bff7ba89a779971c43b2bfbf23dafccbe27cbf4104e5d65c6d14d104"
+				},
+				{
+					"ruta": "extras/cards/Stormcarved Coast.png",
+					"tipo": "carta",
+					"nombre": "Stormcarved Coast",
+					"sha256": "89832aa0c29c787642c840c4b9f04fd6b026b38297f765dd0d6dbe13bd008f05"
+				},
+				{
+					"ruta": "extras/cards/Swiftfoot Boots.png",
+					"tipo": "carta",
+					"nombre": "Swiftfoot Boots",
+					"sha256": "13beb7efb49b63d662ad58734c06d878889f70d677c94dea74157f57dcad43c3"
+				},
+				{
+					"ruta": "extras/cards/Talisman of Creativity.png",
+					"tipo": "carta",
+					"nombre": "Talisman of Creativity",
+					"sha256": "e980f9af57b1cc48bb0d6e673e93e9ce0fe7eab4456c048d37c205b42b484533"
+				},
+				{
+					"ruta": "extras/cards/Tavern Scoundrel.png",
+					"tipo": "carta",
+					"nombre": "Tavern Scoundrel",
+					"sha256": "4a10f69fe00bdaf268274882f566c631156e2ac13e67fc049a97da53506a2f44"
+				},
+				{
+					"ruta": "extras/cards/The Locust God.png",
+					"tipo": "carta",
+					"nombre": "The Locust God",
+					"sha256": "493e7a9e9675a58f1db7b9acc1cda8019a67c6b90292fff2ff0078bb927384a2"
+				},
+				{
+					"ruta": "extras/cards/Thought Vessel.png",
+					"tipo": "carta",
+					"nombre": "Thought Vessel",
+					"sha256": "ffe53e62ae979a590a9c6a175b4f749d3e25b5dcfbaba58e366d8dcfea2ec462"
+				},
+				{
+					"ruta": "extras/cards/Training Center.png",
+					"tipo": "carta",
+					"nombre": "Training Center",
+					"sha256": "9629fddd0a7f2820495fdd63c1e7eedd4f9778239db113290ae25c8227055b9d"
+				},
+				{
+					"ruta": "extras/cards/Treasure Cruise.png",
+					"tipo": "carta",
+					"nombre": "Treasure Cruise",
+					"sha256": "4d2b4d00f1a6497322af5964f6995181a626e85ae5e1d4f57716d05e6d8dd533"
+				},
+				{
+					"ruta": "extras/cards/Tribute Mage.png",
+					"tipo": "carta",
+					"nombre": "Tribute Mage",
+					"sha256": "e29a3cc03bbd3341d3a767b233176cf22cce41dce743d43f2618460c5aae058c"
+				},
+				{
+					"ruta": "extras/cards/Vandalblast.png",
+					"tipo": "carta",
+					"nombre": "Vandalblast",
+					"sha256": "887db53f3730c79b2633a496732b1061c70a62db97525397bbef261af74e9e60"
+				},
+				{
+					"ruta": "extras/cards/Wheel of Misfortune.png",
+					"tipo": "carta",
+					"nombre": "Wheel of Misfortune",
+					"sha256": "be5b1844df8484316c05d629ac34e85268dfb4bd08e7bdcd473b538ece1a322c"
+				},
+				{
+					"ruta": "extras/cards/Whir of Invention.png",
+					"tipo": "carta",
+					"nombre": "Whir of Invention",
+					"sha256": "e5f67faf97a019b82d5d31ea480e60898b86b7cd7367af560a2ec5fd81e2bcb5"
+				},
+				{
+					"ruta": "extras/cards/Windfall.png",
+					"tipo": "carta",
+					"nombre": "Windfall",
+					"sha256": "ca20c58f8eb82d3a34e834ec5d332d33f64506a4b4e89a14fcf6d961724c9883"
+				},
+				{
+					"ruta": "extras/cards/Winds of Change.png",
+					"tipo": "carta",
+					"nombre": "Winds of Change",
+					"sha256": "20495eb3cdd9366e31b10adf4b279e09a3e6b72761027d3bfbf51a3eb6ee0c05"
+				},
+				{
+					"ruta": "extras/cards/Witch_s Clinic.png",
+					"tipo": "carta",
+					"nombre": "Witch's Clinic",
+					"sha256": "f3e74c370a7ca17910160636ea5bb7262712e6b31ed70694546332e0792443f1"
+				},
+				{
+					"ruta": "extras/cards/Yusri, Fortune_s Flame.png",
+					"tipo": "carta",
+					"nombre": "Yusri, Fortune's Flame",
+					"sha256": "ffe2f2f40ac03de548f6df6c526f349f16205873370351edfe2d7a94a9910140"
+				},
+				{
+					"ruta": "extras/cards/Zndrsplt, Eye of Wisdom.png",
+					"tipo": "carta",
+					"nombre": "Zndrsplt, Eye of Wisdom",
+					"sha256": "665bceed010f9a515890356f8cbf9614f11df1d6a007da178137a5d8d8f28128"
+				}
+			]
+		}
+	]
+}

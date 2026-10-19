@@ -733,6 +733,15 @@ impl Carta<'_> {
     /// Una insignia centrada en `(cx, cy)` (mm), en una sección de `alto` mm.
     fn insignia(&mut self, ins: &Insignia, cx: f32, cy: f32, alto: f32) {
         let medio = self.vars.get("medio").cloned().unwrap_or_default();
+        // La piel del pack, si la trae; si no, negro con el borde del color.
+        let piel = self.rec.pack.def.insignias.clone().unwrap_or_default();
+        let fondo = piel.fondo.clone().unwrap_or_else(|| "#151515".into());
+        let medio = piel.borde.clone().unwrap_or(medio);
+        let tinta = piel
+            .texto
+            .as_deref()
+            .and_then(super::pack::rgba)
+            .unwrap_or([255, 255, 255, 255]);
         match ins {
             Insignia::Lealtad(coste) => {
                 let (w, h) = (5.8, 4.2);
@@ -750,10 +759,22 @@ impl Carta<'_> {
                 } else {
                     format!("M{x0},{y0} L{x1},{y0} L{x1},{y1} L{x0},{y1} Z")
                 };
-                self.forma(&format!(
-                    r##"<path d="{d}" fill="#151515" stroke="{medio}" stroke-width="0.32" stroke-linejoin="round"/>"##
-                ));
-                self.texto_centrado(coste, "fr", 1.75, [255, 255, 255, 255], cx, cy, w - 0.6);
+                match &piel.png_lealtad {
+                    Some(ruta) => {
+                        let escalado = self.rec.pack.def.escalado;
+                        self.png_del_pack(
+                            ruta,
+                            super::pack::Zona { x: x0, y: y0, w, h },
+                            escalado,
+                            super::pack::Mezcla::Normal,
+                            1.0,
+                        );
+                    }
+                    None => self.forma(&format!(
+                        r##"<path d="{d}" fill="{fondo}" stroke="{medio}" stroke-width="0.32" stroke-linejoin="round"/>"##
+                    )),
+                }
+                self.texto_centrado(coste, "fr", 1.75, tinta, cx, cy, w - 0.6);
             }
             Insignia::Capitulos(nums) => {
                 let (w, h, sep) = (4.3, 3.5, 0.4);
@@ -768,17 +789,9 @@ impl Carta<'_> {
                         b = cx + w / 4.0
                     );
                     self.forma(&format!(
-                        r##"<path d="{d}" fill="#151515" stroke="{medio}" stroke-width="0.3" stroke-linejoin="round"/>"##
+                        r##"<path d="{d}" fill="{fondo}" stroke="{medio}" stroke-width="0.3" stroke-linejoin="round"/>"##
                     ));
-                    self.texto_centrado(
-                        &a_romano(*n),
-                        "fr",
-                        1.3,
-                        [255, 255, 255, 255],
-                        cx,
-                        ym,
-                        w - 0.8,
-                    );
+                    self.texto_centrado(&a_romano(*n), "fr", 1.3, tinta, cx, ym, w - 0.8);
                     y += h + sep;
                 }
             }
@@ -790,44 +803,20 @@ impl Carta<'_> {
                     a = x1 - 1.2
                 );
                 self.forma(&format!(
-                    r##"<path d="{d}" fill="#151515" stroke="{medio}" stroke-width="0.3" stroke-linejoin="round"/>"##
+                    r##"<path d="{d}" fill="{fondo}" stroke="{medio}" stroke-width="0.3" stroke-linejoin="round"/>"##
                 ));
                 if etiqueta.is_empty() {
-                    self.texto_centrado(
-                        valor,
-                        "fr",
-                        1.6,
-                        [255, 255, 255, 255],
-                        cx - 0.5,
-                        cy,
-                        w - 1.6,
-                    );
+                    self.texto_centrado(valor, "fr", 1.6, tinta, cx - 0.5, cy, w - 1.6);
                 } else {
-                    self.texto_centrado(
-                        etiqueta,
-                        "fr",
-                        0.8,
-                        [255, 255, 255, 255],
-                        cx - 0.5,
-                        cy - 1.05,
-                        w - 1.6,
-                    );
-                    self.texto_centrado(
-                        valor,
-                        "fr",
-                        1.45,
-                        [255, 255, 255, 255],
-                        cx - 0.5,
-                        cy + 0.75,
-                        w - 1.6,
-                    );
+                    self.texto_centrado(etiqueta, "fr", 0.8, tinta, cx - 0.5, cy - 1.05, w - 1.6);
+                    self.texto_centrado(valor, "fr", 1.45, tinta, cx - 0.5, cy + 0.75, w - 1.6);
                 }
             }
             Insignia::Prototipo { coste, fr } => {
                 let (w, h) = (9.0, 7.2);
                 let (x0, y0) = (cx - w / 2.0, cy - h / 2.0);
                 self.forma(&format!(
-                    r##"<rect x="{x0}" y="{y0}" width="{w}" height="{h}" rx="0.8" fill="#151515" stroke="{medio}" stroke-width="0.3"/>"##
+                    r##"<rect x="{x0}" y="{y0}" width="{w}" height="{h}" rx="0.8" fill="{fondo}" stroke="{medio}" stroke-width="0.3"/>"##
                 ));
                 self.simbolos_en_fila(coste, cx, y0 + 2.0, 2.3, w - 1.0);
                 self.caja_fr_tramo(fr, cx, y0 + h - 1.95);
@@ -991,6 +980,8 @@ mod tests {
             color: [0, 0, 0, 255],
             alinear: texto::Alinear::Inicio,
             versalitas: false,
+            resalte: None,
+            habilidad: None,
         }
     }
 

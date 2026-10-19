@@ -74,7 +74,25 @@ fn estilo(
     layout: Option<&str>,
     avisos: &mut Vec<Aviso>,
 ) -> Result<EstiloDef, DisenoError> {
-    estilo_para(rec, e.design.style, layout, avisos)
+    estilo_de_cara(rec, e, 0, layout, avisos)
+}
+
+/// El estilo de una cara (las condiciones del pack miran esa cara).
+fn estilo_de_cara(
+    rec: &Recursos<'_>,
+    e: &DisenoEfectivo,
+    cara: usize,
+    layout: Option<&str>,
+    avisos: &mut Vec<Aviso>,
+) -> Result<EstiloDef, DisenoError> {
+    estilo_para(
+        rec,
+        e.design.style,
+        e.design.estilo_pack.as_deref(),
+        layout,
+        Some(&super::render::hechos_de(e, cara)),
+        avisos,
+    )
 }
 
 /// El layout de una cara simple según su cuerpo.
@@ -121,7 +139,7 @@ fn cara_simple(
     let d = &e.design;
     let cu = cuerpo(&d.card, cara);
     let mut avisos = Vec::new();
-    let est = estilo(rec, e, layout_de_cara(e, cara, cu, maq), &mut avisos)?;
+    let est = estilo_de_cara(rec, e, cara, layout_de_cara(e, cara, cu, maq), &mut avisos)?;
     let mut o = Opciones::de(cara, cu, ancho, alto);
     // La capa: todo menos la ilustración, sobre transparente.
     o.transparente = capa;
@@ -566,6 +584,7 @@ pub fn render_capa(
     ancho_px: u32,
 ) -> Result<Option<CapaVista>, DisenoError> {
     let d = &e.design;
+    preparar(motor, rec);
     let (maq, _) = maquetacion(&d.card);
     let cara = cara.min(super::maquetacion::caras_impresas(&d.card) - 1);
     if !es_simple(e, maq, cara) {
@@ -580,7 +599,17 @@ pub fn render_capa(
     };
     let mut px = pieza.px;
     let radio = e.retoques.card_radius.map_or_else(
-        || estilo_para(rec, d.style, None, &mut Vec::new()).map_or(3.0, |s| s.radio),
+        || {
+            estilo_para(
+                rec,
+                d.style,
+                d.estilo_pack.as_deref(),
+                None,
+                None,
+                &mut Vec::new(),
+            )
+            .map_or(3.0, |s| s.radio)
+        },
         |r| r as f32,
     );
     let r = radio * (ancho as f32 / w_mm as f32);
@@ -607,6 +636,18 @@ pub fn medida(e: &DisenoEfectivo, card: CardSize) -> (f64, f64) {
     }
 }
 
+/// Lo que el motor toma del pack antes de pintar (los caracteres que su
+/// letra no tiene).
+fn preparar(motor: &mut Motor, rec: &Recursos<'_>) {
+    motor.m.sustituir = rec
+        .pack
+        .def
+        .sustituir
+        .iter()
+        .map(|(a, b)| (a.clone(), b.clone()))
+        .collect();
+}
+
 /// Pinta una cara de una carta diseñada.
 #[allow(clippy::too_many_arguments)]
 pub fn render(
@@ -620,6 +661,7 @@ pub fn render(
     salida: Salida,
 ) -> Result<Render, DisenoError> {
     let d = &e.design;
+    preparar(motor, rec);
     let (maq, desconocido) = maquetacion(&d.card);
     let mut avisos = Vec::new();
     if desconocido {
@@ -687,9 +729,17 @@ pub fn render(
     // él, las del marco en pantalla y en ángulo recto al imprimir.
     let radio = match e.retoques.card_radius {
         Some(r) => Some(r as f32),
-        None if salida == Salida::Pantalla => {
-            Some(estilo_para(rec, d.style, None, &mut Vec::new()).map_or(3.0, |s| s.radio))
-        }
+        None if salida == Salida::Pantalla => Some(
+            estilo_para(
+                rec,
+                d.style,
+                d.estilo_pack.as_deref(),
+                None,
+                None,
+                &mut Vec::new(),
+            )
+            .map_or(3.0, |s| s.radio),
+        ),
         None => None,
     };
     if let Some(radio) = radio.filter(|r| *r > 0.0) {

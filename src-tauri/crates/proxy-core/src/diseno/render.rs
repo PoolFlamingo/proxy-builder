@@ -23,11 +23,12 @@ use super::estructura;
 use super::letras::Letras;
 use super::maquetacion::Cuerpo;
 use super::modelo::{
-    Aviso, DesignLang, DesignStyle, FrameColor, OnOffAuto, OriginalName, Palette, RulesBox,
+    Aviso, CardData, DesignLang, DesignStyle, FrameColor, OnOffAuto, OriginalName, Palette,
+    RulesBox,
 };
 use super::pack::{
-    rellenar, rgba, Alineacion, CajaPorDefecto, Capa, Condicion, EstiloDef, Hueco, LetraDef, Pack,
-    PaletaDef,
+    rellenar, rgba, Alineacion, CajaPorDefecto, Capa, EstiloDef, Hechos, Hueco, LetraDef, Mezcla,
+    Pack, PaletaDef,
 };
 use super::pintar::{pintar_bloque, Pincel};
 use super::simbolos::{secuencia, Simbolos};
@@ -392,6 +393,35 @@ pub(super) fn a_pixmap(img: &RgbaImage) -> Option<Pixmap> {
     )
 }
 
+/// Reescala pixel art: al ampliar, vecino más cercano (cada píxel se
+/// repite); al reducir, la media del área (filtro caja).
+pub(super) fn reescalar_pixel(img: &RgbaImage, w: u32, h: u32) -> Option<RgbaImage> {
+    let src = ImageRef::new(img.width(), img.height(), img.as_raw(), PixelType::U8x4).ok()?;
+    let mut dst = Image::new(w.max(1), h.max(1), PixelType::U8x4);
+    let ampliar = w >= img.width() && h >= img.height();
+    let alg = if ampliar {
+        ResizeAlg::Nearest
+    } else {
+        ResizeAlg::Convolution(FilterType::Box)
+    };
+    let op = ResizeOptions::new().resize_alg(alg).use_alpha(true);
+    Resizer::new().resize(&src, &mut dst, &op).ok()?;
+    RgbaImage::from_raw(w.max(1), h.max(1), dst.into_vec())
+}
+
+/// La pintura de una capa según su mezcla y su opacidad.
+pub(super) fn pintura_con(mezcla: Mezcla, opacidad: f32) -> PixmapPaint {
+    PixmapPaint {
+        opacity: opacidad.clamp(0.0, 1.0),
+        blend_mode: match mezcla {
+            Mezcla::Normal => tiny_skia::BlendMode::SourceOver,
+            Mezcla::Oscurecer => tiny_skia::BlendMode::Darken,
+            Mezcla::Multiplicar => tiny_skia::BlendMode::Multiply,
+        },
+        ..PixmapPaint::default()
+    }
+}
+
 /// Reescala con Lanczos3 (la calidad de `imaging::frame`).
 fn reescalar(
     img: &RgbaImage,
@@ -679,8 +709,8 @@ pub(super) mod imagenes_png {
 
     use image::RgbaImage;
 
-    use super::reescalar;
-    use crate::diseno::pack::Pack;
+    use super::{reescalar, reescalar_pixel};
+    use crate::diseno::pack::{Escalado, Pack};
 
     /// Lo que se guarda como mucho (bytes RGBA) de cada tipo.
     const MAX_ORIGINALES: usize = 160 << 20;
@@ -735,14 +765,22 @@ pub(super) mod imagenes_png {
     }
 
     /// El PNG a `w`×`h` píxeles.
-    pub fn a_medida(pack: &Pack, ruta: &str, w: u32, h: u32) -> Option<Arc<RgbaImage>> {
-        let clave = format!("{}/{ruta}@{w}x{h}", pack.huella);
+    pub fn a_medida(
+        pack: &Pack,
+        ruta: &str,
+        w: u32,
+        h: u32,
+        escalado: Escalado,
+    ) -> Option<Arc<RgbaImage>> {
+        let clave = format!("{}/{ruta}@{w}x{h}/{escalado:?}", pack.huella);
         if let Some(i) = buscar(&A_MEDIDA, &clave) {
             return Some(i);
         }
         let o = original(pack, ruta)?;
         let img = if o.width() == w && o.height() == h {
             o
+        } else if escalado == Escalado::Pixel {
+            Arc::new(reescalar_pixel(&o, w, h)?)
         } else {
             Arc::new(reescalar(&o, w, h, None)?)
         };
@@ -774,6 +812,10 @@ pub(super) struct Carta<'a> {
     pub(super) faltan: Vec<String>,
     /// La paleta de las capas PNG (`W`, `gold`…).
     pub(super) clave_color: &'static str,
+    /// Los colores de la carta en orden WUBRG (`{color1}`/`{color2}`).
+    pub(super) colores: Vec<String>,
+    /// Lo que se sabe de la carta para las condiciones de las capas.
+    pub(super) hechos: Hechos,
     /// Estrechado mínimo del título y el tipo (1 = ninguno).
     pub(super) estrechado_base: f32,
     /// Grosores pedidos por la colección.
@@ -892,6 +934,25 @@ impl Carta<'_> {
                     Alineacion::Fin => Alinear::Fin,
                 },
                 versalitas: h.versalitas,
+                // Los colores de las reglas, si el pack los trae.
+                resalte: self
+                    .rec
+                    .pack
+                    .def
+                    .colores_texto
+                    .as_ref()
+                    .filter(|_| rol == "reglas")
+                    .and_then(|c| c.resalte.as_deref())
+                    .and_then(rgba),
+                habilidad: self
+                    .rec
+                    .pack
+                    .def
+                    .colores_texto
+                    .as_ref()
+                    .filter(|_| rol == "reglas")
+                    .and_then(|c| c.habilidad.as_deref())
+                    .and_then(rgba),
             },
             letra.mayuscula,
         )
@@ -928,6 +989,8 @@ impl Carta<'_> {
             color,
             alinear: Alinear::Inicio,
             versalitas: false,
+            resalte: None,
+            habilidad: None,
         };
         let p = texto::con_simbolos(texto);
         let (b, f, _) = linea_ajustada(
@@ -995,6 +1058,13 @@ impl Carta<'_> {
         let Some((h, c)) = self.hueco(nombre) else {
             return;
         };
+        let mayus;
+        let p = if h.mayusculas {
+            mayus = texto::en_mayusculas(p);
+            &mayus
+        } else {
+            p
+        };
         let (e, cap) = self.estilo_texto(&h);
         let ancho = ancho_max.unwrap_or(c.w).min(c.w);
         // El estrechado mínimo de la colección, solo en el título y el tipo.
@@ -1055,16 +1125,24 @@ impl Carta<'_> {
     /// El coste, alineado a la derecha del hueco `coste`. Devuelve dónde
     /// empieza (mm), para que el título no lo pise.
     fn coste(&mut self, coste: &str) -> Option<f32> {
-        let (_, c) = self.hueco("coste")?;
+        let (h, c) = self.hueco("coste")?;
         let simbolos = secuencia(coste);
         if simbolos.is_empty() {
             return None;
         }
+        // Con símbolos propios del pack (las fichas de Balatro): sin la sombra
+        // de debajo y con la separación del pack.
+        let propios = self.rec.pack.simbolos.is_some();
         let lado = c.h;
-        let hueco = lado * 0.05;
+        let hueco = lado * self.rec.pack.def.separacion_coste.unwrap_or(0.05);
         let n = simbolos.len() as f32;
         let total = n * lado + (n - 1.0) * hueco;
-        let mut x = c.x + c.w - total;
+        // A la derecha del hueco, o centrado si lo pide.
+        let mut x = if h.alinear == Alineacion::Centro {
+            c.x + (c.w - total) / 2.0
+        } else {
+            c.x + c.w - total
+        };
         let x0 = x;
         let cy = c.y + c.h / 2.0;
         for s in simbolos {
@@ -1073,7 +1151,9 @@ impl Carta<'_> {
                 self.l.y(cy + lado * 0.08),
                 self.l.x(lado / 2.0),
             );
-            super::simbolos::circulo(&mut self.l.px.as_mut(), px, py, r, [0, 0, 0, 200]);
+            if !propios {
+                super::simbolos::circulo(&mut self.l.px.as_mut(), px, py, r, [0, 0, 0, 200]);
+            }
             let (sx, sy, sl) = (self.l.x(x), self.l.y(cy - lado / 2.0), self.l.x(lado));
             if !self
                 .rec
@@ -1115,18 +1195,9 @@ impl Carta<'_> {
         }
     }
 
-    fn capas(&mut self, capas: &[Capa], cond: &Condicion) {
+    fn capas(&mut self, capas: &[Capa], hechos: &Hechos) {
         for capa in capas {
-            let si = &capa.si;
-            let pasa = [
-                (si.corona, cond.corona),
-                (si.fr, cond.fr),
-                (si.cinta, cond.cinta),
-                (si.emblema, cond.emblema),
-            ]
-            .iter()
-            .all(|(pide, hay)| pide.is_none_or(|p| Some(p) == *hay));
-            if !pasa {
+            if !capa.si.cumple(hechos) {
                 continue;
             }
             if capa.png.is_some() {
@@ -1149,19 +1220,116 @@ impl Carta<'_> {
     /// la carta entera).
     fn capa_png(&mut self, capa: &Capa) {
         let pack = self.rec.pack;
-        let Some(ruta) = capa.png_para(&pack.def, self.clave_color) else {
+        let Some(ruta) = capa.png_para(&pack.def, self.clave_color, &self.colores) else {
             return;
         };
-        let z = capa.en.unwrap_or(super::pack::Zona {
-            x: 0.0,
-            y: 0.0,
-            w: self.l.w_mm,
-            h: self.l.h_mm,
-        });
+        let z = match &capa.en {
+            Some(z) => match z.evaluar(&self.nums) {
+                Ok(z) => z,
+                // Una variable que esta carta no tiene (caja fija): no va.
+                Err(_) => return,
+            },
+            None => super::pack::Zona {
+                x: 0.0,
+                y: 0.0,
+                w: self.l.w_mm,
+                h: self.l.h_mm,
+            },
+        };
+        let escalado = capa.escalado.unwrap_or(pack.def.escalado);
+        if let Some([arriba, abajo]) = capa.tramos {
+            self.png_en_tramos(
+                &ruta,
+                z,
+                arriba,
+                abajo,
+                escalado,
+                capa.mezcla.unwrap_or_default(),
+                capa.opacidad.unwrap_or(1.0),
+            );
+            return;
+        }
+        self.png_del_pack(
+            &ruta,
+            z,
+            escalado,
+            capa.mezcla.unwrap_or_default(),
+            capa.opacidad.unwrap_or(1.0),
+        );
+    }
+
+    /// Un PNG del pack en la zona `z` estirado solo por el medio: `arriba` y
+    /// `abajo` mm (a la escala de su ancho) se pintan tal cual.
+    #[allow(clippy::too_many_arguments)]
+    fn png_en_tramos(
+        &mut self,
+        ruta: &str,
+        z: super::pack::Zona,
+        arriba: f32,
+        abajo: f32,
+        escalado: super::pack::Escalado,
+        mezcla: Mezcla,
+        opacidad: f32,
+    ) {
+        let Some(o) = imagenes_png::original(self.rec.pack, ruta) else {
+            return;
+        };
+        if z.w <= 0.0 || o.width() == 0 {
+            return;
+        }
+        // Píxeles del PNG por mm (los de la imagen son cuadrados).
+        let k = o.width() as f32 / z.w;
+        let a_src = ((arriba * k).round() as u32).min(o.height());
+        let b_src = ((abajo * k).round() as u32).min(o.height() - a_src);
+        let m_src = o.height() - a_src - b_src;
+        let x = self.l.x(z.x).round();
+        let tw = (self.l.x(z.x + z.w).round() - x).max(1.0) as u32;
+        let y0 = self.l.y(z.y).round();
+        let y3 = self.l.y(z.y + z.h).round();
+        let y1 = self.l.y(z.y + arriba).round().min(y3);
+        let y2 = self.l.y(z.y + z.h - abajo).round().max(y1);
+        for (sy, sh, dy, dh) in [
+            (0, a_src, y0, y1 - y0),
+            (a_src, m_src, y1, y2 - y1),
+            (a_src + m_src, b_src, y2, y3 - y2),
+        ] {
+            if sh == 0 || dh < 1.0 {
+                continue;
+            }
+            let trozo = image::imageops::crop_imm(o.as_ref(), 0, sy, o.width(), sh).to_image();
+            let img = if escalado == super::pack::Escalado::Pixel {
+                reescalar_pixel(&trozo, tw, dh as u32)
+            } else {
+                reescalar(&trozo, tw, dh as u32, None)
+            };
+            let Some(p) = img.as_ref().and_then(a_pixmap) else {
+                continue;
+            };
+            self.l.px.draw_pixmap(
+                x as i32,
+                dy as i32,
+                p.as_ref(),
+                &pintura_con(mezcla, opacidad),
+                Transform::identity(),
+                None,
+            );
+        }
+    }
+
+    /// Un PNG del pack estirado a la zona `z` (mm).
+    pub(super) fn png_del_pack(
+        &mut self,
+        ruta: &str,
+        z: super::pack::Zona,
+        escalado: super::pack::Escalado,
+        mezcla: Mezcla,
+        opacidad: f32,
+    ) {
+        let pack = self.rec.pack;
         let (x, y) = (self.l.x(z.x).round(), self.l.y(z.y).round());
         let tw = (self.l.x(z.x + z.w).round() - x).max(1.0) as u32;
         let th = (self.l.y(z.y + z.h).round() - y).max(1.0) as u32;
-        let Some(img) = imagenes_png::a_medida(pack, &ruta, tw, th) else {
+        let Some(img) = imagenes_png::a_medida(pack, ruta, tw, th, escalado) else {
             return;
         };
         if let Some(p) = a_pixmap(&img) {
@@ -1169,11 +1337,92 @@ impl Carta<'_> {
                 x as i32,
                 y as i32,
                 p.as_ref(),
-                &PixmapPaint::default(),
+                &pintura_con(mezcla, opacidad),
                 Transform::identity(),
                 None,
             );
         }
+    }
+
+    /// La caja de la etiqueta de la línea de tipo, si esta carta la lleva.
+    pub(super) fn inicio_etiqueta(&self, card: &CardData, cara: usize) -> Option<Caja> {
+        let (h, caja) = self.hueco("etiqueta")?;
+        let valor = valor_de_etiqueta(card, cara, h.contenido.as_deref())?;
+        self.rec
+            .pack
+            .def
+            .etiquetas
+            .contains_key(&valor)
+            .then_some(caja)
+    }
+
+    /// La etiqueta de la línea de tipo (la rareza, «Legendaria» o el tipo
+    /// de tierra básica): su fondo (un PNG del pack o un color) y su texto en
+    /// el idioma del diseño.
+    pub(super) fn etiqueta(&mut self, card: &CardData, cara: usize, lang: DesignLang) {
+        let Some((h, caja)) = self.hueco("etiqueta") else {
+            return;
+        };
+        let Some((valor, def)) = valor_de_etiqueta(card, cara, h.contenido.as_deref())
+            .and_then(|v| Some((v.clone(), self.rec.pack.def.etiquetas.get(&v)?.clone())))
+        else {
+            return;
+        };
+        let z = super::pack::Zona {
+            x: caja.x,
+            y: caja.y,
+            w: caja.w,
+            h: caja.h,
+        };
+        if def.fondo.ends_with(".png") {
+            let escalado = self.rec.pack.def.escalado;
+            self.png_del_pack(&def.fondo, z, escalado, Mezcla::Normal, 1.0);
+        } else if let Some(c) = rgba(&def.fondo) {
+            let r = caja.h * 0.3;
+            self.forma(&format!(
+                r##"<rect x="{}" y="{}" width="{}" height="{}" rx="{r}" fill="rgb({},{},{})" fill-opacity="{}"/>"##,
+                caja.x,
+                caja.y,
+                caja.w,
+                caja.h,
+                c[0],
+                c[1],
+                c[2],
+                c[3] as f32 / 255.0
+            ));
+        }
+        let codigo = match lang {
+            DesignLang::Es => "es",
+            DesignLang::En => "en",
+        };
+        let texto = def
+            .texto
+            .get(codigo)
+            .or_else(|| def.texto.get("en"))
+            .cloned()
+            .unwrap_or(valor);
+        let color = def
+            .color
+            .as_deref()
+            .and_then(rgba)
+            .unwrap_or_else(|| self.color(&h));
+        let rol = h.rol.clone().unwrap_or_else(|| "tipo".into());
+        let cap = h.mayuscula.unwrap_or(caja.h * 0.42);
+        let (cx, cy) = (caja.x + caja.w / 2.0, caja.y + caja.h / 2.0);
+        // La sombra: el mismo texto, oscuro y un poco abajo a la izquierda.
+        if h.sombra {
+            let d = cap * 0.14;
+            self.texto_centrado(
+                &texto,
+                &rol,
+                cap,
+                [0, 0, 0, 120],
+                cx - d,
+                cy + d,
+                caja.w * 0.9,
+            );
+        }
+        self.texto_centrado(&texto, &rol, cap, color, cx, cy, caja.w * 0.9);
     }
 
     /// El pie: líneas separadas por `\n`, columnas por `\t` (tabuladores del
@@ -1184,32 +1433,63 @@ impl Carta<'_> {
         };
         let (e, cap) = self.estilo_texto(&h);
         let paso = h.interlinea.unwrap_or(1.6);
+        // Sin tabuladores, las columnas van seguidas con este hueco entre ellas.
+        const HUECO: f32 = 1.2;
         for (i, linea) in texto.split('\n').enumerate() {
             let cy = c.y + (i as f32 + 0.5) * paso;
-            for (j, col) in linea.split('\t').enumerate() {
-                let col = col.trim();
-                if col.is_empty() {
-                    continue;
-                }
-                let x = c.x
-                    + if j == 0 {
-                        0.0
+            let columnas: Vec<(usize, texto::Bloque)> = linea
+                .split('\t')
+                .enumerate()
+                .filter(|(_, col)| !col.trim().is_empty())
+                .map(|(j, col)| {
+                    let p = texto::con_simbolos(
+                        &col.trim()
+                            .replace('★', "{ESTRELLA}")
+                            .replace('✎', "{PINCEL}"),
+                    );
+                    (
+                        j,
+                        self.motor.m.maquetar(&mut self.motor.letras, &p, &e, None),
+                    )
+                })
+                .collect();
+            // Seguidas: si no caben, se estrecha la línea entera (hasta la mitad).
+            let seguidas = h.tabs.is_empty();
+            let total: f32 = columnas.iter().map(|(_, b)| b.ancho).sum::<f32>()
+                + self.l.x(HUECO) * columnas.len().saturating_sub(1) as f32;
+            let escala_linea = if seguidas && total > self.l.x(c.w) {
+                (self.l.x(c.w) / total).max(0.5)
+            } else {
+                1.0
+            };
+            let mut x_seguida = self.l.x(c.x);
+            let indices: Vec<usize> = columnas.iter().map(|(j, _)| *j).collect();
+            let limites = limites_de_columnas(&h.tabs, c.x, c.w, &indices);
+            for ((_, b), (x, fin)) in columnas.iter().zip(limites) {
+                let (x0, escala) = if seguidas {
+                    (x_seguida, escala_linea)
+                } else {
+                    let cabe = self.l.x(fin - x);
+                    let escala = if b.ancho > cabe && cabe > 0.0 {
+                        (cabe / b.ancho).max(0.5)
                     } else {
-                        h.tabs.get(j - 1).copied().unwrap_or(0.0)
+                        1.0
                     };
-                let p =
-                    texto::con_simbolos(&col.replace('★', "{ESTRELLA}").replace('✎', "{PINCEL}"));
-                let b = self.motor.m.maquetar(&mut self.motor.letras, &p, &e, None);
+                    (self.l.x(x), escala)
+                };
                 let y0 = self.l.y(cy) - b.base + e.tam * cap / 2.0;
-                let x0 = self.l.x(x);
                 self.faltan.extend(pintar_bloque(
                     &mut self.l.px.as_mut(),
-                    &b,
+                    b,
                     x0,
                     y0,
-                    Pincel::default(),
+                    Pincel {
+                        escala_x: escala,
+                        color: None,
+                    },
                     self.rec.simbolos,
                 ));
+                x_seguida += (b.ancho + self.l.x(HUECO)) * escala;
             }
         }
     }
@@ -1272,22 +1552,52 @@ fn nombre_estilo(s: DesignStyle) -> &'static str {
 pub(super) fn estilo_para(
     rec: &Recursos<'_>,
     style: DesignStyle,
+    propio: Option<&str>,
     layout: Option<&str>,
+    hechos: Option<&Hechos>,
     avisos: &mut Vec<Aviso>,
 ) -> Result<EstiloDef, DisenoError> {
+    // Un estilo propio del pack, si lo tiene; si no, el de serie con aviso.
+    let del_pack = propio.and_then(|id| match rec.pack.estilo(id) {
+        Ok(e) => Some(e),
+        Err(_) => {
+            avisos.push(Aviso::EstiloNoEnElPack { estilo: id.into() });
+            None
+        }
+    });
     // Un estilo que el pack no trae sale del pack de la casa (sus capas se
     // buscan allí); si tampoco, el despejado del pack.
     let fabrica = Pack::de_fabrica_compartido();
-    let mut base = rec
-        .pack
-        .estilo(nombre_estilo(style))
-        .or_else(|e| {
-            fabrica
-                .and_then(|f| f.estilo(nombre_estilo(style)).ok())
-                .ok_or(e)
-        })
-        .or_else(|_| rec.pack.estilo("borderless"))
-        .map_err(|_| DisenoError::Lienzo)?;
+    let mut base = match del_pack {
+        Some(e) => e,
+        None => rec
+            .pack
+            .estilo(nombre_estilo(style))
+            .or_else(|e| {
+                fabrica
+                    .and_then(|f| f.estilo(nombre_estilo(style)).ok())
+                    .ok_or(e)
+            })
+            .or_else(|_| rec.pack.estilo("borderless"))
+            .map_err(|_| DisenoError::Lienzo)?,
+    };
+    // Sin un layout pedido por la carta (ficha, saga…): el de la variante
+    // elegida si el estilo tiene uno con su id; si no, el primero de
+    // `layoutSi` que cumpla la carta (tierra no básica…).
+    let por_carta: Option<String> = match (layout, hechos) {
+        (None, Some(h)) => h
+            .variante
+            .clone()
+            .filter(|v| base.layouts.contains_key(v))
+            .or_else(|| {
+                base.layout_si
+                    .iter()
+                    .find(|r| r.si.cumple(h))
+                    .map(|r| r.layout.clone())
+            }),
+        _ => None,
+    };
+    let layout = layout.or(por_carta.as_deref());
     // Las fichas de un pack sin marco de ficha: el de la casa, sin aviso.
     if let Some("ficha") = layout {
         if !base.layouts.contains_key("ficha") {
@@ -1308,6 +1618,9 @@ pub(super) fn estilo_para(
             if let Some(c) = &def.capas {
                 e.capas = c.clone();
             }
+            if let Some(f) = &def.fondo {
+                e.fondo = f.clone();
+            }
             for (k, v) in &def.huecos {
                 e.huecos.insert(k.clone(), v.clone());
             }
@@ -1327,14 +1640,136 @@ pub(super) fn estilo_para(
     Ok(e)
 }
 
+/// Qué etiqueta lleva una cara: su rareza (`rare`…), `legendary` si es
+/// legendaria o su tipo de tierra básica (`mountain`…), según `contenido`.
+pub(super) fn valor_de_etiqueta(
+    card: &CardData,
+    cara: usize,
+    contenido: Option<&str>,
+) -> Option<String> {
+    let tipo = card
+        .faces
+        .get(cara)
+        .or_else(|| card.faces.first())
+        .map(|f| f.type_line.en.to_lowercase())
+        .unwrap_or_default();
+    match contenido.unwrap_or("rareza") {
+        "rareza" => (!card.rarity.is_empty()).then(|| card.rarity.to_lowercase()),
+        "supertipo" => {
+            (tipo.contains("legendary") || card.es_legendaria()).then(|| "legendary".into())
+        }
+        "subtipoTierra" => ["plains", "island", "swamp", "mountain", "forest", "wastes"]
+            .into_iter()
+            .find(|t| tipo.split(|c: char| !c.is_alphanumeric()).any(|p| p == *t))
+            .map(str::to_string),
+        _ => None,
+    }
+}
+
+/// Los colores de una cara (o de la carta) en orden WUBRG. Una carta sin
+/// color (una tierra), los de su identidad: los que produce.
+pub(super) fn colores_wubrg(e: &DisenoEfectivo, cara: usize) -> Vec<String> {
+    let card = &e.design.card;
+    let propios = card
+        .faces
+        .get(cara)
+        .map(|f| f.colors.as_slice())
+        .filter(|c| !c.is_empty())
+        .or_else(|| Some(card.colors.as_slice()).filter(|c| !c.is_empty()))
+        .unwrap_or(&card.color_identity);
+    ["W", "U", "B", "R", "G"]
+        .iter()
+        .filter(|w| propios.iter().any(|c| c == *w))
+        .map(|w| w.to_string())
+        .collect()
+}
+
+/// Lo que se sabe de una cara para las condiciones del pack (sin lo que
+/// depende del marco elegido: corona, cinta y emblema, que pone `pintar_cara`).
+pub(super) fn hechos_de(e: &DisenoEfectivo, cara: usize) -> Hechos {
+    let card = &e.design.card;
+    let f = card.faces.get(cara).or_else(|| card.faces.first());
+    let tipo = f.map(|f| f.type_line.en.to_lowercase()).unwrap_or_default();
+    Hechos {
+        fr: f.is_some_and(|f| f.power.is_some() && f.toughness.is_some()),
+        tipos: tipo
+            .split(|c: char| !c.is_alphanumeric())
+            .filter(|p| !p.is_empty())
+            .map(str::to_string)
+            .collect(),
+        basica: tipo.contains("basic"),
+        legendaria: tipo.contains("legendary") || card.es_legendaria(),
+        colores: colores_wubrg(e, cara).len() as u8,
+        simbolos: f.map_or(0, |f| secuencia(&f.mana_cost).len() as u8),
+        variante: e.design.variante_pack.clone(),
+        ..Hechos::default()
+    }
+}
+
 /// Rellena las fichas del pie.
 pub(super) fn pie_texto(e: &DisenoEfectivo, lang: DesignLang, original: &str) -> String {
+    pie_con_plantilla(e, lang, original, e.pie.template.get(lang))
+}
+
+/// Dónde empieza y hasta dónde puede llegar (mm) cada columna con texto de
+/// una línea del pie (`indices`: su número de columna en la plantilla): en su
+/// tabulador, hasta donde empieza la siguiente que lleve texto; la última,
+/// hasta el final del hueco.
+fn limites_de_columnas(tabs: &[f32], x: f32, w: f32, indices: &[usize]) -> Vec<(f32, f32)> {
+    let tab = |j: usize| {
+        x + if j == 0 {
+            0.0
+        } else {
+            tabs.get(j - 1).copied().unwrap_or(0.0)
+        }
+    };
+    indices
+        .iter()
+        .enumerate()
+        .map(|(i, j)| {
+            let fin = indices.get(i + 1).map_or(x + w, |k| tab(*k) - 0.4);
+            (tab(*j), fin)
+        })
+        .collect()
+}
+
+/// El pie con la plantilla del pack (`plantillaPie`) si la colección no ha
+/// puesto una propia.
+pub(super) fn pie_del_pack(
+    e: &DisenoEfectivo,
+    lang: DesignLang,
+    original: &str,
+    pack: &super::pack::PackDef,
+) -> String {
+    let propia = e.pie.template.get(lang);
+    let clave = match lang {
+        DesignLang::Es => "es",
+        DesignLang::En => "en",
+    };
+    let del_pack = pack
+        .plantilla_pie
+        .get(clave)
+        .or_else(|| pack.plantilla_pie.get("en"));
+    match del_pack {
+        Some(t) if propia == super::efectivo::PIE_DEFECTO => {
+            pie_con_plantilla(e, lang, original, t)
+        }
+        _ => pie_texto(e, lang, original),
+    }
+}
+
+fn pie_con_plantilla(
+    e: &DisenoEfectivo,
+    lang: DesignLang,
+    original: &str,
+    plantilla: &str,
+) -> String {
     let p = &e.pie;
     let idioma = match lang {
         DesignLang::Es => "ES",
         DesignLang::En => "EN",
     };
-    let mut t = p.template.get(lang).clone();
+    let mut t = plantilla.to_string();
     for (k, v) in [
         ("{num}", p.number.as_str()),
         ("{rarity}", p.rarity.as_str()),
@@ -1541,6 +1976,8 @@ pub(super) fn pintar_cara(
         avisos: Vec::new(),
         faltan: Vec::new(),
         clave_color: clave_marco(e, cara),
+        colores: colores_wubrg(e, cara),
+        hechos: hechos_de(e, cara),
         estrechado_base: e.squeeze_base as f32,
         pesos: e.pesos,
         retoques: e.retoques,
@@ -1709,6 +2146,15 @@ pub(super) fn pintar_cara(
         }
     }
 
+    // ── El fondo de la ventana del arte (debajo de la ilustración). En la
+    // carta sin ilustración (el arrastre en vivo) no: taparía el arte que la
+    // pantalla pone debajo.
+    if !o.sin_arte && !c.estilo.fondo.is_empty() {
+        let fondo = c.estilo.fondo.clone();
+        let hechos = c.hechos.clone();
+        c.capas(&fondo, &hechos);
+    }
+
     // ── Ilustración.
     let mut hueco_arte = None;
     let mut arte_pintado = None;
@@ -1733,7 +2179,9 @@ pub(super) fn pintar_cara(
                 .and_then(|a| rec.imagenes.imagen(&a.image.blob).map(|i| (i, a.framing)));
             match &img {
                 Some((i, f)) => pintar_arte(&mut c.l, i, r, f),
-                None => sin_arte(&mut c.l, r),
+                // Sin ilustración, el fondo del estilo si trae; si no, el gris.
+                None if c.estilo.fondo.is_empty() => sin_arte(&mut c.l, r),
+                None => {}
             }
             arte_pintado = Some((img, r));
         }
@@ -1759,11 +2207,12 @@ pub(super) fn pintar_cara(
     if e.original_name == OriginalName::Ribbon && !en_cinta {
         c.avisos.push(Aviso::SinCinta);
     }
-    let cond = Condicion {
-        corona: Some(corona),
-        fr: Some(fr.is_some()),
-        cinta: Some(en_cinta),
-        emblema: Some(e.emblem.is_some()),
+    let cond = Hechos {
+        corona,
+        fr: fr.is_some(),
+        cinta: en_cinta,
+        emblema: e.emblem.is_some(),
+        ..c.hechos.clone()
     };
     let capas = c.estilo.capas.clone();
     // La curva de la ventana dibujada en una capa de imagen: con un radio
@@ -1810,9 +2259,17 @@ pub(super) fn pintar_cara(
             }
         }
     }
-    let ancho_titulo = c
-        .hueco("titulo")
-        .map(|(_, t)| fin_coste.map_or(t.w, |x0| x0 - 0.6 - t.x));
+    // El coste solo le quita sitio al título si van a la misma altura (en
+    // algunos marcos va debajo, centrado).
+    let coste_al_lado = match (c.hueco("titulo"), c.hueco("coste")) {
+        (Some((_, t)), Some((_, k))) => k.y < t.y + t.h && t.y < k.y + k.h,
+        _ => false,
+    };
+    let ancho_titulo = c.hueco("titulo").map(|(_, t)| {
+        fin_coste
+            .filter(|_| coste_al_lado)
+            .map_or(t.w, |x0| x0 - 0.6 - t.x)
+    });
     c.linea("titulo", &texto::llano(&nombre), ancho_titulo, squeeze);
     if en_cinta {
         let p = vec![texto::Trozo::Texto {
@@ -1822,7 +2279,15 @@ pub(super) fn pintar_cara(
         c.linea("cinta", &p, None, squeeze);
     }
     let tipo = datos.type_line.get(lang).clone();
-    c.linea("tipo", &texto::con_simbolos(&tipo), None, squeeze);
+    // Lo mismo con la etiqueta (la píldora de la rareza) en la línea de tipo.
+    let ancho_tipo = match (c.hueco("tipo"), c.inicio_etiqueta(&d.card, cara)) {
+        (Some((_, t)), Some(e)) if e.y < t.y + t.h && t.y < e.y + e.h && e.x > t.x => {
+            Some(t.w.min(e.x - 0.6 - t.x))
+        }
+        _ => None,
+    };
+    c.linea("tipo", &texto::con_simbolos(&tipo), ancho_tipo, squeeze);
+    c.etiqueta(&d.card, cara, lang);
     if let Some(em) = &e.emblem {
         c.imagen("emblema", &em.blob);
     }
@@ -1844,10 +2309,21 @@ pub(super) fn pintar_cara(
         // En las cajas fijas, el texto normal va centrado en vertical; las
         // secciones que reparten llenan la caja.
         let reparte = matches!(contenido, Contenido::Secciones { repartir: true, .. });
+        let vertical = c
+            .estilo
+            .huecos
+            .get("reglas")
+            .and_then(|h| h.alinear_v)
+            .unwrap_or(Alineacion::Centro);
         let libre = if caja_din.is_some() || reparte {
             0.0
         } else {
-            (sitio.h - hecho.alto() / c.l.ky).max(0.0) / 2.0
+            let sobra = (sitio.h - hecho.alto() / c.l.ky).max(0.0);
+            match vertical {
+                Alineacion::Inicio => 0.0,
+                Alineacion::Centro => sobra / 2.0,
+                Alineacion::Fin => sobra,
+            }
         };
         c.pintar_contenido(
             &contenido,
@@ -1893,7 +2369,7 @@ pub(super) fn pintar_cara(
         } else {
             original
         };
-        let pie = pie_texto(e, lang, &original_pie);
+        let pie = pie_del_pack(e, lang, &original_pie, &c.rec.pack.def);
         c.pie(&pie);
     }
 
@@ -1964,6 +2440,8 @@ impl Carta<'_> {
             color,
             alinear: Alinear::Inicio,
             versalitas: false,
+            resalte: None,
+            habilidad: None,
         };
         let p = texto::con_simbolos(texto);
         let (b, f, _) = linea_ajustada(
@@ -2020,6 +2498,47 @@ mod tests {
 
     fn casa() -> Pack {
         Pack::de_fabrica().unwrap()
+    }
+
+    #[test]
+    fn pixel_art_sin_suavizar() {
+        // Un damero de 2×2 ampliado ×3: bloques de 3×3 exactos.
+        let img = RgbaImage::from_fn(2, 2, |x, y| {
+            if (x + y) % 2 == 0 {
+                image::Rgba([0, 0, 0, 255])
+            } else {
+                image::Rgba([255, 255, 255, 255])
+            }
+        });
+        let g = reescalar_pixel(&img, 6, 6).unwrap();
+        for (x, y, p) in g.enumerate_pixels() {
+            assert_eq!(p, img.get_pixel(x / 3, y / 3), "({x},{y})");
+        }
+        // Y al reducir bloques de 2×2 a 1 píxel, el color del bloque, sin halos.
+        let reducida = reescalar_pixel(&reescalar_pixel(&img, 4, 4).unwrap(), 2, 2).unwrap();
+        assert_eq!(reducida, img);
+    }
+
+    #[test]
+    fn oscurecer_se_queda_con_el_mas_oscuro() {
+        let pintar = |mezcla: Mezcla| {
+            let mut fondo = Pixmap::new(1, 1).unwrap();
+            fondo.fill(tiny_skia::Color::from_rgba8(100, 100, 100, 255));
+            let mut capa = Pixmap::new(1, 1).unwrap();
+            capa.fill(tiny_skia::Color::from_rgba8(160, 160, 160, 255));
+            fondo.draw_pixmap(
+                0,
+                0,
+                capa.as_ref(),
+                &pintura_con(mezcla, 1.0),
+                Transform::identity(),
+                None,
+            );
+            fondo.pixel(0, 0).unwrap().red()
+        };
+        assert_eq!(pintar(Mezcla::Normal), 160);
+        assert_eq!(pintar(Mezcla::Oscurecer), 100);
+        assert!(pintar(Mezcla::Multiplicar) < 100);
     }
 
     /// El color medio de una paleta del pack.
@@ -2186,11 +2705,173 @@ mod tests {
     }
 
     #[test]
+    fn un_estilo_propio_del_pack_y_si_no_esta_su_base() {
+        let mut p = casa();
+        // «prueba»: el clásico con otro radio, heredando del clásico.
+        let mut propio = p.estilo("classic").unwrap().clone();
+        propio.radio = 9.0;
+        propio.base = Some("classic".into());
+        p.def.estilos.insert("prueba".into(), propio.clone());
+        let s = Simbolos::nuevos();
+        let mut avisos = Vec::new();
+        let e = estilo_para(
+            &recursos(&p, &s),
+            DesignStyle::Classic,
+            Some("prueba"),
+            None,
+            None,
+            &mut avisos,
+        )
+        .unwrap();
+        assert_eq!(e, propio);
+        assert!(avisos.is_empty());
+        // Otro pack sin ese estilo: el clásico, con aviso.
+        let q = casa();
+        let e = estilo_para(
+            &recursos(&q, &s),
+            DesignStyle::Classic,
+            Some("prueba"),
+            None,
+            None,
+            &mut avisos,
+        )
+        .unwrap();
+        assert_eq!(&e, q.estilo("classic").unwrap());
+        assert_eq!(
+            avisos,
+            vec![Aviso::EstiloNoEnElPack {
+                estilo: "prueba".into()
+            }]
+        );
+    }
+
+    #[test]
+    fn el_layout_por_la_carta_y_por_la_variante() {
+        let mut p = casa();
+        let mut clasico = p.estilo("classic").unwrap().clone();
+        // «noBasica»: otra ventana de arte; «sinCaja»: la variante.
+        let mut no_basica = super::super::pack::LayoutDef::default();
+        let mut arte = clasico.arte.clone();
+        arte.y = super::super::pack::Valor::Num(1.0);
+        no_basica.arte = Some(arte.clone());
+        clasico.layouts.insert("noBasica".into(), no_basica.clone());
+        let mut variante = no_basica.clone();
+        arte.y = super::super::pack::Valor::Num(2.0);
+        variante.arte = Some(arte);
+        clasico.layouts.insert("sinCaja".into(), variante.clone());
+        clasico.layout_si = vec![super::super::pack::ReglaLayout {
+            si: serde_json::from_str(r#"{"tipo": ["land"], "basica": false}"#).unwrap(),
+            layout: "noBasica".into(),
+        }];
+        p.def.estilos.insert("classic".into(), clasico);
+        let s = Simbolos::nuevos();
+        let r = recursos(&p, &s);
+        let con = |h: Hechos| {
+            estilo_para(
+                &r,
+                DesignStyle::Classic,
+                None,
+                None,
+                Some(&h),
+                &mut Vec::new(),
+            )
+            .unwrap()
+        };
+        let tierra = Hechos {
+            tipos: vec!["land".into()],
+            ..Hechos::default()
+        };
+        assert_eq!(Some(&con(tierra.clone()).arte), no_basica.arte.as_ref());
+        // La variante elegida manda.
+        let elegida = con(Hechos {
+            variante: Some("sinCaja".into()),
+            ..tierra.clone()
+        });
+        assert_eq!(Some(&elegida.arte), variante.arte.as_ref());
+        // Una básica o una criatura: el normal.
+        let normal = p.estilo("classic").unwrap().arte.clone();
+        assert_eq!(
+            con(Hechos {
+                basica: true,
+                ..tierra
+            })
+            .arte,
+            normal
+        );
+        assert_eq!(con(Hechos::default()).arte, normal);
+    }
+
+    #[test]
+    fn la_etiqueta_de_cada_carta() {
+        let carta = |rareza: &str, tipo: &str| CardData {
+            rarity: rareza.into(),
+            faces: vec![FaceData {
+                type_line: super::super::modelo::ByLang {
+                    es: String::new(),
+                    en: tipo.into(),
+                },
+                ..FaceData::default()
+            }],
+            ..CardData::default()
+        };
+        let rara = carta("rare", "Legendary Creature — Human");
+        assert_eq!(valor_de_etiqueta(&rara, 0, None).as_deref(), Some("rare"));
+        assert_eq!(
+            valor_de_etiqueta(&rara, 0, Some("supertipo")).as_deref(),
+            Some("legendary")
+        );
+        assert_eq!(valor_de_etiqueta(&rara, 0, Some("subtipoTierra")), None);
+        let montana = carta("common", "Basic Land — Mountain");
+        assert_eq!(
+            valor_de_etiqueta(&montana, 0, Some("subtipoTierra")).as_deref(),
+            Some("mountain")
+        );
+        assert_eq!(valor_de_etiqueta(&montana, 0, Some("supertipo")), None);
+        assert_eq!(valor_de_etiqueta(&carta("", "Instant"), 0, None), None);
+    }
+
+    #[test]
+    fn mayusculas_sin_tocar_los_simbolos() {
+        let p = texto::con_simbolos("Shivan Reef {T}");
+        let m = texto::en_mayusculas(&p);
+        assert_eq!(
+            m[0],
+            texto::Trozo::Texto {
+                texto: "SHIVAN REEF ".into(),
+                cursiva: false
+            }
+        );
+        assert_eq!(m[1], texto::Trozo::Simbolo("T".into()));
+    }
+
+    #[test]
+    fn sin_estilo_propio_la_huella_no_cambia() {
+        // Los diseños de antes no llevan el campo: su JSON (y su huella) es igual.
+        let d = diseno_de_prueba();
+        assert!(d.estilo_pack.is_none());
+        let json = serde_json::to_string(&d).unwrap();
+        assert!(!json.contains("estiloPack"));
+        let mut con = d.clone();
+        con.estilo_pack = Some("tarot".into());
+        assert!(serde_json::to_string(&con)
+            .unwrap()
+            .contains("\"estiloPack\":\"tarot\""));
+    }
+
+    #[test]
     fn sin_layout_es_el_estilo_tal_cual() {
         let p = casa();
         let s = Simbolos::nuevos();
         let mut avisos = Vec::new();
-        let e = estilo_para(&recursos(&p, &s), DesignStyle::Classic, None, &mut avisos).unwrap();
+        let e = estilo_para(
+            &recursos(&p, &s),
+            DesignStyle::Classic,
+            None,
+            None,
+            None,
+            &mut avisos,
+        )
+        .unwrap();
         assert_eq!(&e, p.estilo("classic").unwrap());
         assert!(avisos.is_empty());
     }
@@ -2205,7 +2886,9 @@ mod tests {
         let e = estilo_para(
             &recursos(&p, &s),
             DesignStyle::Borderless,
+            None,
             Some("ficha"),
+            None,
             &mut avisos,
         )
         .unwrap();
@@ -2226,7 +2909,9 @@ mod tests {
         let e = estilo_para(
             &recursos(&p, &s),
             DesignStyle::Extended,
+            None,
             Some("saga"),
+            None,
             &mut avisos,
         )
         .unwrap();
@@ -2243,7 +2928,9 @@ mod tests {
         let e = estilo_para(
             &recursos(&p, &s),
             DesignStyle::Borderless,
+            None,
             Some("batalla"),
+            None,
             &mut avisos,
         )
         .unwrap();
@@ -2259,7 +2946,9 @@ mod tests {
         let e = estilo_para(
             &recursos(&p, &s),
             DesignStyle::Borderless,
+            None,
             Some("inventado"),
+            None,
             &mut avisos,
         )
         .unwrap();
@@ -2275,7 +2964,9 @@ mod tests {
         estilo_para(
             &recursos(&p, &s),
             DesignStyle::FullArt,
+            None,
             Some("ficha"),
+            None,
             &mut avisos,
         )
         .unwrap();
@@ -2295,7 +2986,9 @@ mod tests {
         let e = estilo_para(
             &recursos(&p, &s),
             DesignStyle::FullArt,
+            None,
             Some("alto"),
+            None,
             &mut avisos,
         )
         .unwrap();
@@ -2314,6 +3007,8 @@ mod tests {
             &recursos(&p, &s),
             DesignStyle::Classic,
             None,
+            None,
+            None,
             &mut Vec::new(),
         );
         assert_eq!(e.unwrap(), clasico);
@@ -2325,7 +3020,9 @@ mod tests {
         let ficha_casa = estilo_para(
             &recursos(&p, &Simbolos::nuevos()),
             DesignStyle::Borderless,
+            None,
             Some("ficha"),
+            None,
             &mut Vec::new(),
         )
         .unwrap();
@@ -2340,7 +3037,9 @@ mod tests {
         let e = estilo_para(
             &recursos(&p, &s),
             DesignStyle::Borderless,
+            None,
             Some("ficha"),
+            None,
             &mut avisos,
         )
         .unwrap();
@@ -2469,6 +3168,52 @@ mod tests {
         let e = carta(&["W"], "Instant");
         let t = pie_texto(&e, DesignLang::Es, "Dusk");
         assert_eq!(t, "0002\tR\tDusk\nAKH • ES\t{PINCEL} ");
+    }
+
+    #[test]
+    fn la_ultima_columna_del_pie_llega_al_final() {
+        // El de fábrica: tabuladores en 8 y 10,6 mm. En la segunda línea
+        // («MH2 • ES» y el artista) el artista llega al final del hueco, no
+        // al tabulador que viene detrás (que esa línea no usa).
+        let casi = |l: Vec<(f32, f32)>, e: &[(f32, f32)]| {
+            assert_eq!(l.len(), e.len(), "{l:?}");
+            for ((a, b), (c, d)) in l.iter().zip(e) {
+                assert!(
+                    (a - c).abs() < 1e-4 && (b - d).abs() < 1e-4,
+                    "{l:?} != {e:?}"
+                );
+            }
+        };
+        casi(
+            limites_de_columnas(&[8.0, 10.6], 4.0, 50.0, &[0, 1]),
+            &[(4.0, 11.6), (12.0, 54.0)],
+        );
+        // En la primera, cada una hasta la siguiente.
+        casi(
+            limites_de_columnas(&[8.0, 10.6], 4.0, 50.0, &[0, 1, 2]),
+            &[(4.0, 11.6), (12.0, 14.2), (14.6, 54.0)],
+        );
+        // Una columna vacía en medio no cuenta.
+        casi(
+            limites_de_columnas(&[8.0, 10.6], 4.0, 50.0, &[0, 2]),
+            &[(4.0, 14.2), (14.6, 54.0)],
+        );
+    }
+
+    #[test]
+    fn el_pie_del_pack_solo_si_la_coleccion_no_pone_uno() {
+        let mut e = carta(&["W"], "Instant");
+        let mut pack = Pack::de_fabrica().unwrap().def;
+        pack.plantilla_pie
+            .insert("en".into(), "{set} • {lang} {num}\t{brush} {artist}".into());
+        // Sin el del idioma, el inglés.
+        assert_eq!(
+            pie_del_pack(&e, DesignLang::Es, "Dusk", &pack),
+            "AKH • ES 0002\t{PINCEL} "
+        );
+        // La de la colección manda.
+        e.pie.template.es = "{num}".into();
+        assert_eq!(pie_del_pack(&e, DesignLang::Es, "Dusk", &pack), "0002");
     }
 
     fn cara(p: Option<&str>, t: Option<&str>, l: Option<&str>, d: Option<&str>) -> FaceData {

@@ -35,10 +35,12 @@ import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { useUi } from "@/stores/ui-store";
 import { AJUSTES_CERO, AjustesFinos, hayAjustes } from "./ajustes-finos";
+import { elegirEstilo, opcionesEstilo, packEfectivo, propiosDe, valorEstilo } from "./estilos";
 import { ID_ORIGINAL, useMarcosOriginales } from "./marcos-originales";
+import { usePacksDescargables } from "./packs-descargables";
 import { RecortarDialog } from "./recortar-dialog";
 import { rehacerMiniaturas } from "./renumerar";
-import { ESTILOS, letraRareza, MAQUETACIONES, NOMBRE_ORIGINAL, PALETAS, RAREZAS } from "./textos";
+import { letraRareza, MAQUETACIONES, NOMBRE_ORIGINAL, PALETAS, RAREZAS } from "./textos";
 import { TraduccionSugerida } from "./traduccion";
 
 type Cambiar = (f: (d: CardDesign) => CardDesign) => void;
@@ -136,6 +138,7 @@ export function Formulario({
 							cambiar={cambiar}
 							cara={cara}
 							colecciones={colecciones}
+							packs={packs}
 							resumen={resumen}
 						/>
 					</TabsContent>
@@ -172,12 +175,18 @@ export function Formulario({
 
 // ── Carta ──────────────────────────────────────────────────────────────────
 
+/**
+ * Un dato de la carta: etiqueta y valor, dentro de la rejilla de `Datos`. La
+ * columna de las etiquetas mide lo que la más larga (como mucho la mitad):
+ * con un ancho fijo, en otro idioma o con una letra más ancha se montaban
+ * sobre el valor.
+ */
 function Dato({ etiqueta, children }: { etiqueta: string; children: React.ReactNode }) {
 	return (
-		<div className="flex gap-2.5 text-xs">
-			<span className="w-28 shrink-0 text-muted-foreground">{etiqueta}</span>
-			<span className="min-w-0 flex-1 break-words">{children}</span>
-		</div>
+		<>
+			<dt className="break-words text-muted-foreground">{etiqueta}</dt>
+			<dd className="min-w-0 break-words">{children}</dd>
+		</>
 	);
 }
 
@@ -216,15 +225,21 @@ function PestanaCarta({
 	cambiar,
 	cara,
 	colecciones,
+	packs,
 	resumen,
 }: {
 	design: CardDesign;
 	cambiar: Cambiar;
 	cara: number;
 	colecciones: Collection[];
+	packs: PackInfo[];
 	resumen: Resumen | null;
 }) {
-	const { t } = useLang();
+	const { t, lang } = useLang();
+	const propios = propiosDe(packs, packEfectivo(design, colecciones));
+	const valor = valorEstilo(design.style, design.estiloPack);
+	const variantes = propios.find((e) => e.id === design.estiloPack)?.variantes ?? [];
+	const sinVariante = "__carta";
 	const f = design.card.faces[cara] ?? design.card.faces[0];
 	const fr =
 		f?.power != null && f.toughness != null
@@ -238,36 +253,62 @@ function PestanaCarta({
 					<Lock className="size-3.5" />
 					{t("Datos de la carta original (no se tocan)")}
 				</div>
-				<Dato etiqueta={t("Nombre original")}>
-					{design.card.faces.map((x) => x.name).join(" // ")}
-				</Dato>
-				<Dato etiqueta={t("Coste")}>
-					<span className="font-mono">{f?.manaCost || "—"}</span>
-				</Dato>
-				<Dato etiqueta={t("Tipo")}>
-					{f?.typeLine.es}
-					{f?.typeLine.en && f.typeLine.en !== f.typeLine.es && (
-						<span className="block text-muted-foreground">{f.typeLine.en}</span>
+				<dl className="grid grid-cols-[fit-content(50%)_minmax(0,1fr)] gap-x-2.5 gap-y-1.5 text-xs">
+					<Dato etiqueta={t("Nombre original")}>
+						{design.card.faces.map((x) => x.name).join(" // ")}
+					</Dato>
+					<Dato etiqueta={t("Coste")}>
+						<span className="font-mono">{f?.manaCost || "—"}</span>
+					</Dato>
+					<Dato etiqueta={t("Tipo")}>
+						{f?.typeLine.es}
+						{f?.typeLine.en && f.typeLine.en !== f.typeLine.es && (
+							<span className="block text-muted-foreground">{f.typeLine.en}</span>
+						)}
+					</Dato>
+					{fr && <Dato etiqueta={t("Fuerza/resistencia")}>{fr}</Dato>}
+					<Dato etiqueta={t("Rareza")}>{t(RAREZAS[design.card.rarity] ?? design.card.rarity)}</Dato>
+					<Dato etiqueta={t("Edición")}>
+						{design.card.set.toUpperCase()} {design.card.collectorNumber}
+					</Dato>
+					{resumen && (
+						<Dato etiqueta={t("Maquetación")}>{t(MAQUETACIONES[resumen.maquetacion])}</Dato>
 					)}
-				</Dato>
-				{fr && <Dato etiqueta={t("Fuerza/resistencia")}>{fr}</Dato>}
-				<Dato etiqueta={t("Rareza")}>{t(RAREZAS[design.card.rarity] ?? design.card.rarity)}</Dato>
-				<Dato etiqueta={t("Edición")}>
-					{design.card.set.toUpperCase()} {design.card.collectorNumber}
-				</Dato>
-				{resumen && (
-					<Dato etiqueta={t("Maquetación")}>{t(MAQUETACIONES[resumen.maquetacion])}</Dato>
-				)}
+				</dl>
 			</div>
 			{resumen && resumen.partes.length > 0 && <Partes partes={resumen.partes} />}
 			<Fila etiqueta={t("Estilo")}>
 				<Selector
-					valor={design.style}
-					opciones={ESTILOS.map((e) => ({ valor: e.valor, etiqueta: t(e.etiqueta) }))}
-					onChange={(style) => cambiar((d) => ({ ...d, style }))}
+					valor={valor}
+					opciones={opcionesEstilo(t, lang, propios, valor)}
+					onChange={(v) =>
+						cambiar((d) => ({
+							...d,
+							...elegirEstilo(v, propios, d.style),
+							variantePack: undefined,
+						}))
+					}
 					ancho="w-48"
 				/>
 			</Fila>
+			{variantes.length > 0 && (
+				<Fila etiqueta={t("Variante")}>
+					<Selector
+						valor={design.variantePack ?? sinVariante}
+						opciones={[
+							{ valor: sinVariante, etiqueta: t("Según la carta") },
+							...variantes.map((v) => ({
+								valor: v.id,
+								etiqueta: lang === "en" ? v.nombreEn : v.nombreEs,
+							})),
+						]}
+						onChange={(v) =>
+							cambiar((d) => ({ ...d, variantePack: v === sinVariante ? undefined : v }))
+						}
+						ancho="w-48"
+					/>
+				</Fila>
+			)}
 			<Fila etiqueta={t("Colección")}>
 				<Selector
 					valor={design.collection ?? ninguna}
@@ -372,6 +413,11 @@ function PestanaTextos({
 								/>
 								<p className="text-[11px] text-amber-700 dark:text-amber-400">
 									{t("Reglas escritas a mano: cuida que digan exactamente lo mismo que la carta.")}
+								</p>
+								<p className="text-[11px] text-muted-foreground">
+									{t(
+										"[[así]] resalta unas palabras con el color del pack (si lo trae, como el de Balatro); sin él, salen normales.",
+									)}
 								</p>
 							</>
 						) : (
@@ -603,7 +649,23 @@ export function EditorMarco({
 	}));
 	// Los originales se ofrecen siempre; si no están, elegirlos los descarga.
 	if (!hayOriginal) opciones.push({ valor: ID_ORIGINAL, etiqueta: t("Original (descargar)") });
+	// Y los del repositorio de packs (Balatro), igual.
+	const descargables = usePacksDescargables();
+	useEffect(() => {
+		if (!descargables.lista) void descargables.cargar();
+	}, [descargables.lista, descargables.cargar]);
+	const porBajar = (descargables.lista ?? []).filter((d) => !packs.some((p) => p.id === d.id));
+	for (const d of porBajar) {
+		opciones.push({ valor: d.id, etiqueta: t("{nombre} (descargar)", { nombre: d.nombre }) });
+	}
 	const elegirPack = (pack: string) => {
+		if (porBajar.some((d) => d.id === pack)) {
+			descargables
+				.descargar(pack)
+				.then(() => onChange({ ...marco, pack }))
+				.catch((e) => toast.error(mensaje(e)));
+			return;
+		}
 		if (pack !== ID_ORIGINAL || hayOriginal) return onChange({ ...marco, pack });
 		originales
 			.descargar()
@@ -615,6 +677,19 @@ export function EditorMarco({
 			<Fila etiqueta={t("Pack de marcos")}>
 				<Selector valor={marco.pack} opciones={opciones} onChange={elegirPack} ancho="w-52" />
 			</Fila>
+			{descargables.progreso && (
+				<div className="flex flex-col gap-1.5">
+					<Progress
+						value={(descargables.progreso.hechas * 100) / Math.max(1, descargables.progreso.total)}
+					/>
+					<span className="text-[11px] text-muted-foreground">
+						{t("Descargando el pack: {hechas} de {total}", {
+							hechas: descargables.progreso.hechas,
+							total: descargables.progreso.total,
+						})}
+					</span>
+				</div>
+			)}
 			{originales.progreso ? (
 				<div className="flex flex-col gap-1.5">
 					<Progress

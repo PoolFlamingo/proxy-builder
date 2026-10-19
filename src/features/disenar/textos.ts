@@ -71,6 +71,10 @@ export function textoAviso(a: Aviso, t: T): string {
 			return t("Faltan símbolos de maná ({lista}). Descárgalos en «Letras, marcos y símbolos».", {
 				lista: a.simbolos.join(", "),
 			});
+		case "estiloNoEnElPack":
+			return t("El pack de marcos no tiene el estilo «{estilo}»: se usa su estilo de serie.", {
+				estilo: a.estilo,
+			});
 		case "packSinLayout":
 			return t("El pack de marcos no tiene diseño para «{layout}»: se usa el normal.", {
 				layout: a.layout,

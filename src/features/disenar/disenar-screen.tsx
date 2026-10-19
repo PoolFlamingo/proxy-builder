@@ -30,6 +30,7 @@ import { Formulario } from "./formulario";
 import { agrupar, type Grupo } from "./grupos";
 import { ListaCartas } from "./lista-cartas";
 import { useMarcosOriginales } from "./marcos-originales";
+import { usePacksDescargables } from "./packs-descargables";
 import { renumerar } from "./renumerar";
 import { useBorrador } from "./use-borrador";
 import { useResumen } from "./use-resumen";
@@ -68,14 +69,16 @@ export function DisenarScreen() {
 	// Colecciones y packs (se releen al cerrar sus diálogos y al descargar los
 	// marcos originales).
 	const versionOriginales = useMarcosOriginales((s) => s.version);
+	const versionDescargables = usePacksDescargables((s) => s.version);
 	useEffect(() => {
+		void versionDescargables;
 		call("collection_list", {})
 			.then(setColecciones)
 			.catch(() => {});
 		call("packs_list", {})
 			.then(setPacks)
 			.catch(() => {});
-	}, [dialogo, versionOriginales]);
+	}, [dialogo, versionOriginales, versionDescargables]);
 
 	// La primera vez, los símbolos de maná (se descargan si no están).
 	useEffect(() => {

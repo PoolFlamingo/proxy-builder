@@ -24,10 +24,12 @@ import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
 import { AJUSTES_CERO, AjustesFinos, hayAjustes } from "./ajustes-finos";
+import { elegirEstilo, opcionesEstilo, propiosDe, valorEstilo } from "./estilos";
 import { EditorMarco } from "./formulario";
 import { useMarcosOriginales } from "./marcos-originales";
+import { usePacksDescargables } from "./packs-descargables";
 import { rehacerMiniaturas } from "./renumerar";
-import { ESTILOS, NOMBRE_ORIGINAL } from "./textos";
+import { NOMBRE_ORIGINAL } from "./textos";
 
 /** La plantilla del pie de fábrica (la misma que `PIE_DEFECTO` en Rust). */
 const PIE_DEFECTO = "{num}\t{rarity}\t{original}\n{set} • {lang}\t{brush} {artist}";
@@ -100,12 +102,14 @@ function Contenido() {
 
 	// Los packs, también al descargar los marcos originales.
 	const versionOriginales = useMarcosOriginales((s) => s.version);
+	const versionDescargables = usePacksDescargables((s) => s.version);
 	useEffect(() => {
 		void versionOriginales;
+		void versionDescargables;
 		call("packs_list", {})
 			.then(setPacks)
 			.catch(() => {});
-	}, [versionOriginales]);
+	}, [versionOriginales, versionDescargables]);
 
 	// Al cerrar, si se guardó algo, se rehacen las miniaturas viejas.
 	useEffect(() => {
@@ -322,7 +326,7 @@ function Editor({
 	packs: PackInfo[];
 	familias: string[];
 }) {
-	const { t, mensaje } = useLang();
+	const { t, mensaje, lang } = useLang();
 	const ajustes = useDeck((s) => s.deck?.settings);
 	const poner = (p: Partial<Collection>) => onChange({ ...c, ...p });
 	const opcionesLetra = useMemo(
@@ -360,9 +364,17 @@ function Editor({
 			</Fila>
 			<Fila etiqueta={t("Estilo de las cartas nuevas")}>
 				<Selector
-					valor={c.defaultStyle}
-					opciones={ESTILOS.map((e) => ({ valor: e.valor, etiqueta: t(e.etiqueta) }))}
-					onChange={(defaultStyle) => poner({ defaultStyle })}
+					valor={valorEstilo(c.defaultStyle, c.estiloPackDefecto)}
+					opciones={opcionesEstilo(
+						t,
+						lang,
+						propiosDe(packs, c.frame.pack),
+						valorEstilo(c.defaultStyle, c.estiloPackDefecto),
+					)}
+					onChange={(v) => {
+						const e = elegirEstilo(v, propiosDe(packs, c.frame.pack), c.defaultStyle);
+						poner({ defaultStyle: e.style, estiloPackDefecto: e.estiloPack });
+					}}
 					ancho="w-52"
 				/>
 			</Fila>

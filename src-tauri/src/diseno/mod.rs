@@ -6,6 +6,7 @@
 
 pub mod arte;
 pub mod borrador;
+pub mod descargables;
 pub mod letras_libres;
 pub mod lote;
 pub mod original;

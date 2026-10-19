@@ -463,6 +463,23 @@
 				"ruta": "domine/OFL.txt",
 				"sha256": "4931b601cf50f9e6ee749ae76778a067fb2e0df4296f08d095ef38afc526a5e4"
 			}
+		},
+		{
+			"id": "pixelifysans",
+			"familia": "Pixelify Sans",
+			"uso": "ambos",
+			"cursiva": false,
+			"ficheros": [
+				{
+					"ruta": "pixelifysans/PixelifySans[wght].ttf",
+					"sha256": "9ba86cd010a4de309d263ceff8e8044092c9db7efda869620cb9ff1c4389e8a5",
+					"bytes": 79160
+				}
+			],
+			"licencia": {
+				"ruta": "pixelifysans/OFL.txt",
+				"sha256": "b66ba46f511a851ab09998b5a5a9fdbb102545a3864cb993095e1745996873a7"
+			}
 		}
 	]
 }

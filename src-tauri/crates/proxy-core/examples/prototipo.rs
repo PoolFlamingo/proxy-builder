@@ -235,6 +235,8 @@ impl Ctx {
             color,
             alinear: Alinear::Inicio,
             versalitas: false,
+            resalte: None,
+            habilidad: None,
         }
     }
 

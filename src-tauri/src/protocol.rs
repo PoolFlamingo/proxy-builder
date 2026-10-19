@@ -49,6 +49,15 @@ pub enum Ruta {
         blob: String,
         lado: u32,
     },
+    /// Una imagen extra de un pack descargable (`/x/<pack>/<n>`).
+    Extra {
+        pack: String,
+        indice: usize,
+    },
+    /// Una letra de un tema de tweakcn instalado (`/f/<huella>.woff2`).
+    Letra {
+        huella: String,
+    },
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -109,6 +118,24 @@ pub fn leer_ruta(ruta: &str) -> Result<Ruta, Fallo> {
                 lado,
             })
         }
+        ["x", pack, n]
+            if !pack.is_empty()
+                && pack.len() <= 40
+                && pack
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_') =>
+        {
+            Ok(Ruta::Extra {
+                pack: (*pack).to_string(),
+                indice: n.parse().map_err(|_| Fallo::Mala)?,
+            })
+        }
+        ["f", fichero] => match fichero.strip_suffix(".woff2") {
+            Some(h) if es_huella(h) => Ok(Ruta::Letra {
+                huella: h.to_string(),
+            }),
+            _ => Err(Fallo::Mala),
+        },
         _ => Err(Fallo::NoEsta),
     }
 }
@@ -184,6 +211,16 @@ async fn atender<R: tauri::Runtime>(app: tauri::AppHandle<R>, ruta: String) -> R
                 _ => vacia(StatusCode::INTERNAL_SERVER_ERROR),
             }
         }
+        Ok(Ruta::Extra { pack, indice }) => {
+            match crate::diseno::descargables::extra_por_indice(&estado, &pack, indice) {
+                Ok(b) => respuesta(StatusCode::OK, "image/png", b),
+                Err(_) => vacia(StatusCode::NOT_FOUND),
+            }
+        }
+        Ok(Ruta::Letra { huella }) => match crate::temas::letra(&estado.paths.data, &huella) {
+            Ok(b) => respuesta(StatusCode::OK, "font/woff2", b),
+            Err(_) => vacia(StatusCode::NOT_FOUND),
+        },
         Ok(Ruta::Arte { blob, lado }) => {
             let _permiso = estado.renders.acquire().await;
             let app2 = app.clone();
@@ -205,7 +242,12 @@ async fn atender<R: tauri::Runtime>(app: tauri::AppHandle<R>, ruta: String) -> R
                 .join("t")
                 .join(format!("{huella}.jpg"));
             if let Ok(b) = std::fs::read(&ruta) {
-                return respuesta(StatusCode::OK, "image/jpeg", b);
+                let tipo = if b.starts_with(&[0x89, b'P', b'N', b'G']) {
+                    "image/png"
+                } else {
+                    "image/jpeg"
+                };
+                return respuesta(StatusCode::OK, tipo, b);
             }
             let url = estado
                 .miniaturas
@@ -215,10 +257,25 @@ async fn atender<R: tauri::Runtime>(app: tauri::AppHandle<R>, ruta: String) -> R
             let Some(url) = url else {
                 return vacia(StatusCode::NOT_FOUND);
             };
-            match estado.scryfall.download(&url).await {
+            // Las de Scryfall, por su cliente; las de otras fuentes, solo por
+            // el de la lista cerrada, y vueltas a codificar.
+            let bajada = if url.starts_with("https://cards.scryfall.io/") {
+                estado.scryfall.download(&url).await
+            } else {
+                match estado.externo.bajar(&url, crate::fuentes::MAX_IMAGEN).await {
+                    Ok(b) => crate::fuentes::limpiar_imagen(&b),
+                    Err(e) => Err(e),
+                }
+            };
+            match bajada {
                 Ok(b) => {
                     let _ = crate::store::blobs::escribir_atomico(&ruta, &b);
-                    respuesta(StatusCode::OK, "image/jpeg", b)
+                    let tipo = if b.starts_with(&[0x89, b'P', b'N', b'G']) {
+                        "image/png"
+                    } else {
+                        "image/jpeg"
+                    };
+                    respuesta(StatusCode::OK, tipo, b)
                 }
                 Err(_) => vacia(StatusCode::BAD_GATEWAY),
             }
@@ -292,6 +349,26 @@ mod tests {
     }
 
     #[test]
+    fn la_ruta_de_un_extra() {
+        assert_eq!(
+            leer_ruta("/x/balatro/12"),
+            Ok(Ruta::Extra {
+                pack: "balatro".into(),
+                indice: 12
+            })
+        );
+    }
+
+    #[test]
+    fn la_ruta_de_una_letra() {
+        let h = "a".repeat(64);
+        assert_eq!(
+            leer_ruta(&format!("/f/{h}.woff2")),
+            Ok(Ruta::Letra { huella: h.clone() })
+        );
+    }
+
+    #[test]
     fn las_rutas_raras_se_rechazan() {
         let h = "a".repeat(64);
         let p = params_b64();
@@ -309,6 +386,13 @@ mod tests {
             format!("/d/{h}"),
             "/home/estigio/secreto.png".to_string(),
             "/r/%2e%2e".to_string(),
+            "/x/../0".to_string(),
+            "/x/balatro/-1".to_string(),
+            "/x/balatro/uno".to_string(),
+            "/x/bala%2Ftro/1".to_string(),
+            format!("/f/{h}"),
+            format!("/f/{h}.ttf"),
+            "/f/../fuentes.woff2".to_string(),
         ] {
             assert!(leer_ruta(&mala).is_err(), "{mala}");
         }

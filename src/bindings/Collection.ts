@@ -10,7 +10,12 @@ import type { OriginalName } from "./OriginalName";
  * Una colección: lo compartido por un grupo de diseños (marco, emblema,
  * pie…). Se guarda en `presets` con `kind = collection`.
  */
-export type Collection = { id: string, name: string, defaultStyle: DesignStyle, frame: FrameOptions, 
+export type Collection = { id: string, name: string, defaultStyle: DesignStyle, 
+/**
+ * El estilo propio del pack para las cartas nuevas (con `default_style`
+ * como su base).
+ */
+estiloPackDefecto?: string, frame: FrameOptions, 
 /**
  * El emblema del mazo o de la serie (el slime de Pablo).
  */

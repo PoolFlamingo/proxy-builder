@@ -314,6 +314,7 @@ pub fn aplicar(
     let mut nueva = card.clone();
     nueva.source = CardSource::Custom {
         scryfall_id: Some(d.card.scryfall_id.clone()),
+        externa: None,
     };
     nueva.front = Some(front);
     nueva.back = back;
@@ -497,7 +498,8 @@ mod tests {
         assert!(matches!(
             nueva.source,
             CardSource::Custom {
-                scryfall_id: Some(_)
+                scryfall_id: Some(_),
+                ..
             }
         ));
         let vuelta = quitar(&nueva);
