@@ -20,8 +20,9 @@ For Linux, Windows and macOS, in Spanish and in English.
 ## From list to paper in a minute
 
 1. **Paste the list** however you have it: `4 Lightning Bolt`, `1 Sol Ring (CMM) 410`…
-   The Moxfield, Arena or MTGO formats work. You can also import an Archidekt deck
-   by its URL, with or without the sideboard.
+   The Moxfield, Arena or MTGO formats work, and so does a list copied as text from
+   Archidekt (with its `SIDEBOARD` or `#SIDEBOARD` header). You can also import an
+   Archidekt deck by its URL, with or without the sideboard.
 2. **Press «Cargar lista» (Load list).** The app looks up each card, picks the
    printing, downloads the images and, if you want, automatically adds the tokens
    the deck creates.
@@ -58,7 +59,13 @@ And also:
   doesn't exist in that language, it stays in English and tells you. «Reaplicar
   idioma» (Reapply language) changes all the cards that aren't pinned at once.
 - **Automatic tokens.** The tokens, emblems and copies your cards create are
-  added to the end automatically.
+  added to the end automatically. «Detectar fichas» (Detect tokens) looks for the
+  ones an existing deck is missing, also for linked custom cards.
+- **Beyond Scryfall.** Tokens Scryfall doesn't have (such as Kelp or some Oozes)
+  come from the Cockatrice token catalogue, in the list, in «Añadir carta» (Add
+  card) and when linking. Cards written by their name in another language that
+  Scryfall doesn't have printed that way are found too; in *Settings* you can
+  download an index of names in every language to do it without asking online.
 - **Honest warnings**: card not found, low-resolution image, card Scryfall
   doesn't have scanned yet… Each slot marks it.
 
@@ -85,20 +92,21 @@ file and nothing more:
 To recognise them, the app reads each image with **OCR**: the title, the type
 line and the bottom text, where many proxies carry the original name. It searches
 what it reads in the Scryfall catalogue, in any language, and proposes the card
-with a confidence level: exact, probable or no proposal. The reading is done on
-your computer.
+with a confidence level: exact, probable or no proposal. The original name is
+found wherever it is (next to the artist, in a corner, in the rules box), and the
+set, number and language printed at the bottom are read too, so the image's
+language is noted. The reading is done on your computer.
 
 You can link in three ways:
 
-**One card.** Right click → «Vincular con Scryfall…» (Link with Scryfall…). The
+**One card.** Right click → «Vincular con una carta…» (Link to a card…). The
 search starts with the file name and «Detectar con OCR» (Detect with OCR) reads
 the card. Here it gets the exact edition right.
 
 ![Linking one card with OCR](docs/presentacion/en/vincular-una.jpg)
 
 **The selected ones.** Select several with Ctrl or Shift and, with the right
-click, «Vincular con Scryfall las seleccionadas…» (Link the selected ones with
-Scryfall…). The dialog lets you choose between the selection and the whole deck,
+click, «Vincular las seleccionadas…» (Link selected…). The dialog lets you choose between the selection and the whole deck,
 and between reading only the missing ones or all of them again.
 
 ![Linking the selected cards from the menu](docs/presentacion/en/vincular-menu-seleccion.jpg)
@@ -107,7 +115,7 @@ and between reading only the missing ones or all of them again.
 
 ![Proposals for the selected ones](docs/presentacion/en/vincular-seleccion-resultado.jpg)
 
-**The whole deck.** The «Vincular con Scryfall» (Link with Scryfall) button in the
+**The whole deck.** The «Vincular con una carta» (Link to a card) button in the
 left panel reads all the deck's custom images in one go, with a progress bar and
 time remaining, and you can stop halfway to review what was read. Each proposal
 can be changed in its dropdown or unticked before pressing «Vincular» (Link).
@@ -243,6 +251,9 @@ espacio» (Free up space) deletes the images that no deck uses any more.
   **Filters** by colour identity (includes, exactly or at most), by class
   (Commander, constructed, limited), by the formats it's legal in, by the
   language of its cards, and by whether it has designed cards or custom images.
+  If a deck is really in another language but its cards are linked to English
+  printings, set its **language by hand** from its menu; for a custom image you
+  can also say which language it is in.
 - **Sort** by modified, opened or created date, name, cards, price, average cost
   or colours, and **group** by tag, colours, class or language. Grouped by tag, a
   deck with several tags shows up under each one.
@@ -262,6 +273,8 @@ espacio» (Free up space) deletes the images that no deck uses any more.
 
 Spanish or English, light or dark theme, more than forty colour themes, three
 surface styles (flat, embossed and glass), materials, effects and interface size.
+«Más temas…» (More themes…) installs any theme from the
+[tweakcn](https://tweakcn.com/community) community by its link, with its fonts.
 
 ![Settings](docs/presentacion/en/ajustes.jpg)
 
@@ -287,8 +300,13 @@ a card, with a new frame and translated text:
   the first time they are chosen.
 - **Free fonts** to download from the app: classical, medieval or fantasy style
   for the title (Cinzel, Almendra, Uncial Antiqua, Grenze Gotisch…) and very
-  legible ones for the rules text. In addition, the collection decides how much
-  the title and the type line are condensed, always and at most.
+  legible ones for the rules text, plus a pixel font (Pixelify Sans). In
+  addition, the collection decides how much the title and the type line are
+  condensed, always and at most.
+- **Downloadable frame packs.** The first one is **Balatro**: pixel-art frames
+  in seven styles (Joker, Planeswalker, Spectral, Tarot, Planet, Voucher and
+  Land), with their mana chips, rarity labels and coloured keywords, plus
+  ready-made backs, tokens and lands to add to the deck.
 - **Collections** with their set symbol and numbering, so the whole deck looks like
   it's from the same edition.
 - Almost all of Magic's layouts: planeswalkers, sagas, classes, cases, levels,
@@ -377,5 +395,12 @@ The card data and images come from [Scryfall](https://scryfall.com).
 The editor's original frames come from
 [Card Conjurer](https://github.com/Investigamer/cardconjurer): the app downloads
 them when they are used and does not distribute them.
+The Balatro pack's templates are by the author of the «Balatro Balatrez» deck,
+who shares them publicly; its font is m6x11plus by Daniel Linssen. Balatro is a
+game by LocalThunk. Token data not in Scryfall comes from
+[Cockatrice](https://github.com/Cockatrice/Magic-Token), names in other
+languages from [MTGJSON](https://mtgjson.com) and
+[magicthegathering.io](https://magicthegathering.io), and the extra colour
+themes from [tweakcn](https://tweakcn.com).
 Magic: The Gathering is a trademark of Wizards of the Coast. This application is
 not affiliated with or endorsed by either.
