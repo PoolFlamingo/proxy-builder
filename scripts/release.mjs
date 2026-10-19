@@ -7,19 +7,28 @@
 //   pnpm release 1.4.0               # versión exacta
 //   pnpm release patch --dry         # solo comprueba y enseña qué haría
 //   pnpm release patch --publicar    # publica el borrador sin preguntar
+//   pnpm release patch --notas "Arreglos del OCR"   # texto del release
+//   pnpm release patch --notas-fichero notas.md      # texto del release (Markdown)
+//   pnpm release patch --sin-notas   # solo el texto fijo de siempre
 //
-// Pasos: comprueba que `main` está limpia y al día con origin → sube la versión
+// Sin ninguna de las tres de las notas, abre el editor ($VISUAL, $EDITOR,
+// nano/vi o notepad) con una plantilla en `tmp/` y la lista de commits; vacío
+// corta antes de tocar nada. Las notas van al borrador antes de preguntar si
+// se publica, con el texto fijo del workflow debajo.
+//
+// Pasos: comprueba que `main` está limpia y al día con origin → pide las notas → sube la versión
 // en los cuatro sitios (package.json, tauri.conf.json, Cargo.toml, Cargo.lock)
 // → commit «Versión X» y push → espera a la CI de ese commit → lanza el
 // workflow `release` (instaladores de Linux, Windows y macOS en un borrador) y
-// espera → pregunta si publicar el borrador. Publicarlo crea la etiqueta `vX`.
+// espera → pone las notas al borrador → pregunta si publicarlo. Publicarlo crea la etiqueta `vX`.
 //
 // Necesita `git` y `gh` (con la sesión iniciada: `gh auth login`).
 
-import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { execFileSync, spawnSync } from "node:child_process";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { createInterface } from "node:readline/promises";
+import { componer, ErrorDeUso, leerArgs, limpiarNotas, plantilla, USO } from "./release-notas.mjs";
 
 const RAIZ = new URL("..", import.meta.url).pathname;
 const RAMA = "main";
@@ -29,12 +38,17 @@ const CARGO = join(RAIZ, "src-tauri/Cargo.toml");
 const BLOQUEO = join(RAIZ, "src-tauri/Cargo.lock");
 const SEMVER = /^\d+\.\d+\.\d+$/;
 
-const args = process.argv.slice(2);
-const dry = args.includes("--dry");
-const publicarYa = args.includes("--publicar");
-const tipo = args.find((a) => !a.startsWith("--"));
-
 class Fallo extends Error {}
+
+let opciones;
+try {
+	opciones = leerArgs(process.argv.slice(2));
+} catch (e) {
+	if (!(e instanceof ErrorDeUso)) throw e;
+	console.error(`\n✖ ${e.message}\n${USO}`);
+	process.exit(1);
+}
+const { tipo, dry, publicarYa } = opciones;
 
 function ejecutar(cmd, params, { silencioso = true } = {}) {
 	try {
@@ -97,7 +111,7 @@ function siguiente(actual, tipo) {
 	if (tipo === "major") return `${ma + 1}.0.0`;
 	if (tipo === "minor") return `${ma}.${mi + 1}.0`;
 	if (tipo === "patch") return `${ma}.${mi}.${pa + 1}`;
-	throw new Fallo("Uso: pnpm release <patch|minor|major|X.Y.Z> [--dry] [--publicar]");
+	throw new Fallo(USO);
 }
 
 function subirVersion(nueva) {
@@ -120,6 +134,65 @@ async function preguntar(texto) {
 	} finally {
 		rl.close();
 	}
+}
+
+// Los commits desde la última etiqueta, para la plantilla de las notas.
+function commitsDesdeLaUltima() {
+	let desde = "";
+	try {
+		desde = git("describe", "--tags", "--abbrev=0");
+	} catch {
+		// Sin etiquetas: los últimos commits.
+	}
+	const rango = desde ? [`${desde}..HEAD`] : ["-20"];
+	return git("log", "--oneline", "--no-decorate", ...rango)
+		.split("\n")
+		.filter(Boolean);
+}
+
+function abrirEditor(fichero) {
+	const editor =
+		process.env.VISUAL ||
+		process.env.EDITOR ||
+		(process.platform === "win32"
+			? "notepad"
+			: spawnSync("which", ["nano"]).status === 0
+				? "nano"
+				: "vi");
+	// El editor puede llevar argumentos («code --wait»).
+	const [cmd, ...params] = editor.split(" ").filter(Boolean);
+	const r = spawnSync(cmd, [...params, fichero], {
+		stdio: "inherit",
+		shell: process.platform === "win32",
+	});
+	if (r.error || r.status !== 0) throw new Fallo(`No se pudo abrir el editor «${editor}».`);
+}
+
+// Las notas del release (sin el texto fijo), o null con --sin-notas.
+function obtenerNotas(version) {
+	if (opciones.sinNotas) return null;
+	let texto;
+	if (opciones.notas !== undefined) {
+		texto = opciones.notas;
+	} else if (opciones.notasFichero !== undefined) {
+		try {
+			texto = readFileSync(resolve(process.cwd(), opciones.notasFichero), "utf8");
+		} catch {
+			throw new Fallo(`No puedo leer ${opciones.notasFichero}.`);
+		}
+	} else {
+		const carpeta = join(RAIZ, "tmp");
+		mkdirSync(carpeta, { recursive: true });
+		const fichero = join(carpeta, `release-notas-v${version}.md`);
+		writeFileSync(fichero, plantilla(version, commitsDesdeLaUltima()));
+		abrirEditor(fichero);
+		texto = readFileSync(fichero, "utf8");
+	}
+	const limpias = limpiarNotas(texto);
+	if (!limpias) {
+		throw new Fallo("Las notas están vacías. Escríbelas o usa --sin-notas para el texto fijo.");
+	}
+	return limpias;
 }
 
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -165,7 +238,7 @@ function repo() {
 }
 
 async function main() {
-	if (!tipo) throw new Fallo("Uso: pnpm release <patch|minor|major|X.Y.Z> [--dry] [--publicar]");
+	if (!tipo) throw new Fallo(USO);
 
 	paso("Comprobaciones");
 	try {
@@ -196,8 +269,14 @@ async function main() {
 		problema(`Ya hay un release ${etiqueta} en GitHub.`);
 	}
 
+	paso("Notas del release");
+	const notas = obtenerNotas(nueva);
+	console.log(notas === null ? "  (solo el texto fijo)" : notas.replace(/^/gm, "  "));
+
 	if (dry) {
-		console.log(`\nDry run: subiría la versión a ${nueva}, commit, push, CI, release y publicar.`);
+		console.log(
+			`\nDry run: subiría la versión a ${nueva}, commit, push, CI, release con estas notas y publicar.`,
+		);
 		return;
 	}
 
@@ -231,6 +310,13 @@ async function main() {
 		throw new Fallo(`El release ${etiqueta} no es el borrador esperado (${borrador.url}).`);
 	}
 	console.log(`  ${borrador.assets.length} ficheros en ${borrador.url}`);
+	if (notas !== null) {
+		const fichero = join(RAIZ, "tmp", `release-notas-v${nueva}-final.md`);
+		mkdirSync(join(RAIZ, "tmp"), { recursive: true });
+		writeFileSync(fichero, componer(notas));
+		gh("release", "edit", etiqueta, "--notes-file", fichero);
+		console.log("  notas puestas en el borrador");
+	}
 
 	const publicar =
 		publicarYa ||
