@@ -28,6 +28,51 @@ pub enum Trozo {
 
 pub type Parrafo = Vec<Trozo>;
 
+/// Marcas internas (de uso privado de Unicode) de los tramos que van de
+/// otro color: lo marcado a mano con `[[…]]` (resalte) y las palabras de
+/// habilidad del principio de una línea. Las quita `maquetar`, que los pinta
+/// del color del pack (o del normal si el pack no trae colores).
+const RESALTE: (char, char) = ('\u{E010}', '\u{E011}');
+const HABILIDAD: (char, char) = ('\u{E012}', '\u{E013}');
+
+/// Añade `t` a `texto` quitando las marcas y apuntando sus tramos.
+fn anadir_marcado(
+    texto: &mut String,
+    t: &str,
+    abiertos: &mut [Option<usize>; 2],
+    tramos: &mut [Vec<std::ops::Range<usize>>; 2],
+) {
+    for c in t.chars() {
+        let i = match c {
+            c if c == RESALTE.0 || c == HABILIDAD.0 => {
+                abiertos[usize::from(c == HABILIDAD.0)] = Some(texto.len());
+                continue;
+            }
+            c if c == RESALTE.1 || c == HABILIDAD.1 => usize::from(c == HABILIDAD.1),
+            c => {
+                texto.push(c);
+                continue;
+            }
+        };
+        if let Some(ini) = abiertos[i].take() {
+            tramos[i].push(ini..texto.len());
+        }
+    }
+}
+
+/// El párrafo con el texto en mayúsculas (los símbolos, igual).
+pub fn en_mayusculas(p: &Parrafo) -> Parrafo {
+    p.iter()
+        .map(|t| match t {
+            Trozo::Texto { texto, cursiva } => Trozo::Texto {
+                texto: texto.to_uppercase(),
+                cursiva: *cursiva,
+            },
+            otro => otro.clone(),
+        })
+        .collect()
+}
+
 fn empujar(p: &mut Parrafo, texto: &str, cursiva: bool) {
     if texto.is_empty() {
         return;
@@ -49,8 +94,13 @@ fn empujar(p: &mut Parrafo, texto: &str, cursiva: bool) {
 }
 
 /// Una línea con símbolos y paréntesis en cursiva. `base` es la cursiva de
-/// fuera de los paréntesis (el sabor va entero en cursiva).
+/// fuera de los paréntesis (el sabor va entero en cursiva). `[[…]]` marca un
+/// tramo resaltado.
 fn linea(texto: &str, base: bool) -> Parrafo {
+    let marcado = texto
+        .replace("[[", &RESALTE.0.to_string())
+        .replace("]]", &RESALTE.1.to_string());
+    let texto = marcado.as_str();
     let mut p = Parrafo::new();
     let mut nivel = 0usize;
     let mut resto = texto;
@@ -103,7 +153,8 @@ pub fn reglas(texto: &str) -> Vec<Parrafo> {
         .map(|l| match palabra_de_habilidad(l) {
             Some(i) => {
                 let mut p = Parrafo::new();
-                empujar(&mut p, &l[..i], true);
+                let palabra = format!("{}{}{}", HABILIDAD.0, &l[..i], HABILIDAD.1);
+                empujar(&mut p, &palabra, true);
                 for t in linea(&l[i..], false) {
                     match t {
                         Trozo::Texto { texto, cursiva } => empujar(&mut p, &texto, cursiva),
@@ -175,6 +226,10 @@ pub struct Estilo {
     pub alinear: Alinear,
     /// Versalitas de verdad si la letra las tiene (`smcp`).
     pub versalitas: bool,
+    /// El color de lo marcado con `[[…]]` en las reglas (si no, el normal).
+    pub resalte: Option<Color>,
+    /// El color de las palabras de habilidad (si no, el normal).
+    pub habilidad: Option<Color>,
 }
 
 impl Estilo {
@@ -225,11 +280,29 @@ impl Bloque {
 #[derive(Default)]
 pub struct Maquetador {
     lcx: LayoutContext<Color>,
+    /// Caracteres que la letra del pack no tiene y por qué se cambian
+    /// (`"—"` → `"-"`). Lo pone cada render con lo que diga el pack.
+    pub sustituir: Vec<(String, String)>,
 }
 
 impl Maquetador {
     pub fn nuevo() -> Maquetador {
         Maquetador::default()
+    }
+
+    fn sustituido<'t>(&self, t: &'t str) -> std::borrow::Cow<'t, str> {
+        if self
+            .sustituir
+            .iter()
+            .all(|(de, _)| !t.contains(de.as_str()))
+        {
+            return std::borrow::Cow::Borrowed(t);
+        }
+        let mut s = t.to_string();
+        for (de, a) in &self.sustituir {
+            s = s.replace(de.as_str(), a);
+        }
+        std::borrow::Cow::Owned(s)
     }
 
     /// Maqueta un párrafo con ancho máximo (`None` = una sola línea).
@@ -243,13 +316,16 @@ impl Maquetador {
         // Texto plano y dónde van los grupos de símbolos.
         let mut texto = String::new();
         let mut cursivas: Vec<std::ops::Range<usize>> = Vec::new();
+        let mut abiertos: [Option<usize>; 2] = [None, None];
+        let mut tramos: [Vec<std::ops::Range<usize>>; 2] = [Vec::new(), Vec::new()];
         let mut grupos: Vec<(usize, Vec<String>, String)> = Vec::new();
         let mut i = 0;
         while i < parrafo.len() {
             match &parrafo[i] {
                 Trozo::Texto { texto: t, cursiva } => {
                     let ini = texto.len();
-                    texto.push_str(t);
+                    let t = self.sustituido(t);
+                    anadir_marcado(&mut texto, &t, &mut abiertos, &mut tramos);
                     if *cursiva {
                         cursivas.push(ini..texto.len());
                     }
@@ -275,7 +351,8 @@ impl Maquetador {
                             let cursiva = *cursiva;
                             let ini = texto.len();
                             grupos.push((ini, simbolos, cola));
-                            texto.push_str(&resto);
+                            let resto = self.sustituido(&resto);
+                            anadir_marcado(&mut texto, &resto, &mut abiertos, &mut tramos);
                             if cursiva {
                                 cursivas.push(ini..texto.len());
                             }
@@ -337,6 +414,14 @@ impl Maquetador {
         for r in cursivas {
             if !r.is_empty() {
                 b.push(StyleProperty::FontStyle(FontStyle::Italic), r);
+            }
+        }
+        // Los tramos de color (si el pack trae colores; si no, normales).
+        for (color, rangos) in [estilo.resalte, estilo.habilidad].into_iter().zip(tramos) {
+            if let Some(c) = color {
+                for r in rangos.into_iter().filter(|r| !r.is_empty()) {
+                    b.push(StyleProperty::Brush(c), r);
+                }
             }
         }
         for c in cajas {
@@ -576,7 +661,9 @@ mod tests {
     #[test]
     fn palabra_de_habilidad_en_cursiva() {
         let p = reglas("Imprimir — Cuando entre, roba una carta.\nElige uno —\n• Roba.");
-        assert_eq!(p[0][0], t("Imprimir", true));
+        // Con sus marcas (las quita el maquetador, que la colorea si el pack
+        // trae color de habilidad).
+        assert_eq!(p[0][0], t("\u{E012}Imprimir\u{E013}", true));
         assert_eq!(p[0][1], t(" — Cuando entre, roba una carta.", false));
         // «Elige uno —» no es palabra de habilidad.
         assert_eq!(p[1], vec![t("Elige uno —", false)]);
@@ -623,6 +710,8 @@ mod tests {
             color: [0, 0, 0, 255],
             alinear: Alinear::Inicio,
             versalitas: false,
+            resalte: None,
+            habilidad: None,
         }
     }
 

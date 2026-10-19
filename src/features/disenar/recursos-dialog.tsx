@@ -2,19 +2,24 @@ import {
 	Check,
 	Download,
 	FolderOpen,
+	Images,
 	Loader2,
 	Package,
+	Plus,
 	RefreshCw,
+	SquareStack,
 	Trash2,
 	Type,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import type { DescargableInfo } from "@/bindings/DescargableInfo";
 import type { LetraInfo } from "@/bindings/LetraInfo";
 import type { LetraLibre } from "@/bindings/LetraLibre";
 import type { PackInfo } from "@/bindings/PackInfo";
 import type { SimbolosInfo } from "@/bindings/SimbolosInfo";
-import { useLang } from "@/components/language-provider";
+import type { TipoExtra } from "@/bindings/TipoExtra";
+import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -27,10 +32,16 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WithTooltip } from "@/components/ui/with-tooltip";
+import { cartaPropia } from "@/lib/cartas";
+import { insertar } from "@/lib/deck-ops";
 import { abrirParaImportar } from "@/lib/dialogos";
+import { urlExtra } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
+import { cn } from "@/lib/utils";
+import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
 import { ID_ORIGINAL, useMarcosOriginales } from "./marcos-originales";
+import { usePacksDescargables } from "./packs-descargables";
 import { rehacerMiniaturas } from "./renumerar";
 import { ESTILOS } from "./textos";
 
@@ -260,6 +271,7 @@ function Contenido() {
 							{packs !== null && !packs.some((p) => p.id === ID_ORIGINAL) && (
 								<FilaOriginales alTerminar={recargar} />
 							)}
+							{packs !== null && <FilasDescargables alTerminar={recargar} />}
 							{packs?.map((p) => (
 								<li key={p.id} className="flex items-center gap-2.5 px-3 py-2">
 									<div className="min-w-0 flex-1">
@@ -371,6 +383,160 @@ function FilaOriginales({ alTerminar }: { alTerminar: () => void }) {
 			</div>
 			{progreso && <Progress value={(progreso.hechas * 100) / Math.max(1, progreso.total)} />}
 		</li>
+	);
+}
+
+/** Los packs descargables (Balatro): bajarlos y, ya bajados, su contenido extra. */
+function FilasDescargables({ alTerminar }: { alTerminar: () => void }) {
+	const { t, mensaje } = useLang();
+	const { lista, progreso, cargar, descargar } = usePacksDescargables();
+	const [abierto, setAbierto] = useState<string | null>(null);
+	useEffect(() => {
+		if (!lista) void cargar();
+	}, [lista, cargar]);
+	return (
+		<>
+			{(lista ?? []).map((d) => (
+				<li key={d.id} className="flex flex-col gap-2 px-3 py-2">
+					<div className="flex items-center gap-2.5">
+						<div className="min-w-0 flex-1">
+							<div className="truncate text-xs font-medium">{d.nombre}</div>
+							<div className="text-[10px] text-muted-foreground">
+								{d.listo
+									? t(
+											"Descargado: {n} imágenes extra (reversos, fichas, tierras y cartas hechas).",
+											{
+												n: d.extras.length,
+											},
+										)
+									: t("Pack descargable (unos 45 MB con sus extras). Se descarga de GitHub.")}
+							</div>
+						</div>
+						{d.listo ? (
+							<Button
+								size="sm"
+								variant={abierto === d.id ? "secondary" : "outline"}
+								onClick={() => setAbierto(abierto === d.id ? null : d.id)}
+							>
+								<Images />
+								{t("Contenido")}
+							</Button>
+						) : (
+							<Button
+								size="sm"
+								variant="outline"
+								disabled={progreso !== null}
+								onClick={() =>
+									descargar(d.id)
+										.then(alTerminar)
+										.catch((e) => toast.error(mensaje(e)))
+								}
+							>
+								{progreso?.id === d.id ? <Loader2 className="animate-spin" /> : <Download />}
+								{t("Descargar")}
+							</Button>
+						)}
+					</div>
+					{progreso?.id === d.id && (
+						<Progress value={(progreso.hechas * 100) / Math.max(1, progreso.total)} />
+					)}
+					{abierto === d.id && d.listo && <ContenidoPack pack={d} />}
+				</li>
+			))}
+		</>
+	);
+}
+
+const TIPOS_EXTRA: { valor: TipoExtra; etiqueta: string }[] = [
+	{ valor: "reverso", etiqueta: paraTraducir("Reversos") },
+	{ valor: "ficha", etiqueta: paraTraducir("Fichas") },
+	{ valor: "tierra", etiqueta: paraTraducir("Tierras básicas") },
+	{ valor: "carta", etiqueta: paraTraducir("Cartas hechas") },
+];
+
+/** Las imágenes extra de un pack, para ponerlas de reverso o añadirlas al deck. */
+function ContenidoPack({ pack }: { pack: DescargableInfo }) {
+	const { t, mensaje } = useLang();
+	const [tipo, setTipo] = useState<TipoExtra>("reverso");
+	const [elegido, setElegido] = useState<number | null>(null);
+	const hayDeck = useDeck((s) => s.deck !== null);
+	const extras = pack.extras.map((e, i) => ({ ...e, indice: i })).filter((e) => e.tipo === tipo);
+	const actual = elegido !== null ? pack.extras[elegido] : null;
+	const usar = async (como: "reverso" | "carta") => {
+		if (!actual) return;
+		try {
+			const img = await call("pack_extra_use", { id: pack.id, ruta: actual.ruta });
+			if (como === "reverso") {
+				useDeck.getState().aplicar(() => ({ defaultBack: img }));
+				useUi.getState().anunciar(t("Reverso del deck cambiado"));
+			} else {
+				useDeck.getState().setCartas((c) => insertar(c, [cartaPropia(img, actual.nombre)]));
+				useUi.getState().anunciar(t("«{nombre}» añadida al deck", { nombre: actual.nombre }));
+			}
+		} catch (e) {
+			toast.error(mensaje(e));
+		}
+	};
+	return (
+		<div className="flex flex-col gap-2 rounded-md border bg-muted/30 p-2">
+			<div className="flex flex-wrap gap-1">
+				{TIPOS_EXTRA.map((x) => (
+					<Button
+						key={x.valor}
+						size="xs"
+						variant={tipo === x.valor ? "secondary" : "ghost"}
+						onClick={() => {
+							setTipo(x.valor);
+							setElegido(null);
+						}}
+					>
+						{t(x.etiqueta)} ({pack.extras.filter((e) => e.tipo === x.valor).length})
+					</Button>
+				))}
+			</div>
+			<div className="grid grid-cols-[repeat(auto-fill,minmax(64px,1fr))] gap-1.5 p-1">
+				{extras.map((e) => (
+					<WithTooltip key={e.indice} content={e.nombre}>
+						<button
+							type="button"
+							onClick={() => setElegido(e.indice)}
+							className={cn(
+								"overflow-hidden rounded-[6%] ring-offset-1 transition-shadow",
+								elegido === e.indice ? "ring-2 ring-primary" : "hover:ring-1 hover:ring-border",
+							)}
+						>
+							<img
+								src={urlExtra(pack.id, e.indice)}
+								alt=""
+								loading="lazy"
+								decoding="async"
+								className="aspect-[63/88] w-full object-cover"
+							/>
+						</button>
+					</WithTooltip>
+				))}
+			</div>
+			<div className="flex flex-wrap items-center justify-end gap-1.5">
+				{!hayDeck && (
+					<span className="mr-auto text-[11px] text-muted-foreground">
+						{t("Abre un deck para usarlas.")}
+					</span>
+				)}
+				<Button
+					size="sm"
+					variant="outline"
+					disabled={!actual || !hayDeck}
+					onClick={() => usar("reverso")}
+				>
+					<SquareStack />
+					{t("Usar como reverso del deck")}
+				</Button>
+				<Button size="sm" disabled={!actual || !hayDeck} onClick={() => usar("carta")}>
+					<Plus />
+					{t("Añadir al deck")}
+				</Button>
+			</div>
+		</div>
 	);
 }
 

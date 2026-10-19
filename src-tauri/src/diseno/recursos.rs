@@ -57,8 +57,34 @@ pub struct PackInfo {
     /// `false` para el de la casa (no se puede quitar).
     pub importado: bool,
     pub estilos: Vec<String>,
+    /// Los estilos propios del pack (los que no son de serie), para elegirlos.
+    pub estilos_propios: Vec<EstiloPropio>,
     /// De dónde salen sus imágenes, si lo dice.
     pub origen: Option<String>,
+}
+
+/// Un estilo propio de un pack de marcos.
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct EstiloPropio {
+    pub id: String,
+    pub nombre_es: String,
+    pub nombre_en: String,
+    /// El de serie del que hereda (y al que se cae sin el pack).
+    pub base: proxy_core::diseno::modelo::DesignStyle,
+    /// Las variantes que se pueden elegir.
+    pub variantes: Vec<VariantePack>,
+}
+
+/// Una variante de un estilo de pack.
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct VariantePack {
+    pub id: String,
+    pub nombre_es: String,
+    pub nombre_en: String,
 }
 
 /// Cómo están los símbolos.
@@ -241,6 +267,33 @@ fn info_de(p: &Pack) -> PackInfo {
         nombre: p.def.nombre.clone(),
         importado: p.def.id != "builtin",
         estilos: p.def.estilos.keys().cloned().collect(),
+        estilos_propios: p
+            .def
+            .estilos
+            .iter()
+            .filter(|(id, _)| !proxy_core::diseno::pack::ESTILOS_DE_SERIE.contains(&id.as_str()))
+            .map(|(id, e)| {
+                let nombre = |l: &str| e.nombre.get(l).cloned().unwrap_or_else(|| id.clone());
+                EstiloPropio {
+                    id: id.clone(),
+                    nombre_es: nombre("es"),
+                    nombre_en: nombre("en"),
+                    base: serde_json::from_value(serde_json::Value::String(
+                        e.base.clone().unwrap_or_else(|| "classic".into()),
+                    ))
+                    .unwrap_or(proxy_core::diseno::modelo::DesignStyle::Classic),
+                    variantes: e
+                        .variantes
+                        .iter()
+                        .map(|(vid, n)| VariantePack {
+                            id: vid.clone(),
+                            nombre_es: n.get("es").cloned().unwrap_or_else(|| vid.clone()),
+                            nombre_en: n.get("en").cloned().unwrap_or_else(|| vid.clone()),
+                        })
+                        .collect(),
+                }
+            })
+            .collect(),
         origen: p.def.origen.clone(),
     }
 }
@@ -298,8 +351,13 @@ impl Recursos {
             .cloned()
             .ok_or_else(|| AppError::new(ErrorCode::Internal).with("detalle", "sin pack"))?;
         let letras: Vec<&str> = e.letras.iter().map(|(i, _)| i.id.as_str()).collect();
+        // Los símbolos del pack (si trae) por encima de los de Scryfall.
+        let simbolos = match &p.simbolos {
+            Some(propios) => Arc::new(e.simbolos.con_propios(propios.clone())),
+            None => e.simbolos.clone(),
+        };
         Ok(Instantanea {
-            simbolos: e.simbolos.clone(),
+            simbolos,
             huella: format!("{}|{}|{}", p.huella, e.huella_simbolos, letras.join(",")),
             pack: p,
             generacion: self.generacion.load(Ordering::SeqCst),

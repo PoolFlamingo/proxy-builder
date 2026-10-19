@@ -48,7 +48,8 @@ el plano `[127, 88.9]`.
 
 - **`id`**: letras, números, `-` y `_`. No puede ser `builtin`. Importar otro
   pack con el mismo `id` lo sustituye.
-- **`version`**: 1.
+- **`version`**: 1, o 2 si usa algo de «Lo que añade la versión 2» (una app
+  anterior rechaza el pack en vez de pintarlo mal).
 
 ### Paletas
 
@@ -236,6 +237,133 @@ Los usa la Fase 5:
 Si un pack no trae un layout que la carta necesita, se pinta con el estilo
 normal y se avisa («el pack no tiene marco para…»). Las partidas, Fusionar y
 Habitación no necesitan layout propio: son dos cartas normales giradas.
+
+## Lo que añade la versión 2
+
+Lo necesitó el pack Balatro (pixel art, siete plantillas distintas), pero vale
+para cualquier pack.
+
+### Estilos propios
+
+Además de los cuatro de serie, `estilos` puede traer estilos con otro id
+(`tarot`, `planeta`…). La app los ofrece en el selector de estilo de la carta
+y de la colección mientras el pack esté elegido.
+
+```json
+"tarot": {
+  "nombre": { "es": "Tarot", "en": "Tarot" },
+  "base": "classic",
+  "variantes": { "sinBarrido": { "es": "Sin barrido", "en": "No scanlines" } },
+  "layoutSi": [ { "si": { "tipo": ["land"], "basica": false }, "layout": "noBasica" } ],
+  "fondo": [ { "png": "tarot/fondo.png" } ],
+  …lo mismo que un estilo de serie…
+}
+```
+
+- **`nombre`**: lo que se lee en el selector, por idioma.
+- **`base`**: de qué estilo de serie hereda lo que el motor decide por el
+  estilo (esquinas, símbolo del paisaje…) y a cuál cae la carta si el pack no
+  está. Sin decirlo, `classic`.
+- **`variantes`**: opciones que elige el usuario (selector «Variante»).
+  Encienden las capas con `si.variante` y, si el estilo tiene un layout con
+  el mismo id, lo usan.
+- **`layoutSi`**: layouts que se eligen solos por la carta; gana la primera
+  regla que se cumpla.
+- **`fondo`**: capas que se pintan **debajo** de la ilustración (el papel de
+  una carta cuyo arte no la llena). Un layout también puede traer `fondo`.
+
+Una carta con un estilo propio cuyo pack ya no está sale con su `base` y un
+aviso.
+
+### Condiciones (`si`)
+
+Además de `corona`, `fr`, `cinta` y `emblema`:
+
+| Campo | Se cumple si… |
+|-------|---------------|
+| `tipo` | la carta es de alguno de estos tipos (en inglés y minúsculas: `land`, `creature`, `token`…). |
+| `basica`, `legendaria` | es (o no) tierra básica, legendaria. |
+| `colores` | tiene entre `[min, max]` colores. |
+| `simbolos` | su coste tiene entre `[min, max]` símbolos. |
+| `variante` | el usuario eligió esa variante. |
+
+### Capas
+
+| Campo | Qué es |
+|-------|--------|
+| `escalado` | `suave` (de fábrica) o `pixel`: al ampliar cada píxel se repite, sin emborronar. `escalado` en la raíz del pack lo pone para todas. |
+| `mezcla` | `normal`, `oscurecer` o `multiplicar`. |
+| `opacidad` | De 0 a 1. |
+| `tramos` | `[arriba, abajo]` en mm: esos trozos de arriba y de abajo se pintan sin deformar y solo se estira lo de en medio (una caja con esquinas que crece). |
+
+La zona `en` de una capa PNG admite las mismas expresiones que los huecos
+(`"y": "yTipo+1.6"`, `"h": "80-yTipo"`): así la barra del tipo y la caja de
+reglas se mueven con la caja que crece (`caja` del estilo). Con una caja fija
+esas variables no existen y la capa no se pinta. El hueco `arte` también las
+admite, para que la ilustración llegue hasta la barra del tipo.
+
+En la ruta de un PNG, `{color1}` y `{color2}` son el primer y el segundo color
+de la carta en orden WUBRG (sin color, la letra de incoloro; con uno, los dos
+el mismo): los cuadros de color junto al título.
+
+### Huecos
+
+| Campo | Qué es |
+|-------|--------|
+| `mayusculas` | Todo el texto en mayúsculas. |
+| `alinearV` | En una caja fija, dónde va el texto en vertical: `inicio`, `centro` (de fábrica) o `fin`. |
+| `contenido` | Solo en el hueco `etiqueta`: `rareza` (de fábrica), `supertipo` o `subtipoTierra`. |
+
+`alinear: "centro"` en el hueco `coste` centra los símbolos.
+
+### Raíz del pack
+
+```json
+"simbolos": { "W": "symbols/W.png", "T": "symbols/T.png" },
+"etiquetas": { "rare": { "texto": { "es": "Rara", "en": "Rare" },
+                         "fondo": "labels/rare.png", "color": "#ffffff" } },
+"insignias": { "fondo": "#3a3a3a", "borde": "#000000", "texto": "#ffffff",
+               "pngLealtad": "insignias/lealtad.png" },
+"coloresTexto": { "resalte": "#4aa0ff", "habilidad": "#ff9b2e" },
+"sustituir": { "—": "-", "•": "·" },
+"separacionCoste": 0.1,
+"plantillaPie": { "es": "{set} • {lang} {num} {rarity}\t{original} {brush} {artist}" }
+```
+
+- **`simbolos`**: símbolos propios (código sin llaves → SVG o PNG del pack)
+  que tapan a los de Scryfall en el coste y en las reglas. Los que no trae
+  siguen siendo los de Scryfall.
+- **`etiquetas`**: la píldora del hueco `etiqueta`, por valor (`common`,
+  `uncommon`, `rare`, `mythic`, `legendary`, `mountain`…). `fondo` es un PNG
+  del pack o un color.
+- **`insignias`**: colores de las insignias de las secciones y, si se quiere,
+  una imagen para la de lealtad.
+- **`coloresTexto`**: en las reglas, el color de lo marcado con `[[así]]` y
+  el de las palabras de habilidad. Sin él, las marcas se quitan y todo sale del
+  color normal.
+- **`sustituir`**: caracteres que su letra no tiene y por cuáles se cambian,
+  solo al escribir con este pack.
+- **`separacionCoste`**: hueco entre los símbolos del coste, en proporción a
+  su lado (0,05 de fábrica).
+- **`plantillaPie`**: el pie de fábrica de este pack por idioma (sin el del
+  idioma, el inglés), con las claves de las colecciones. Solo cuando la
+  colección no pone uno propio. Si el hueco `pie` no tiene `tabs`, las
+  columnas (separadas por tabulador) van seguidas y, si la línea no cabe, se
+  estrecha; con `tabs`, cada columna se estrecha hasta el tabulador
+  siguiente.
+
+## Packs para descargar
+
+Los packs que no van con la app (el Balatro) viven en el repositorio
+`PoolFlamingo/proxy-builder-packs`. La app trae su lista en
+`src-tauri/assets/packs-descargables.json`: un commit fijo y la huella SHA-256
+de cada fichero, como los marcos Original. Se descargan desde **Letras,
+marcos y símbolos** o al elegir el pack en el selector de marco
+(`diseno/descargables.rs`). Las imágenes extra (reversos, fichas y tierras ya
+hechas) quedan en `app_data_dir/packs-extras/<id>/` y se añaden al deck como
+cartas propias. Al bajar una versión nueva solo se descarga lo que ha cambiado
+y se quita lo que su manifiesto ya no tiene. En desarrollo, `PB_PACKS_LOCAL=<carpeta>` lee los packs de
+una copia local en lugar de bajarlos.
 
 ## Lo que el motor pone solo
 

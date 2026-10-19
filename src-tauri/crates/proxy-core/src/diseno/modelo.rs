@@ -491,6 +491,18 @@ pub struct CardDesign {
     #[ts(optional)]
     pub collection: Option<String>,
     pub style: DesignStyle,
+    /// Un estilo propio del pack de marcos (no uno de los de serie): su id en
+    /// el pack («tarot»). `style` es entonces el de serie del que hereda, al
+    /// que se cae si el pack no lo tiene. Sin `skip_serializing_if` cambiaría
+    /// la huella de todos los diseños de antes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub estilo_pack: Option<String>,
+    /// La variante elegida del estilo (`variantes` del pack). Como
+    /// `estilo_pack`, sin escribirse si no hay, por la huella.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub variante_pack: Option<String>,
     /// El marco propio de esta carta; `None` = el de la colección (y si no
     /// hay, el de fábrica). Así, cambiar la colección cambia sus cartas.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -579,6 +591,11 @@ pub enum Aviso {
     PackSinLayout {
         layout: String,
     },
+    /// El estilo propio de la carta no está en el pack de marcos (se cambió
+    /// de pack o no está descargado): se usa su estilo de serie.
+    EstiloNoEnElPack {
+        estilo: String,
+    },
     LayoutDesconocido {
         layout: String,
     },
@@ -607,6 +624,11 @@ pub struct Collection {
     pub id: String,
     pub name: String,
     pub default_style: DesignStyle,
+    /// El estilo propio del pack para las cartas nuevas (con `default_style`
+    /// como su base).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub estilo_pack_defecto: Option<String>,
     pub frame: FrameOptions,
     /// El emblema del mazo o de la serie (el slime de Pablo).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -698,6 +720,8 @@ pub(crate) mod tests {
             status: DesignStatus::Draft,
             collection: Some("c1".into()),
             style: DesignStyle::Borderless,
+            estilo_pack: None,
+            variante_pack: None,
             frame: None,
             faces: vec![
                 FaceDesign {

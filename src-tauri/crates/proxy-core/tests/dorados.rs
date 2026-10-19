@@ -67,6 +67,8 @@ fn diseno(c: &Caso) -> CardDesign {
         status: DesignStatus::Ready,
         collection: Some("col".into()),
         style: c.estilo,
+        estilo_pack: None,
+        variante_pack: None,
         frame: None,
         faces: vec![FaceDesign {
             art: Some(ArtRef {
@@ -133,6 +135,7 @@ fn coleccion() -> Collection {
         id: "col".into(),
         name: "Prueba".into(),
         default_style: DesignStyle::Borderless,
+        estilo_pack_defecto: None,
         frame: FrameOptions::default(),
         emblem: Some(img("emblema")),
         set_code: "TST".into(),
@@ -318,6 +321,27 @@ fn casos() -> Vec<Caso> {
             ..base("clasico-ficha", DesignStyle::Classic)
         },
     ]
+}
+
+/// Cartas de texto largo para los packs con cajas fijas (Balatro).
+fn casos_largos() -> Vec<Caso> {
+    vec![Caso {
+        archivo: "largo-yusri",
+        estilo: DesignStyle::Classic,
+        nombre: "Yusri, Llama de la Fortuna",
+        original: "Yusri, Fortune's Flame",
+        coste: "{1}{U}{R}",
+        tipo: "Criatura legendaria — Efrit",
+        tipo_en: "Legendary Creature — Efreet",
+        reglas: "Vuela.\nSiempre que Yusri, Llama de la Fortuna ataque, elige un número entre el 1 y el 5. Lanza esa cantidad de monedas a cara o cruz. Por cada lanzamiento que ganes, roba una carta. Por cada lanzamiento que pierdas, Yusri te hace 2 puntos de daño. Si ganaste cinco lanzamientos de esta manera, puedes lanzar hechizos desde tu mano este turno sin pagar sus costes de maná.",
+        sabor: "",
+        colores: &["U", "R"],
+        fr: Some(("2", "3")),
+        legendaria: true,
+        layout: "normal",
+        arte: 3,
+        cinta: false,
+    }]
 }
 
 fn entorno() -> (Pack, Simbolos, Artes) {
@@ -646,5 +670,240 @@ fn letras_libres_a_ojo() {
         r.imagen
             .save(std::env::temp_dir().join(format!("letra-{}.png", f["id"].as_str().unwrap())))
             .unwrap();
+    }
+}
+
+/// El pack de Balatro con sus imágenes (Fase D): cada caso con cada estilo
+/// propio, en español y en inglés, a `PB_SALIDA` (o la carpeta temporal).
+/// `PB_BALATRO=<carpeta del pack> cargo test -p proxy-core --test dorados
+/// balatro -- --ignored --nocapture`.
+#[test]
+#[ignore]
+fn balatro_con_sus_imagenes() {
+    let (base, salida, pack) = pack_balatro();
+    let (_, simbolos, artes) = entorno();
+    let simbolos = match &pack.simbolos {
+        Some(p) => simbolos.con_propios(p.clone()),
+        None => simbolos,
+    };
+    let rec = Recursos {
+        pack: &pack,
+        simbolos: &simbolos,
+        imagenes: &artes,
+    };
+    let mut motor = motor_balatro(&base);
+    let col = coleccion();
+    let estilos: Vec<String> = pack
+        .def
+        .estilos
+        .keys()
+        .filter(|k| !proxy_core::diseno::pack::ESTILOS_DE_SERIE.contains(&k.as_str()))
+        .cloned()
+        .collect();
+    for c in casos().into_iter().chain(casos_largos()) {
+        for estilo in &estilos {
+            for lang in [DesignLang::Es, DesignLang::En] {
+                let mut d = diseno(&c);
+                d.estilo_pack = Some(estilo.clone());
+                let e = efectivo(&d, Some(&col));
+                let r = render(
+                    &mut motor,
+                    &e,
+                    0,
+                    lang,
+                    &rec,
+                    CardSize::MTG,
+                    745,
+                    Salida::Pantalla,
+                )
+                .unwrap();
+                let avisos: Vec<_> = r
+                    .avisos
+                    .iter()
+                    .filter(|a| !matches!(a, Aviso::SinTextoOficial | Aviso::FaltaNombre { .. }))
+                    .collect();
+                if !avisos.is_empty() {
+                    println!("{} {estilo} {lang:?}: {avisos:?}", c.archivo);
+                }
+                r.imagen
+                    .save(salida.join(format!("{estilo}-{}-{lang:?}.png", c.archivo)))
+                    .unwrap();
+            }
+        }
+    }
+}
+
+/// Las cartas del autor de las plantillas, pintadas con el pack con su
+/// propia ilustración (recortada de su carta) y sus mismos datos, para
+/// ponerlas al lado del original. `PB_AUTOR=<carpeta del Drive>`.
+#[test]
+#[ignore]
+fn balatro_contra_el_autor() {
+    let (base, salida, pack) = pack_balatro();
+    let autor = PathBuf::from(std::env::var("PB_AUTOR").expect("PB_AUTOR"));
+    let refs: serde_json::Value = serde_json::from_str(
+        &std::fs::read_to_string(base.join("source/references.json")).unwrap(),
+    )
+    .unwrap();
+    let mut artes = HashMap::new();
+    let mut casos = Vec::new();
+    for (i, r) in refs.as_array().unwrap().iter().enumerate() {
+        let s = |k: &str| r[k].as_str().unwrap_or("").to_string();
+        let lista = |k: &str| -> Vec<String> {
+            r[k].as_array()
+                .map(|v| {
+                    v.iter()
+                        .filter_map(|x| x.as_str().map(String::from))
+                        .collect()
+                })
+                .unwrap_or_default()
+        };
+        let estilo = s("estilo");
+        // La ilustración: la carta del autor recortada a la ventana del arte.
+        let carta = image::open(autor.join(s("archivo"))).unwrap().to_rgba8();
+        let carta = if carta.width() == 1365 {
+            image::imageops::crop_imm(&carta, 62, 62, 1240, 1730).to_image()
+        } else {
+            carta
+        };
+        let def = pack.estilo(&estilo).unwrap();
+        let layout_basica = r["tipo"].as_str().unwrap_or("").starts_with("Basic");
+        let arte = if layout_basica {
+            def.layouts
+                .get("basica")
+                .and_then(|l| l.arte.clone())
+                .unwrap_or(def.arte.clone())
+        } else {
+            def.arte.clone()
+        };
+        let num = |v: &proxy_core::diseno::pack::Valor| match v {
+            proxy_core::diseno::pack::Valor::Num(n) => *n,
+            proxy_core::diseno::pack::Valor::Expr(_) => 0.0,
+        };
+        let (kx, ky) = (carta.width() as f32 / 63.0, carta.height() as f32 / 88.0);
+        let recorte = image::imageops::crop_imm(
+            &carta,
+            (num(&arte.x) * kx) as u32,
+            (num(&arte.y) * ky) as u32,
+            (num(&arte.w) * kx) as u32,
+            (num(&arte.h) * ky) as u32,
+        )
+        .to_image();
+        let blob = format!("ref{i}");
+        artes.insert(blob.clone(), Arc::new(recorte));
+        let fr: Vec<String> = lista("fr");
+        let cara = FaceData {
+            name: s("nombre"),
+            mana_cost: s("coste"),
+            type_line: ByLang {
+                es: s("tipo"),
+                en: s("tipo"),
+            },
+            rules: ByLang {
+                es: s("reglas"),
+                en: s("reglas"),
+            },
+            printed_name_es: None,
+            colors: lista("colores"),
+            power: fr.first().cloned(),
+            toughness: fr.get(1).cloned(),
+            loyalty: r["lealtad"].as_str().map(String::from),
+            defense: None,
+        };
+        let identidad = {
+            let i = lista("identidad");
+            if i.is_empty() {
+                cara.colors.clone()
+            } else {
+                i
+            }
+        };
+        let mut d = CardDesign {
+            version: VERSION_DISENO,
+            status: DesignStatus::Ready,
+            collection: Some("col".into()),
+            style: DesignStyle::Classic,
+            estilo_pack: Some(estilo.clone()),
+            variante_pack: r["variante"].as_str().map(String::from),
+            frame: None,
+            faces: vec![FaceDesign {
+                art: Some(ArtRef {
+                    image: img(&blob),
+                    source: ArtSource::Upload,
+                    framing: ArtFraming::default(),
+                }),
+                texts: ByLang {
+                    es: FaceTexts {
+                        name: s("nombre"),
+                        flavor: String::new(),
+                        rules_override: None,
+                    },
+                    en: FaceTexts {
+                        name: s("nombre"),
+                        flavor: String::new(),
+                        rules_override: None,
+                    },
+                },
+            }],
+            before: BeforeDesign {
+                source: CardSource::Blank,
+                front: None,
+                back: BackSpec::DeckDefault,
+                edits: CardEdits::default(),
+            },
+            card: CardData {
+                scryfall_id: "x".into(),
+                layout: r["layout"].as_str().unwrap_or("normal").into(),
+                rarity: s("rareza"),
+                frame_effects: if r["legendaria"].as_bool().unwrap_or(false) {
+                    vec!["legendary".into()]
+                } else {
+                    vec![]
+                },
+                colors: cara.colors.clone(),
+                color_identity: identidad,
+                set: "jok".into(),
+                collector_number: "1".into(),
+                artist: None,
+                faces: vec![cara],
+                ..CardData::default()
+            },
+            footer: FooterOptions::default(),
+            options: DesignOptions::default(),
+            emblem: EmblemChoice::Inherit,
+            thumb_key: None,
+        };
+        d.options.show_flavor = false;
+        casos.push((s("archivo"), d));
+    }
+    let (_, simbolos, _) = entorno();
+    let simbolos = match &pack.simbolos {
+        Some(p) => simbolos.con_propios(p.clone()),
+        None => simbolos,
+    };
+    let artes = Artes(artes);
+    let rec = Recursos {
+        pack: &pack,
+        simbolos: &simbolos,
+        imagenes: &artes,
+    };
+    let mut motor = motor_balatro(&base);
+    let col = coleccion();
+    for (archivo, d) in casos {
+        let e = efectivo(&d, Some(&col));
+        let r = render(
+            &mut motor,
+            &e,
+            0,
+            DesignLang::En,
+            &rec,
+            CardSize::MTG,
+            745,
+            Salida::Pantalla,
+        )
+        .unwrap();
+        println!("{archivo}: {:?}", r.avisos);
+        let nombre = archivo.replace('/', "_");
+        r.imagen.save(salida.join(format!("ref-{nombre}"))).unwrap();
     }
 }

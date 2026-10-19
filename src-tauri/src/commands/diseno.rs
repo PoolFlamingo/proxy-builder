@@ -118,6 +118,47 @@ pub async fn original_download(app: AppHandle, state: State<'_, AppState>) -> Ap
     .await
 }
 
+/// Los packs de marcos descargables (Balatro…) y cómo están.
+#[tauri::command]
+pub fn packs_downloadable_list(
+    state: State<'_, AppState>,
+) -> AppResult<Vec<crate::diseno::descargables::DescargableInfo>> {
+    crate::diseno::descargables::lista(&state)
+}
+
+/// Descarga un pack de marcos del repositorio de packs; avisa por
+/// `packs://progress`.
+#[tauri::command]
+pub async fn pack_downloadable_download(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    id: String,
+) -> AppResult<PackInfo> {
+    let id2 = id.clone();
+    crate::diseno::descargables::descargar(&state, &id, &move |done, total| {
+        let _ = app.emit(
+            "packs://progress",
+            crate::diseno::descargables::DescargaProgressEvent {
+                id: id2.clone(),
+                done,
+                total,
+            },
+        );
+    })
+    .await
+}
+
+/// Un extra de un pack descargable (reverso, ficha, carta hecha) al almacén
+/// de imágenes.
+#[tauri::command]
+pub fn pack_extra_use(
+    state: State<'_, AppState>,
+    id: String,
+    ruta: String,
+) -> AppResult<proxy_core::model::FaceImage> {
+    crate::diseno::descargables::usar_extra(&state, &id, &ruta)
+}
+
 /// Cómo están los símbolos; si faltan o son viejos, los descarga antes.
 #[tauri::command]
 pub async fn symbols_status(state: State<'_, AppState>, refresh: bool) -> AppResult<SimbolosInfo> {

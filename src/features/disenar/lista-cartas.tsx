@@ -121,7 +121,7 @@ export function ListaCartas({
 								{estado === "sinVincular" ? (
 									<WithTooltip
 										content={t(
-											"Vincúlala primero con su carta de Scryfall (clic derecho en el deck → «Vincular con Scryfall…»).",
+											"Vincúlala primero con su carta de Scryfall (clic derecho en el deck → «Vincular con una carta…»).",
 										)}
 									>
 										<span className="block">{fila}</span>

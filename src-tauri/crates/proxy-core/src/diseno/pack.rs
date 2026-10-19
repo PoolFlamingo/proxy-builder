@@ -18,7 +18,10 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 /// Versión del formato que entiende esta app.
-pub const VERSION_PACK: u32 = 1;
+/// La 2 (19/10/2026) trae estilos propios, variantes, símbolos, etiquetas,
+/// colores de texto, capas de fondo, escalado `pixel` y mezclas: una app
+/// anterior rechaza un pack que los use en vez de pintarlo mal sin avisar.
+pub const VERSION_PACK: u32 = 2;
 
 /// Lo que puede fallar al cargar un pack (códigos, no prosa).
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
@@ -133,6 +136,65 @@ pub struct Condicion {
     pub cinta: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub emblema: Option<bool>,
+    /// Alguno de estos tipos de carta (en inglés y minúsculas: `land`,
+    /// `creature`, `planeswalker`, `artifact`, `enchantment`, `instant`,
+    /// `sorcery`, `battle`, `token`…).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tipo: Option<Vec<String>>,
+    /// Tierra básica (o no).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub basica: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub legendaria: Option<bool>,
+    /// Cuántos colores tiene la carta, como rango `[min, max]`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub colores: Option<[u8; 2]>,
+    /// Cuántos símbolos tiene el coste, como rango (`[3, 3]`: solo con tres).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub simbolos: Option<[u8; 2]>,
+    /// La variante del estilo que ha elegido el usuario (`variantes`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub variante: Option<String>,
+}
+
+/// Lo que se sabe de la carta que se pinta, para las condiciones (`si`).
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Hechos {
+    pub corona: bool,
+    pub fr: bool,
+    pub cinta: bool,
+    pub emblema: bool,
+    /// Los tipos (en inglés y minúsculas).
+    pub tipos: Vec<String>,
+    pub basica: bool,
+    pub legendaria: bool,
+    pub colores: u8,
+    pub simbolos: u8,
+    pub variante: Option<String>,
+}
+
+impl Condicion {
+    /// ¿Se cumple con estos hechos? Lo que la condición no pide, vale.
+    pub fn cumple(&self, h: &Hechos) -> bool {
+        let igual = |pide: Option<bool>, hay: bool| pide.is_none_or(|p| p == hay);
+        let rango = |pide: Option<[u8; 2]>, hay: u8| pide.is_none_or(|[a, b]| hay >= a && hay <= b);
+        igual(self.corona, h.corona)
+            && igual(self.fr, h.fr)
+            && igual(self.cinta, h.cinta)
+            && igual(self.emblema, h.emblema)
+            && igual(self.basica, h.basica)
+            && igual(self.legendaria, h.legendaria)
+            && rango(self.colores, h.colores)
+            && rango(self.simbolos, h.simbolos)
+            && self.tipo.as_ref().is_none_or(|t| {
+                t.iter()
+                    .any(|x| h.tipos.iter().any(|y| y.eq_ignore_ascii_case(x)))
+            })
+            && self
+                .variante
+                .as_ref()
+                .is_none_or(|v| h.variante.as_deref() == Some(v.as_str()))
+    }
 }
 
 /// Un rectángulo en mm.
@@ -142,6 +204,54 @@ pub struct Zona {
     pub y: f32,
     pub w: f32,
     pub h: f32,
+}
+
+/// Un rectángulo en mm cuyos lados pueden ser expresiones (`"yTipo-1.3"`):
+/// la zona de una capa que se mueve con la caja de reglas que crece.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ZonaV {
+    pub x: Valor,
+    pub y: Valor,
+    pub w: Valor,
+    pub h: Valor,
+}
+
+impl ZonaV {
+    /// La zona en mm con las variables de la carta (las que falten, error).
+    pub fn evaluar(&self, vars: &BTreeMap<&str, f32>) -> Result<Zona, PackError> {
+        Ok(Zona {
+            x: self.x.evaluar(vars)?,
+            y: self.y.evaluar(vars)?,
+            w: self.w.evaluar(vars)?,
+            h: self.h.evaluar(vars)?,
+        })
+    }
+}
+
+/// Cómo se reescala una capa PNG a su medida en la carta.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Escalado {
+    /// Suave (Lanczos3): para marcos pintados o fotografiados.
+    #[default]
+    Suave,
+    /// Para pixel art: al ampliar, cada píxel se repite (vecino más cercano);
+    /// al reducir, la media de lo que cubre cada píxel. Nada de halos ni de
+    /// bordes emborronados.
+    Pixel,
+}
+
+/// Cómo se mezcla una capa con lo que hay debajo.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Mezcla {
+    #[default]
+    Normal,
+    /// Se queda el más oscuro de los dos (el «Oscurecer» de Photoshop: las
+    /// líneas de barrido de un monitor viejo).
+    Oscurecer,
+    /// Multiplicar.
+    Multiplicar,
 }
 
 /// Una capa del marco: un SVG (con variables) o una imagen PNG.
@@ -155,28 +265,60 @@ pub struct Capa {
     /// color del marco (ver `colores`): `m15/m15Frame{color}.png`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub png: Option<String>,
-    /// Dónde va el PNG (estirado a esa zona); sin ella, la carta entera.
+    /// Dónde va el PNG (estirado a esa zona); sin ella, la carta entera. Sus
+    /// lados admiten las variables de la caja que crece (`yTipo`, `yReglas`,
+    /// `altoReglas`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub en: Option<Zona>,
+    pub en: Option<ZonaV>,
+    /// Estirar solo por el medio: los mm de arriba y de abajo (a la escala
+    /// de su ancho) se pintan sin deformar y lo de en medio se estira hasta
+    /// el alto de la zona. Para las cajas de pixel art que crecen.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tramos: Option<[f32; 2]>,
     /// Letras de color propias de esta capa (paleta → texto de `{color}`);
     /// lo que no diga, como el pack.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub colores: BTreeMap<String, String>,
     #[serde(default)]
     pub si: Condicion,
+    /// Cómo se reescala el PNG (si no lo dice, como el pack).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub escalado: Option<Escalado>,
+    /// Cómo se mezcla con lo de debajo.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mezcla: Option<Mezcla>,
+    /// Opacidad del PNG (0–1; de partida, entera): el barrido de Balatro va
+    /// al 5 %.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub opacidad: Option<f32>,
 }
 
 impl Capa {
     /// La ruta del PNG para la paleta `clave` (`W`, `gold`…), si es de PNG.
-    pub fn png_para(&self, pack: &PackDef, clave: &str) -> Option<String> {
+    /// `{color1}` y `{color2}` son el primer y el segundo color de la carta
+    /// (`colores`, en orden WUBRG; sin colores, la letra de incoloro; con uno
+    /// solo, los dos el mismo): los cuadros de color junto al título.
+    pub fn png_para(&self, pack: &PackDef, clave: &str, colores: &[String]) -> Option<String> {
         let plantilla = self.png.as_ref()?;
-        let letra = self
-            .colores
-            .get(clave)
-            .or_else(|| pack.colores.get(clave))
-            .map(String::as_str)
-            .unwrap_or_else(|| letra_por_defecto(clave));
-        Some(plantilla.replace("{color}", letra))
+        let letra_de = |clave: &str| -> String {
+            self.colores
+                .get(clave)
+                .or_else(|| pack.colores.get(clave))
+                .cloned()
+                .unwrap_or_else(|| letra_por_defecto(clave).to_string())
+        };
+        let primero = colores
+            .first()
+            .map_or_else(|| letra_de("colorless"), |c| letra_de(c));
+        let segundo = colores
+            .get(1)
+            .map_or_else(|| primero.clone(), |c| letra_de(c));
+        Some(
+            plantilla
+                .replace("{color}", &letra_de(clave))
+                .replace("{color1}", &primero)
+                .replace("{color2}", &segundo),
+        )
     }
 }
 
@@ -231,6 +373,49 @@ pub struct Hueco {
     /// Versalitas (títulos de las fichas).
     #[serde(default)]
     pub versalitas: bool,
+    /// Todo en mayúsculas (los títulos de algunos marcos).
+    #[serde(default)]
+    pub mayusculas: bool,
+    /// Dónde va el texto en vertical en una caja fija (las reglas): de
+    /// partida, centrado.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub alinear_v: Option<Alineacion>,
+    /// En el hueco `etiqueta`, qué lleva: `rareza` (de partida),
+    /// `supertipo` («Legendaria») o `subtipoTierra` («Montaña»).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub contenido: Option<String>,
+}
+
+/// Una etiqueta de la línea de tipo (`etiquetas` del pack, por valor:
+/// `common`, `uncommon`, `rare`, `mythic`, `special`, `bonus`, `legendary`,
+/// `plains`…).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EtiquetaDef {
+    /// El texto por idioma (`es`, `en`). Sin el del idioma, el inglés.
+    #[serde(default)]
+    pub texto: BTreeMap<String, String>,
+    /// El fondo: un PNG del pack (estirado al hueco) o un color.
+    pub fondo: String,
+    /// El color del texto (si no, el del hueco).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub color: Option<String>,
+}
+
+/// Cómo se pintan las insignias de las secciones (lealtad, capítulos,
+/// niveles) en un pack.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InsigniasDef {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fondo: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub borde: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub texto: Option<String>,
+    /// Un PNG del pack en lugar de la forma de la insignia de lealtad.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub png_lealtad: Option<String>,
 }
 
 /// La caja de reglas que crece (§3.7 del plan): de `altoMin` a `altoMax`
@@ -269,6 +454,8 @@ pub struct LayoutDef {
     pub caja: Option<CajaDinamica>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub capas: Option<Vec<Capa>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fondo: Option<Vec<Capa>>,
     #[serde(default)]
     pub huecos: BTreeMap<String, Hueco>,
 }
@@ -287,6 +474,10 @@ pub struct EstiloDef {
     #[serde(default)]
     pub caja_por_defecto: CajaPorDefecto,
     pub capas: Vec<Capa>,
+    /// Capas que van **debajo** de la ilustración (el fondo de la ventana
+    /// del arte, que se ve a través de una ilustración con transparencia).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub fondo: Vec<Capa>,
     pub huecos: BTreeMap<String, Hueco>,
     #[serde(default)]
     pub layouts: BTreeMap<String, LayoutDef>,
@@ -302,7 +493,37 @@ pub struct EstiloDef {
     /// de la ilustración y debajo de las capas.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ventana_arte: Option<VentanaArte>,
+    /// El nombre que se enseña de un estilo propio del pack, por idioma
+    /// (`{"es": "Tarot", "en": "Tarot"}`).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub nombre: BTreeMap<String, String>,
+    /// En un estilo propio del pack (no uno de los cuatro de serie), de cuál
+    /// de serie hereda el comportamiento (`borderless`, `extended`,
+    /// `classic` o `fullArt`): lo que el motor decide por el estilo (esquinas
+    /// redondeadas, símbolo del paisaje…) y a qué estilo cae si el pack no
+    /// está. Sin decirlo, `classic`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub base: Option<String>,
+    /// Variantes que elige el usuario (id → nombre por idioma): encienden las
+    /// capas con `si.variante` y, si hay un layout con su mismo id, ese.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub variantes: BTreeMap<String, BTreeMap<String, String>>,
+    /// Layouts que se eligen por la carta (la primera regla que se cumpla):
+    /// `[{"si": {"tipo": ["land"], "basica": false}, "layout": "noBasica"}]`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub layout_si: Vec<ReglaLayout>,
 }
+
+/// Un layout del estilo que toca cuando la carta cumple una condición.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReglaLayout {
+    pub si: Condicion,
+    pub layout: String,
+}
+
+/// Los estilos de serie (los de `DesignStyle`).
+pub const ESTILOS_DE_SERIE: &[&str] = &["borderless", "extended", "classic", "fullArt"];
 
 /// La ventana de la ilustración (mm).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -353,6 +574,48 @@ pub struct PackDef {
     /// De dónde salen las imágenes, para decirlo en la app.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub origen: Option<String>,
+    /// Cómo se reescalan sus capas PNG si la capa no dice otra cosa
+    /// (`pixel` para un pack de pixel art).
+    #[serde(default)]
+    pub escalado: Escalado,
+    /// Símbolos propios (código sin llaves → ruta de un SVG o PNG del pack):
+    /// tapan a los de Scryfall en el coste y en el texto (`"W"`, `"2"`,
+    /// `"T"`…). Los que no trae, los de Scryfall.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub simbolos: BTreeMap<String, String>,
+    /// Las etiquetas de la línea de tipo (hueco `etiqueta`), por valor.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub etiquetas: BTreeMap<String, EtiquetaDef>,
+    /// Los colores (y la imagen de la de lealtad) de las insignias.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub insignias: Option<InsigniasDef>,
+    /// Colores dentro de las reglas: lo marcado con `[[…]]` y las palabras de
+    /// habilidad. Sin ellos, todo del color normal (y sin las marcas).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub colores_texto: Option<ColoresTexto>,
+    /// Caracteres que su letra no tiene y por cuáles se cambian al escribir
+    /// con este pack (`{"—": "-"}`).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub sustituir: BTreeMap<String, String>,
+    /// El pie de fábrica de este pack por idioma (`es`, `en`), con las mismas
+    /// claves que el de las colecciones (`{num}`, `{set}`…). Solo cuando la
+    /// colección no pone uno propio.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub plantilla_pie: BTreeMap<String, String>,
+    /// Separación entre los símbolos del coste, en proporción a su lado (de
+    /// partida, 0,05).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub separacion_coste: Option<f32>,
+}
+
+/// Los colores de texto de las reglas de un pack.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ColoresTexto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resalte: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub habilidad: Option<String>,
 }
 
 /// Un pack cargado: la definición y sus ficheros.
@@ -364,6 +627,8 @@ pub struct Pack {
     pub imagenes: BTreeMap<String, Arc<Vec<u8>>>,
     /// Huella de todo el pack (entra en la huella del render).
     pub huella: String,
+    /// Sus símbolos propios, ya cargados (si trae).
+    pub simbolos: Option<Arc<super::simbolos::SimbolosPropios>>,
 }
 
 /// Los huecos que todo estilo tiene que tener.
@@ -437,7 +702,36 @@ impl Pack {
                 return Err(PackError::Color(format!("falta la paleta {p}")));
             }
         }
+        // Los fondos de las etiquetas y la imagen de la insignia de lealtad.
+        let imagenes_pedidas = def
+            .etiquetas
+            .values()
+            .map(|e| &e.fondo)
+            .filter(|f| f.ends_with(".png"))
+            .chain(def.insignias.iter().flat_map(|i| i.png_lealtad.iter()));
+        for ruta in imagenes_pedidas {
+            if !imagenes.contains_key(ruta) {
+                return Err(PackError::FaltaFichero(ruta.clone()));
+            }
+        }
+        for e in def.etiquetas.values() {
+            for c in std::iter::once(&e.fondo)
+                .filter(|f| !f.ends_with(".png"))
+                .chain(e.color.iter())
+            {
+                if !color_valido(c) {
+                    return Err(PackError::Color(c.clone()));
+                }
+            }
+        }
         for (nombre, e) in &def.estilos {
+            if let Some(b) = &e.base {
+                if !ESTILOS_DE_SERIE.contains(&b.as_str()) {
+                    return Err(PackError::Json(format!(
+                        "el estilo {nombre} tiene una base que no existe: {b}"
+                    )));
+                }
+            }
             for h in HUECOS_OBLIGATORIOS {
                 if !e.huecos.contains_key(*h) {
                     return Err(PackError::FaltaHueco {
@@ -449,7 +743,9 @@ impl Pack {
             let capas = e
                 .capas
                 .iter()
-                .chain(e.layouts.values().flat_map(|l| l.capas.iter().flatten()));
+                .chain(e.fondo.iter())
+                .chain(e.layouts.values().flat_map(|l| l.capas.iter().flatten()))
+                .chain(e.layouts.values().flat_map(|l| l.fondo.iter().flatten()));
             for c in capas {
                 comprobar_capa(c, &def, &ficheros, &imagenes)?;
             }
@@ -491,11 +787,32 @@ impl Pack {
             h.update([0]);
         }
         let huella = h.finalize().iter().map(|b| format!("{b:02x}")).collect();
+        let simbolos = if def.simbolos.is_empty() {
+            None
+        } else {
+            let mut s = super::simbolos::SimbolosPropios::nuevos(def.escalado == Escalado::Pixel);
+            for (codigo, ruta) in &def.simbolos {
+                let r = if ruta.ends_with(".svg") {
+                    let svg = ficheros
+                        .get(ruta)
+                        .ok_or_else(|| PackError::FaltaFichero(ruta.clone()))?;
+                    s.cargar_svg(codigo, svg.as_bytes())
+                } else {
+                    let png = imagenes
+                        .get(ruta)
+                        .ok_or_else(|| PackError::FaltaFichero(ruta.clone()))?;
+                    s.cargar_png(codigo, png)
+                };
+                r.map_err(|e| PackError::Json(e.to_string()))?;
+            }
+            Some(Arc::new(s))
+        };
         Ok(Pack {
             def,
             ficheros,
             imagenes,
             huella,
+            simbolos,
         })
     }
 
@@ -544,10 +861,16 @@ fn comprobar_capa(
             }
         }
         (Some(_), true) => {
+            // Cada paleta y, si la ruta lleva `{color1}`/`{color2}`, cada color.
+            let colores: Vec<Vec<String>> = std::iter::once(Vec::new())
+                .chain(["W", "U", "B", "R", "G"].map(|c| vec![c.to_string()]))
+                .collect();
             for clave in PALETAS {
-                if let Some(ruta) = c.png_para(def, clave) {
-                    if !imagenes.contains_key(&ruta) {
-                        return Err(PackError::FaltaFichero(ruta));
+                for cs in &colores {
+                    if let Some(ruta) = c.png_para(def, clave, cs) {
+                        if !imagenes.contains_key(&ruta) {
+                            return Err(PackError::FaltaFichero(ruta));
+                        }
                     }
                 }
             }
@@ -657,6 +980,22 @@ pub const ORIGINAL_IMAGENES: &str = include_str!("../../assets/marcos/original/i
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
+
+    #[test]
+    fn la_zona_de_una_capa_admite_expresiones() {
+        let c: Capa = serde_json::from_str(
+            r#"{"png": "caja.png", "en": {"x": 2, "y": "yTipo+1.5", "w": 59, "h": "80-yTipo"},
+                "tramos": [1.6, 0.5]}"#,
+        )
+        .unwrap();
+        let mut v = BTreeMap::new();
+        v.insert("yTipo", 50.0);
+        let z = c.en.as_ref().unwrap().evaluar(&v).unwrap();
+        assert_eq!((z.x, z.y, z.w, z.h), (2.0, 51.5, 59.0, 30.0));
+        assert_eq!(c.tramos, Some([1.6, 0.5]));
+        // Sin la variable (caja fija), error: la capa no se pinta.
+        assert!(c.en.unwrap().evaluar(&BTreeMap::new()).is_err());
+    }
 
     #[test]
     fn expresiones() {
@@ -780,24 +1119,78 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn condiciones_por_los_datos_de_la_carta() {
+        let tierra = Hechos {
+            tipos: vec!["land".into()],
+            basica: false,
+            colores: 2,
+            simbolos: 0,
+            ..Hechos::default()
+        };
+        let si: Condicion =
+            serde_json::from_str(r#"{"tipo": ["land"], "basica": false, "colores": [2, 5]}"#)
+                .unwrap();
+        assert!(si.cumple(&tierra));
+        assert!(!si.cumple(&Hechos {
+            basica: true,
+            ..tierra.clone()
+        }));
+        assert!(!si.cumple(&Hechos {
+            tipos: vec!["creature".into()],
+            ..tierra.clone()
+        }));
+        let tres: Condicion = serde_json::from_str(r#"{"simbolos": [3, 3]}"#).unwrap();
+        assert!(!tres.cumple(&tierra));
+        assert!(tres.cumple(&Hechos {
+            simbolos: 3,
+            ..Hechos::default()
+        }));
+        let variante: Condicion = serde_json::from_str(r#"{"variante": "sinDados"}"#).unwrap();
+        assert!(!variante.cumple(&Hechos::default()));
+        assert!(variante.cumple(&Hechos {
+            variante: Some("sinDados".into()),
+            ..Hechos::default()
+        }));
+        // Sin pedir nada, vale siempre.
+        assert!(Condicion::default().cumple(&Hechos::default()));
+    }
+
+    #[test]
+    fn cuadros_de_color_con_color1_y_color2() {
+        let (f, im) = con_png();
+        let p = Pack::cargar_con_imagenes(f, im).unwrap();
+        let capa = Capa {
+            png: Some("cuadro{color1}-{color2}.png".into()),
+            ..Capa::default()
+        };
+        let c = |v: &[&str]| -> Option<String> {
+            let v: Vec<String> = v.iter().map(|s| s.to_string()).collect();
+            capa.png_para(&p.def, "gold", &v)
+        };
+        assert_eq!(c(&["U", "R"]).as_deref(), Some("cuadroU-R.png"));
+        assert_eq!(c(&["G"]).as_deref(), Some("cuadroG-G.png"));
+        assert_eq!(c(&[]).as_deref(), Some("cuadroC-C.png"));
+    }
+
+    #[test]
     fn capas_png_por_color() {
         let (f, im) = con_png();
         let p = Pack::cargar_con_imagenes(f, im).unwrap();
         let capas = &p.estilo("borderless").unwrap().capas;
         assert_eq!(
-            capas[0].png_para(&p.def, "gold").as_deref(),
+            capas[0].png_para(&p.def, "gold", &[]).as_deref(),
             Some("marcoM.png")
         );
         assert_eq!(
-            capas[0].png_para(&p.def, "U").as_deref(),
+            capas[0].png_para(&p.def, "U", &[]).as_deref(),
             Some("marcoU.png")
         );
         assert_eq!(
-            capas[1].png_para(&p.def, "land").as_deref(),
+            capas[1].png_para(&p.def, "land", &[]).as_deref(),
             Some("fr-c.png")
         );
         assert_eq!(
-            capas[1].png_para(&p.def, "artifact").as_deref(),
+            capas[1].png_para(&p.def, "artifact", &[]).as_deref(),
             Some("fr-A.png")
         );
     }
@@ -866,7 +1259,7 @@ pub(crate) mod tests {
         for e in p.def.estilos.values() {
             for c in &e.capas {
                 for k in PALETAS {
-                    pedidas.extend(c.png_para(&p.def, k));
+                    pedidas.extend(c.png_para(&p.def, k, &[]));
                 }
             }
         }

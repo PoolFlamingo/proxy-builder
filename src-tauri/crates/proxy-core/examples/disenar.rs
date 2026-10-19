@@ -80,6 +80,8 @@ fn diseno(
         status: DesignStatus::Draft,
         collection: Some("rts".into()),
         style: estilo,
+        estilo_pack: None,
+        variante_pack: None,
         frame: None,
         faces: vec![FaceDesign {
             art: arte.map(|a| ArtRef {
@@ -141,6 +143,7 @@ fn coleccion(original: OriginalName, pie: &str) -> Collection {
         id: "rts".into(),
         name: "Tensura 2".into(),
         default_style: DesignStyle::Borderless,
+        estilo_pack_defecto: None,
         frame: FrameOptions::default(),
         emblem: Some(img("emblema")),
         set_code: "RTS".into(),

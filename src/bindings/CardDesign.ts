@@ -14,6 +14,18 @@ import type { FrameOptions } from "./FrameOptions";
  */
 export type CardDesign = { version: number, status: DesignStatus, collection?: string, style: DesignStyle, 
 /**
+ * Un estilo propio del pack de marcos (no uno de los de serie): su id en
+ * el pack («tarot»). `style` es entonces el de serie del que hereda, al
+ * que se cae si el pack no lo tiene. Sin `skip_serializing_if` cambiaría
+ * la huella de todos los diseños de antes.
+ */
+estiloPack?: string, 
+/**
+ * La variante elegida del estilo (`variantes` del pack). Como
+ * `estilo_pack`, sin escribirse si no hay, por la huella.
+ */
+variantePack?: string, 
+/**
  * El marco propio de esta carta; `None` = el de la colección (y si no
  * hay, el de fábrica). Así, cambiar la colección cambia sus cartas.
  */

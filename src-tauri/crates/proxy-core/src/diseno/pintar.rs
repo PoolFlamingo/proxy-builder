@@ -254,6 +254,8 @@ mod tests {
             color: [0, 0, 0, 255],
             alinear: Alinear::Inicio,
             versalitas: false,
+            resalte: None,
+            habilidad: None,
         }
     }
 
@@ -291,6 +293,45 @@ mod tests {
         let mut p = Pixmap::new(600, 120).unwrap();
         let faltan = pintar_bloque(&mut p.as_mut(), b, x, y, pincel, s);
         (p, faltan)
+    }
+
+    #[test]
+    fn las_palabras_marcadas_van_de_su_color_y_sin_color_igual_que_antes() {
+        let mut m = Motor::de_fabrica().unwrap();
+        let reglas = texto::reglas("Two-Headed Coin — When it enters, [[draw]] a card.");
+        let p = &reglas[0];
+        // Sin colores en el pack: lo mismo que sin marcas, letra a letra.
+        let sin = m.m.maquetar(&mut m.letras, p, &estilo(), Some(2000.0));
+        let llano = texto::reglas("Two-Headed Coin — When it enters, draw a card.");
+        let normal =
+            m.m.maquetar(&mut m.letras, &llano[0], &estilo(), Some(2000.0));
+        assert_eq!(sin.ancho, normal.ancho);
+        assert_eq!(sin.alto, normal.alto);
+        let (a, _) = pintar(&sin, 0.0, 10.0, Pincel::default(), &simbolos(&[]));
+        assert!(a.pixels().iter().all(|c| c.blue() == 0 || c.alpha() == 0));
+        // Con colores: hay píxeles azules (resalte) y amarillos (habilidad).
+        let con = Estilo {
+            resalte: Some([0, 0, 255, 255]),
+            habilidad: Some([255, 200, 0, 255]),
+            ..estilo()
+        };
+        let b = m.m.maquetar(&mut m.letras, p, &con, Some(2000.0));
+        assert_eq!(b.ancho, normal.ancho);
+        let (pm, _) = pintar(&b, 0.0, 10.0, Pincel::default(), &simbolos(&[]));
+        let hay = |f: &dyn Fn(&tiny_skia::PremultipliedColorU8) -> bool| pm.pixels().iter().any(f);
+        assert!(hay(&|c| c.blue() > 200 && c.red() == 0));
+        assert!(hay(&|c| c.red() > 200 && c.green() > 150 && c.blue() == 0));
+    }
+
+    #[test]
+    fn los_caracteres_que_la_letra_no_tiene_se_cambian() {
+        let mut m = Motor::de_fabrica().unwrap();
+        let guion = bloque(&mut m, "Criatura - Dragón");
+        m.m.sustituir = vec![("—".into(), "-".into())];
+        let raya = bloque(&mut m, "Criatura — Dragón");
+        assert_eq!(raya.ancho, guion.ancho);
+        m.m.sustituir.clear();
+        assert_ne!(bloque(&mut m, "Criatura — Dragón").ancho, guion.ancho);
     }
 
     #[test]

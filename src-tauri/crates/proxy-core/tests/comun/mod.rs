@@ -4,10 +4,12 @@
 #![allow(dead_code, clippy::unwrap_used, clippy::expect_used)]
 
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use image::{Rgba, RgbaImage};
-use proxy_core::diseno::render::Imagenes;
+use proxy_core::diseno::pack::Pack;
+use proxy_core::diseno::render::{Imagenes, Motor};
 use proxy_core::diseno::simbolos::Simbolos;
 use proxy_core::model::{FaceImage, ImageOrigin};
 
@@ -124,4 +126,50 @@ pub fn diferencia(a: &RgbaImage, b: &RgbaImage) -> f64 {
         .filter(|(p, q)| p.0.iter().zip(q.0.iter()).any(|(x, y)| x.abs_diff(*y) > 8))
         .count();
     distintos as f64 * 100.0 / (a.width() * a.height()) as f64
+}
+
+/// El pack de la carpeta `PB_BALATRO` (sin `source/`, `extras/` ni
+/// `golden/`) y la carpeta de salida (`PB_SALIDA` o la temporal).
+pub fn pack_balatro() -> (PathBuf, PathBuf, Pack) {
+    let base = PathBuf::from(std::env::var("PB_BALATRO").expect("PB_BALATRO"));
+    let salida = std::env::var("PB_SALIDA")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| std::env::temp_dir().join("balatro"));
+    std::fs::create_dir_all(&salida).unwrap();
+    let mut ficheros = std::collections::BTreeMap::new();
+    let mut imagenes = std::collections::BTreeMap::new();
+    let mut pila = vec![base.clone()];
+    while let Some(d) = pila.pop() {
+        for e in std::fs::read_dir(&d).unwrap().flatten() {
+            let p = e.path();
+            let rel = p
+                .strip_prefix(&base)
+                .unwrap()
+                .to_string_lossy()
+                .replace('\\', "/");
+            if p.is_dir() {
+                if !["source", "extras", "golden"].contains(&rel.as_str()) {
+                    pila.push(p);
+                }
+            } else if rel.ends_with(".png") {
+                imagenes.insert(rel, Arc::new(std::fs::read(&p).unwrap()));
+            } else if rel.ends_with(".json") || rel.ends_with(".svg") {
+                ficheros.insert(rel, std::fs::read_to_string(&p).unwrap());
+            }
+        }
+    }
+    (
+        base,
+        salida,
+        Pack::cargar_con_imagenes(ficheros, imagenes).unwrap(),
+    )
+}
+
+pub fn motor_balatro(base: &std::path::Path) -> Motor {
+    let mut motor = Motor::de_fabrica().unwrap();
+    motor
+        .letras
+        .cargar(std::fs::read(base.join("fonts/m6x11plus.ttf")).unwrap())
+        .unwrap();
+    motor
 }

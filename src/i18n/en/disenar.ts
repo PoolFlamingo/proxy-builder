@@ -254,8 +254,8 @@ export const DISENAR: Record<string, string> = {
 	"Buscar carta…": "Search card…",
 	"{hechas} de {total} listas": "{hechas} of {total} ready",
 	"Carta sin nombre": "Unnamed card",
-	"Vincúlala primero con su carta de Scryfall (clic derecho en el deck → «Vincular con Scryfall…»).":
-		"Link it to its Scryfall card first (right-click in the deck → “Link with Scryfall…”).",
+	"Vincúlala primero con su carta de Scryfall (clic derecho en el deck → «Vincular con una carta…»).":
+		"Link it to its Scryfall card first (right-click in the deck → “Link to a card…”).",
 	"Recortar la ilustración de una carta": "Crop the illustration from a card",
 	"Arrastra sobre la carta para marcar la zona de la ilustración.":
 		"Drag over the card to mark the illustration area.",
@@ -362,4 +362,24 @@ export const DISENAR: Record<string, string> = {
 	"Ajustes guardados en la colección": "Fine tuning saved to the collection",
 	"Usar estos ajustes en toda la colección «{c}»":
 		"Use this fine tuning for the whole «{c}» collection",
+	"El pack de marcos no tiene el estilo «{estilo}»: se usa su estilo de serie.":
+		"The frame pack doesn't have the “{estilo}” style: its standard style is used.",
+	"Variante": "Variant",
+	"Según la carta": "From the card",
+	"[[así]] resalta unas palabras con el color del pack (si lo trae, como el de Balatro); sin él, salen normales.":
+		"[[like this]] highlights words with the pack's colour (if it has one, like Balatro's); without it, they look normal.",
+	"Descargado: {n} imágenes extra (reversos, fichas, tierras y cartas hechas).":
+		"Downloaded: {n} extra images (backs, tokens, lands and finished cards).",
+	"Pack descargable (unos 45 MB con sus extras). Se descarga de GitHub.":
+		"Downloadable pack (about 45 MB with its extras). It's downloaded from GitHub.",
+	"Contenido": "Contents",
+	"Reversos": "Backs",
+	"Tierras básicas": "Basic lands",
+	"Cartas hechas": "Finished cards",
+	"«{nombre}» añadida al deck": "“{nombre}” added to the deck",
+	"Abre un deck para usarlas.": "Open a deck to use them.",
+	"Usar como reverso del deck": "Use as the deck's back",
+	"Añadir al deck": "Add to the deck",
+	"{nombre} (descargar)": "{nombre} (download)",
+	"Descargando el pack: {hechas} de {total}": "Downloading the pack: {hechas} of {total}",
 };
