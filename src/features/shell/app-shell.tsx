@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { WithTooltip } from "@/components/ui/with-tooltip";
 import { SettingsDialog } from "@/features/settings/settings-dialog";
 import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
-import { BotonActualizar } from "./actualizacion-automatica";
+import { BotonActualizar, PuntoActualizacion, useAvisoAjustes } from "./actualizacion-automatica";
 import { SaveIndicator } from "./save-indicator";
 
 /**
@@ -36,6 +37,7 @@ export function AppShell({
 	const setVista = useUi((s) => s.setVista);
 	const editor = useUi((s) => s.editorCartas);
 	const [ajustes, setAjustes] = useState(false);
+	const avisoAjustes = useAvisoAjustes();
 	const layout = useDefaultLayout({ id: "proxybuilder.paneles", storage: localStorage });
 
 	return (
@@ -90,15 +92,19 @@ export function AppShell({
 				<div className="ml-auto flex items-center gap-2.5">
 					<SaveIndicator />
 					<BotonActualizar />
-					<Button
-						size="sm"
-						variant="ghost"
-						onClick={() => setAjustes(true)}
-						aria-label={t("Ajustes")}
-					>
-						<Settings className="size-4" />
-						{t("Ajustes")}
-					</Button>
+					<WithTooltip content={avisoAjustes}>
+						<Button
+							size="sm"
+							variant="ghost"
+							onClick={() => setAjustes(true)}
+							aria-label={avisoAjustes ? `${t("Ajustes")}: ${avisoAjustes}` : t("Ajustes")}
+							className="relative"
+						>
+							<Settings className="size-4" />
+							{t("Ajustes")}
+							<PuntoActualizacion />
+						</Button>
+					</WithTooltip>
 				</div>
 			</header>
 

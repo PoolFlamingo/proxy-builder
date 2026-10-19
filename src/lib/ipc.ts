@@ -25,6 +25,7 @@ import type { DesignLang } from "@/bindings/DesignLang";
 import type { ExportEstimate } from "@/bindings/ExportEstimate";
 import type { FaceImage } from "@/bindings/FaceImage";
 import type { FichaPropuesta } from "@/bindings/FichaPropuesta";
+import type { FormatoLista } from "@/bindings/FormatoLista";
 import type { FuenteCarta } from "@/bindings/FuenteCarta";
 import type { GcReport } from "@/bindings/GcReport";
 import type { IdentifyRequest } from "@/bindings/IdentifyRequest";
@@ -206,6 +207,8 @@ export interface Commands {
 	cache_stats: { args: Record<string, never>; result: CacheStats };
 	cache_clear: { args: Record<string, never>; result: CacheStats };
 	deck_export_package: { args: { id: string; path: string }; result: number };
+	deck_list_text: { args: { deck: Deck; format: FormatoLista }; result: string };
+	deck_list_save: { args: { deck: Deck; format: FormatoLista; path: string }; result: null };
 	deck_import_package: { args: { path: string }; result: Deck };
 	preset_list: { args: { kind: PresetKind }; result: Preset[] };
 	preset_save: { args: { kind: PresetKind; name: string; json: string }; result: Preset };

@@ -13,7 +13,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useUi } from "@/stores/ui-store";
-import { Actualizaciones } from "./actualizaciones";
+import { Actualizaciones, ReiniciarParaActualizar } from "./actualizaciones";
 import { Appearance } from "./appearance";
 import { NombresIdiomas } from "./nombres-idiomas";
 
@@ -34,11 +34,14 @@ export function SettingsDialog({
 					<DialogTitle>{t("Ajustes")}</DialogTitle>
 					<DialogDescription className="flex items-center justify-between gap-2.5">
 						<span>{t("Idioma y aspecto de la aplicación.")}</span>
-						{version && (
-							<span className="rounded-md border px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
-								Proxy Builder {version}
-							</span>
-						)}
+						<span className="flex items-center gap-2">
+							<ReiniciarParaActualizar />
+							{version && (
+								<span className="rounded-md border px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
+									Proxy Builder {version}
+								</span>
+							)}
+						</span>
 					</DialogDescription>
 				</DialogHeader>
 				<DialogCuerpo>

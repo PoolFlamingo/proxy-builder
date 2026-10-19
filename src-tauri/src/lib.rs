@@ -85,6 +85,8 @@ pub fn run() {
             commands::actualizar::update_download,
             commands::actualizar::update_install,
             commands::decklist::parse_decklist,
+            commands::decklist::deck_list_text,
+            commands::decklist::deck_list_save,
             commands::layout::compute_page_plan,
             commands::library::deck_list,
             commands::library::deck_create,

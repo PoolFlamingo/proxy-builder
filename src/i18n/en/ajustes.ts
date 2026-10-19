@@ -89,4 +89,8 @@ export const AJUSTES: Record<string, string> = {
 	"La {version} está lista. Se instala al reiniciar.":
 		"{version} is ready. It installs when you restart.",
 	"Instalando la {version}…": "Installing {version}…",
+	"Reiniciar y actualizar a la {version}": "Restart and update to {version}",
+	"Descargando Proxy Builder {version}…": "Downloading Proxy Builder {version}…",
+	"No se ha podido descargar la actualización.": "The update couldn't be downloaded.",
+	"La {version} está lista: reinicia desde Ajustes.": "{version} is ready: restart from Settings.",
 };
