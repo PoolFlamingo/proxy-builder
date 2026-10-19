@@ -123,6 +123,12 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
 - OCR: `originales.rs` busca el nombre original en cualquier línea leída
   (n-gramas contra el índice local de nombres, puntuados por zona) y
   `pie_leido` saca set, número e idioma del pie.
+- Exportar: el botón «Exportar PDF» va partido; los tres puntos
+  (`features/export/menu-exportar.tsx`) copian la lista para Moxfield, Arena,
+  MTGO o en texto plano, la guardan para MTGO (`.txt`) y guardan el
+  `.pbdeck`. La lista la escribe `proxy_core::decklist::exportar` (de las
+  cartas del deck; las secciones, por el nombre en la lista escrita; sin
+  fichas ni huecos).
 - Idioma del deck a mano: `decks.lang_override` (migración 0004; no toca
   `updated_at`), `deck_lang_set`, submenú «Idioma» de la biblioteca.
 - **Temas de tweakcn** (Pablo, 19/10/2026): `temas.rs` baja un tema por id o
@@ -144,7 +150,11 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
   trabajo largo en marcha (`Busy`) y guarda el deck antes. En pantalla:
   `stores/actualizacion-store.ts`, `features/shell/actualizacion-automatica.tsx`
   (al arrancar y cada 6 h si `ui-store.actualizarSola`, de fábrica encendido;
-  aviso y botón en la barra) y `features/settings/actualizaciones.tsx`.
+  botón en la barra; los avisos —descargando con el %, lista para reiniciar,
+  fallo— los pone `useAvisosActualizacion`, se baje sola o desde Ajustes),
+  el puntito del botón de Ajustes (ámbar mientras baja, del color de la app
+  cuando está lista) y `features/settings/actualizaciones.tsx` (con
+  «Reiniciar y actualizar» también en la cabecera de Ajustes).
   🛑 La clave privada está en `~/.tauri/proxy-builder.key` de Pablo (sin
   contraseña) y en el secreto `TAURI_SIGNING_PRIVATE_KEY`; la pública, en
   `tauri.conf.json`. Si se pierde, nadie recibe más actualizaciones.
