@@ -3,5 +3,11 @@
 	"identifier": "default",
 	"description": "Permisos de la ventana principal. Nada de `fs`: todo acceso a disco pasa por comandos de Rust.",
 	"windows": ["main"],
-	"permissions": ["core:default", "opener:default", "dialog:default", "window-state:default"]
+	"permissions": [
+		"core:default",
+		"core:window:allow-show",
+		"opener:default",
+		"dialog:default",
+		"window-state:default"
+	]
 }

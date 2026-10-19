@@ -17,7 +17,9 @@
 				"width": 1440,
 				"height": 900,
 				"minWidth": 960,
-				"minHeight": 640
+				"minHeight": 640,
+				"visible": false,
+				"backgroundColor": "#1d1b19"
 			}
 		],
 		"security": {
@@ -26,7 +28,7 @@
 				"script-src": "'self'",
 				"img-src": "'self' pbimg: http://pbimg.localhost data: blob:",
 				"style-src": "'self' 'unsafe-inline'",
-				"font-src": "'self' data:",
+				"font-src": "'self' data: pbimg: http://pbimg.localhost",
 				"connect-src": "ipc: http://ipc.localhost",
 				"object-src": "'none'",
 				"base-uri": "'self'",

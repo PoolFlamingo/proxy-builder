@@ -3,7 +3,8 @@
 // orden y los nombres casen con `src/themes.css`.
 export type Mode = "light" | "dark" | "system";
 
-export type ThemeName =
+/** Los temas que trae la app (`src/themes.css`). */
+export type TemaDeSerie =
 	| "base"
 	| "claymorphism"
 	| "starry-night"
@@ -47,6 +48,14 @@ export type ThemeName =
 	| "darkmatter"
 	| "mono"
 	| "soft-pop";
+
+/**
+ * Uno de serie o uno de tweakcn instalado (`tw-<id>`). Los instalados se
+ * añaden al final de `THEMES` al arrancar y al instalar o quitar uno
+ * (`lib/temas-instalados.ts`): así el selector y el `ThemeProvider` los tratan
+ * como a los demás.
+ */
+export type ThemeName = TemaDeSerie | `tw-${string}`;
 
 export const THEMES: { name: ThemeName; label: string; swatch: string }[] = [
 	// El primero a propósito: es el tema neutro de shadcn, la referencia contra
