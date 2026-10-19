@@ -40,6 +40,7 @@
 	"bundle": {
 		"active": true,
 		"targets": "all",
+		"createUpdaterArtifacts": true,
 		"category": "Utility",
 		"shortDescription": "Decks proxy de Magic: The Gathering listos para imprimir",
 		"icon": [
@@ -52,6 +53,18 @@
 		"linux": {
 			"deb": {
 				"depends": []
+			}
+		}
+	},
+	"plugins": {
+		"updater": {
+			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ3QUQ1QjE0NkQ0M0Y1NDUKUldSRjlVTnRGRnV0MTZ5cFZHd3FCZ1NjaHgyRU9OZXBDVklNZkhzemo3VXpyek53dmM0dUJkanIK",
+			"endpoints": [
+				"https://github.com/PoolFlamingo/proxy-builder/releases/latest/download/latest.json"
+			],
+			"requireSignedVersion": true,
+			"windows": {
+				"installMode": "passive"
 			}
 		}
 	}

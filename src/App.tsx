@@ -12,6 +12,7 @@ import { MoverADialog } from "@/features/preview/mover-a-dialog";
 import { PreviewPane } from "@/features/preview/preview-pane";
 import { SetBrowserDialog } from "@/features/set-browser/set-browser-dialog";
 import { SincronizarTemas } from "@/features/settings/temas-tweakcn";
+import { useActualizacionAutomatica } from "@/features/shell/actualizacion-automatica";
 import { AppShell } from "@/features/shell/app-shell";
 import { useDeckInicial } from "@/features/shell/use-deck-inicial";
 import { StatsDialog } from "@/features/stats/stats-dialog";
@@ -23,6 +24,7 @@ import { useUi } from "@/stores/ui-store";
 
 export default function App() {
 	useDeckInicial();
+	useActualizacionAutomatica();
 	// El editor de cartas está en beta: sin encenderlo en Ajustes no se monta nada suyo.
 	const editor = useUi((s) => s.editorCartas);
 	return (

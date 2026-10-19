@@ -4,6 +4,7 @@ import {
 	ErrorDeUso,
 	leerArgs,
 	limpiarNotas,
+	notasDelActualizador,
 	plantilla,
 	TEXTO_FIJO,
 } from "../release-notas.mjs";
@@ -45,5 +46,29 @@ describe("notas", () => {
 	it("el texto fijo va debajo de las notas", () => {
 		expect(componer("Hola")).toBe(`Hola\n\n${TEXTO_FIJO}\n`);
 		expect(componer("<!-- nada -->")).toBe(`${TEXTO_FIJO}\n`);
+	});
+});
+
+describe("latest.json", () => {
+	const json = JSON.stringify({
+		version: "2.4.0",
+		notes: TEXTO_FIJO,
+		pub_date: "2026-10-20T10:00:00Z",
+		platforms: { "linux-x86_64-deb": { signature: "x", url: "u" } },
+	});
+
+	it("cambia solo las notas", () => {
+		const r = JSON.parse(notasDelActualizador(json, "2.4.0", "<!-- c -->\n- OCR mejor\n"));
+		expect(r.notes).toBe("- OCR mejor");
+		expect(r.platforms["linux-x86_64-deb"]).toEqual({ signature: "x", url: "u" });
+		expect(r.pub_date).toBe("2026-10-20T10:00:00Z");
+	});
+
+	it("sin notas las deja vacías", () => {
+		expect(JSON.parse(notasDelActualizador(json, "2.4.0", null)).notes).toBe("");
+	});
+
+	it("no toca el de otra versión", () => {
+		expect(() => notasDelActualizador(json, "2.5.0", "x")).toThrow();
 	});
 });

@@ -7,6 +7,7 @@
 
 #![cfg_attr(not(test), deny(clippy::unwrap_used, clippy::expect_used))]
 
+pub mod actualizar;
 pub mod archidekt;
 pub mod biblioteca;
 pub mod commands;
@@ -29,7 +30,9 @@ pub mod temas;
 pub fn run() {
     let constructor = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_dialog::init());
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(actualizar::Actualizador::default());
 
     #[cfg(desktop)]
     // La ventana arranca oculta (sin el destello blanco del primer
@@ -77,6 +80,10 @@ pub fn run() {
             commands::carpetas::carpeta_recordar,
             commands::carpetas::carpeta_inicial,
             commands::sistema::ping_error,
+            commands::actualizar::update_status,
+            commands::actualizar::update_check,
+            commands::actualizar::update_download,
+            commands::actualizar::update_install,
             commands::decklist::parse_decklist,
             commands::layout::compute_page_plan,
             commands::library::deck_list,

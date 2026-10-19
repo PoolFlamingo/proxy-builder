@@ -5,6 +5,14 @@
 # 🛑 Solo a mano, no al subir etiquetas: publicar el borrador crea la etiqueta,
 # y con el disparador de etiquetas eso volvía a compilarlo todo (13/10/2026).
 # Sin firma de código en v1: Windows SmartScreen y Gatekeeper avisarán (README).
+#
+# Actualizaciones dentro de la app (`src-tauri/src/actualizar.rs`): con
+# `createUpdaterArtifacts` cada instalador sale firmado (`.sig`, minisign) y
+# tauri-action junta en `latest.json` una entrada por instalador
+# (`linux-x86_64-deb`, `windows-x86_64-nsis`, `darwin-aarch64-app`…). La app lo
+# lee de `releases/latest/download/latest.json`: solo cuenta al publicar el
+# borrador. 🛑 Sin el secreto `TAURI_SIGNING_PRIVATE_KEY` (la clave privada de
+# `~/.tauri/proxy-builder.key`, sin contraseña) `tauri build` falla.
 name: release
 
 on:
@@ -57,6 +65,8 @@ jobs:
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: v__VERSION__
           releaseName: "Proxy Builder v__VERSION__"

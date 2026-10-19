@@ -20,7 +20,9 @@
 // en los cuatro sitios (package.json, tauri.conf.json, Cargo.toml, Cargo.lock)
 // → commit «Versión X» y push → espera a la CI de ese commit → lanza el
 // workflow `release` (instaladores de Linux, Windows y macOS en un borrador) y
-// espera → pone las notas al borrador → pregunta si publicarlo. Publicarlo crea la etiqueta `vX`.
+// espera → pone las notas al borrador y a su `latest.json` (lo que enseña la
+// app al avisar de la versión nueva) → pregunta si publicarlo. Publicarlo crea
+// la etiqueta `vX` y, desde ese momento, las apps instaladas la ven.
 //
 // Necesita `git` y `gh` (con la sesión iniciada: `gh auth login`).
 
@@ -28,7 +30,15 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { createInterface } from "node:readline/promises";
-import { componer, ErrorDeUso, leerArgs, limpiarNotas, plantilla, USO } from "./release-notas.mjs";
+import {
+	componer,
+	ErrorDeUso,
+	leerArgs,
+	limpiarNotas,
+	notasDelActualizador,
+	plantilla,
+	USO,
+} from "./release-notas.mjs";
 
 const RAIZ = new URL("..", import.meta.url).pathname;
 const RAMA = "main";
@@ -310,6 +320,12 @@ async function main() {
 		throw new Fallo(`El release ${etiqueta} no es el borrador esperado (${borrador.url}).`);
 	}
 	console.log(`  ${borrador.assets.length} ficheros en ${borrador.url}`);
+	// Sin él las apps instaladas no se enteran de la versión nueva.
+	if (!borrador.assets.some((a) => a.name === "latest.json")) {
+		throw new Fallo(
+			`El borrador no tiene latest.json (${borrador.url}). ¿Están los secretos TAURI_SIGNING_PRIVATE_KEY?`,
+		);
+	}
 	if (notas !== null) {
 		const fichero = join(RAIZ, "tmp", `release-notas-v${nueva}-final.md`);
 		mkdirSync(join(RAIZ, "tmp"), { recursive: true });
@@ -317,6 +333,26 @@ async function main() {
 		gh("release", "edit", etiqueta, "--notes-file", fichero);
 		console.log("  notas puestas en el borrador");
 	}
+	const carpetaJson = join(RAIZ, "tmp", `latest-v${nueva}`);
+	mkdirSync(carpetaJson, { recursive: true });
+	const ficheroJson = join(carpetaJson, "latest.json");
+	gh(
+		"release",
+		"download",
+		etiqueta,
+		"--pattern",
+		"latest.json",
+		"--dir",
+		carpetaJson,
+		"--clobber",
+	);
+	try {
+		writeFileSync(ficheroJson, notasDelActualizador(leer(ficheroJson), nueva, notas));
+	} catch (e) {
+		throw new Fallo(e.message);
+	}
+	gh("release", "upload", etiqueta, ficheroJson, "--clobber");
+	console.log("  notas puestas en latest.json (las que enseña la app)");
 
 	const publicar =
 		publicarYa ||

@@ -17,6 +17,8 @@ type Preferencias = {
 	infoCarta: boolean;
 	/** El editor de cartas (beta): apagado de fábrica, se enciende en Ajustes. */
 	editorCartas: boolean;
+	/** Buscar y bajar las versiones nuevas sola (al arrancar y cada pocas horas). */
+	actualizarSola: boolean;
 };
 
 /** Los diálogos que se abren desde las cartas o las barras. */
@@ -86,6 +88,7 @@ const PREDETERMINADAS: Preferencias = {
 	zoom: 0.8,
 	infoCarta: false,
 	editorCartas: false,
+	actualizarSola: true,
 };
 
 function leer(): Preferencias {
@@ -108,6 +111,7 @@ function guardar(s: Preferencias) {
 		zoom: s.zoom,
 		infoCarta: s.infoCarta,
 		editorCartas: s.editorCartas,
+		actualizarSola: s.actualizarSola,
 	};
 	try {
 		localStorage.setItem(CLAVE, JSON.stringify(p));

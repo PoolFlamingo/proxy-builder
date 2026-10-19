@@ -73,4 +73,20 @@ export const AJUSTES: Record<string, string> = {
 	"Aún no hay ninguno.": "None yet.",
 	"Eso no es un enlace ni un id de un tema de tweakcn.": "That isn't a tweakcn theme link or id.",
 	"tweakcn no tiene ningún tema con ese enlace.": "tweakcn has no theme with that link.",
+	Actualizaciones: "Updates",
+	"Buscar ahora": "Check now",
+	"Solo en la app instalada: esta copia no viene de un instalador (por ejemplo, en desarrollo).":
+		"Only in the installed app: this copy doesn't come from an installer (for example, in development).",
+	"Buscar versiones nuevas al abrir la app y bajarlas sin molestar. Se instalan cuando reinicies.":
+		"Check for new versions when the app opens and download them quietly. They install when you restart.",
+	"Descargar la {version}": "Download {version}",
+	"Reiniciar y actualizar": "Restart and update",
+	"Tienes la última versión ({version}).": "You have the latest version ({version}).",
+	"Hay una versión nueva: {version}.": "A new version is available: {version}.",
+	"Descargando la {version}…": "Downloading {version}…",
+	"La {version} está lista. Al reiniciar, el sistema pedirá tu contraseña.":
+		"{version} is ready. When you restart, your system will ask for your password.",
+	"La {version} está lista. Se instala al reiniciar.":
+		"{version} is ready. It installs when you restart.",
+	"Instalando la {version}…": "Installing {version}…",
 };

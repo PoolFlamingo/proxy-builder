@@ -74,3 +74,17 @@ export function componer(notas) {
 	const limpias = limpiarNotas(notas);
 	return limpias ? `${limpias}\n\n${TEXTO_FIJO}\n` : `${TEXTO_FIJO}\n`;
 }
+
+/**
+ * El `latest.json` del actualizador con las notas de verdad: el workflow le
+ * pone el texto fijo, que en la app no dice nada. Sin notas, vacío. Falla si
+ * no es el `latest.json` de la versión esperada.
+ */
+export function notasDelActualizador(json, version, notas) {
+	const datos = JSON.parse(json);
+	if (datos.version !== version || typeof datos.platforms !== "object" || !datos.platforms) {
+		throw new Error(`latest.json no es el de la ${version}.`);
+	}
+	datos.notes = notas === null ? "" : limpiarNotas(notas);
+	return `${JSON.stringify(datos, null, 2)}\n`;
+}
