@@ -95,6 +95,7 @@ mod tests {
                 ..CardMeta::default()
             },
             design: None,
+            marca: None,
         }
     }
 

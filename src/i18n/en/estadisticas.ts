@@ -179,4 +179,6 @@ export const ESTADISTICAS: Record<string, string> = {
 	Optimizado: "Optimized",
 	"Sin restricciones: más de tres Game Changers o destrucción masiva de tierras.":
 		"No restrictions: more than three Game Changers or mass land destruction.",
+	"Aparte, por su marca (no cuentan aquí): {v} variantes de diseño, {o} opcionales y {b} en el banquillo.":
+		"Set aside by their mark (not counted here): {v} design variants, {o} optional and {b} in the sideboard.",
 };

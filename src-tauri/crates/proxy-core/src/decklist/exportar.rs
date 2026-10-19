@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use super::{parse, LineKind, Section};
-use crate::model::{CardSource, Deck, DeckCard};
+use crate::model::{cuentan, CardSource, Deck, DeckCard, MarcaCarta};
 
 /// A qué se exporta.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -117,16 +117,24 @@ fn con_impresion(l: &Linea, nombre: &str) -> String {
 /// Las cartas del deck en líneas, en el orden en que aparecen.
 fn juntar(deck: &Deck) -> Vec<Linea> {
     let secciones = secciones_de(&deck.decklist_text);
+    // Por las marcas: sin las opcionales ni las variantes de más; las del
+    // banquillo, al banquillo.
+    let (dentro, _) = cuentan(&deck.cards);
     let mut out: Vec<Linea> = Vec::new();
     for c in &deck.cards {
-        if !va_en_la_lista(c) {
+        let banquillo = c.marca == Some(MarcaCarta::Banquillo);
+        if !va_en_la_lista(c) || (!banquillo && !dentro.iter().any(|d| std::ptr::eq(*d, c))) {
             continue;
         }
         let nombre = c.meta.name.trim();
         if nombre.is_empty() {
             continue;
         }
-        let seccion = seccion_de(&secciones, nombre);
+        let seccion = if banquillo {
+            Section::Sideboard
+        } else {
+            seccion_de(&secciones, nombre)
+        };
         if matches!(seccion, Section::Tokens | Section::Maybeboard) {
             continue;
         }
@@ -221,6 +229,7 @@ mod tests {
                 ..CardMeta::default()
             },
             design: None,
+            marca: None,
         }
     }
 
@@ -304,6 +313,24 @@ mod tests {
             "{t}"
         );
         assert!(!t.contains("Sideboard"));
+    }
+
+    #[test]
+    fn las_marcas_mandan() {
+        let mut d = deck();
+        // Una variante de Sol Ring (que ya está sin marcar), un opcional y
+        // uno del banquillo.
+        let mut variante = carta("Sol Ring", "sld", "1011");
+        variante.marca = Some(MarcaCarta::Variante);
+        let mut opcional = carta("Counterspell", "mh2", "267");
+        opcional.marca = Some(MarcaCarta::Opcional);
+        let mut fuera = carta("Blasphemous Act", "cm2", "85");
+        fuera.marca = Some(MarcaCarta::Banquillo);
+        d.cards.extend([variante, opcional, fuera]);
+        assert_eq!(
+            exportar(&d, FormatoLista::Arena),
+            "Commander\n1 Yusri, Fortune's Flame (MH2) 218\n\nDeck\n2 Sol Ring (CMM) 410\n1 Delver of Secrets (ISD) 51\n\nSideboard\n1 Pyroblast (ICE) 213\n1 Blasphemous Act (CM2) 85\n"
+        );
     }
 
     #[test]

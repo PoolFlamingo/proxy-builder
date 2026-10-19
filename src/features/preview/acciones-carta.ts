@@ -1,5 +1,6 @@
 import type { DeckCard } from "@/bindings/DeckCard";
 import type { FaceImage } from "@/bindings/FaceImage";
+import type { MarcaCarta } from "@/bindings/MarcaCarta";
 import { elegirImagenes, type T } from "@/features/decklist/acciones";
 import { nombreDeFichero } from "@/lib/cartas";
 import { actualizar, duplicar, huecos, moverGrupo, quitar } from "@/lib/deck-ops";
@@ -50,6 +51,13 @@ export function idiomaDeImagen(ids: string[], lang: string | null) {
 					: x,
 			),
 		);
+}
+
+/** Pone (o quita, con `null`) una marca fija a las cartas elegidas. */
+export function marcarCartas(ids: string[], marca: MarcaCarta | null) {
+	useDeck
+		.getState()
+		.setCartas((c) => actualizar(c, ids, (x) => ({ ...x, marca: marca ?? undefined })));
 }
 
 export function fijarCartas(ids: string[], fijar: boolean) {

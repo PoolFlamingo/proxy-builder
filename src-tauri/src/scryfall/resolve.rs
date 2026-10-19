@@ -15,9 +15,9 @@ use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use futures::future::join_all;
-use proxy_core::decklist::{LineKind, ParsedDecklist, ParsedLine};
+use proxy_core::decklist::{LineKind, ParsedDecklist, ParsedLine, Section};
 use proxy_core::model::{
-    BackSpec, CardEdits, CardMeta, CardSource, DeckCard, FaceImage, ImageOrigin,
+    BackSpec, CardEdits, CardMeta, CardSource, DeckCard, FaceImage, ImageOrigin, MarcaCarta,
 };
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -475,22 +475,31 @@ pub async fn resolve<A: CardApi, G: Guardar>(
             locked: false,
             meta: meta_de(c, fallback),
             design: None,
+            marca: None,
         }
     };
     let mut cards = Vec::new();
     let mut unresolved = Vec::new();
     for l in &lineas {
         let p = Peticion::de(l);
+        // La sección de la lista, como marca de la carta.
+        let marca = match l.section {
+            Section::Sideboard => Some(MarcaCarta::Banquillo),
+            Section::Maybeboard => Some(MarcaCarta::Opcional),
+            _ => None,
+        };
         match finales.get(&p) {
             Some((c, fallback)) => {
                 for _ in 0..l.qty {
-                    cards.push(hacer(
+                    let mut copia = hacer(
                         c,
                         CardSource::Scryfall {
                             scryfall_id: c.id.clone(),
                         },
                         *fallback,
-                    ));
+                    );
+                    copia.marca = marca;
+                    cards.push(copia);
                 }
             }
             None if !sin_imagen.contains(&p) => {
@@ -503,6 +512,7 @@ pub async fn resolve<A: CardApi, G: Guardar>(
                             if i > 0 {
                                 copia.id = uuid::Uuid::new_v4().to_string();
                             }
+                            copia.marca = marca;
                             cards.push(copia);
                         }
                     }
@@ -696,6 +706,7 @@ pub(crate) mod tests {
                 ..CardMeta::default()
             },
             design: None,
+            marca: None,
         }
     }
     impl Guardar for ConExternas {
@@ -854,6 +865,24 @@ pub(crate) mod tests {
         // Serra se descarga una vez aunque haya dos copias.
         let d = api.descargas.lock().unwrap();
         assert_eq!(d.iter().filter(|u| u.contains("serra")).count(), 1);
+    }
+
+    #[tokio::test]
+    async fn las_del_banquillo_salen_marcadas() {
+        let (r, _) = resolver(
+            "1 Sol Ring (CMM) 410\n\nSideboard\n2 Serra Ascendant",
+            opciones("en"),
+        )
+        .await;
+        let marcas: Vec<_> = r.cards.iter().map(|c| c.marca).collect();
+        assert_eq!(
+            marcas,
+            [
+                None,
+                Some(MarcaCarta::Banquillo),
+                Some(MarcaCarta::Banquillo)
+            ]
+        );
     }
 
     #[tokio::test]

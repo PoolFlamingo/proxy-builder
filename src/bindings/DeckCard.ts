@@ -5,6 +5,7 @@ import type { CardEdits } from "./CardEdits";
 import type { CardMeta } from "./CardMeta";
 import type { CardSource } from "./CardSource";
 import type { FaceImage } from "./FaceImage";
+import type { MarcaCarta } from "./MarcaCarta";
 
 /**
  * Una copia física del deck.
@@ -26,4 +27,10 @@ locked: boolean, meta: CardMeta,
  * El diseño del editor de cartas, si lo tiene (la 2.0). Opcional: los
  * decks 1.x se leen igual y las cartas subidas a mano no lo llevan.
  */
-design?: CardDesign, };
+design?: CardDesign, 
+/**
+ * Una marca fija para organizar el deck (no cambia lo que se imprime):
+ * variante de diseño, opcional o banquillo. Las marcadas no cuentan para
+ * el tamaño del mazo, las copias ni las estadísticas (`cuentan`).
+ */
+marca?: MarcaCarta, };

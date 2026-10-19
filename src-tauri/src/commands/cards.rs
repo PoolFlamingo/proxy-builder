@@ -460,6 +460,7 @@ pub(crate) async fn traer_carta<A: CardApi>(
         locked: false,
         meta: crate::scryfall::resolve::meta_de(&c, false),
         design: None,
+        marca: None,
     })
 }
 

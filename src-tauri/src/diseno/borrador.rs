@@ -385,6 +385,7 @@ mod tests {
             locked: false,
             meta: Default::default(),
             design: None,
+            marca: None,
         };
         let b = montar(&card, d, None, &["0001".into(), "T001".into()]);
         assert_eq!(b.avisos, vec![Aviso::SinTextoOficial]);

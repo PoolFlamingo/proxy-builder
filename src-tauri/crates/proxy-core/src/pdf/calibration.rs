@@ -60,6 +60,7 @@ pub fn calibration(
                 locked: false,
                 meta: CardMeta::default(),
                 design: None,
+                marca: None,
             })
             .collect(),
         ..base
@@ -259,6 +260,7 @@ mod tests {
                     locked: false,
                     meta: CardMeta::default(),
                     design: None,
+                    marca: None,
                 }],
                 settings: s,
                 default_back: None,

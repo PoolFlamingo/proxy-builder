@@ -1,6 +1,7 @@
 import type { Deck } from "@/bindings/Deck";
 import type { DeckCard } from "@/bindings/DeckCard";
 import type { FaceImage } from "@/bindings/FaceImage";
+import type { MarcaCarta } from "@/bindings/MarcaCarta";
 import type { ParsedDecklist } from "@/bindings/ParsedDecklist";
 import type { ParsedLine } from "@/bindings/ParsedLine";
 import { paraTraducir } from "@/components/language-provider";
@@ -39,10 +40,42 @@ export function nombreDeFichero(ruta: string): string {
 	return limpio || f.trim();
 }
 
-export type Insignia = { texto: string; tono: "info" | "aviso" | "error"; ayuda: string };
+export type Insignia = {
+	texto: string;
+	tono: "info" | "aviso" | "error" | "marca";
+	ayuda: string;
+};
+
+/** Las marcas fijas de una carta del deck (`DeckCard.marca`), con su texto. */
+export const MARCAS: Record<MarcaCarta, { nombre: string; insignia: string; ayuda: string }> = {
+	variante: {
+		nombre: paraTraducir("Variante de diseño"),
+		insignia: paraTraducir("VARIANTE"),
+		ayuda: paraTraducir(
+			"Otra versión de una carta que ya está: se escogerá una. De sus copias solo cuenta una para el mazo.",
+		),
+	},
+	opcional: {
+		nombre: paraTraducir("Opcional"),
+		insignia: paraTraducir("OPCIONAL"),
+		ayuda: paraTraducir("Puede ir o no: no cuenta para el mazo."),
+	},
+	banquillo: {
+		nombre: paraTraducir("Banquillo"),
+		insignia: paraTraducir("BANQUILLO"),
+		ayuda: paraTraducir("Del banquillo (sideboard): no cuenta para el mazo."),
+	},
+};
 
 /** Las marcas que se pintan sobre una carta (CUSTOM, ↩ EN, LOWRES…). */
 export function insignias(c: DeckCard): Insignia[] {
+	const marca: Insignia[] = c.marca
+		? [{ texto: MARCAS[c.marca].insignia, tono: "marca", ayuda: MARCAS[c.marca].ayuda }]
+		: [];
+	return [...marca, ...insigniasDeLaCarta(c)];
+}
+
+function insigniasDeLaCarta(c: DeckCard): Insignia[] {
 	// Una carta diseñada se pinta aquí: lo de la imagen de Scryfall no aplica.
 	if (c.design)
 		return [

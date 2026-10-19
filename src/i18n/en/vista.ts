@@ -50,4 +50,22 @@ export const VISTA: Record<string, string> = {
 	"Usar el reverso del deck": "Use the deck's back",
 	"Idioma de la imagen": "Image language",
 	"Sin indicar": "Not set",
+	"Marcadas como variante de diseño, opcional o banquillo: se imprimen, pero no cuentan para el mazo.":
+		"Marked as design variant, optional or sideboard: they're printed but don't count for the deck.",
+	"{n} marcadas": "{n} marked",
+	Marca: "Mark",
+	"Se imprimen igual; no cuentan para el tamaño del mazo, las copias ni las estadísticas.":
+		"They're printed all the same; they don't count for the deck size, the copy limit or the statistics.",
+	"Variante de diseño": "Design variant",
+	VARIANTE: "VARIANT",
+	"Otra versión de una carta que ya está: se escogerá una. De sus copias solo cuenta una para el mazo.":
+		"Another version of a card that's already in: one will be chosen. Only one of its copies counts for the deck.",
+	Opcional: "Optional",
+	OPCIONAL: "OPTIONAL",
+	"Puede ir o no: no cuenta para el mazo.":
+		"It may or may not go in: it doesn't count for the deck.",
+	Banquillo: "Sideboard",
+	BANQUILLO: "SIDEBOARD",
+	"Del banquillo (sideboard): no cuenta para el mazo.":
+		"From the sideboard: it doesn't count for the deck.",
 };
