@@ -1,6 +1,6 @@
 import { getVersion } from "@tauri-apps/api/app";
-import { Brush, Languages, TriangleAlert } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import { Languages } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useLang } from "@/components/language-provider";
 import {
 	Dialog,
@@ -10,14 +10,12 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { useUi } from "@/stores/ui-store";
 import { Actualizaciones, ReiniciarParaActualizar } from "./actualizaciones";
 import { Appearance } from "./appearance";
 import { NombresIdiomas } from "./nombres-idiomas";
 
-/** Ajustes de la app: idioma, actualizaciones, editor de cartas (beta) y apariencia. */
+/** Ajustes de la app: idioma, actualizaciones, nombres en otros idiomas y apariencia. */
 export function SettingsDialog({
 	open,
 	onOpenChange,
@@ -68,52 +66,11 @@ export function SettingsDialog({
 						</div>
 						<Actualizaciones />
 						<NombresIdiomas />
-						<EditorBeta />
 						<Appearance />
 					</div>
 				</DialogCuerpo>
 			</DialogContent>
 		</Dialog>
-	);
-}
-
-/**
- * El interruptor del **editor de cartas**: apagado de fábrica porque aún es
- * beta. Encendido, aparece la pestaña «Diseñar» y las opciones de
- * diseño del menú de cada carta.
- */
-function EditorBeta() {
-	const { t } = useLang();
-	const id = useId();
-	const encendido = useUi((s) => s.editorCartas);
-	return (
-		<div className="flex flex-col gap-2 rounded-lg border p-2.5">
-			<div className="flex items-center justify-between gap-2.5">
-				<label htmlFor={id} className="flex items-center gap-2 text-xs font-medium">
-					<Brush className="size-3.5" />
-					{t("Editor de cartas")}
-					<span className="rounded-full border border-amber-500/50 px-1.5 text-[9px] leading-4 font-medium text-amber-600 uppercase dark:text-amber-400">
-						{t("Beta")}
-					</span>
-				</label>
-				<Switch
-					id={id}
-					checked={encendido}
-					onCheckedChange={(v) => useUi.getState().setEditorCartas(v)}
-				/>
-			</div>
-			<p className="text-xs text-muted-foreground">
-				{t(
-					"Diseña tus propias versiones de las cartas: marco, textos en español o inglés y arte nuevo. Añade la pestaña «Diseñar» y las opciones de diseño al menú de cada carta.",
-				)}
-			</p>
-			<p className="flex items-start gap-1.5 text-xs text-amber-600 dark:text-amber-400">
-				<TriangleAlert className="mt-0.5 size-3.5 shrink-0" />
-				{t(
-					"Está en pruebas: puede tener fallos y cambiar entre versiones. Los diseños se guardan con el deck, pero revisa el PDF antes de imprimir.",
-				)}
-			</p>
-		</div>
 	);
 }
 

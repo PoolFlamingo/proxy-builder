@@ -83,7 +83,6 @@ describe("store de pantalla", () => {
 				"actualizarSola",
 				"addTokens",
 				"calidadVista",
-				"editorCartas",
 				"imagePolicy",
 				"infoCarta",
 				"lang",
@@ -111,45 +110,9 @@ describe("store de pantalla", () => {
 		expect(s().ancla).toBeNull();
 	});
 
-	it("el editor de cartas viene apagado y no se puede entrar a diseñar", async () => {
-		const { useUi } = await store();
-		const s = useUi.getState;
-		expect(s().editorCartas).toBe(false);
-		s().disenar("c1");
-		expect(s().vista).toBe("deck");
-		expect(s().disenando).toBeNull();
-	});
-
-	it("encender el editor se recuerda; apagarlo saca de «Diseñar» y cierra sus diálogos", async () => {
-		const ls = almacen();
-		const { useUi } = await store(ls);
-		const s = useUi.getState;
-		s().setEditorCartas(true);
-		expect(JSON.parse(ls.datos.get(CLAVE) ?? "{}").editorCartas).toBe(true);
-		s().disenar("c1");
-		s().abrir({ tipo: "exportarPng" });
-		s().setEditorCartas(false);
-		expect(s().vista).toBe("deck");
-		expect(s().disenando).toBeNull();
-		expect(s().dialogo).toBeNull();
-		expect(JSON.parse(ls.datos.get(CLAVE) ?? "{}").editorCartas).toBe(false);
-	});
-
-	it("apagar el editor no toca la vista ni los diálogos de otras cosas", async () => {
-		const { useUi } = await store();
-		const s = useUi.getState;
-		s().setEditorCartas(true);
-		s().setVista("biblioteca");
-		s().abrir({ tipo: "estadisticas" });
-		s().setEditorCartas(false);
-		expect(s().vista).toBe("biblioteca");
-		expect(s().dialogo).toEqual({ tipo: "estadisticas" });
-	});
-
 	it("diseñar una carta cambia a la vista «Diseñar»; soltarla no cambia la vista", async () => {
 		const { useUi } = await store();
 		const s = useUi.getState;
-		s().setEditorCartas(true);
 		s().disenar("c1");
 		expect(s().vista).toBe("disenar");
 		expect(s().disenando).toBe("c1");
