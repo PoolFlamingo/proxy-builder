@@ -129,6 +129,13 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
   `.pbdeck`. La lista la escribe `proxy_core::decklist::exportar` (de las
   cartas del deck; las secciones, por el nombre en la lista escrita; sin
   fichas ni huecos).
+- **Marcas de carta** (Pablo, 19/10/2026): `DeckCard.marca` = variante de
+  diseño, opcional o banquillo (submenú «Marca» de la casilla, insignia
+  violeta). Se imprimen, pero `proxy_core::model::cuentan` las deja fuera del
+  tamaño, las copias y las estadísticas (de las variantes de una carta cuenta
+  una si no está sin marcar; `DeckStats.setAside` dice cuántas) y de la lista
+  exportada (el banquillo va al sideboard). Al cargar la lista, la sección
+  Sideboard llega como banquillo y la Maybeboard (si se incluye) como opcional.
 - Idioma del deck a mano: `decks.lang_override` (migración 0004; no toca
   `updated_at`), `deck_lang_set`, submenú «Idioma» de la biblioteca.
 - **Temas de tweakcn** (Pablo, 19/10/2026): `temas.rs` baja un tema por id o
@@ -163,11 +170,8 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
   `main.tsx` la enseña tras el primer fotograma (sin destello blanco); el
   window-state no guarda la visibilidad.
 - **Editor de cartas (2.0).** El plan es `plans/20261014 - editor-de-cartas/`.
-  - 🛑 Beta y **apagado de fábrica** (Pablo, 14/10/2026): se enciende en
-    Ajustes (`ui-store.editorCartas`, `setEditorCartas`). Apagado no se monta
-    nada suyo: ni la pestaña «Diseñar», ni sus diálogos (`App.tsx`), ni sus
-    entradas del menú de la casilla. Las cartas ya diseñadas se siguen
-    imprimiendo desde su diseño.
+  - Fuera de beta desde el 19/10/2026 (Pablo): siempre montado, sin
+    interruptor en Ajustes ni etiqueta «Beta».
   - Motor en `proxy-core::diseno`: `modelo` (CardDesign, CardData, Collection),
     `efectivo` (carta > colección > fábrica y la huella), `pack` (formato de
     marcos, ver `docs/packs-de-marcos.md`), `texto` y `pintar` (parley +
