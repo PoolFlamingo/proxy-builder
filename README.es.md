@@ -21,8 +21,9 @@ Para Linux, Windows y macOS, en español y en inglés.
 ## De la lista al papel en un minuto
 
 1. **Pega la lista** como la tengas: `4 Lightning Bolt`, `1 Sol Ring (CMM) 410`…
-   Vale el formato de Moxfield, Arena o MTGO. También se puede importar un deck de
-   Archidekt por su URL, con banquillo o sin él.
+   Vale el formato de Moxfield, Arena o MTGO, y la lista copiada como texto de
+   Archidekt (con su cabecera `SIDEBOARD` o `#SIDEBOARD`). También se puede
+   importar un deck de Archidekt por su URL, con banquillo o sin él.
 2. **Pulsa «Cargar lista».** La app busca cada carta, elige la impresión,
    descarga las imágenes y, si quieres, añade sola las fichas que crea el deck.
 3. **Revisa las hojas.** Lo que ves es lo que se imprime: la vista previa y el
@@ -58,7 +59,14 @@ Y además:
   carta no existe en ese idioma, se queda en inglés y te avisa. «Reaplicar
   idioma» cambia de golpe todas las que no estén fijadas.
 - **Fichas automáticas.** Las fichas, emblemas y copias que crean tus cartas se
-  añaden solas al final.
+  añaden solas al final. «Detectar fichas» busca las que le faltan a un deck ya
+  hecho, también por las cartas propias vinculadas.
+- **Más allá de Scryfall.** Las fichas que Scryfall no tiene (como Kelp o
+  algunos Ooze) salen del catálogo de fichas de Cockatrice, en la lista, en
+  «Añadir carta» y al vincular. También se encuentran las cartas escritas por
+  su nombre en otro idioma que Scryfall no tiene impresas así; en *Ajustes* se
+  puede descargar un índice de nombres en todos los idiomas para hacerlo sin
+  preguntar en línea.
 - **Avisos honestos**: carta no encontrada, imagen de baja resolución, carta que
   Scryfall aún no tiene escaneada… Cada casilla lo marca.
 
@@ -86,19 +94,21 @@ fichero y nada más:
 Para reconocerlas, la app lee cada imagen con **OCR**: el título, la línea de
 tipo y el pie, donde muchos proxies llevan el nombre original. Busca lo leído
 en el catálogo de Scryfall, en cualquier idioma, y propone la carta con un
-grado de confianza: exacta, probable o sin propuesta. La lectura se hace en tu
-equipo.
+grado de confianza: exacta, probable o sin propuesta. El nombre original se
+encuentra esté donde esté (junto al artista, en una esquina, en la caja de
+reglas), y también se leen la edición, el número y el idioma del pie, así que
+queda apuntado el idioma de la imagen. La lectura se hace en tu equipo.
 
 Se puede vincular de tres maneras:
 
-**Una carta.** Clic derecho → «Vincular con Scryfall…». La búsqueda empieza
+**Una carta.** Clic derecho → «Vincular con una carta…». La búsqueda empieza
 con el nombre del fichero y «Detectar con OCR» lee la carta. Aquí acierta
 hasta la edición exacta.
 
 ![Vincular una carta con OCR](docs/presentacion/vincular-una.jpg)
 
 **Las seleccionadas.** Selecciona varias con Ctrl o Mayús y, con el clic
-derecho, «Vincular con Scryfall las seleccionadas…». El diálogo deja elegir
+derecho, «Vincular las seleccionadas…». El diálogo deja elegir
 entre la selección y todo el deck, y entre leer solo las que faltan o todas
 otra vez.
 
@@ -108,7 +118,7 @@ otra vez.
 
 ![Propuestas para las seleccionadas](docs/presentacion/vincular-seleccion-resultado.jpg)
 
-**Todo el deck.** El botón «Vincular con Scryfall» del panel izquierdo lee de
+**Todo el deck.** El botón «Vincular con una carta» del panel izquierdo lee de
 una vez todas las imágenes propias del deck, con barra de progreso y tiempo
 restante, y se puede parar a medias para revisar lo leído. Cada propuesta se
 puede cambiar en su desplegable o desmarcar antes de pulsar «Vincular». En este
@@ -247,6 +257,9 @@ espacio» borra las imágenes que ya no usa ningún deck.
   como mucho), por clase (Commander, construido, limitado), por los formatos en
   los que es legal, por el idioma de sus cartas y por si lleva cartas diseñadas
   o imágenes propias.
+  Si un deck está de verdad en otro idioma pero sus cartas están vinculadas a
+  impresiones en inglés, se le pone el **idioma a mano** desde su menú; de una
+  imagen propia también se puede decir en qué idioma está.
 - **Orden** por fecha de modificado, abierto o creado, nombre, cartas, precio,
   coste medio o colores, y **grupos** por etiqueta, colores, clase o idioma.
   Agrupados por etiqueta, un deck con varias sale en cada una.
@@ -266,7 +279,8 @@ espacio» borra las imágenes que ya no usa ningún deck.
 
 Español o inglés, tema claro u oscuro, más de cuarenta temas de color, tres estilos
 de superficie (plano, relieve y cristal), materiales, efectos y tamaño de la
-interfaz.
+interfaz. «Más temas…» instala cualquier tema de la comunidad de
+[tweakcn](https://tweakcn.com/community) por su enlace, con sus letras.
 
 ![Ajustes](docs/presentacion/ajustes.jpg)
 
@@ -292,8 +306,13 @@ nuevo y los textos traducidos:
   despejado), que se descargan la primera vez que se eligen.
 - **Letras libres** para descargar desde la app: de aire clásico, medieval o
   de fantasía para el título (Cinzel, Almendra, Uncial Antiqua, Grenze
-  Gotisch…) y muy legibles para las reglas. Además, la colección decide
-  cuánto se estrechan el título y el tipo, siempre y como mucho.
+  Gotisch…) y muy legibles para las reglas, además de una pixelada (Pixelify
+  Sans). La colección decide cuánto se estrechan el título y el tipo, siempre
+  y como mucho.
+- **Packs de marcos para descargar.** El primero es **Balatro**: marcos de
+  pixel art en siete estilos (Joker, Planeswalker, Espectral, Tarot, Planeta,
+  Vale y Tierra), con sus fichas de maná, etiquetas de rareza y palabras de
+  colores, y reversos, fichas y tierras ya hechos para añadir al deck.
 - **Colecciones** con su símbolo y numeración, para que todo el deck parezca de
   la misma edición.
 - Casi todas las maquetaciones de Magic: planeswalkers, sagas, clases, casos,
@@ -386,5 +405,12 @@ Los datos y las imágenes de las cartas vienen de [Scryfall](https://scryfall.co
 Los marcos originales del editor vienen de
 [Card Conjurer](https://github.com/Investigamer/cardconjurer): la app los
 descarga al usarlos y no los distribuye.
+Las plantillas del pack Balatro son del autor del mazo «Balatro Balatrez», que
+las comparte públicamente; su letra es m6x11plus, de Daniel Linssen. Balatro es
+un juego de LocalThunk. Las fichas que no están en Scryfall vienen de
+[Cockatrice](https://github.com/Cockatrice/Magic-Token), los nombres en otros
+idiomas de [MTGJSON](https://mtgjson.com) y
+[magicthegathering.io](https://magicthegathering.io), y los temas de color de
+más de [tweakcn](https://tweakcn.com).
 Magic: The Gathering es una marca de Wizards of the Coast. Esta aplicación no está
 afiliada ni respaldada por ninguna de las dos.

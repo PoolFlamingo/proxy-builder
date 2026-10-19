@@ -100,11 +100,44 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
   por `/cards/collection` lo que falte o tenga precios de más de 24 h, y a las
   impresiones que no están en inglés les pone el precio de la inglesa (Scryfall
   no les da). El diálogo (`features/stats/`) va en pestañas y solo pinta.
-- Cartas propias vinculadas: `CardSource::Custom { scryfallId? }`. La imagen
-  sigue siendo la propia; el vínculo da la info de carta y las estadísticas.
+- Cartas propias vinculadas: `CardSource::Custom { scryfallId?, externa? }`
+  (`externa`: `RefExterna { fuente, id }`, una carta que Scryfall no tiene;
+  campo opcional y no variante nueva, para que la 2.2.0 siga abriendo los
+  decks). La imagen sigue siendo la propia; el vínculo da la info de carta y
+  las estadísticas. `CardMeta.imageLang` es el idioma de la imagen propia.
   Una a una (`vincular-dialog`) o en bloque (`vincular-lote`: `identify_batch`
   en Rust con progreso, puntúa cada propuesta exacta/probable/ninguna y la
   pantalla la deja revisar antes de vincular; con selección, solo esas).
+- **Fuentes aparte de Scryfall** (Pablo, 19/10/2026; plan
+  `plans/20261019 - fuentes-idioma-release-balatro/`). Toda descarga de fuera
+  va por `fuentes::Externo`: lista cerrada de sitio + ruta (`PERMITIDOS`),
+  cada redirección se vuelve a comprobar, tope de tamaño leyendo por partes, y
+  las imágenes siempre se decodifican y se vuelven a codificar
+  (`limpiar_imagen`: JPEG 95 si eran JPEG o PNG grandes). `fuentes/cockatrice.rs`
+  (fichas que Scryfall no tiene; salen en Vincular, Añadir carta y al resolver
+  la lista), `fuentes/mtgio.rs` y `fuentes/mtgjson.rs` (nombres en otros
+  idiomas; el índice de MTGJSON se baja en Ajustes a SQLite).
+  `scryfall/fichas_auto.rs` saca las fichas de las impresiones inglesas
+  (`all_parts` solo está completo ahí); «Detectar fichas» en el panel de la
+  lista (`fichas-dialog`).
+- OCR: `originales.rs` busca el nombre original en cualquier línea leída
+  (n-gramas contra el índice local de nombres, puntuados por zona) y
+  `pie_leido` saca set, número e idioma del pie.
+- Idioma del deck a mano: `decks.lang_override` (migración 0004; no toca
+  `updated_at`), `deck_lang_set`, submenú «Idioma» de la biblioteca.
+- **Temas de tweakcn** (Pablo, 19/10/2026): `temas.rs` baja un tema por id o
+  enlace (`tweakcn.com/r/themes/<id>`; la comunidad no tiene API, se abre en
+  el navegador y se pega el enlace), lo pasa a CSS con el formato de
+  `themes.css` (`[data-theme="tw-<id>"]`, solo variables con nombre y valor
+  comprobados) y baja sus letras de Google Fonts a `app_data_dir/temas/`,
+  servidas por `pbimg://…/f/<huella>.woff2`. En pantalla,
+  `lib/temas-instalados.ts` los mete al final de `THEMES` y en un `<style>`
+  antes de montar (`main.tsx`): `theme-provider.tsx` es de solo lectura
+  (heredado de judlex) y solo acepta temas que estén en `THEMES`. El modal es
+  `features/settings/temas-tweakcn.tsx` («Más temas…» en Apariencia).
+- La ventana arranca oculta y con fondo oscuro (`tauri.conf.json`) y
+  `main.tsx` la enseña tras el primer fotograma (sin destello blanco); el
+  window-state no guarda la visibilidad.
 - **Editor de cartas (2.0).** El plan es `plans/20261014 - editor-de-cartas/`.
   - 🛑 Beta y **apagado de fábrica** (Pablo, 14/10/2026): se enciende en
     Ajustes (`ui-store.editorCartas`, `setEditorCartas`). Apagado no se monta
@@ -137,7 +170,22 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
     SHA-256 de cada fichero; de título, de aire clásico/medieval/fantasía, y
     de reglas, todas legibles y sin trazos finos). `diseno/letras_libres.rs`
     las baja y las importa como letras propias; las muestras de la pantalla
-    son PNG en `src/assets/letras/`.
+    son PNG en `src/assets/letras/`. Pixelify Sans va además como alternativa
+    libre a la letra del pack Balatro.
+  - **Packs descargables** (Pablo, 19/10/2026): `diseno/descargables.rs` con
+    el manifiesto `assets/packs-descargables.json` (commit fijo y SHA-256 por
+    fichero) del repo `PoolFlamingo/proxy-builder-packs` (lo sube Pablo; al
+    cambiar un pack, `python -I source/manifest.py .. <commit>`, desde la carpeta del pack, da su
+    entrada nueva). El primero es **Balatro** (pixel art, 7 plantillas como estilos
+    propios del pack, con sus variantes). El formato de pack versión 2
+    (estilos propios, condiciones por tipo/colores, escalado pixel,
+    símbolos y etiquetas propios…) está en `docs/packs-de-marcos.md`. El
+    trabajo del pack (PSD → capas, `source/convert.py` y `source/build.py`) es
+    ese repo, clonado al lado de este (`../proxy-builder-packs/`, Pablo,
+    19/10/2026; tiene sus propias sesiones), con carpetas y ficheros en
+    inglés (`layers/`, `fonts/`, `symbols/`, `labels/`, `extras/{cards,tokens,backs,lands}`);
+    los ids de estilo (`tierra`, `planeta`, `espectral`, `vale`) y las claves de
+    los JSON siguen en español porque los leen la app y los decks.
   - Estrechado del título y el tipo: límite (`title_squeeze_min`, 55–75 %) y
     mínimo que se aplica siempre (`title_squeeze_base`, 100 % = nada), en la
     colección o en la carta (`texto::linea_ajustada_con_base`).
@@ -178,6 +226,8 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
 - Idioma de fábrica de la app: inglés (Pablo, 15/10/2026); el español se elige
   en Ajustes y se recuerda (`language-provider`, `proxybuilder.lang`).
 - Releases: los hace Pablo (o Claude Code en su VS Code), no esta sesión.
+  El texto de la release: `--notas "…"`, `--notas-fichero <ruta>` o
+  `--sin-notas`; sin ninguno, abre `$EDITOR` (`scripts/release-notas.mjs`).
 - Valores de fábrica (Pablo, 13/10/2026): 2 mm de separación en blanco,
   sangrado 0, guías de corte apagadas y «Rellenar las esquinas» apagado (lo
   transparente sale del color del papel; `corners::fill` solo si se activa).
