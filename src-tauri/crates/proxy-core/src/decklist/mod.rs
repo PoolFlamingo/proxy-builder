@@ -9,6 +9,10 @@
 //! No adivina nada: cada línea sale con su tipo y, si no se entiende, con el
 //! motivo (`LineError`) para marcarla en pantalla.
 
+mod exportar;
+
+pub use exportar::{exportar, FormatoLista};
+
 use std::sync::LazyLock;
 
 use regex::Regex;

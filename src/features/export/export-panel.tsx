@@ -51,6 +51,7 @@ import { usePlan } from "@/stores/plan-store";
 import { useTrabajo } from "@/stores/trabajo-store";
 import { AVISO_BYTES, exportarA, exportarCalibracion, megas, pedirDestino } from "./acciones";
 import { AlinearFilas } from "./alinear-filas";
+import { MenuExportar } from "./menu-exportar";
 import { PresetsImpresion } from "./presets";
 
 const TAMANOS = {
@@ -149,10 +150,18 @@ export function ExportPanel() {
 						</Button>
 					</div>
 				) : (
-					<Button onClick={exportar} disabled={trabajo !== null} className="!text-sm">
-						<FileDown />
-						{t("Exportar PDF")}
-					</Button>
+					// El botón partido: el PDF y, en los tres puntos, las demás formas.
+					<div className="flex">
+						<Button
+							onClick={exportar}
+							disabled={trabajo !== null}
+							className="min-w-0 flex-1 rounded-r-none !text-sm"
+						>
+							<FileDown />
+							{t("Exportar PDF")}
+						</Button>
+						<MenuExportar deshabilitado={trabajo !== null} />
+					</div>
 				)}
 			</div>
 
