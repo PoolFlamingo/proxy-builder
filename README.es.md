@@ -140,6 +140,11 @@ El resultado: las mismas imágenes, ahora con su carta real detrás.
 - **Arrastra** las cartas para reordenarlas, o usa «Mover antes / después / a
   la posición…». Selecciona varias con Ctrl o Mayús y actúa sobre todas.
 - **Fija** una carta en su casilla para que nada la mueva.
+- **Marca** una carta como **variante de diseño** (otra versión de una carta que
+  ya está, para escoger una después), **opcional** o **banquillo**. Las marcadas
+  se imprimen, pero no cuentan para el tamaño del mazo, el límite de copias ni
+  las estadísticas: un Commander con variantes sigue sumando 100. Las de la
+  sección Sideboard de la lista llegan ya marcadas.
 - **Auto ordenar** junta las copias, quita los huecos y respeta las fijadas.
 - **Info de carta** muestra el nombre y la edición de cada casilla; **Ver
   reversos** enseña la otra cara de la hoja.
@@ -197,6 +202,9 @@ Cuando termines, decide a qué llega el cambio:
   HL-L2350») y úsalos en cualquier deck.
 - La exportación va con barra de progreso y se puede cancelar en cualquier
   momento.
+- Los **⋮** junto a «Exportar PDF» copian la lista del deck para Moxfield,
+  Arena, MTGO o en texto plano, la descargan para MTGO o guardan el deck con sus
+  imágenes (`.pbdeck`).
 
 ![Exportando](docs/presentacion/exportando.jpg)
 
@@ -286,14 +294,11 @@ interfaz. «Más temas…» instala cualquier tema de la comunidad de
 
 ---
 
-## Editor de cartas (beta)
+## Editor de cartas
 
-> Viene **apagado**. Se enciende en *Ajustes → Editor de cartas*. Está en
-> pruebas: puede tener fallos y cambiar entre versiones.
-
-Encendido, aparece la pestaña **Diseñar** y la opción «Diseñar proxy» en el
-menú de cada carta. Sirve para crear tu propia versión de una carta, con marco
-nuevo y los textos traducidos:
+La pestaña **Diseñar** y la opción «Diseñar proxy» del menú de cada carta
+sirven para crear tu propia versión de una carta, con marco nuevo y los textos
+traducidos:
 
 - **Textos en español e inglés** sacados de la carta real, con la versión de
   cada idioma a un clic. Para las cartas sin impresión en español hay una

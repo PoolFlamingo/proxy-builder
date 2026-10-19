@@ -138,6 +138,11 @@ The result: the same images, now with their real card behind them.
   (Move before / after / to position…). Select several with Ctrl or Shift and act
   on all of them.
 - **Pin** a card to its slot so nothing moves it.
+- **Mark** a card as a **design variant** (another version of a card that's
+  already in, to pick one later), **optional** or **sideboard**. Marked cards are
+  printed but don't count for the deck size, the copy limit or the statistics, so
+  a Commander deck with variants still adds up to 100. Cards in the list's
+  Sideboard section come already marked.
 - **Auto sort** groups the copies, removes the gaps and respects the pinned cards.
 - **Card info** shows the name and edition of each slot; **Ver reversos** (Show
   backs) shows the other side of the sheet.
@@ -194,6 +199,9 @@ When you're done, decide where the change goes:
 - **Presets**: save all your print settings under a name («Brother HL-L2350») and
   use them in any deck.
 - Exporting shows a progress bar and can be cancelled at any moment.
+- The **⋮** next to «Exportar PDF» copies the deck list for Moxfield, Arena, MTGO
+  or as plain text, downloads it for MTGO, or saves the deck with its images
+  (`.pbdeck`).
 
 ![Exporting](docs/presentacion/en/exportando.jpg)
 
@@ -280,14 +288,11 @@ surface styles (flat, embossed and glass), materials, effects and interface size
 
 ---
 
-## Card editor (beta)
+## Card editor
 
-> It comes **turned off**. Turn it on in *Settings → Card editor*. It is still
-> being tested: it may have bugs and change between versions.
-
-When turned on, the **Design** tab appears, along with the «Diseñar proxy»
-(Design proxy) option in each card's menu. It lets you create your own version of
-a card, with a new frame and translated text:
+The **Design** tab and the «Diseñar proxy» (Design proxy) option in each card's
+menu let you create your own version of a card, with a new frame and translated
+text:
 
 - **Text in Spanish and English** taken from the real card, with each language's
   version one click away. For cards with no Spanish printing there is a suggested
