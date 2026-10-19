@@ -135,6 +135,20 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
   antes de montar (`main.tsx`): `theme-provider.tsx` es de solo lectura
   (heredado de judlex) y solo acepta temas que estén en `THEMES`. El modal es
   `features/settings/temas-tweakcn.tsx` («Más temas…» en Apariencia).
+- **Actualizaciones dentro de la app** (Pablo, 19/10/2026): `actualizar.rs` +
+  `commands/actualizar.rs` (`tauri-plugin-updater`, solo desde Rust). Lee
+  `releases/latest/download/latest.json` (solo cuentan los releases
+  publicados), baja el paquete del instalador con el que se instaló
+  (`.deb`/`.rpm` por `pkexec`, AppImage, NSIS, `.app`), comprueba la firma
+  (`requireSignedVersion`) e instala con `request_restart`. Nunca con un
+  trabajo largo en marcha (`Busy`) y guarda el deck antes. En pantalla:
+  `stores/actualizacion-store.ts`, `features/shell/actualizacion-automatica.tsx`
+  (al arrancar y cada 6 h si `ui-store.actualizarSola`, de fábrica encendido;
+  aviso y botón en la barra) y `features/settings/actualizaciones.tsx`.
+  🛑 La clave privada está en `~/.tauri/proxy-builder.key` de Pablo (sin
+  contraseña) y en el secreto `TAURI_SIGNING_PRIVATE_KEY`; la pública, en
+  `tauri.conf.json`. Si se pierde, nadie recibe más actualizaciones.
+  `pnpm release` pone las notas en el `latest.json` del borrador.
 - La ventana arranca oculta y con fondo oscuro (`tauri.conf.json`) y
   `main.tsx` la enseña tras el primer fotograma (sin destello blanco); el
   window-state no guarda la visibilidad.
@@ -190,9 +204,15 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
     mínimo que se aplica siempre (`title_squeeze_base`, 100 % = nada), en la
     colección o en la carta (`texto::linea_ajustada_con_base`).
   - Ajustes finos (`FineTuning`, en la colección o propios de la carta):
-    altura de cada texto, caja de reglas más opaca, radio de la ventana de la
+    altura de cada texto, tamaño de cada uno (`titleSize`… en proporción; en
+    las reglas, sin valor es «automático») e interlineado de reglas y pie,
+    caja de reglas más opaca, radio de la ventana de la
     ilustración (`ventanaArte` del pack) y de la carta (sin él, redondeada en
-    pantalla y recta al imprimir). La definición de los marcos Original en
+    pantalla y recta al imprimir).
+  - Color del marco y caja de reglas en los marcos de imagen (Original,
+    Balatro): degradado a mano = dos capas fundidas, color propio = la capa
+    neutra teñida (`render::ExtraMarco`), y la caja pedida se pinta en las
+    capas `cajaReglas` del pack. La definición de los marcos Original en
     disco se pone al día al cargar (`original::definicion_al_dia`).
   - Vista previa en tiempo real: `lib/imagen-viva.ts` (se pide al ritmo del
     cambio, la última gana, más pequeña mientras se arrastra).

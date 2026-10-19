@@ -351,6 +351,13 @@ repositorio. No van firmados: Windows (SmartScreen) avisará de «editor
 desconocido» (Más información → Ejecutar de todas formas) y macOS (Gatekeeper)
 pedirá abrir la app con clic derecho → Abrir la primera vez.
 
+Desde ahí la app se actualiza sola: al abrirla (y cada pocas horas) busca una
+versión nueva, la baja sin molestar y ofrece reiniciar. Se puede apagar, o
+buscar a mano, en Ajustes → Actualizaciones. Cada actualización va firmada y la
+app la comprueba antes de instalarla; en Linux, el `.deb` y el `.rpm` piden tu
+contraseña para instalarla. Las versiones anteriores a la 2.4.0 aún no lo
+tienen: instala la 2.4.0 a mano una vez.
+
 Los datos viven en la carpeta de datos de la app (`com.estigio.proxybuilder`):
 la biblioteca (`library.db`), las imágenes de los decks (`blobs/`) y el
 registro (`logs/proxy-builder.log`). La caché de miniaturas se puede borrar
@@ -396,6 +403,13 @@ Sube la versión en los cuatro sitios, la commitea y la sube, espera a la CI,
 lanza el workflow a mano (pestaña Actions → release) y, al terminar, pregunta si
 publicar el borrador. Al publicarlo se crea la etiqueta. Necesita `gh` con la
 sesión iniciada.
+
+Los instaladores van firmados para el actualizador de la app (no para
+SmartScreen ni Gatekeeper) con la clave del secreto `TAURI_SIGNING_PRIVATE_KEY`
+del repositorio; su mitad pública está en `tauri.conf.json`. El borrador lleva
+un `latest.json` con una entrada por instalador, y las apps instaladas lo ven al
+publicarlo. Si se pierde la clave privada, las versiones instaladas no aceptarán
+ninguna actualización nueva.
 
 ---
 

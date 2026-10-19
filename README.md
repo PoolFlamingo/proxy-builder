@@ -342,6 +342,13 @@ They are not signed: Windows (SmartScreen) will warn about an «unknown publishe
 (More info → Run anyway) and macOS (Gatekeeper) will ask you to open the app with
 right click → Open the first time.
 
+From then on the app updates itself: when it opens (and every few hours) it
+checks for a new version, downloads it quietly and offers to restart. It can be
+turned off, or checked by hand, in Settings → Updates. Each update is signed and
+the app verifies it before installing; on Linux, the `.deb` and `.rpm` ask for
+your password to install it. Versions before 2.4.0 don't have this yet: install
+2.4.0 by hand once.
+
 The data lives in the app's data folder (`com.estigio.proxybuilder`): the library
 (`library.db`), the deck images (`blobs/`) and the log (`logs/proxy-builder.log`).
 The thumbnail cache can be cleared from the app without losing anything.
@@ -386,6 +393,12 @@ It bumps the version in four places, commits and pushes it, waits for the CI,
 starts the workflow by hand (Actions tab → release) and, when it finishes, asks
 whether to publish the draft. Publishing creates the tag. It needs `gh` with an
 active session.
+
+The installers are signed for the in-app updater (not for SmartScreen or
+Gatekeeper) with the key in the `TAURI_SIGNING_PRIVATE_KEY` repository secret;
+its public half is in `tauri.conf.json`. The draft gets a `latest.json` with an
+entry per installer, and the installed apps see it once the draft is published.
+If the private key is lost, the installed versions won't accept any new update.
 
 ---
 
