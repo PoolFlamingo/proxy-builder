@@ -56,6 +56,9 @@ struct Biblioteca {
     etiquetas: Vec<EtiquetaPaquete>,
     #[serde(default)]
     notas: String,
+    /// El idioma del deck elegido a mano (desde la 2.3).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    idioma: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -128,6 +131,7 @@ fn escribir<W: Write + Seek>(w: W, deck: &Deck, blobs: &BlobStore, db: &Db) -> A
             })
             .collect(),
         notas: decks::notas_de(db, &deck.id)?,
+        idioma: decks::idioma_de(db, &deck.id)?,
     };
     let json = serde_json::to_vec_pretty(&Manifiesto {
         format: FORMATO.into(),
@@ -260,6 +264,10 @@ pub fn import<R: Read + Seek>(r: R, blobs: &BlobStore, db: &Db) -> AppResult<Dec
         if !b.notas.is_empty() {
             etiquetas::notas(db, &deck.id, &b.notas)?;
         }
+        // Un idioma que este equipo no conoce se ignora.
+        if let Some(l) = b.idioma.as_deref() {
+            let _ = etiquetas::idioma(db, std::slice::from_ref(&deck.id), Some(l));
+        }
     }
     Ok(deck)
 }
@@ -309,7 +317,10 @@ mod tests {
         let mut d = decks::create(db, "Mi deck", Some(b.clone())).unwrap();
         d.cards.push(DeckCard {
             id: "c1".into(),
-            source: CardSource::Custom { scryfall_id: None },
+            source: CardSource::Custom {
+                scryfall_id: None,
+                externa: None,
+            },
             front: Some(a),
             back: BackSpec::DeckDefault,
             edits: CardEdits::default(),
@@ -328,6 +339,7 @@ mod tests {
         let t = etiquetas::create(&db, "Torneo", "red").unwrap();
         etiquetas::etiquetar(&db, std::slice::from_ref(&d.id), &[t.id], &[]).unwrap();
         etiquetas::notas(&db, &d.id, "Mazo del viernes").unwrap();
+        etiquetas::idioma(&db, std::slice::from_ref(&d.id), Some("es")).unwrap();
         let ruta = dir.path().join("x.pbdeck");
         export(&d, &ruta, &s, &db).unwrap();
 
@@ -339,6 +351,7 @@ mod tests {
         let r = r.iter().find(|x| x.id == nuevo.id).unwrap();
         assert_eq!(r.tags, vec![ya.id]);
         assert_eq!(r.notes, "Mazo del viernes");
+        assert_eq!(r.lang_override.as_deref(), Some("es"));
         assert_eq!(etiquetas::list(&db2).unwrap().len(), 1);
     }
 

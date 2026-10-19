@@ -22,6 +22,7 @@ import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
 import { FiltrosBusqueda, idiomaParaRust } from "./filtros";
 import { RejillaCartas } from "./rejilla-cartas";
+import { traerCarta } from "./traer";
 
 /**
  * «Cambiar variante»: todas las impresiones de la carta (filtros de idioma y
@@ -82,7 +83,7 @@ function Contenido({ carta }: { carta: DeckCard }) {
 		if (!elegida) return;
 		setAplicando(true);
 		try {
-			const nueva = await call("card_fetch", { scryfallId: elegida.id });
+			const nueva = await traerCarta(elegida);
 			useDeck
 				.getState()
 				.setCartas((cs) =>

@@ -48,4 +48,6 @@ export const VISTA: Record<string, string> = {
 	"Mover después": "Move later",
 	"Reemplazar imagen…": "Replace image…",
 	"Usar el reverso del deck": "Use the deck's back",
+	"Idioma de la imagen": "Image language",
+	"Sin indicar": "Not set",
 };

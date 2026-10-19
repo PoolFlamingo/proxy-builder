@@ -1,0 +1,13 @@
+{
+	"cards": [
+		{ "name": "Kelpie Guide", "foreignNames": [{ "name": "Guía kelpie", "language": "Spanish" }] },
+		{
+			"name": "Wall of Kelp",
+			"foreignNames": [
+				{ "name": "Muro de algas", "language": "Spanish" },
+				{ "name": "Mur de varech", "language": "French" }
+			]
+		},
+		{ "name": "Wall of Kelp", "foreignNames": [{ "name": "Muro de algas", "language": "Spanish" }] }
+	]
+}

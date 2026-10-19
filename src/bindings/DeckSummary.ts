@@ -22,6 +22,11 @@ coverName: string | null,
  */
 coverCardId: string | null, pinned: boolean, notes: string, 
 /**
+ * El idioma elegido a mano (código de Scryfall); manda sobre el que se
+ * calcula de las cartas.
+ */
+langOverride: string | null, 
+/**
  * Las etiquetas del deck (ids de `tags`).
  */
 tags: Array<string>, };

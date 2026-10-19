@@ -50,7 +50,10 @@ pub fn calibration(
         cards: (0..cap)
             .map(|i| DeckCard {
                 id: format!("c{i}"),
-                source: CardSource::Custom { scryfall_id: None },
+                source: CardSource::Custom {
+                    scryfall_id: None,
+                    externa: None,
+                },
                 front: None,
                 back: BackSpec::DeckDefault,
                 edits: CardEdits::default(),
@@ -246,7 +249,10 @@ mod tests {
                 decklist_text: String::new(),
                 cards: vec![DeckCard {
                     id: "a".into(),
-                    source: CardSource::Custom { scryfall_id: None },
+                    source: CardSource::Custom {
+                        scryfall_id: None,
+                        externa: None,
+                    },
                     front: None,
                     back: BackSpec::DeckDefault,
                     edits: CardEdits::default(),

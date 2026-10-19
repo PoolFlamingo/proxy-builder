@@ -157,4 +157,7 @@ export const BIBLIOTECA: Record<string, string> = {
 	"¿Eliminar {n} decks?": "Delete {n} decks?",
 	"Ámbar": "Amber",
 	"Idioma: {i}": "Language: {i}",
+	"Idioma de los {n}": "Language of the {n}",
+	"Automático (según las cartas)": "Automatic (from the cards)",
+	"Elegido a mano": "Set by hand",
 };

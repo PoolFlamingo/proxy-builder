@@ -31,7 +31,7 @@ fn id_scryfall(c: &DeckCard) -> Option<&str> {
         CardSource::Scryfall { scryfall_id } | CardSource::Token { scryfall_id } => {
             Some(scryfall_id)
         }
-        CardSource::Custom { scryfall_id } => scryfall_id.as_deref(),
+        CardSource::Custom { scryfall_id, .. } => scryfall_id.as_deref(),
         CardSource::Blank => None,
     }
 }
@@ -234,7 +234,13 @@ pub(crate) async fn calcular<A: CardApi>(
                     s.type_line
                         .as_deref()
                         .is_some_and(|t| t.starts_with("Token"))
-                });
+                })
+                // Y una vinculada a (o traída de) otra fuente, por su tipo.
+                || (matches!(&c.source, CardSource::Custom { externa: Some(_), .. })
+                    && c.meta
+                        .type_line
+                        .as_deref()
+                        .is_some_and(|t| t.starts_with("Token")));
             match dato {
                 Some(s) => entrada(
                     c,
@@ -394,11 +400,18 @@ mod tests {
         );
         assert_eq!(
             id(CardSource::Custom {
-                scryfall_id: Some("v".into())
+                scryfall_id: Some("v".into()),
+                externa: None,
             }),
             Some("v".into())
         );
-        assert_eq!(id(CardSource::Custom { scryfall_id: None }), None);
+        assert_eq!(
+            id(CardSource::Custom {
+                scryfall_id: None,
+                externa: None
+            }),
+            None
+        );
         assert_eq!(id(CardSource::Blank), None);
     }
 
@@ -593,19 +606,42 @@ mod tests {
                 "2",
                 CardSource::Custom {
                     scryfall_id: Some("goblin".into()),
+                    externa: None,
                 },
             ),
             copia(
                 "3",
                 CardSource::Custom {
                     scryfall_id: Some("elfo".into()),
+                    externa: None,
                 },
             ),
-            copia("4", CardSource::Custom { scryfall_id: None }),
+            copia(
+                "4",
+                CardSource::Custom {
+                    scryfall_id: None,
+                    externa: None,
+                },
+            ),
             copia("5", CardSource::Blank),
+            // Una ficha de Cockatrice (Kelp): ficha por su tipo.
+            {
+                let mut k = copia(
+                    "6",
+                    CardSource::Custom {
+                        scryfall_id: None,
+                        externa: Some(proxy_core::model::RefExterna {
+                            fuente: proxy_core::model::FuenteCarta::Cockatrice,
+                            id: "kelp".into(),
+                        }),
+                    },
+                );
+                k.meta.type_line = Some("Token Creature — Plant Wall".into());
+                k
+            },
         ];
         let st = calcular(&db, &a, &cartas, None).await.unwrap();
-        assert_eq!(st.tokens, 2);
+        assert_eq!(st.tokens, 3);
         assert_eq!(st.cards, 1);
         // La propia sin vincular cuenta como «sin datos», con su nombre; el
         // hueco en blanco no cuenta para nada.

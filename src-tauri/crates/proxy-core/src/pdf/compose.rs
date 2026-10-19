@@ -163,7 +163,10 @@ pub(crate) mod tests {
             cards: (0..n)
                 .map(|i| DeckCard {
                     id: format!("c{i}"),
-                    source: CardSource::Custom { scryfall_id: None },
+                    source: CardSource::Custom {
+                        scryfall_id: None,
+                        externa: None,
+                    },
                     front: Some(img.clone()),
                     back: BackSpec::DeckDefault,
                     edits: CardEdits::default(),

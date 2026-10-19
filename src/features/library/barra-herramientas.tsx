@@ -30,7 +30,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { COLORES } from "@/features/stats/textos";
 import { cn } from "@/lib/utils";
-import { type Agrupar, filtrosDelPanel, type ModoColor, type Orden } from "./organizar";
+import { type Agrupar, filtrosDelPanel, idiomasDe, type ModoColor, type Orden } from "./organizar";
 import { ChipEtiqueta, CLASES, FORMATOS, IDIOMAS, Pip } from "./piezas";
 import { ascendentePorDefecto, useFiltrosBiblioteca, usePrefsBiblioteca } from "./preferencias";
 import { useBiblioteca } from "./store";
@@ -210,7 +210,8 @@ function PanelFiltros() {
 	const detalles = useBiblioteca((s) => s.detalles);
 	const n = filtrosDelPanel(f);
 	// Los idiomas que hay en la biblioteca.
-	const idiomas = [...new Set(Object.values(detalles).flatMap((d) => d?.langs ?? []))].sort();
+	const decks = useBiblioteca((s) => s.decks);
+	const idiomas = [...new Set((decks ?? []).flatMap((d) => idiomasDe(d, detalles[d.id])))].sort();
 	const alternar = <T,>(lista: T[], x: T) =>
 		lista.includes(x) ? lista.filter((y) => y !== x) : [...lista, x];
 	return (

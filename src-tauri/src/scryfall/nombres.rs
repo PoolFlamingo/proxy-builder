@@ -6,7 +6,7 @@
 //! Se descarga la primera vez que hace falta a `app_cache_dir` (se puede
 //! borrar sin perder nada) y se renueva si tiene más de una semana.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
@@ -19,6 +19,7 @@ use crate::scryfall::client::Scryfall;
 use crate::store::blobs::escribir_atomico;
 
 const FICHERO: &str = "scryfall-card-names.json";
+const FICHERO_SETS: &str = "scryfall-set-codes.json";
 const CADUCA: Duration = Duration::from_secs(7 * 24 * 60 * 60);
 /// Desde cuánto parecido una línea mal leída cuenta como ese nombre.
 const UMBRAL: f64 = 0.85;
@@ -135,42 +136,70 @@ impl Indice {
 pub async fn indice(scryfall: &Scryfall, cache: &Path) -> AppResult<Arc<Indice>> {
     INDICE
         .get_or_try_init(|| async {
-            let ruta = cache.join(FICHERO);
-            let fresca = std::fs::metadata(&ruta)
-                .and_then(|m| m.modified())
-                .ok()
-                .and_then(|t| SystemTime::now().duration_since(t).ok())
-                .is_some_and(|edad| edad < CADUCA);
-            let leida = if fresca {
-                std::fs::read(&ruta)
-                    .ok()
-                    .and_then(|b| serde_json::from_slice::<Vec<String>>(&b).ok())
-            } else {
-                None
-            };
-            let nombres = match leida {
-                Some(n) => n,
-                None => match scryfall.card_names().await {
-                    Ok(n) if !n.is_empty() => {
-                        let json = serde_json::to_vec(&n)
-                            .map_err(|e| AppError::new(ErrorCode::Internal).with("detalle", e))?;
-                        escribir_atomico(&ruta, &json)?;
-                        n
-                    }
-                    // Sin red, la copia vieja vale.
-                    otro => std::fs::read(&ruta)
-                        .ok()
-                        .and_then(|b| serde_json::from_slice::<Vec<String>>(&b).ok())
-                        .ok_or_else(|| {
-                            otro.err()
-                                .unwrap_or_else(|| AppError::new(ErrorCode::Network))
-                        })?,
-                },
-            };
+            let nombres = catalogo(&cache.join(FICHERO), || scryfall.card_names()).await?;
             Ok(Arc::new(Indice::nuevo(&nombres)))
         })
         .await
         .cloned()
+}
+
+static SETS: OnceCell<Arc<HashSet<String>>> = OnceCell::const_new();
+
+/// Los códigos de todos los sets de Scryfall, en minúsculas: para reconocer
+/// la colección en el pie de una carta propia («NEO • SP»). Como el
+/// catálogo de nombres: en `app_cache_dir`, renovado cada semana.
+pub async fn codigos_de_sets(scryfall: &Scryfall, cache: &Path) -> AppResult<Arc<HashSet<String>>> {
+    SETS.get_or_try_init(|| async {
+        let codigos = catalogo(&cache.join(FICHERO_SETS), || async {
+            Ok(scryfall
+                .sets()
+                .await?
+                .into_iter()
+                .map(|s| s.code.to_lowercase())
+                .collect())
+        })
+        .await?;
+        Ok(Arc::new(codigos.into_iter().collect()))
+    })
+    .await
+    .cloned()
+}
+
+/// Una lista guardada en `ruta`: la del disco si tiene menos de una semana;
+/// si no, la de `descargar` (y se guarda); sin red, la vieja si la hay.
+async fn catalogo<F, Fut>(ruta: &Path, descargar: F) -> AppResult<Vec<String>>
+where
+    F: FnOnce() -> Fut,
+    Fut: std::future::Future<Output = AppResult<Vec<String>>>,
+{
+    let leer = || {
+        std::fs::read(ruta)
+            .ok()
+            .and_then(|b| serde_json::from_slice::<Vec<String>>(&b).ok())
+    };
+    let fresca = std::fs::metadata(ruta)
+        .and_then(|m| m.modified())
+        .ok()
+        .and_then(|t| SystemTime::now().duration_since(t).ok())
+        .is_some_and(|edad| edad < CADUCA);
+    if fresca {
+        if let Some(n) = leer() {
+            return Ok(n);
+        }
+    }
+    match descargar().await {
+        Ok(n) if !n.is_empty() => {
+            let json = serde_json::to_vec(&n)
+                .map_err(|e| AppError::new(ErrorCode::Internal).with("detalle", e))?;
+            escribir_atomico(ruta, &json)?;
+            Ok(n)
+        }
+        // Sin red, la copia vieja vale.
+        otro => leer().ok_or_else(|| {
+            otro.err()
+                .unwrap_or_else(|| AppError::new(ErrorCode::Network))
+        }),
+    }
 }
 
 #[cfg(test)]

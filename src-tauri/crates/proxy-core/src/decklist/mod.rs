@@ -168,15 +168,24 @@ fn linea(line_no: u32, raw: &str, seccion: &mut Section, en_about: &mut bool) ->
         *en_about = false;
         return p;
     }
-    if t.starts_with("//") || t.starts_with('#') {
-        p.kind = LineKind::Comment;
-        return p;
-    }
-    if let Some(s) = seccion_de_cabecera(t) {
+    // Hay sitios que ponen la cabecera como comentario al copiar la lista como
+    // texto («#SIDEBOARD», «// Sideboard (15)»): si lo de detrás es una
+    // cabecera, cuenta como tal; si no, es un comentario.
+    let comentario = t.starts_with("//") || t.starts_with('#');
+    let cabecera = if comentario {
+        t.trim_start_matches(['/', '#']).trim()
+    } else {
+        t
+    };
+    if let Some(s) = seccion_de_cabecera(cabecera) {
         *seccion = s;
-        *en_about = t.trim_end_matches(':').eq_ignore_ascii_case("about");
+        *en_about = cabecera.trim_end_matches(':').eq_ignore_ascii_case("about");
         p.kind = LineKind::Section;
         p.section = s;
+        return p;
+    }
+    if comentario {
+        p.kind = LineKind::Comment;
         return p;
     }
     // MTG Arena: «About» / «Name Mi mazo».
@@ -317,6 +326,36 @@ mod tests {
 
     fn s(v: &str) -> Option<String> {
         Some(v.to_string())
+    }
+
+    #[test]
+    fn cabeceras_escritas_como_comentario() {
+        for cab in [
+            "SIDEBOARD",
+            "#SIDEBOARD",
+            "# Sideboard:",
+            "//Sideboard (15)",
+            "// SIDEBOARD",
+        ] {
+            let p = parse(&format!("4 Island\n{cab}\n2 Duress"));
+            assert_eq!(p.lines[1].kind, LineKind::Section, "«{cab}»");
+            assert_eq!(p.lines[2].section, Section::Sideboard, "«{cab}»");
+            assert_eq!(p.lines[0].section, Section::Main);
+        }
+        let p = parse("#Commander\n1 Atraxa, Praetors' Voice\n# mi nota\n// mi mazo\n1 Sol Ring");
+        assert_eq!(p.lines[1].section, Section::Commander);
+        assert_eq!(p.lines[2].kind, LineKind::Comment);
+        assert_eq!(p.lines[3].kind, LineKind::Comment);
+        // Los comentarios no cambian de sección.
+        assert_eq!(p.lines[4].section, Section::Commander);
+    }
+
+    #[test]
+    fn about_tras_almohadilla() {
+        let p = parse("# About\nName Mi mazo\n\nDeck\n1 Island");
+        assert_eq!(p.lines[0].kind, LineKind::Section);
+        assert_eq!(p.lines[1].kind, LineKind::Comment);
+        assert_eq!(p.lines[4].kind, LineKind::Card);
     }
 
     #[test]

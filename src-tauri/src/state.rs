@@ -27,6 +27,8 @@ pub struct AppState {
     pub blobs: BlobStore,
     pub paths: Paths,
     pub scryfall: Arc<Scryfall>,
+    /// El cliente para las fuentes de fuera (Cockatrice…), con lista cerrada.
+    pub externo: Arc<crate::fuentes::Externo>,
     pub jobs: Jobs,
     /// Miniaturas de resultados de búsqueda: huella de la URL → URL. Lo rellenan
     /// las búsquedas y lo lee el protocolo de imágenes (ruta `/t/`).
@@ -60,6 +62,7 @@ impl AppState {
             blobs,
             paths,
             scryfall: Arc::new(Scryfall::new()?),
+            externo: Arc::new(crate::fuentes::Externo::nuevo()?),
             jobs: Jobs::default(),
             miniaturas: Mutex::new(HashMap::new()),
             diseno,

@@ -90,7 +90,14 @@ const Tarjeta = memo(function Tarjeta({
 					<span className="rounded-[3px] bg-black/75 px-1 font-mono text-[8px] font-bold text-white uppercase">
 						{c.lang}
 					</span>
-					{!c.highres && (
+					{c.fuente && (
+						<WithTooltip content={t("Ficha que Scryfall no tiene (base de fichas de Cockatrice)")}>
+							<span className="rounded-[3px] bg-sky-600/90 px-1 font-mono text-[8px] font-bold text-white">
+								COCKATRICE
+							</span>
+						</WithTooltip>
+					)}
+					{!c.highres && !c.fuente && (
 						<WithTooltip content={t("Escaneo de baja resolución")}>
 							<span className="rounded-[3px] bg-amber-500/90 px-1 font-mono text-[8px] font-bold text-black">
 								LOWRES

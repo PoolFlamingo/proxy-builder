@@ -12,7 +12,15 @@ import { urlMiniatura } from "@/lib/image-url";
 import { cn } from "@/lib/utils";
 import { MenuContextualDeck, MenuDeck } from "./menu-deck";
 import type { Orden } from "./organizar";
-import { ChipsEtiquetas, CLASES, IDIOMAS, Identidad, useDinero, useFecha, useHace } from "./piezas";
+import {
+	ChipsEtiquetas,
+	CLASES,
+	Identidad,
+	NombresIdiomas,
+	useDinero,
+	useFecha,
+	useHace,
+} from "./piezas";
 import { ascendentePorDefecto, usePrefsBiblioteca } from "./preferencias";
 import { useBiblioteca } from "./store";
 import { PORTADA, useSeleccion } from "./vista-cuadricula";
@@ -227,13 +235,7 @@ function Fila({ deck: d, cols }: { deck: DeckSummary; cols: Columna[] }) {
 			case "precio":
 				return det ? <Precio det={det} /> : <Cargando />;
 			case "idioma":
-				return det ? (
-					<span className="truncate">
-						{det.langs.map((l) => t(IDIOMAS[l] ?? l.toUpperCase())).join(", ") || "—"}
-					</span>
-				) : (
-					<Cargando />
-				);
+				return det || d.langOverride ? <NombresIdiomas deck={d} det={det} /> : <Cargando />;
 			case "propias":
 				return det ? <Propias det={det} /> : <Cargando />;
 			case "modificado":

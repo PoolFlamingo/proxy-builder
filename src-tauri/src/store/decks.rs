@@ -32,6 +32,9 @@ pub struct DeckSummary {
     pub cover_card_id: Option<String>,
     pub pinned: bool,
     pub notes: String,
+    /// El idioma elegido a mano (código de Scryfall); manda sobre el que se
+    /// calcula de las cartas.
+    pub lang_override: Option<String>,
     /// Las etiquetas del deck (ids de `tags`).
     pub tags: Vec<String>,
 }
@@ -188,7 +191,7 @@ pub fn list(db: &Db) -> AppResult<Vec<DeckSummary>> {
     let mut st = c.prepare(
         "SELECT d.id, d.name, d.created_at, d.updated_at, d.opened_at, d.pinned, d.notes, d.cover_card_id,
                 (SELECT COUNT(*) FROM deck_cards WHERE deck_id = d.id),
-                p.front_blob, json_extract(p.card_json, '$.meta.name')
+                p.front_blob, json_extract(p.card_json, '$.meta.name'), d.lang_override
          FROM decks d
          LEFT JOIN deck_cards p ON p.deck_id = d.id AND p.id = COALESCE(
              (SELECT x.id FROM deck_cards x WHERE x.deck_id = d.id AND x.id = d.cover_card_id AND x.front_blob IS NOT NULL),
@@ -208,6 +211,7 @@ pub fn list(db: &Db) -> AppResult<Vec<DeckSummary>> {
             card_count: r.get(8)?,
             thumbnail: r.get(9)?,
             cover_name: r.get(10)?,
+            lang_override: r.get(11)?,
             tags: Vec::new(),
         })
     })?;
@@ -233,6 +237,17 @@ pub fn notas_de(db: &Db, id: &str) -> AppResult<String> {
         .query_row("SELECT notes FROM decks WHERE id = ?1", [id], |r| r.get(0))
         .optional()?
         .unwrap_or_default())
+}
+
+/// El idioma elegido a mano.
+pub fn idioma_de(db: &Db, id: &str) -> AppResult<Option<String>> {
+    Ok(db
+        .conn()?
+        .query_row("SELECT lang_override FROM decks WHERE id = ?1", [id], |r| {
+            r.get(0)
+        })
+        .optional()?
+        .flatten())
 }
 
 /// Apunta que el deck se acaba de abrir.
@@ -269,14 +284,19 @@ pub fn duplicate(db: &Db, id: &str, name: &str) -> AppResult<Deck> {
     }
     save(db, &d)?;
     let c = db.conn()?;
-    let (notas, portada): (String, Option<String>) = c.query_row(
-        "SELECT notes, cover_card_id FROM decks WHERE id = ?1",
+    let (notas, portada, idioma): (String, Option<String>, Option<String>) = c.query_row(
+        "SELECT notes, cover_card_id, lang_override FROM decks WHERE id = ?1",
         [id],
-        |r| Ok((r.get(0)?, r.get(1)?)),
+        |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
     )?;
     c.execute(
-        "UPDATE decks SET notes = ?2, cover_card_id = ?3 WHERE id = ?1",
-        (&d.id, notas, portada.and_then(|p| ids.get(&p).cloned())),
+        "UPDATE decks SET notes = ?2, cover_card_id = ?3, lang_override = ?4 WHERE id = ?1",
+        (
+            &d.id,
+            notas,
+            portada.and_then(|p| ids.get(&p).cloned()),
+            idioma,
+        ),
     )?;
     c.execute(
         "INSERT INTO deck_tags (deck_id, tag_id) SELECT ?2, tag_id FROM deck_tags WHERE deck_id = ?1",
@@ -376,7 +396,10 @@ mod tests {
     fn carta(i: usize, img: &FaceImage) -> DeckCard {
         DeckCard {
             id: format!("c{i}"),
-            source: CardSource::Custom { scryfall_id: None },
+            source: CardSource::Custom {
+                scryfall_id: None,
+                externa: None,
+            },
             front: Some(img.clone()),
             back: BackSpec::DeckDefault,
             edits: CardEdits {
@@ -535,6 +558,8 @@ mod tests {
             status: DesignStatus::Draft,
             collection: None,
             style: DesignStyle::Borderless,
+            estilo_pack: None,
+            variante_pack: None,
             frame: None,
             faces: vec![FaceDesign {
                 art: Some(ArtRef {

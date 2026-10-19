@@ -165,11 +165,14 @@ function Contenido({ ids, soloSeleccion }: { ids?: string[]; soloSeleccion: bool
 		try {
 			for (const f of aVincular) {
 				if (parar.current) break;
-				if (f.elegida) await vincular(f.carta.id, f.elegida);
+				if (f.elegida) {
+					const c = f.resultado?.candidates.find((x) => x.id === f.elegida);
+					await vincular(f.carta.id, c ?? f.elegida, f.resultado?.pie?.idioma);
+				}
 				hechas++;
 				setProgreso({ hechas, total: aVincular.length });
 			}
-			useUi.getState().anunciar(t("{n} cartas propias vinculadas con Scryfall", { n: hechas }));
+			useUi.getState().anunciar(t("{n} cartas propias vinculadas", { n: hechas }));
 			useUi.getState().abrir(null);
 		} catch (e) {
 			toast.error(mensaje(e));
@@ -200,7 +203,7 @@ function Contenido({ ids, soloSeleccion }: { ids?: string[]; soloSeleccion: bool
 			cambiosSinGuardar={fase === "revisar" && filas.length > 0}
 		>
 			<DialogHeader>
-				<DialogTitle>{t("Vincular con Scryfall en bloque")}</DialogTitle>
+				<DialogTitle>{t("Vincular en bloque")}</DialogTitle>
 				<DialogDescription>
 					{enSeleccion
 						? t("{n} imágenes propias distintas entre las cartas seleccionadas.", {

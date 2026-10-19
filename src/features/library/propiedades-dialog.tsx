@@ -21,8 +21,8 @@ import { useDeck } from "@/stores/deck-store";
 import {
 	ChipEtiqueta,
 	CLASES,
-	IDIOMAS,
 	Identidad,
+	NombresIdiomas,
 	nombreColores,
 	useDinero,
 	useFecha,
@@ -224,9 +224,11 @@ export function PropiedadesDialog({
 							],
 							[
 								t("Idioma"),
-								det
-									? det.langs.map((l) => t(IDIOMAS[l] ?? l.toUpperCase())).join(", ") || "—"
-									: "…",
+								det || deck.langOverride ? (
+									<NombresIdiomas key="idioma" deck={deck} det={det} />
+								) : (
+									"…"
+								),
 							],
 							[
 								t("Imágenes propias"),

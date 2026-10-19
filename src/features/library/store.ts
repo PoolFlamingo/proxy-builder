@@ -24,6 +24,8 @@ type Store = {
 	editarEtiqueta: (id: string, nombre: string, color: string) => Promise<void>;
 	borrarEtiqueta: (id: string) => Promise<void>;
 	favorito: (decks: string[], si: boolean) => Promise<void>;
+	/** El idioma elegido a mano (`null`: el que se calcula). */
+	idioma: (decks: string[], lang: string | null) => Promise<void>;
 	notas: (id: string, texto: string) => Promise<void>;
 	portada: (id: string, carta: string | null) => Promise<void>;
 };
@@ -67,6 +69,10 @@ export const useBiblioteca = create<Store>((set, get) => ({
 	},
 	favorito: async (decks, pinned) => {
 		await call("deck_pin", { decks, pinned });
+		await get().refrescar();
+	},
+	idioma: async (decks, lang) => {
+		await call("deck_lang_set", { decks, lang });
 		await get().refrescar();
 	},
 	notas: async (id, notes) => {

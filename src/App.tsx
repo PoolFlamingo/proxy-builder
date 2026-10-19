@@ -1,5 +1,6 @@
 import { CardEditorDialog } from "@/features/card-editor/card-editor-dialog";
 import { DecklistPanel } from "@/features/decklist/decklist-panel";
+import { FichasDialog } from "@/features/decklist/fichas-dialog";
 import { ColeccionesDialog } from "@/features/disenar/colecciones-dialog";
 import { DisenarScreen } from "@/features/disenar/disenar-screen";
 import { LoteDialog } from "@/features/disenar/lote-dialog";
@@ -10,6 +11,7 @@ import { LibraryScreen } from "@/features/library/library-screen";
 import { MoverADialog } from "@/features/preview/mover-a-dialog";
 import { PreviewPane } from "@/features/preview/preview-pane";
 import { SetBrowserDialog } from "@/features/set-browser/set-browser-dialog";
+import { SincronizarTemas } from "@/features/settings/temas-tweakcn";
 import { AppShell } from "@/features/shell/app-shell";
 import { useDeckInicial } from "@/features/shell/use-deck-inicial";
 import { StatsDialog } from "@/features/stats/stats-dialog";
@@ -38,6 +40,8 @@ export default function App() {
 			<VincularLoteDialog />
 			<CardEditorDialog />
 			<MoverADialog />
+			<FichasDialog />
+			<SincronizarTemas />
 			<StatsDialog />
 			<SetBrowserDialog />
 			{editor && (

@@ -1,6 +1,7 @@
 import {
 	Copy,
 	FolderOpen,
+	Languages,
 	PackageOpen,
 	Pencil,
 	Plus,
@@ -33,7 +34,7 @@ import {
 	DropdownMenuSubContent,
 	DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
-import { PuntoEtiqueta } from "./piezas";
+import { IDIOMAS, PuntoEtiqueta } from "./piezas";
 import { useBiblioteca } from "./store";
 
 /** Lo que se puede hacer con los decks: lo pone la pantalla. */
@@ -149,6 +150,36 @@ function Items({ deck, M }: { deck: DeckSummary; M: Primitivas }) {
 						<Plus />
 						{t("Nueva etiqueta…")}
 					</M.Item>
+				</M.SubContent>
+			</M.Sub>
+			<M.Sub>
+				<M.SubTrigger>
+					<Languages />
+					{varios ? t("Idioma de los {n}", { n: ids.length }) : t("Idioma")}
+				</M.SubTrigger>
+				<M.SubContent className="max-h-80 min-w-44 text-xs">
+					<M.CheckboxItem
+						checked={elegidos.every((d) => !d.langOverride)}
+						onSelect={() => void lib.idioma(ids, null)}
+					>
+						{t("Automático (según las cartas)")}
+					</M.CheckboxItem>
+					<M.Separator />
+					{Object.entries(IDIOMAS).map(([codigo, nombre]) => (
+						<M.CheckboxItem
+							key={codigo}
+							checked={
+								elegidos.length > 0 && elegidos.every((d) => d.langOverride === codigo)
+									? true
+									: elegidos.some((d) => d.langOverride === codigo)
+										? "indeterminate"
+										: false
+							}
+							onSelect={() => void lib.idioma(ids, codigo)}
+						>
+							{t(nombre)}
+						</M.CheckboxItem>
+					))}
 				</M.SubContent>
 			</M.Sub>
 			{!varios && (

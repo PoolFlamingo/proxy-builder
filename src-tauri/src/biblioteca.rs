@@ -6,7 +6,7 @@
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Mutex;
 
-use proxy_core::model::{CardSource, Deck};
+use proxy_core::model::{CardSource, Deck, DeckCard};
 use proxy_core::stats::DeckKind;
 use serde::Serialize;
 use ts_rs::TS;
@@ -67,6 +67,17 @@ fn candado<T>(m: &Mutex<T>) -> AppResult<std::sync::MutexGuard<'_, T>> {
 
 const WUBRG: [&str; 5] = ["W", "U", "B", "R", "G"];
 
+/// El idioma con el que cuenta una carta. Las propias, el de su imagen: el
+/// de la carta vinculada suele ser el inglés aunque la imagen esté en
+/// español, y haría «inglés» un deck que no lo es.
+fn idioma_de_la_carta(c: &DeckCard) -> Option<&str> {
+    let l = match c.source {
+        CardSource::Custom { .. } => c.meta.image_lang.as_deref(),
+        _ => c.meta.lang.as_deref(),
+    };
+    l.filter(|l| !l.is_empty())
+}
+
 /// Los detalles de un deck ya abierto.
 pub async fn detalles_de(db: &Db, deck: &Deck) -> AppResult<DeckDetails> {
     let s = crate::commands::stats::calcular_sin_red(db, &deck.cards).await?;
@@ -87,10 +98,10 @@ pub async fn detalles_de(db: &Db, deck: &Deck) -> AppResult<DeckDetails> {
             *idiomas
                 .entry(format!("{:?}", deck.settings.design_lang).to_lowercase())
                 .or_default() += 1;
-        } else if let Some(l) = c.meta.lang.as_deref().filter(|l| !l.is_empty()) {
+        } else if let Some(l) = idioma_de_la_carta(c) {
             *idiomas.entry(l.to_lowercase()).or_default() += 1;
         }
-        if let CardSource::Custom { scryfall_id } = &c.source {
+        if let CardSource::Custom { scryfall_id, .. } = &c.source {
             custom += 1;
             if scryfall_id.is_some() {
                 linked += 1;
@@ -199,16 +210,40 @@ mod tests {
             .put_bytes(&db, &png(3, 4, 1), ImageOrigin::Upload)
             .unwrap();
         let mut deck = decks::create(&db, "Mezcla", None).unwrap();
+        let mut propia_es = carta(
+            "a",
+            CardSource::Custom {
+                scryfall_id: None,
+                externa: None,
+            },
+            "",
+            &img,
+        );
+        propia_es.meta.image_lang = Some("es".into());
+        // Vinculada a la impresión inglesa, con la imagen en español.
+        let mut vinculada = carta(
+            "b",
+            CardSource::Custom {
+                scryfall_id: Some("x".into()),
+                externa: None,
+            },
+            "en",
+            &img,
+        );
+        vinculada.meta.image_lang = Some("es".into());
+        // Vinculada en inglés sin saber el idioma de la imagen: no cuenta.
+        let sin_idioma = carta(
+            "e",
+            CardSource::Custom {
+                scryfall_id: Some("z".into()),
+                externa: None,
+            },
+            "en",
+            &img,
+        );
         deck.cards = vec![
-            carta("a", CardSource::Custom { scryfall_id: None }, "es", &img),
-            carta(
-                "b",
-                CardSource::Custom {
-                    scryfall_id: Some("x".into()),
-                },
-                "es",
-                &img,
-            ),
+            propia_es,
+            vinculada,
             carta(
                 "c",
                 CardSource::Scryfall {
@@ -218,6 +253,7 @@ mod tests {
                 &img,
             ),
             carta("d", CardSource::Blank, "", &img),
+            sin_idioma,
         ];
         decks::save(&db, &deck).unwrap();
         let cache = CacheDetalles::default();
@@ -225,11 +261,14 @@ mod tests {
         assert_eq!(v.len(), 1);
         let d = &v[0];
         assert_eq!(d.langs, vec!["es", "en"]);
-        assert_eq!((d.custom, d.custom_linked), (2, 1));
+        assert_eq!((d.custom, d.custom_linked), (3, 2));
         // Sin caché de Scryfall: nada se sabe de esas cartas.
-        assert_eq!(d.unknown, 3);
+        assert_eq!(d.unknown, 4);
         assert_eq!(d.price_eur, None);
-        assert_eq!(d.card_names, vec!["Carta a", "Carta b", "Carta c"]);
+        assert_eq!(
+            d.card_names,
+            vec!["Carta a", "Carta b", "Carta c", "Carta e"]
+        );
         // Queda en memoria con la fecha del deck.
         assert!(cache.m.lock().unwrap().contains_key(&deck.id));
         // Solo los pedidos.

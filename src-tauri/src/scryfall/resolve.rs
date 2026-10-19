@@ -23,10 +23,13 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use super::client::CardApi;
+use super::fichas_auto::fichas_de;
 use super::models::{Identifier, ScryCard};
 use crate::error::{AppError, AppResult, ErrorCode};
 
 const LOTE: usize = 75;
+/// Cuántas líneas no encontradas se intentan traducir como mucho.
+const MAX_TRADUCIDAS: usize = 20;
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -99,6 +102,33 @@ pub trait Guardar: Sync {
     /// para no volver a pedirlos).
     fn apuntar(&self, _carta: &ScryCard) -> AppResult<()> {
         Ok(())
+    }
+    /// El nombre en inglés de una carta escrita en otro idioma (`idioma`,
+    /// código de Scryfall), por otras fuentes: para las líneas que Scryfall
+    /// no encuentra («Muro de algas» → Wall of Kelp).
+    fn nombre_ingles(
+        &self,
+        _nombre: &str,
+        _idioma: &str,
+    ) -> impl std::future::Future<Output = Option<String>> + Send {
+        async { None }
+    }
+    /// Una carta de otra fuente que se llama así (una ficha que Scryfall no
+    /// tiene: «Kelp»), como carta del deck con su imagen. Para las líneas que
+    /// Scryfall no encuentra.
+    fn externa_por_nombre(
+        &self,
+        _nombre: &str,
+    ) -> impl std::future::Future<Output = AppResult<Option<DeckCard>>> + Send {
+        async { Ok(None) }
+    }
+    /// Las fichas de otras fuentes que crean estas cartas (por su nombre en
+    /// inglés), como cartas del deck: «Wall of Kelp» → Kelp.
+    fn externas_creadas_por(
+        &self,
+        _cartas: &[String],
+    ) -> impl std::future::Future<Output = AppResult<Vec<DeckCard>>> + Send {
+        async { Ok(Vec::new()) }
     }
 }
 
@@ -221,6 +251,7 @@ pub(crate) fn meta_de(c: &ScryCard, fallback: bool) -> CardMeta {
         image_status: c.image_status.clone(),
         highres: c.highres_image,
         type_line: c.type_line.clone(),
+        image_lang: None,
     }
 }
 
@@ -275,13 +306,63 @@ pub async fn resolve<A: CardApi, G: Guardar>(
         });
     }
 
+    // 1b. Lo que no se encontró puede estar escrito en otro idioma (el del
+    // deck; si no se pidió ninguno, español): su nombre en inglés por otras
+    // fuentes, y ese a Scryfall.
+    let faltan: Vec<Peticion> = unicas
+        .iter()
+        .filter(|p| !encontradas.contains_key(*p) && p.set.is_none())
+        .cloned()
+        .collect();
+    if !faltan.is_empty() {
+        let idioma = if opciones.lang.is_empty() || opciones.lang == "any" || opciones.lang == "en"
+        {
+            "es"
+        } else {
+            opciones.lang.as_str()
+        };
+        // A la vez (la fuente en línea es lenta) y como mucho 20.
+        comprobar(cancelado)?;
+        let respuestas = join_all(
+            faltan
+                .iter()
+                .take(MAX_TRADUCIDAS)
+                .map(|p| guardar.nombre_ingles(&p.name, idioma)),
+        )
+        .await;
+        let traducidas: Vec<(Peticion, String)> = faltan
+            .iter()
+            .zip(respuestas)
+            .filter_map(|(p, en)| en.map(|en| (p.clone(), en)))
+            .collect();
+        for lote in traducidas.chunks(LOTE) {
+            comprobar(cancelado)?;
+            let ids: Vec<Identifier> = lote
+                .iter()
+                .map(|(_, en)| Identifier::Name { name: en.clone() })
+                .collect();
+            let r = api.collection(&ids).await?;
+            for (p, en) in lote {
+                if let Some(c) = r.data.iter().find(|c| c.responde_a(en)) {
+                    encontradas.insert(p.clone(), c.clone());
+                }
+            }
+        }
+    }
+
     // 2 y 3. Idioma y política de imagen, por carta distinta.
     let quiere_idioma = opciones.lang != "any" && !opciones.lang.is_empty();
     let mut finales: HashMap<Peticion, (ScryCard, bool)> = HashMap::new();
     let mut sin_imagen: HashSet<Peticion> = HashSet::new();
+    // Las inglesas del paso 1: sus `all_parts` dicen qué fichas crean (las
+    // traducidas no lo traen completo).
+    let mut inglesas: HashMap<Peticion, ScryCard> = HashMap::new();
     let total = encontradas.len() as u32;
     for (i, (p, c)) in encontradas.into_iter().enumerate() {
         comprobar(cancelado)?;
+        if opciones.add_tokens && c.lang == "en" {
+            inglesas.insert(p.clone(), c.clone());
+        }
         let mut c = c;
         if quiere_idioma && c.lang != opciones.lang {
             if let Some(x) = en_idioma(api, &c, &opciones.lang).await? {
@@ -302,36 +383,32 @@ pub async fn resolve<A: CardApi, G: Guardar>(
         progreso(ResolvePhase::Language.paso(i as u32 + 1, total));
     }
 
-    // 4. Tokens.
+    // 4. Tokens: los de la impresión inglesa de cada carta (la del paso 1 si
+    // lo era; si no, se pide).
     let mut tokens: Vec<ScryCard> = Vec::new();
     if opciones.add_tokens {
-        let mut ids: Vec<String> = Vec::new();
-        let mut vistos = HashSet::new();
+        let mut fuentes: Vec<ScryCard> = Vec::new();
+        let mut vistas = HashSet::new();
         for l in &lineas {
-            if let Some((c, _)) = finales.get(&Peticion::de(l)) {
-                for parte in c.all_parts.iter().filter(|p| p.component == "token") {
-                    if vistos.insert(parte.id.clone()) {
-                        ids.push(parte.id.clone());
-                    }
+            let p = Peticion::de(l);
+            if let Some((c, _)) = finales.get(&p) {
+                let fuente = if c.lang == "en" {
+                    c
+                } else {
+                    inglesas.get(&p).unwrap_or(c)
+                };
+                if vistas.insert(fuente.id.clone()) {
+                    fuentes.push(fuente.clone());
                 }
             }
         }
-        let total = ids.len() as u32;
-        for (i, lote) in ids.chunks(LOTE).enumerate() {
-            comprobar(cancelado)?;
-            let pedir: Vec<Identifier> = lote
-                .iter()
-                .map(|id| Identifier::Id { id: id.clone() })
-                .collect();
-            let r = api.collection(&pedir).await?;
-            // En el orden pedido.
-            for id in lote {
-                if let Some(t) = r.data.iter().find(|t| &t.id == id) {
-                    tokens.push(t.clone());
-                }
-            }
-            progreso(ResolvePhase::Tokens.paso(((i + 1) * LOTE).min(ids.len()) as u32, total));
-        }
+        tokens = fichas_de(api, &fuentes, cancelado, |hechas, total| {
+            progreso(ResolvePhase::Tokens.paso(hechas, total))
+        })
+        .await?
+        .into_iter()
+        .map(|f| f.ficha)
+        .collect();
     }
 
     // 5. Imágenes: una descarga por carta distinta (frente y dorso DFC).
@@ -416,14 +493,30 @@ pub async fn resolve<A: CardApi, G: Guardar>(
                     ));
                 }
             }
+            None if !sin_imagen.contains(&p) => {
+                // Lo que Scryfall no tiene, en otras fuentes (una ficha).
+                comprobar(cancelado)?;
+                match guardar.externa_por_nombre(&l.name).await {
+                    Ok(Some(c)) => {
+                        for i in 0..l.qty {
+                            let mut copia = c.clone();
+                            if i > 0 {
+                                copia.id = uuid::Uuid::new_v4().to_string();
+                            }
+                            cards.push(copia);
+                        }
+                    }
+                    _ => unresolved.push(Unresolved {
+                        line_no: l.line_no,
+                        name: l.name.clone(),
+                        reason: UnresolvedReason::NotFound,
+                    }),
+                }
+            }
             None => unresolved.push(Unresolved {
                 line_no: l.line_no,
                 name: l.name.clone(),
-                reason: if sin_imagen.contains(&p) {
-                    UnresolvedReason::NoImage
-                } else {
-                    UnresolvedReason::NotFound
-                },
+                reason: UnresolvedReason::NoImage,
             }),
         }
     }
@@ -435,6 +528,19 @@ pub async fn resolve<A: CardApi, G: Guardar>(
             },
             false,
         ));
+    }
+    // Las fichas de otras fuentes que crean las cartas (las que Scryfall no
+    // relaciona porque no las tiene).
+    if opciones.add_tokens {
+        let nombres: Vec<String> = finales.values().map(|(c, _)| c.name.clone()).collect();
+        let ya: HashSet<String> = tokens.iter().map(|t| t.name.to_lowercase()).collect();
+        if let Ok(externas) = guardar.externas_creadas_por(&nombres).await {
+            cards.extend(
+                externas
+                    .into_iter()
+                    .filter(|c| !ya.contains(&c.meta.name.to_lowercase())),
+            );
+        }
     }
     Ok(ResolveResult { cards, unresolved })
 }
@@ -567,6 +673,122 @@ pub(crate) mod tests {
         }
     }
 
+    /// Con una «otra fuente» de mentira: tiene la ficha Kelp, que crea Wall of
+    /// Kelp (aquí, Dragon Fodder, que está en el Scryfall de mentira).
+    struct ConExternas;
+    fn kelp() -> DeckCard {
+        DeckCard {
+            id: uuid::Uuid::new_v4().to_string(),
+            source: CardSource::Custom {
+                scryfall_id: None,
+                externa: Some(proxy_core::model::RefExterna {
+                    fuente: proxy_core::model::FuenteCarta::Cockatrice,
+                    id: "kelp".into(),
+                }),
+            },
+            front: None,
+            back: BackSpec::DeckDefault,
+            edits: CardEdits::default(),
+            locked: false,
+            meta: CardMeta {
+                name: "Kelp".into(),
+                type_line: Some("Token Creature — Plant Wall".into()),
+                ..CardMeta::default()
+            },
+            design: None,
+        }
+    }
+    impl Guardar for ConExternas {
+        fn guardar(&self, bytes: &[u8], origin: ImageOrigin) -> AppResult<FaceImage> {
+            GuardarFalso.guardar(bytes, origin)
+        }
+        async fn nombre_ingles(&self, nombre: &str, idioma: &str) -> Option<String> {
+            (nombre == "Carne de dragón" && idioma == "es").then(|| "Dragon Fodder".into())
+        }
+        async fn externa_por_nombre(&self, nombre: &str) -> AppResult<Option<DeckCard>> {
+            Ok((nombre == "Kelp").then(kelp))
+        }
+        async fn externas_creadas_por(&self, cartas: &[String]) -> AppResult<Vec<DeckCard>> {
+            Ok(if cartas.iter().any(|c| c == "Dragon Fodder") {
+                vec![kelp()]
+            } else {
+                vec![]
+            })
+        }
+    }
+
+    #[tokio::test]
+    async fn lo_que_scryfall_no_tiene_se_busca_en_otras_fuentes() {
+        let api = falso();
+        let r = resolve(
+            &api,
+            &ConExternas,
+            &parse("2 Kelp\n1 Sol Ring\n1 Carta Inventada"),
+            &opciones("en"),
+            &AtomicBool::new(false),
+            |_| {},
+        )
+        .await
+        .unwrap();
+        assert_eq!(r.cards.len(), 3);
+        assert_eq!(r.cards[0].meta.name, "Kelp");
+        assert_ne!(r.cards[0].id, r.cards[1].id);
+        assert_eq!(r.cards[2].meta.name, "Sol Ring");
+        assert_eq!(r.unresolved.len(), 1);
+        assert_eq!(r.unresolved[0].name, "Carta Inventada");
+    }
+
+    #[tokio::test]
+    async fn un_nombre_en_espanol_se_traduce_por_otras_fuentes() {
+        let api = falso();
+        let r = resolve(
+            &api,
+            &ConExternas,
+            &parse("1 Carne de dragón"),
+            &opciones("any"),
+            &AtomicBool::new(false),
+            |_| {},
+        )
+        .await
+        .unwrap();
+        assert_eq!(r.cards.len(), 1);
+        assert_eq!(r.cards[0].meta.name, "Dragon Fodder");
+        assert!(r.unresolved.is_empty());
+    }
+
+    #[tokio::test]
+    async fn las_fichas_de_otras_fuentes_tambien_se_anaden() {
+        let api = falso();
+        let o = ResolveOptions {
+            add_tokens: true,
+            ..opciones("en")
+        };
+        let r = resolve(
+            &api,
+            &ConExternas,
+            &parse("1 Dragon Fodder"),
+            &o,
+            &AtomicBool::new(false),
+            |_| {},
+        )
+        .await
+        .unwrap();
+        let nombres: Vec<&str> = r.cards.iter().map(|c| c.meta.name.as_str()).collect();
+        assert_eq!(nombres, vec!["Dragon Fodder", "Goblin", "Kelp"]);
+        // Sin «Añadir tokens», no.
+        let r = resolve(
+            &api,
+            &ConExternas,
+            &parse("1 Dragon Fodder"),
+            &opciones("en"),
+            &AtomicBool::new(false),
+            |_| {},
+        )
+        .await
+        .unwrap();
+        assert_eq!(r.cards.len(), 1);
+    }
+
     fn opciones(lang: &str) -> ResolveOptions {
         ResolveOptions {
             lang: lang.into(),
@@ -661,6 +883,41 @@ pub(crate) mod tests {
         let (r, _) = resolver("1 Serra Ascendant (M11) 28", o).await;
         assert_eq!(r.cards[0].meta.set.as_deref(), Some("2x2"));
         assert!(r.cards[0].meta.highres);
+    }
+
+    #[tokio::test]
+    async fn los_tokens_salen_de_la_inglesa_en_un_deck_traducido() {
+        // Dragon Fodder en español, sin `all_parts` (Scryfall no los da en
+        // las traducidas): la ficha sale de la inglesa del paso 1, sin pedir
+        // nada más.
+        let mut api = falso();
+        api.cartas.push(carta(json!({
+            "id": "fodder-es", "name": "Dragon Fodder", "printed_name": "Carne de dragón",
+            "lang": "es", "set": "fdn", "collector_number": "535", "layout": "normal",
+            "image_uris": {"png": "https://img/fodder-es.png", "large": "https://img/fodder-es.jpg"},
+            "image_status": "highres_scan", "highres_image": true
+        })));
+        let o = ResolveOptions {
+            add_tokens: true,
+            ..opciones("es")
+        };
+        let r = resolve(
+            &api,
+            &GuardarFalso,
+            &parse("1 Dragon Fodder"),
+            &o,
+            &AtomicBool::new(false),
+            |_| {},
+        )
+        .await
+        .unwrap();
+        assert_eq!(r.cards.len(), 2);
+        assert_eq!(r.cards[0].meta.lang.as_deref(), Some("es"));
+        assert!(
+            matches!(&r.cards[1].source, CardSource::Token { scryfall_id } if scryfall_id == "goblin")
+        );
+        // Una petición para la lista y otra para la ficha.
+        assert_eq!(*api.colecciones.lock().unwrap(), 2);
     }
 
     #[tokio::test]

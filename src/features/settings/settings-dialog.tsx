@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useUi } from "@/stores/ui-store";
 import { Appearance } from "./appearance";
+import { NombresIdiomas } from "./nombres-idiomas";
 
 /** Ajustes de la app: idioma, editor de cartas (beta) y apariencia. */
 export function SettingsDialog({
@@ -61,6 +62,7 @@ export function SettingsDialog({
 								</ToggleGroupItem>
 							</ToggleGroup>
 						</div>
+						<NombresIdiomas />
 						<EditorBeta />
 						<Appearance />
 					</div>

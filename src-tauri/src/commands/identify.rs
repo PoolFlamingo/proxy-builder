@@ -14,6 +14,7 @@ use ts_rs::TS;
 use super::cards::{resumir, CardSummary};
 use crate::error::{AppError, AppResult, ErrorCode};
 use crate::ocr;
+use crate::originales::{self, PieLeido};
 use crate::scryfall::cache;
 use crate::scryfall::client::CardApi;
 use crate::scryfall::models::ScryCard;
@@ -57,6 +58,9 @@ pub struct CardIdentify {
     /// La propuesta (id de Scryfall), si alguna se parece lo bastante.
     pub best: Option<String>,
     pub confidence: Confidence,
+    /// La colección, el número y el idioma leídos en el pie (con OCR). El
+    /// idioma es el de la imagen: se guarda al vincular.
+    pub pie: Option<PieLeido>,
 }
 
 /// Para comparar nombres: minúsculas, sin tildes ni signos.
@@ -257,22 +261,26 @@ async fn identificar(
         .collect();
 
     // Los nombres reales que aparecen en la carta, buscados en local en el
-    // catálogo de Scryfall: primero lo exacto en el pie, el título y la pista;
-    // luego cualquier otra línea de la carta; y si nada, lo más parecido (una
-    // letra mal leída).
+    // catálogo de Scryfall: la pista (el nombre del fichero o lo escrito) y,
+    // en lo leído, el nombre original esté donde esté (`originales`). Si
+    // nada, lo más parecido a la pista (una letra mal escrita).
     let mut seguros: Vec<String> = Vec::new();
     let mut aproximados: Vec<String> = Vec::new();
     match nombres::indice(&state.scryfall, &state.paths.cache).await {
         Ok(indice) => {
-            for t in &principales {
+            for t in &pista {
                 seguros.extend(indice.exacto(t).or_else(|| indice.al_principio(t)));
             }
-            for t in &leido.resto {
-                seguros.extend(indice.exacto(t));
+            for a in originales::buscar(&leido.lineas, &indice) {
+                if a.aproximado {
+                    aproximados.push(a.nombre);
+                } else {
+                    seguros.push(a.nombre);
+                }
             }
-            if seguros.is_empty() {
+            if seguros.is_empty() && aproximados.is_empty() {
                 aproximados.extend(
-                    principales
+                    pista
                         .iter()
                         .filter_map(|t| indice.parecido(t))
                         .map(|h| h.nombre),
@@ -282,9 +290,31 @@ async fn identificar(
         Err(e) => tracing::warn!(codigo = ?e.code, "sin catálogo de nombres"),
     }
 
+    // La colección y el número del pie dan la carta exacta.
+    let pie = if leido.lineas.is_empty() {
+        None
+    } else {
+        match nombres::codigos_de_sets(&state.scryfall, &state.paths.cache).await {
+            Ok(sets) => originales::pie_leido(&leido.lineas, &sets),
+            Err(e) => {
+                tracing::warn!(codigo = ?e.code, "sin la lista de sets");
+                None
+            }
+        }
+    };
+
     let mut vistas = HashSet::new();
     let mut probados = HashSet::new();
     let mut cartas = Vec::new();
+
+    let mut del_pie: Option<String> = None;
+    if let Some(p) = &pie {
+        if let Ok(Some(c)) = state.scryfall.card_lang(&p.set, &p.numero, "en").await {
+            del_pie = Some(c.id.clone());
+            vistas.insert(c.id.clone());
+            cartas.push(c);
+        }
+    }
 
     // Las fichas: Scryfall no las devuelve sin `include:extras` y casi no las
     // tiene en otros idiomas, así que se buscan por su tipo en inglés
@@ -327,6 +357,27 @@ async fn identificar(
         }
     }
     cartas.truncate(MAX_CANDIDATAS);
+    // Nada en Scryfall: puede ser el nombre impreso en otro idioma de una
+    // carta que Scryfall no tiene en ese idioma (las antiguas en español):
+    // su nombre inglés por otras fuentes, y ese a Scryfall.
+    if cartas.is_empty() {
+        let idioma = pie
+            .as_ref()
+            .and_then(|p| p.idioma.clone())
+            .unwrap_or_else(|| "es".into());
+        let textos: Vec<String> = pista.iter().chain(&leido.titulo).cloned().collect();
+        for t in textos.iter().take(2) {
+            for en in crate::fuentes::nombres_ingleses(state, t, &idioma).await {
+                for c in buscar(state, &en).await? {
+                    if vistas.insert(c.id.clone()) {
+                        cartas.push(c);
+                    }
+                }
+                seguros.push(en);
+            }
+        }
+        cartas.truncate(MAX_CANDIDATAS);
+    }
     // Lo escrito, en todo el nombre: «waste» trae Wastes, Snow-Covered
     // Wastes, Lay Waste…, lo más parecido primero.
     if escrito {
@@ -341,6 +392,23 @@ async fn identificar(
         }
     }
     let mut candidates = resumir(state, cartas);
+    // Las fichas que Scryfall no tiene (Cockatrice): las que se llaman como
+    // algo leído o escrito; con lo escrito, también las que lo llevan.
+    let leidos: Vec<String> = seguros
+        .iter()
+        .chain(&pista)
+        .chain(&leido.titulo)
+        .cloned()
+        .collect();
+    let mut externas = crate::fuentes::buscar_cockatrice(state, &leidos, true).await;
+    if escrito {
+        externas.extend(crate::fuentes::buscar_cockatrice(state, &pista, false).await);
+    }
+    for e in externas {
+        if !candidates.iter().any(|c| c.id == e.id) {
+            candidates.push(e);
+        }
+    }
     // Los aproximados no puntúan: la propuesta se mide contra lo leído, y así
     // una letra mal leída sale como «probable» para que se revise.
     let textos: Vec<String> = seguros.iter().chain(&principales).cloned().collect();
@@ -348,6 +416,14 @@ async fn identificar(
     // Una ficha encontrada por su tipo traducido no se parece a lo leído
     // («Guerrero» no es «Warrior»), pero es la propuesta; hay varias versiones
     // de cada ficha, así que se deja como probable para revisarla.
+    // La del pie, si lo leído no da otra: puede ser un pie copiado de otra
+    // carta (las plantillas lo traen), así que solo probable.
+    if confidence == Confidence::None {
+        if let Some(id) = del_pie {
+            best = Some(id);
+            confidence = Confidence::Probable;
+        }
+    }
     if confidence == Confidence::None {
         if let Some(id) = primera_ficha {
             best = Some(id);
@@ -367,6 +443,7 @@ async fn identificar(
         candidates,
         best,
         confidence,
+        pie,
     })
 }
 
@@ -465,6 +542,25 @@ async fn lote(
     Ok(())
 }
 
+/// Lo que sabe de sí una carta propia vinculada a una de otra fuente.
+#[tauri::command]
+pub async fn card_link_externa(
+    state: State<'_, AppState>,
+    fuente: proxy_core::model::FuenteCarta,
+    id: String,
+) -> AppResult<CardMeta> {
+    match fuente {
+        proxy_core::model::FuenteCarta::Cockatrice => {
+            let c =
+                crate::fuentes::cockatrice::catalogo(&state.externo, &state.paths.cache).await?;
+            let f = c
+                .por_id(&id)
+                .ok_or_else(|| AppError::new(ErrorCode::NotFound).with("ficha", &id))?;
+            Ok(crate::fuentes::meta_cockatrice(f))
+        }
+    }
+}
+
 /// Los datos de la carta elegida (de la caché si están; si no, de Scryfall,
 /// y se guardan para que las estadísticas funcionen sin red).
 #[tauri::command]
@@ -499,6 +595,7 @@ mod tests {
             image_status: None,
             is_dfc: false,
             type_line: None,
+            fuente: None,
         }
     }
 

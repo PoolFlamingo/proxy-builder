@@ -83,6 +83,14 @@ export type Detalles = Record<string, DeckDetails | undefined>;
 
 export const WUBRG = ["W", "U", "B", "R", "G"] as const;
 
+/**
+ * Los idiomas de un deck: el elegido a mano si lo hay; si no, los que se
+ * calculan de sus cartas (el más usado primero).
+ */
+export function idiomasDe(d: DeckSummary, x: DeckDetails | undefined): string[] {
+	return d.langOverride ? [d.langOverride] : (x?.langs ?? []);
+}
+
 /** Sin tildes ni mayúsculas, para buscar. */
 export function normalizar(s: string): string {
 	return s
@@ -146,7 +154,7 @@ export function filtrar(
 			if (f.colores.length > 0 && !pasaColores(x.colorIdentity, f)) return false;
 			if (f.clases.length > 0 && !f.clases.includes(x.kind)) return false;
 			if (f.formato && !x.legalFormats.includes(f.formato)) return false;
-			if (f.idioma && !x.langs.includes(f.idioma)) return false;
+			if (f.idioma && !idiomasDe(d, x).includes(f.idioma)) return false;
 			if (f.conDisenos && x.designed === 0) return false;
 			if (f.conPropias && x.custom === 0) return false;
 		}
@@ -259,6 +267,11 @@ export function agrupar(
 	};
 	for (const d of decks) {
 		const x = det[d.id];
+		// El idioma elegido a mano no necesita los detalles.
+		if (por === "idioma" && d.langOverride) {
+			meter(`l:${d.langOverride}`, { tipo: "idioma", idioma: d.langOverride }, d);
+			continue;
+		}
 		if (!x) {
 			meter("sin-datos", { tipo: "sinDatos" }, d);
 			continue;
@@ -268,7 +281,7 @@ export function agrupar(
 		} else if (por === "clase") {
 			meter(`k:${x.kind}`, { tipo: "clase", clase: x.kind }, d);
 		} else {
-			const idioma = x.langs[0] ?? "";
+			const idioma = idiomasDe(d, x)[0] ?? "";
 			meter(`l:${idioma}`, { tipo: "idioma", idioma }, d);
 		}
 	}

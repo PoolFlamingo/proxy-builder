@@ -30,6 +30,7 @@ export type Dialogo =
 	| { tipo: "vincularLote"; ids?: string[]; soloSeleccion?: boolean }
 	| { tipo: "anadir"; en?: number }
 	| { tipo: "moverA"; ids: string[] }
+	| { tipo: "fichas" }
 	| { tipo: "sets" }
 	| { tipo: "estadisticas" }
 	/** Editor de cartas: colecciones; letras, packs y símbolos; recortar arte. */

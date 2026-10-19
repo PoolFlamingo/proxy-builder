@@ -26,6 +26,46 @@ impl Guardar for EnLaApp<'_> {
     fn apuntar(&self, c: &ScryCard) -> AppResult<()> {
         cache::guardar(&self.0.db, c)
     }
+    async fn nombre_ingles(&self, nombre: &str, idioma: &str) -> Option<String> {
+        crate::fuentes::nombres_ingleses(self.0, nombre, idioma)
+            .await
+            .into_iter()
+            .next()
+    }
+    async fn externa_por_nombre(&self, nombre: &str) -> AppResult<Option<DeckCard>> {
+        let c = crate::fuentes::cockatrice::catalogo(&self.0.externo, &self.0.paths.cache).await?;
+        let Some(f) = c
+            .exactas(nombre)
+            .into_iter()
+            .find(|f| !f.imagenes.is_empty())
+        else {
+            return Ok(None);
+        };
+        crate::fuentes::carta_cockatrice(self.0, &f.id)
+            .await
+            .map(Some)
+    }
+    async fn externas_creadas_por(&self, cartas: &[String]) -> AppResult<Vec<DeckCard>> {
+        let c = crate::fuentes::cockatrice::catalogo(&self.0.externo, &self.0.paths.cache).await?;
+        let mut ids: Vec<String> = Vec::new();
+        for n in cartas {
+            for f in c.creadas_por(n) {
+                if !f.imagenes.is_empty() && !ids.contains(&f.id) {
+                    ids.push(f.id.clone());
+                }
+            }
+        }
+        let mut out = Vec::new();
+        for id in ids {
+            match crate::fuentes::carta_cockatrice(self.0, &id).await {
+                Ok(carta) => out.push(carta),
+                Err(e) => {
+                    tracing::warn!(codigo = ?e.code, ficha = %id, "ficha de Cockatrice sin imagen")
+                }
+            }
+        }
+        Ok(out)
+    }
 }
 
 #[derive(Debug, Clone, Serialize, TS)]
@@ -110,6 +150,22 @@ pub struct CardSummary {
     pub image_status: Option<String>,
     pub is_dfc: bool,
     pub type_line: Option<String>,
+    /// De qué fuente es, si no es de Scryfall (`id` es entonces el de allí).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub fuente: Option<proxy_core::model::FuenteCarta>,
+}
+
+/// Apunta la URL de una miniatura para el protocolo (`/t/<huella>`).
+pub(crate) fn registrar_miniatura(state: &AppState, url: &str) -> String {
+    let h = huella_url(url);
+    if let Ok(mut r) = state.miniaturas.lock() {
+        if r.len() > 5_000 {
+            r.clear();
+        }
+        r.insert(h.clone(), url.to_string());
+    }
+    h
 }
 
 fn huella_url(url: &str) -> String {
@@ -150,6 +206,7 @@ pub(crate) fn resumir(state: &AppState, cartas: Vec<ScryCard>) -> Vec<CardSummar
                 is_dfc: c.is_dfc(),
                 type_line: c.type_line.clone(),
                 name: c.name,
+                fuente: None,
             }
         })
         .collect()
@@ -219,7 +276,29 @@ pub async fn card_search(
 ) -> AppResult<Vec<CardSummary>> {
     let consulta = consulta_busqueda(&q, &lang, highres_only);
     let r = state.scryfall.search(&consulta, lang.is_some(), 50).await?;
-    Ok(resumir(&state, r))
+    let mut v = resumir(&state, r);
+    // Las fichas que Scryfall no tiene (solo en inglés y sin pedir alta
+    // resolución: las de Cockatrice no lo son). Detrás, salvo si se llama
+    // exactamente así y en Scryfall no hay ninguna que se llame así.
+    if lang.as_deref().is_none_or(|l| l == "en") && !highres_only {
+        let externas =
+            crate::fuentes::buscar_cockatrice(&state, std::slice::from_ref(&q), false).await;
+        juntar_externas(&mut v, externas, &q);
+    }
+    Ok(v)
+}
+
+/// Añade las de otras fuentes detrás, o delante si una se llama exactamente
+/// como lo buscado y de Scryfall ninguna.
+fn juntar_externas(v: &mut Vec<CardSummary>, externas: Vec<CardSummary>, q: &str) {
+    use crate::commands::identify::normalizar;
+    let q = normalizar(q);
+    let exacta_en_scryfall = v.iter().any(|c| normalizar(&c.name) == q);
+    let (delante, detras): (Vec<_>, Vec<_>) = externas
+        .into_iter()
+        .partition(|c| !exacta_en_scryfall && normalizar(&c.name) == q);
+    v.splice(0..0, delante);
+    v.extend(detras);
 }
 
 /// Todas las impresiones de una carta (selector de variantes).
@@ -231,8 +310,94 @@ pub async fn card_prints(
     highres_only: bool,
 ) -> AppResult<Vec<CardSummary>> {
     let q = consulta_impresiones(&name, &lang, highres_only);
-    let r = state.scryfall.search(&q, true, 175).await?;
-    Ok(resumir(&state, r))
+    // Sin resultados en Scryfall (una ficha que no tiene) no es un error.
+    let r = state
+        .scryfall
+        .search(&q, true, 175)
+        .await
+        .unwrap_or_default();
+    let mut v = resumir(&state, r);
+    if lang.as_deref().is_none_or(|l| l == "en") && !highres_only {
+        let externas =
+            crate::fuentes::buscar_cockatrice(&state, std::slice::from_ref(&name), true).await;
+        v.extend(externas);
+    }
+    Ok(v)
+}
+
+/// Trae una carta de otra fuente como carta del deck (una propia con su imagen
+/// y el vínculo), para añadirla o para reemplazar otra.
+#[tauri::command]
+pub async fn card_fetch_externa(
+    state: State<'_, AppState>,
+    fuente: proxy_core::model::FuenteCarta,
+    id: String,
+) -> AppResult<DeckCard> {
+    let _marca = state.trabajo();
+    match fuente {
+        proxy_core::model::FuenteCarta::Cockatrice => {
+            crate::fuentes::carta_cockatrice(&state, &id).await
+        }
+    }
+}
+
+/// Una ficha que falta en el deck y la carta que la crea.
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct FichaPropuesta {
+    pub carta: CardSummary,
+    pub creada_por: String,
+}
+
+/// **Detectar fichas** en un deck ya hecho: las que crean sus cartas (también
+/// las propias vinculadas) y que no tiene. Solo las propone; se añaden con
+/// `card_fetch` las que se elijan.
+#[tauri::command]
+pub async fn deck_tokens_detect(
+    state: State<'_, AppState>,
+    cards: Vec<DeckCard>,
+) -> AppResult<Vec<FichaPropuesta>> {
+    let _marca = state.trabajo();
+    let db = &state.db;
+    let halladas = crate::scryfall::fichas_auto::faltan_en_el_deck(
+        state.scryfall.as_ref(),
+        &cards,
+        |id| cache::leer(db, id).ok().flatten().map(|(c, _)| c),
+        &std::sync::atomic::AtomicBool::new(false),
+    )
+    .await?;
+    for f in &halladas {
+        cache::guardar(db, &f.ficha)?;
+    }
+    let creadores: Vec<String> = halladas.iter().map(|f| f.creada_por.clone()).collect();
+    let resumen = resumir(&state, halladas.into_iter().map(|f| f.ficha).collect());
+    let mut out: Vec<FichaPropuesta> = resumen
+        .into_iter()
+        .zip(creadores)
+        .map(|(carta, creada_por)| FichaPropuesta { carta, creada_por })
+        .collect();
+    // Las fichas que Scryfall no tiene (Cockatrice) y que crean las cartas
+    // del deck, si no están ya (por nombre: también una propia hecha a mano).
+    if let Ok(cat) = crate::fuentes::cockatrice::catalogo(&state.externo, &state.paths.cache).await
+    {
+        let mut ya: std::collections::HashSet<String> = cards
+            .iter()
+            .map(|c| c.meta.name.to_lowercase())
+            .chain(out.iter().map(|p| p.carta.name.to_lowercase()))
+            .collect();
+        for c in &cards {
+            for f in cat.creadas_por(&c.meta.name) {
+                if !f.imagenes.is_empty() && ya.insert(f.nombre.to_lowercase()) {
+                    out.push(FichaPropuesta {
+                        carta: crate::fuentes::resumen_cockatrice(&state, f),
+                        creada_por: c.meta.name.clone(),
+                    });
+                }
+            }
+        }
+    }
+    Ok(out)
 }
 
 /// Descarga una impresión concreta y la devuelve como carta del deck (para
@@ -293,18 +458,7 @@ pub(crate) async fn traer_carta<A: CardApi>(
         back: back.unwrap_or(BackSpec::DeckDefault),
         edits: CardEdits::default(),
         locked: false,
-        meta: proxy_core::model::CardMeta {
-            name: c.name.clone(),
-            set: Some(c.set.clone()),
-            collector_number: Some(c.collector_number.clone()),
-            lang: Some(c.lang.clone()),
-            lang_fallback: false,
-            layout: Some(c.layout.clone()),
-            is_dfc: c.is_dfc(),
-            image_status: c.image_status.clone(),
-            highres: c.highres_image,
-            type_line: c.type_line.clone(),
-        },
+        meta: crate::scryfall::resolve::meta_de(&c, false),
         design: None,
     })
 }

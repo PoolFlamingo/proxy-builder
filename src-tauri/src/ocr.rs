@@ -31,11 +31,11 @@ const MODELOS: [(&str, &str); 2] = [
 
 /// Proporción de la altura que se lee: el nombre y, en muchas cartas propias,
 /// el nombre original en pequeño justo debajo.
-const FRANJA_TITULO: f32 = 0.16;
+pub const FRANJA_TITULO: f32 = 0.16;
 
 /// Desde qué altura (del centro de la línea) empieza el pie: número, rareza
 /// y, en las propias, el nombre original.
-const FRANJA_PIE: f32 = 0.94;
+pub const FRANJA_PIE: f32 = 0.94;
 
 static MOTOR: OnceLock<OcrEngine> = OnceLock::new();
 
@@ -110,6 +110,15 @@ fn motor(datos: &Path) -> AppResult<&'static OcrEngine> {
     MOTOR.get().ok_or_else(|| fallo("motor"))
 }
 
+/// Una línea leída, con dónde está: `y` es la altura de su centro y `alto` la
+/// de sus letras, las dos en proporción a la altura de la carta (0 = arriba).
+#[derive(Debug, Clone, PartialEq)]
+pub struct LineaLeida {
+    pub texto: String,
+    pub y: f32,
+    pub alto: f32,
+}
+
 /// Lo que se ha leído en una imagen: las líneas del título y los nombres de
 /// la línea de abajo.
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -117,8 +126,13 @@ pub struct Lectura {
     pub titulo: Vec<String>,
     pub pie: Vec<String>,
     pub resto: Vec<String>,
-    /// Pone «Token» o «Ficha» en algún sitio (el pie o la línea de tipo).
+    /// La línea de tipo, si se reconoce (`linea_de_tipo`).
+    pub tipo: Option<String>,
+    /// Pone «Token» o «Ficha» en el pie o en la línea de tipo.
     pub ficha: bool,
+    /// Todas las líneas, sin filtrar, de arriba abajo: para buscar el nombre
+    /// original esté donde esté (`originales`) y la colección del pie.
+    pub lineas: Vec<LineaLeida>,
 }
 
 /// Lee la carta entera, a la resolución original de la imagen, y reparte las
@@ -127,11 +141,23 @@ pub struct Lectura {
 /// otro sitio. Síncrono y pesado: se llama desde un hilo aparte.
 pub fn leer_carta(datos: &Path, img: &RgbaImage) -> AppResult<Lectura> {
     let motor = motor(datos)?;
-    let mut l = Lectura::default();
-    for (texto, y) in lineas(motor, img.clone())? {
-        if es_de_ficha(&texto) {
-            l.ficha = true;
-        }
+    Ok(repartir(lineas(motor, img.clone())?))
+}
+
+/// Reparte las líneas leídas (aparte para poder probarlo sin el OCR).
+pub fn repartir(lineas: Vec<LineaLeida>) -> Lectura {
+    let mut l = Lectura {
+        tipo: linea_de_tipo(&lineas),
+        ..Lectura::default()
+    };
+    // «Ficha» en el texto de reglas («que no sea ficha») no dice nada: solo
+    // en el pie, en la línea de tipo o al principio de una línea.
+    l.ficha = l.tipo.as_deref().is_some_and(es_de_ficha)
+        || lineas.iter().any(|x| {
+            let pie = x.y > FRANJA_PIE || parece_pie(&x.texto);
+            (pie && es_de_ficha(&x.texto)) || empieza_por_ficha(&x.texto)
+        });
+    for LineaLeida { texto, y, .. } in lineas.iter().cloned() {
         if y < FRANJA_TITULO {
             let t = limpiar(&texto);
             if parece_un_nombre(&t) {
@@ -146,12 +172,91 @@ pub fn leer_carta(datos: &Path, img: &RgbaImage) -> AppResult<Lectura> {
             }
         }
     }
-    Ok(l)
+    l.lineas = lineas;
+    l
 }
 
-/// Las líneas de texto de una imagen, de arriba abajo, con la altura de su
-/// centro (0 = arriba, 1 = abajo).
-fn lineas(motor: &OcrEngine, img: RgbaImage) -> AppResult<Vec<(String, f32)>> {
+/// Las palabras de las líneas de tipo, en español y en inglés (sin tildes).
+const PALABRAS_DE_TIPO: &[&str] = &[
+    "criatura",
+    "creature",
+    "artefacto",
+    "artifact",
+    "encantamiento",
+    "enchantment",
+    "tierra",
+    "land",
+    "instantaneo",
+    "instant",
+    "conjuro",
+    "sorcery",
+    "planeswalker",
+    "batalla",
+    "battle",
+    "ficha",
+    "token",
+    "legendaria",
+    "legendario",
+    "legendary",
+    "basica",
+    "basico",
+    "basic",
+    "tribal",
+    "nieve",
+    "snow",
+    "mundo",
+    "world",
+    "aura",
+    "equipo",
+    "equipment",
+    "vehiculo",
+    "vehicle",
+    "saga",
+    "clase",
+    "class",
+    "caso",
+    "case",
+];
+
+fn palabras_normalizadas(texto: &str) -> Vec<String> {
+    crate::commands::identify::normalizar(texto)
+        .split(' ')
+        .filter(|p| !p.is_empty())
+        .map(str::to_string)
+        .collect()
+}
+
+/// ¿Es una línea de tipo? «Criatura legendaria — Dragón», «Token Creature -
+/// Goblin», o solo palabras de tipo («Artefacto»).
+pub fn es_linea_de_tipo(texto: &str) -> bool {
+    let es_de_tipo = |p: &String| PALABRAS_DE_TIPO.contains(&p.as_str());
+    if let Some(i) = texto.find(['—', '–', '-']) {
+        let izquierda = palabras_normalizadas(&texto[..i]);
+        return !izquierda.is_empty() && izquierda.len() <= 4 && izquierda.iter().all(es_de_tipo);
+    }
+    let p = palabras_normalizadas(texto);
+    !p.is_empty() && p.len() <= 4 && p.iter().all(es_de_tipo)
+}
+
+/// La línea de tipo entre el título y el pie: si hay varias candidatas, la
+/// más cercana a la mitad de la carta (donde va casi siempre).
+pub fn linea_de_tipo(lineas: &[LineaLeida]) -> Option<String> {
+    lineas
+        .iter()
+        .filter(|l| l.y >= FRANJA_TITULO && l.y <= FRANJA_PIE && es_linea_de_tipo(&l.texto))
+        .min_by(|a, b| (a.y - 0.55).abs().total_cmp(&(b.y - 0.55).abs()))
+        .map(|l| l.texto.clone())
+}
+
+/// ¿Empieza por «Ficha» o «Token»? («Ficha de criatura — Guerrero»).
+fn empieza_por_ficha(linea: &str) -> bool {
+    palabras_normalizadas(linea)
+        .first()
+        .is_some_and(|p| p == "ficha" || p == "token")
+}
+
+/// Las líneas de texto de una imagen, de arriba abajo, con su posición.
+fn lineas(motor: &OcrEngine, img: RgbaImage) -> AppResult<Vec<LineaLeida>> {
     let alto = img.height().max(1) as f32;
     let rgb = image::DynamicImage::ImageRgba8(img).into_rgb8();
     let fuente = ImageSource::from_bytes(rgb.as_raw(), rgb.dimensions()).map_err(fallo)?;
@@ -164,8 +269,14 @@ fn lineas(motor: &OcrEngine, img: RgbaImage) -> AppResult<Vec<(String, f32)>> {
         .zip(textos)
         .filter_map(|(rects, texto)| {
             let texto = texto?.to_string();
-            let y = rects.iter().map(|r| r.center().y).sum::<f32>() / rects.len().max(1) as f32;
-            Some((texto, y / alto))
+            let n = rects.len().max(1) as f32;
+            let y = rects.iter().map(|r| r.center().y).sum::<f32>() / n;
+            let letra = rects.iter().map(|r| r.height()).sum::<f32>() / n;
+            Some(LineaLeida {
+                texto,
+                y: y / alto,
+                alto: letra / alto,
+            })
         })
         .collect())
 }
@@ -299,6 +410,57 @@ mod tests {
         assert!(es_de_ficha("Ficha de artefacto -Tesoro"));
         assert!(!es_de_ficha("Fichaje"));
         assert_eq!(nombre_del_pie("TM & © 2024 Wizards of the Coast"), None);
+    }
+
+    fn linea(texto: &str, y: f32) -> LineaLeida {
+        LineaLeida {
+            texto: texto.into(),
+            y,
+            alto: 0.02,
+        }
+    }
+
+    #[test]
+    fn ficha_solo_en_el_tipo_o_el_pie() {
+        // «que no sea ficha» en las reglas no la hace ficha (Mirror Box).
+        let l = repartir(vec![
+            linea("Espejos de Izis", 0.05),
+            linea("Artefacto", 0.585),
+            linea("Cada criatura que nO sea ficha que controlas", 0.8),
+        ]);
+        assert!(!l.ficha);
+        assert_eq!(l.tipo.as_deref(), Some("Artefacto"));
+        assert_eq!(l.lineas.len(), 3);
+        // En la línea de tipo, sí.
+        let l = repartir(vec![
+            linea("Hombre-Lagarto (Kelp)", 0.05),
+            linea("Criatura ficha — Planta Muro", 0.45),
+            linea("Defensor.", 0.55),
+        ]);
+        assert!(l.ficha);
+        assert_eq!(l.tipo.as_deref(), Some("Criatura ficha — Planta Muro"));
+        assert!(!repartir(vec![linea("T 0008 Ooze", 0.96)]).ficha);
+        assert!(repartir(vec![linea("T0008 T Token", 0.96)]).ficha);
+    }
+
+    #[test]
+    fn lineas_de_tipo() {
+        for si in [
+            "Criatura legendaria — Dragón",
+            "Token Creature - Goblin",
+            "Artefacto",
+            "Legendary Artifact Creature — Golem",
+            "Encantamiento — Aura",
+        ] {
+            assert!(es_linea_de_tipo(si), "{si}");
+        }
+        for no in [
+            "Cada criatura legendaria que controlas",
+            "Will-o'-the-Wisp",
+            "La criatura equipada obtiene +2/+2.",
+        ] {
+            assert!(!es_linea_de_tipo(no), "{no}");
+        }
     }
 
     #[test]

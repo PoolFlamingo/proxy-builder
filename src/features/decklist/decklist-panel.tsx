@@ -1,4 +1,5 @@
 import {
+	Coins,
 	Download,
 	Eraser,
 	FileText,
@@ -222,13 +223,30 @@ export function DecklistPanel() {
 									</Button>
 								</WithTooltip>
 							</div>
-							<label className="flex items-center gap-2 text-xs">
-								<Checkbox
-									checked={ui.addTokens}
-									onCheckedChange={(v) => ui.setPreferencia("addTokens", v === true)}
-								/>
-								{t("Añadir tokens automáticamente")}
-							</label>
+							<div className="flex items-center justify-between gap-2">
+								<label className="flex items-center gap-2 text-xs">
+									<Checkbox
+										checked={ui.addTokens}
+										onCheckedChange={(v) => ui.setPreferencia("addTokens", v === true)}
+									/>
+									{t("Añadir tokens automáticamente")}
+								</label>
+								<WithTooltip
+									content={t(
+										"Busca las fichas que crean las cartas del deck ya cargado (también las propias vinculadas) y te deja elegir cuáles añadir.",
+									)}
+								>
+									<Button
+										size="xs"
+										variant="ghost"
+										onClick={() => useUi.getState().abrir({ tipo: "fichas" })}
+										disabled={ocupado || !hayCartas}
+									>
+										<Coins />
+										{t("Detectar fichas")}
+									</Button>
+								</WithTooltip>
+							</div>
 						</div>
 
 						<ScrollArea className="min-h-0 flex-1 border-t">
@@ -316,7 +334,7 @@ export function DecklistPanel() {
 												disabled={ocupado}
 											>
 												<Link2 />
-												{t("Vincular con Scryfall")}
+												{t("Vincular con una carta")}
 											</Button>
 										</WithTooltip>
 									</div>

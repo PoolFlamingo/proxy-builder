@@ -22,6 +22,7 @@ import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
 import { FiltrosBusqueda, idiomaParaRust } from "./filtros";
 import { RejillaCartas } from "./rejilla-cartas";
+import { traerCarta } from "./traer";
 
 /**
  * «Añadir carta»: buscar en Scryfall (con su sintaxis o por nombre, con
@@ -101,7 +102,7 @@ function Contenido({ en }: { en?: number }) {
 		if (!c) return;
 		setAnadiendo(true);
 		try {
-			const base = await call("card_fetch", { scryfallId: c.id });
+			const base = await traerCarta(c);
 			const copias = Array.from({ length: Math.max(1, cantidad) }, (_, i) =>
 				i === 0 ? base : { ...base, id: nuevoId() },
 			);

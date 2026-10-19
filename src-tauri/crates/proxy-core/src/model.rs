@@ -78,9 +78,35 @@ pub enum CardSource {
         )]
         #[ts(rename = "scryfallId", optional)]
         scryfall_id: Option<String>,
+        /// O vinculada a una carta de **otra fuente** (una ficha de Cockatrice
+        /// que Scryfall no tiene: «Kelp»). Es también lo que es una carta
+        /// añadida desde esa fuente: una propia con la imagen bajada de allí.
+        /// Un campo opcional (no una variante nueva) para que una versión
+        /// anterior de la app siga abriendo el deck: la ve como propia.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        externa: Option<RefExterna>,
     },
     /// Un hueco en blanco (lo que deja «+ Añadir página»).
     Blank,
+}
+
+/// De dónde sale una carta que no es de Scryfall.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum FuenteCarta {
+    /// La base de fichas de Cockatrice (`Cockatrice/Magic-Token`).
+    Cockatrice,
+}
+
+/// Una carta de otra fuente: la fuente y su id allí.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct RefExterna {
+    pub fuente: FuenteCarta,
+    pub id: String,
 }
 
 /// Qué va al dorso de la carta cuando se imprime a doble cara.
@@ -199,6 +225,13 @@ pub struct CardMeta {
     pub image_status: Option<String>,
     pub highres: bool,
     pub type_line: Option<String>,
+    /// En las cartas propias, el idioma de **la imagen**, que no tiene por qué
+    /// ser el de la carta vinculada (`lang`): una propia en español vinculada
+    /// a la impresión inglesa. Lo pone quien vincula (el pie leído por el OCR)
+    /// o se elige en «Editar carta».
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub image_lang: Option<String>,
 }
 
 /// Una copia física del deck.

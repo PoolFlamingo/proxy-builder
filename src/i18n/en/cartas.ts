@@ -50,4 +50,6 @@ export const CARTAS: Record<string, string> = {
 	"Reemplazar solo esta": "Replace only this one",
 	"Variante cambiada en todas las copias de {carta}": "Printing changed on every copy of {carta}",
 	"Variante cambiada": "Printing changed",
+	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)":
+		"Token Scryfall doesn't have (Cockatrice token database)",
 };

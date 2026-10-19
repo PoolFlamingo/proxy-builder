@@ -1,4 +1,6 @@
+import type { CardSource } from "@/bindings/CardSource";
 import type { DeckCard } from "@/bindings/DeckCard";
+import type { FuenteCarta } from "@/bindings/FuenteCarta";
 import { call } from "@/lib/ipc";
 import { useDeck } from "@/stores/deck-store";
 
@@ -11,18 +13,42 @@ import { useDeck } from "@/stores/deck-store";
 
 const esPropia = (c: DeckCard) => c.source.kind === "custom";
 
-/** Vincula la carta `id` (y las copias con su misma imagen) con `scryfallId`. */
-export async function vincular(id: string, scryfallId: string): Promise<string> {
-	const meta = await call("card_link", { scryfallId });
+/** La carta con la que se vincula: un id de Scryfall o una de otra fuente. */
+export type Destino = string | { id: string; fuente?: FuenteCarta | null };
+
+/**
+ * Vincula la carta `id` (y las copias con su misma imagen) con `destino`: un
+ * id de Scryfall o una carta de otra fuente (una ficha de Cockatrice).
+ * `idiomaImagen`: el idioma de la imagen si se sabe (el pie leído por el
+ * OCR); si no, se queda el que tuviera.
+ */
+export async function vincular(
+	id: string,
+	destino: Destino,
+	idiomaImagen?: string | null,
+): Promise<string> {
+	const d = typeof destino === "string" ? { id: destino, fuente: null } : destino;
+	const meta = d.fuente
+		? await call("card_link_externa", { fuente: d.fuente, id: d.id })
+		: await call("card_link", { scryfallId: d.id });
+	const source: CardSource = d.fuente
+		? { kind: "custom", externa: { fuente: d.fuente, id: d.id } }
+		: { kind: "custom", scryfallId: d.id };
 	const blob = useDeck.getState().deck?.cards.find((c) => c.id === id)?.front?.blob;
 	useDeck.getState().setCartas((cs) =>
 		cs.map((c) =>
 			esPropia(c) && (c.id === id || (blob && c.front?.blob === blob))
 				? {
 						...c,
-						source: { kind: "custom", scryfallId },
-						// La imagen es propia: su estado no es el de Scryfall.
-						meta: { ...meta, imageStatus: null, highres: c.meta.highres, langFallback: false },
+						source,
+						// La imagen es propia: su estado y su idioma no son los de Scryfall.
+						meta: {
+							...meta,
+							imageStatus: null,
+							highres: c.meta.highres,
+							langFallback: false,
+							imageLang: idiomaImagen ?? c.meta.imageLang,
+						},
 					}
 				: c,
 		),
@@ -55,4 +81,5 @@ export function propiasPorImagen(ids?: string[]): DeckCard[] {
 	return [...porImagen.values()];
 }
 
-export const estaVinculada = (c: DeckCard) => c.source.kind === "custom" && !!c.source.scryfallId;
+export const estaVinculada = (c: DeckCard) =>
+	c.source.kind === "custom" && (!!c.source.scryfallId || !!c.source.externa);
