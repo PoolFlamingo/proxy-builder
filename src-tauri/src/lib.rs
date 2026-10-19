@@ -47,6 +47,17 @@ pub fn run() {
             .build(),
     );
 
+    // En cuanto la página ha cargado, la ventana se enseña (con su fondo
+    // oscuro, sin destello blanco). No se espera a que pinte la pantalla:
+    // WebKitGTK no da fotogramas (`requestAnimationFrame`) a una ventana
+    // oculta, y entonces solo salía a los 3 segundos.
+    #[cfg(desktop)]
+    let constructor = constructor.on_page_load(|webview, payload| {
+        if payload.event() == tauri::webview::PageLoadEvent::Finished {
+            let _ = webview.window().show();
+        }
+    });
+
     // El protocolo de imágenes: la vista previa pide aquí cada miniatura.
     let constructor = constructor
         .register_asynchronous_uri_scheme_protocol(protocol::ESQUEMA, protocol::manejador);
@@ -62,8 +73,8 @@ pub fn run() {
             registro::iniciar(&rutas.app_log_dir()?);
             let estado = state::AppState::open(paths).map_err(|e| e.to_string())?;
             app.manage(estado);
-            // Por si la pantalla no llega a enseñar la ventana (un error al
-            // cargar): a los 3 segundos, se enseña igual.
+            // Por si la página no llega a cargar: a los 3 segundos, se enseña
+            // igual.
             let app2 = app.handle().clone();
             std::thread::spawn(move || {
                 std::thread::sleep(std::time::Duration::from_secs(3));

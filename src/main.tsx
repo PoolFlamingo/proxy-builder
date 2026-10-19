@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipsNativos } from "@/components/tooltips-nativos";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ponerTemaAntesDeMontar } from "@/lib/tema-inicial";
 import { prepararTemasInstalados } from "@/lib/temas-instalados";
 import App from "./App";
 import "./index.css";
@@ -22,20 +23,22 @@ if (!import.meta.env.DEV) {
 
 // Antes de montar: el `ThemeProvider` solo acepta un tema que esté en `THEMES`.
 prepararTemasInstalados();
+// Y el tema ya puesto en `<html>`: la ventana se enseña enseguida y el primer
+// pintado tiene que salir con sus colores, no con los claros por defecto.
+ponerTemaAntesDeMontar();
 
 const raiz = document.getElementById("root");
 if (!raiz) throw new Error("Falta el elemento #root en index.html");
 
-// La ventana arranca oculta (`tauri.conf.json`): se enseña cuando la pantalla
-// ya está pintada con su tema, sin el destello blanco del primer fotograma.
+// La ventana arranca oculta y con fondo oscuro (`tauri.conf.json`). Se enseña
+// ya, sin esperar a que pinte: WebKitGTK no da fotogramas
+// (`requestAnimationFrame`) a una ventana oculta y entonces salía a los 3
+// segundos. No hay destello blanco porque el tema ya está puesto
+// (`ponerTemaAntesDeMontar`). Rust también la enseña al cargar la página.
 function ensenarVentana() {
-	requestAnimationFrame(() =>
-		requestAnimationFrame(() => {
-			import("@tauri-apps/api/window")
-				.then(({ getCurrentWindow }) => getCurrentWindow().show())
-				.catch(() => {});
-		}),
-	);
+	import("@tauri-apps/api/window")
+		.then(({ getCurrentWindow }) => getCurrentWindow().show())
+		.catch(() => {});
 }
 
 ReactDOM.createRoot(raiz).render(
