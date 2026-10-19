@@ -18,6 +18,7 @@ const TONOS = {
 	info: "bg-sky-600/90 text-white",
 	aviso: "bg-amber-500/90 text-black",
 	error: "bg-red-600/90 text-white",
+	marca: "bg-violet-600/90 text-white",
 } as const;
 
 /**

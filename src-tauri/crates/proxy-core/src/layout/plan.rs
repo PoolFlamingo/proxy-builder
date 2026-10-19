@@ -584,6 +584,7 @@ mod tests {
             locked: false,
             meta: CardMeta::default(),
             design: None,
+            marca: None,
         }
     }
 

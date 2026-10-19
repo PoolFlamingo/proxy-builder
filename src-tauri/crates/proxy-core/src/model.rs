@@ -254,6 +254,75 @@ pub struct DeckCard {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub design: Option<crate::diseno::modelo::CardDesign>,
+    /// Una marca fija para organizar el deck (no cambia lo que se imprime):
+    /// variante de diseño, opcional o banquillo. Las marcadas no cuentan para
+    /// el tamaño del mazo, las copias ni las estadísticas (`cuentan`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub marca: Option<MarcaCarta>,
+}
+
+/// Las marcas fijas de una carta del deck.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum MarcaCarta {
+    /// Otra versión (de diseño, de arte…) de una carta que ya está: se
+    /// escogerá una. De las copias de esa carta solo cuenta una.
+    Variante,
+    /// Puede ir o no: no cuenta.
+    Opcional,
+    /// Del banquillo (sideboard): no cuenta para el mazo.
+    Banquillo,
+}
+
+/// Cuántas copias se quedan fuera de las cuentas del mazo por su marca.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct Apartadas {
+    pub variantes: u32,
+    pub opcionales: u32,
+    pub banquillo: u32,
+}
+
+impl Apartadas {
+    pub fn total(&self) -> u32 {
+        self.variantes + self.opcionales + self.banquillo
+    }
+}
+
+/// Las copias que cuentan para el mazo (tamaño, copias, estadísticas) y las
+/// que se quedan fuera. Sin las opcionales ni las del banquillo; de las
+/// variantes de diseño, ninguna si la carta también está sin marcar, y una
+/// si todas sus copias son variantes (es la carta que irá, falta escoger
+/// cuál).
+pub fn cuentan(cards: &[DeckCard]) -> (Vec<&DeckCard>, Apartadas) {
+    let mut ap = Apartadas::default();
+    let nombre = |c: &DeckCard| c.meta.name.trim().to_lowercase();
+    let sin_marcar: std::collections::HashSet<String> = cards
+        .iter()
+        .filter(|c| c.marca.is_none())
+        .map(nombre)
+        .collect();
+    let mut variante_puesta: std::collections::HashSet<String> = Default::default();
+    let mut out = Vec::new();
+    for c in cards {
+        match c.marca {
+            None => out.push(c),
+            Some(MarcaCarta::Opcional) => ap.opcionales += 1,
+            Some(MarcaCarta::Banquillo) => ap.banquillo += 1,
+            Some(MarcaCarta::Variante) => {
+                let n = nombre(c);
+                if !sin_marcar.contains(&n) && variante_puesta.insert(n) {
+                    out.push(c);
+                } else {
+                    ap.variantes += 1;
+                }
+            }
+        }
+    }
+    (out, ap)
 }
 
 // ── Ajustes de impresión ────────────────────────────────────────────────────
@@ -555,6 +624,50 @@ pub struct Deck {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn copia(nombre: &str, marca: Option<MarcaCarta>) -> DeckCard {
+        DeckCard {
+            id: nombre.into(),
+            source: CardSource::Blank,
+            front: None,
+            back: BackSpec::DeckDefault,
+            edits: CardEdits::default(),
+            locked: false,
+            meta: CardMeta {
+                name: nombre.into(),
+                ..CardMeta::default()
+            },
+            design: None,
+            marca,
+        }
+    }
+
+    #[test]
+    fn las_marcadas_no_cuentan() {
+        use MarcaCarta::*;
+        let cartas = vec![
+            copia("Sol Ring", None),
+            // Variante de una que ya está: no cuenta.
+            copia("Sol Ring", Some(Variante)),
+            // Solo variantes: cuenta una.
+            copia("Yusri", Some(Variante)),
+            copia("yusri", Some(Variante)),
+            copia("Counterspell", Some(Opcional)),
+            copia("Pyroblast", Some(Banquillo)),
+        ];
+        let (dentro, ap) = cuentan(&cartas);
+        let nombres: Vec<&str> = dentro.iter().map(|c| c.meta.name.as_str()).collect();
+        assert_eq!(nombres, ["Sol Ring", "Yusri"]);
+        assert_eq!(
+            ap,
+            Apartadas {
+                variantes: 2,
+                opcionales: 1,
+                banquillo: 1
+            }
+        );
+        assert_eq!(ap.total(), 4);
+    }
 
     #[test]
     fn los_ajustes_por_defecto_son_los_de_fabricard() {

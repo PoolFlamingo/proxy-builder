@@ -251,6 +251,9 @@ pub struct Bracket {
 #[ts(export)]
 pub struct DeckStats {
     pub kind: DeckKind,
+    /// Las copias que no cuentan por su marca (variantes de diseño de más,
+    /// opcionales y banquillo): no están en nada de lo de abajo.
+    pub set_aside: crate::model::Apartadas,
     /// La que se deduce del deck (la elegida puede ser otra).
     pub detected_kind: DeckKind,
     /// Copias con datos, sin tokens.
@@ -898,6 +901,7 @@ pub fn stats(entrada: &[StatInput], kind: Option<DeckKind>) -> DeckStats {
     sets_v.sort_by(|a, b| b.count.cmp(&a.count).then(a.code.cmp(&b.code)));
 
     DeckStats {
+        set_aside: crate::model::Apartadas::default(),
         kind,
         detected_kind: detectada,
         cards: cartas,

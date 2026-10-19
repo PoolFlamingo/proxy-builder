@@ -420,6 +420,7 @@ mod tests {
                 ..Default::default()
             },
             design: None,
+            marca: None,
         }
     }
 

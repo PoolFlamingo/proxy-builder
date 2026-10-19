@@ -1,4 +1,4 @@
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Tag } from "lucide-react";
 import { useState } from "react";
 import type { DeckStats } from "@/bindings/DeckStats";
 import { useLang } from "@/components/language-provider";
@@ -83,6 +83,20 @@ export function Resumen({ s, moneda }: { s: DeckStats; moneda: Moneda }) {
 					/>
 				)}
 			</div>
+
+			{s.setAside.variantes + s.setAside.opcionales + s.setAside.banquillo > 0 && (
+				<p className="flex items-center gap-1.5 rounded-lg border bg-muted/40 p-2.5 text-xs text-muted-foreground">
+					<Tag className="size-3.5 shrink-0" />
+					{t(
+						"Aparte, por su marca (no cuentan aquí): {v} variantes de diseño, {o} opcionales y {b} en el banquillo.",
+						{
+							v: s.setAside.variantes,
+							o: s.setAside.opcionales,
+							b: s.setAside.banquillo,
+						},
+					)}
+				</p>
+			)}
 
 			{(s.unknown > 0 || s.problems.length > 0) && (
 				<div className="flex flex-col gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/5 p-2.5">

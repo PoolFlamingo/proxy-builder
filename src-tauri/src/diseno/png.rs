@@ -189,6 +189,7 @@ mod tests {
             locked: false,
             meta: CardMeta::default(),
             design: None,
+            marca: None,
         };
         let datos = CardData {
             scryfall_id: "x".into(),

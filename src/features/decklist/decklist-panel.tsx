@@ -457,6 +457,7 @@ function PiePanel() {
 	const { t } = useLang();
 	const trabajo = useTrabajo((s) => s.actual);
 	const cartas = useDeck((s) => s.deck?.cards.length ?? 0);
+	const marcadas = useDeck((s) => s.deck?.cards.filter((c) => c.marca).length ?? 0);
 	const hojas = usePlan((s) => s.plan?.sheets ?? 0);
 	const ultima = useUi((s) => s.ultimaAccion);
 	const [visible, setVisible] = useState(ultima);
@@ -494,6 +495,18 @@ function PiePanel() {
 				<div className="flex items-center gap-2">
 					<span className="font-medium">
 						{t("{n} cartas · {p} hojas", { n: cartas, p: hojas })}
+						{marcadas > 0 && (
+							<WithTooltip
+								content={t(
+									"Marcadas como variante de diseño, opcional o banquillo: se imprimen, pero no cuentan para el mazo.",
+								)}
+							>
+								<span className="text-muted-foreground">
+									{" "}
+									· {t("{n} marcadas", { n: marcadas })}
+								</span>
+							</WithTooltip>
+						)}
 					</span>
 					{visible && (
 						<span className="min-w-0 flex-1 truncate text-right text-muted-foreground">

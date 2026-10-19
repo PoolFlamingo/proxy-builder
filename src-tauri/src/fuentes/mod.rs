@@ -378,6 +378,7 @@ pub async fn carta_cockatrice(state: &AppState, id: &str) -> AppResult<DeckCard>
                     locked: false,
                     meta: meta_cockatrice(&f),
                     design: None,
+                    marca: None,
                 });
             }
             Err(e) => error = e,

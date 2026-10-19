@@ -139,10 +139,13 @@ pub(crate) async fn calcular<A: CardApi>(
     cards: &[DeckCard],
     kind: Option<DeckKind>,
 ) -> AppResult<DeckStats> {
+    // Solo lo que entra en el mazo: las marcadas como opcionales, banquillo o
+    // variantes de diseño de más se cuentan aparte.
+    let (cards, apartadas) = proxy_core::model::cuentan(cards);
     let mut datos: HashMap<String, ScryCard> = HashMap::new();
     let mut pedir: Vec<String> = Vec::new();
     let ahora = crate::store::ahora_ms();
-    for c in cards {
+    for c in cards.iter().copied() {
         let Some(id) = id_scryfall(c) else {
             continue;
         };
@@ -224,6 +227,7 @@ pub(crate) async fn calcular<A: CardApi>(
 
     let entrada: Vec<StatInput> = cards
         .iter()
+        .copied()
         .filter(|c| !matches!(c.source, CardSource::Blank))
         .map(|c| {
             let es_token = matches!(c.source, CardSource::Token { .. });
@@ -258,7 +262,9 @@ pub(crate) async fn calcular<A: CardApi>(
             }
         })
         .collect();
-    Ok(stats(&entrada, kind))
+    let mut s = stats(&entrada, kind);
+    s.set_aside = apartadas;
+    Ok(s)
 }
 
 #[cfg(test)]
@@ -359,6 +365,7 @@ mod tests {
                 ..CardMeta::default()
             },
             design: None,
+            marca: None,
         }
     }
 
@@ -648,6 +655,44 @@ mod tests {
         assert_eq!(st.unknown, 1);
         assert_eq!(st.unknown_cards[0].name, "Propia 4");
         assert_eq!(st.deck_size, 2);
+    }
+
+    #[tokio::test]
+    async fn las_cartas_marcadas_no_cuentan_para_el_mazo() {
+        use proxy_core::model::MarcaCarta;
+        let db = Db::in_memory().unwrap();
+        let a = api(Vec::new());
+        let propia = || CardSource::Custom {
+            scryfall_id: None,
+            externa: None,
+        };
+        let mut cartas: Vec<DeckCard> = (0..100).map(|i| copia(&i.to_string(), propia())).collect();
+        // Una variante de diseño de la primera, una opcional y una del
+        // banquillo: el Commander sigue siendo de 100.
+        let mut variante = copia("0", propia());
+        variante.marca = Some(MarcaCarta::Variante);
+        let mut opcional = copia("opc", propia());
+        opcional.marca = Some(MarcaCarta::Opcional);
+        let mut banquillo = copia("sb", propia());
+        banquillo.marca = Some(MarcaCarta::Banquillo);
+        cartas.extend([variante, opcional, banquillo]);
+        let st = calcular(&db, &a, &cartas, Some(DeckKind::Commander))
+            .await
+            .unwrap();
+        assert_eq!(st.deck_size, 100);
+        assert!(
+            !st.problems.iter().any(|p| p.code == "size"),
+            "{:?}",
+            st.problems
+        );
+        assert_eq!(
+            (
+                st.set_aside.variantes,
+                st.set_aside.opcionales,
+                st.set_aside.banquillo
+            ),
+            (1, 1, 1)
+        );
     }
 
     #[tokio::test]
