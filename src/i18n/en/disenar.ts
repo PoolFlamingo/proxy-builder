@@ -382,4 +382,12 @@ export const DISENAR: Record<string, string> = {
 	"Añadir al deck": "Add to the deck",
 	"{nombre} (descargar)": "{nombre} (download)",
 	"Descargando el pack: {hechas} de {total}": "Downloading the pack: {hechas} of {total}",
+	"Tamaño del texto e interlineado": "Text size and line spacing",
+	"Cada texto en proporción al del marco (100 % = como viene). Más pequeñas, las reglas dejan más sitio al arte en los marcos con la caja que crece.":
+		"Each text relative to the frame's (100 % = as it comes). Smaller rules text leaves more room for the art in frames whose box grows.",
+	"Reglas: tamaño automático": "Rules: automatic size",
+	"La letra baja lo justo para que quepa y, en los marcos con la caja que crece, un poco antes de comerse el arte. Apagado, las reglas van al tamaño que elijas y la caja crece lo que haga falta.":
+		"The text shrinks just enough to fit and, in frames whose box grows, a little before it eats the art. Off, rules text uses the size you choose and the box grows as needed.",
+	"Interlineado de las reglas": "Rules line spacing",
+	"Interlineado del pie": "Footer line spacing",
 };

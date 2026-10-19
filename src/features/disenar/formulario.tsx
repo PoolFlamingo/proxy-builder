@@ -874,7 +874,16 @@ function PestanaMarco({
 			<div className={cn(!propio && "pointer-events-none opacity-60")}>
 				<EditorMarco
 					marco={marco}
-					onChange={(m) => cambiar((d) => ({ ...d, frame: m }))}
+					onChange={(m) =>
+						cambiar((d) => ({
+							...d,
+							frame: m,
+							// Un estilo propio que el pack nuevo no tiene: al de serie.
+							estiloPack: propiosDe(packs, m.pack).some((e) => e.id === d.estiloPack)
+								? d.estiloPack
+								: undefined,
+						}))
+					}
 					packs={packs}
 				/>
 			</div>

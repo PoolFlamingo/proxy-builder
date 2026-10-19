@@ -4,7 +4,7 @@
 		{
 			"id": "balatro",
 			"nombre": "Balatro",
-			"commit": "b3ce21312572ed6f19cc94ba41ef6339f73282ef",
+			"commit": "8a71dd17f64c8eb5349fbc290dc860ea5d1bb2dc",
 			"carpeta": "balatro/",
 			"ficheros": {
 				"labels/bonus.png": "6e21af4dd3d0b8fbe10ba6456e386ea9c0da0c7867522c5196e7d592e06bd030",
@@ -103,7 +103,7 @@
 				"layers/voucher/frame__typeline__typeline.png": "1939c29ba76080da5b12fd5345a113a3e4010115ee8de245d6b1f63f513e1119",
 				"layers/voucher/layer-26.png": "8d46edd9a013d70a586a707bd91903ef407530e07471d56f1b85538031f4bfd4",
 				"layers/voucher/layer-41.png": "a131a454240e5a96c02fda58457bf67fc366d1dd6655bfe0ee58dfd8e5720cdb",
-				"pack.json": "fdd63f0b09b4c1922ffe37066efdd1b75f3a8faaffb9d2e2ba01f349255f9b4c",
+				"pack.json": "3b731d661ee2e8ce05ea871106f246be587675827448cdbbe1e5362e47c55ed8",
 				"symbols/0.png": "016b05bb50656d9cf24119d999ca8200472953e7e0a9e7a7e93958ece5fedb62",
 				"symbols/1.png": "b334ddfbe07e880e29182f14c9c18e13398613873a72c50d4d36cbe3bdc89d38",
 				"symbols/10.png": "845335ec4609edcd701ff22caed09e9f9712827793369332c32d4209889811fd",

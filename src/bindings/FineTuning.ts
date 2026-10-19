@@ -21,4 +21,17 @@ artRadius?: number,
  * Radio (mm) de las esquinas de la carta (`None` = redondeadas en
  * pantalla y en ángulo recto al imprimir). Con él, igual en las dos.
  */
-cardRadius?: number, };
+cardRadius?: number, 
+/**
+ * Tamaño de cada texto en proporción al del marco (`None` = 1, el del
+ * marco). En las reglas, `None` es «automático»: en las cajas que
+ * crecen, la letra baja un poco antes de comerse el arte; con un valor,
+ * la letra es esa y la caja crece lo que haga falta (y solo baja si ni
+ * al máximo cabe). El título y el tipo se estrechan como siempre.
+ */
+titleSize?: number, typeSize?: number, rulesSize?: number, ptSize?: number, footerSize?: number, 
+/**
+ * Interlineado de las reglas y del pie, en proporción al del marco
+ * (`None` = 1).
+ */
+rulesLineSpacing?: number, footerLineSpacing?: number, };

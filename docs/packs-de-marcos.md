@@ -269,6 +269,10 @@ y de la colección mientras el pack esté elegido.
   el mismo id, lo usan.
 - **`layoutSi`**: layouts que se eligen solos por la carta; gana la primera
   regla que se cumpla.
+- **`caja.altoComodo`** (en cualquier estilo con caja que crece): hasta
+  dónde crece la caja antes de bajar la letra (hasta el 75 %). Así un texto
+  largo no se come el arte. Si la carta pide un tamaño de reglas a mano (en
+  los ajustes finos), manda ese.
 - **`fondo`**: capas que se pintan **debajo** de la ilustración (el papel de
   una carta cuyo arte no la llena). Un layout también puede traer `fondo`.
 
@@ -295,6 +299,14 @@ Además de `corona`, `fr`, `cinta` y `emblema`:
 | `mezcla` | `normal`, `oscurecer` o `multiplicar`. |
 | `opacidad` | De 0 a 1. |
 | `tramos` | `[arriba, abajo]` en mm: esos trozos de arriba y de abajo se pintan sin deformar y solo se estira lo de en medio (una caja con esquinas que crece). |
+| `cajaReglas` | `true` y una zona `en`, sin `png` ni `svg`: ahí se pinta el tinte de la caja de reglas cuando el diseño pide una caja oscura, clara o de otro tinte (para los marcos de imagen, que traen la caja pintada). Con ella, el texto de las reglas toma el color que se lee encima. Va en su sitio de la lista de capas (encima del marco y debajo de la caja de F/R, por ejemplo). |
+
+En los marcos de imagen, un **degradado** elegido a mano pinta la capa de
+cada color fundiendo la segunda de izquierda a derecha (entre el 35 % y el
+65 % del ancho), y un **color propio** tiñe la capa del color neutro
+(`colorless`) conservando sus luces y sombras. Solo las capas con `{color}`
+en la ruta. Las cartas de dos colores en automático siguen en oro, como las
+de verdad.
 
 La zona `en` de una capa PNG admite las mismas expresiones que los huecos
 (`"y": "yTipo+1.6"`, `"h": "80-yTipo"`): así la barra del tipo y la caja de
