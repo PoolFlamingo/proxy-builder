@@ -142,3 +142,30 @@ function Estado() {
 						: null;
 	return texto && <p className="text-xs font-medium">{texto}</p>;
 }
+
+/**
+ * En la cabecera de Ajustes, a mano, mientras haya una versión bajada:
+ * reiniciar la app con ella.
+ */
+export function ReiniciarParaActualizar() {
+	const { t, mensaje } = useLang();
+	const paso = useActualizacion((s) => s.paso);
+	const info = useActualizacion((s) => s.info);
+	if ((paso !== "lista" && paso !== "instalando") || !info) return null;
+	return (
+		<Button
+			size="xs"
+			onClick={() => {
+				toast.dismiss("actualizacion");
+				useActualizacion
+					.getState()
+					.instalar()
+					.catch((e) => toast.error(mensaje(e)));
+			}}
+			disabled={paso === "instalando"}
+		>
+			{paso === "instalando" ? <Loader2 className="animate-spin" /> : <ArrowUpCircle />}
+			{t("Reiniciar y actualizar a la {version}", { version: info.version })}
+		</Button>
+	);
+}

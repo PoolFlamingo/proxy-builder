@@ -5,6 +5,7 @@ import type { ActualizacionInfo } from "@/bindings/ActualizacionInfo";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { WithTooltip } from "@/components/ui/with-tooltip";
+import { cn } from "@/lib/utils";
 import { useActualizacion } from "@/stores/actualizacion-store";
 import { useUi } from "@/stores/ui-store";
 
@@ -14,15 +15,14 @@ const CADA_MS = 6 * 60 * 60 * 1000;
 
 /**
  * Si está encendido en Ajustes (lo está de fábrica): busca una versión nueva
- * al arrancar y cada 6 horas, la baja sin molestar y avisa para reiniciar.
- * Sin red o sin release no dice nada.
+ * al arrancar y cada 6 horas y la baja sin molestar (los avisos, en
+ * `useAvisosActualizacion`). Sin red o sin release no dice nada.
  */
 export function useActualizacionAutomatica() {
 	const lang = useLang();
 	const textos = useRef(lang);
 	textos.current = lang;
 	const activa = useUi((s) => s.actualizarSola);
-	const avisada = useRef<string | null>(null);
 
 	useEffect(() => {
 		if (!activa) return;
@@ -32,10 +32,8 @@ export function useActualizacionAutomatica() {
 			if (!(await a.iniciar()) || !viva) return;
 			const info = await a.buscar();
 			if (!info || !viva) return;
-			if (!(await useActualizacion.getState().bajar()) || !viva) return;
-			if (avisada.current === info.version) return;
-			avisada.current = info.version;
-			avisar(info, textos.current);
+			// Los avisos los pone `useAvisosActualizacion`.
+			await useActualizacion.getState().bajar();
 		};
 		const primera = setTimeout(ronda, PRIMERA_MS);
 		const cada = setInterval(ronda, CADA_MS);
@@ -47,9 +45,44 @@ export function useActualizacionAutomatica() {
 	}, [activa]);
 }
 
+/**
+ * Los avisos de la actualización, se baje sola o desde Ajustes: uno mientras
+ * se descarga (con el porcentaje) que pasa a «lista, reiniciar» al terminar,
+ * y otro si la descarga falla. Va montado una vez en `App`.
+ */
+export function useAvisosActualizacion() {
+	const lang = useLang();
+	const textos = useRef(lang);
+	textos.current = lang;
+	useEffect(() => {
+		let avisada: string | null = null;
+		return useActualizacion.subscribe((s, antes) => {
+			const { t, mensaje } = textos.current;
+			const info = s.info;
+			if (!info) return;
+			if (s.paso === "bajando" && (antes.paso !== "bajando" || s.progreso !== antes.progreso)) {
+				toast.loading(t("Descargando Proxy Builder {version}…", { version: info.version }), {
+					id: ID_AVISO,
+					description: s.progreso !== null ? `${s.progreso} %` : undefined,
+				});
+			} else if (s.paso === "lista" && antes.paso === "bajando" && avisada !== info.version) {
+				avisada = info.version;
+				avisar(info, textos.current);
+			} else if (s.paso === "disponible" && antes.paso === "bajando") {
+				toast.error(t("No se ha podido descargar la actualización."), {
+					id: ID_AVISO,
+					description: s.error ? mensaje(s.error) : undefined,
+				});
+			}
+		});
+	}, []);
+}
+
+const ID_AVISO = "actualizacion";
+
 function avisar(info: ActualizacionInfo, { t, mensaje }: ReturnType<typeof useLang>) {
-	toast(t("Proxy Builder {version} está lista", { version: info.version }), {
-		id: "actualizacion",
+	toast.success(t("Proxy Builder {version} está lista", { version: info.version }), {
+		id: ID_AVISO,
 		duration: Number.POSITIVE_INFINITY,
 		description: info.pidePermiso
 			? t("Se instala al reiniciar; el sistema pedirá tu contraseña.")
@@ -73,7 +106,7 @@ export function BotonActualizar() {
 	const info = useActualizacion((s) => s.info);
 	if ((paso !== "lista" && paso !== "instalando") || !info) return null;
 	const instalar = () => {
-		toast.dismiss("actualizacion");
+		toast.dismiss(ID_AVISO);
 		useActualizacion
 			.getState()
 			.instalar()
@@ -97,4 +130,34 @@ export function BotonActualizar() {
 			</Button>
 		</WithTooltip>
 	);
+}
+
+/**
+ * El puntito sobre el botón de Ajustes: ámbar y latiendo mientras se baja una
+ * versión nueva; del color de la app cuando está lista para instalarse.
+ */
+export function PuntoActualizacion() {
+	const paso = useActualizacion((s) => s.paso);
+	if (paso !== "bajando" && paso !== "lista" && paso !== "instalando") return null;
+	return (
+		<span
+			aria-hidden
+			className={cn(
+				"absolute top-1 right-1 size-2 rounded-full ring-2 ring-background",
+				paso === "bajando" ? "animate-pulse bg-amber-500" : "bg-primary",
+			)}
+		/>
+	);
+}
+
+/** Lo que dice el botón de Ajustes mientras hay una actualización en marcha. */
+export function useAvisoAjustes(): string | null {
+	const { t } = useLang();
+	const paso = useActualizacion((s) => s.paso);
+	const info = useActualizacion((s) => s.info);
+	if (!info) return null;
+	if (paso === "bajando") return t("Descargando la {version}…", { version: info.version });
+	if (paso === "lista" || paso === "instalando")
+		return t("La {version} está lista: reinicia desde Ajustes.", { version: info.version });
+	return null;
 }
