@@ -218,13 +218,35 @@ fn colores_marco(e: &DisenoEfectivo, cara: usize, pack: &Pack) -> (Tonos, Option
     }
 }
 
-/// La paleta de los marcos de imagen (`{color}` de las capas PNG): los de
-/// dos colores y los de color propio no tienen imagen propia y van en oro,
-/// como las cartas multicolor de verdad.
+/// La paleta de los marcos de imagen (`{color}` de las capas PNG). Las
+/// cartas de dos colores van en oro, como las multicolor de verdad.
 pub(super) fn clave_marco(e: &DisenoEfectivo, cara: usize) -> &'static str {
+    if let FrameColor::Gradient { a, .. } = &e.frame.color {
+        return clave_paleta(*a);
+    }
     match eleccion_marco(e, cara) {
         Eleccion::Una(p) => clave_paleta(p),
-        Eleccion::Dos(..) | Eleccion::Propio(_) => "gold",
+        Eleccion::Dos(..) => "gold",
+        // Se tiñe el marco neutro (`marco_png`).
+        Eleccion::Propio(_) => "colorless",
+    }
+}
+
+/// Lo que piden a los marcos de imagen un degradado o un color propio
+/// elegidos a mano: la segunda paleta (se funde de izquierda a derecha) o el
+/// color con que se tiñe el marco neutro.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(super) enum ExtraMarco {
+    Nada,
+    Degradado(&'static str),
+    Tinte([u8; 4]),
+}
+
+pub(super) fn extra_marco(e: &DisenoEfectivo) -> ExtraMarco {
+    match &e.frame.color {
+        FrameColor::Gradient { b, .. } => ExtraMarco::Degradado(clave_paleta(*b)),
+        FrameColor::Custom { hex } => ExtraMarco::Tinte(rgba(hex).unwrap_or([128, 128, 128, 255])),
+        _ => ExtraMarco::Nada,
     }
 }
 
@@ -789,6 +811,41 @@ pub(super) mod imagenes_png {
     }
 }
 
+/// La segunda imagen de un marco en degradado: transparente a la izquierda y
+/// entera a la derecha, con el paso entre el 35 % y el 65 % del ancho de la
+/// carta (como el degradado de los marcos SVG). `x0`: dónde empieza la imagen
+/// en el lienzo (px); `k`: px por mm.
+fn fundir_a_la_derecha(img: &mut RgbaImage, x0: f32, k: f32) {
+    let (a, b) = (63.0 * 0.35 * k, 63.0 * 0.65 * k);
+    for (x, _, p) in img.enumerate_pixels_mut() {
+        let t = ((x0 + x as f32 - a) / (b - a)).clamp(0.0, 1.0);
+        p.0[3] = (f32::from(p.0[3]) * t).round() as u8;
+    }
+}
+
+/// Tiñe una imagen de un color conservando sus luces y sombras (fusión
+/// «superponer» de la luminosidad con el color): la textura del marco neutro
+/// queda del color pedido.
+fn tenir(img: &mut RgbaImage, color: [u8; 4]) {
+    let c = color.map(|v| f32::from(v) / 255.0);
+    for p in img.pixels_mut() {
+        let [r, g, b, _] = p.0.map(|v| f32::from(v) / 255.0);
+        let l = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        for (canal, ci) in p.0.iter_mut().zip(c).take(3) {
+            let v = if l < 0.5 {
+                2.0 * l * ci
+            } else {
+                1.0 - 2.0 * (1.0 - l) * (1.0 - ci)
+            };
+            *canal = (v.clamp(0.0, 1.0) * 255.0).round() as u8;
+        }
+    }
+}
+
+/// Hasta dónde baja la letra de las reglas antes de que la caja que crece pase
+/// de su altura cómoda (`altoComodo`).
+const LETRA_COMODA: f32 = 0.75;
+
 /// Un pixmap (premultiplicado) a imagen RGBA.
 pub(super) fn de_pixmap(p: &Pixmap) -> RgbaImage {
     let mut img = RgbaImage::new(p.width(), p.height());
@@ -812,6 +869,11 @@ pub(super) struct Carta<'a> {
     pub(super) faltan: Vec<String>,
     /// La paleta de las capas PNG (`W`, `gold`…).
     pub(super) clave_color: &'static str,
+    /// Degradado o color propio de los marcos de imagen.
+    pub(super) extra_marco: ExtraMarco,
+    /// El tinte de la caja de reglas que pide el diseño (color y opacidad),
+    /// para las capas `cajaReglas`; `None` con la caja automática.
+    pub(super) caja_pedida: Option<([u8; 4], f32)>,
     /// Los colores de la carta en orden WUBRG (`{color1}`/`{color2}`).
     pub(super) colores: Vec<String>,
     /// Lo que se sabe de la carta para las condiciones de las capas.
@@ -917,16 +979,36 @@ impl Carta<'_> {
         }
     }
 
+    /// Lo que se agranda o achica el texto de un papel (ajustes finos).
+    pub(super) fn escala_texto(&self, rol: &str) -> f32 {
+        let r = &self.retoques;
+        let v = match rol {
+            "titulo" | "cinta" => r.title_size,
+            "tipo" => r.type_size,
+            "reglas" => r.rules_size,
+            "fr" => r.pt_size,
+            "pie" => r.footer_size,
+            _ => None,
+        };
+        v.unwrap_or(1.0) as f32
+    }
+
     fn estilo_texto(&mut self, h: &Hueco) -> (Estilo, f32) {
         let rol = h.rol.as_deref().unwrap_or("reglas");
         let letra = self.letra(rol);
-        let tam = self.l.x(h.mayuscula.unwrap_or(1.78)) / letra.mayuscula.max(0.3);
+        let tam = self.l.x(h.mayuscula.unwrap_or(1.78)) / letra.mayuscula.max(0.3)
+            * self.escala_texto(rol);
         (
             Estilo {
                 familia: letra.familia,
                 peso: letra.peso,
                 tam,
-                interlinea: 1.06,
+                interlinea: 1.06
+                    * if rol == "reglas" {
+                        self.retoques.rules_line_spacing.unwrap_or(1.0) as f32
+                    } else {
+                        1.0
+                    },
                 color: self.color(h),
                 alinear: match h.alinear {
                     Alineacion::Inicio => Alinear::Inicio,
@@ -984,7 +1066,7 @@ impl Carta<'_> {
         let e = Estilo {
             familia: letra.familia,
             peso: letra.peso,
-            tam: self.l.x(cap_mm) / letra.mayuscula.max(0.3),
+            tam: self.l.x(cap_mm) / letra.mayuscula.max(0.3) * self.escala_texto(rol),
             interlinea: 1.06,
             color,
             alinear: Alinear::Inicio,
@@ -1200,6 +1282,10 @@ impl Carta<'_> {
             if !capa.si.cumple(hechos) {
                 continue;
             }
+            if capa.caja_reglas {
+                self.tinte_caja(capa);
+                continue;
+            }
             if capa.png.is_some() {
                 self.capa_png(capa);
                 continue;
@@ -1249,13 +1335,75 @@ impl Carta<'_> {
             );
             return;
         }
-        self.png_del_pack(
-            &ruta,
-            z,
-            escalado,
-            capa.mezcla.unwrap_or_default(),
-            capa.opacidad.unwrap_or(1.0),
-        );
+        let mezcla = capa.mezcla.unwrap_or_default();
+        let opacidad = capa.opacidad.unwrap_or(1.0);
+        // Solo las capas que cambian con el color del marco.
+        let de_color = capa.png.as_deref().is_some_and(|p| p.contains("{color}"));
+        match self.extra_marco {
+            ExtraMarco::Degradado(b) if de_color => {
+                self.png_del_pack(&ruta, z, escalado, mezcla, opacidad);
+                if let Some(ruta_b) = capa.png_para(&pack.def, b, &self.colores) {
+                    self.png_con(&ruta_b, z, escalado, mezcla, opacidad, |img, x0, k| {
+                        fundir_a_la_derecha(img, x0, k)
+                    });
+                }
+            }
+            ExtraMarco::Tinte(color) if de_color => {
+                self.png_con(&ruta, z, escalado, mezcla, opacidad, |img, _, _| {
+                    tenir(img, color)
+                });
+            }
+            _ => self.png_del_pack(&ruta, z, escalado, mezcla, opacidad),
+        }
+    }
+
+    /// El tinte de la caja de reglas en la zona de la capa, si se pide.
+    fn tinte_caja(&mut self, capa: &Capa) {
+        let (Some((color, opacidad)), Some(z)) = (self.caja_pedida, &capa.en) else {
+            return;
+        };
+        let Ok(z) = z.evaluar(&self.nums) else {
+            return;
+        };
+        self.forma(&format!(
+            r##"<rect x="{}" y="{}" width="{}" height="{}" fill="{}" fill-opacity="{opacidad}"/>"##,
+            z.x,
+            z.y,
+            z.w,
+            z.h,
+            hex(color)
+        ));
+    }
+
+    /// Como `png_del_pack`, pasando antes la imagen (ya a su medida) por `f`
+    /// con dónde empieza (px del lienzo) y los px por mm.
+    fn png_con(
+        &mut self,
+        ruta: &str,
+        z: super::pack::Zona,
+        escalado: super::pack::Escalado,
+        mezcla: Mezcla,
+        opacidad: f32,
+        f: impl Fn(&mut RgbaImage, f32, f32),
+    ) {
+        let (x, y) = (self.l.x(z.x).round(), self.l.y(z.y).round());
+        let tw = (self.l.x(z.x + z.w).round() - x).max(1.0) as u32;
+        let th = (self.l.y(z.y + z.h).round() - y).max(1.0) as u32;
+        let Some(img) = imagenes_png::a_medida(self.rec.pack, ruta, tw, th, escalado) else {
+            return;
+        };
+        let mut img = (*img).clone();
+        f(&mut img, x, self.l.kx);
+        if let Some(p) = a_pixmap(&img) {
+            self.l.px.draw_pixmap(
+                x as i32,
+                y as i32,
+                p.as_ref(),
+                &pintura_con(mezcla, opacidad),
+                Transform::identity(),
+                None,
+            );
+        }
     }
 
     /// Un PNG del pack en la zona `z` estirado solo por el medio: `arriba` y
@@ -1432,7 +1580,8 @@ impl Carta<'_> {
             return;
         };
         let (e, cap) = self.estilo_texto(&h);
-        let paso = h.interlinea.unwrap_or(1.6);
+        let paso =
+            h.interlinea.unwrap_or(1.6) * self.retoques.footer_line_spacing.unwrap_or(1.0) as f32;
         // Sin tabuladores, las columnas van seguidas con este hueco entre ellas.
         const HUECO: f32 = 1.2;
         for (i, linea) in texto.split('\n').enumerate() {
@@ -1976,6 +2125,8 @@ pub(super) fn pintar_cara(
         avisos: Vec::new(),
         faltan: Vec::new(),
         clave_color: clave_marco(e, cara),
+        extra_marco: extra_marco(e),
+        caja_pedida: (!matches!(e.frame.rules_box, RulesBox::Auto)).then_some(modo_caja),
         colores: colores_wubrg(e, cara),
         hechos: hechos_de(e, cara),
         estrechado_base: e.squeeze_base as f32,
@@ -1985,6 +2136,13 @@ pub(super) fn pintar_cara(
         letra_reglas: e.font_rules.clone(),
     };
     c.avisos.append(&mut avisos);
+    // Con un tinte pedido sobre la caja pintada en la imagen, el texto de las
+    // reglas toma el color que se lee sobre él.
+    if c.caja_pedida.is_some() && c.estilo.capas.iter().any(|k| k.caja_reglas) {
+        if let Some(h) = c.estilo.huecos.get_mut("reglas") {
+            h.color = Some(hex(tinta_caja));
+        }
+    }
 
     // ── Reglas: maquetar primero, porque la caja que crece mueve el resto.
     if d.faces
@@ -2045,17 +2203,41 @@ pub(super) fn pintar_cara(
                 super::pack::Valor::Expr(_) => 5.95,
             };
             let mut pad_abajo = din.pad_abajo + franja;
-            let mut aj = cuerpos::ajustar(
-                &contenido,
-                &mut c.motor.m,
-                &mut c.motor.letras,
-                &est,
-                c.l.x(ancho),
-                c.l.y(din.alto_max - din.pad_arriba - pad_abajo),
-                tam_min.min(est.tam),
-                paso,
-                k,
-            );
+            // Primero, en la altura cómoda con la letra hasta el 75 %; si no
+            // cabe, en la máxima con la letra entera (y bajando lo que haga
+            // falta).
+            // Con un tamaño elegido a mano en los ajustes finos, ese manda.
+            let comoda = din
+                .alto_comodo
+                .filter(|a| *a < din.alto_max && c.retoques.rules_size.is_none())
+                .map(|a| {
+                    cuerpos::ajustar(
+                        &contenido,
+                        &mut c.motor.m,
+                        &mut c.motor.letras,
+                        &est,
+                        c.l.x(ancho),
+                        c.l.y(a - din.pad_arriba - pad_abajo),
+                        (est.tam * LETRA_COMODA).max(tam_min).min(est.tam),
+                        paso,
+                        k,
+                    )
+                })
+                .filter(|aj| aj.1 <= 0.0);
+            let mut aj = match comoda {
+                Some(aj) => aj,
+                None => cuerpos::ajustar(
+                    &contenido,
+                    &mut c.motor.m,
+                    &mut c.motor.letras,
+                    &est,
+                    c.l.x(ancho),
+                    c.l.y(din.alto_max - din.pad_arriba - pad_abajo),
+                    tam_min.min(est.tam),
+                    paso,
+                    k,
+                ),
+            };
             let mut alto_txt = aj.0.alto() / c.l.ky;
             // Si el último renglón llega a la caja de fuerza/resistencia, se
             // deja ese hueco libre por abajo.
@@ -2435,7 +2617,7 @@ impl Carta<'_> {
         let e = Estilo {
             familia: letra.familia,
             peso: letra.peso,
-            tam: self.l.x(cap_mm) / letra.mayuscula.max(0.3),
+            tam: self.l.x(cap_mm) / letra.mayuscula.max(0.3) * self.escala_texto(rol),
             interlinea: 1.06,
             color,
             alinear: Alinear::Inicio,
@@ -3085,11 +3267,107 @@ mod tests {
         assert_eq!(clave_marco(&carta(&["R", "G"], "Instant"), 0), "gold");
         assert_eq!(clave_marco(&carta(&["W", "U", "B"], "Instant"), 0), "gold");
         assert_eq!(clave_marco(&carta(&[], "Artifact"), 0), "artifact");
+        // Color propio: el marco neutro, teñido.
         let mut e = carta(&["R"], "Instant");
         e.frame.color = FrameColor::Custom {
             hex: "#123456".into(),
         };
-        assert_eq!(clave_marco(&e, 0), "gold");
+        assert_eq!(clave_marco(&e, 0), "colorless");
+        assert_eq!(extra_marco(&e), ExtraMarco::Tinte([0x12, 0x34, 0x56, 255]));
+        // Degradado a mano: la primera paleta y, fundida, la segunda.
+        e.frame.color = FrameColor::Gradient {
+            a: Palette::R,
+            b: Palette::U,
+        };
+        assert_eq!(clave_marco(&e, 0), "R");
+        assert_eq!(extra_marco(&e), ExtraMarco::Degradado("U"));
+    }
+
+    #[test]
+    fn el_tinte_conserva_luces_y_sombras() {
+        let mut img = RgbaImage::from_pixel(3, 1, image::Rgba([0, 0, 0, 200]));
+        img.put_pixel(1, 0, image::Rgba([128, 128, 128, 255]));
+        img.put_pixel(2, 0, image::Rgba([255, 255, 255, 255]));
+        tenir(&mut img, [0, 200, 100, 255]);
+        // El negro sigue negro y el blanco, blanco; el gris medio toma el
+        // color. La transparencia no cambia.
+        assert_eq!(img.get_pixel(0, 0).0, [0, 0, 0, 200]);
+        assert_eq!(img.get_pixel(2, 0).0, [255, 255, 255, 255]);
+        let medio = img.get_pixel(1, 0).0;
+        assert!(medio[1] > medio[0] && medio[1] > medio[2], "{medio:?}");
+    }
+
+    #[test]
+    fn el_tamano_y_el_interlineado_cambian_el_texto() {
+        use crate::diseno::modelo::FineTuning;
+        let p = casa();
+        let s = Simbolos::nuevos();
+        let rec = recursos(&p, &s);
+        let mut motor = Motor::de_fabrica().unwrap();
+        let mut pinta = |e: &DisenoEfectivo| {
+            render(
+                &mut motor,
+                e,
+                0,
+                DesignLang::Es,
+                &rec,
+                crate::model::CardSize::MTG,
+                315,
+                Salida::Impresion,
+            )
+            .unwrap()
+            .imagen
+        };
+        let mut e = carta(&["U"], "Instant");
+        let base = pinta(&e);
+        for f in [
+            FineTuning {
+                rules_size: Some(0.7),
+                ..FineTuning::default()
+            },
+            FineTuning {
+                rules_line_spacing: Some(1.4),
+                ..FineTuning::default()
+            },
+            FineTuning {
+                title_size: Some(0.7),
+                ..FineTuning::default()
+            },
+            FineTuning {
+                type_size: Some(1.3),
+                ..FineTuning::default()
+            },
+            FineTuning {
+                footer_size: Some(1.3),
+                ..FineTuning::default()
+            },
+            FineTuning {
+                footer_line_spacing: Some(1.4),
+                ..FineTuning::default()
+            },
+        ] {
+            e.retoques = f.limitado();
+            assert_ne!(pinta(&e), base, "{f:?}");
+        }
+        // Al 100 %, como sin tocar.
+        e.retoques = FineTuning {
+            title_size: Some(1.0),
+            footer_line_spacing: Some(1.0),
+            ..FineTuning::default()
+        };
+        assert_eq!(pinta(&e), base);
+    }
+
+    #[test]
+    fn el_degradado_funde_de_izquierda_a_derecha() {
+        // 63 px de ancho = 1 px por mm: transparente hasta el 35 %, entero
+        // desde el 65 %.
+        let mut img = RgbaImage::from_pixel(63, 1, image::Rgba([255, 0, 0, 255]));
+        fundir_a_la_derecha(&mut img, 0.0, 1.0);
+        assert_eq!(img.get_pixel(10, 0).0[3], 0);
+        assert_eq!(img.get_pixel(50, 0).0[3], 255);
+        let medio = img.get_pixel(31, 0).0[3];
+        assert!((100..160).contains(&medio), "{medio}");
     }
 
     #[test]

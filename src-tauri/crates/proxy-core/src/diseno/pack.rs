@@ -275,6 +275,12 @@ pub struct Capa {
     /// el alto de la zona. Para las cajas de pixel art que crecen.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tramos: Option<[f32; 2]>,
+    /// No es una imagen: aquí va el tinte de la caja de reglas (en la zona
+    /// `en`) cuando el diseño pide uno (oscura, clara u otro tinte). Para los
+    /// marcos de imagen, que traen la caja pintada; con ella, el texto de las
+    /// reglas cambia de color para que se lea.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub caja_reglas: bool,
     /// Letras de color propias de esta capa (paleta → texto de `{color}`);
     /// lo que no diga, como el pack.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
@@ -429,6 +435,11 @@ pub struct CajaDinamica {
     pub barra_tipo: f32,
     pub pad_arriba: f32,
     pub pad_abajo: f32,
+    /// Hasta dónde crece la caja (mm) antes de bajar un poco la letra (hasta
+    /// el 75 %): así un texto largo no se come el arte. Sin él, la caja crece
+    /// hasta `altoMax` con la letra entera.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub alto_comodo: Option<f32>,
 }
 
 /// Qué caja de reglas lleva el estilo de serie.
@@ -854,6 +865,15 @@ fn comprobar_capa(
     ficheros: &BTreeMap<String, String>,
     imagenes: &BTreeMap<String, Arc<Vec<u8>>>,
 ) -> Result<(), PackError> {
+    if c.caja_reglas {
+        return if c.png.is_none() && c.svg.is_empty() && c.en.is_some() {
+            Ok(())
+        } else {
+            Err(PackError::Json(
+                "la caja de reglas va sola y con su zona".into(),
+            ))
+        };
+    }
     match (&c.png, c.svg.is_empty()) {
         (None, false) => {
             if !ficheros.contains_key(&c.svg) {

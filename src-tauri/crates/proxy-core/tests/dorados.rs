@@ -907,3 +907,95 @@ fn balatro_contra_el_autor() {
         r.imagen.save(salida.join(format!("ref-{nombre}"))).unwrap();
     }
 }
+
+/// El pack «Original» con los colores y cajas pedidos a mano (degradado,
+/// color propio, caja oscura, clara y con tinte), en clásico y despejado:
+/// `PB_ORIGINAL=<carpeta> PB_SALIDA=<carpeta> cargo test -p proxy-core --test
+/// dorados original_colores -- --ignored`.
+#[test]
+#[ignore]
+fn original_colores() {
+    use proxy_core::diseno::pack::{ORIGINAL, ORIGINAL_IMAGENES};
+    let base = PathBuf::from(std::env::var("PB_ORIGINAL").expect("PB_ORIGINAL"));
+    let salida = std::env::var("PB_SALIDA")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| std::env::temp_dir());
+    let lista: serde_json::Value = serde_json::from_str(ORIGINAL_IMAGENES).unwrap();
+    let imagenes = lista["imagenes"]
+        .as_object()
+        .unwrap()
+        .keys()
+        .map(|r| (r.clone(), Arc::new(std::fs::read(base.join(r)).unwrap())))
+        .collect();
+    let ficheros = ORIGINAL
+        .iter()
+        .map(|(k, v)| ((*k).to_string(), (*v).to_string()))
+        .collect();
+    let pack = Pack::cargar_con_imagenes(ficheros, imagenes).unwrap();
+    let (_, simbolos, artes) = entorno();
+    let rec = Recursos {
+        pack: &pack,
+        simbolos: &simbolos,
+        imagenes: &artes,
+    };
+    let mut motor = Motor::de_fabrica().unwrap();
+    let col = coleccion();
+    let colores = [
+        ("auto", FrameColor::Auto),
+        (
+            "degradado",
+            FrameColor::Gradient {
+                a: Palette::R,
+                b: Palette::U,
+            },
+        ),
+        (
+            "propio",
+            FrameColor::Custom {
+                hex: "#20e0c0".into(),
+            },
+        ),
+    ];
+    let cajas = [
+        ("caja-auto", RulesBox::Auto),
+        ("caja-oscura", RulesBox::Dark),
+        ("caja-clara", RulesBox::Light),
+        (
+            "caja-tinte",
+            RulesBox::Tint {
+                hex: "#c060d0".into(),
+            },
+        ),
+    ];
+    let c = &casos_largos()[0];
+    for estilo in [DesignStyle::Classic, DesignStyle::Borderless] {
+        for (nc, color) in &colores {
+            for (nb, caja) in &cajas {
+                let mut d = diseno(c);
+                d.style = estilo;
+                let mut frame = FrameOptions {
+                    pack: "original".into(),
+                    ..FrameOptions::default()
+                };
+                frame.color = color.clone();
+                frame.rules_box = caja.clone();
+                d.frame = Some(frame);
+                let e = efectivo(&d, Some(&col));
+                let r = render(
+                    &mut motor,
+                    &e,
+                    0,
+                    DesignLang::Es,
+                    &rec,
+                    CardSize::MTG,
+                    745,
+                    Salida::Pantalla,
+                )
+                .unwrap();
+                r.imagen
+                    .save(salida.join(format!("original-{estilo:?}-{nc}-{nb}.png")))
+                    .unwrap();
+            }
+        }
+    }
+}

@@ -22,16 +22,29 @@ export function hayAjustes(f: FineTuning | undefined): boolean {
 	return (
 		Object.entries(AJUSTES_CERO).some(([k, v]) => f[k as keyof FineTuning] !== v) ||
 		f.artRadius !== undefined ||
-		f.cardRadius !== undefined
+		f.cardRadius !== undefined ||
+		TAMANOS.some((k) => f[k] !== undefined)
 	);
 }
+
+/** El tamaño de cada texto (en proporción al del marco; sin él, el del marco). */
+const TAMANOS = [
+	"titleSize",
+	"typeSize",
+	"rulesSize",
+	"ptSize",
+	"footerSize",
+	"rulesLineSpacing",
+	"footerLineSpacing",
+] as const;
+type Tamano = (typeof TAMANOS)[number];
 
 type Posicion = "title" | "cost" | "typeLine" | "emblem" | "rules" | "pt" | "footer";
 
 /**
- * Los ajustes finos de una carta o de una colección: la altura de cada
- * texto, lo opaco del fondo de la caja de reglas y el radio de las esquinas
- * de la ilustración y de la carta.
+ * Los ajustes finos de una carta o de una colección: el tamaño y la altura
+ * de cada texto, lo opaco del fondo de la caja de reglas y el radio de las
+ * esquinas de la ilustración y de la carta.
  */
 export function AjustesFinos({
 	valor,
@@ -51,8 +64,64 @@ export function AjustesFinos({
 		["pt", t("Fuerza/resistencia")],
 		["footer", t("Pie")],
 	];
+	const tamanos: [Exclude<Tamano, "rulesLineSpacing" | "footerLineSpacing">, string][] = [
+		["titleSize", t("Título")],
+		["typeSize", t("Línea de tipo")],
+		["rulesSize", t("Texto de reglas")],
+		["ptSize", t("Fuerza/resistencia")],
+		["footerSize", t("Pie")],
+	];
 	return (
 		<div className="flex flex-col gap-2.5">
+			<p className="text-xs font-semibold">{t("Tamaño del texto e interlineado")}</p>
+			<p className="text-[11px] text-muted-foreground">
+				{t(
+					"Cada texto en proporción al del marco (100 % = como viene). Más pequeñas, las reglas dejan más sitio al arte en los marcos con la caja que crece.",
+				)}
+			</p>
+			<FilaInterruptor
+				etiqueta={t("Reglas: tamaño automático")}
+				ayuda={t(
+					"La letra baja lo justo para que quepa y, en los marcos con la caja que crece, un poco antes de comerse el arte. Apagado, las reglas van al tamaño que elijas y la caja crece lo que haga falta.",
+				)}
+				valor={valor.rulesSize === undefined}
+				onChange={(v) => poner({ rulesSize: v ? undefined : 1 })}
+			/>
+			{tamanos
+				.filter(([k]) => k !== "rulesSize" || valor.rulesSize !== undefined)
+				.map(([k, etiqueta]) => (
+					<FilaDeslizador
+						key={k}
+						etiqueta={etiqueta}
+						valor={Math.round((valor[k] ?? 1) * 100)}
+						min={50}
+						max={160}
+						paso={5}
+						sufijo="%"
+						// 100 % es el del marco: no se guarda (salvo en las reglas,
+						// donde sin valor es «automático»).
+						onChange={(v) => poner({ [k]: v === 100 && k !== "rulesSize" ? undefined : v / 100 })}
+					/>
+				))}
+			<FilaDeslizador
+				etiqueta={t("Interlineado de las reglas")}
+				valor={Math.round((valor.rulesLineSpacing ?? 1) * 100)}
+				min={70}
+				max={160}
+				paso={5}
+				sufijo="%"
+				onChange={(v) => poner({ rulesLineSpacing: v === 100 ? undefined : v / 100 })}
+			/>
+			<FilaDeslizador
+				etiqueta={t("Interlineado del pie")}
+				valor={Math.round((valor.footerLineSpacing ?? 1) * 100)}
+				min={70}
+				max={160}
+				paso={5}
+				sufijo="%"
+				onChange={(v) => poner({ footerLineSpacing: v === 100 ? undefined : v / 100 })}
+			/>
+			<p className="pt-1 text-xs font-semibold">{t("Posición")}</p>
 			<p className="text-[11px] text-muted-foreground">
 				{t("Altura de cada cosa, en milímetros: en positivo baja y en negativo sube.")}
 			</p>

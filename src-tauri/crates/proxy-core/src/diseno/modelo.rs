@@ -459,12 +459,49 @@ pub struct FineTuning {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub card_radius: Option<f64>,
+    /// Tamaño de cada texto en proporción al del marco (`None` = 1, el del
+    /// marco). En las reglas, `None` es «automático»: en las cajas que
+    /// crecen, la letra baja un poco antes de comerse el arte; con un valor,
+    /// la letra es esa y la caja crece lo que haga falta (y solo baja si ni
+    /// al máximo cabe). El título y el tipo se estrechan como siempre.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub title_size: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub type_size: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub rules_size: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub pt_size: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub footer_size: Option<f64>,
+    /// Interlineado de las reglas y del pie, en proporción al del marco
+    /// (`None` = 1).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub rules_line_spacing: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub footer_line_spacing: Option<f64>,
 }
+
+/// Lo que se puede agrandar o achicar cada texto.
+pub const TAMANO_TEXTO_MIN: f64 = 0.5;
+pub const TAMANO_TEXTO_MAX: f64 = 1.6;
+/// Lo que se puede apretar o separar el interlineado.
+pub const INTERLINEADO_MIN: f64 = 0.7;
+pub const INTERLINEADO_MAX: f64 = 1.6;
 
 impl FineTuning {
     /// Dentro de los límites.
     pub fn limitado(self) -> FineTuning {
         let m = |v: f64| v.clamp(-AJUSTE_MAX_MM, AJUSTE_MAX_MM);
+        let tam = |v: Option<f64>| v.map(|v| v.clamp(TAMANO_TEXTO_MIN, TAMANO_TEXTO_MAX));
+        let lin = |v: Option<f64>| v.map(|v| v.clamp(INTERLINEADO_MIN, INTERLINEADO_MAX));
         FineTuning {
             title: m(self.title),
             cost: m(self.cost),
@@ -476,6 +513,13 @@ impl FineTuning {
             rules_box_opacity: self.rules_box_opacity.clamp(0.0, 1.0),
             art_radius: self.art_radius.map(|r| r.clamp(0.0, 20.0)),
             card_radius: self.card_radius.map(|r| r.clamp(0.0, 6.0)),
+            title_size: tam(self.title_size),
+            type_size: tam(self.type_size),
+            rules_size: tam(self.rules_size),
+            pt_size: tam(self.pt_size),
+            footer_size: tam(self.footer_size),
+            rules_line_spacing: lin(self.rules_line_spacing),
+            footer_line_spacing: lin(self.footer_line_spacing),
         }
     }
 }
@@ -689,6 +733,23 @@ fn estrechado_base_defecto() -> f64 {
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
+
+    #[test]
+    fn los_tamanos_e_interlineados_tienen_limites() {
+        let f = FineTuning {
+            rules_size: Some(0.1),
+            title_size: Some(9.0),
+            rules_line_spacing: Some(0.2),
+            footer_line_spacing: Some(3.0),
+            ..FineTuning::default()
+        }
+        .limitado();
+        assert_eq!(f.rules_size, Some(TAMANO_TEXTO_MIN));
+        assert_eq!(f.title_size, Some(TAMANO_TEXTO_MAX));
+        assert_eq!(f.rules_line_spacing, Some(INTERLINEADO_MIN));
+        assert_eq!(f.footer_line_spacing, Some(INTERLINEADO_MAX));
+        assert_eq!(f.type_size, None);
+    }
     use crate::model::{DeckCard, ImageOrigin};
 
     pub(crate) fn imagen(h: &str) -> FaceImage {
