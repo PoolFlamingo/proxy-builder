@@ -400,10 +400,16 @@ pub async fn design_rerender(
 
 // ── Ilustración ────────────────────────────────────────────────────────────
 
-/// Una imagen pegada del portapapeles (base64).
+/// La imagen del portapapeles del sistema; `None` si no hay ninguna.
 #[tauri::command]
-pub async fn art_from_clipboard(app: AppHandle, data: String) -> AppResult<ArtRef> {
-    en_hilo(app, move |s| crate::diseno::arte::desde_bytes(s, &data)).await
+pub async fn art_from_clipboard(app: AppHandle) -> AppResult<Option<ArtRef>> {
+    let Some(img) = crate::diseno::portapapeles::imagen(&app).await? else {
+        return Ok(None);
+    };
+    en_hilo(app, move |s| {
+        crate::diseno::arte::desde_imagen(s, &img).map(Some)
+    })
+    .await
 }
 
 /// Un fichero ya importado al almacén (`blob_import_files`).

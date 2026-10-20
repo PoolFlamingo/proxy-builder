@@ -445,15 +445,6 @@ function PestanaTextos({
 
 // ── Arte ───────────────────────────────────────────────────────────────────
 
-function aBase64(b: Blob): Promise<string> {
-	return new Promise((ok, mal) => {
-		const r = new FileReader();
-		r.onload = () => ok(String(r.result));
-		r.onerror = () => mal(r.error);
-		r.readAsDataURL(b);
-	});
-}
-
 function PestanaArte({
 	design,
 	cambiar,
@@ -491,14 +482,10 @@ function PestanaArte({
 		});
 	const pegar = () =>
 		intentar(async () => {
-			const items = await navigator.clipboard.read();
-			for (const it of items) {
-				const tipo = it.types.find((x) => x.startsWith("image/"));
-				if (tipo)
-					return call("art_from_clipboard", { data: await aBase64(await it.getType(tipo)) });
-			}
-			toast.info(t("No hay ninguna imagen en el portapapeles."));
-			return null;
+			// El portapapeles lo lee Rust: WebKitGTK no deja usar `navigator.clipboard.read()`.
+			const a = await call("art_from_clipboard", {});
+			if (!a) toast.info(t("No hay ninguna imagen en el portapapeles."));
+			return a;
 		});
 	const scryfall = () =>
 		intentar(() => call("art_from_scryfall", { scryfallId: design.card.scryfallId, cara }));

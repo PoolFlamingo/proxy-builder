@@ -2,8 +2,7 @@
 //! subir/pegar/arrastrar una imagen, el `art_crop` de Scryfall de partida y
 //! recortar la ilustración de una carta ya hecha del deck.
 
-use base64::engine::general_purpose::STANDARD;
-use base64::Engine;
+use image::RgbaImage;
 use proxy_core::diseno::modelo::{ArtFraming, ArtRef, ArtSource};
 use proxy_core::model::ImageOrigin;
 
@@ -19,12 +18,9 @@ fn arte(image: proxy_core::model::FaceImage, source: ArtSource) -> ArtRef {
     }
 }
 
-/// Una imagen pegada del portapapeles (base64, sin el prefijo `data:`).
-pub fn desde_bytes(state: &AppState, base64: &str) -> AppResult<ArtRef> {
-    let datos = base64.split_once(',').map_or(base64, |(_, d)| d);
-    let bytes = STANDARD
-        .decode(datos.trim())
-        .map_err(|_| AppError::new(ErrorCode::InvalidInput).with("motivo", "base64"))?;
+/// Una imagen pegada del portapapeles (ya leída por `portapapeles`).
+pub fn desde_imagen(state: &AppState, imagen: &RgbaImage) -> AppResult<ArtRef> {
+    let bytes = proxy_core::imaging::encode::png(imagen)?;
     let img = state
         .blobs
         .put_bytes(&state.db, &bytes, ImageOrigin::Upload)?;
@@ -108,17 +104,11 @@ mod tests {
             cache: dir.path().join("cache"),
         })
         .unwrap();
-        let png = crate::store::blobs::tests::png(100, 140, 5);
-        let a = desde_bytes(
-            &s,
-            &format!("data:image/png;base64,{}", STANDARD.encode(&png)),
-        )
-        .unwrap();
+        let a = desde_imagen(&s, &RgbaImage::new(100, 140)).unwrap();
         assert_eq!((a.image.width, a.image.height), (100, 140));
         let r = desde_carta(&s, &a.image.blob, 0.1, 0.1, 0.8, 0.5).unwrap();
         assert_eq!((r.image.width, r.image.height), (80, 70));
         assert!(matches!(r.source, ArtSource::CardCrop { .. }));
         assert!(desde_carta(&s, &a.image.blob, 0.5, 0.5, 0.0, 0.0).is_err());
-        assert!(desde_bytes(&s, "no es base64!").is_err());
     }
 }
