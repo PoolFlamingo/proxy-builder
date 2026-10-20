@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { RaizScroll } from "@/features/preview/visibilidad";
-import { insertar, nuevoId } from "@/lib/deck-ops";
+import { insertar, nuevoId, quitar } from "@/lib/deck-ops";
 import { call } from "@/lib/ipc";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
@@ -33,14 +33,15 @@ export function AddCardDialog() {
 	const dialogo = useUi((s) => s.dialogo);
 	const abierto = dialogo?.tipo === "anadir";
 	const en = dialogo?.tipo === "anadir" ? dialogo.en : undefined;
+	const hueco = dialogo?.tipo === "anadir" ? dialogo.hueco : undefined;
 	return (
 		<Dialog open={abierto} onOpenChange={(o) => !o && useUi.getState().abrir(null)}>
-			{abierto && <Contenido en={en} />}
+			{abierto && <Contenido en={en} hueco={hueco} />}
 		</Dialog>
 	);
 }
 
-function Contenido({ en }: { en?: number }) {
+function Contenido({ en, hueco }: { en?: number; hueco?: string }) {
 	const { t, mensaje } = useLang();
 	const idiomaDeck = useUi((s) => s.lang);
 	const [q, setQ] = useState("");
@@ -106,7 +107,8 @@ function Contenido({ en }: { en?: number }) {
 			const copias = Array.from({ length: Math.max(1, cantidad) }, (_, i) =>
 				i === 0 ? base : { ...base, id: nuevoId() },
 			);
-			useDeck.getState().setCartas((cs) => insertar(cs, copias, en));
+			// Un hueco en blanco se sustituye: la carta ocupa su posición.
+			useDeck.getState().setCartas((cs) => insertar(hueco ? quitar(cs, [hueco]) : cs, copias, en));
 			useUi
 				.getState()
 				.anunciar(t("{n} × {carta} añadida", { n: copias.length, carta: base.meta.name }));
