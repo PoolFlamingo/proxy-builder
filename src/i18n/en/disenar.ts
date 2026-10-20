@@ -96,6 +96,7 @@ export const DISENAR: Record<string, string> = {
 	"Parte {n}": "Part {n}",
 	"Nueva colección": "New collection",
 	"Colección guardada": "Collection saved",
+	"Colección duplicada": "Collection duplicated",
 	Colecciones: "Collections",
 	"Lo que comparten las cartas de un mazo o una serie: marco, emblema, pie y letras. Cambiar una colección cambia todas sus cartas.":
 		"What the cards of a deck or a series share: frame, emblem, footer and fonts. Changing a collection changes all its cards.",

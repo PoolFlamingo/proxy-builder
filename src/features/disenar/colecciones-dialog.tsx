@@ -1,4 +1,4 @@
-import { Loader2, Plus, Save, Trash2, Upload, X } from "lucide-react";
+import { Copy, Loader2, MoreHorizontal, Plus, Save, Trash2, Upload, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { Collection } from "@/bindings/Collection";
@@ -15,6 +15,13 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { abrirParaImportar } from "@/lib/dialogos";
@@ -72,7 +79,7 @@ function Contenido() {
 	const [elegida, setElegida] = useState<string | null>(null);
 	const [borrador, setBorrador] = useState<Collection | null>(null);
 	const [guardando, setGuardando] = useState(false);
-	const [borrar, setBorrar] = useState(false);
+	const [borrar, setBorrar] = useState<Collection | null>(null);
 	const [tocadas, setTocadas] = useState(false);
 
 	const recargar = useCallback(async () => {
@@ -149,14 +156,33 @@ function Contenido() {
 		}
 	};
 
-	const quitar = async () => {
-		if (!original) return;
+	/** Una copia guardada (con su emblema); se abre si no hay cambios a medias. */
+	const duplicar = async (c: Collection) => {
 		try {
-			await call("collection_delete", { id: original.id });
+			const copia = await call("collection_save", {
+				collection: { ...c, id: "", name: t("{n} (copia)", { n: c.name }) },
+			});
+			await recargar();
+			if (!cambiada) {
+				setElegida(copia.id);
+				setBorrador(copia);
+			}
+			useUi.getState().anunciar(t("Colección duplicada"));
+		} catch (e) {
+			toast.error(mensaje(e));
+		}
+	};
+
+	const quitar = async (c: Collection) => {
+		try {
+			await call("collection_delete", { id: c.id });
 			const cs = await recargar();
-			const primera = cs[0] ?? null;
-			setElegida(primera?.id ?? null);
-			setBorrador(primera);
+			// Si era la abierta, se abre la primera; si no, sigue la que estaba.
+			if (c.id === elegida) {
+				const primera = cs[0] ?? null;
+				setElegida(primera?.id ?? null);
+				setBorrador(primera);
+			}
 			setTocadas(true);
 		} catch (e) {
 			toast.error(mensaje(e));
@@ -198,18 +224,14 @@ function Contenido() {
 								</li>
 							)}
 							{lista?.map((c) => (
-								<li key={c.id}>
-									<button
-										type="button"
-										onClick={() => elegir(c)}
-										className={cn(
-											"w-full truncate rounded-md px-2 py-1.5 text-left text-xs hover:bg-muted",
-											elegida === c.id && "bg-muted font-medium ring-1 ring-primary/50",
-										)}
-									>
-										{c.name}
-									</button>
-								</li>
+								<FilaColeccion
+									key={c.id}
+									c={c}
+									elegida={elegida === c.id}
+									onElegir={() => elegir(c)}
+									onDuplicar={() => void duplicar(c)}
+									onBorrar={() => setBorrar(c)}
+								/>
 							))}
 						</ul>
 					</ScrollArea>
@@ -227,10 +249,16 @@ function Contenido() {
 							</ScrollArea>
 							<div className="flex shrink-0 items-center gap-1.5 border-t p-2.5">
 								{original && (
-									<Button size="sm" variant="ghost" onClick={() => setBorrar(true)}>
-										<Trash2 />
-										{t("Borrar")}
-									</Button>
+									<>
+										<Button size="sm" variant="ghost" onClick={() => setBorrar(original)}>
+											<Trash2 />
+											{t("Borrar")}
+										</Button>
+										<Button size="sm" variant="ghost" onClick={() => void duplicar(original)}>
+											<Copy />
+											{t("Duplicar")}
+										</Button>
+									</>
 								)}
 								<div className="ml-auto flex gap-1.5">
 									<Button
@@ -260,17 +288,73 @@ function Contenido() {
 				</div>
 			</div>
 			<Confirmar
-				abierto={borrar}
-				onCerrar={() => setBorrar(false)}
-				titulo={t("¿Borrar la colección «{nombre}»?", { nombre: original?.name ?? "" })}
+				abierto={!!borrar}
+				onCerrar={() => setBorrar(null)}
+				titulo={t("¿Borrar la colección «{nombre}»?", { nombre: borrar?.name ?? "" })}
 				descripcion={t(
 					"Sus cartas se quedan con su diseño, pero vuelven al marco y al pie de fábrica.",
 				)}
 				accion={t("Borrar")}
 				destructiva
-				onConfirmar={quitar}
+				onConfirmar={() => borrar && quitar(borrar)}
 			/>
 		</DialogContent>
+	);
+}
+
+/** Una colección de la lista, con su menú (duplicar y borrar) al pasar por encima. */
+function FilaColeccion({
+	c,
+	elegida,
+	onElegir,
+	onDuplicar,
+	onBorrar,
+}: {
+	c: Collection;
+	elegida: boolean;
+	onElegir: () => void;
+	onDuplicar: () => void;
+	onBorrar: () => void;
+}) {
+	const { t } = useLang();
+	return (
+		<li
+			className={cn(
+				"group flex items-center rounded-md text-xs hover:bg-muted",
+				elegida && "bg-muted font-medium ring-1 ring-primary/50",
+			)}
+		>
+			<button
+				type="button"
+				onClick={onElegir}
+				className="min-w-0 flex-1 truncate px-2 py-1.5 text-left"
+			>
+				{c.name}
+			</button>
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button
+						size="icon-xs"
+						variant="ghost"
+						className="mr-0.5 hidden group-hover:inline-flex data-[state=open]:inline-flex"
+						aria-label={t("Más acciones")}
+					>
+						<MoreHorizontal />
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="start" className="text-xs">
+					<DropdownMenuItem onSelect={onDuplicar}>
+						<Copy />
+						{t("Duplicar")}
+					</DropdownMenuItem>
+					<DropdownMenuSeparator />
+					<DropdownMenuItem variant="destructive" onSelect={onBorrar}>
+						<Trash2 />
+						{t("Borrar")}
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
+		</li>
 	);
 }
 
