@@ -30,7 +30,7 @@ export class LimiteError extends Component<{ children: ReactNode }, { error: Err
 							"Tus decks están a salvo: viven en la biblioteca local, no en esta pantalla. Puedes volver e intentarlo de nuevo.",
 						)}
 					</p>
-					<pre className="max-h-40 w-full overflow-auto rounded-md border bg-muted/40 p-2 text-left text-[11px] text-muted-foreground">
+					<pre className="max-h-40 w-full overflow-auto rounded-md border bg-muted/40 p-2 text-left text-[11px] text-muted-foreground select-text">
 						{this.state.error.message}
 					</pre>
 					<div className="flex gap-2">
