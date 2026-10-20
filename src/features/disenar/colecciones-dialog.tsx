@@ -606,7 +606,7 @@ function Editor({
 			/>
 			<p className="text-[11px] leading-relaxed text-muted-foreground">
 				{t(
-					"Fichas: {num} {rarity} {original} {set} {lang} {artist} {credit} {universe} {year} {brush} {star}. Un tabulador separa columnas; una línea nueva, filas. Vacía, la de fábrica.",
+					"Fichas: {num} {rarity} {original} {set} {lang} {artist} {credit} {universe} {year} {brush} {star}. Un tabulador separa columnas; una línea nueva, filas; lo que va tras {>}, a la derecha. Vacía, la de fábrica. Si no pone {universe}, {year} ni {credit}, salen solos a la derecha de la última línea.",
 				)}
 			</p>
 

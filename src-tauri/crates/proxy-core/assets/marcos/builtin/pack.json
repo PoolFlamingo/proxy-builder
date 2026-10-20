@@ -282,18 +282,18 @@
 			"cajaPorDefecto": "clara",
 			"capas": [
 				{
+					"svg": "extendido/cinta.svg",
+					"si": {
+						"cinta": true
+					}
+				},
+				{
 					"svg": "extendido/marco.svg"
 				},
 				{
 					"svg": "extendido/corona.svg",
 					"si": {
 						"corona": true
-					}
-				},
-				{
-					"svg": "extendido/cinta.svg",
-					"si": {
-						"cinta": true
 					}
 				},
 				{
@@ -410,18 +410,18 @@
 					},
 					"capas": [
 						{
+							"svg": "extendido/cinta.svg",
+							"si": {
+								"cinta": true
+							}
+						},
+						{
 							"svg": "extendido/marco-alto.svg"
 						},
 						{
 							"svg": "extendido/corona.svg",
 							"si": {
 								"corona": true
-							}
-						},
-						{
-							"svg": "extendido/cinta.svg",
-							"si": {
-								"cinta": true
 							}
 						},
 						{

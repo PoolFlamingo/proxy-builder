@@ -362,7 +362,10 @@ el mismo): los cuadros de color junto al título.
   colección no pone uno propio. Si el hueco `pie` no tiene `tabs`, las
   columnas (separadas por tabulador) van seguidas y, si la línea no cabe, se
   estrecha; con `tabs`, cada columna se estrecha hasta el tabulador
-  siguiente.
+  siguiente. Lo que va tras `{>}` en una línea se pega a la derecha del
+  hueco (y lo demás llega hasta ahí). Si la plantilla no pone `{universe}`,
+  `{year}` ni `{credit}`, salen solos tras `{>}` en la última línea
+  («Monster Hunter · © 2026 Capcom»).
 
 ## Packs para descargar
 

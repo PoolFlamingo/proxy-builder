@@ -1574,7 +1574,8 @@ impl Carta<'_> {
     }
 
     /// El pie: líneas separadas por `\n`, columnas por `\t` (tabuladores del
-    /// hueco). `★` y `✎` van como iconos.
+    /// hueco) y lo que va tras `{>}`, pegado a la derecha. `★` y `✎` van como
+    /// iconos.
     fn pie(&mut self, texto: &str) {
         let Some((h, c)) = self.hueco("pie") else {
             return;
@@ -1584,36 +1585,62 @@ impl Carta<'_> {
             h.interlinea.unwrap_or(1.6) * self.retoques.footer_line_spacing.unwrap_or(1.0) as f32;
         // Sin tabuladores, las columnas van seguidas con este hueco entre ellas.
         const HUECO: f32 = 1.2;
+        let maquetar = |motor: &mut Motor, col: &str| {
+            let p = texto::con_simbolos(
+                &col.trim()
+                    .replace('★', "{ESTRELLA}")
+                    .replace('✎', "{PINCEL}"),
+            );
+            motor.m.maquetar(&mut motor.letras, &p, &e, None)
+        };
         for (i, linea) in texto.split('\n').enumerate() {
             let cy = c.y + (i as f32 + 0.5) * paso;
+            let y0 = |b: &texto::Bloque, l: &Lienzo| l.y(cy) - b.base + e.tam * cap / 2.0;
+            let (linea, derecha) = linea.split_once("{>}").unwrap_or((linea, ""));
+            // Lo de la derecha, al final del hueco (si no cabe en la mitad, se
+            // estrecha); lo demás llega hasta donde empieza.
+            let mut ancho = c.w;
+            if !derecha.trim().is_empty() {
+                let b = maquetar(self.motor, derecha);
+                let cabe = self.l.x(c.w * 0.5);
+                let escala = if b.ancho > cabe {
+                    (cabe / b.ancho).max(0.5)
+                } else {
+                    1.0
+                };
+                let x0 = self.l.x(c.x + c.w) - b.ancho * escala;
+                ancho = (x0 / self.l.kx - c.x - HUECO).max(0.0);
+                let y = y0(&b, &self.l);
+                self.faltan.extend(pintar_bloque(
+                    &mut self.l.px.as_mut(),
+                    &b,
+                    x0,
+                    y,
+                    Pincel {
+                        escala_x: escala,
+                        color: None,
+                    },
+                    self.rec.simbolos,
+                ));
+            }
             let columnas: Vec<(usize, texto::Bloque)> = linea
                 .split('\t')
                 .enumerate()
                 .filter(|(_, col)| !col.trim().is_empty())
-                .map(|(j, col)| {
-                    let p = texto::con_simbolos(
-                        &col.trim()
-                            .replace('★', "{ESTRELLA}")
-                            .replace('✎', "{PINCEL}"),
-                    );
-                    (
-                        j,
-                        self.motor.m.maquetar(&mut self.motor.letras, &p, &e, None),
-                    )
-                })
+                .map(|(j, col)| (j, maquetar(self.motor, col)))
                 .collect();
             // Seguidas: si no caben, se estrecha la línea entera (hasta la mitad).
             let seguidas = h.tabs.is_empty();
             let total: f32 = columnas.iter().map(|(_, b)| b.ancho).sum::<f32>()
                 + self.l.x(HUECO) * columnas.len().saturating_sub(1) as f32;
-            let escala_linea = if seguidas && total > self.l.x(c.w) {
-                (self.l.x(c.w) / total).max(0.5)
+            let escala_linea = if seguidas && total > self.l.x(ancho) {
+                (self.l.x(ancho) / total).max(0.5)
             } else {
                 1.0
             };
             let mut x_seguida = self.l.x(c.x);
             let indices: Vec<usize> = columnas.iter().map(|(j, _)| *j).collect();
-            let limites = limites_de_columnas(&h.tabs, c.x, c.w, &indices);
+            let limites = limites_de_columnas(&h.tabs, c.x, ancho, &indices);
             for ((_, b), (x, fin)) in columnas.iter().zip(limites) {
                 let (x0, escala) = if seguidas {
                     (x_seguida, escala_linea)
@@ -1626,12 +1653,12 @@ impl Carta<'_> {
                     };
                     (self.l.x(x), escala)
                 };
-                let y0 = self.l.y(cy) - b.base + e.tam * cap / 2.0;
+                let y = y0(b, &self.l);
                 self.faltan.extend(pintar_bloque(
                     &mut self.l.px.as_mut(),
                     b,
                     x0,
-                    y0,
+                    y,
                     Pincel {
                         escala_x: escala,
                         color: None,
@@ -1919,6 +1946,26 @@ fn pie_con_plantilla(
         DesignLang::En => "EN",
     };
     let mut t = plantilla.to_string();
+    // Universo, año y créditos: si la plantilla no los pone, van a la derecha
+    // de la última línea (como el «™ & ©» de las cartas impresas).
+    if !["{credit}", "{universe}", "{year}"]
+        .iter()
+        .any(|k| plantilla.contains(k))
+    {
+        let derechos = format!("{} {}", p.year.trim(), p.credit.trim());
+        let derechos = match derechos.trim() {
+            "" => String::new(),
+            d => format!("© {d}"),
+        };
+        let extra = [p.universe.trim(), derechos.as_str()]
+            .into_iter()
+            .filter(|x| !x.is_empty())
+            .collect::<Vec<_>>()
+            .join(" · ");
+        if !extra.is_empty() {
+            t = format!("{t}{{>}}{extra}");
+        }
+    }
     for (k, v) in [
         ("{num}", p.number.as_str()),
         ("{rarity}", p.rarity.as_str()),
@@ -3446,6 +3493,26 @@ mod tests {
         let e = carta(&["W"], "Instant");
         let t = pie_texto(&e, DesignLang::Es, "Dusk");
         assert_eq!(t, "0002\tR\tDusk\nAKH • ES\t{PINCEL} ");
+    }
+
+    #[test]
+    fn universo_ano_y_creditos_van_a_la_derecha_si_la_plantilla_no_los_pone() {
+        let mut e = carta(&["W"], "Instant");
+        e.pie.universe = "Monster Hunter".into();
+        e.pie.year = "2026".into();
+        e.pie.credit = "Capcom".into();
+        let t = pie_texto(&e, DesignLang::Es, "");
+        assert!(
+            t.ends_with("{PINCEL} {>}Monster Hunter · © 2026 Capcom"),
+            "{t}"
+        );
+        // Solo el año.
+        e.pie.universe.clear();
+        e.pie.credit.clear();
+        assert!(pie_texto(&e, DesignLang::Es, "").ends_with("{>}© 2026"));
+        // Si la plantilla pone alguno, manda ella.
+        e.pie.template.es = "{num}\t{year}".into();
+        assert_eq!(pie_texto(&e, DesignLang::Es, ""), "0002\t2026");
     }
 
     #[test]
