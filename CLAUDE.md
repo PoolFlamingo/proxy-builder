@@ -194,7 +194,7 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
   - 🛑 **Marcos «Original»** (Pablo, 15/10/2026): marcos de imagen M15 de
     Card Conjurer (capas PNG del pack). No van en el repo ni en los
     instaladores: se descargan al elegirlos (`diseno/original.rs`, commit
-    fijo y SHA-256 de cada PNG en `assets/marcos/original/imagenes.json`).
+    fijo y SHA-256 de cada PNG en `proxy-core/assets/marcos/original/imagenes.json`).
   - **Letras libres para descargar** (Pablo, 15/10/2026): catálogo OFL de
     Google Fonts en `src-tauri/assets/letras-libres.json` (commit fijo y
     SHA-256 de cada fichero; de título, de aire clásico/medieval/fantasía, y
@@ -298,3 +298,45 @@ equipo. Los planes (`plans/`) no se versionan.
   eso, en una pantalla sin GPU las animaciones de entrada de los diálogos no
   avanzan y quedan invisibles (pero abiertos y tapando los clics). En el
   equipo de Pablo no hace falta.
+
+## Wiki (documentación)
+
+La documentación completa del proyecto vive en el wiki de GitHub
+(`https://github.com/PoolFlamingo/proxy-builder/wiki`), **en inglés**. Es un
+repo aparte (`PoolFlamingo/proxy-builder.wiki`) con su clon local en
+`/home/estigio/Projects/Tauri/proxy-builder.wiki/`, al lado de este y del de
+packs. No es lo mismo que `README.md`/`README.es.md` (la presentación) ni que
+`docs/packs-de-marcos.md`: el wiki es la referencia para entender, ampliar y
+rehacer la app.
+
+- 🛑 **Todo cambio que añada, modifique o quite algo se documenta en el wiki en
+  la misma sesión, antes de darlo por terminado** (Pablo, 20/10/2026): una
+  función de cara al usuario, un comando de Rust, un ajuste, un formato
+  (`.pbdeck`, packs, migración de la base de datos), una regla de arquitectura,
+  un cambio en el CI o en la release, una carpeta de datos nueva… Se actualizan
+  las páginas afectadas; si el cambio no cabe en ninguna, página nueva.
+- Qué página toca qué área: el mapa está en `Home.md` y `File-Index.md` del
+  wiki (cada área de `src/features/*`, `src-tauri/src/*` y
+  `proxy-core::*` tiene su página). Los cambios de «Mapa rápido» de este fichero
+  se reflejan también allí.
+- Página nueva: se enlaza desde `Home.md` y `_Sidebar.md`, y desde las páginas
+  relacionadas (cada una acaba con `## See also`).
+- Formato: ficheros planos `Nombre-Con-Guiones.md`, enlaces `[Texto](Nombre-Pagina)`
+  (sin `.md`), diagramas en Mermaid, rutas y símbolos reales entre comillas
+  invertidas. Describe el código **tal como está ahora** y, sobre todo, **el
+  porqué** (decisiones, invariantes, casos límite), sin fechas ni nombres de
+  persona. Lo que no se sabe con certeza va marcado como `Inferred:`.
+- Nunca en el wiki: claves, rutas de claves, rutas absolutas del equipo, correos
+  ni nada de `plans/` (no se versiona).
+- Antes de subir: `git pull` en el clon del wiki, comprobar que no hay enlaces
+  rotos entre páginas ni rutas del repo que ya no existen, `git commit` y
+  `git push`. **El wiki sí se sube** (Pablo, 20/10/2026): no lanza el CI ni manda
+  correos, a diferencia de este repo, donde sigue valiendo la regla de no subir.
+  Lo que sí se mantiene: el código llega a Pablo como edición sin commit y el
+  wiki se sube al terminar la tarea; en el mensaje final se dice qué páginas se
+  tocaron.
+- Si el wiki aún no existe en GitHub (no se puede clonar), se escribe igualmente
+  en el clon local y se avisa a Pablo para que cree la primera página desde la
+  web; después se vuelca todo.
+- Al cerrar cada fase (junto a reindexar `codebase-memory-mcp`), repasar el wiki
+  entero contra el código por si algo quedó desfasado.
