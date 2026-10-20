@@ -193,6 +193,20 @@
   #root {
     height: 100%;
   }
+  /* Texto inseleccionable, como en una app de escritorio (Pablo, 20/10/2026).
+     Solo se seleccionan y copian los campos y los cuadros de copiar (estos
+     llevan `select-text`). WebKit no deja seleccionar dentro de un campo si
+     un antecesor lleva `user-select: none`, por eso se devuelve a mano. */
+  body {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  input,
+  textarea,
+  [contenteditable]:not([contenteditable="false"]) {
+    -webkit-user-select: text;
+    user-select: text;
+  }
   /* Cursor de mano en TODO lo interactivo. Tailwind Preflight pone `cursor:
      default` en los <button>, por eso el ratón no cambiaba. Esto lo devuelve
      a la manita en botones, enlaces, selects y cualquier role="button". */

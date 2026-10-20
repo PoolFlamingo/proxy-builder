@@ -44,6 +44,8 @@ materiales. Radio 14 px, densidad 10 px (`p-2.5`/`gap-2.5`), texto base
 `overflow-auto`), las listas cuyos items llevan borde o anillo con padding
 (`p-1`) para que no se corten, nada de `title=` nativo (va con `<Tooltip>`; lo vigila
 `pnpm check:title`), y el scroll se prueba en WebKitGTK, no en Chrome.
+El texto no se selecciona (`src/index.css`, Pablo, 20/10/2026): solo los
+campos y los cuadros de copiar, que llevan `select-text`.
 
 Textos: siempre por `t()` con la cadena fuente en español; la traducción al
 inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
