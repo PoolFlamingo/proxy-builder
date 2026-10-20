@@ -573,6 +573,9 @@ pub struct CapaVista {
     /// Cuánto sigue la ilustración por debajo del hueco (extensión del
     /// difuminado), en fracciones del alto de la carta.
     pub extension: f32,
+    /// El color del borde de la ilustración: el fondo del hueco en la
+    /// pantalla mientras se mueve, si la imagen no lo cubre (zoom bajo 1).
+    pub fondo: [u8; 3],
     /// El radio de las esquinas, en fracciones del ancho y del alto.
     pub radio: [f32; 2],
     /// La cara del diseño cuya ilustración va en el hueco.
@@ -630,6 +633,12 @@ pub fn render_capa(
         imagen: de_pixmap(&px),
         arte,
         extension: pieza.arte_extension,
+        fondo: d
+            .faces
+            .get(cara)
+            .and_then(|f| f.art.as_ref())
+            .and_then(|a| rec.imagenes.imagen(&a.image.blob))
+            .map_or([0, 0, 0], |i| super::render::color_de_borde(&i)),
         radio: [r / ancho as f32, r / alto as f32],
         cara,
     }))

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { ArtFraming } from "@/bindings/ArtFraming";
 import type { CapaInfo } from "@/bindings/CapaInfo";
 import { cn } from "@/lib/utils";
-import { geometriaArte } from "./encuadre";
+import { cubreElHueco, geometriaArte } from "./encuadre";
 
 /**
  * La carta montada en la pantalla mientras se mueve la ilustración: fondo
@@ -57,6 +57,15 @@ export function ArteEnVivo({
 					height: `${(h + extension) * 100}%`,
 				}}
 			>
+				{/* Si la imagen no cubre el hueco (zoom por debajo de 1), lo que
+				    falta, del color de su borde (Rust alarga los bordes y los
+				    desenfoca; mientras se mueve, basta con su color). */}
+				{!cubreElHueco(framing) && (
+					<div
+						className="absolute inset-0"
+						style={{ backgroundColor: `rgb(${capa.fondo.join(",")})` }}
+					/>
+				)}
 				<div
 					className="absolute top-0 left-0 w-full"
 					style={{ height: `${(h / (h + extension)) * 100}%` }}

@@ -35,6 +35,7 @@ import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { useUi } from "@/stores/ui-store";
 import { AJUSTES_CERO, AjustesFinos, hayAjustes } from "./ajustes-finos";
+import { ZOOM_MAX, ZOOM_MIN } from "./encuadre";
 import { elegirEstilo, opcionesEstilo, packEfectivo, propiosDe, valorEstilo } from "./estilos";
 import { ID_ORIGINAL, useMarcosOriginales } from "./marcos-originales";
 import { usePacksDescargables } from "./packs-descargables";
@@ -544,8 +545,8 @@ function PestanaArte({
 					<FilaDeslizador
 						etiqueta={t("Zoom")}
 						valor={arte.framing.zoom}
-						min={1}
-						max={3}
+						min={ZOOM_MIN}
+						max={ZOOM_MAX}
 						paso={0.01}
 						sufijo="×"
 						onChange={(zoom) => encuadre({ zoom })}

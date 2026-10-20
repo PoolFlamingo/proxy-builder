@@ -38,9 +38,26 @@ describe("moverEncuadre", () => {
 		expect(moverEncuadre(neutro, { dy: 5 }, hueco).offsetY).toBe(-1);
 	});
 
-	it("el zoom va de 1 a 3", () => {
-		expect(moverEncuadre(neutro, { zoom: -0.5 }, hueco).zoom).toBe(1);
+	it("el zoom va de 0,1 a 3", () => {
+		expect(moverEncuadre(neutro, { zoom: -0.5 }, hueco).zoom).toBeCloseTo(0.5);
+		expect(moverEncuadre({ ...neutro, zoom: 0.12 }, { zoom: -0.04 }, hueco).zoom).toBe(0.1);
 		expect(moverEncuadre({ ...neutro, zoom: 2.99 }, { zoom: 0.04 }, hueco).zoom).toBe(3);
+	});
+
+	it("con zoom por debajo de 1 cabe entera y también sigue al ratón 1:1", () => {
+		const f = { ...neutro, zoom: 0.6, offsetX: 0.3 };
+		const g = geometriaArte(f, hueco.iw, hueco.ih, hueco.w, hueco.h);
+		// Más pequeña que el hueco en los dos lados.
+		expect(g.ancho).toBeLessThan(100);
+		expect(g.alto).toBeLessThan(100);
+		const m = moverEncuadre(f, { dx: 2 / 63, dy: 1 / 88 }, hueco);
+		expect(centro(m).x - centro(f).x).toBeCloseTo(2, 6);
+		expect(centro(m).y - centro(f).y).toBeCloseTo(1, 6);
+		// De -1 a 1 va de un borde del hueco al otro (-1, pegada a la izquierda).
+		const izq = geometriaArte({ ...f, offsetX: -1 }, hueco.iw, hueco.ih, hueco.w, hueco.h);
+		const der = geometriaArte({ ...f, offsetX: 1 }, hueco.iw, hueco.ih, hueco.w, hueco.h);
+		expect(izq.tx).toBeCloseTo(0, 6);
+		expect(der.tx).toBeCloseTo(100 * (100 / g.ancho - 1), 6);
 	});
 });
 
