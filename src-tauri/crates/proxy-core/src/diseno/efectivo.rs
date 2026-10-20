@@ -174,11 +174,36 @@ pub fn efectivo(d: &CardDesign, coleccion: Option<&Collection>) -> DisenoEfectiv
     }
 }
 
+/// El diseño sin los textos del otro idioma, que no se pintan: así, editar
+/// el inglés no cambia la huella (ni repinta) la vista en español, y al revés.
+/// De las reglas a mano solo cuenta si las hay (las compuestas lo miran en
+/// los dos idiomas). La línea de tipo se queda: la inglesa decide cosas
+/// (criatura, sala…) en los dos.
+fn sin_el_otro_idioma(e: &DisenoEfectivo, lang: DesignLang) -> DisenoEfectivo {
+    let otro = match lang {
+        DesignLang::Es => DesignLang::En,
+        DesignLang::En => DesignLang::Es,
+    };
+    let mut e = e.clone();
+    for f in &mut e.design.faces {
+        let t = f.texts.get_mut(otro);
+        *t = FaceTexts {
+            rules_override: t.rules_override.as_ref().map(|_| String::new()),
+            ..FaceTexts::default()
+        };
+    }
+    for f in &mut e.design.card.faces {
+        f.rules.get_mut(otro).clear();
+    }
+    e.pie.template.get_mut(otro).clear();
+    e
+}
+
 /// La huella de un render: el diseño efectivo, el idioma y las huellas de
 /// los recursos (letras, pack, símbolos) y la versión del motor.
 pub fn huella(e: &DisenoEfectivo, lang: DesignLang, cara: usize, recursos: &str) -> String {
     let mut h = Sha256::new();
-    h.update(serde_json::to_vec(e).unwrap_or_default());
+    h.update(serde_json::to_vec(&sin_el_otro_idioma(e, lang)).unwrap_or_default());
     h.update(format!(
         "|{lang:?}|{cara}|{recursos}|{}",
         super::VERSION_MOTOR
@@ -269,5 +294,23 @@ mod tests {
             a,
             huella(&efectivo(&d, Some(&coleccion())), DesignLang::Es, 0, "s")
         );
+    }
+
+    #[test]
+    fn los_textos_del_otro_idioma_no_cambian_la_huella() {
+        let c = coleccion();
+        let d = diseno_de_prueba();
+        let h = |d: &CardDesign, l| huella(&efectivo(d, Some(&c)), l, 0, "r");
+        let mut en = d.clone();
+        en.faces[0].texts.en.name = "Other".into();
+        en.faces[0].texts.en.flavor = "Flavor".into();
+        assert_eq!(h(&d, DesignLang::Es), h(&en, DesignLang::Es));
+        assert_ne!(h(&d, DesignLang::En), h(&en, DesignLang::En));
+        // Reglas a mano en el otro idioma: cuenta que las haya, no qué dicen.
+        en.faces[0].texts.en.rules_override = Some("A".into());
+        let a = h(&en, DesignLang::Es);
+        assert_ne!(h(&d, DesignLang::Es), a);
+        en.faces[0].texts.en.rules_override = Some("B".into());
+        assert_eq!(a, h(&en, DesignLang::Es));
     }
 }

@@ -499,6 +499,16 @@ pub struct EstiloDef {
     /// despejado (como el pack de la casa).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub corona_legendaria: Option<bool>,
+    /// Cuánto (mm) se funde con negro el borde de abajo de la ilustración
+    /// (el extendido de la casa, para que no acabe en seco). Los ajustes
+    /// finos de la carta o de la colección lo cambian.
+    #[serde(default, skip_serializing_if = "es_cero")]
+    pub difuminado_arte: f32,
+    /// Cuánto (mm) sigue la ilustración por debajo de su hueco, perdiéndose
+    /// (la extensión del difuminado). Va con `difuminadoArte`: si los ajustes
+    /// finos ponen un difuminado propio, la extensión es la suya (o ninguna).
+    #[serde(default, skip_serializing_if = "es_cero")]
+    pub extension_difuminado: f32,
     /// La ventana de la ilustración: fuera de ella, negro, con las esquinas
     /// redondeadas a su radio (o al de los ajustes finos). Se pinta encima
     /// de la ilustración y debajo de las capas.
@@ -562,6 +572,10 @@ pub struct VentanaArte {
 
 fn radio_defecto() -> f32 {
     3.0
+}
+
+fn es_cero(v: &f32) -> bool {
+    *v == 0.0
 }
 
 /// El `pack.json`.
@@ -912,7 +926,17 @@ pub fn rellenar(plantilla: &str, vars: &BTreeMap<String, String>) -> String {
         match tras.find("}}") {
             Some(f) => {
                 let nombre = tras[..f].trim();
-                if let Some(v) = vars.get(nombre) {
+                if let Some(expr) = nombre.strip_prefix('=') {
+                    // `{{= 56.25 - subeCaja}}`: la cuenta con las variables
+                    // que son números (la caja de reglas a medida).
+                    let nums: BTreeMap<&str, f32> = vars
+                        .iter()
+                        .filter_map(|(k, v)| Some((k.as_str(), v.parse::<f32>().ok()?)))
+                        .collect();
+                    if let Ok(v) = evaluar(expr, &nums) {
+                        out.push_str(&format!("{v}"));
+                    }
+                } else if let Some(v) = vars.get(nombre) {
                     out.push_str(v);
                 }
                 resto = &tras[f + 2..];
@@ -1042,6 +1066,7 @@ pub(crate) mod tests {
         let mut v = BTreeMap::new();
         v.insert("a".to_string(), "1".to_string());
         assert_eq!(rellenar("x{{a}}y{{ b }}z{{", &v), "x1yz{{");
+        assert_eq!(rellenar("{{= 5.5 - a}} {{= 2 + b}}", &v), "4.5 ");
     }
 
     #[test]

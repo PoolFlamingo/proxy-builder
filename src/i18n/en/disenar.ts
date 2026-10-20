@@ -97,6 +97,14 @@ export const DISENAR: Record<string, string> = {
 	"Nueva colección": "New collection",
 	"Colección guardada": "Collection saved",
 	"Colección duplicada": "Collection duplicated",
+	"Difuminado de la ilustración a medida": "Custom art fade",
+	"Funde con negro el borde de abajo de la ilustración. Sin tocarlo, el del marco (en el extendido, 12 mm con 7 de extensión). A 0 mm, sin difuminado. La extensión hace que la ilustración siga por debajo de su ventana, perdiéndose: se ve donde el marco no la tapa (en el extendido, a los lados de la caja y debajo).":
+		"Fades the bottom edge of the art into black. Untouched, the frame's (12 mm with a 7 mm extension on extended). At 0 mm, no fade. The extension lets the art continue below its window as it fades out: it shows wherever the frame doesn't cover it (on extended, beside and below the box).",
+	"Extensión del difuminado": "Fade extension",
+	"Difuminado de la ilustración": "Art fade",
+	"Cuánto más alta (en positivo, crece hacia arriba y la ilustración se acorta) o más baja (en negativo, la letra baja si hace falta). A 0, como viene. En los marcos de imagen (Original, Balatro) no cambia.":
+		"How much taller (positive: it grows upwards and the art gets shorter) or shorter (negative: the text shrinks if needed). At 0, as the frame comes. Image frames (Original, Balatro) don't change.",
+	"Altura de la caja de reglas": "Rules box height",
 	Colecciones: "Collections",
 	"Lo que comparten las cartas de un mazo o una serie: marco, emblema, pie y letras. Cambiar una colección cambia todas sus cartas.":
 		"What the cards of a deck or a series share: frame, emblem, footer and fonts. Changing a collection changes all its cards.",

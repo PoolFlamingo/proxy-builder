@@ -339,6 +339,8 @@ pub fn vars_de_ejemplo() -> BTreeMap<String, String> {
         ("opacidadCaja", "0.8"),
         ("tintaCaja", "#ffffff"),
         ("yReglas", "60"),
+        ("subeCaja", "0"),
+        ("extensionArte", "0"),
         ("altoReglas", "23"),
         ("yTipo", "54"),
         ("yTipo04", "54.4"),
@@ -479,14 +481,20 @@ pub fn reducida(img: &RgbaImage, lado: u32) -> RgbaImage {
 }
 
 /// La ilustración cubriendo su hueco, con zoom, desplazamiento y giro.
+///
+/// `extra` (mm): cuánto sigue por debajo del hueco (la extensión del
+/// difuminado), con el mismo encuadre: lo que haya de la imagen debajo de lo
+/// que se ve y, si se acaba, su última fila estirada (ahí ya está casi negro).
 pub(super) fn pintar_arte(
     l: &mut Lienzo,
     img: &RgbaImage,
     hueco: (f32, f32, f32, f32),
     f: &super::modelo::ArtFraming,
+    extra: f32,
 ) {
     let (x, y, w, h) = (l.x(hueco.0), l.y(hueco.1), l.x(hueco.2), l.y(hueco.3));
     let (tw, th) = (w.round().max(1.0) as u32, h.round().max(1.0) as u32);
+    let te = l.y(extra.max(0.0)).round() as u32;
     let (iw, ih) = (img.width() as f64, img.height() as f64);
     let zoom = f.zoom.max(1.0);
     let girada = f.rotation.rem_euclid(360.0).abs() > 0.01;
@@ -497,7 +505,12 @@ pub(super) fn pintar_arte(
         let (hx, hy) = ((iw - cw) / 2.0, (ih - ch) / 2.0);
         let l0 = hx + f.offset_x.clamp(-1.0, 1.0) * hx;
         let t0 = hy + f.offset_y.clamp(-1.0, 1.0) * hy;
-        reescalar(img, tw, th, Some((l0, t0, cw, ch)))
+        // Lo de debajo, en el mismo paso (sin costura): lo que quede.
+        let debajo = (te as f64 / cubre).min((ih - t0 - ch).max(0.0));
+        let th_debajo = (debajo * cubre).round() as u32;
+        let debajo = if th_debajo == 0 { 0.0 } else { debajo };
+        reescalar(img, tw, th + th_debajo, Some((l0, t0, cw, ch + debajo)))
+            .map(|p| estirar_abajo(p, th + te))
     } else {
         let a = f.rotation.to_radians();
         let (c, s) = (a.cos().abs(), a.sin().abs());
@@ -507,7 +520,7 @@ pub(super) fn pintar_arte(
         let grande = reescalar(img, rw, rh, None);
         grande.and_then(|g| {
             let pm = a_pixmap(&g)?;
-            let mut out = Pixmap::new(tw, th)?;
+            let mut out = Pixmap::new(tw, th + te)?;
             let (bw, bh) = (rw as f64 * c + rh as f64 * s, rw as f64 * s + rh as f64 * c);
             let dx = f.offset_x.clamp(-1.0, 1.0) * ((bw - wf) / 2.0).max(0.0);
             let dy = f.offset_y.clamp(-1.0, 1.0) * ((bh - hf) / 2.0).max(0.0);
@@ -538,6 +551,93 @@ pub(super) fn pintar_arte(
             None,
         );
     }
+}
+
+/// La imagen alargada hasta `alto` px repitiendo su última fila, suavizada
+/// en horizontal (repetida tal cual, salen rayas).
+fn estirar_abajo(img: RgbaImage, alto: u32) -> RgbaImage {
+    let (w, h) = img.dimensions();
+    if h >= alto || h == 0 || w == 0 {
+        return img;
+    }
+    let radio = (w / 40).max(1) as i64;
+    let fila: Vec<image::Rgba<u8>> = (0..w as i64)
+        .map(|x| {
+            let (a, b) = ((x - radio).max(0), (x + radio).min(w as i64 - 1));
+            let mut suma = [0u32; 4];
+            for xx in a..=b {
+                let p = img.get_pixel(xx as u32, h - 1);
+                for (s, v) in suma.iter_mut().zip(p.0) {
+                    *s += u32::from(v);
+                }
+            }
+            let n = (b - a + 1) as u32;
+            image::Rgba(suma.map(|s| (s / n) as u8))
+        })
+        .collect();
+    let mut out = RgbaImage::new(w, alto);
+    image::imageops::replace(&mut out, &img, 0, 0);
+    for y in h..alto {
+        for (x, p) in fila.iter().enumerate() {
+            out.put_pixel(x as u32, y, *p);
+        }
+    }
+    out
+}
+
+/// Lo oscuro del difuminado en cada punto (de 0, arriba, a 1): muy suave al
+/// empezar y al acabar (smootherstep), que no se note dónde empieza ni dónde
+/// la imagen se pierde.
+fn curva_difuminado(t: f32) -> f32 {
+    t * t * t * (t * (t * 6.0 - 15.0) + 10.0)
+}
+
+/// Cuánto antes del final del hueco de la ilustración llega el difuminado a
+/// negro del todo (mm).
+const DIFUMINADO_COLCHON_MM: f32 = 1.5;
+
+/// Funde con negro los `mm` de abajo del hueco de la ilustración. Es un
+/// degradado encima (no transparencia), así sale igual en la capa de la
+/// vista en directo, donde la ilustración va por debajo.
+fn difuminar_abajo(l: &mut Lienzo, hueco: (f32, f32, f32, f32), mm: f32) {
+    let alto = mm.min(hueco.3);
+    if alto <= 0.0 {
+        return;
+    }
+    // Negro del todo un poco antes del final del hueco: el marco suele tapar
+    // el filo de abajo del arte, y la imagen tiene que haberse perdido antes
+    // de llegar ahí (si no, se corta en seco contra él).
+    let colchon = DIFUMINADO_COLCHON_MM.min(alto * 0.25);
+    let fondo = hueco.1 + hueco.3;
+    let (x, w) = (l.x(hueco.0), l.x(hueco.2));
+    let (y0, y_negro, y1) = (l.y(fondo - alto), l.y(fondo - colchon), l.y(fondo));
+    let negro =
+        |a: f32| tiny_skia::Color::from_rgba(0.0, 0.0, 0.0, a).unwrap_or(tiny_skia::Color::BLACK);
+    let paradas = (0..=12)
+        .map(|i| {
+            let t = i as f32 / 12.0;
+            let a = curva_difuminado(t);
+            tiny_skia::GradientStop::new(t, negro(a))
+        })
+        .collect();
+    let (Some(sombra), Some(rect)) = (
+        tiny_skia::LinearGradient::new(
+            tiny_skia::Point::from_xy(0.0, y0),
+            tiny_skia::Point::from_xy(0.0, y_negro),
+            paradas,
+            tiny_skia::SpreadMode::Pad,
+            Transform::identity(),
+        ),
+        tiny_skia::Rect::from_xywh(x, y0, w, y1 - y0),
+    ) else {
+        return;
+    };
+    let pintura = tiny_skia::Paint {
+        shader: sombra,
+        anti_alias: false,
+        ..Default::default()
+    };
+    l.px.fill_rect(rect, &pintura, Transform::identity(), None);
 }
 
 /// La ilustración (o lo que haya) y lo de dentro de la ventana, otra vez,
@@ -609,7 +709,7 @@ fn repintar_ventana(
         return;
     };
     match img {
-        Some((i, f)) => pintar_arte(&mut otro, i, *hueco, f),
+        Some((i, f)) => pintar_arte(&mut otro, i, *hueco, f, 0.0),
         None => sin_arte(&mut otro, *hueco),
     }
     l.px.draw_pixmap(
@@ -2043,6 +2143,9 @@ pub(super) struct Pieza {
     /// El hueco de la ilustración en fracciones del lienzo (x, y, ancho,
     /// alto), si lo tiene.
     pub(super) arte: Option<[f32; 4]>,
+    /// Cuánto sigue la ilustración por debajo de su hueco (extensión del
+    /// difuminado), en fracciones del alto del lienzo.
+    pub(super) arte_extension: f32,
 }
 
 /// Las líneas de la caja de una mazmorra: salas en filas.
@@ -2161,6 +2264,21 @@ pub(super) fn pintar_cara(
     vars.insert("opacidadCaja".into(), format!("{}", modo_caja.1));
     // Para los marcos con la caja en la imagen (Original): cuánto oscurecerla.
     vars.insert("refuerzoCaja".into(), format!("{refuerzo}"));
+    // La caja de reglas a medida (ajustes finos): cuánto sube su borde de
+    // arriba. Los marcos fijos lo usan en sus huecos y en sus SVG.
+    let sube_caja = e.retoques.rules_box_height.unwrap_or(0.0) as f32;
+    vars.insert("subeCaja".into(), format!("{sube_caja}"));
+    // Cuánto sigue la ilustración por debajo de su ventana (el negro del
+    // marco empieza ese tanto más abajo). Con un difuminado propio, la
+    // extensión también es la propia; sin él, las dos del marco.
+    let extension_arte = match e.retoques.art_fade {
+        Some(_) => e.retoques.art_fade_extension.unwrap_or(0.0) as f32,
+        None => e
+            .retoques
+            .art_fade_extension
+            .map_or(estilo.extension_difuminado, |v| v as f32),
+    };
+    vars.insert("extensionArte".into(), format!("{extension_arte}"));
 
     let mut c = Carta {
         l,
@@ -2168,7 +2286,7 @@ pub(super) fn pintar_cara(
         rec,
         estilo,
         vars,
-        nums: BTreeMap::new(),
+        nums: BTreeMap::from([("subeCaja", sube_caja), ("extensionArte", extension_arte)]),
         avisos: Vec::new(),
         faltan: Vec::new(),
         clave_color: clave_marco(e, cara),
@@ -2249,76 +2367,93 @@ pub(super) fn pintar_cara(
                 super::pack::Valor::Num(n) => *n,
                 super::pack::Valor::Expr(_) => 5.95,
             };
-            let mut pad_abajo = din.pad_abajo + franja;
-            // Primero, en la altura cómoda con la letra hasta el 75 %; si no
+            // Encaja el texto en una caja de hasta `max` mm: primero en la
+            // altura cómoda (`comodo`) con la letra hasta el 75 %; si no
             // cabe, en la máxima con la letra entera (y bajando lo que haga
-            // falta).
-            // Con un tamaño elegido a mano en los ajustes finos, ese manda.
-            let comoda = din
-                .alto_comodo
-                .filter(|a| *a < din.alto_max && c.retoques.rules_size.is_none())
-                .map(|a| {
-                    cuerpos::ajustar(
-                        &contenido,
-                        &mut c.motor.m,
-                        &mut c.motor.letras,
-                        &est,
-                        c.l.x(ancho),
-                        c.l.y(a - din.pad_arriba - pad_abajo),
-                        (est.tam * LETRA_COMODA).max(tam_min).min(est.tam),
-                        paso,
-                        k,
-                    )
-                })
-                .filter(|aj| aj.1 <= 0.0);
-            let mut aj = match comoda {
-                Some(aj) => aj,
-                None => cuerpos::ajustar(
-                    &contenido,
-                    &mut c.motor.m,
-                    &mut c.motor.letras,
-                    &est,
-                    c.l.x(ancho),
-                    c.l.y(din.alto_max - din.pad_arriba - pad_abajo),
-                    tam_min.min(est.tam),
-                    paso,
-                    k,
-                ),
-            };
-            let mut alto_txt = aj.0.alto() / c.l.ky;
-            // Si el último renglón llega a la caja de fuerza/resistencia, se
-            // deja ese hueco libre por abajo.
-            if fr.is_some() {
-                if let Some(frh) = c.estilo.huecos.get("fr") {
-                    let fr_x = frh.x.evaluar(&BTreeMap::new()).unwrap_or(48.0);
-                    let fr_y = frh.y.evaluar(&BTreeMap::new()).unwrap_or(80.0);
-                    let libre = c.l.x(fr_x - 0.6 - x_txt);
-                    let invade = din.fondo - fr_y + 0.4;
-                    if aj.0.fin_ultima_linea() > libre && pad_abajo < invade {
-                        pad_abajo = invade;
-                        aj = cuerpos::ajustar(
+            // falta). Con un tamaño elegido a mano en los ajustes finos, ese
+            // manda.
+            let mut encajar = |max: f32, comodo: Option<f32>| {
+                let mut pad_abajo = din.pad_abajo + franja;
+                let comoda = comodo
+                    .filter(|a| *a < max && c.retoques.rules_size.is_none())
+                    .map(|a| {
+                        cuerpos::ajustar(
                             &contenido,
                             &mut c.motor.m,
                             &mut c.motor.letras,
                             &est,
                             c.l.x(ancho),
-                            c.l.y(din.alto_max - din.pad_arriba - pad_abajo),
-                            tam_min.min(est.tam),
+                            c.l.y(a - din.pad_arriba - pad_abajo),
+                            (est.tam * LETRA_COMODA).max(tam_min).min(est.tam),
                             paso,
                             k,
-                        );
-                        alto_txt = aj.0.alto() / c.l.ky;
+                        )
+                    })
+                    .filter(|aj| aj.1 <= 0.0);
+                let mut aj = match comoda {
+                    Some(aj) => aj,
+                    None => cuerpos::ajustar(
+                        &contenido,
+                        &mut c.motor.m,
+                        &mut c.motor.letras,
+                        &est,
+                        c.l.x(ancho),
+                        c.l.y(max - din.pad_arriba - pad_abajo),
+                        tam_min.min(est.tam),
+                        paso,
+                        k,
+                    ),
+                };
+                let mut alto_txt = aj.0.alto() / c.l.ky;
+                // Si el último renglón llega a la caja de fuerza/resistencia,
+                // se deja ese hueco libre por abajo.
+                if fr.is_some() {
+                    if let Some(frh) = c.estilo.huecos.get("fr") {
+                        let fr_x = frh.x.evaluar(&BTreeMap::new()).unwrap_or(48.0);
+                        let fr_y = frh.y.evaluar(&BTreeMap::new()).unwrap_or(80.0);
+                        let libre = c.l.x(fr_x - 0.6 - x_txt);
+                        let invade = din.fondo - fr_y + 0.4;
+                        if aj.0.fin_ultima_linea() > libre && pad_abajo < invade {
+                            pad_abajo = invade;
+                            aj = cuerpos::ajustar(
+                                &contenido,
+                                &mut c.motor.m,
+                                &mut c.motor.letras,
+                                &est,
+                                c.l.x(ancho),
+                                c.l.y(max - din.pad_arriba - pad_abajo),
+                                tam_min.min(est.tam),
+                                paso,
+                                k,
+                            );
+                            alto_txt = aj.0.alto() / c.l.ky;
+                        }
                     }
                 }
-            }
+                (aj, alto_txt, pad_abajo)
+            };
+            // La caja a medida (ajustes finos): más alta, crece por arriba y
+            // el texto tiene más sitio; más baja, el texto se vuelve a encajar
+            // en ella (con la letra más pequeña si hace falta).
+            let sube = c.retoques.rules_box_height.unwrap_or(0.0) as f32;
+            let mas = sube.max(0.0);
+            let (mut aj, alto_txt, mut pad_abajo) =
+                encajar(din.alto_max + mas, din.alto_comodo.map(|a| a + mas));
+            let natural = alto_txt + din.pad_arriba + pad_abajo;
+            let pedida = natural.clamp(din.alto_min, din.alto_max) + sube;
+            let alto_caja = if sube < 0.0 {
+                let alto = pedida.max(din.pad_arriba + pad_abajo + 3.0);
+                (aj, _, pad_abajo) = encajar(alto, None);
+                alto
+            } else {
+                pedida.max(natural).min(din.alto_max + mas)
+            };
             if aj.1 > 0.0 {
                 c.avisos.push(Aviso::TextoNoCabe {
                     hueco: "reglas".into(),
                     sobra: f64::from(aj.1 / c.l.ky),
                 });
             }
-            let alto_caja =
-                (alto_txt + din.pad_arriba + pad_abajo).clamp(din.alto_min, din.alto_max);
             let y_reglas = din.fondo - alto_caja;
             let y_tipo = y_reglas - din.barra_tipo;
             c.nums.insert("yReglas", y_reglas + din.pad_arriba);
@@ -2386,33 +2521,62 @@ pub(super) fn pintar_cara(
 
     // ── Ilustración.
     let mut hueco_arte = None;
+    let mut extension_hueco = 0.0;
     let mut arte_pintado = None;
     {
         let h = c.estilo.arte.clone();
         let ev = |v: &super::pack::Valor| v.evaluar(&c.nums).unwrap_or(0.0);
-        let arte = Caja {
+        let ventana = Caja {
             x: ev(&h.x),
             y: ev(&h.y),
             w: ev(&h.w),
             h: ev(&h.h),
         };
+        // Con la extensión del difuminado, la ilustración sigue por debajo
+        // de su ventana (hasta el final de la carta como mucho).
+        let arte = Caja {
+            h: (ventana.h + extension_arte).min(h_mm - ventana.y),
+            ..ventana
+        };
+        let extendido = arte.h - ventana.h;
         if arte.w > 0.0 && arte.h > 0.0 {
-            hueco_arte = Some([arte.x / w_mm, arte.y / h_mm, arte.w / w_mm, arte.h / h_mm]);
+            hueco_arte = Some([
+                ventana.x / w_mm,
+                ventana.y / h_mm,
+                ventana.w / w_mm,
+                ventana.h / h_mm,
+            ]);
+            extension_hueco = extendido / h_mm;
         }
         if !o.sin_arte && arte.w > 0.0 && arte.h > 0.0 {
-            let r = (arte.x, arte.y, arte.w, arte.h);
+            let r = (ventana.x, ventana.y, ventana.w, ventana.h);
             let img = d
                 .faces
                 .get(cara)
                 .and_then(|f| f.art.as_ref())
                 .and_then(|a| rec.imagenes.imagen(&a.image.blob).map(|i| (i, a.framing)));
             match &img {
-                Some((i, f)) => pintar_arte(&mut c.l, i, r, f),
+                Some((i, f)) => pintar_arte(&mut c.l, i, r, f, extendido),
                 // Sin ilustración, el fondo del estilo si trae; si no, el gris.
-                None if c.estilo.fondo.is_empty() => sin_arte(&mut c.l, r),
+                None if c.estilo.fondo.is_empty() => {
+                    sin_arte(&mut c.l, (arte.x, arte.y, arte.w, arte.h))
+                }
                 None => {}
             }
             arte_pintado = Some((img, r));
+        }
+        let difuminado = e
+            .retoques
+            .art_fade
+            .map_or(c.estilo.difuminado_arte, |v| v as f32);
+        // El difuminado empieza donde siempre y acaba al final de la
+        // extensión.
+        if arte.w > 0.0 && arte.h > 0.0 {
+            difuminar_abajo(
+                &mut c.l,
+                (arte.x, arte.y, arte.w, arte.h),
+                difuminado + extendido,
+            );
         }
     }
     if let Some(v) = c.estilo.ventana_arte.clone() {
@@ -2612,6 +2776,7 @@ pub(super) fn pintar_cara(
         avisos: c.avisos,
         faltan: c.faltan,
         arte: hueco_arte,
+        arte_extension: extension_hueco,
     })
 }
 

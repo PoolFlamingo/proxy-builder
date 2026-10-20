@@ -119,6 +119,14 @@ Los estilos que la app conoce son `borderless` (despejado), `extended`,
   cuadradas: el corte las redondea).
 - **`coronaLegendaria`** (opcional): `true` para que las legendarias lleven
   corona sin pedirla. Sin decirlo, solo en el despejado.
+- **`difuminadoArte`** (opcional, mm): funde con negro esos milímetros de
+  abajo del hueco del arte, para que la ilustración no acabe en seco (el
+  extendido de la casa lleva 12, con 7 de `extensionDifuminado`: lo que sigue la ilustración por debajo de su hueco, perdiéndose). Es un degradado encima del arte y debajo de
+  las capas, suave al empezar y al acabar, y llega a negro del todo 1,5 mm
+  antes del final del hueco (el marco suele tapar ese filo). Los ajustes
+  finos de la carta o la colección lo cambian.
+- La capa de la `cinta` va antes que la del marco cuando el marco tapa la
+  barra del título: así queda por debajo de ella.
 - **`ventanaArte`** (opcional): `{ x, y, w, h, radio, soloAbajo }` en mm. Lo
   que queda fuera se pinta de negro, con las esquinas a `radio` (o al de los
   ajustes finos de la carta o la colección). Va encima del arte y debajo de
@@ -201,9 +209,16 @@ Las capas SVG llevan `{{variables}}` que el motor rellena antes de pintar:
 | `{{refuerzoCaja}}` | De 0 a 1, cuánto más opaca se ha pedido la caja (para los marcos con la caja en la imagen: un rectángulo negro debajo con esa opacidad). |
 | `{{tintaCrema}}`, `{{tintaFr}}` | Texto sobre crema y sobre la caja de F/R. |
 | `{{yReglas}}`, `{{altoReglas}}`, `{{yTipo}}`, `{{yTipo04}}` | La geometría de la caja que crece. |
+| `{{extensionArte}}` | Cuántos mm sigue la ilustración por debajo de su hueco (la extensión del difuminado de los ajustes finos; 0 de fábrica). El negro de debajo del arte tiene que empezar ese tanto más abajo, si no, la tapa. |
+| `{{subeCaja}}` | Cuántos mm más alta se ha pedido la caja de reglas en los ajustes finos (negativo, más baja; 0 de fábrica). |
+| `{{= 56.25 - subeCaja}}` | Una cuenta (sumas y restas) con las variables que son números. Así un marco fijo mueve su barra de tipo y el borde de arriba de su caja. |
 
-Los huecos pueden usar `yReglas`, `altoReglas` y `yTipo` en expresiones de
-sumas y restas: `"y": "yTipo+0.4"`.
+Los huecos pueden usar `yReglas`, `altoReglas`, `yTipo` y `subeCaja` en
+expresiones de sumas y restas: `"y": "yTipo+0.4"`, `"h": "52.5 - subeCaja"`.
+En los marcos fijos de la casa (extendido y clásico), el arte, la línea de
+tipo, el emblema y las reglas van con `subeCaja`; en la caja que crece
+(despejado), lo pedido se suma a su altura. Un pack que no use `subeCaja` no
+cambia con ese ajuste.
 
 ### Layouts de un estilo
 

@@ -283,6 +283,7 @@ fn partida(
         avisos,
         faltan,
         arte: None,
+        arte_extension: 0.0,
     })
 }
 
@@ -383,6 +384,7 @@ fn secuela(
         avisos,
         faltan,
         arte: None,
+        arte_extension: 0.0,
     })
 }
 
@@ -452,6 +454,7 @@ fn flip(
         avisos,
         faltan,
         arte: None,
+        arte_extension: 0.0,
     })
 }
 
@@ -491,6 +494,7 @@ fn apaisada(
         avisos: p.avisos,
         faltan: p.faltan,
         arte: None,
+        arte_extension: 0.0,
     })
 }
 
@@ -538,6 +542,7 @@ fn meld_dorso(
         avisos: p.avisos,
         faltan: p.faltan,
         arte: None,
+        arte_extension: 0.0,
     })
 }
 
@@ -565,6 +570,9 @@ pub struct CapaVista {
     /// El hueco de la ilustración, en fracciones de la carta (x, y, ancho,
     /// alto).
     pub arte: [f32; 4],
+    /// Cuánto sigue la ilustración por debajo del hueco (extensión del
+    /// difuminado), en fracciones del alto de la carta.
+    pub extension: f32,
     /// El radio de las esquinas, en fracciones del ancho y del alto.
     pub radio: [f32; 2],
     /// La cara del diseño cuya ilustración va en el hueco.
@@ -621,6 +629,7 @@ pub fn render_capa(
     Ok(Some(CapaVista {
         imagen: de_pixmap(&px),
         arte,
+        extension: pieza.arte_extension,
         radio: [r / ancho as f32, r / alto as f32],
         cara,
     }))
@@ -1109,6 +1118,79 @@ mod tests {
         )
         .unwrap()
         .is_none());
+    }
+
+    #[test]
+    fn la_extension_del_difuminado_no_toca_la_ventana() {
+        use crate::diseno::modelo::{DesignStyle, FineTuning};
+        let pack = Pack::de_fabrica().unwrap();
+        let s = simbolos(&["2", "W"]);
+        let rec = Recursos {
+            pack: &pack,
+            simbolos: &s,
+            imagenes: &Roja,
+        };
+        let mut motor = Motor::de_fabrica().unwrap();
+        let mut capa = |extension: Option<f64>| {
+            let mut e = normal();
+            e.design.style = DesignStyle::Extended;
+            e.retoques = FineTuning {
+                art_fade_extension: extension,
+                ..FineTuning::default()
+            };
+            render_capa(&mut motor, &e, 0, DesignLang::Es, &rec, CardSize::MTG, 400)
+                .unwrap()
+                .unwrap()
+        };
+        let (sin, con, fabrica) = (capa(Some(0.0)), capa(Some(10.0)), capa(None));
+        // El hueco (el encuadre) es el mismo; la extensión va aparte.
+        assert_eq!(sin.arte, con.arte);
+        assert_eq!(sin.arte, fabrica.arte);
+        assert_eq!(sin.extension, 0.0);
+        // La del extendido de la casa: 7 mm.
+        assert!(
+            (fabrica.extension * 88.0 - 7.0).abs() < 0.01,
+            "{}",
+            fabrica.extension
+        );
+        assert!(
+            (con.extension * 88.0 - 10.0).abs() < 0.01,
+            "{}",
+            con.extension
+        );
+    }
+
+    #[test]
+    fn la_caja_de_reglas_a_medida_acorta_el_arte_en_los_marcos_fijos() {
+        use crate::diseno::modelo::{DesignStyle, FineTuning};
+        let pack = Pack::de_fabrica().unwrap();
+        let s = simbolos(&["2", "W"]);
+        let rec = Recursos {
+            pack: &pack,
+            simbolos: &s,
+            imagenes: &Roja,
+        };
+        let mut motor = Motor::de_fabrica().unwrap();
+        for estilo in [DesignStyle::Extended, DesignStyle::Classic] {
+            let mut alto = |sube: Option<f64>| {
+                let mut e = normal();
+                e.design.style = estilo;
+                e.retoques = FineTuning {
+                    rules_box_height: sube,
+                    ..FineTuning::default()
+                };
+                let c = render_capa(&mut motor, &e, 0, DesignLang::Es, &rec, CardSize::MTG, 400)
+                    .unwrap()
+                    .unwrap();
+                c.arte[3] * 88.0
+            };
+            let (cero, mas, menos) = (alto(None), alto(Some(5.0)), alto(Some(-3.0)));
+            assert!((cero - mas - 5.0).abs() < 0.01, "{estilo:?}: {cero} {mas}");
+            assert!(
+                (menos - cero - 3.0).abs() < 0.01,
+                "{estilo:?}: {cero} {menos}"
+            );
+        }
     }
 
     // ── Medida ──

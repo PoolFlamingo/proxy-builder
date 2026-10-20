@@ -11,6 +11,11 @@ export type CapaInfo = { huella: string,
  */
 arte: [number, number, number, number], 
 /**
+ * Cuánto sigue la ilustración por debajo del hueco (extensión del
+ * difuminado), en fracciones del alto de la carta.
+ */
+extension: number, 
+/**
  * El radio de las esquinas en fracciones del ancho y del alto.
  */
 radio: [number, number], 
