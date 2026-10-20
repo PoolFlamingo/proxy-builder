@@ -71,7 +71,10 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
 - Clippy con `-D warnings`; nada de `unwrap()`/`expect()` fuera de tests
   (`#![cfg_attr(not(test), deny(...))]`).
 - Usar siempre `codebase-memory-mcp` y reindexar el proyecto al cerrar cada
-  fase.
+  fase. 🛑 Para explorar código (buscar símbolos, llamadas, texto) van
+  `search_graph`, `search_code`, `trace_path` y `get_code_snippet`, **no**
+  `grep`/`rg`/`find` por Bash (Pablo, 20/10/2026); `grep` solo para lo que no
+  es código (configs, JSON, markdown) o si el grafo no devuelve nada.
 
 ## Mapa rápido
 
@@ -180,8 +183,10 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
     tiny-skia), `render` (una cara sobre un lienzo de cualquier medida),
     `componer` (partidas, secuela, flip, batalla, meld, grandes),
     `maquetacion` (layout de la carta y cuerpo de cada cara), `estructura`
-    (habilidades, capítulos, niveles… del texto) y `cuerpos` (secciones con
-    insignias). Pack de la casa en `assets/marcos/builtin/`; letras en
+    (habilidades, capítulos, niveles… del texto), `cuerpos` (secciones con
+    insignias) y `emoji` (emoji en color: Twemoji COLR incrustada, familia
+    genérica de emoji de parley, capas pintadas con `ColorPainter` de skrifa;
+    Pablo, 20/10/2026). Pack de la casa en `assets/marcos/builtin/`; letras en
     `assets/fuentes/`. Dorados en `tests/dorados/` y `tests/dorados/layouts/`
     (con datos reales en `layouts/datos/`, bajados por
     `borrador::en_vivo::datos_de_layouts`).
@@ -302,7 +307,8 @@ equipo. Los planes (`plans/`) no se versionan.
 ## Wiki (documentación)
 
 La documentación completa del proyecto vive en el wiki de GitHub
-(`https://github.com/PoolFlamingo/proxy-builder/wiki`), **en inglés**. Es un
+(`https://github.com/PoolFlamingo/proxy-builder/wiki`), **en inglés (idioma de
+referencia) y en español**. Es un
 repo aparte (`PoolFlamingo/proxy-builder.wiki`) con su clon local en
 `/home/estigio/Projects/Tauri/proxy-builder.wiki/`, al lado de este y del de
 packs. No es lo mismo que `README.md`/`README.es.md` (la presentación) ni que
@@ -315,12 +321,36 @@ rehacer la app.
   (`.pbdeck`, packs, migración de la base de datos), una regla de arquitectura,
   un cambio en el CI o en la release, una carpeta de datos nueva… Se actualizan
   las páginas afectadas; si el cambio no cabe en ninguna, página nueva.
-- Qué página toca qué área: el mapa está en `Home.md` y `File-Index.md` del
+- Qué página toca qué área: el mapa está en `Documentation.md` y `File-Index.md` del
   wiki (cada área de `src/features/*`, `src-tauri/src/*` y
   `proxy-core::*` tiene su página). Los cambios de «Mapa rápido» de este fichero
   se reflejan también allí.
-- Página nueva: se enlaza desde `Home.md` y `_Sidebar.md`, y desde las páginas
-  relacionadas (cada una acaba con `## See also`).
+- Página nueva: se enlaza desde `Documentation.md`, `Documentación.md` y `_Sidebar.md`, y desde
+  las páginas relacionadas (cada una acaba con `## See also`; en la española,
+  `## Véase también`).
+- 🛑 **Idiomas** (Pablo, 20/10/2026): GitHub no tiene selector de idioma en los
+  wikis, así que cada página existe una vez por idioma: la inglesa
+  (`User-Guide.md`, la de referencia) y la española con **su título traducido
+  como nombre de página, sin prefijos** (`Guía-de-usuario.md`; GitHub saca el
+  título de la página del nombre del fichero, por eso no se usa `ES-`). Justo
+  bajo el `# Título` va la barra `**English** · [Español](Guía-de-usuario)` (en
+  la española, `[English](User-Guide) · **Español**`), y `_Sidebar.md` pone en
+  cada línea los dos enlaces (`- [User-Guide](User-Guide) · [Guía de
+  usuario](Guía-de-usuario)`); el índice español es `Documentación.md` (la portada inglesa, `Documentation.md`). El nombre de
+  la española sale del `# Título` traducido, con guiones y sin los caracteres
+  `\ / : * ? " < > | # % & { } +`. **Un cambio se escribe primero en inglés y
+  se traslada a todas las versiones en el mismo trabajo**; nunca se deja una
+  versión desfasada ni se sube un idioma sin los demás. En las traducciones no
+  se traduce código, rutas, símbolos, errores ni textos de la interfaz ya
+  citados; en la española los textos de interfaz son los de la fuente en
+  español; los enlaces a `Pagina#ancla` pasan a la página sin ancla (los
+  títulos traducidos cambian el ancla); las capturas de la española salen de
+  `docs/presentacion/` y las de la inglesa de `docs/presentacion/en/`;
+  `Inferred:` pasa a `Deducido:`; el texto de cada enlace es el título de la
+  página destino en ese idioma. Idioma nuevo = una versión de cada página con su
+  título traducido, su portada (`Documentación` en español), la barra de idioma en todas
+  y su enlace en cada línea de `_Sidebar.md`. Si se renombra una página, se
+  corrigen los enlaces de todas y la barra lateral.
 - Formato: ficheros planos `Nombre-Con-Guiones.md`, enlaces `[Texto](Nombre-Pagina)`
   (sin `.md`), diagramas en Mermaid, rutas y símbolos reales entre comillas
   invertidas. Describe el código **tal como está ahora** y, sobre todo, **el
