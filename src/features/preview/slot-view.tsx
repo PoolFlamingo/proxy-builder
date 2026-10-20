@@ -11,7 +11,7 @@ import { insignias } from "@/lib/cartas";
 import { type AnchoMiniatura, parametros, urlMiniatura } from "@/lib/image-url";
 import { cn } from "@/lib/utils";
 import { useUi } from "@/stores/ui-store";
-import { seleccionarConClic } from "./acciones-carta";
+import { anadirEnHueco, seleccionarConClic } from "./acciones-carta";
 import { SlotMenu } from "./slot-menu";
 
 const TONOS = {
@@ -98,7 +98,11 @@ export const SlotView = memo(function SlotView({
 				role="button"
 				aria-label={carta?.meta.name || t("Hueco")}
 				aria-pressed={seleccionada}
-				onClick={(ev) => seleccionarConClic(id, ev)}
+				onClick={(ev) => {
+					seleccionarConClic(id, ev);
+					// Un clic suelto en un hueco abre «Añadir carta» para llenarlo.
+					if (hueco && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey) anadirEnHueco(id);
+				}}
 				onDoubleClick={() => carta?.front && useUi.getState().abrir({ tipo: "editar", id })}
 				className={cn(
 					"group absolute cursor-grab outline-none active:cursor-grabbing",

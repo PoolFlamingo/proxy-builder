@@ -125,7 +125,7 @@ export const PageView = memo(function PageView({
 	);
 });
 
-/** Una casilla sin carta. La primera de la última hoja ofrece «+ Añadir carta». */
+/** Una casilla sin carta; un clic abre «Añadir carta». La primera lo rotula. */
 function CeldaVacia({
 	celda,
 	escala,
@@ -147,16 +147,15 @@ function CeldaVacia({
 			)}
 			style={{ left: celda.x * e, top: celda.y * e, width: celda.w * e, height: celda.h * e }}
 		>
-			{primera && (
-				<button
-					type="button"
-					onClick={() => useUi.getState().abrir({ tipo: "anadir" })}
-					className="flex size-full flex-col items-center justify-center gap-1 text-[10px] font-semibold tracking-wider text-black/40 uppercase hover:bg-black/5 hover:text-black/70"
-				>
-					<Plus className="size-5" />
-					{t("Añadir carta")}
-				</button>
-			)}
+			<button
+				type="button"
+				aria-label={t("Añadir carta")}
+				onClick={() => useUi.getState().abrir({ tipo: "anadir" })}
+				className="flex size-full flex-col items-center justify-center gap-1 text-[10px] font-semibold tracking-wider text-black/40 uppercase hover:bg-black/5 hover:text-black/70"
+			>
+				<Plus className="size-5" />
+				{primera && t("Añadir carta")}
+			</button>
 		</div>
 	);
 }

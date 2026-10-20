@@ -28,7 +28,8 @@ export type Dialogo =
 	/** `ids`: la selección, si la hay; `soloSeleccion`: empezar limitado a ella
 	 *  (se puede cambiar a todo el deck en el diálogo). */
 	| { tipo: "vincularLote"; ids?: string[]; soloSeleccion?: boolean }
-	| { tipo: "anadir"; en?: number }
+	/** `en`: posición donde entra; `hueco`: casilla en blanco que la carta sustituye. */
+	| { tipo: "anadir"; en?: number; hueco?: string }
 	| { tipo: "moverA"; ids: string[] }
 	| { tipo: "fichas" }
 	| { tipo: "sets" }

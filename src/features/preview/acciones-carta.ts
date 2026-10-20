@@ -22,6 +22,12 @@ export function objetivo(id: string): string[] {
 	return sel.includes(id) ? sel : [id];
 }
 
+/** Abre «Añadir carta» para llenar un hueco en blanco: la carta entra en su sitio. */
+export function anadirEnHueco(id: string) {
+	const en = cartas().findIndex((c) => c.id === id);
+	useUi.getState().abrir({ tipo: "anadir", en: en < 0 ? undefined : en, hueco: id });
+}
+
 export function duplicarCartas(ids: string[]) {
 	useDeck.getState().setCartas((c) => duplicar(c, ids));
 }

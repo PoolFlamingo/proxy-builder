@@ -7,6 +7,7 @@ export const VISTA: Record<string, string> = {
 	Mover: "Move",
 	Posición: "Position",
 	"Añadir carta": "Add card",
+	"Añadir carta de Scryfall…": "Add card from Scryfall…",
 	"Eliminar las cartas de esta página": "Delete the cards on this page",
 	"Página {n} de {total}": "Page {n} of {total}",
 	Acercar: "Zoom in",

@@ -12,6 +12,7 @@ import {
 	LockOpen,
 	Palette,
 	Replace,
+	Search,
 	SlidersHorizontal,
 	SquareStack,
 	Tag,
@@ -40,6 +41,7 @@ import { MARCAS } from "@/lib/cartas";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
 import {
+	anadirEnHueco,
 	cambiarReverso,
 	cartaPorId,
 	duplicarCartas,
@@ -83,6 +85,15 @@ export function SlotMenu({ id, children }: { id: string; children: ReactNode }) 
 		<ContextMenu onOpenChange={abrirMenu}>
 			<ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
 			<ContextMenuContent className="w-72 text-xs">
+				{carta?.source.kind === "blank" && !varias && (
+					<>
+						<ContextMenuItem onSelect={() => anadirEnHueco(id)}>
+							<Search />
+							{t("Añadir carta de Scryfall…")}
+						</ContextMenuItem>
+						<ContextMenuSeparator />
+					</>
+				)}
 				<ContextMenuItem onSelect={() => duplicarCartas(ids())}>
 					<Copy />
 					{t("Duplicar")}
