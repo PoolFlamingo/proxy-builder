@@ -57,6 +57,8 @@ export function useBorrador(
 	const [huella, setHuella] = useState<{ h: string; de: CardDesign } | null>(null);
 	const [avisos, setAvisos] = useState<Aviso[]>([]);
 	const [guardando, setGuardando] = useState(false);
+	// Sube al quitar el diseño: la carta vuelve a pedir un borrador nuevo.
+	const [recarga, setRecarga] = useState(0);
 	const principal = grupo?.cartas[0] ?? null;
 	const idPrincipal = principal?.id ?? null;
 	const clave = grupo?.clave ?? null;
@@ -96,7 +98,7 @@ export function useBorrador(
 			})
 			.catch((e) => toast.error(mensaje(e)))
 			.finally(() => turno.current === mio && setCargando(false));
-	}, [clave, idPrincipal]);
+	}, [clave, idPrincipal, recarga]);
 
 	// Si el diseño de la carta cambia por fuera (borradores en bloque,
 	// deshacer, renumerar) y aquí no hay nada sin guardar, se toma el nuevo.
@@ -197,6 +199,7 @@ export function useBorrador(
 		if (!grupo) return;
 		const ids = new Set(grupo.cartas.map((c) => c.id));
 		useDeck.getState().setCartas((cs) => quitarDiseno(cs, ids));
+		setRecarga((n) => n + 1);
 	}, [grupo]);
 
 	const cambiado = JSON.stringify(design) !== JSON.stringify(original);

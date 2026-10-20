@@ -271,13 +271,9 @@ export function DisenarScreen() {
 								<div className="flex items-center gap-1.5">
 									{tieneDiseno && (
 										<WithTooltip content={t("Quita el diseño y deja la carta como estaba.")}>
-											<Button
-												size="sm"
-												variant="ghost"
-												onClick={b.quitar}
-												aria-label={t("Quitar diseño")}
-											>
+											<Button size="sm" variant="ghost" onClick={b.quitar}>
 												<Trash2 />
+												{t("Quitar diseño")}
 											</Button>
 										</WithTooltip>
 									)}
