@@ -151,7 +151,7 @@ async fn traducir_frase<A: CardApi>(api: &A, frase: &str) -> AppResult<Option<St
 }
 
 /// La línea de tipo en español de una carta con la misma línea en inglés.
-async fn traducir_tipo<A: CardApi>(api: &A, tipo: &str) -> AppResult<Option<String>> {
+pub async fn traducir_tipo<A: CardApi>(api: &A, tipo: &str) -> AppResult<Option<String>> {
     let q = format!("t:\"{}\" lang:es order:released", tipo.replace('"', "\\\""));
     let r = match api.search(&q, true, 40).await {
         Ok(r) => r,

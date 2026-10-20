@@ -16,6 +16,8 @@ use crate::scryfall::client::CardApi;
 use crate::scryfall::models::{CardFace, ScryCard};
 use crate::store::db::Db;
 
+use super::traduccion::traducir_tipo;
+
 /// Layouts cuyas caras se diseñan por separado (las de `card_faces`).
 fn por_caras(layout: &str) -> bool {
     matches!(
@@ -62,8 +64,48 @@ pub async fn carta_completa<A: CardApi>(db: &Db, api: &A, id: &str) -> AppResult
 /// La impresión española de una carta, si existe: la de la propia carta si
 /// ya está en español; si no, **la más reciente** (el texto vigente, que en
 /// las reediciones corrige plantillas viejas); si no, la del mismo set y
-/// número.
+/// número. Si esa impresión no trae la línea de tipo (Scryfall se la deja en
+/// blanco en algunas), se toma la de otra carta española con el mismo tipo en
+/// inglés, para que no salga «Land» en una carta en español.
 pub async fn impresion_es<A: CardApi>(
+    db: &Db,
+    api: &A,
+    c: &ScryCard,
+) -> AppResult<Option<ScryCard>> {
+    let mut es = buscar_impresion_es(db, api, c).await?;
+    if let Some(e) = es.as_mut() {
+        completar_tipo(api, c, e).await;
+    }
+    Ok(es)
+}
+
+/// Rellena en `es` las líneas de tipo que le faltan. Sin red o sin otra carta
+/// con ese tipo, se queda como estaba (la pantalla enseña el inglés).
+async fn completar_tipo<A: CardApi>(api: &A, en: &ScryCard, es: &mut ScryCard) {
+    if es.card_faces.is_empty() {
+        if es.printed_type_line.is_none() {
+            if let Some(tipo) = en.type_line.as_deref() {
+                es.printed_type_line = traducir_tipo(api, tipo).await.ok().flatten();
+            }
+        }
+        return;
+    }
+    for (i, cara) in es.card_faces.iter_mut().enumerate() {
+        if cara.printed_type_line.is_some() {
+            continue;
+        }
+        let tipo = en
+            .card_faces
+            .get(i)
+            .and_then(|f| f.type_line.as_deref())
+            .or(en.type_line.as_deref());
+        if let Some(tipo) = tipo {
+            cara.printed_type_line = traducir_tipo(api, tipo).await.ok().flatten();
+        }
+    }
+}
+
+async fn buscar_impresion_es<A: CardApi>(
     db: &Db,
     api: &A,
     c: &ScryCard,
@@ -392,6 +434,57 @@ mod tests {
         assert_eq!(b.design.footer.number, "0002");
         assert_eq!(b.design.style, DesignStyle::Borderless);
         assert_eq!(b.design.faces[0].texts.en.name, "Progenitus");
+    }
+
+    /// Solo sabe contestar a la búsqueda de una carta española por su tipo.
+    struct ApiTipos(Vec<ScryCard>);
+
+    impl CardApi for ApiTipos {
+        async fn collection(
+            &self,
+            _: &[crate::scryfall::models::Identifier],
+        ) -> AppResult<crate::scryfall::models::Collection> {
+            Err(AppError::new(ErrorCode::Network))
+        }
+        async fn card(&self, _: &str) -> AppResult<Option<ScryCard>> {
+            Ok(None)
+        }
+        async fn card_lang(&self, _: &str, _: &str, _: &str) -> AppResult<Option<ScryCard>> {
+            Ok(None)
+        }
+        async fn search(&self, _: &str, _: bool, _: usize) -> AppResult<Vec<ScryCard>> {
+            Ok(self.0.clone())
+        }
+        async fn download(&self, _: &str) -> AppResult<Vec<u8>> {
+            Err(AppError::new(ErrorCode::Network))
+        }
+    }
+
+    #[tokio::test]
+    async fn una_impresion_sin_linea_de_tipo_la_toma_de_otra_carta_con_el_mismo_tipo() {
+        let en = carta(serde_json::json!({
+            "id":"e","name":"Rogue's Passage","lang":"en","set":"hoc","collector_number":"212",
+            "layout":"normal","type_line":"Land","oracle_text":"{T}: Add {C}."
+        }));
+        // Como la de FIC: tiene el texto impreso pero no el tipo.
+        let mut es = en.clone();
+        es.lang = "es".into();
+        es.printed_text = Some("{T}: Agrega {C}.".into());
+        let otra = carta(serde_json::json!({
+            "id":"o","name":"Command Tower","lang":"es","set":"x","collector_number":"1",
+            "layout":"normal","type_line":"Land","printed_type_line":"Tierra"
+        }));
+        completar_tipo(&ApiTipos(vec![otra]), &en, &mut es).await;
+        assert_eq!(es.printed_type_line.as_deref(), Some("Tierra"));
+        let d = datos(&en, Some(&es), 1);
+        assert_eq!(d.faces[0].type_line.es, "Tierra");
+        assert_eq!(d.faces[0].type_line.en, "Land");
+
+        // Sin ninguna con ese tipo (o sin red) se queda como estaba.
+        let mut sola = es.clone();
+        sola.printed_type_line = None;
+        completar_tipo(&ApiTipos(Vec::new()), &en, &mut sola).await;
+        assert_eq!(sola.printed_type_line, None);
     }
 
     #[test]
