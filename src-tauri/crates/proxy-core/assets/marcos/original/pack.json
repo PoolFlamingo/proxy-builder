@@ -126,7 +126,7 @@
 				"radio": 0,
 				"soloAbajo": true,
 				"repintar": [[0.13, 55, 3.9, 26.1], [58.97, 55, 3.9, 26.1]],
-				"repintarTras": 3
+				"repintarTras": 4
 			},
 			"capas": [
 				{
@@ -134,6 +134,12 @@
 				},
 				{
 					"svg": "refuerzo-caja.svg"
+				},
+				{
+					"svg": "cinta.svg",
+					"si": {
+						"cinta": true
+					}
 				},
 				{
 					"png": "m15/borderless/m15GenericShowcaseFrame{color}.png"
@@ -157,12 +163,6 @@
 					},
 					"si": {
 						"corona": true
-					}
-				},
-				{
-					"svg": "cinta.svg",
-					"si": {
-						"cinta": true
 					}
 				},
 				{
@@ -276,6 +276,12 @@
 			"cajaPorDefecto": "clara",
 			"capas": [
 				{
+					"svg": "cinta.svg",
+					"si": {
+						"cinta": true
+					}
+				},
+				{
 					"png": "m15/regular/m15Frame{color}.png",
 					"colores": {
 						"colorless": "A"
@@ -306,12 +312,6 @@
 					},
 					"si": {
 						"corona": true
-					}
-				},
-				{
-					"svg": "cinta.svg",
-					"si": {
-						"cinta": true
 					}
 				},
 				{

@@ -137,8 +137,8 @@ export const DISENAR: Record<string, string> = {
 	Año: "Year",
 	"Plantilla del pie en español": "Spanish footer template",
 	"Plantilla del pie en inglés": "English footer template",
-	"Fichas: {num} {rarity} {original} {set} {lang} {artist} {credit} {universe} {year} {brush} {star}. Un tabulador separa columnas; una línea nueva, filas. Vacía, la de fábrica.":
-		"Tokens: {num} {rarity} {original} {set} {lang} {artist} {credit} {universe} {year} {brush} {star}. A tab separates columns; a new line, rows. Empty means the default one.",
+	"Fichas: {num} {rarity} {original} {set} {lang} {artist} {credit} {universe} {year} {brush} {star}. Un tabulador separa columnas; una línea nueva, filas; lo que va tras {>}, a la derecha. Vacía, la de fábrica. Si no pone {universe}, {year} ni {credit}, salen solos a la derecha de la última línea.":
+		"Tokens: {num} {rarity} {original} {set} {lang} {artist} {credit} {universe} {year} {brush} {star}. A tab separates columns; a new line, rows; whatever follows {>} goes on the right. Empty means the default one. If it doesn't use {universe}, {year} or {credit}, they go on the right of the last line on their own.",
 	"Sin símbolos de maná: hace falta conexión la primera vez.":
 		"No mana symbols: an internet connection is needed the first time.",
 	"Diseño guardado": "Design saved",
