@@ -68,12 +68,13 @@ pub struct Motor {
 }
 
 impl Motor {
-    /// Con las letras de la casa (Spectral y Montserrat).
+    /// Con las letras de la casa (Spectral y Montserrat) y la de emoji.
     pub fn de_fabrica() -> Result<Motor, DisenoError> {
         let mut letras = Letras::nuevas();
         for f in LETRAS_DE_FABRICA {
             letras.cargar(f.to_vec())?;
         }
+        letras.cargar_emoji(LETRA_DE_EMOJI.to_vec())?;
         Ok(Motor {
             letras,
             m: Maquetador::nuevo(),
@@ -88,6 +89,10 @@ const LETRAS_DE_FABRICA: &[&[u8]] = &[
     include_bytes!("../../assets/fuentes/Spectral-Bold.ttf"),
     include_bytes!("../../assets/fuentes/Montserrat-Variable.ttf"),
 ];
+
+/// Twemoji en color (COLR), para los emoji de cualquier texto. Los gráficos son
+/// de Twitter (CC BY 4.0); ver `Twemoji-LICENSE.txt`.
+const LETRA_DE_EMOJI: &[u8] = include_bytes!("../../assets/fuentes/Twemoji-Mozilla.ttf");
 
 /// Para qué es el render.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -495,51 +500,13 @@ pub(super) fn pintar_arte(
     let (x, y, w, h) = (l.x(hueco.0), l.y(hueco.1), l.x(hueco.2), l.y(hueco.3));
     let (tw, th) = (w.round().max(1.0) as u32, h.round().max(1.0) as u32);
     let te = l.y(extra.max(0.0)).round() as u32;
-    let (iw, ih) = (img.width() as f64, img.height() as f64);
-    let zoom = f.zoom.max(1.0);
+    let zoom = f.zoom.max(ZOOM_MIN);
     let girada = f.rotation.rem_euclid(360.0).abs() > 0.01;
-    let pieza = if !girada {
-        // Sin giro: recorte exacto + Lanczos en un paso.
-        let cubre = (tw as f64 / iw).max(th as f64 / ih) * zoom;
-        let (cw, ch) = (tw as f64 / cubre, th as f64 / cubre);
-        let (hx, hy) = ((iw - cw) / 2.0, (ih - ch) / 2.0);
-        let l0 = hx + f.offset_x.clamp(-1.0, 1.0) * hx;
-        let t0 = hy + f.offset_y.clamp(-1.0, 1.0) * hy;
-        // Lo de debajo, en el mismo paso (sin costura): lo que quede.
-        let debajo = (te as f64 / cubre).min((ih - t0 - ch).max(0.0));
-        let th_debajo = (debajo * cubre).round() as u32;
-        let debajo = if th_debajo == 0 { 0.0 } else { debajo };
-        reescalar(img, tw, th + th_debajo, Some((l0, t0, cw, ch + debajo)))
-            .map(|p| estirar_abajo(p, th + te))
+    let pieza = if !girada && zoom >= 1.0 {
+        // Sin giro y cubriendo: recorte exacto + Lanczos en un paso.
+        recorte_exacto(img, tw, th, te, zoom, f.offset_x, f.offset_y)
     } else {
-        let a = f.rotation.to_radians();
-        let (c, s) = (a.cos().abs(), a.sin().abs());
-        let (wf, hf) = (tw as f64, th as f64);
-        let cubre = ((wf * c + hf * s) / iw).max((wf * s + hf * c) / ih) * zoom;
-        let (rw, rh) = ((iw * cubre).round() as u32, (ih * cubre).round() as u32);
-        let grande = reescalar(img, rw, rh, None);
-        grande.and_then(|g| {
-            let pm = a_pixmap(&g)?;
-            let mut out = Pixmap::new(tw, th + te)?;
-            let (bw, bh) = (rw as f64 * c + rh as f64 * s, rw as f64 * s + rh as f64 * c);
-            let dx = f.offset_x.clamp(-1.0, 1.0) * ((bw - wf) / 2.0).max(0.0);
-            let dy = f.offset_y.clamp(-1.0, 1.0) * ((bh - hf) / 2.0).max(0.0);
-            let t = Transform::from_translate((wf / 2.0 - dx) as f32, (hf / 2.0 - dy) as f32)
-                .pre_rotate(f.rotation as f32)
-                .pre_translate(-(rw as f32) / 2.0, -(rh as f32) / 2.0);
-            out.draw_pixmap(
-                0,
-                0,
-                pm.as_ref(),
-                &PixmapPaint {
-                    quality: FilterQuality::Bicubic,
-                    ..PixmapPaint::default()
-                },
-                t,
-                None,
-            );
-            Some(de_pixmap(&out))
-        })
+        arte_libre(img, tw, th, te, zoom, f)
     };
     if let Some(p) = pieza.as_ref().and_then(a_pixmap) {
         l.px.draw_pixmap(
@@ -551,6 +518,147 @@ pub(super) fn pintar_arte(
             None,
         );
     }
+}
+
+/// El zoom más pequeño de la ilustración: por debajo de 1 cabe entera en
+/// su hueco (lo que sobra, la misma ilustración desenfocada).
+pub const ZOOM_MIN: f64 = 0.1;
+
+/// La ilustración cubriendo el hueco (`tw`×`th` px, y `te` px más por debajo
+/// con la extensión del difuminado), sin giro y con zoom de 1 o más.
+fn recorte_exacto(
+    img: &RgbaImage,
+    tw: u32,
+    th: u32,
+    te: u32,
+    zoom: f64,
+    offset_x: f64,
+    offset_y: f64,
+) -> Option<RgbaImage> {
+    let (iw, ih) = (img.width() as f64, img.height() as f64);
+    let cubre = (tw as f64 / iw).max(th as f64 / ih) * zoom;
+    let (cw, ch) = (tw as f64 / cubre, th as f64 / cubre);
+    let (hx, hy) = ((iw - cw) / 2.0, (ih - ch) / 2.0);
+    let l0 = hx + offset_x.clamp(-1.0, 1.0) * hx;
+    let t0 = hy + offset_y.clamp(-1.0, 1.0) * hy;
+    // Lo de debajo, en el mismo paso (sin costura): lo que quede.
+    let debajo = (te as f64 / cubre).min((ih - t0 - ch).max(0.0));
+    let th_debajo = (debajo * cubre).round() as u32;
+    let debajo = if th_debajo == 0 { 0.0 } else { debajo };
+    reescalar(img, tw, th + th_debajo, Some((l0, t0, cw, ch + debajo)))
+        .map(|p| estirar_abajo(p, th + te))
+}
+
+/// La ilustración girada o más pequeña que su hueco: escalada entera y
+/// colocada con su centro. El desplazamiento recorre lo que sobra (si la
+/// imagen es más grande) o lo que falta (si es más pequeña), igual que la
+/// cuenta de la pantalla (`encuadre.ts`). Si no cubre el hueco, lo que falta
+/// sale de sus bordes alargados y desenfocados (con fondo blanco, blanco).
+fn arte_libre(
+    img: &RgbaImage,
+    tw: u32,
+    th: u32,
+    te: u32,
+    zoom: f64,
+    f: &super::modelo::ArtFraming,
+) -> Option<RgbaImage> {
+    let (iw, ih) = (img.width() as f64, img.height() as f64);
+    let girada = f.rotation.rem_euclid(360.0).abs() > 0.01;
+    let a = f.rotation.to_radians();
+    let (c, s) = (a.cos().abs(), a.sin().abs());
+    let (wf, hf) = (tw as f64, th as f64);
+    let cubre = ((wf * c + hf * s) / iw).max((wf * s + hf * c) / ih) * zoom;
+    let (rw, rh) = (
+        (iw * cubre).round().max(1.0) as u32,
+        (ih * cubre).round().max(1.0) as u32,
+    );
+    let escalada = reescalar(img, rw, rh, None)?;
+    let pm = a_pixmap(&escalada)?;
+    let mut out = Pixmap::new(tw, th + te)?;
+    let (bw, bh) = (rw as f64 * c + rh as f64 * s, rw as f64 * s + rh as f64 * c);
+    let dx = f.offset_x.clamp(-1.0, 1.0) * (bw - wf) / 2.0;
+    let dy = f.offset_y.clamp(-1.0, 1.0) * (bh - hf) / 2.0;
+    if zoom < 1.0 {
+        let esquina = (
+            (wf / 2.0 - dx - rw as f64 / 2.0).round() as i64,
+            (hf / 2.0 - dy - rh as f64 / 2.0).round() as i64,
+        );
+        let fondo = desenfocar(&bordes_alargados(&escalada, esquina, tw, th + te));
+        if let Some(fondo) = fondo.as_ref().and_then(a_pixmap) {
+            out.draw_pixmap(
+                0,
+                0,
+                fondo.as_ref(),
+                &PixmapPaint::default(),
+                Transform::identity(),
+                None,
+            );
+        }
+    }
+    let t = if girada {
+        Transform::from_translate((wf / 2.0 - dx) as f32, (hf / 2.0 - dy) as f32)
+            .pre_rotate(f.rotation as f32)
+            .pre_translate(-(rw as f32) / 2.0, -(rh as f32) / 2.0)
+    } else {
+        // Sin giro, a píxel entero: nítida.
+        Transform::from_translate(
+            (wf / 2.0 - dx - rw as f64 / 2.0).round() as f32,
+            (hf / 2.0 - dy - rh as f64 / 2.0).round() as f32,
+        )
+    };
+    out.draw_pixmap(
+        0,
+        0,
+        pm.as_ref(),
+        &PixmapPaint {
+            quality: FilterQuality::Bicubic,
+            ..PixmapPaint::default()
+        },
+        t,
+        None,
+    );
+    Some(de_pixmap(&out))
+}
+
+/// Un lienzo de `w`×`h` con `img` en `esquina` y, fuera de ella, el píxel de
+/// su borde más cercano (los bordes alargados).
+fn bordes_alargados(img: &RgbaImage, esquina: (i64, i64), w: u32, h: u32) -> RgbaImage {
+    let (iw, ih) = (i64::from(img.width()), i64::from(img.height()));
+    RgbaImage::from_fn(w, h, |x, y| {
+        let sx = (i64::from(x) - esquina.0).clamp(0, iw - 1);
+        let sy = (i64::from(y) - esquina.1).clamp(0, ih - 1);
+        *img.get_pixel(sx as u32, sy as u32)
+    })
+}
+
+/// El color medio del borde de una imagen (un anillo del 3 % de su lado): el
+/// fondo de la ilustración en la vista en directo cuando no cubre su hueco.
+pub fn color_de_borde(img: &RgbaImage) -> [u8; 3] {
+    let (w, h) = img.dimensions();
+    if w == 0 || h == 0 {
+        return [0, 0, 0];
+    }
+    let anillo = (w.min(h) / 33).max(1);
+    let (mut suma, mut n) = ([0u64; 3], 0u64);
+    for (x, y, p) in img.enumerate_pixels() {
+        if x < anillo || y < anillo || x >= w - anillo || y >= h - anillo {
+            for (s, v) in suma.iter_mut().zip(p.0) {
+                *s += u64::from(v);
+            }
+            n += 1;
+        }
+    }
+    suma.map(|s| (s / n.max(1)) as u8)
+}
+
+/// Muy desenfocada (reducida mucho y vuelta a su tamaño): el fondo de una
+/// ilustración que no cubre su hueco.
+fn desenfocar(img: &RgbaImage) -> Option<RgbaImage> {
+    let (w, h) = img.dimensions();
+    let k = 24;
+    let pequena = reescalar(img, (w / k).max(1), (h / k).max(1), None)?;
+    let pequena = image::imageops::blur(&pequena, 1.5);
+    reescalar(&pequena, w, h, None)
 }
 
 /// La imagen alargada hasta `alto` px repitiendo su última fila, suavizada
@@ -3624,6 +3732,35 @@ mod tests {
         )
         .unwrap();
         assert_eq!(r.imagen.get_pixel(402, 702).0, [10, 20, 30, 255]);
+    }
+
+    #[test]
+    fn con_zoom_bajo_1_la_imagen_cabe_entera_y_el_resto_es_su_borde() {
+        // Una imagen de 40×20 blanca con el centro rojo, en un hueco de 40×20 mm.
+        let img = RgbaImage::from_fn(40, 20, |x, y| {
+            if (10..30).contains(&x) && (5..15).contains(&y) {
+                image::Rgba([220, 20, 20, 255])
+            } else {
+                image::Rgba([255, 255, 255, 255])
+            }
+        });
+        let mut l = Lienzo::nuevo(40.0, 20.0, 400, 200).unwrap();
+        let f = super::super::modelo::ArtFraming {
+            zoom: 0.5,
+            ..Default::default()
+        };
+        pintar_arte(&mut l, &img, (0.0, 0.0, 40.0, 20.0), &f, 0.0);
+        let px = |x: u32, y: u32| {
+            let c = l.px.pixel(x, y).unwrap();
+            [c.red(), c.green(), c.blue()]
+        };
+        // Centrada a la mitad: el rojo en el centro y blanco alrededor (los
+        // bordes alargados), también en las esquinas del hueco.
+        assert!(px(200, 100)[0] > 200 && px(200, 100)[1] < 60);
+        for (x, y) in [(5, 5), (395, 5), (5, 195), (395, 195), (120, 100)] {
+            assert!(px(x, y).iter().all(|v| *v > 240), "{x},{y}: {:?}", px(x, y));
+        }
+        assert_eq!(color_de_borde(&img), [255, 255, 255]);
     }
 
     // ── Textos ──

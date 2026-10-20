@@ -112,6 +112,21 @@ pub fn pintar_bloque(
                         .map_or(0.0, |grados| grados.to_radians().tan());
                     let mut pb = PathBuilder::new();
                     for g in gr.positioned_glyphs() {
+                        // Los emoji van en color, capa a capa; en la sombra,
+                        // de un solo color.
+                        if super::emoji::pintar_glifo(
+                            lienzo,
+                            &fuente,
+                            g.id,
+                            x + g.x * sx,
+                            y + g.y,
+                            tam,
+                            sx,
+                            gr.style().brush,
+                            pincel.color,
+                        ) {
+                            continue;
+                        }
                         let Some(contorno) = contornos.get(GlyphId::new(g.id)) else {
                             continue;
                         };
@@ -332,6 +347,41 @@ mod tests {
         assert_eq!(raya.ancho, guion.ancho);
         m.m.sustituir.clear();
         assert_ne!(bloque(&mut m, "Criatura — Dragón").ancho, guion.ancho);
+    }
+
+    #[test]
+    fn los_emoji_se_pintan_en_color_y_ocupan_sitio() {
+        let mut m = Motor::de_fabrica().unwrap();
+        let sin = bloque(&mut m, "Homologada por el gremio.");
+        let con = bloque(&mut m, "Homologada por el gremio. 👍");
+        assert!(con.ancho > sin.ancho + 10.0, "el emoji no ocupa nada");
+        let (p, _) = pintar(&con, 0.0, 40.0, Pincel::default(), &Simbolos::nuevos());
+        // El pulgar de Twemoji es amarillo (el texto va en negro).
+        assert!(
+            p.pixels()
+                .iter()
+                .any(|c| c.alpha() == 255 && c.red() > 200 && c.green() > 150 && c.blue() < 100),
+            "no hay píxeles de color"
+        );
+    }
+
+    #[test]
+    fn un_emoji_con_secuencia_zwj_y_tono_se_pinta_y_la_sombra_es_de_un_color() {
+        let mut m = Motor::de_fabrica().unwrap();
+        let b = bloque(&mut m, "🧙🏽‍♀️ ❤️");
+        let (p, _) = pintar(&b, 0.0, 40.0, Pincel::default(), &Simbolos::nuevos());
+        assert!(pintado(&p).is_some());
+        let sombra = Pincel {
+            color: Some([10, 20, 30, 255]),
+            ..Pincel::default()
+        };
+        let (s, _) = pintar(&b, 0.0, 40.0, sombra, &Simbolos::nuevos());
+        assert!(pintado(&s).is_some());
+        assert!(s
+            .pixels()
+            .iter()
+            .filter(|c| c.alpha() == 255)
+            .all(|c| c.red() <= 10 && c.green() <= 20 && c.blue() <= 30));
     }
 
     #[test]

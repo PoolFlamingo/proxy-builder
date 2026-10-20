@@ -8,27 +8,34 @@ export type CambioEncuadre = { dx?: number; dy?: number; zoom?: number };
 /** Medidas de la carta (mm) con las que se cuentan los arrastres. */
 export const CARTA_MM = { w: 63, h: 88 };
 
+/** El zoom más pequeño (`ZOOM_MIN` en Rust): por debajo de 1, la imagen
+ *  cabe entera en su hueco. */
+export const ZOOM_MIN = 0.1;
+export const ZOOM_MAX = 3;
+
 /** El hueco de la ilustración (mm) y la proporción de la imagen. */
 export type HuecoArte = { w: number; h: number; iw: number; ih: number };
 
 /**
  * Cómo cubre la imagen el hueco (la cuenta de `pintar_arte` en Rust): su
  * tamaño sin girar (`rw`, `rh`) y cuánto sobra a cada lado de su caja girada
- * (`hx`, `hy`), que es lo que recorre el desplazamiento de -1 a 1.
+ * (`hx`, `hy`), que es lo que recorre el desplazamiento de -1 a 1. Con zoom
+ * por debajo de 1 es negativo: lo que falta, y el desplazamiento la mueve
+ * dentro del hueco.
  */
 function cubrir(f: ArtFraming, { w, h, iw, ih }: HuecoArte) {
 	const a = (f.rotation * Math.PI) / 180;
 	const c = Math.abs(Math.cos(a));
 	const s = Math.abs(Math.sin(a));
-	const zoom = Math.max(1, f.zoom);
+	const zoom = Math.max(ZOOM_MIN, f.zoom);
 	const cubre = Math.max((w * c + h * s) / iw, (w * s + h * c) / ih) * zoom;
 	const rw = iw * cubre;
 	const rh = ih * cubre;
 	return {
 		rw,
 		rh,
-		hx: Math.max(0, (rw * c + rh * s - w) / 2),
-		hy: Math.max(0, (rw * s + rh * c - h) / 2),
+		hx: (rw * c + rh * s - w) / 2,
+		hy: (rw * s + rh * c - h) / 2,
 	};
 }
 
@@ -40,7 +47,7 @@ const limitar = (v: number) => Math.min(1, Math.max(-1, v));
  * o el giro que tenga, hasta que llega a un borde.
  */
 export function moverEncuadre(f: ArtFraming, c: CambioEncuadre, hueco: HuecoArte): ArtFraming {
-	const zoom = Math.min(3, Math.max(1, f.zoom + (c.zoom ?? 0)));
+	const zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, f.zoom + (c.zoom ?? 0)));
 	const { hx, hy } = cubrir({ ...f, zoom }, hueco);
 	// Lo que se mueve el ratón, en mm; el desplazamiento recorre la holgura.
 	const mx = (c.dx ?? 0) * CARTA_MM.w;
@@ -48,8 +55,8 @@ export function moverEncuadre(f: ArtFraming, c: CambioEncuadre, hueco: HuecoArte
 	return {
 		...f,
 		zoom,
-		offsetX: hx > 1e-6 ? limitar(f.offsetX - mx / hx) : f.offsetX,
-		offsetY: hy > 1e-6 ? limitar(f.offsetY - my / hy) : f.offsetY,
+		offsetX: Math.abs(hx) > 1e-6 ? limitar(f.offsetX - mx / hx) : f.offsetX,
+		offsetY: Math.abs(hy) > 1e-6 ? limitar(f.offsetY - my / hy) : f.offsetY,
 	};
 }
 
@@ -65,6 +72,9 @@ export function claveCapa(d: CardDesign, cara: number, lang: DesignLang): string
 	};
 	return `${cara}|${lang}|${JSON.stringify(sin)}`;
 }
+
+/** Por debajo de 1 la imagen no cubre el hueco: lleva el fondo desenfocado. */
+export const cubreElHueco = (f: ArtFraming) => f.zoom >= 1;
 
 /** Dónde va la ilustración dentro de su hueco, para CSS. */
 export type GeometriaArte = {

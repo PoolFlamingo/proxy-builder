@@ -2,7 +2,7 @@
 //! cargan aquí (nunca las del sistema), para que una carta salga igual en
 //! cualquier equipo.
 
-use parley::fontique::{Blob, Collection, CollectionOptions, SourceCache};
+use parley::fontique::{Blob, Collection, CollectionOptions, FamilyId, GenericFamily, SourceCache};
 use parley::FontContext;
 
 use super::DisenoError;
@@ -48,6 +48,25 @@ impl Letras {
             }
         }
         Ok(nombres)
+    }
+
+    /// Carga la letra de emoji (en color) y la deja como la familia genérica
+    /// de emoji: `parley` la usa para los emoji que la letra del texto no
+    /// tiene, que es todos.
+    pub fn cargar_emoji(&mut self, datos: Vec<u8>) -> Result<(), DisenoError> {
+        let mut ids: Vec<FamilyId> = Vec::new();
+        for (id, _) in self.fcx.collection.register_fonts(Blob::from(datos), None) {
+            if !ids.contains(&id) {
+                ids.push(id);
+            }
+        }
+        if ids.is_empty() {
+            return Err(DisenoError::LetraNoValida);
+        }
+        self.fcx
+            .collection
+            .set_generic_families(GenericFamily::Emoji, ids.into_iter());
+        Ok(())
     }
 
     /// Si hay alguna familia con ese nombre.

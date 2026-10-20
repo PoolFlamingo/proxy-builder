@@ -16,6 +16,11 @@ arte: [number, number, number, number],
  */
 extension: number, 
 /**
+ * El color del borde de la ilustración (RGB): el fondo del hueco si la
+ * imagen no lo cubre (zoom por debajo de 1).
+ */
+fondo: [number, number, number], 
+/**
  * El radio de las esquinas en fracciones del ancho y del alto.
  */
 radio: [number, number], 

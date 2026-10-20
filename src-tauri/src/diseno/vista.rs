@@ -109,6 +109,10 @@ pub struct CapaInfo {
     /// difuminado), en fracciones del alto de la carta.
     #[serde(default)]
     pub extension: f32,
+    /// El color del borde de la ilustración (RGB): el fondo del hueco si la
+    /// imagen no lo cubre (zoom por debajo de 1).
+    #[serde(default)]
+    pub fondo: [u8; 3],
     /// El radio de las esquinas en fracciones del ancho y del alto.
     pub radio: [f32; 2],
     /// La cara del diseño cuya ilustración va en el hueco.
@@ -174,6 +178,7 @@ pub fn capa(
         huella: h,
         arte: c.arte,
         extension: c.extension,
+        fondo: c.fondo,
         radio: c.radio,
         cara: c.cara as u32,
     };
