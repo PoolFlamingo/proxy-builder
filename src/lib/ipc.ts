@@ -188,7 +188,7 @@ export interface Commands {
 	design_remove: { args: { card: DeckCard }; result: DeckCard };
 	design_rerender: { args: { cards: DeckCard[]; lang: DesignLang }; result: DeckCard[] };
 	design_renumber: { args: { cards: DeckCard[]; lang: DesignLang }; result: DeckCard[] };
-	art_from_clipboard: { args: { data: string }; result: ArtRef };
+	art_from_clipboard: { args: Record<string, never>; result: ArtRef | null };
 	art_from_blob: { args: { blob: string }; result: ArtRef };
 	art_from_scryfall: { args: { scryfallId: string; cara: number }; result: ArtRef };
 	art_from_card: {

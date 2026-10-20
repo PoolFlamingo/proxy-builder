@@ -81,6 +81,15 @@ tokio = { version = "1", features = ["rt", "macros", "time", "test-util"] }
 # Recuerda tamaño, posición y si estaba maximizada.
 tauri-plugin-window-state = "2"
 
+# «Pegar» en el editor de cartas: la imagen del portapapeles la lee Rust
+# (`diseno/portapapeles.rs`), porque WebKitGTK no deja leerla a la vista web.
+# En Linux, el GTK que ya trae Tauri; en Windows y macOS, arboard.
+[target.'cfg(target_os = "linux")'.dependencies]
+gtk = "0.18"
+
+[target.'cfg(not(target_os = "linux"))'.dependencies]
+arboard = { version = "3", default-features = false, features = ["image-data"] }
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Perfiles (copiados de judlex con su motivo)
 # ─────────────────────────────────────────────────────────────────────────────

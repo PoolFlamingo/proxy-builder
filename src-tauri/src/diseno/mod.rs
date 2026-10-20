@@ -12,6 +12,7 @@ pub mod lote;
 pub mod original;
 pub mod pintar;
 pub mod png;
+pub mod portapapeles;
 pub mod recursos;
 pub mod traduccion;
 pub mod vista;
