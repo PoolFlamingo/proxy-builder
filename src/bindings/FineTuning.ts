@@ -23,6 +23,23 @@ artRadius?: number,
  */
 cardRadius?: number, 
 /**
+ * Cuánto (mm) se funde con negro el borde de abajo de la ilustración
+ * (`None` = lo del marco: `difuminadoArte` del estilo; 0 = nada).
+ */
+artFade?: number, 
+/**
+ * Cuánto (mm) sigue la ilustración por debajo de su ventana, perdiéndose
+ * (el difuminado acaba ahí). Se ve donde el marco no la tapa: en el
+ * extendido, a los lados de la caja y debajo de ella. `None` = nada.
+ */
+artFadeExtension?: number, 
+/**
+ * Cuánto (mm) más alta la caja de reglas: crece hacia arriba (y la
+ * ilustración se acorta); negativo, más baja. `None` = la del marco.
+ * En los marcos de imagen (Original, Balatro) no cambia.
+ */
+rulesBoxHeight?: number, 
+/**
  * Tamaño de cada texto en proporción al del marco (`None` = 1, el del
  * marco). En las reglas, `None` es «automático»: en las cajas que
  * crecen, la letra baja un poco antes de comerse el arte; con un valor,

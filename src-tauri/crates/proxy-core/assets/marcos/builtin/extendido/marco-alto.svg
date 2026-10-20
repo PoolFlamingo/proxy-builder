@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 63 88" width="63" height="88">
 <defs>{{defs}}</defs>
 <!-- Variante alta (planeswalkers, clases, casos, levelers): Mitad de abajo: marco del color de la carta, barra de tipo y caja clara. -->
-<rect x="-1" y="39.4" width="65" height="49.6" fill="#000"/>
-<rect x="2.1" y="39.5" width="58.8" height="43.6" rx="1.0" fill="url(#marco)"/>
-<rect x="2.1" y="39.5" width="58.8" height="43.6" rx="1.0" fill="url(#lateral)"/>
-<rect x="3.55" y="44.25" width="55.75" height="38.6" fill="url(#crema)" stroke="{{oscuro}}" stroke-width="0.25"/>
-<rect x="2.35" y="39.45" width="58.3" height="4.75" rx="1.4" fill="url(#marco)"/>
-<rect x="2.35" y="39.45" width="58.3" height="4.75" rx="1.4" fill="url(#brillo)"/>
-<rect x="2.95" y="39.85" width="57.1" height="3.95" rx="1.0" fill="#141414"/>
+<rect x="-1" y="{{= 39.4 - subeCaja + extensionArte}}" width="65" height="{{= 49.6 + subeCaja}}" fill="#000"/>
+<rect x="2.1" y="{{= 39.5 - subeCaja}}" width="58.8" height="{{= 43.6 + subeCaja}}" rx="1.0" fill="url(#marco)"/>
+<rect x="2.1" y="{{= 39.5 - subeCaja}}" width="58.8" height="{{= 43.6 + subeCaja}}" rx="1.0" fill="url(#lateral)"/>
+<rect x="3.55" y="{{= 44.25 - subeCaja}}" width="55.75" height="{{= 38.6 + subeCaja}}" fill="url(#crema)" stroke="{{oscuro}}" stroke-width="0.25"/>
+<rect x="2.35" y="{{= 39.45 - subeCaja}}" width="58.3" height="4.75" rx="1.4" fill="url(#marco)"/>
+<rect x="2.35" y="{{= 39.45 - subeCaja}}" width="58.3" height="4.75" rx="1.4" fill="url(#brillo)"/>
+<rect x="2.95" y="{{= 39.85 - subeCaja}}" width="57.1" height="3.95" rx="1.0" fill="#141414"/>
 <!-- Barra del título, clara. -->
 <rect x="2.05" y="2.65" width="59.0" height="6.3" rx="1.8" fill="url(#marco)" stroke="#000" stroke-opacity="0.5" stroke-width="0.12"/>
 <rect x="2.05" y="2.65" width="59.0" height="6.3" rx="1.8" fill="url(#brillo)"/>

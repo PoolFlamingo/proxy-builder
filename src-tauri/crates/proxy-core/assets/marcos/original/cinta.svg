@@ -1,4 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 63 88" width="63" height="88">
-<!-- Cinta del nombre original, bajo la barra del título. -->
-<path d="M9.0,9.6 H54.0 L53.0,12.0 H10.0 Z" fill="#141414" fill-opacity="0.92" stroke="#b8b8b8" stroke-opacity="0.8" stroke-width="0.12"/>
+<defs>{{defs}}</defs>
+<!-- Cinta del nombre original, bajo la barra del título: ribete fino del
+     color del marco, como la del extendido de la casa pero más delgado. -->
+<path d="M8.7,9.6 H54.3 L53.2,12.3 H9.8 Z" fill="url(#marco)" stroke="#000" stroke-opacity="0.55" stroke-width="0.08"/>
+<path d="M9.1,9.6 H53.9 L52.95,11.95 H10.05 Z" fill="#141414" fill-opacity="0.94"/>
 </svg>

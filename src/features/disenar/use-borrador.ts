@@ -10,6 +10,10 @@ import { aplicarAlDeck, type Grupo, numerosUsados, quitarDiseno } from "./grupos
 
 const CLAVE_COLECCION = "proxybuilder.disenar.coleccion";
 
+/** Cuánto sin cambios antes de volver a pintar la vista previa (Pablo, 20/10/2026):
+ *  repintar a cada letra al escribir molesta. */
+const ESPERA_VISTA_MS = 1000;
+
 /** La última colección usada para los borradores nuevos (en este equipo). */
 export function coleccionRecordada(): string | null {
 	try {
@@ -34,8 +38,9 @@ export function recordarColeccion(id: string | null) {
  * hasta «Guardar»: entonces Rust pinta la miniatura y la carta va al deck con
  * un solo `setCartas` (deshacer sigue funcionando).
  *
- * La vista previa se registra en Rust con 120 ms de espera y los avisos
- * (texto que no cabe, símbolos que faltan…) con 400 ms.
+ * La vista previa se registra en Rust cuando se deja de tocar el diseño un
+ * segundo (`ESPERA_VISTA_MS`; al cambiar de carta, cara o idioma, al
+ * momento) y los avisos (texto que no cabe, símbolos que faltan…) con 400 ms.
  */
 export function useBorrador(
 	grupo: Grupo | null,
@@ -104,17 +109,22 @@ export function useBorrador(
 		setOriginal(deFuera);
 	}, [deFuera]);
 
-	// Vista previa, en tiempo real: cada cambio se registra en cuanto acaba
-	// el anterior (sin esperar a que se deje de arrastrar o de escribir); si
-	// llegan varios mientras tanto, solo el último.
+	// Vista previa: se registra al pasar `ESPERA_VISTA_MS` sin cambios (al
+	// momento si es otra carta, cara, idioma o recursos); si llegan varios
+	// mientras hay uno en marcha, solo el último.
 	const registro = useRef<{ enVuelo: boolean; pendiente: (() => void) | null }>({
 		enVuelo: false,
 		pendiente: null,
 	});
+	const ultimoContexto = useRef<unknown[] | null>(null);
 	useEffect(() => {
 		if (!design) return;
 		const mio = turno.current;
 		const r = registro.current;
+		const contexto = [turno.current, cara, lang, recursos];
+		const antes = ultimoContexto.current;
+		ultimoContexto.current = contexto;
+		const mismo = !!antes && antes.every((v, i) => Object.is(v, contexto[i]));
 		const pedir = () => {
 			r.enVuelo = true;
 			call("design_register", { design, cara, lang })
@@ -127,8 +137,16 @@ export function useBorrador(
 					p?.();
 				});
 		};
-		if (r.enVuelo) r.pendiente = pedir;
-		else pedir();
+		const lanzar = () => {
+			if (r.enVuelo) r.pendiente = pedir;
+			else pedir();
+		};
+		if (!mismo) {
+			lanzar();
+			return;
+		}
+		const id = setTimeout(lanzar, ESPERA_VISTA_MS);
+		return () => clearTimeout(id);
 	}, [design, cara, lang, mensaje, recursos]);
 
 	// Avisos.

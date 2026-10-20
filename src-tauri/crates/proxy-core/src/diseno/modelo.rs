@@ -459,6 +459,23 @@ pub struct FineTuning {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub card_radius: Option<f64>,
+    /// Cuánto (mm) se funde con negro el borde de abajo de la ilustración
+    /// (`None` = lo del marco: `difuminadoArte` del estilo; 0 = nada).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub art_fade: Option<f64>,
+    /// Cuánto (mm) sigue la ilustración por debajo de su ventana, perdiéndose
+    /// (el difuminado acaba ahí). Se ve donde el marco no la tapa: en el
+    /// extendido, a los lados de la caja y debajo de ella. `None` = nada.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub art_fade_extension: Option<f64>,
+    /// Cuánto (mm) más alta la caja de reglas: crece hacia arriba (y la
+    /// ilustración se acorta); negativo, más baja. `None` = la del marco.
+    /// En los marcos de imagen (Original, Balatro) no cambia.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub rules_box_height: Option<f64>,
     /// Tamaño de cada texto en proporción al del marco (`None` = 1, el del
     /// marco). En las reglas, `None` es «automático»: en las cajas que
     /// crecen, la letra baja un poco antes de comerse el arte; con un valor,
@@ -489,6 +506,12 @@ pub struct FineTuning {
     pub footer_line_spacing: Option<f64>,
 }
 
+/// Lo más que se puede fundir con negro el borde de abajo de la ilustración (mm).
+pub const DIFUMINADO_MAX_MM: f64 = 25.0;
+/// Lo más que puede seguir la ilustración por debajo de su ventana (mm).
+pub const EXTENSION_DIFUMINADO_MAX_MM: f64 = 35.0;
+/// Lo más que se puede subir o bajar el borde de arriba de la caja de reglas (mm).
+pub const ALTO_CAJA_MAX_MM: f64 = 10.0;
 /// Lo que se puede agrandar o achicar cada texto.
 pub const TAMANO_TEXTO_MIN: f64 = 0.5;
 pub const TAMANO_TEXTO_MAX: f64 = 1.6;
@@ -513,6 +536,13 @@ impl FineTuning {
             rules_box_opacity: self.rules_box_opacity.clamp(0.0, 1.0),
             art_radius: self.art_radius.map(|r| r.clamp(0.0, 20.0)),
             card_radius: self.card_radius.map(|r| r.clamp(0.0, 6.0)),
+            art_fade: self.art_fade.map(|r| r.clamp(0.0, DIFUMINADO_MAX_MM)),
+            art_fade_extension: self
+                .art_fade_extension
+                .map(|r| r.clamp(0.0, EXTENSION_DIFUMINADO_MAX_MM)),
+            rules_box_height: self
+                .rules_box_height
+                .map(|r| r.clamp(-ALTO_CAJA_MAX_MM, ALTO_CAJA_MAX_MM)),
             title_size: tam(self.title_size),
             type_size: tam(self.type_size),
             rules_size: tam(self.rules_size),

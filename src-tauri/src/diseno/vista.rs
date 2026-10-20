@@ -105,6 +105,10 @@ pub struct CapaInfo {
     pub huella: String,
     /// El hueco de la ilustración en fracciones de la carta: x, y, ancho, alto.
     pub arte: [f32; 4],
+    /// Cuánto sigue la ilustración por debajo del hueco (extensión del
+    /// difuminado), en fracciones del alto de la carta.
+    #[serde(default)]
+    pub extension: f32,
     /// El radio de las esquinas en fracciones del ancho y del alto.
     pub radio: [f32; 2],
     /// La cara del diseño cuya ilustración va en el hueco.
@@ -169,6 +173,7 @@ pub fn capa(
     let info = CapaInfo {
         huella: h,
         arte: c.arte,
+        extension: c.extension,
         radio: c.radio,
         cara: c.cara as u32,
     };

@@ -22,6 +22,9 @@ export function hayAjustes(f: FineTuning | undefined): boolean {
 	return (
 		Object.entries(AJUSTES_CERO).some(([k, v]) => f[k as keyof FineTuning] !== v) ||
 		f.artRadius !== undefined ||
+		f.artFade !== undefined ||
+		f.artFadeExtension !== undefined ||
+		f.rulesBoxHeight !== undefined ||
 		f.cardRadius !== undefined ||
 		TAMANOS.some((k) => f[k] !== undefined)
 	);
@@ -44,7 +47,8 @@ type Posicion = "title" | "cost" | "typeLine" | "emblem" | "rules" | "pt" | "foo
 /**
  * Los ajustes finos de una carta o de una colección: el tamaño y la altura
  * de cada texto, lo opaco del fondo de la caja de reglas y el radio de las
- * esquinas de la ilustración y de la carta.
+ * esquinas de la ilustración y de la carta y el difuminado de abajo de la
+ * ilustración.
  */
 export function AjustesFinos({
 	valor,
@@ -137,6 +141,21 @@ export function AjustesFinos({
 					onChange={(v) => poner({ [k]: v })}
 				/>
 			))}
+			<p className="pt-1 text-xs font-semibold">{t("Caja de reglas")}</p>
+			<p className="text-[11px] text-muted-foreground">
+				{t(
+					"Cuánto más alta (en positivo, crece hacia arriba y la ilustración se acorta) o más baja (en negativo, la letra baja si hace falta). A 0, como viene. En los marcos de imagen (Original, Balatro) no cambia.",
+				)}
+			</p>
+			<FilaDeslizador
+				etiqueta={t("Altura de la caja de reglas")}
+				valor={valor.rulesBoxHeight ?? 0}
+				min={-10}
+				max={10}
+				paso={0.5}
+				sufijo=" mm"
+				onChange={(v) => poner({ rulesBoxHeight: v === 0 ? undefined : v })}
+			/>
 			<FilaDeslizador
 				etiqueta={t("Fondo de la caja de reglas más opaco")}
 				valor={Math.round(valor.rulesBoxOpacity * 100)}
@@ -163,6 +182,42 @@ export function AjustesFinos({
 					sufijo=" mm"
 					onChange={(artRadius) => poner({ artRadius })}
 				/>
+			)}
+			<FilaInterruptor
+				etiqueta={t("Difuminado de la ilustración a medida")}
+				ayuda={t(
+					"Funde con negro el borde de abajo de la ilustración. Sin tocarlo, el del marco (en el extendido, 12 mm con 7 de extensión). A 0 mm, sin difuminado. La extensión hace que la ilustración siga por debajo de su ventana, perdiéndose: se ve donde el marco no la tapa (en el extendido, a los lados de la caja y debajo).",
+				)}
+				valor={valor.artFade !== undefined}
+				onChange={(v) =>
+					poner(
+						v
+							? { artFade: 12, artFadeExtension: 7 }
+							: { artFade: undefined, artFadeExtension: undefined },
+					)
+				}
+			/>
+			{valor.artFade !== undefined && (
+				<>
+					<FilaDeslizador
+						etiqueta={t("Difuminado de la ilustración")}
+						valor={valor.artFade}
+						min={0}
+						max={25}
+						paso={0.5}
+						sufijo=" mm"
+						onChange={(artFade) => poner({ artFade })}
+					/>
+					<FilaDeslizador
+						etiqueta={t("Extensión del difuminado")}
+						valor={valor.artFadeExtension ?? 0}
+						min={0}
+						max={35}
+						paso={0.5}
+						sufijo=" mm"
+						onChange={(v) => poner({ artFadeExtension: v === 0 ? undefined : v })}
+					/>
+				</>
 			)}
 			<FilaInterruptor
 				etiqueta={t("Esquinas de la carta a medida")}

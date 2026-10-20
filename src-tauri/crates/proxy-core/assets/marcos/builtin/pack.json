@@ -277,9 +277,11 @@
 				"x": 0,
 				"y": 0,
 				"w": 63,
-				"h": 52.5
+				"h": "52.5 - subeCaja"
 			},
 			"cajaPorDefecto": "clara",
+			"difuminadoArte": 12,
+			"extensionDifuminado": 7,
 			"capas": [
 				{
 					"svg": "extendido/cinta.svg",
@@ -331,7 +333,7 @@
 				},
 				"tipo": {
 					"x": 4.5,
-					"y": 51.85,
+					"y": "51.85 - subeCaja",
 					"w": 49.0,
 					"h": 3.95,
 					"rol": "tipo",
@@ -340,15 +342,15 @@
 				},
 				"emblema": {
 					"x": 54.4,
-					"y": 52.35,
+					"y": "52.35 - subeCaja",
 					"w": 4.6,
 					"h": 3.0
 				},
 				"reglas": {
 					"x": 5.9,
-					"y": 57.25,
+					"y": "57.25 - subeCaja",
 					"w": 51.7,
-					"h": 22.6,
+					"h": "22.6 + subeCaja",
 					"rol": "reglas",
 					"mayuscula": 1.72,
 					"color": "{{tintaCaja}}"
@@ -391,9 +393,9 @@
 						},
 						"reglas": {
 							"x": 5.9,
-							"y": 57.25,
+							"y": "57.25 - subeCaja",
 							"w": 51.7,
-							"h": 22.6,
+							"h": "22.6 + subeCaja",
 							"rol": "reglas",
 							"mayuscula": 1.72,
 							"color": "{{tintaCaja}}",
@@ -406,7 +408,7 @@
 						"x": 0,
 						"y": 0,
 						"w": 63,
-						"h": 40.5
+						"h": "40.5 - subeCaja"
 					},
 					"capas": [
 						{
@@ -434,7 +436,7 @@
 					"huecos": {
 						"tipo": {
 							"x": 4.5,
-							"y": 39.85,
+							"y": "39.85 - subeCaja",
 							"w": 49.0,
 							"h": 3.95,
 							"rol": "tipo",
@@ -443,15 +445,15 @@
 						},
 						"emblema": {
 							"x": 54.4,
-							"y": 40.35,
+							"y": "40.35 - subeCaja",
 							"w": 4.6,
 							"h": 3.0
 						},
 						"reglas": {
 							"x": 5.9,
-							"y": 45.25,
+							"y": "45.25 - subeCaja",
 							"w": 51.7,
-							"h": 34.6,
+							"h": "34.6 + subeCaja",
 							"rol": "reglas",
 							"mayuscula": 1.72,
 							"color": "{{tintaCaja}}"
@@ -465,7 +467,7 @@
 				"x": 3.57,
 				"y": 8.6,
 				"w": 55.83,
-				"h": 39.7
+				"h": "39.7 - subeCaja"
 			},
 			"cajaPorDefecto": "clara",
 			"capas": [
@@ -519,7 +521,7 @@
 				},
 				"tipo": {
 					"x": 3.9,
-					"y": 49.2,
+					"y": "49.2 - subeCaja",
 					"w": 50.6,
 					"h": 4.8,
 					"rol": "tipo",
@@ -528,15 +530,15 @@
 				},
 				"emblema": {
 					"x": 55.0,
-					"y": 50.1,
+					"y": "50.1 - subeCaja",
 					"w": 4.4,
 					"h": 3.0
 				},
 				"reglas": {
 					"x": 4.9,
-					"y": 55.4,
+					"y": "55.4 - subeCaja",
 					"w": 53.2,
-					"h": 24.6,
+					"h": "24.6 + subeCaja",
 					"rol": "reglas",
 					"mayuscula": 1.72,
 					"color": "{{tintaCaja}}"
@@ -579,9 +581,9 @@
 						},
 						"reglas": {
 							"x": 4.9,
-							"y": 55.4,
+							"y": "55.4 - subeCaja",
 							"w": 53.2,
-							"h": 24.6,
+							"h": "24.6 + subeCaja",
 							"rol": "reglas",
 							"mayuscula": 1.72,
 							"color": "{{tintaCaja}}",
@@ -594,7 +596,7 @@
 						"x": 3.57,
 						"y": 8.6,
 						"w": 55.83,
-						"h": 27.7
+						"h": "27.7 - subeCaja"
 					},
 					"capas": [
 						{
@@ -622,7 +624,7 @@
 					"huecos": {
 						"tipo": {
 							"x": 3.9,
-							"y": 37.2,
+							"y": "37.2 - subeCaja",
 							"w": 50.6,
 							"h": 4.8,
 							"rol": "tipo",
@@ -631,15 +633,15 @@
 						},
 						"emblema": {
 							"x": 55.0,
-							"y": 38.1,
+							"y": "38.1 - subeCaja",
 							"w": 4.4,
 							"h": 3.0
 						},
 						"reglas": {
 							"x": 4.9,
-							"y": 43.4,
+							"y": "43.4 - subeCaja",
 							"w": 53.2,
-							"h": 36.6,
+							"h": "36.6 + subeCaja",
 							"rol": "reglas",
 							"mayuscula": 1.72,
 							"color": "{{tintaCaja}}"

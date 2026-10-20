@@ -34,6 +34,7 @@ export function ArteEnVivo({
 	useEffect(() => onLista(lista), [lista, onLista]);
 
 	const [x, y, w, h] = capa.arte;
+	const extension = capa.extension;
 	// El hueco en milímetros de la carta de 63 × 88: la proporción es lo que cuenta.
 	const g = arte ? geometriaArte(framing, arte.w, arte.h, w * 63, h * 88) : null;
 	return (
@@ -45,34 +46,41 @@ export function ArteEnVivo({
 			)}
 			style={{ borderRadius: `${capa.radio[0] * 100}% / ${capa.radio[1] * 100}%` }}
 		>
+			{/* El recorte llega hasta el final de la extensión del difuminado;
+			    dentro, el hueco de siempre (la cuenta del encuadre es la suya). */}
 			<div
 				className="absolute overflow-hidden"
 				style={{
 					left: `${x * 100}%`,
 					top: `${y * 100}%`,
 					width: `${w * 100}%`,
-					height: `${h * 100}%`,
+					height: `${(h + extension) * 100}%`,
 				}}
 			>
-				<img
-					src={urlArte}
-					alt=""
-					draggable={false}
-					onLoad={(e) => {
-						const i = e.currentTarget;
-						setArte({ url: urlArte, w: i.naturalWidth, h: i.naturalHeight });
-					}}
-					className="absolute top-0 left-0 max-w-none will-change-transform"
-					style={
-						g
-							? {
-									width: `${g.ancho}%`,
-									height: `${g.alto}%`,
-									transform: `translate(${g.tx}%, ${g.ty}%) rotate(${g.giro}deg)`,
-								}
-							: { visibility: "hidden" }
-					}
-				/>
+				<div
+					className="absolute top-0 left-0 w-full"
+					style={{ height: `${(h / (h + extension)) * 100}%` }}
+				>
+					<img
+						src={urlArte}
+						alt=""
+						draggable={false}
+						onLoad={(e) => {
+							const i = e.currentTarget;
+							setArte({ url: urlArte, w: i.naturalWidth, h: i.naturalHeight });
+						}}
+						className="absolute top-0 left-0 max-w-none will-change-transform"
+						style={
+							g
+								? {
+										width: `${g.ancho}%`,
+										height: `${g.alto}%`,
+										transform: `translate(${g.tx}%, ${g.ty}%) rotate(${g.giro}deg)`,
+									}
+								: { visibility: "hidden" }
+						}
+					/>
+				</div>
 			</div>
 			<img
 				src={urlCapa}
