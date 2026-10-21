@@ -195,6 +195,7 @@ pub fn run() {
             commands::diseno::design_save,
             commands::diseno::design_remove,
             commands::diseno::design_rerender,
+            commands::imagen::card_export_image,
             commands::diseno::design_renumber,
             commands::diseno::art_from_clipboard,
             commands::diseno::art_from_blob,

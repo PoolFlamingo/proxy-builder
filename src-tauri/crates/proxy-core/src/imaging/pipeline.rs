@@ -152,6 +152,23 @@ pub fn render(bytes: &[u8], s: &RenderSpec) -> Result<Rendered, ImagingError> {
             bytes: bytes.to_vec(),
         });
     }
+    let img = render_rgba(bytes, s)?;
+    let (width, height) = img.dimensions();
+    let bytes = match s.format {
+        ImageFormat::Jpeg => encode::jpeg(&img, s.jpeg_quality)?,
+        ImageFormat::Png => encode::png(&img)?,
+    };
+    Ok(Rendered::Encoded {
+        bytes,
+        format: s.format,
+        width,
+        height,
+    })
+}
+
+/// La tubería entera hasta los píxeles (sin codificar ni pasar el original
+/// tal cual): para guardar la carta en otros formatos.
+pub fn render_rgba(bytes: &[u8], s: &RenderSpec) -> Result<RgbaImage, ImagingError> {
     let mut img = decode(bytes)?;
     if s.fill_corners {
         corners::fill(&mut img);
@@ -166,18 +183,7 @@ pub fn render(bytes: &[u8], s: &RenderSpec) -> Result<Rendered, ImagingError> {
         edges::apply(&mut img, e);
     }
     let b = (s.bleed_mm * px_mm).round().max(0.0) as u32;
-    let img = bleed::extend(&img, b, s.bleed_mode);
-    let (width, height) = img.dimensions();
-    let bytes = match s.format {
-        ImageFormat::Jpeg => encode::jpeg(&img, s.jpeg_quality)?,
-        ImageFormat::Png => encode::png(&img)?,
-    };
-    Ok(Rendered::Encoded {
-        bytes,
-        format: s.format,
-        width,
-        height,
-    })
+    Ok(bleed::extend(&img, b, s.bleed_mode))
 }
 
 /// ¿Se oscurece esta imagen? Según el origen y si es un dorso.

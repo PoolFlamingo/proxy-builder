@@ -3,6 +3,7 @@ import {
 	ArrowRight,
 	Brush,
 	Copy,
+	Download,
 	Eraser,
 	Hash,
 	ImageUp,
@@ -46,6 +47,7 @@ import {
 	cartaPorId,
 	duplicarCartas,
 	eliminarCartas,
+	exportarImagen,
 	fijarCartas,
 	idiomaDeImagen,
 	marcarCartas,
@@ -53,6 +55,7 @@ import {
 	objetivo,
 	reemplazarImagen,
 	reversoDelDeck,
+	tieneReverso,
 } from "./acciones-carta";
 
 /**
@@ -211,6 +214,30 @@ export function SlotMenu({ id, children }: { id: string; children: ReactNode }) 
 						</ContextMenuItem>
 					</ContextMenuSubContent>
 				</ContextMenuSub>
+				{carta?.front && (
+					<ContextMenuSub>
+						<ContextMenuSubTrigger disabled={varias}>
+							<Download />
+							{t("Exportar imagen")}
+						</ContextMenuSubTrigger>
+						<ContextMenuSubContent className="text-xs">
+							<ContextMenuItem onSelect={intentar(() => exportarImagen(id, false, t))}>
+								{t("Frente…")}
+							</ContextMenuItem>
+							<ContextMenuItem
+								disabled={!tieneReverso(carta)}
+								onSelect={intentar(() => exportarImagen(id, true, t))}
+							>
+								{t("Reverso…")}
+							</ContextMenuItem>
+							<p className="px-2 py-1.5 text-[10px] text-muted-foreground">
+								{t(
+									"PNG, JPEG, WebP, TIFF o BMP, según la extensión del nombre. A los PPP de la calidad del PDF y sin sangrado.",
+								)}
+							</p>
+						</ContextMenuSubContent>
+					</ContextMenuSub>
+				)}
 				<ContextMenuSeparator />
 				<ContextMenuItem onSelect={() => moverUno(ids(), -1)}>
 					<ArrowLeft />

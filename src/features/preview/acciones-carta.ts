@@ -2,8 +2,9 @@ import type { DeckCard } from "@/bindings/DeckCard";
 import type { FaceImage } from "@/bindings/FaceImage";
 import type { MarcaCarta } from "@/bindings/MarcaCarta";
 import { elegirImagenes, type T } from "@/features/decklist/acciones";
-import { nombreDeFichero } from "@/lib/cartas";
+import { imagenDorso, nombreDeFichero } from "@/lib/cartas";
 import { actualizar, duplicar, huecos, moverGrupo, quitar } from "@/lib/deck-ops";
+import { guardarParaExportar } from "@/lib/dialogos";
 import { call } from "@/lib/ipc";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
@@ -201,4 +202,45 @@ export function seleccionarConClic(
 
 export function cartaPorId(id: string): DeckCard | undefined {
 	return cartas().find((c) => c.id === id);
+}
+
+/** Los formatos en que se guarda una carta; manda la extensión del nombre. */
+const FORMATOS_IMAGEN = [
+	{ name: "PNG", extensions: ["png"] },
+	{ name: "JPEG", extensions: ["jpg", "jpeg"] },
+	{ name: "WebP", extensions: ["webp"] },
+	{ name: "TIFF", extensions: ["tif", "tiff"] },
+	{ name: "BMP", extensions: ["bmp"] },
+];
+
+/**
+ * «Exportar imagen…»: guarda una cara de la carta tal como saldría en el PDF
+ * (a los PPP de la calidad del PDF y sin sangrado), en el formato de la
+ * extensión que se elija.
+ */
+export async function exportarImagen(id: string, dorso: boolean, t: T) {
+	const deck = useDeck.getState().deck;
+	const carta = deck?.cards.find((c) => c.id === id);
+	if (!deck || !carta) return;
+	const base = (carta.meta.name || t("carta")).replace(/[\\/:*?"<>|]+/g, " ").trim();
+	const nombre = dorso ? `${base} (${t("reverso")})` : base;
+	const destino = await guardarParaExportar(
+		{ title: t("Exportar imagen"), filters: FORMATOS_IMAGEN },
+		`${nombre}.png`,
+	);
+	if (!destino) return;
+	const ruta = await call("card_export_image", {
+		card: carta,
+		back: dorso,
+		settings: deck.settings,
+		deckBack: deck.defaultBack,
+		path: destino,
+	});
+	useUi.getState().anunciar(t("Imagen guardada: {nombre}", { nombre: nombreDeFichero(ruta) }));
+}
+
+/** ¿Tiene reverso que guardar? (el propio, el de la otra cara o el del deck). */
+export function tieneReverso(carta: DeckCard): boolean {
+	const deck = useDeck.getState().deck;
+	return !!deck && imagenDorso(carta, deck) !== null;
 }

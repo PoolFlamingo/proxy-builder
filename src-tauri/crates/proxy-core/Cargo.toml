@@ -14,7 +14,7 @@ regex = "1"
 # Leer formato y medidas de una imagen sin decodificarla (la misma que usa krilla).
 imagesize = "0.14"
 # Decodificar y codificar imágenes (solo los formatos que se usan).
-image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "webp", "rayon"] }
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "webp", "tiff", "bmp", "rayon"] }
 # Remuestreo Lanczos3 con SIMD (mucho más rápido que el de `image`).
 fast_image_resize = { version = "6.1.0", features = ["rayon"] }
 rayon = "1.12"
