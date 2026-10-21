@@ -200,6 +200,11 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
     Card Conjurer (capas PNG del pack). No van en el repo ni en los
     instaladores: se descargan al elegirlos (`diseno/original.rs`, commit
     fijo y SHA-256 de cada PNG en `proxy-core/assets/marcos/original/imagenes.json`).
+    Clásico, extendido y despejado llevan el mismo mármol y pergamino (Pablo,
+    21/10/2026): piezas del marco normal sobre los otros con `mascara` y
+    `desde` de las capas PNG (pack versión 3). Si una versión nueva pide
+    imágenes que no están, carga sin esos estilos (`original::cargar`) y las
+    baja sola al arrancar (`original::completar`).
   - **Letras libres para descargar** (Pablo, 15/10/2026): catálogo OFL de
     Google Fonts en `src-tauri/assets/letras-libres.json` (commit fijo y
     SHA-256 de cada fichero; de título, de aire clásico/medieval/fantasía, y
