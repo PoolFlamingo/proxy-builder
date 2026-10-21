@@ -1,7 +1,7 @@
 {
 	"id": "original",
 	"nombre": "Original (Card Conjurer)",
-	"version": 2,
+	"version": 3,
 	"origen": "Card Conjurer · github.com/Investigamer/cardconjurer",
 	"paletas": {
 		"W": {
@@ -117,7 +117,7 @@
 				"w": 63,
 				"h": 88
 			},
-			"cajaPorDefecto": "tinte",
+			"cajaPorDefecto": "clara",
 			"ventanaArte": {
 				"x": 0,
 				"y": 0,
@@ -145,6 +145,35 @@
 					"png": "m15/borderless/m15GenericShowcaseFrame{color}.png"
 				},
 				{
+					"png": "m15/regular/m15Frame{color}.png",
+					"mascara": "m15/regular/m15MaskTitle.png",
+					"colores": {
+						"colorless": "A"
+					}
+				},
+				{
+					"png": "m15/regular/m15Frame{color}.png",
+					"mascara": "m15/regular/m15MaskType.png",
+					"colores": {
+						"colorless": "A"
+					}
+				},
+				{
+					"png": "m15/regular/m15Frame{color}.png",
+					"desde": {
+						"x": 4.72,
+						"y": 55.2,
+						"w": 53.66,
+						"h": 26.2
+					},
+					"colores": {
+						"colorless": "A"
+					},
+					"si": {
+						"caja": ["auto", "light"]
+					}
+				},
+				{
 					"cajaReglas": true,
 					"en": {
 						"x": 4.91,
@@ -166,23 +195,15 @@
 					}
 				},
 				{
-					"png": "m15/borderless/pt/{color}.png",
+					"png": "m15/regular/m15PT{color}.png",
 					"en": {
-						"x": 48.13,
-						"y": 77.98,
-						"w": 11.51,
-						"h": 5.87
+						"x": 47.71,
+						"y": 77.86,
+						"w": 11.84,
+						"h": 6.45
 					},
 					"colores": {
-						"W": "w",
-						"U": "u",
-						"B": "b",
-						"R": "r",
-						"G": "g",
-						"gold": "m",
-						"artifact": "a",
-						"land": "l",
-						"colorless": "l"
+						"land": "A"
 					},
 					"si": {
 						"fr": true
@@ -197,8 +218,7 @@
 					"h": 4.78,
 					"rol": "titulo",
 					"mayuscula": 2.15,
-					"color": "#ffffff",
-					"sombra": true
+					"color": "#111111"
 				},
 				"coste": {
 					"x": 30.0,
@@ -223,8 +243,7 @@
 					"h": 4.78,
 					"rol": "tipo",
 					"mayuscula": 1.9,
-					"color": "#ffffff",
-					"sombra": true
+					"color": "#111111"
 				},
 				"emblema": {
 					"x": 53.4,
@@ -239,7 +258,7 @@
 					"h": 23.35,
 					"rol": "reglas",
 					"mayuscula": 1.72,
-					"color": "#ffffff"
+					"color": "#111111"
 				},
 				"fr": {
 					"x": 49.95,
@@ -248,7 +267,161 @@
 					"h": 3.27,
 					"rol": "fr",
 					"mayuscula": 2.3,
-					"color": "#ffffff",
+					"color": "#111111",
+					"alinear": "centro"
+				},
+				"pie": {
+					"x": 4.3,
+					"y": 82.08,
+					"w": 43.0,
+					"h": 3.0,
+					"rol": "pie",
+					"mayuscula": 1.0,
+					"color": "#f0f0f0",
+					"tabs": [7.85, 10.25],
+					"interlinea": 1.75
+				}
+			},
+			"radio": 3,
+			"coronaLegendaria": true
+		},
+		"extended": {
+			"arte": {
+				"x": 0,
+				"y": 7.4,
+				"w": 63,
+				"h": 47.9
+			},
+			"cajaPorDefecto": "clara",
+			"capas": [
+				{
+					"svg": "cinta.svg",
+					"si": {
+						"cinta": true
+					}
+				},
+				{
+					"png": "m15/new/extended/{color}.png",
+					"colores": {
+						"W": "w",
+						"U": "u",
+						"B": "b",
+						"R": "r",
+						"G": "g",
+						"gold": "m",
+						"artifact": "a",
+						"land": "l",
+						"colorless": "a"
+					}
+				},
+				{
+					"png": "m15/regular/m15Frame{color}.png",
+					"mascara": "m15/regular/m15MaskType.png",
+					"colores": {
+						"colorless": "A"
+					}
+				},
+				{
+					"cajaReglas": true,
+					"en": {
+						"x": 4.91,
+						"y": 55.35,
+						"w": 53.18,
+						"h": 26.25
+					}
+				},
+				{
+					"svg": "cubierta-corona.svg",
+					"si": {
+						"corona": true
+					}
+				},
+				{
+					"png": "m15/crowns/m15Crown{color}Floating.png",
+					"en": {
+						"x": 1.93,
+						"y": 1.68,
+						"w": 59.14,
+						"h": 9.01
+					},
+					"si": {
+						"corona": true
+					}
+				},
+				{
+					"png": "m15/regular/m15PT{color}.png",
+					"en": {
+						"x": 47.71,
+						"y": 77.86,
+						"w": 11.84,
+						"h": 6.45
+					},
+					"colores": {
+						"land": "A"
+					},
+					"si": {
+						"fr": true
+					}
+				}
+			],
+			"huecos": {
+				"titulo": {
+					"x": 5.38,
+					"y": 4.19,
+					"w": 52.24,
+					"h": 4.78,
+					"rol": "titulo",
+					"mayuscula": 2.15,
+					"color": "#111111"
+				},
+				"coste": {
+					"x": 30.0,
+					"y": 5.2,
+					"w": 28.54,
+					"h": 2.85
+				},
+				"cinta": {
+					"x": 9.5,
+					"y": 9.95,
+					"w": 44.0,
+					"h": 1.85,
+					"rol": "cinta",
+					"mayuscula": 1.2,
+					"color": "#f0f0f0",
+					"alinear": "centro"
+				},
+				"tipo": {
+					"x": 5.38,
+					"y": 49.54,
+					"w": 47.3,
+					"h": 4.78,
+					"rol": "tipo",
+					"mayuscula": 1.9,
+					"color": "#111111"
+				},
+				"emblema": {
+					"x": 53.4,
+					"y": 50.5,
+					"w": 4.6,
+					"h": 3.3
+				},
+				"reglas": {
+					"x": 5.42,
+					"y": 55.75,
+					"w": 52.16,
+					"h": 23.1,
+					"rol": "reglas",
+					"mayuscula": 1.72,
+					"color": "#111111"
+				},
+				"fr": {
+					"x": 49.95,
+					"y": 78.98,
+					"w": 8.61,
+					"h": 3.27,
+					"rol": "fr",
+					"mayuscula": 2.3,
+					"color": "#111111",
 					"alinear": "centro"
 				},
 				"pie": {

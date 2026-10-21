@@ -208,6 +208,16 @@ fn cargar_pack(f: Ficheros) -> Result<Pack, PackError> {
     Pack::cargar_con_imagenes(f.textos, f.imagenes)
 }
 
+/// Como `cargar_pack`, para el pack de la carpeta `id`: el de los marcos
+/// «Original» carga aunque le falten imágenes de una versión nueva.
+fn cargar_pack_de(id: &std::ffi::OsStr, f: Ficheros) -> Result<Pack, PackError> {
+    if id == super::original::ID {
+        super::original::cargar(f.textos, f.imagenes)
+    } else {
+        cargar_pack(f)
+    }
+}
+
 fn leer_packs(dir: &Path) -> BTreeMap<String, Arc<Pack>> {
     let mut m = BTreeMap::new();
     if let Ok(p) = Pack::de_fabrica() {
@@ -221,7 +231,7 @@ fn leer_packs(dir: &Path) -> BTreeMap<String, Arc<Pack>> {
                 super::original::definicion_al_dia(&e.path());
             }
             if let Ok(f) = leer_carpeta(&e.path()) {
-                if let Ok(p) = cargar_pack(f) {
+                if let Ok(p) = cargar_pack_de(&e.file_name(), f) {
                     m.insert(p.def.id.clone(), Arc::new(p));
                 }
             }
@@ -527,7 +537,7 @@ impl Recursos {
     /// Vuelve a leer de disco el pack `marcos/<id>/` (tras descargarlo).
     pub fn recargar_pack(&self, id: &str) -> AppResult<PackInfo> {
         let f = leer_carpeta(&self.dir.join("marcos").join(id))?;
-        let p = cargar_pack(f).map_err(de_pack)?;
+        let p = cargar_pack_de(id.as_ref(), f).map_err(de_pack)?;
         let info = info_de(&p);
         self.escribir()?.packs.insert(id.to_string(), Arc::new(p));
         Ok(info)

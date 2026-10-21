@@ -569,7 +569,11 @@ fn original_con_sus_imagenes() {
     let mut motor = Motor::de_fabrica().unwrap();
     let col = coleccion();
     for c in casos() {
-        for estilo in [DesignStyle::Classic, DesignStyle::Borderless] {
+        for estilo in [
+            DesignStyle::Classic,
+            DesignStyle::Extended,
+            DesignStyle::Borderless,
+        ] {
             let mut d = diseno(&c);
             d.style = estilo;
             let e = efectivo(&d, Some(&col));
@@ -968,7 +972,11 @@ fn original_colores() {
         ),
     ];
     let c = &casos_largos()[0];
-    for estilo in [DesignStyle::Classic, DesignStyle::Borderless] {
+    for estilo in [
+        DesignStyle::Classic,
+        DesignStyle::Extended,
+        DesignStyle::Borderless,
+    ] {
         for (nc, color) in &colores {
             for (nb, caja) in &cajas {
                 let mut d = diseno(c);
