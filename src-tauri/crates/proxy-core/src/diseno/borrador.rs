@@ -254,9 +254,10 @@ const SUBTIPOS: [(&str, &str); 19] = [
 ];
 
 /// La línea de tipo en español de una en inglés, sin red: un solo tipo de
-/// carta (con «Basic» o «Legendary») y subtipos conocidos. `None` si algo no
-/// se sabe (criaturas, fichas, tipos mezclados): ahí manda lo que imprimió
-/// Scryfall. Evita que salga «Land» en una carta en español.
+/// carta (con «Basic» o «Legendary»); los subtipos que no se saben (los de
+/// criatura) se dejan en inglés. `None` si los tipos no se saben (fichas,
+/// tipos mezclados): ahí manda lo que imprimió Scryfall. Evita que salga
+/// «Land» en una carta en español.
 pub fn tipo_en_espanol(en: &str) -> Option<String> {
     let (tipos, subtipos) = match en.split_once('—') {
         Some((a, b)) => (a.trim(), Some(b.trim())),
@@ -297,12 +298,14 @@ pub fn tipo_en_espanol(en: &str) -> Option<String> {
         if palabras.is_empty() {
             return None;
         }
-        let es: Option<Vec<&str>> = palabras
+        // Un subtipo que no se sabe (casi todos los de criatura) se queda como
+        // viene: mejor «Criatura — Eldrazi» que toda la línea en inglés.
+        let es: Vec<&str> = palabras
             .iter()
-            .map(|p| SUBTIPOS.iter().find(|s| s.0 == *p).map(|s| s.1))
+            .map(|p| SUBTIPOS.iter().find(|s| s.0 == *p).map_or(*p, |s| s.1))
             .collect();
         r.push_str(" — ");
-        r.push_str(&es?.join(" "));
+        r.push_str(&es.join(" "));
     }
     Some(r)
 }
@@ -312,7 +315,9 @@ pub fn tipo_en_espanol(en: &str) -> Option<String> {
 /// frases de `tipos_idiomas`.
 pub fn tipo_traducido(en: &str, lang: DesignLang) -> Option<String> {
     match lang {
-        DesignLang::Es => tipo_en_espanol(en),
+        DesignLang::Es => {
+            super::tipos_idiomas::tipo_en(en, DesignLang::Es).or_else(|| tipo_en_espanol(en))
+        }
         DesignLang::En => None,
         l => super::tipos_idiomas::tipo_en(en, l),
     }
@@ -330,7 +335,7 @@ pub fn arreglar_tipos(card: &mut CardData, lang: DesignLang) -> bool {
         if actual.is_empty() || *actual != f.type_line.en {
             continue;
         }
-        if let Some(t) = tipo_traducido(&f.type_line.en, lang) {
+        if let Some(t) = tipo_traducido(&f.type_line.en, lang).filter(|t| *t != f.type_line.en) {
             *f.type_line.get_mut(lang) = t;
             cambio = true;
         }
@@ -359,9 +364,28 @@ mod tests {
             "Artefacto legendario — Equipo"
         );
         assert_eq!(t("Instant"), "Instantáneo");
-        assert_eq!(tipo_en_espanol("Creature — Elf"), None);
+        assert_eq!(t("Creature — Eldrazi"), "Criatura — Eldrazi");
+        assert_eq!(
+            t("Legendary Creature — Elf Druid"),
+            "Criatura legendaria — Elf Druid"
+        );
         assert_eq!(tipo_en_espanol("Artifact Creature"), None);
         assert_eq!(tipo_en_espanol("Token Creature — Bird"), None);
+    }
+
+    #[test]
+    fn tipos_mezclados_y_de_criatura_salen_de_lo_impreso() {
+        let t = |s| tipo_traducido(s, DesignLang::Es).unwrap();
+        assert_eq!(t("Creature — Eldrazi"), "Criatura — Eldrazi");
+        assert_eq!(
+            t("Legendary Artifact Creature — Golem"),
+            "Criatura artefacto legendaria — Gólem"
+        );
+        assert_eq!(t("Kindred Instant"), "Instantáneo tribal");
+        assert_eq!(t("Creature — Elf Druid"), "Criatura — Elfo Druida");
+        assert_eq!(t("Basic Land — Forest"), "Tierra básica — Bosque");
+        // Un subtipo que ninguna carta trae suelto se queda en inglés.
+        assert_eq!(t("Creature — Xyzzy"), "Criatura — Xyzzy");
     }
 
     #[test]
