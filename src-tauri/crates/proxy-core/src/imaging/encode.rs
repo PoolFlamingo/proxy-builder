@@ -29,6 +29,68 @@ pub fn png(img: &RgbaImage) -> Result<Vec<u8>, ImagingError> {
     Ok(out)
 }
 
+/// Los formatos en que se puede guardar una carta suelta.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FormatoImagen {
+    Png,
+    Jpeg,
+    Webp,
+    Tiff,
+    Bmp,
+}
+
+impl FormatoImagen {
+    /// El formato de una extensión (`png`, `jpg`, `jpeg`, `webp`, `tif`…).
+    pub fn de_extension(ext: &str) -> Option<Self> {
+        match ext.to_ascii_lowercase().as_str() {
+            "png" => Some(Self::Png),
+            "jpg" | "jpeg" => Some(Self::Jpeg),
+            "webp" => Some(Self::Webp),
+            "tif" | "tiff" => Some(Self::Tiff),
+            "bmp" => Some(Self::Bmp),
+            _ => None,
+        }
+    }
+
+    /// ¿Guarda transparencia? Los que no, reciben la carta sobre blanco.
+    pub fn con_alfa(self) -> bool {
+        matches!(self, Self::Png | Self::Webp | Self::Tiff)
+    }
+}
+
+/// Codifica una imagen en cualquiera de esos formatos. WebP va sin pérdida;
+/// `calidad` solo cuenta para JPEG.
+pub fn en_formato(
+    img: &RgbaImage,
+    formato: FormatoImagen,
+    calidad: u8,
+) -> Result<Vec<u8>, ImagingError> {
+    let fallo = |e: image::ImageError| ImagingError::Encode(e.to_string());
+    let mut sobre_blanco;
+    let img = if formato.con_alfa() {
+        img
+    } else {
+        sobre_blanco = img.clone();
+        super::corners::sobre_blanco(&mut sobre_blanco);
+        &sobre_blanco
+    };
+    let destino = match formato {
+        FormatoImagen::Jpeg => return jpeg(img, calidad),
+        FormatoImagen::Png => return png(img),
+        FormatoImagen::Webp => image::ImageFormat::WebP,
+        FormatoImagen::Tiff => image::ImageFormat::Tiff,
+        FormatoImagen::Bmp => image::ImageFormat::Bmp,
+    };
+    let mut out = std::io::Cursor::new(Vec::new());
+    let dinamica = if formato.con_alfa() {
+        DynamicImage::ImageRgba8(img.clone())
+    } else {
+        DynamicImage::ImageRgb8(DynamicImage::ImageRgba8(img.clone()).into_rgb8())
+    };
+    dinamica.write_to(&mut out, destino).map_err(fallo)?;
+    Ok(out.into_inner())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -85,5 +147,23 @@ mod tests {
             decode(&jpeg(&img, 80).unwrap()).unwrap().dimensions(),
             (1, 1)
         );
+    }
+
+    #[test]
+    fn todos_los_formatos_se_leen_de_vuelta() {
+        let img = muestra();
+        for (f, ext) in [
+            (FormatoImagen::Png, "png"),
+            (FormatoImagen::Jpeg, "jpg"),
+            (FormatoImagen::Webp, "webp"),
+            (FormatoImagen::Tiff, "tiff"),
+            (FormatoImagen::Bmp, "bmp"),
+        ] {
+            assert_eq!(FormatoImagen::de_extension(ext), Some(f));
+            let bytes = en_formato(&img, f, 90).unwrap();
+            let leida = image::load_from_memory(&bytes).unwrap();
+            assert_eq!((leida.width(), leida.height()), img.dimensions(), "{ext}");
+        }
+        assert_eq!(FormatoImagen::de_extension("gif"), None);
     }
 }

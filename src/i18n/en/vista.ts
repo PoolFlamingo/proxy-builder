@@ -38,6 +38,13 @@ export const VISTA: Record<string, string> = {
 	"{papel} apaisado": "{papel} landscape",
 	"¿Eliminar las cartas de esta página?": "Delete the cards on this page?",
 	"Cambiar reverso": "Change back",
+	"Exportar imagen": "Export image",
+	"Frente…": "Front…",
+	reverso: "back",
+	"Reverso…": "Back…",
+	"Imagen guardada: {nombre}": "Image saved: {nombre}",
+	"PNG, JPEG, WebP, TIFF o BMP, según la extensión del nombre. A los PPP de la calidad del PDF y sin sangrado.":
+		"PNG, JPEG, WebP, TIFF or BMP, by the file name's extension. At the PDF quality's DPI and without bleed.",
 	"Cambiar variante": "Change printing",
 	Desfijar: "Unlock",
 	"Editar carta": "Edit card",

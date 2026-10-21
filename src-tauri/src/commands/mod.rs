@@ -9,6 +9,7 @@ pub mod diseno;
 pub mod export;
 pub mod fuentes;
 pub mod identify;
+pub mod imagen;
 pub mod layout;
 pub mod library;
 pub mod sistema;

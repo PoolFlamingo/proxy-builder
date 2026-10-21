@@ -118,6 +118,16 @@ export interface Commands {
 		result: CardIdentify;
 	};
 	card_link: { args: { scryfallId: string }; result: CardMeta };
+	card_export_image: {
+		args: {
+			card: DeckCard;
+			back: boolean;
+			settings: PrintSettings;
+			deckBack: FaceImage | null;
+			path: string;
+		};
+		result: string;
+	};
 	card_link_externa: { args: { fuente: FuenteCarta; id: string }; result: CardMeta };
 	identify_batch: { args: { items: IdentifyRequest[]; ocr: boolean }; result: number };
 	design_draft: {
