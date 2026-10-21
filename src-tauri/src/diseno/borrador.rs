@@ -707,11 +707,11 @@ mod tests {
             d.faces[0].rules.get(DesignLang::Ro),
             "Protection from everything."
         );
-        // «Legendary Creature — Hydra Avatar»: los subtipos de criatura no se
-        // saben sin red, así que se queda en inglés.
+        // «Legendary Creature — Hydra Avatar»: el tipo sale de la tabla y los
+        // subtipos de criatura, que no se saben sin red, se quedan en inglés.
         assert_eq!(
             d.faces[0].type_line.get(DesignLang::Ro),
-            "Legendary Creature — Hydra Avatar"
+            "Creatură legendară — Hydra Avatar"
         );
         let mut tierra = carta(serde_json::json!({
             "id":"t","name":"Plains","lang":"en","set":"x","collector_number":"1",

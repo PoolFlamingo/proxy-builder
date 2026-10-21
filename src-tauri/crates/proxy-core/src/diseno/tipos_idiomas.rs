@@ -13,6 +13,11 @@
 //! neerlandés y ucraniano no tienen cartas: sus tablas las escribió el
 //! desarrollo y van **sin fuente oficial**.
 
+use std::collections::BTreeMap;
+use std::sync::OnceLock;
+
+use serde::Deserialize;
+
 use super::modelo::DesignLang;
 
 struct Tabla {
@@ -634,28 +639,85 @@ fn tabla(lang: DesignLang) -> Option<&'static Tabla> {
     })
 }
 
-/// La línea de tipo en `lang` (ni español ni inglés) de una en inglés, sin
-/// red: una combinación conocida de tipos y subtipos conocidos. `None` si
-/// algo no se sabe.
+/// Lo que Scryfall imprime en cada idioma (`scripts/tipos-impresos.mjs`): la
+/// parte de tipos entera («Legendary Artifact Creature») y cada subtipo suelto.
+/// Cubre todas las combinaciones de tipos y supertipos que existen en cartas
+/// reales y casi todos los subtipos; las tablas escritas a mano de arriba
+/// quedan para los idiomas sin cartas (rumano, polaco, neerlandés, ucraniano).
+#[derive(Default, Deserialize)]
+struct Impresos {
+    #[serde(default)]
+    tipos: BTreeMap<String, String>,
+    #[serde(default)]
+    subtipos: BTreeMap<String, String>,
+}
+
+#[derive(Default, Deserialize)]
+struct Fichero {
+    #[serde(default)]
+    idiomas: BTreeMap<String, Impresos>,
+}
+
+fn impresos(lang: DesignLang) -> Option<&'static Impresos> {
+    static FICHERO: OnceLock<Fichero> = OnceLock::new();
+    FICHERO
+        .get_or_init(|| {
+            serde_json::from_str(include_str!("../../assets/tipos-impresos.json"))
+                .unwrap_or_default()
+        })
+        .idiomas
+        .get(lang.codigo())
+}
+
+/// El español no tiene tabla a mano (la gramática está en
+/// `borrador::tipo_en_espanol`): solo cómo se juntan los subtipos.
+const ES: Tabla = Tabla {
+    tipos: &[],
+    subtipos: &[],
+    separador: " — ",
+    // Elfo Druida
+    union: Some(" "),
+    ultima: None,
+};
+
+/// La línea de tipo en `lang` (que no sea el inglés) de una en inglés, sin
+/// red. Los tipos salen de lo que imprimió Scryfall o, si no, de las frases de
+/// la tabla; un subtipo que no se sabe se deja en inglés (mejor «Créature —
+/// Eldrazi» que toda la línea sin traducir). `None` si los tipos no se saben.
 pub fn tipo_en(en: &str, lang: DesignLang) -> Option<String> {
-    let t = tabla(lang)?;
+    let t = if lang == DesignLang::Es {
+        &ES
+    } else {
+        tabla(lang)?
+    };
+    let reales = impresos(lang);
     let (tipos, subtipos) = match en.split_once('—') {
         Some((a, b)) => (a.trim(), Some(b.trim())),
         None => (en.trim(), None),
     };
     let tipos = tipos.split_whitespace().collect::<Vec<_>>().join(" ");
-    let mut r = t.tipos.iter().find(|(k, _)| *k == tipos)?.1.to_string();
+    let mut r = match reales.and_then(|i| i.tipos.get(&tipos)) {
+        Some(impreso) => impreso.clone(),
+        None => t.tipos.iter().find(|(k, _)| *k == tipos)?.1.to_string(),
+    };
     if let Some(sub) = subtipos {
-        let palabras: Option<Vec<&str>> = sub
+        let palabras: Vec<&str> = sub
             .split_whitespace()
-            .map(|p| t.subtipos.iter().find(|(k, _)| *k == p).map(|(_, v)| *v))
+            .map(|p| {
+                t.subtipos
+                    .iter()
+                    .find(|(k, _)| *k == p)
+                    .map(|(_, v)| *v)
+                    .or_else(|| reales.and_then(|i| i.subtipos.get(p)).map(String::as_str))
+                    .unwrap_or(p)
+            })
             .collect();
-        let palabras = palabras?;
         let n = palabras.len();
         let unidos = match (n, t.union) {
             (0, _) => return None,
             (1, _) => palabras[0].to_string(),
-            (_, None) => return None,
+            // El idioma cambia el orden de los subtipos y no se sabe cuál toca.
+            (_, None) => palabras.join(" "),
             (_, Some(u)) => match t.ultima {
                 Some(y) => format!("{}{y}{}", palabras[..n - 1].join(u), palabras[n - 1]),
                 None => palabras.join(u),
@@ -734,12 +796,27 @@ mod tests {
             tipo_en("Land — Plains Forest", DesignLang::Zhs).as_deref(),
             Some("地 ～平原／树林")
         );
-        // El italiano cambia el orden de los subtipos: con dos, no se sabe.
-        assert_eq!(tipo_en("Land — Island Swamp", DesignLang::It), None);
+        // El italiano cambia el orden de los subtipos: con dos, van como vienen.
+        assert_eq!(
+            tipo_en("Land — Island Swamp", DesignLang::It).as_deref(),
+            Some("Terra — Isola Palude")
+        );
         assert_eq!(tipo_en("Sorcery", DesignLang::Pl).as_deref(), Some("Czar"));
-        // Criaturas (demasiados subtipos) y mezclas, no.
-        assert_eq!(tipo_en("Creature — Elf Druid", DesignLang::Fr), None);
-        assert_eq!(tipo_en("Artifact Creature — Golem", DesignLang::Ru), None);
+        // Criaturas (demasiados subtipos): el subtipo se queda en inglés.
+        assert_eq!(
+            tipo_en("Creature — Eldrazi", DesignLang::Fr).as_deref(),
+            Some("Créature — eldrazi")
+        );
+        // Los tipos mezclados salen de lo que imprimió Scryfall.
+        assert_eq!(
+            tipo_en("Artifact Creature — Golem", DesignLang::Fr).as_deref(),
+            Some("Créature-artefact — golem")
+        );
+        // Un subtipo que ninguna carta trae suelto se queda en inglés.
+        assert_eq!(
+            tipo_en("Creature — Xyzzy", DesignLang::Fr).as_deref(),
+            Some("Créature — Xyzzy")
+        );
         assert_eq!(tipo_en("Land", DesignLang::En), None);
     }
 }
