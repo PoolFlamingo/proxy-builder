@@ -180,6 +180,7 @@
 	"Las cartas en borrador se ven en el deck, pero así sabes cuáles has revisado.": "Os cards em rascunho aparecem no deck, mas assim você sabe quais já revisou.",
 	"Nombre temático": "Nome temático",
 	"Nombre en {idioma}": "Nome em {idioma}",
+	"Línea de tipo en {idioma}": "Linha de tipo em {idioma}",
 	"Texto de ambientación (opcional)": "Texto ilustrativo (opcional)",
 	"Ambientación en {idioma}": "Texto ilustrativo em {idioma}",
 	"Texto de reglas": "Texto de regras",
@@ -365,5 +366,8 @@
 	"Faltan las letras de {idioma}: sin ellas, sus caracteres salen como cuadrados.": "Faltam as fontes de {idioma}: sem elas, os caracteres aparecem como quadrados.",
 	"Busca en Scryfall las mismas frases en otras cartas que sí están en {idioma} y propone su texto oficial. Tarda un poco: una búsqueda por frase.": "Procura no Scryfall as mesmas frases em outros cards que existem em {idioma} e sugere o texto oficial. Demora um pouco: uma busca por frase.",
 	"Usar como reglas en {idioma}": "Usar como regras em {idioma}",
-	"Bajar las letras": "Baixar as fontes"
+	"Bajar las letras": "Baixar as fontes",
+	"Copia:": "Cópia:",
+	"Copia {n}": "Cópia {n}",
+	"Recorrer también las copias con las flechas": "Percorrer também as cópias com as setas"
 }

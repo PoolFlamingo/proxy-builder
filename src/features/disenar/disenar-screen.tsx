@@ -27,7 +27,7 @@ import { call } from "@/lib/ipc";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
 import { Formulario } from "./formulario";
-import { agrupar, type Grupo } from "./grupos";
+import { agrupar, vecina } from "./grupos";
 import { ListaCartas } from "./lista-cartas";
 import { useMarcosOriginales } from "./marcos-originales";
 import { usePacksDescargables } from "./packs-descargables";
@@ -39,7 +39,8 @@ import { VistaPrevia } from "./vista-previa";
 /**
  * **Diseñar**: la tercera vista. A la izquierda las cartas del deck y su
  * estado; en el centro la carta tal como saldrá (pintada por Rust); a la
- * derecha el formulario. `Alt+←/→` pasa de carta.
+ * derecha el formulario. `Alt+←/→` pasa de carta (y, si se elige, de copia:
+ * cada copia de una carta puede llevar su propio diseño).
  */
 export function DisenarScreen() {
 	const { t, mensaje } = useLang();
@@ -68,7 +69,10 @@ export function DisenarScreen() {
 		() => ({ colecciones, packs, simbolos, versionLetras }),
 		[colecciones, packs, simbolos, versionLetras],
 	);
-	const b = useBorrador(grupo, cara, lang, recursos);
+	const porCopias = useUi((s) => s.disenarCopias);
+	// La copia que se diseña es la carta que dice `disenando`.
+	const copia = Math.max(0, grupo?.cartas.findIndex((c) => c.id === disenando) ?? 0);
+	const b = useBorrador(grupo, cara, lang, copia, recursos);
 	const resumen = useResumen(b.design, cara, lang);
 	const dialogo = useUi((s) => s.dialogo);
 
@@ -101,7 +105,8 @@ export function DisenarScreen() {
 	// Al cambiar de carta, cara 0.
 	useEffect(() => {
 		setCara(0);
-		setSoloEsta(false);
+		// Con las copias por separado, lo que se guarda es solo la copia de ahora.
+		setSoloEsta(useUi.getState().disenarCopias);
 	}, [grupo?.clave]);
 
 	const elegibles = useMemo(() => grupos.filter((g) => g.scryfallId), [grupos]);
@@ -109,14 +114,20 @@ export function DisenarScreen() {
 	useEffect(() => {
 		if (!grupo && elegibles[0]?.cartas[0]) useUi.getState().disenar(elegibles[0].cartas[0].id);
 	}, [grupo, elegibles]);
+	const ir = useCallback(
+		(id: string) => {
+			// Dentro de la misma carta es otra copia: se guarda solo esa.
+			if (grupo?.cartas.some((c) => c.id === id)) setSoloEsta(true);
+			useUi.getState().disenar(id);
+		},
+		[grupo],
+	);
 	const pasar = useCallback(
 		(dir: 1 | -1) => {
-			if (elegibles.length === 0) return;
-			const i = grupo ? elegibles.findIndex((g) => g.clave === grupo.clave) : -1;
-			const sig = elegibles[(i + dir + elegibles.length) % elegibles.length];
-			if (sig?.cartas[0]) useUi.getState().disenar(sig.cartas[0].id);
+			const id = vecina(elegibles, disenando, dir, porCopias);
+			if (id) ir(id);
 		},
-		[elegibles, grupo],
+		[elegibles, disenando, porCopias, ir],
 	);
 	useEffect(() => {
 		const tecla = (e: KeyboardEvent) => {
@@ -128,10 +139,11 @@ export function DisenarScreen() {
 		return () => window.removeEventListener("keydown", tecla);
 	}, [pasar]);
 
-	const [pendiente, setPendiente] = useState<Grupo | null>(null);
-	const elegir = (g: Grupo) => {
-		if (b.cambiado) return setPendiente(g);
-		if (g.cartas[0]) useUi.getState().disenar(g.cartas[0].id);
+	// Lo que se hará si se descartan los cambios sin guardar.
+	const [pendiente, setPendiente] = useState<(() => void) | null>(null);
+	const saltar = (id: string) => {
+		if (b.cambiado) return setPendiente(() => () => ir(id));
+		ir(id);
 	};
 
 	const guardar = async (siguiente: boolean) => {
@@ -152,7 +164,7 @@ export function DisenarScreen() {
 		});
 
 	const copias = grupo?.cartas.length ?? 0;
-	const tieneDiseno = !!grupo?.cartas[0]?.design;
+	const tieneDiseno = !!grupo?.cartas[copia]?.design;
 
 	return (
 		<div className="flex h-full flex-col">
@@ -231,7 +243,11 @@ export function DisenarScreen() {
 				className="min-h-0 flex-1"
 			>
 				<ResizablePanel id="lista" defaultSize="22" minSize={220}>
-					<ListaCartas grupos={grupos} elegido={grupo?.clave ?? null} onElegir={elegir} />
+					<ListaCartas
+						grupos={grupos}
+						elegido={grupo?.clave ?? null}
+						onElegir={(g) => g.cartas[0] && saltar(g.cartas[0].id)}
+					/>
 				</ResizablePanel>
 				<ResizableHandle withHandle />
 				<ResizablePanel id="vista" minSize={320}>
@@ -268,16 +284,47 @@ export function DisenarScreen() {
 								/>
 							</div>
 							<div className="flex shrink-0 flex-col gap-2 border-t p-2.5">
-								{copias > 1 && (
-									<label className="flex items-center gap-2 text-xs">
-										<Checkbox checked={soloEsta} onCheckedChange={(v) => setSoloEsta(v === true)} />
-										{t("Solo esta copia (hay {n})", { n: copias })}
-									</label>
+								{copias > 1 && grupo && (
+									<>
+										<div className="flex flex-wrap items-center gap-1.5">
+											<span className="text-xs text-muted-foreground">{t("Copia:")}</span>
+											{grupo.cartas.map((c, i) => (
+												<Button
+													key={c.id}
+													size="sm"
+													variant={i === copia ? "secondary" : "ghost"}
+													className="h-6 min-w-6 px-1.5"
+													onClick={() => i !== copia && saltar(c.id)}
+													aria-label={t("Copia {n}", { n: i + 1 })}
+													aria-pressed={i === copia}
+												>
+													{i + 1}
+												</Button>
+											))}
+										</div>
+										<label className="flex items-center gap-2 text-xs">
+											<Checkbox
+												checked={soloEsta}
+												onCheckedChange={(v) => setSoloEsta(v === true)}
+											/>
+											{t("Solo esta copia (hay {n})", { n: copias })}
+										</label>
+										<label className="flex items-center gap-2 text-xs">
+											<Checkbox
+												checked={porCopias}
+												onCheckedChange={(v) => {
+													useUi.getState().setPreferencia("disenarCopias", v === true);
+													setSoloEsta(v === true);
+												}}
+											/>
+											{t("Recorrer también las copias con las flechas")}
+										</label>
+									</>
 								)}
 								<div className="flex items-center gap-1.5">
 									{tieneDiseno && (
 										<WithTooltip content={t("Quita el diseño y deja la carta como estaba.")}>
-											<Button size="sm" variant="ghost" onClick={b.quitar}>
+											<Button size="sm" variant="ghost" onClick={() => b.quitar(!soloEsta)}>
 												<Trash2 />
 												{t("Quitar diseño")}
 											</Button>
@@ -330,7 +377,7 @@ export function DisenarScreen() {
 				accion={t("Descartar")}
 				destructiva
 				onConfirmar={() => {
-					if (pendiente?.cartas[0]) useUi.getState().disenar(pendiente.cartas[0].id);
+					pendiente?.();
 				}}
 			/>
 		</div>

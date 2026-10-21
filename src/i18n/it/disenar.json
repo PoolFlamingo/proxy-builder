@@ -180,6 +180,7 @@
 	"Las cartas en borrador se ven en el deck, pero así sabes cuáles has revisado.": "Le carte in bozza si vedono nel mazzo, ma così sai quali hai già rivisto.",
 	"Nombre temático": "Nome tematico",
 	"Nombre en {idioma}": "Nome in {idioma}",
+	"Línea de tipo en {idioma}": "Riga del tipo in {idioma}",
 	"Texto de ambientación (opcional)": "Testo di colore (opzionale)",
 	"Ambientación en {idioma}": "Testo di colore in {idioma}",
 	"Texto de reglas": "Testo delle regole",
@@ -365,5 +366,8 @@
 	"Faltan las letras de {idioma}: sin ellas, sus caracteres salen como cuadrados.": "Mancano i caratteri per {idioma}: senza, i suoi caratteri appaiono come quadratini.",
 	"Busca en Scryfall las mismas frases en otras cartas que sí están en {idioma} y propone su texto oficial. Tarda un poco: una búsqueda por frase.": "Cerca su Scryfall le stesse frasi in altre carte stampate in {idioma} e ne propone il testo ufficiale. Richiede un po' di tempo: una ricerca per frase.",
 	"Usar como reglas en {idioma}": "Usa come regole in {idioma}",
-	"Bajar las letras": "Scarica i caratteri"
+	"Bajar las letras": "Scarica i caratteri",
+	"Copia:": "Copia:",
+	"Copia {n}": "Copia {n}",
+	"Recorrer también las copias con las flechas": "Scorri anche le copie con le frecce"
 }

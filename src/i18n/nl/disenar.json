@@ -174,6 +174,7 @@
 	"Las cartas en borrador se ven en el deck, pero así sabes cuáles has revisado.": "Conceptkaarten zie je nog steeds in het deck, maar zo weet je welke je hebt nagekeken.",
 	"Nombre temático": "Thematische naam",
 	"Nombre en {idioma}": "Naam in {idioma}",
+	"Línea de tipo en {idioma}": "Typeregel in {idioma}",
 	"Texto de ambientación (opcional)": "Sfeertekst (optioneel)",
 	"Ambientación en {idioma}": "Sfeertekst in {idioma}",
 	"Texto de reglas": "Regeltekst",
@@ -355,5 +356,8 @@
 	"Faltan las letras de {idioma}: sin ellas, sus caracteres salen como cuadrados.": "De lettertypen voor {idioma} ontbreken: zonder die verschijnen de tekens als vierkantjes.",
 	"Busca en Scryfall las mismas frases en otras cartas que sí están en {idioma} y propone su texto oficial. Tarda un poco: una búsqueda por frase.": "Zoekt op Scryfall dezelfde zinnen op andere kaarten die wel in {idioma} bestaan en stelt hun officiële tekst voor. Duurt even: één zoekopdracht per zin.",
 	"Usar como reglas en {idioma}": "Als regels in {idioma} gebruiken",
-	"Bajar las letras": "Lettertypen downloaden"
+	"Bajar las letras": "Lettertypen downloaden",
+	"Copia:": "Kopie:",
+	"Copia {n}": "Kopie {n}",
+	"Recorrer también las copias con las flechas": "Ook door de kopieën bladeren met de pijlen"
 }

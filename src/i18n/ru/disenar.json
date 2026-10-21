@@ -186,6 +186,7 @@
 	"Las cartas en borrador se ven en el deck, pero así sabes cuáles has revisado.": "Черновики тоже видны в колоде, но так вы знаете, какие карты уже проверены.",
 	"Nombre temático": "Тематическое название",
 	"Nombre en {idioma}": "Название ({idioma})",
+	"Línea de tipo en {idioma}": "Строка типа ({idioma})",
 	"Texto de ambientación (opcional)": "Художественный текст (необязательно)",
 	"Ambientación en {idioma}": "Художественный текст ({idioma})",
 	"Texto de reglas": "Текст правил",
@@ -375,5 +376,8 @@
 	"Faltan las letras de {idioma}: sin ellas, sus caracteres salen como cuadrados.": "Нет шрифтов для языка «{idioma}»: без них его символы выводятся квадратиками.",
 	"Busca en Scryfall las mismas frases en otras cartas que sí están en {idioma} y propone su texto oficial. Tarda un poco: una búsqueda por frase.": "Ищет в Scryfall те же фразы на других картах, изданных на языке «{idioma}», и предлагает их официальный текст. Это занимает время: один поиск на фразу.",
 	"Usar como reglas en {idioma}": "Использовать как правила ({idioma})",
-	"Bajar las letras": "Скачать шрифты"
+	"Bajar las letras": "Скачать шрифты",
+	"Copia:": "Копия:",
+	"Copia {n}": "Копия {n}",
+	"Recorrer también las copias con las flechas": "Листать стрелками и копии"
 }

@@ -17,6 +17,8 @@ type Preferencias = {
 	infoCarta: boolean;
 	/** Buscar y bajar las versiones nuevas sola (al arrancar y cada pocas horas). */
 	actualizarSola: boolean;
+	/** En Diseñar, las flechas pasan también por las copias de cada carta. */
+	disenarCopias: boolean;
 };
 
 /** Los diálogos que se abren desde las cartas o las barras. */
@@ -79,6 +81,7 @@ const PREDETERMINADAS: Preferencias = {
 	zoom: 0.8,
 	infoCarta: false,
 	actualizarSola: true,
+	disenarCopias: false,
 };
 
 function leer(): Preferencias {
@@ -101,6 +104,7 @@ function guardar(s: Preferencias) {
 		zoom: s.zoom,
 		infoCarta: s.infoCarta,
 		actualizarSola: s.actualizarSola,
+		disenarCopias: s.disenarCopias,
 	};
 	try {
 		localStorage.setItem(CLAVE, JSON.stringify(p));

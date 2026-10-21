@@ -107,6 +107,14 @@ function conTextos(
 	return { ...d, faces };
 }
 
+/** Cambia la línea de tipo de una cara en un idioma (la de la carta, no un texto del diseño). */
+function conTipo(d: CardDesign, cara: number, lang: DesignLang, tipo: string): CardDesign {
+	const faces = d.card.faces.map((f, i) =>
+		i === cara ? { ...f, typeLine: conIdioma(f.typeLine, lang, tipo) } : f,
+	);
+	return { ...d, card: { ...d.card, faces } };
+}
+
 function conArte(d: CardDesign, cara: number, art: ArtRef | undefined): CardDesign {
 	return { ...d, faces: d.faces.map((f, i) => (i === cara ? { ...f, art } : f)) };
 }
@@ -387,6 +395,20 @@ function PestanaTextos({
 							aria-label={t("Nombre en {idioma}", { idioma: nombre })}
 							className="h-8 text-xs"
 						/>
+						{lang !== "en" && (
+							<Input
+								value={porIdioma(datos.typeLine, lang)}
+								onChange={(e) => cambiar((d) => conTipo(d, cara, lang, e.target.value))}
+								// Vacío no vale: la línea de tipo vuelve a la original en inglés.
+								onBlur={(e) => {
+									if (!e.target.value.trim())
+										cambiar((d) => conTipo(d, cara, lang, datos.typeLine.en));
+								}}
+								placeholder={datos.typeLine.en}
+								aria-label={t("Línea de tipo en {idioma}", { idioma: nombre })}
+								className="h-8 text-xs"
+							/>
+						)}
 						<AreaTexto
 							valor={tx.flavor}
 							onChange={(flavor) => cambiar((d) => conTextos(d, cara, lang, { flavor }))}
