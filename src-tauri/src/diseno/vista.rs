@@ -347,11 +347,14 @@ pub fn rehacer(
     let mut cambiadas = Vec::new();
     for c in cartas {
         let Some(d) = &c.design else { continue };
-        let e = efectivo_de(d, &cols);
-        if d.thumb_key.as_deref() == Some(huella_de(state, &e, 0, lang)?.as_str()) {
+        // Un diseño guardado con el tipo en inglés («Land») se arregla.
+        let mut arreglado = d.clone();
+        let tipos = proxy_core::diseno::borrador::arreglar_tipos_es(&mut arreglado.card);
+        let e = efectivo_de(&arreglado, &cols);
+        if !tipos && d.thumb_key.as_deref() == Some(huella_de(state, &e, 0, lang)?.as_str()) {
             continue;
         }
-        cambiadas.push(aplicar(state, c, d, lang)?);
+        cambiadas.push(aplicar(state, c, &arreglado, lang)?);
     }
     Ok(cambiadas)
 }
