@@ -1,0 +1,66 @@
+import type { Diccionario } from "../tipos";
+
+// Diálogos de cartas: añadir, variantes y editor.
+export const CARTAS: Diccionario = {
+	"Aplicar a todas las cartas": "Applica a tutte le carte",
+	"Aplicar también a sus copias ({n})": "Applica anche alle sue copie ({n})",
+	"Carta y sus {n} copias retocadas": {
+		one: "Carta e {n} copia ritoccate",
+		many: "Carta e le sue {n} copie ritoccate",
+		other: "Carta e le sue {n} copie ritoccate",
+	},
+	"Solo los retoques de color; el giro y el encuadre se quedan en esta carta.":
+		"Solo i ritocchi di colore; la rotazione e l'inquadratura restano su questa carta.",
+	"Las que llevan la misma imagen: giro, encuadre y retoques, todo igual.":
+		"Quelle con la stessa immagine: rotazione, inquadratura e ritocchi, tutto uguale.",
+	Aplicar: "Applica",
+	Brillo: "Luminosità",
+	Calidez: "Calore",
+	"Carta retocada": "Carta ritoccata",
+	Claridad: "Chiarezza",
+	"Con este zoom se recorta el pie de la carta (artista y copyright).":
+		"Con questo zoom si taglia il piè di pagina della carta (artista e copyright).",
+	Contraste: "Contrasto",
+	Desvanecido: "Dissolvenza",
+	"Editar {carta}": "Modifica {carta}",
+	"Encuadre horizontal": "Inquadratura orizzontale",
+	"Encuadre vertical": "Inquadratura verticale",
+	Exposición: "Esposizione",
+	"Girar a la derecha": "Ruota a destra",
+	"Girar a la izquierda": "Ruota a sinistra",
+	Giro: "Rotazione",
+	Intensidad: "Vividezza",
+	Nitidez: "Nitidezza",
+	"Reducción de ruido": "Riduzione del rumore",
+	"Restablecer todo": "Ripristina tutto",
+	"Retoques aplicados a todas las cartas": "Ritocchi applicati a tutte le carte",
+	Saturación: "Saturazione",
+	Viñeta: "Vignettatura",
+	Zoom: "Zoom",
+	carta: "carta",
+	"Busca por nombre o con la sintaxis de Scryfall (t:dragon c:r). Doble clic para añadir.":
+		"Cerca per nome o con la sintassi di Scryfall (t:dragon c:r). Doppio clic per aggiungere.",
+	Buscar: "Cerca",
+	Copias: "Copie",
+	"Escribe un nombre y pulsa Enter.": "Scrivi un nome e premi Invio.",
+	"Nombre de la carta…": "Nome della carta…",
+	"Sin resultados.": "Nessun risultato.",
+	"{n} resultados": {
+		one: "{n} risultato",
+		many: "{n} risultati",
+		other: "{n} risultati",
+	},
+	"{n} × {carta} añadida": "{n} × {carta} aggiunta",
+	"Cualquier idioma": "Qualsiasi lingua",
+	"Escaneo de baja resolución": "Scansione a bassa risoluzione",
+	"Ahora: {set} {num}": "Attuale: {set} {num}",
+	"Cambiar variante de {carta}": "Cambia variante di {carta}",
+	"No hay impresiones con esos filtros.": "Nessuna stampa con quei filtri.",
+	"Reemplazar las {n} copias": "Sostituisci tutte le {n} copie",
+	"Reemplazar solo esta": "Sostituisci solo questa",
+	"Variante cambiada en todas las copias de {carta}":
+		"Variante cambiata in tutte le copie di {carta}",
+	"Variante cambiada": "Variante cambiata",
+	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)":
+		"Pedina che Scryfall non ha (database di pedine di Cockatrice)",
+};

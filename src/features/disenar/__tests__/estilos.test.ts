@@ -3,8 +3,8 @@ import type { EstiloPropio } from "@/bindings/EstiloPropio";
 import { elegirEstilo, opcionesEstilo, propiosDe, valorEstilo } from "../estilos";
 
 const propios: EstiloPropio[] = [
-	{ id: "tarot", nombreEs: "Tarot", nombreEn: "Tarot card", base: "classic", variantes: [] },
-	{ id: "planeta", nombreEs: "Planeta", nombreEn: "Planet", base: "borderless", variantes: [] },
+	{ id: "tarot", nombres: { es: "Tarot", en: "Tarot card" }, base: "classic", variantes: [] },
+	{ id: "planeta", nombres: { es: "Planeta", fr: "Planète" }, base: "borderless", variantes: [] },
 ];
 const t = (s: string) => s;
 
@@ -20,6 +20,10 @@ describe("estilos propios del pack", () => {
 			"pack:planeta",
 		]);
 		expect(o[4].etiqueta).toBe("Tarot card");
+		// Cada idioma el suyo; sin él, el inglés; sin inglés, el id.
+		expect(opcionesEstilo(t, "fr", propios)[5].etiqueta).toBe("Planète");
+		expect(opcionesEstilo(t, "de", propios)[4].etiqueta).toBe("Tarot card");
+		expect(opcionesEstilo(t, "de", propios)[5].etiqueta).toBe("planeta");
 		// Uno que el pack ya no tiene sigue a la vista.
 		expect(opcionesEstilo(t, "es", [], "pack:vale").at(-1)?.valor).toBe("pack:vale");
 	});

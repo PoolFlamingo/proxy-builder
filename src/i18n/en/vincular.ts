@@ -1,5 +1,7 @@
+import type { Diccionario } from "../tipos";
+
 // Vincular cartas propias con Scryfall, zoom con la rueda y escala de la interfaz.
-export const VINCULAR: Record<string, string> = {
+export const VINCULAR: Diccionario = {
 	Comparar: "Compare",
 	"Sin carta de Scryfall elegida.": "No Scryfall card chosen.",
 	"Tu carta": "Your card",

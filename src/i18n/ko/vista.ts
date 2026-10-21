@@ -1,0 +1,77 @@
+import type { Diccionario } from "../tipos";
+
+export const VISTA: Diccionario = {
+	"Cartas ordenadas": "카드를 정리했어요",
+	"De 1 a {n}. Cada página tiene sus casillas seguidas.":
+		"1부터 {n}까지. 각 페이지의 칸 번호가 이어져요.",
+	"Mover a posición": "위치로 이동",
+	"Mover": "이동",
+	"Posición": "위치",
+	"Añadir carta": "카드 추가",
+	"Añadir carta de Scryfall…": "Scryfall에서 카드 추가…",
+	"Eliminar las cartas de esta página": "이 페이지의 카드 삭제",
+	"Página {n} de {total}": "{total}페이지 중 {n}페이지",
+	"Acercar": "확대",
+	"Alejar": "축소",
+	"Volver al 100 %": "100%로 되돌리기",
+	"Auto ordenar": "자동 정리",
+	"Añadir página": "페이지 추가",
+	"El deck está vacío": "덱이 비어 있어요",
+	"Hueco": "빈 칸",
+	"Info de carta": "카드 정보",
+	"Junta las copias, quita los huecos y deja las fijadas en su sitio":
+		"사본을 모으고 빈 칸을 없애요. 고정된 카드는 제자리에 둬요",
+	"La vista es aproximada; el resultado exacto es el del PDF.":
+		"미리 보기는 대략적이에요. 정확한 결과는 PDF에서 확인하세요.",
+	"Ocultar DFC": "양면 카드 숨기기",
+	"Pega una lista a la izquierda y pulsa «Cargar lista», o añade cartas una a una.":
+		"왼쪽에 목록을 붙여 넣고 ‘목록 불러오기’를 누르거나, 카드를 하나씩 추가하세요.",
+	"Quita las cartas de doble cara de las hojas y del PDF": "용지와 PDF에서 양면 카드를 빼요",
+	"Se puede deshacer con Ctrl+Z.": "Ctrl+Z로 되돌릴 수 있어요.",
+	"Todas": "모두",
+	"Ver reversos": "뒷면 보기",
+	"Vista {papel}": "{papel} 미리 보기",
+	"{n} cartas de doble cara sin dúplex: su otra cara no se imprime (activa «Pares DFC intercalados» o el dúplex).":
+		"양면 인쇄 없이 양면 카드 {n}장: 다른 면이 인쇄되지 않아요(‘양면 카드 쌍 끼워 넣기’나 양면 인쇄를 켜세요).",
+	"{n} cartas sin reverso: el deck no tiene reverso por defecto.":
+		"뒷면이 없는 카드 {n}장: 덱에 기본 뒷면이 없어요.",
+	"{papel} apaisado": "{papel} 가로",
+	"¿Eliminar las cartas de esta página?": "이 페이지의 카드를 삭제할까요?",
+	"Cambiar reverso": "뒷면 변경",
+	"Exportar imagen": "이미지 내보내기",
+	"Frente…": "앞면…",
+	"reverso": "뒷면",
+	"Reverso…": "뒷면…",
+	"Imagen guardada: {nombre}": "이미지 저장됨: {nombre}",
+	"PNG, JPEG, WebP, TIFF o BMP, según la extensión del nombre. A los PPP de la calidad del PDF y sin sangrado.":
+		"파일 이름의 확장자에 따라 PNG, JPEG, WebP, TIFF 또는 BMP로 저장해요. PDF 품질의 DPI로, 도련 없이 저장해요.",
+	"Cambiar variante": "판본 변경",
+	"Desfijar": "고정 해제",
+	"Editar carta": "카드 편집",
+	"Elegir imagen…": "이미지 선택…",
+	"Eliminar las seleccionadas": "선택한 카드 삭제",
+	"Fijar": "고정",
+	"Mover a posición…": "위치로 이동…",
+	"Mover antes": "앞으로 이동",
+	"Mover después": "뒤로 이동",
+	"Reemplazar imagen…": "이미지 교체…",
+	"Usar el reverso del deck": "덱 뒷면 사용",
+	"Idioma de la imagen": "이미지 언어",
+	"Sin indicar": "지정 안 함",
+	"Marcadas como variante de diseño, opcional o banquillo: se imprimen, pero no cuentan para el mazo.":
+		"디자인 변형, 선택 사항 또는 사이드보드로 표시된 카드: 인쇄는 되지만 덱에 포함되지 않아요.",
+	"{n} marcadas": "{n}장 표시됨",
+	"Marca": "표시",
+	"Se imprimen igual; no cuentan para el tamaño del mazo, las copias ni las estadísticas.":
+		"똑같이 인쇄되지만 덱 크기, 사본 수 제한, 통계에는 포함되지 않아요.",
+	"Variante de diseño": "디자인 변형",
+	"VARIANTE": "변형",
+	"Otra versión de una carta que ya está: se escogerá una. De sus copias solo cuenta una para el mazo.":
+		"이미 있는 카드의 다른 버전이에요. 하나를 고르게 돼요. 사본 중 하나만 덱에 포함돼요.",
+	"Opcional": "선택 사항",
+	"OPCIONAL": "선택",
+	"Puede ir o no: no cuenta para el mazo.": "넣을 수도 안 넣을 수도 있어요. 덱에 포함되지 않아요.",
+	"Banquillo": "사이드보드",
+	"BANQUILLO": "사이드보드",
+	"Del banquillo (sideboard): no cuenta para el mazo.": "사이드보드 카드: 덱에 포함되지 않아요.",
+};

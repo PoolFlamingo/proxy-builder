@@ -1,5 +1,7 @@
+import type { Diccionario } from "../tipos";
+
 // Diálogos de cartas: añadir, variantes y editor.
-export const CARTAS: Record<string, string> = {
+export const CARTAS: Diccionario = {
 	"Aplicar a todas las cartas": "Apply to all cards",
 	"Aplicar también a sus copias ({n})": "Also apply to its copies ({n})",
 	"Carta y sus {n} copias retocadas": "Card and its {n} copies edited",

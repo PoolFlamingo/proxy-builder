@@ -2,6 +2,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import { Languages } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLang } from "@/components/language-provider";
+import { SelectorIdioma } from "@/components/selector-idioma";
 import {
 	Dialog,
 	DialogContent,
@@ -10,7 +11,6 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Actualizaciones, ReiniciarParaActualizar } from "./actualizaciones";
 import { Appearance } from "./appearance";
 import { NombresIdiomas } from "./nombres-idiomas";
@@ -49,20 +49,7 @@ export function SettingsDialog({
 								<Languages className="size-3.5" />
 								{t("Idioma")}
 							</span>
-							<ToggleGroup
-								type="single"
-								variant="outline"
-								size="sm"
-								value={lang}
-								onValueChange={(v) => (v === "es" || v === "en") && setLang(v)}
-							>
-								<ToggleGroupItem value="es" className="px-3 text-xs">
-									Español
-								</ToggleGroupItem>
-								<ToggleGroupItem value="en" className="px-3 text-xs">
-									English
-								</ToggleGroupItem>
-							</ToggleGroup>
+							<SelectorIdioma valor={lang} onCambio={setLang} ariaLabel={t("Idioma")} />
 						</div>
 						<Actualizaciones />
 						<NombresIdiomas />

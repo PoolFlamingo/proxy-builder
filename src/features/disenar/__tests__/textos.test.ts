@@ -19,6 +19,7 @@ const TODOS: Aviso[] = [
 	{ kind: "layoutDesconocido", layout: "reversible_card" },
 	{ kind: "coleccionPerdida" },
 	{ kind: "sinCinta" },
+	{ kind: "faltanLetras", lang: "ja" },
 ];
 
 describe("textoAviso", () => {
@@ -30,12 +31,12 @@ describe("textoAviso", () => {
 		}
 	});
 
-	it("textoNoCabe: los milímetros que sobran con un decimal", () => {
+	it("textoNoCabe: los milímetros que sobran, redondeados a un decimal", () => {
 		expect(textoAviso({ kind: "textoNoCabe", hueco: "reglas", sobra: 2.345 }, t)).toContain(
 			"sobran 2.3 mm",
 		);
 		expect(textoAviso({ kind: "textoNoCabe", hueco: "reglas", sobra: 0 }, t)).toContain(
-			"sobran 0.0 mm",
+			"sobran 0 mm",
 		);
 	});
 
@@ -46,26 +47,15 @@ describe("textoAviso", () => {
 		expect(textoAviso({ kind: "tituloReducido", hueco: "otro" }, t)).toMatch(/^El título/);
 	});
 
-	it("reglasEditadas y faltaNombre: el idioma también pasa por t()", () => {
-		const vistas: string[] = [];
-		const espia = (es: string, p?: Record<string, string | number>) => {
-			vistas.push(es);
-			return t(es, p);
-		};
-		expect(textoAviso({ kind: "reglasEditadas", cara: 0, lang: "es" }, espia)).toBe(
-			"Las reglas en español están escritas a mano.",
+	it("reglasEditadas, faltaNombre y faltanLetras: el idioma por su nombre propio", () => {
+		expect(textoAviso({ kind: "reglasEditadas", cara: 0, lang: "es" }, t)).toBe(
+			"Reglas escritas a mano (Español).",
 		);
-		expect(textoAviso({ kind: "reglasEditadas", cara: 0, lang: "en" }, espia)).toBe(
-			"Las reglas en inglés están escritas a mano.",
+		expect(textoAviso({ kind: "faltaNombre", cara: 0, lang: "ja" }, t)).toBe(
+			"Falta el nombre temático (日本語): se usa el original.",
 		);
-		expect(textoAviso({ kind: "faltaNombre", cara: 0, lang: "es" }, espia)).toBe(
-			"Falta el nombre en español: se usa el original.",
-		);
-		expect(textoAviso({ kind: "faltaNombre", cara: 0, lang: "en" }, espia)).toBe(
-			"Falta el nombre en inglés: se usa el original.",
-		);
-		expect(vistas).toContain("español");
-		expect(vistas).toContain("inglés");
+		expect(textoAviso({ kind: "faltanLetras", lang: "zht" }, t)).toContain("繁體中文");
+		expect(esGrave({ kind: "faltanLetras", lang: "ko" })).toBe(true);
 	});
 
 	it("letraNoEncontrada, packSinLayout y layoutDesconocido nombran lo que falta", () => {
@@ -82,7 +72,9 @@ describe("textoAviso", () => {
 	});
 
 	it("los textos fijos salen tal cual", () => {
-		expect(textoAviso({ kind: "sinTextoOficial" }, t)).toMatch(/^No hay impresión en español/);
+		expect(textoAviso({ kind: "sinTextoOficial" }, t)).toMatch(
+			/^No hay impresión de esta carta en el idioma de diseño/,
+		);
 		expect(textoAviso({ kind: "coleccionPerdida" }, t)).toBe(
 			"La colección de esta carta ya no existe: se usan los valores de fábrica.",
 		);
@@ -90,9 +82,9 @@ describe("textoAviso", () => {
 });
 
 describe("esGrave", () => {
-	it("solo el texto que no cabe y los símbolos que faltan son graves", () => {
+	it("solo el texto que no cabe y los símbolos o letras que faltan son graves", () => {
 		const graves = TODOS.filter(esGrave).map((a) => a.kind);
-		expect(graves).toEqual(["textoNoCabe", "faltanSimbolos"]);
+		expect(graves).toEqual(["textoNoCabe", "faltanSimbolos", "faltanLetras"]);
 	});
 });
 

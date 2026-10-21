@@ -6,10 +6,10 @@ import type { FraseSugerida } from "./FraseSugerida";
  */
 export type Sugerencia = { 
 /**
- * La línea de tipo en español, si alguna carta la tiene igual.
+ * La línea de tipo en el idioma pedido, si alguna carta la tiene igual.
  */
 tipo: string | null, 
 /**
- * Las reglas con lo encontrado en español y lo demás en inglés.
+ * Las reglas con lo encontrado en ese idioma y lo demás en inglés.
  */
 reglas: string, frases: Array<FraseSugerida>, traducidas: number, total: number, };

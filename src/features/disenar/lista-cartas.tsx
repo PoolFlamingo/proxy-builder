@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { parametros, urlMiniatura } from "@/lib/image-url";
+import { textosDe } from "@/lib/por-idioma";
 import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
 import { type EstadoDiseno, estadoDe, type Grupo } from "./grupos";
@@ -28,6 +29,7 @@ export function ListaCartas({
 }) {
 	const { t } = useLang();
 	const ajustes = useDeck((s) => s.deck?.settings);
+	const lang = ajustes?.designLang ?? "es";
 	const [filtro, setFiltro] = useState("");
 	const etiqueta: Record<EstadoDiseno, string> = {
 		sinVincular: t("Sin vincular"),
@@ -40,11 +42,9 @@ export function ListaCartas({
 		if (!f) return grupos;
 		return grupos.filter((g) => {
 			const c = g.cartas[0];
-			const nombres = [
-				c?.meta.name,
-				c?.design?.faces[0]?.texts.es.name,
-				c?.design?.faces[0]?.texts.en.name,
-			];
+			const textos = c?.design?.faces[0]?.texts;
+			// El nombre en cualquier idioma del diseño.
+			const nombres = [c?.meta.name, ...Object.values(textos ?? {}).map((x) => x?.name)];
 			return nombres.some((n) => n?.toLowerCase().includes(f));
 		});
 	}, [grupos, filtro]);
@@ -70,8 +70,12 @@ export function ListaCartas({
 						const c = g.cartas[0];
 						if (!c) return null;
 						const estado = estadoDe(g);
+						const textos = c.design?.faces[0]?.texts;
 						const nombre =
-							c.design?.faces[0]?.texts.es.name || c.meta.name || t("Carta sin nombre");
+							(textos && textosDe(textos, lang).name) ||
+							textos?.es.name ||
+							c.meta.name ||
+							t("Carta sin nombre");
 						const fila = (
 							<button
 								type="button"

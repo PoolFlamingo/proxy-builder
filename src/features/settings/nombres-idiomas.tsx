@@ -88,7 +88,7 @@ export function NombresIdiomas() {
 			)}
 			{info?.descargado && progreso === null && (
 				<p className="text-[11px] text-muted-foreground">
-					{t("{n} nombres descargados.", { n: info.nombres.toLocaleString() })}
+					{t("{n} nombres descargados.", { n: info.nombres })}
 				</p>
 			)}
 		</div>

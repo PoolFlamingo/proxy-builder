@@ -89,6 +89,7 @@
 			"!public",
 			"!plans",
 			"!src/bindings",
+			"!src-tauri/crates/proxy-core/tests/compatibilidad",
 			"!src/index.css",
 			"!src/themes.css",
 			"!src/fonts.css",

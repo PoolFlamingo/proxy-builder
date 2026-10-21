@@ -88,6 +88,7 @@ export function useBorrador(
 			card: principal,
 			usados: numerosUsados(cartas),
 			collection: coleccionRecordada(),
+			lang,
 		})
 			.then((b) => {
 				if (turno.current !== mio) return;

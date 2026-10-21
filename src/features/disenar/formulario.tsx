@@ -31,12 +31,22 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { abrirParaImportar } from "@/lib/dialogos";
+import { idioma } from "@/lib/idiomas";
 import { call } from "@/lib/ipc";
+import { conIdioma, porIdioma, textosDe } from "@/lib/por-idioma";
 import { cn } from "@/lib/utils";
+import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
 import { AJUSTES_CERO, AjustesFinos, hayAjustes } from "./ajustes-finos";
 import { ZOOM_MAX, ZOOM_MIN } from "./encuadre";
-import { elegirEstilo, opcionesEstilo, packEfectivo, propiosDe, valorEstilo } from "./estilos";
+import {
+	elegirEstilo,
+	nombreEnIdioma,
+	opcionesEstilo,
+	packEfectivo,
+	propiosDe,
+	valorEstilo,
+} from "./estilos";
 import { ID_ORIGINAL, useMarcosOriginales } from "./marcos-originales";
 import { usePacksDescargables } from "./packs-descargables";
 import { RecortarDialog } from "./recortar-dialog";
@@ -90,7 +100,9 @@ function conTextos(
 	c: Partial<FaceTexts>,
 ): CardDesign {
 	const faces = d.faces.map((f, i) =>
-		i === cara ? { ...f, texts: { ...f.texts, [lang]: { ...f.texts[lang], ...c } } } : f,
+		i === cara
+			? { ...f, texts: conIdioma(f.texts, lang, { ...textosDe(f.texts, lang), ...c }) }
+			: f,
 	);
 	return { ...d, faces };
 }
@@ -237,6 +249,7 @@ function PestanaCarta({
 	resumen: Resumen | null;
 }) {
 	const { t, lang } = useLang();
+	const langDiseno = useDeck((s) => s.deck?.settings.designLang ?? "es");
 	const propios = propiosDe(packs, packEfectivo(design, colecciones));
 	const valor = valorEstilo(design.style, design.estiloPack);
 	const variantes = propios.find((e) => e.id === design.estiloPack)?.variantes ?? [];
@@ -262,8 +275,8 @@ function PestanaCarta({
 						<span className="font-mono">{f?.manaCost || "—"}</span>
 					</Dato>
 					<Dato etiqueta={t("Tipo")}>
-						{f?.typeLine.es}
-						{f?.typeLine.en && f.typeLine.en !== f.typeLine.es && (
+						{f && porIdioma(f.typeLine, langDiseno)}
+						{f?.typeLine.en && f.typeLine.en !== porIdioma(f.typeLine, langDiseno) && (
 							<span className="block text-muted-foreground">{f.typeLine.en}</span>
 						)}
 					</Dato>
@@ -300,7 +313,7 @@ function PestanaCarta({
 							{ valor: sinVariante, etiqueta: t("Según la carta") },
 							...variantes.map((v) => ({
 								valor: v.id,
-								etiqueta: lang === "en" ? v.nombreEn : v.nombreEs,
+								etiqueta: nombreEnIdioma(v.nombres, lang, v.id),
 							})),
 						]}
 						onChange={(v) =>
@@ -351,17 +364,18 @@ function PestanaTextos({
 	cara: number;
 }) {
 	const { t } = useLang();
+	const langDiseno = useDeck((s) => s.deck?.settings.designLang ?? "es");
 	const textos = design.faces[cara]?.texts;
 	const datos = design.card.faces[cara];
 	if (!textos || !datos) return null;
-	const idiomas: { lang: DesignLang; nombre: string }[] = [
-		{ lang: "es", nombre: t("Español") },
-		{ lang: "en", nombre: t("Inglés") },
-	];
+	// El idioma de diseño del deck y, debajo, el inglés (el original); con el
+	// inglés, el español. Los textos de los demás idiomas se guardan igual.
+	const langs: DesignLang[] = langDiseno === "en" ? ["en", "es"] : [langDiseno, "en"];
+	const idiomas = langs.map((lang) => ({ lang, nombre: idioma(lang).nativo }));
 	return (
 		<div className="flex flex-col gap-3">
 			{idiomas.map(({ lang, nombre }) => {
-				const tx = textos[lang];
+				const tx = textosDe(textos, lang);
 				const aMano = tx.rulesOverride !== undefined;
 				return (
 					<div key={lang} className="flex flex-col gap-1.5 rounded-lg border p-2.5">
@@ -397,7 +411,9 @@ function PestanaTextos({
 									size="xs"
 									variant="ghost"
 									onClick={() =>
-										cambiar((d) => conTextos(d, cara, lang, { rulesOverride: datos.rules[lang] }))
+										cambiar((d) =>
+											conTextos(d, cara, lang, { rulesOverride: porIdioma(datos.rules, lang) }),
+										)
 									}
 								>
 									{t("Escribir a mano")}
@@ -423,7 +439,7 @@ function PestanaTextos({
 							</>
 						) : (
 							<p className="whitespace-pre-line rounded-md bg-muted/50 px-2.5 py-1.5 text-[11px] text-muted-foreground">
-								{datos.rules[lang] || t("(sin texto)")}
+								{porIdioma(datos.rules, lang) || t("(sin texto)")}
 							</p>
 						)}
 					</div>

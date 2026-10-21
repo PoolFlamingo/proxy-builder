@@ -32,6 +32,7 @@ import {
 	Selector,
 } from "@/components/campos";
 import { useLang } from "@/components/language-provider";
+import { SelectorIdioma } from "@/components/selector-idioma";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -208,20 +209,12 @@ export function ExportPanel() {
 								"En qué idioma salen en el PDF y en la vista previa las cartas hechas con el diseñador (PROXY). Las imágenes no se tocan.",
 							)}
 						>
-							<ToggleGroup
-								type="single"
-								variant="outline"
-								size="sm"
-								value={s.designLang}
-								onValueChange={(v) => (v === "es" || v === "en") && void ponerIdiomaDiseno(v)}
-							>
-								<ToggleGroupItem value="es" className="h-7 px-2 text-[11px]">
-									ES
-								</ToggleGroupItem>
-								<ToggleGroupItem value="en" className="h-7 px-2 text-[11px]">
-									EN
-								</ToggleGroupItem>
-							</ToggleGroup>
+							<SelectorIdioma
+								valor={s.designLang}
+								onCambio={(l) => void ponerIdiomaDiseno(l, t, mensaje)}
+								ancho="w-40"
+								ariaLabel={t("Idioma de las cartas diseñadas")}
+							/>
 						</Fila>
 						{s.encoding.format === "jpeg" && (
 							<FilaDeslizador

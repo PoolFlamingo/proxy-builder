@@ -1,11 +1,11 @@
 import { create } from "zustand";
 
 /**
- * El trabajo largo en marcha (uno a la vez): resolver una lista o exportar un
- * PDF. Lo pintan el pie del panel izquierdo y el botón de exportar, y desde
+ * El trabajo largo en marcha (uno a la vez): resolver una lista, exportar un
+ * PDF o completar un idioma de diseño. Lo pintan el pie del panel izquierdo y el botón de exportar, y desde
  * aquí se cancela.
  */
-export type TipoTrabajo = "resolver" | "exportar";
+export type TipoTrabajo = "resolver" | "exportar" | "idioma";
 
 export type EstadoTrabajo = {
 	tipo: TipoTrabajo;

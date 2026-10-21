@@ -1,9 +1,10 @@
-export const SHELL: Record<string, string> = {
+import type { Diccionario } from "../tipos";
+
+export const SHELL: Diccionario = {
 	"Scryfall · listo para imprimir": "Scryfall · print-ready",
 	Deck: "Deck",
 	Biblioteca: "Library",
 	"Lista de cartas": "Decklist",
-	"Vista previa": "Preview",
 	Exportar: "Export",
 	Guardado: "Saved",
 	"Guardando…": "Saving…",

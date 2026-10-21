@@ -35,6 +35,7 @@ import { WithTooltip } from "@/components/ui/with-tooltip";
 import { cartaPropia } from "@/lib/cartas";
 import { insertar } from "@/lib/deck-ops";
 import { abrirParaImportar } from "@/lib/dialogos";
+import { localeDe } from "@/lib/idiomas";
 import { urlExtra } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
@@ -141,7 +142,7 @@ function Contenido() {
 	};
 
 	const fecha = simbolos?.fecha
-		? new Date(simbolos.fecha).toLocaleDateString(lang === "en" ? "en-GB" : "es-ES", {
+		? new Date(simbolos.fecha).toLocaleDateString(localeDe(lang), {
 				day: "numeric",
 				month: "long",
 				year: "numeric",

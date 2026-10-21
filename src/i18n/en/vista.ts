@@ -1,5 +1,7 @@
+import type { Diccionario } from "../tipos";
+
 // Vista previa: hojas, barra, menú de carta y diálogo de mover.
-export const VISTA: Record<string, string> = {
+export const VISTA: Diccionario = {
 	"Cartas ordenadas": "Cards arranged",
 	"De 1 a {n}. Cada página tiene sus casillas seguidas.":
 		"From 1 to {n}. Each page's slots run in order.",

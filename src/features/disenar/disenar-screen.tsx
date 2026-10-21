@@ -47,7 +47,11 @@ export function DisenarScreen() {
 	const lang = useDeck((s) => s.deck?.settings.designLang ?? "es");
 	// El idioma de la vista es el del deck: lo que se ve aquí es lo que sale
 	// en el PDF.
-	const setLang = (l: DesignLang) => void ponerIdiomaDiseno(l);
+	// Sube al acabar de cambiar de idioma: si se bajaron letras (japonés,
+	// coreano, chino), la vista previa se vuelve a pedir.
+	const [versionLetras, setVersionLetras] = useState(0);
+	const setLang = (l: DesignLang) =>
+		void ponerIdiomaDiseno(l, t, mensaje).then(() => setVersionLetras((v) => v + 1));
 	const disenando = useUi((s) => s.disenando);
 	const layout = useDefaultLayout({ id: "proxybuilder.paneles.disenar", storage: localStorage });
 	const grupos = useMemo(() => agrupar(cartas ?? []), [cartas]);
@@ -61,8 +65,8 @@ export function DisenarScreen() {
 	const [packs, setPacks] = useState<PackInfo[]>([]);
 	const [simbolos, setSimbolos] = useState<number | null>(null);
 	const recursos = useMemo(
-		() => ({ colecciones, packs, simbolos }),
-		[colecciones, packs, simbolos],
+		() => ({ colecciones, packs, simbolos, versionLetras }),
+		[colecciones, packs, simbolos, versionLetras],
 	);
 	const b = useBorrador(grupo, cara, lang, recursos);
 	const resumen = useResumen(b.design, cara, lang);

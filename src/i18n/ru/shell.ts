@@ -1,0 +1,23 @@
+import type { Diccionario } from "../tipos";
+
+export const SHELL: Diccionario = {
+	"Scryfall · listo para imprimir": "Scryfall · готово к печати",
+	Deck: "Колода",
+	Biblioteca: "Библиотека",
+	"Lista de cartas": "Список карт",
+	Exportar: "Экспорт",
+	Guardado: "Сохранено",
+	"Guardando…": "Сохранение…",
+	"Sin guardar": "Не сохранено",
+	"Error al guardar": "Ошибка сохранения",
+	"Deck sin título": "Колода без названия",
+	"Proxy Builder {version} está lista": "Proxy Builder {version} готов",
+	"Se instala al reiniciar; el sistema pedirá tu contraseña.":
+		"Установится при перезапуске; система запросит ваш пароль.",
+	"Se instala al reiniciar la app.": "Установится при перезапуске приложения.",
+	Reiniciar: "Перезапустить",
+	"Reinicia la app con la versión nueva. El sistema pedirá tu contraseña.":
+		"Перезапускает приложение с новой версией. Система запросит ваш пароль.",
+	"Reinicia la app con la versión nueva.": "Перезапускает приложение с новой версией.",
+	"Actualizar a {version}": "Обновить до {version}",
+};
