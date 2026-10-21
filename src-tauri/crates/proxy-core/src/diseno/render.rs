@@ -2069,7 +2069,7 @@ pub(super) fn estilo_para(
     // Un estilo que el pack no trae sale del pack de la casa (sus capas se
     // buscan allí); si tampoco, el despejado del pack.
     let fabrica = Pack::de_fabrica_compartido();
-    let mut base = match del_pack {
+    let base = match del_pack {
         Some(e) => e,
         None => rec
             .pack
@@ -2099,14 +2099,17 @@ pub(super) fn estilo_para(
         _ => None,
     };
     let layout = layout.or(por_carta.as_deref());
-    // Las fichas de un pack sin marco de ficha: el de la casa, sin aviso.
-    if let Some("ficha") = layout {
-        if !base.layouts.contains_key("ficha") {
-            if let Some(f) = fabrica.and_then(|f| f.estilo(nombre_estilo(style)).ok()) {
-                base = f;
-            }
+    // Las fichas de un pack sin marco de ficha salen con el estilo del propio
+    // pack, tal cual, para que se vean como el resto de cartas del tema (nunca
+    // con el marco de la casa), y sin aviso.
+    let layout = match layout {
+        Some("ficha")
+            if !base.layouts.contains_key("ficha") && rec.pack.layout("ficha").is_none() =>
+        {
+            None
         }
-    }
+        l => l,
+    };
     let mut e = base.clone();
     if let Some(l) = layout {
         if let Some(def) = base.layouts.get(l) {
@@ -3582,9 +3585,9 @@ mod tests {
                 layout: "inventado".into()
             }]
         );
-        // El arte completo no trae «ficha»: aviso.
+        // El arte completo no trae «ficha»: su propio estilo, sin aviso.
         let mut avisos = Vec::new();
-        estilo_para(
+        let e = estilo_para(
             &recursos(&p, &s),
             DesignStyle::FullArt,
             None,
@@ -3593,12 +3596,8 @@ mod tests {
             &mut avisos,
         )
         .unwrap();
-        assert_eq!(
-            avisos,
-            vec![Aviso::PackSinLayout {
-                layout: "ficha".into()
-            }]
-        );
+        assert_eq!(&e, p.estilo("fullArt").unwrap());
+        assert!(avisos.is_empty());
     }
 
     #[test]
@@ -3638,23 +3637,16 @@ mod tests {
     }
 
     #[test]
-    fn las_fichas_de_un_pack_sin_marco_de_ficha_salen_de_la_casa_sin_aviso() {
+    fn las_fichas_de_un_pack_sin_marco_de_ficha_salen_con_su_propio_estilo_sin_aviso() {
         let mut p = casa();
-        let ficha_casa = estilo_para(
-            &recursos(&p, &Simbolos::nuevos()),
-            DesignStyle::Borderless,
-            None,
-            Some("ficha"),
-            None,
-            &mut Vec::new(),
-        )
-        .unwrap();
         p.def
             .estilos
             .get_mut("borderless")
             .unwrap()
             .layouts
             .remove("ficha");
+        // Un estilo del pack distinto del de la casa, para notar el cambio.
+        p.def.estilos.get_mut("borderless").unwrap().radio = 9.0;
         let s = Simbolos::nuevos();
         let mut avisos = Vec::new();
         let e = estilo_para(
@@ -3666,7 +3658,8 @@ mod tests {
             &mut avisos,
         )
         .unwrap();
-        assert_eq!(e, ficha_casa);
+        // Nada del marco de la casa: el estilo del pack, tal cual.
+        assert_eq!(&e, p.estilo("borderless").unwrap());
         assert!(avisos.is_empty());
     }
 

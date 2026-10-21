@@ -280,6 +280,11 @@ pub fn huella(e: &DisenoEfectivo, lang: DesignLang, cara: usize, recursos: &str)
     if json.chars().any(super::emoji::es_emoji) {
         h.update("|emoji-noto");
     }
+    // Las fichas de un pack sin marco de ficha salen con el estilo del pack
+    // (antes, con el de la casa): solo ellas se vuelven a pintar.
+    if e.design.card.es_ficha() {
+        h.update("|ficha-estilo-del-pack");
+    }
     h.finalize().iter().map(|b| format!("{b:02x}")).collect()
 }
 
