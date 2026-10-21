@@ -1,14 +1,24 @@
-// Los diccionarios de la interfaz. El inglés va en el paquete principal (es el
-// respaldo de todos); cada uno de los demás es un trozo aparte que se carga al
-// elegirlo, para no meter los 14 en el arranque.
+// Los diccionarios de la interfaz. Cada idioma es una carpeta (`src/i18n/<código>/`)
+// con un JSON por área de la app, y aquí se funden. El inglés va en el paquete
+// principal (es el respaldo de todos); cada uno de los demás es un trozo aparte
+// que se carga al elegirlo, para no meter los 14 en el arranque.
 
 import type { Lang } from "@/lib/idiomas";
-import { DICCIONARIO as EN } from "./en";
 import type { Diccionario } from "./tipos";
 
-type Modulo = { DICCIONARIO: Diccionario };
+const AREAS_EN = import.meta.glob<Diccionario>("./en/*.json", { eager: true, import: "default" });
+// El español (`es/`) no se carga: es la fuente, y `pnpm idiomas` la comprueba.
+const AREAS_PEREZOSAS = import.meta.glob<Diccionario>(
+	["./*/*.json", "!./en/*.json", "!./es/*.json", "!./*/identicas.json"],
+	{ import: "default" },
+);
 
-const PEREZOSOS = import.meta.glob<Modulo>(["./*/index.ts", "!./en/index.ts"]);
+/** Une las áreas de un idioma. Una cadena en dos áreas gana la última; `pnpm idiomas` lo impide. */
+function fundir(areas: Diccionario[]): Diccionario {
+	return Object.assign({}, ...areas);
+}
+
+const EN = fundir(Object.values(AREAS_EN));
 
 const cargados = new Map<Lang, Diccionario>([["en", EN]]);
 
@@ -26,12 +36,14 @@ export function diccionarioCargado(lang: Lang): Diccionario | undefined {
 export async function cargarDiccionario(lang: Lang): Promise<Diccionario | undefined> {
 	const hecho = cargados.get(lang);
 	if (hecho || lang === "es") return hecho;
-	const cargar = PEREZOSOS[`./${lang}/index.ts`];
-	if (!cargar) return undefined;
+	const cargar = Object.entries(AREAS_PEREZOSAS)
+		.filter(([ruta]) => ruta.startsWith(`./${lang}/`))
+		.map(([, area]) => area());
+	if (cargar.length === 0) return undefined;
 	try {
-		const { DICCIONARIO } = await cargar();
-		cargados.set(lang, DICCIONARIO);
-		return DICCIONARIO;
+		const dic = fundir(await Promise.all(cargar));
+		cargados.set(lang, dic);
+		return dic;
 	} catch {
 		return undefined;
 	}

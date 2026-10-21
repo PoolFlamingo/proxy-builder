@@ -48,7 +48,7 @@ El texto no se selecciona (`src/index.css`, Pablo, 20/10/2026): solo los
 campos y los cuadros de copiar, que llevan `select-text`.
 
 Textos: siempre por `t()` con la cadena fuente en español; la traducción va
-en **los 14 diccionarios** `src/i18n/<código>/<área>.ts` (`en`, `fr`, `de`,
+en **los 15 diccionarios** `src/i18n/<código>/<área>.json` (`es`, la fuente, que repite cada cadena; `en`, `fr`, `de`,
 `it`, `pt`, `ro`, `pl`, `nl`, `ru`, `uk`, `ja`, `ko`, `zhs`, `zht`; Pablo,
 21/10/2026), con los términos de `src/i18n/GLOSARIO.md`. Una cadena con
 `{n}` que cuenta va como plural (`{ one, few, many, other }`, las categorías

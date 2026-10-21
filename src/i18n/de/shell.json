@@ -1,0 +1,19 @@
+{
+	"Scryfall · listo para imprimir": "Scryfall · druckfertig",
+	"Deck": "Deck",
+	"Biblioteca": "Bibliothek",
+	"Lista de cartas": "Kartenliste",
+	"Exportar": "Exportieren",
+	"Guardado": "Gespeichert",
+	"Guardando…": "Speichern…",
+	"Sin guardar": "Nicht gespeichert",
+	"Error al guardar": "Speichern fehlgeschlagen",
+	"Deck sin título": "Unbenanntes Deck",
+	"Proxy Builder {version} está lista": "Proxy Builder {version} ist bereit",
+	"Se instala al reiniciar; el sistema pedirá tu contraseña.": "Wird beim Neustart installiert; das System fragt nach deinem Passwort.",
+	"Se instala al reiniciar la app.": "Wird beim Neustart der App installiert.",
+	"Reiniciar": "Neu starten",
+	"Reinicia la app con la versión nueva. El sistema pedirá tu contraseña.": "Startet die App mit der neuen Version neu. Das System fragt nach deinem Passwort.",
+	"Reinicia la app con la versión nueva.": "Startet die App mit der neuen Version neu.",
+	"Actualizar a {version}": "Auf {version} aktualisieren"
+}

@@ -1,0 +1,124 @@
+{
+	"Buscando cartas…": "Se caută cărțile…",
+	"Buscando el idioma…": "Se caută limba…",
+	"Buscando tokens…": "Se caută jetoanele…",
+	"Descargando imágenes…": "Se descarcă imaginile…",
+	"Cancelado: no se ha cambiado nada": "Anulat: nu s-a schimbat nimic",
+	"Elegir imágenes": "Alege imagini",
+	"Idioma reaplicado a {n} cartas": {
+		"one": "Limba a fost reaplicată la {n} carte",
+		"few": "Limba a fost reaplicată la {n} cărți",
+		"other": "Limba a fost reaplicată la {n} de cărți"
+	},
+	"Imágenes": "Imagini",
+	"La lista no tiene cartas": "Lista nu are cărți",
+	"No hay cartas de Scryfall sin fijar": "Nu există cărți Scryfall nefixate",
+	"Reverso del deck cambiado": "Versoul pachetului a fost schimbat",
+	"Reverso genérico restablecido": "Versoul generic a fost restabilit",
+	"Sin encontrar: {nombres}": "Negăsite: {nombres}",
+	"{n} cartas añadidas": {
+		"one": "{n} carte adăugată",
+		"few": "{n} cărți adăugate",
+		"other": "{n} de cărți adăugate"
+	},
+	"{n} cartas cargadas": {
+		"one": "{n} carte încărcată",
+		"few": "{n} cărți încărcate",
+		"other": "{n} de cărți încărcate"
+	},
+	"{n} imágenes propias añadidas": {
+		"one": "{n} imagine proprie adăugată",
+		"few": "{n} imagini proprii adăugate",
+		"other": "{n} de imagini proprii adăugate"
+	},
+	"Alta (672 px)": "Înaltă (672 px)",
+	"Archidekt. De Moxfield no se puede: copia la lista y pégala arriba.": "Archidekt. Din Moxfield nu se poate: copiază lista și lipește-o mai sus.",
+	"Añadir estas cartas al final del deck": "Adaugă aceste cărți la sfârșitul pachetului",
+	"Añadir tokens automáticamente": "Adaugă jetoanele automat",
+	"Añadir": "Adaugă",
+	"Baja (244 px)": "Scăzută (244 px)",
+	"Caché limpiada ({mb})": "Cache golit ({mb})",
+	"Calidad de la vista previa": "Calitatea previzualizării",
+	"Cargar lista": "Încarcă lista",
+	"Con imagen": "Cu imagine",
+	"Ejemplo": "Exemplu",
+	"Idioma de las cartas": "Limba cărților",
+	"Importar desde URL": "Importă din URL",
+	"Importar": "Importă",
+	"Imágenes propias": "Imagini proprii",
+	"Incluir el banquillo": "Include sideboardul",
+	"La mejor disponible": "Cea mai bună disponibilă",
+	"Las cartas actuales se cambian por las de la lista. Se puede deshacer con Ctrl+Z.": "Cărțile actuale sunt înlocuite cu cele din listă. Poți anula cu Ctrl+Z.",
+	"Limpiar caché de miniaturas": "Golește cache-ul de miniaturi",
+	"Limpiar": "Golește",
+	"Lista importada de Archidekt ({n} cartas)": {
+		"one": "Listă importată din Archidekt ({n} carte)",
+		"few": "Listă importată din Archidekt ({n} cărți)",
+		"other": "Listă importată din Archidekt ({n} de cărți)"
+	},
+	"Máxima (745 px)": "Maximă (745 px)",
+	"No volver a preguntar": "Nu mai întreba",
+	"Normal (488 px)": "Normală (488 px)",
+	"Ocupa {mb} en {n} ficheros. Se vuelven a generar al verlas. Las imágenes de tus decks no se tocan.": {
+		"one": "Ocupă {mb} în {n} fișier. Se regenerează când sunt afișate. Imaginile pachetelor tale rămân neatinse.",
+		"few": "Ocupă {mb} în {n} fișiere. Se regenerează când sunt afișate. Imaginile pachetelor tale rămân neatinse.",
+		"other": "Ocupă {mb} în {n} de fișiere. Se regenerează când sunt afișate. Imaginile pachetelor tale rămân neatinse."
+	},
+	"Opciones": "Opțiuni",
+	"Poner una lista de ejemplo": "Inserează o listă de exemplu",
+	"Preguntar antes de reemplazar las cartas": "Întreabă înainte de a înlocui cărțile",
+	"Qué impresión se elige cuando la lista no dice el set": "Ce tipărire se alege când lista nu precizează setul",
+	"Reaplicar idioma": "Reaplică limba",
+	"Reemplazar": "Înlocuiește",
+	"Solo alta resolución": "Doar rezoluție înaltă",
+	"Solo la pantalla. El PDF siempre sale a la resolución de exportación.": "Doar pe ecran. PDF-ul folosește mereu rezoluția de export.",
+	"Subir cartas": "Încarcă cărți",
+	"Subir reverso": "Încarcă verso",
+	"También puedes arrastrar imágenes a la vista previa: sobre una carta la reemplazan; fuera, se añaden.": "Poți și să tragi imagini în previzualizare: peste o carte, o înlocuiesc; în altă parte, se adaugă.",
+	"Vaciar el cuadro (las cartas del deck no se tocan)": "Golește caseta (cărțile pachetului rămân neatinse)",
+	"Volver al reverso genérico": "Revino la versoul generic",
+	"Vuelve a pedir las cartas no fijadas en el idioma elegido": "Cere din nou cărțile nefixate în limba aleasă",
+	"{n} cartas en la lista": {
+		"one": "{n} carte în listă",
+		"few": "{n} cărți în listă",
+		"other": "{n} de cărți în listă"
+	},
+	"{n} cartas · {p} hojas": {
+		"one": "{n} carte · foi: {p}",
+		"few": "{n} cărți · foi: {p}",
+		"other": "{n} de cărți · foi: {p}"
+	},
+	"{n} líneas sin entender": {
+		"one": "{n} linie neînțeleasă",
+		"few": "{n} linii neînțelese",
+		"other": "{n} de linii neînțelese"
+	},
+	"¿Limpiar la caché de miniaturas?": "Golești cache-ul de miniaturi?",
+	"¿Reemplazar las cartas del deck?": "Înlocuiești cărțile pachetului?",
+	"Demasiadas copias (máximo 999)": "Prea multe copii (maximum 999)",
+	"Falta el nombre de la carta": "Lipsește numele cărții",
+	"La cantidad es 0": "Cantitatea este 0",
+	"La cantidad no se entiende": "Cantitatea nu poate fi citită",
+	"4 Lightning Bolt\n1 Sol Ring (CMM) 410\n…": "4 Lightning Bolt\n1 Sol Ring (CMM) 410\n…",
+	"Imagen propia": "Imagine proprie",
+	"No existe en el idioma pedido: se ha quedado en inglés": "Nu există în limba cerută: a rămas în engleză",
+	"Scryfall aún no tiene la imagen real": "Scryfall nu are încă imaginea reală",
+	"Scryfall no tiene imagen": "Scryfall nu are imagine",
+	"Scryfall solo tiene un escaneo de baja resolución": "Scryfall are doar o scanare la rezoluție mică",
+	"Detectar fichas": "Detectează jetoanele",
+	"Busca las fichas que crean las cartas del deck ya cargado (también las propias vinculadas) y te deja elegir cuáles añadir.": "Caută jetoanele create de cărțile pachetului încărcat (inclusiv cele proprii asociate) și te lasă să alegi pe care să le adaugi.",
+	"Las fichas que crean las cartas del deck (también las propias vinculadas) y que aún no tiene. Desmarca las que no quieras.": "Jetoanele create de cărțile pachetului (inclusiv cele proprii asociate) pe care încă nu le are. Debifează-le pe cele pe care nu le vrei.",
+	"Buscando las fichas…": "Se caută jetoanele…",
+	"No falta ninguna ficha.": "Nu lipsește niciun jeton.",
+	"{ficha}: la crea {carta}": "{ficha}: creat de {carta}",
+	"{n} fichas añadidas": {
+		"one": "{n} jeton adăugat",
+		"few": "{n} jetoane adăugate",
+		"other": "{n} de jetoane adăugate"
+	},
+	"Añadir {n} fichas": {
+		"one": "Adaugă {n} jeton",
+		"few": "Adaugă {n} jetoane",
+		"other": "Adaugă {n} de jetoane"
+	}
+}
