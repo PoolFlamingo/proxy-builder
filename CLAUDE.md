@@ -47,8 +47,17 @@ materiales. Radio 14 px, densidad 10 px (`p-2.5`/`gap-2.5`), texto base
 El texto no se selecciona (`src/index.css`, Pablo, 20/10/2026): solo los
 campos y los cuadros de copiar, que llevan `select-text`.
 
-Textos: siempre por `t()` con la cadena fuente en español; la traducción al
-inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
+Textos: siempre por `t()` con la cadena fuente en español; la traducción va
+en **los 14 diccionarios** `src/i18n/<código>/<área>.ts` (`en`, `fr`, `de`,
+`it`, `pt`, `ro`, `pl`, `nl`, `ru`, `uk`, `ja`, `ko`, `zhs`, `zht`; Pablo,
+21/10/2026), con los términos de `src/i18n/GLOSARIO.md`. Una cadena con
+`{n}` que cuenta va como plural (`{ one, few, many, other }`, las categorías
+de `Intl.PluralRules` de cada idioma) y `n` se pasa como número, sin
+formatear. `pnpm idiomas` falla si falta alguna en cualquier idioma, si un
+`{x}` se pierde o si a un plural le falta una forma. La tabla de idiomas
+(código, nombre propio, bandera, locale, si hay cartas impresas) es
+`src/lib/idiomas.ts`; fechas y números, con `localeDe(lang)`. Al idioma que
+le falta una cadena le sale la inglesa.
 
 ## Herramientas
 
@@ -177,6 +186,27 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
 - **Editor de cartas (2.0).** El plan es `plans/20261014 - editor-de-cartas/`.
   - Fuera de beta desde el 19/10/2026 (Pablo): siempre montado, sin
     interruptor en Ajustes ni etiqueta «Beta».
+  - **Idiomas de diseño** (Pablo, 21/10/2026; plan
+    `plans/20261021 - idiomas-y-emoji/`): `DesignLang` tiene los 15 de la
+    interfaz. `ByLang` guarda `es` y `en` siempre y los demás solo si
+    existen (`otros`), así un diseño es/en se guarda byte a byte como antes
+    y su huella no cambia (test `las_huellas_en_espanol_e_ingles_son_las_de_antes`
+    y `tests/compatibilidad/diseno-2.5.9.json`). En la pantalla se leen con
+    `lib/por-idioma.ts` (`ts-rs` solo ve `es`/`en`). Nombres impresos y «sin
+    texto» de los otros idiomas en `FaceData.printed_names` y
+    `CardData.sin_texto` (por código; `printed_name_es` y `sin_texto_es`
+    siguen igual para la 2.5.x). La app baja el español siempre y además el
+    idioma de diseño del deck (`borrador::datos_de`, `anadir_idioma`); al
+    cambiarlo, `design_complete_lang` (`diseno/idioma.rs`) completa las
+    cartas que lo necesiten. `ro`, `pl`, `nl`, `uk` no tienen cartas: reglas
+    en inglés y tipo de `proxy-core::diseno::tipos_idiomas` (tablas sacadas de
+    cartas reales; las de esos cuatro, sin fuente oficial). Las palabras fijas
+    («NIVEL», Fusionar, el código del pie) en `textos_motor.rs`. Japonés,
+    coreano y chino: Noto Sans JP/KR/SC/TC bajadas aparte
+    (`diseno/letras_cjk.rs`, `assets/letras-cjk.json`, a
+    `app_data_dir/letras-cjk/`); sin ellas, aviso `FaltanLetras`. Lo que a
+    una letra le falte de latín o cirílico sale con Spectral o Montserrat
+    (`Letras::respaldos`).
   - Motor en `proxy-core::diseno`: `modelo` (CardDesign, CardData, Collection),
     `efectivo` (carta > colección > fábrica y la huella), `pack` (formato de
     marcos, ver `docs/packs-de-marcos.md`), `texto` y `pintar` (parley +
@@ -184,9 +214,11 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
     `componer` (partidas, secuela, flip, batalla, meld, grandes),
     `maquetacion` (layout de la carta y cuerpo de cada cara), `estructura`
     (habilidades, capítulos, niveles… del texto), `cuerpos` (secciones con
-    insignias) y `emoji` (emoji en color: Twemoji COLR incrustada, familia
-    genérica de emoji de parley, capas pintadas con `ColorPainter` de skrifa;
-    Pablo, 20/10/2026). Pack de la casa en `assets/marcos/builtin/`; letras en
+    insignias), `emoji` (emoji en color: Noto Color Emoji COLRv1 incrustada,
+    familia genérica de emoji de parley, capas, degradados y modos de fusión
+    pintados con `ColorPainter` de skrifa; Pablo, 20 y 21/10/2026),
+    `textos_motor` (palabras fijas por idioma) y `tipos_idiomas` (líneas de
+    tipo sin red). Pack de la casa en `assets/marcos/builtin/`; letras en
     `assets/fuentes/`. Dorados en `tests/dorados/` y `tests/dorados/layouts/`
     (con datos reales en `layouts/datos/`, bajados por
     `borrador::en_vivo::datos_de_layouts`).
@@ -269,8 +301,19 @@ inglés va en `src/i18n/en/<área>.ts`. `pnpm idiomas` falla si falta alguna.
   secciones y capturas. Las del inglés salen de la app en inglés y van en
   `docs/presentacion/en/` con los mismos nombres; las del español, en
   `docs/presentacion/`.
-- Idioma de fábrica de la app: inglés (Pablo, 15/10/2026); el español se elige
-  en Ajustes y se recuerda (`language-provider`, `proxybuilder.lang`).
+- Idioma de fábrica de la app: inglés (Pablo, 15/10/2026); los otros 14 se
+  eligen en Ajustes (`components/selector-idioma.tsx`, con bandera) y se
+  recuerdan (`language-provider`, `proxybuilder.lang`). Cada diccionario es un
+  trozo aparte que se carga al elegirlo (`i18n/cargar.ts`); `main.tsx` lo
+  espera antes del primer pintado.
+- **Emoji de Noto** (Pablo, 21/10/2026): en la interfaz, los SVG de Noto Color
+  Emoji que usa la app (las banderas de los idiomas) en `src/assets/emoji/`
+  (los copia `scripts/emoji-noto.mjs`, commit fijo y SHA-256 en
+  `fuentes.json`; la de España, en PNG) y se pintan con `<Emoji>` /
+  `<Bandera>` (`components/emoji.tsx`). En las cartas, `Noto-COLRv1.ttf`
+  incrustada (`render.rs`, `LETRA_DE_EMOJI`) y pintada con sus degradados y
+  capas (`diseno/emoji.rs`); solo las cartas con emoji cambian de huella
+  (`|emoji-noto`).
 - Releases: los hace Pablo (o Claude Code en su VS Code), no esta sesión.
   El texto de la release: `--notas "…"`, `--notas-fichero <ruta>` o
   `--sin-notas`; sin ninguno, abre `$EDITOR` (`scripts/release-notas.mjs`).

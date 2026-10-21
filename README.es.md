@@ -285,9 +285,13 @@ espacio» borra las imágenes que ya no usa ningún deck.
 
 ## A tu gusto
 
-Español o inglés, tema claro u oscuro, más de cuarenta temas de color, tres estilos
-de superficie (plano, relieve y cristal), materiales, efectos y tamaño de la
-interfaz. «Más temas…» instala cualquier tema de la comunidad de
+La interfaz en **15 idiomas**: inglés, español, francés, alemán, italiano,
+portugués de Brasil, rumano, polaco, neerlandés, ruso, ucraniano, japonés,
+coreano y chino simplificado y tradicional, elegidos en una lista con la
+bandera de cada uno. Las traducciones están hechas con cuidado pero sin
+revisión nativa: las correcciones son bienvenidas como issues en GitHub. Tema
+claro u oscuro, más de cuarenta temas de color, tres estilos de superficie
+(plano, relieve y cristal), materiales, efectos y tamaño de la interfaz. «Más temas…» instala cualquier tema de la comunidad de
 [tweakcn](https://tweakcn.com/community) por su enlace, con sus letras.
 
 ![Ajustes](docs/presentacion/ajustes.jpg)
@@ -300,9 +304,14 @@ La pestaña **Diseñar** y la opción «Diseñar proxy» del menú de cada carta
 sirven para crear tu propia versión de una carta, con marco nuevo y los textos
 traducidos:
 
-- **Textos en español e inglés** sacados de la carta real, con la versión de
-  cada idioma a un clic. Para las cartas sin impresión en español hay una
-  traducción sugerida a partir de frases oficiales.
+- **Textos en cualquiera de los 15 idiomas** sacados de la impresión de la
+  carta real en ese idioma (nombre, línea de tipo y reglas), elegido por
+  deck; el inglés, siempre a un clic. El rumano, el polaco, el neerlandés y el
+  ucraniano no tienen cartas impresas: sus reglas salen en inglés y la línea
+  de tipo, traducida. Las letras del japonés, el coreano y el chino se bajan la
+  primera vez que se elige uno de esos idiomas. Para las cartas sin impresión
+  en el idioma elegido hay una traducción sugerida a partir de frases
+  oficiales.
 - **Arte** de Scryfall, subido, pegado o recortado de otra carta, con zoom,
   encuadre y giro.
 - **Marcos y estilos** de un pack de marcos, con color, corona de legendaria
@@ -429,7 +438,11 @@ las comparte públicamente; su letra es m6x11plus, de Daniel Linssen. Balatro es
 un juego de LocalThunk. Las fichas que no están en Scryfall vienen de
 [Cockatrice](https://github.com/Cockatrice/Magic-Token), los nombres en otros
 idiomas de [MTGJSON](https://mtgjson.com) y
-[magicthegathering.io](https://magicthegathering.io), y los temas de color de
-más de [tweakcn](https://tweakcn.com).
+[magicthegathering.io](https://magicthegathering.io), los temas de color de
+más de [tweakcn](https://tweakcn.com), los emoji y las banderas de
+[Noto Color Emoji](https://github.com/googlefonts/noto-emoji) (OFL 1.1 y
+Apache 2.0; las banderas, de dominio público) y las letras del japonés, el
+coreano y el chino de Noto Sans CJK en [Google Fonts](https://fonts.google.com)
+(OFL 1.1).
 Magic: The Gathering es una marca de Wizards of the Coast. Esta aplicación no está
 afiliada ni respaldada por ninguna de las dos.

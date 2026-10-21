@@ -82,6 +82,12 @@ familia tiene que estar cargada (las de la casa son Spectral y Montserrat; las
 demás se importan en **Letras**). Una colección puede pedir otra letra para el
 título y las reglas.
 
+Una letra no tiene por qué traer todos los idiomas: lo que le falte del latín
+(«ș», «ł»…) o del cirílico sale con Spectral o Montserrat, que lo tienen
+todo, en vez de con cuadrados. El japonés, el coreano y el chino salen con
+Noto Sans JP, KR, SC o TC, que la app baja la primera vez que se elige uno de
+esos idiomas de diseño.
+
 ### Estilos
 
 Los estilos que la app conoce son `borderless` (despejado), `extended`,
@@ -364,6 +370,23 @@ el mismo): los cuadros de color junto al título.
 
 `alinear: "centro"` en el hueco `coste` centra los símbolos.
 
+### Textos por idioma
+
+`nombre` y `variantes` de los estilos, el `texto` de las `etiquetas` y la
+`plantillaPie` son mapas **código de idioma → texto**. Los códigos son los de
+la app (los de Scryfall): `es`, `en`, `fr`, `de`, `it`, `pt` (portugués de
+Brasil), `ro`, `pl`, `nl`, `ru`, `uk`, `ja`, `ko`, `zhs` (chino simplificado)
+y `zht` (chino tradicional). Se puede traer los que se quiera:
+
+- **`nombre`** y **`variantes`** se leen en el idioma de la **interfaz**; sin
+  ese idioma, en inglés; sin inglés, el id.
+- **`etiquetas`** y **`plantillaPie`** se pintan en el idioma de **diseño** de
+  la carta; sin ese idioma, en inglés.
+- Una clave que no es de ningún idioma de la app se ignora.
+- `{lang}` en la plantilla del pie es el código que llevan las cartas
+  impresas en ese idioma (`FR`, `DE`, `JP`, `KR`, `CS`, `CT`…; el español sigue
+  saliendo como `ES`).
+
 ### Raíz del pack
 
 ```json
@@ -444,6 +467,10 @@ una copia local en lugar de bajarlos.
   prototipo) y las franjas, en los colores de la carta.
 - El indicador de cara de las transformables (sol y luna) y de las MDFC
   (triángulos), con la pestaña de la otra cara.
+- Las palabras fijas en el idioma de diseño: la de los niveles de un leveler
+  («NIVEL», «STUFE», «等级»…) y el recordatorio de Fusionar.
+- Los emoji de cualquier texto, con Noto Color Emoji (COLRv1, con sus
+  degradados).
 
 ## Comprobar un pack
 

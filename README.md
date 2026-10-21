@@ -279,8 +279,13 @@ espacio» (Free up space) deletes the images that no deck uses any more.
 
 ## To your taste
 
-Spanish or English, light or dark theme, more than forty colour themes, three
-surface styles (flat, embossed and glass), materials, effects and interface size.
+The interface in **15 languages**: English, Spanish, French, German, Italian,
+Brazilian Portuguese, Romanian, Polish, Dutch, Russian, Ukrainian, Japanese,
+Korean and Simplified and Traditional Chinese, picked from a list with each
+one's flag. The translations were written with care but without native
+review: corrections are welcome as GitHub issues. Light or dark theme, more
+than forty colour themes, three surface styles (flat, embossed and glass),
+materials, effects and interface size.
 «Más temas…» (More themes…) installs any theme from the
 [tweakcn](https://tweakcn.com/community) community by its link, with its fonts.
 
@@ -294,9 +299,13 @@ The **Design** tab and the «Diseñar proxy» (Design proxy) option in each card
 menu let you create your own version of a card, with a new frame and translated
 text:
 
-- **Text in Spanish and English** taken from the real card, with each language's
-  version one click away. For cards with no Spanish printing there is a suggested
-  translation based on official phrases.
+- **Text in any of the 15 languages** taken from the real card's printing in
+  that language (name, type line and rules), chosen per deck; English is always
+  one click away. Romanian, Polish, Dutch and Ukrainian have no printed cards:
+  their rules stay in English and the type line is translated. Japanese, Korean
+  and Chinese fonts are downloaded the first time you pick one of those
+  languages. For cards with no printing in the chosen language there is a
+  suggested translation based on official phrases.
 - **Art** from Scryfall, uploaded, pasted or cropped from another card, with zoom,
   framing and rotation.
 - **Frames and styles** from a frame pack, with colour, legendary crown and rules
@@ -418,7 +427,10 @@ who shares them publicly; its font is m6x11plus by Daniel Linssen. Balatro is a
 game by LocalThunk. Token data not in Scryfall comes from
 [Cockatrice](https://github.com/Cockatrice/Magic-Token), names in other
 languages from [MTGJSON](https://mtgjson.com) and
-[magicthegathering.io](https://magicthegathering.io), and the extra colour
-themes from [tweakcn](https://tweakcn.com).
+[magicthegathering.io](https://magicthegathering.io), the extra colour
+themes from [tweakcn](https://tweakcn.com), the emoji and flags from
+[Noto Color Emoji](https://github.com/googlefonts/noto-emoji) (OFL 1.1 and
+Apache 2.0; flags in the public domain) and the Japanese, Korean and Chinese
+fonts from Noto Sans CJK on [Google Fonts](https://fonts.google.com) (OFL 1.1).
 Magic: The Gathering is a trademark of Wizards of the Coast. This application is
 not affiliated with or endorsed by either.
