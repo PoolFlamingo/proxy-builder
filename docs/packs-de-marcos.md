@@ -48,8 +48,9 @@ el plano `[127, 88.9]`.
 
 - **`id`**: letras, números, `-` y `_`. No puede ser `builtin`. Importar otro
   pack con el mismo `id` lo sustituye.
-- **`version`**: 1, o 2 si usa algo de «Lo que añade la versión 2» (una app
-  anterior rechaza el pack en vez de pintarlo mal).
+- **`version`**: 1, 2 si usa algo de «Lo que añade la versión 2» o 3 si usa
+  el trozo o la máscara de una capa PNG («Lo que añade la versión 3»). Una app
+  anterior rechaza el pack en vez de pintarlo mal.
 
 ### Paletas
 
@@ -168,12 +169,31 @@ que repintar con el mismo marco (al arrastrar el arte) no cuesta.
 ### Los marcos «Original»
 
 El pack `original` (`crates/proxy-core/assets/marcos/original/`) son los
-marcos M15 de Card Conjurer: normal (clásico) y despejado, con sus coronas y
-cajas de F/R por color. En el repositorio solo va su `pack.json`, tres SVG
-propios y `imagenes.json` (la lista de PNG con la huella SHA-256 de cada
-uno y el commit fijo del que salen). La app los descarga la primera vez que
-se eligen (`diseno/original.rs`), comprueba cada huella y los deja en
-`app_data_dir/marcos/original/`. No se distribuyen con la app.
+marcos M15 de Card Conjurer, con sus coronas y cajas de F/R por color, y los
+tres estilos con el mismo mármol y pergamino:
+
+- **Clásico**: el marco normal (`m15/regular/m15Frame{color}.png`).
+- **Extendido**: el extendido (`m15/new/extended/{color}.png`, la ilustración
+  hasta los bordes) con la barra del tipo de mármol del clásico encima (la
+  suya es negra translúcida), recortada con la máscara `m15MaskType.png`, y
+  la corona flotante (no hay bordes laterales bajo el título).
+- **Despejado**: el marco despejado genérico de Card Conjurer, liso y
+  translúcido, con las barras del título y del tipo del clásico (máscaras
+  `m15MaskTitle.png` y `m15MaskType.png`), el pergamino de su caja de reglas
+  (un trozo con `desde`, en su mismo sitio: el hueco entre los bordes de la
+  caja es igual en los dos marcos) y su caja de F/R. El texto va oscuro. El pergamino
+  solo sale con la caja automática o clara (`"si": {"caja": ["auto", "light"]}`):
+  con la oscura o la de tinte queda la caja translúcida del marco, con el
+  tinte encima, y se sigue viendo la ilustración. El borde de la caja es
+  siempre el del marco.
+
+En el repositorio solo va su `pack.json`, tres SVG propios e
+`imagenes.json` (la lista de PNG con la huella SHA-256 de cada uno y el
+commit fijo del que salen). La app los descarga la primera vez que se eligen
+(`diseno/original.rs`), comprueba cada huella y los deja en
+`app_data_dir/marcos/original/`. No se distribuyen con la app. Si una versión
+nueva pide imágenes que aún no están, el pack carga sin los estilos que las
+usan (caen a los de la casa) y la app las baja sola al arrancar.
 
 ### Huecos
 
@@ -305,6 +325,7 @@ Además de `corona`, `fr`, `cinta` y `emblema`:
 | `colores` | tiene entre `[min, max]` colores. |
 | `simbolos` | su coste tiene entre `[min, max]` símbolos. |
 | `variante` | el usuario eligió esa variante. |
+| `caja` | (versión 3) la caja de reglas elegida en el diseño es una de estas: `auto`, `dark`, `light`, `tint`. |
 
 ### Capas
 
@@ -381,6 +402,26 @@ el mismo): los cuadros de color junto al título.
   hueco (y lo demás llega hasta ahí). Si la plantilla no pone `{universe}`,
   `{year}` ni `{credit}`, salen solos tras `{>}` en la última línea
   («Monster Hunter · © 2026 Capcom»).
+
+## Lo que añade la versión 3
+
+La condición `caja` (ver «Condiciones») y dos campos de las capas PNG para
+sacar una pieza de otro marco:
+
+| Campo | Qué es |
+|-------|--------|
+| `desde` | Una zona en mm (`x`, `y`, `w`, `h`; admite las mismas variables que `en`) medida como si la imagen cubriera la carta entera: solo se pinta ese trozo. Sin `en` va en el mismo sitio de la carta; con `en`, estirado a esa zona. |
+| `mascara` | Un PNG del pack de la medida de la carta: la capa solo se ve donde la máscara es opaca (multiplica su transparencia). Con `desde`, se usa el mismo trozo de la máscara. |
+
+```json
+{ "png": "m15/regular/m15Frame{color}.png", "mascara": "m15/regular/m15MaskType.png" },
+{ "png": "m15/regular/m15Frame{color}.png",
+  "desde": { "x": 4.72, "y": 55.2, "w": 53.66, "h": 26.2 } }
+```
+
+Ninguno de los dos va con `tramos` ni en capas SVG. La máscara no lleva
+`{color}`: es la misma para todos los colores. El degradado y el color propio
+del marco (ver «Capas») se aplican igual al trozo.
 
 ## Packs para descargar
 
