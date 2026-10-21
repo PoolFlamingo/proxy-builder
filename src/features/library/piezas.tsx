@@ -6,6 +6,7 @@ import type { Tag } from "@/bindings/Tag";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { COLORES } from "@/features/stats/textos";
+import { IDIOMAS_SCRYFALL, localeDe } from "@/lib/idiomas";
 import { cn } from "@/lib/utils";
 import { idiomasDe, WUBRG } from "./organizar";
 
@@ -167,19 +168,12 @@ export const CLASES: Record<DeckKind, string> = {
 	limited: paraTraducir("Limitado"),
 };
 
-/** Nombre del idioma de las cartas. */
+/**
+ * Nombre del idioma de las cartas: el suyo propio (no se traduce), salvo el
+ * phyrexiano, que no es de la tabla de la app.
+ */
 export const IDIOMAS: Record<string, string> = {
-	es: paraTraducir("Español"),
-	en: paraTraducir("Inglés"),
-	fr: paraTraducir("Francés"),
-	de: paraTraducir("Alemán"),
-	it: paraTraducir("Italiano"),
-	pt: paraTraducir("Portugués"),
-	ja: paraTraducir("Japonés"),
-	ko: paraTraducir("Coreano"),
-	ru: paraTraducir("Ruso"),
-	zhs: paraTraducir("Chino simplificado"),
-	zht: paraTraducir("Chino tradicional"),
+	...Object.fromEntries(IDIOMAS_SCRYFALL.map((i) => [i.codigo, i.nativo])),
 	ph: paraTraducir("Phyrexiano"),
 };
 
@@ -220,7 +214,7 @@ export function useFecha() {
 	return (ms: number | null, conHora = true) =>
 		ms === null
 			? "—"
-			: new Date(ms).toLocaleString(lang === "en" ? "en-GB" : "es-ES", {
+			: new Date(ms).toLocaleString(localeDe(lang), {
 					dateStyle: "medium",
 					...(conHora ? { timeStyle: "short" as const } : {}),
 				});
@@ -229,7 +223,7 @@ export function useFecha() {
 /** «hace 3 días», «hace 2 h»… */
 export function useHace() {
 	const { lang } = useLang();
-	const rtf = new Intl.RelativeTimeFormat(lang === "en" ? "en" : "es", { numeric: "auto" });
+	const rtf = new Intl.RelativeTimeFormat(localeDe(lang), { numeric: "auto" });
 	return (ms: number | null) => {
 		if (ms === null) return "—";
 		const s = (ms - Date.now()) / 1000;
@@ -249,7 +243,7 @@ export function useDinero() {
 	return (v: number | null, moneda: "EUR" | "USD" = "EUR") =>
 		v === null
 			? "—"
-			: new Intl.NumberFormat(lang === "en" ? "en-GB" : "es-ES", {
+			: new Intl.NumberFormat(localeDe(lang), {
 					style: "currency",
 					currency: moneda,
 					maximumFractionDigits: v >= 100 ? 0 : 2,

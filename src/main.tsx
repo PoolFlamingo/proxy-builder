@@ -1,12 +1,13 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { LanguageProvider } from "@/components/language-provider";
+import { LanguageProvider, leerIdioma } from "@/components/language-provider";
 import { LimiteError } from "@/components/limite-error";
 import { SmoothScrollClient } from "@/components/smooth-scroll-client";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipsNativos } from "@/components/tooltips-nativos";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { cargarDiccionario } from "@/i18n/cargar";
 import { ponerTemaAntesDeMontar } from "@/lib/tema-inicial";
 import { prepararTemasInstalados } from "@/lib/temas-instalados";
 import App from "./App";
@@ -41,22 +42,29 @@ function ensenarVentana() {
 		.catch(() => {});
 }
 
-ReactDOM.createRoot(raiz).render(
-	<React.StrictMode>
-		{/* Un error de render nunca debe dejar la ventana en blanco. */}
-		<LimiteError>
-			<LanguageProvider>
-				<ThemeProvider>
-					<SmoothScrollClient />
-					<TooltipProvider>
-						<App />
-						<Toaster position="bottom-right" />
-						{/* Ningún `title` nativo llega a pintarse: se convierte en el Tooltip de la casa. */}
-						<TooltipsNativos />
-					</TooltipProvider>
-				</ThemeProvider>
-			</LanguageProvider>
-		</LimiteError>
-	</React.StrictMode>,
-);
+function montar(raiz: HTMLElement) {
+	ReactDOM.createRoot(raiz).render(
+		<React.StrictMode>
+			{/* Un error de render nunca debe dejar la ventana en blanco. */}
+			<LimiteError>
+				<LanguageProvider>
+					<ThemeProvider>
+						<SmoothScrollClient />
+						<TooltipProvider>
+							<App />
+							<Toaster position="bottom-right" />
+							{/* Ningún `title` nativo llega a pintarse: se convierte en el Tooltip de la casa. */}
+							<TooltipsNativos />
+						</TooltipProvider>
+					</ThemeProvider>
+				</LanguageProvider>
+			</LimiteError>
+		</React.StrictMode>,
+	);
+}
+
+// El diccionario del idioma elegido antes del primer pintado (el inglés ya va
+// en el paquete): así la app no sale un instante en otro idioma. Si no carga,
+// se monta igual y los textos caen al inglés.
+void cargarDiccionario(leerIdioma()).finally(() => montar(raiz));
 ensenarVentana();

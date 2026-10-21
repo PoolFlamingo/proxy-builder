@@ -1,6 +1,8 @@
+import type { Diccionario } from "../tipos";
+
 // Estadísticas completas del deck: pestañas, funciones, probabilidades, precios
 // y legalidad.
-export const ESTADISTICAS: Record<string, string> = {
+export const ESTADISTICAS: Diccionario = {
 	// Pestañas y cabecera.
 	Resumen: "Overview",
 	Maná: "Mana",

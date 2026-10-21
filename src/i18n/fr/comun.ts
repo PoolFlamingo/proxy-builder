@@ -1,0 +1,35 @@
+import type { Diccionario } from "../tipos";
+
+export const COMUN: Diccionario = {
+	"No hay conexión o el servidor no responde.": "Pas de connexion, ou le serveur ne répond pas.",
+	"El servicio pide ir más despacio. Vuelve a intentarlo en un momento.":
+		"Le service demande de ralentir. Réessayez dans un instant.",
+	"No se ha encontrado lo que se buscaba.": "Ce que vous cherchiez est introuvable.",
+	"No se ha podido leer o escribir en el disco.": "Impossible de lire ou d'écrire sur le disque.",
+	"La biblioteca local ha dado un error.": "La bibliothèque locale a renvoyé une erreur.",
+	"Los datos no son válidos.": "Les données ne sont pas valides.",
+	"Cancelado.": "Annulé.",
+	"No se ha podido generar el PDF.": "Impossible de générer le PDF.",
+	"No se ha podido procesar la imagen.": "Impossible de traiter l'image.",
+	"Ese formato de fichero no se admite.": "Ce format de fichier n'est pas pris en charge.",
+	"Hay un trabajo en marcha; espera a que termine.":
+		"Une tâche est en cours ; attendez qu'elle se termine.",
+	"Error interno inesperado.": "Erreur interne inattendue.",
+	"Algo ha fallado en la pantalla": "Un problème est survenu à l'écran",
+	"Tus decks están a salvo: viven en la biblioteca local, no en esta pantalla. Puedes volver e intentarlo de nuevo.":
+		"Vos decks sont en sécurité : ils vivent dans la bibliothèque locale, pas sur cet écran. Vous pouvez revenir et réessayer.",
+	"Volver": "Retour",
+	"Recargar la ventana": "Recharger la fenêtre",
+	"¿Interrumpir lo que está en marcha?": "Interrompre ce qui est en cours ?",
+	"¿Salir sin guardar?": "Quitter sans enregistrer ?",
+	"Lo que has escrito en esta ventana se pierde.":
+		"Ce que vous avez saisi dans cette fenêtre sera perdu.",
+	"Seguir esperando": "Continuer d'attendre",
+	"Seguir editando": "Continuer la modification",
+	"Interrumpir y salir": "Interrompre et quitter",
+	"Salir sin guardar": "Quitter sans enregistrer",
+	"Cerrar": "Fermer",
+	"Cancelar": "Annuler",
+	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.":
+		"Si vous quittez maintenant, la tâche s'arrête. Ce qui a déjà été envoyé se termine tout seul, mais le reste n'est pas traité et ce qui est à moitié fait n'est pas enregistré.",
+};

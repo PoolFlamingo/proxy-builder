@@ -1,5 +1,7 @@
+import type { Diccionario } from "../tipos";
+
 // Panel de la lista de cartas, carga y resolución, y marcas de las cartas.
-export const LISTA: Record<string, string> = {
+export const LISTA: Diccionario = {
 	"Buscando cartas…": "Looking up cards…",
 	"Buscando el idioma…": "Finding the language…",
 	"Buscando tokens…": "Finding tokens…",

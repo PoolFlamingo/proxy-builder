@@ -1,5 +1,7 @@
+import type { Diccionario } from "../tipos";
+
 // Panel de exportación, alineado de filas, presets y hoja de calibración.
-export const EXPORTAR: Record<string, string> = {
+export const EXPORTAR: Diccionario = {
 	"Rellenar las esquinas": "Fill corners",
 	"Pinta del color del borde las esquinas redondeadas (transparentes o claras) de las imágenes, para que no salgan triángulos blancos al sangrar o recortar. Apagado, quedan del color del papel.":
 		"Paints the rounded corners (transparent or light) of the images with the border colour, so no white triangles show when bleeding or trimming. Off, they stay the colour of the paper.",

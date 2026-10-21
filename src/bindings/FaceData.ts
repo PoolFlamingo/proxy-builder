@@ -10,11 +10,18 @@ export type FaceData = {
  */
 name: string, manaCost: string, 
 /**
- * Línea de tipo y reglas por idioma: `en` del Oracle, `es` de la
- * impresión española (o el Oracle si no hay, con aviso).
+ * Línea de tipo y reglas por idioma: `en` del Oracle; los demás, de la
+ * impresión en ese idioma (o el Oracle si no hay, con aviso). Un idioma
+ * que aún no se ha bajado cae al inglés (`ByLang::get`).
  */
 typeLine: ByLang<string>, rules: ByLang<string>, 
 /**
  * Nombre impreso en español (para sustituirlo en las reglas).
  */
-printedNameEs: string | null, colors: Array<string>, power: string | null, toughness: string | null, loyalty: string | null, defense: string | null, };
+printedNameEs: string | null, 
+/**
+ * Nombre impreso en los demás idiomas, por su código (ni `es`, que va
+ * arriba y así lo sigue leyendo la 2.5.x, ni `en`, que es `name`).
+ * Mejor leerlo con `printed_name`.
+ */
+printedNames?: { [key in string]: string }, colors: Array<string>, power: string | null, toughness: string | null, loyalty: string | null, defense: string | null, };

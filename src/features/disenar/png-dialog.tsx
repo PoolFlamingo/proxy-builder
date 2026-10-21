@@ -3,8 +3,10 @@ import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { DesignLang } from "@/bindings/DesignLang";
 import { Fila } from "@/components/campos";
+import { Bandera } from "@/components/emoji";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Dialog,
 	DialogContent,
@@ -16,17 +18,18 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { elegirCarpetaParaExportar } from "@/lib/dialogos";
+import { IDIOMAS } from "@/lib/idiomas";
 import { call } from "@/lib/ipc";
 import { lanzarTrabajo } from "@/lib/trabajos";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
-
-type Idiomas = "es" | "en" | "ambos";
+import { completarIdioma, rehacerMiniaturas } from "./renumerar";
 
 /**
  * **Exportar imágenes**: las cartas diseñadas como PNG, a la medida exacta
- * del corte y a 300, 600 o 900 PPP, en las carpetas `es/` y `en/` de la
- * carpeta elegida. Las copias de una carta salen una vez.
+ * del corte y a 300, 600 o 900 PPP, cada idioma elegido en su carpeta
+ * (`es/`, `fr/`…) de la carpeta elegida. Las copias de una carta salen una
+ * vez. A un idioma que les falte a las cartas, antes se completa.
  */
 export function PngDialog() {
 	const abierto = useUi((s) => s.dialogo?.tipo === "exportarPng");
@@ -46,7 +49,7 @@ function Contenido() {
 		seleccion.length > 1 ? "seleccion" : "todo",
 	);
 	const [ppp, setPpp] = useState("600");
-	const [idiomas, setIdiomas] = useState<Idiomas>(langDeck);
+	const [idiomas, setIdiomas] = useState<DesignLang[]>([langDeck]);
 	const [progreso, setProgreso] = useState<{ hechas: number; total: number } | null>(null);
 	const jobId = useRef<number | null>(null);
 
@@ -58,15 +61,22 @@ function Contenido() {
 	const exportar = async () => {
 		const carpeta = await elegirCarpetaParaExportar();
 		if (!carpeta) return;
-		const langs: DesignLang[] = idiomas === "ambos" ? ["es", "en"] : [idiomas];
+		// En el orden de la tabla, no en el de los clics.
+		const langs = IDIOMAS.map((i) => i.codigo).filter((l) => idiomas.includes(l));
 		setProgreso({ hechas: 0, total: 0 });
 		try {
+			// Los idiomas que no son el español ni el inglés, antes completos.
+			const ids = new Set(elegidas.map((c) => c.id));
+			const otros = langs.filter((l) => l !== "es" && l !== "en");
+			for (const l of otros) await completarIdioma(l, t, mensaje, ids);
+			if (otros.length > 0) await rehacerMiniaturas();
+			const listas = (useDeck.getState().deck?.cards ?? []).filter((c) => ids.has(c.id));
 			const { jobId: id, fin } = await lanzarTrabajo(
 				"designpng://progress",
 				"designpng://done",
 				() =>
 					call("design_export_png", {
-						cards: elegidas,
+						cards: listas,
 						folder: carpeta,
 						cardSize: useDeck.getState().deck?.settings.cardSize ?? { widthMm: 63, heightMm: 88 },
 						dpi: Number(ppp),
@@ -101,7 +111,7 @@ function Contenido() {
 				<DialogTitle>{t("Exportar imágenes")}</DialogTitle>
 				<DialogDescription className="text-xs">
 					{t(
-						"Cada carta diseñada como PNG, a la medida exacta del corte. Se guardan en las carpetas «es» y «en» de la carpeta que elijas, con el nombre «número - nombre».",
+						"Cada carta diseñada como PNG, a la medida exacta del corte. Cada idioma va a su carpeta («es», «fr»…) dentro de la que elijas, con el nombre «número - nombre».",
 					)}
 				</DialogDescription>
 			</DialogHeader>
@@ -131,24 +141,30 @@ function Contenido() {
 						))}
 					</ToggleGroup>
 				</Fila>
-				<Fila etiqueta={t("Idioma")}>
-					<ToggleGroup
-						type="single"
-						size="sm"
-						value={idiomas}
-						onValueChange={(v) => (v === "es" || v === "en" || v === "ambos") && setIdiomas(v)}
-					>
-						<ToggleGroupItem value="es" className="px-2.5 text-xs">
-							ES
-						</ToggleGroupItem>
-						<ToggleGroupItem value="en" className="px-2.5 text-xs">
-							EN
-						</ToggleGroupItem>
-						<ToggleGroupItem value="ambos" className="px-2.5 text-xs">
-							{t("Los dos")}
-						</ToggleGroupItem>
-					</ToggleGroup>
-				</Fila>
+				<div className="flex flex-col gap-1.5">
+					<span className="text-xs font-medium">{t("Idiomas")}</span>
+					<div className="grid grid-cols-3 gap-1 p-1">
+						{IDIOMAS.map((i) => (
+							<label
+								key={i.codigo}
+								className="flex min-w-0 items-center gap-1.5 text-xs"
+								lang={i.locale}
+							>
+								<Checkbox
+									checked={idiomas.includes(i.codigo)}
+									disabled={enMarcha}
+									onCheckedChange={(v) =>
+										setIdiomas((ls) =>
+											v === true ? [...ls, i.codigo] : ls.filter((l) => l !== i.codigo),
+										)
+									}
+								/>
+								<Bandera pais={i.pais} alt="" />
+								<span className="truncate">{i.nativo}</span>
+							</label>
+						))}
+					</div>
+				</div>
 				<p className="text-xs text-muted-foreground">
 					{elegidas.length === 0
 						? t("No hay cartas diseñadas.")
@@ -162,7 +178,11 @@ function Contenido() {
 						{t("Cancelar")}
 					</Button>
 				) : (
-					<Button size="sm" onClick={exportar} disabled={elegidas.length === 0}>
+					<Button
+						size="sm"
+						onClick={exportar}
+						disabled={elegidas.length === 0 || idiomas.length === 0}
+					>
 						<FolderOpen />
 						{t("Elegir carpeta y exportar")}
 					</Button>

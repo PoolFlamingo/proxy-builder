@@ -1,21 +1,35 @@
-import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
+import {
+	createContext,
+	type ReactNode,
+	useContext,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 
-import { EN } from "@/i18n/en";
+import { cargarDiccionario, diccionarioCargado, EN } from "@/i18n/cargar";
+import { traducir, type Vars } from "@/i18n/traducir";
 import { mensajeDeError } from "@/lib/errores";
+import { esLang, type Lang, localeDe } from "@/lib/idiomas";
 
 /**
  * Idioma de la interfaz (patrón de judlex).
  *
  * El diccionario se indexa por la **cadena fuente en español**: el código se
- * escribe en español y el inglés es una traducción de esa cadena. Si falta una
- * entrada, se devuelve el español tal cual; nunca queda un hueco vacío ni una
- * clave técnica a la vista. `pnpm idiomas` comprueba que no falte ninguna.
+ * escribe en español y cada idioma es una traducción de esa cadena. Si a un
+ * idioma le falta una entrada, sale la inglesa, y si tampoco está, el
+ * español tal cual; nunca queda un hueco vacío ni una clave técnica a la
+ * vista. `pnpm idiomas` comprueba que no falte ninguna.
+ *
+ * Un valor puede ser un plural (`{ one, few, many, other }`): la forma la
+ * elige la variable `n`, que debe ser un número.
  *
  * Si la misma palabra española significa dos cosas en sitios distintos, se
  * desambigua ALARGANDO la cadena fuente del caso menos genérico, nunca con un
  * segundo diccionario.
  */
-export type Lang = "es" | "en";
+export type { Lang };
 
 const LANG_KEY = "proxybuilder.lang";
 
@@ -28,10 +42,11 @@ export function paraTraducir<T extends string>(es: T): T {
 	return es;
 }
 
-/** El idioma elegido; sin elegir, inglés. */
-function leerIdioma(): Lang {
+/** El idioma elegido; sin elegir (o uno que ya no existe), inglés. */
+export function leerIdioma(): Lang {
 	try {
-		return localStorage.getItem(LANG_KEY) === "es" ? "es" : "en";
+		const l = localStorage.getItem(LANG_KEY);
+		return esLang(l) ? l : "en";
 	} catch {
 		return "en";
 	}
@@ -42,23 +57,15 @@ function leerIdioma(): Lang {
  * `LimiteError`, que tiene que envolverlo para que un fallo dentro del propio
  * proveedor no deje la ventana en blanco.
  */
-export function traduccionSuelta(es: string): string {
-	return traducir(es, leerIdioma());
-}
-
-function traducir(es: string, lang: Lang): string {
-	return lang === "en" ? (EN[es] ?? es) : es;
-}
-
-function interpolar(s: string, vars?: Record<string, string | number>) {
-	if (!vars) return s;
-	return s.replace(/\{(\w+)\}/g, (_, k) => (vars[k] != null ? String(vars[k]) : `{${k}}`));
+export function traduccionSuelta(es: string, vars?: Vars): string {
+	const lang = leerIdioma();
+	return traducir(es, lang, vars, diccionarioCargado(lang), EN);
 }
 
 type Ctx = {
 	lang: Lang;
 	setLang: (l: Lang) => void;
-	t: (es: string, vars?: Record<string, string | number>) => string;
+	t: (es: string, vars?: Vars) => string;
 	/** Un error de Rust (o cualquiera) en el idioma de la interfaz. */
 	mensaje: (e: unknown) => string;
 };
@@ -67,23 +74,33 @@ const LanguageContext = createContext<Ctx | null>(null);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
 	const [lang, setLangState] = useState<Lang>(leerIdioma);
+	// El último idioma pedido: si se piden dos seguidos, gana el último aunque
+	// su diccionario llegue antes.
+	const pedido = useRef(lang);
 
 	useEffect(() => {
-		document.documentElement.setAttribute("lang", lang);
+		// El locale entero y no el código: así WebKit elige bien las letras
+		// japonesas o chinas para los ideogramas que comparten.
+		document.documentElement.setAttribute("lang", localeDe(lang));
 	}, [lang]);
 
 	const value = useMemo<Ctx>(() => {
-		const t = (es: string, vars?: Record<string, string | number>) =>
-			interpolar(traducir(es, lang), vars);
+		const dic = diccionarioCargado(lang);
+		const t = (es: string, vars?: Vars) => traducir(es, lang, vars, dic, EN);
 		return {
 			lang,
 			setLang: (l) => {
-				setLangState(l);
+				pedido.current = l;
 				try {
 					localStorage.setItem(LANG_KEY, l);
 				} catch {
 					/* sin almacenamiento: el idioma vive solo en esta sesión */
 				}
+				// Primero el diccionario y luego el cambio: mientras carga se
+				// queda el idioma de antes, sin parpadeo de textos a medias.
+				void cargarDiccionario(l).then(() => {
+					if (pedido.current === l) setLangState(l);
+				});
 			},
 			t,
 			mensaje: (e) => mensajeDeError(e, t),

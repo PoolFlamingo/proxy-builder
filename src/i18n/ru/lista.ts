@@ -1,0 +1,151 @@
+import type { Diccionario } from "../tipos";
+
+// Panel de la lista de cartas, carga y resolución, y marcas de las cartas.
+export const LISTA: Diccionario = {
+	"Buscando cartas…": "Поиск карт…",
+	"Buscando el idioma…": "Поиск языка…",
+	"Buscando tokens…": "Поиск фишек…",
+	"Descargando imágenes…": "Скачивание изображений…",
+	"Cancelado: no se ha cambiado nada": "Отменено: ничего не изменилось",
+	"Elegir imágenes": "Выбрать изображения",
+	"Idioma reaplicado a {n} cartas": {
+		one: "Язык заново применён к {n} карте",
+		few: "Язык заново применён к {n} картам",
+		many: "Язык заново применён к {n} картам",
+		other: "Язык заново применён к {n} карты",
+	},
+	Imágenes: "Изображения",
+	"La lista no tiene cartas": "В списке нет карт",
+	"No hay cartas de Scryfall sin fijar": "Нет незакреплённых карт из Scryfall",
+	"Reverso del deck cambiado": "Рубашка колоды изменена",
+	"Reverso genérico restablecido": "Восстановлена стандартная рубашка",
+	"Sin encontrar: {nombres}": "Не найдено: {nombres}",
+	"{n} cartas añadidas": {
+		one: "Добавлена {n} карта",
+		few: "Добавлены {n} карты",
+		many: "Добавлено {n} карт",
+		other: "Добавлено {n} карты",
+	},
+	"{n} cartas cargadas": {
+		one: "Загружена {n} карта",
+		few: "Загружены {n} карты",
+		many: "Загружено {n} карт",
+		other: "Загружено {n} карты",
+	},
+	"{n} imágenes propias añadidas": {
+		one: "Добавлено {n} своё изображение",
+		few: "Добавлено {n} своих изображения",
+		many: "Добавлено {n} своих изображений",
+		other: "Добавлено {n} своего изображения",
+	},
+	"Alta (672 px)": "Высокое (672 px)",
+	"Archidekt. De Moxfield no se puede: copia la lista y pégala arriba.":
+		"Archidekt. С Moxfield так нельзя: скопируйте список и вставьте его выше.",
+	"Añadir estas cartas al final del deck": "Добавить эти карты в конец колоды",
+	"Añadir tokens automáticamente": "Добавлять фишки автоматически",
+	Añadir: "Добавить",
+	"Baja (244 px)": "Низкое (244 px)",
+	"Caché limpiada ({mb})": "Кэш очищен ({mb})",
+	"Calidad de la vista previa": "Качество предпросмотра",
+	"Cargar lista": "Загрузить список",
+	"Con imagen": "С изображением",
+	Ejemplo: "Пример",
+	"Idioma de las cartas": "Язык карт",
+	"Importar desde URL": "Импорт по URL",
+	Importar: "Импорт",
+	"Imágenes propias": "Свои изображения",
+	"Incluir el banquillo": "Включить сайдборд",
+	"La mejor disponible": "Лучшее доступное",
+	"Las cartas actuales se cambian por las de la lista. Se puede deshacer con Ctrl+Z.":
+		"Текущие карты будут заменены картами из списка. Отменить можно через Ctrl+Z.",
+	"Limpiar caché de miniaturas": "Очистить кэш миниатюр",
+	Limpiar: "Очистить",
+	"Lista importada de Archidekt ({n} cartas)": {
+		one: "Список импортирован из Archidekt ({n} карта)",
+		few: "Список импортирован из Archidekt ({n} карты)",
+		many: "Список импортирован из Archidekt ({n} карт)",
+		other: "Список импортирован из Archidekt ({n} карты)",
+	},
+	"Máxima (745 px)": "Максимальное (745 px)",
+	"No volver a preguntar": "Больше не спрашивать",
+	"Normal (488 px)": "Обычное (488 px)",
+	"Ocupa {mb} en {n} ficheros. Se vuelven a generar al verlas. Las imágenes de tus decks no se tocan.":
+		{
+			one: "Занимает {mb} в {n} файле. Миниатюры создаются заново при просмотре. Изображения ваших колод не затрагиваются.",
+			few: "Занимает {mb} в {n} файлах. Миниатюры создаются заново при просмотре. Изображения ваших колод не затрагиваются.",
+			many: "Занимает {mb} в {n} файлах. Миниатюры создаются заново при просмотре. Изображения ваших колод не затрагиваются.",
+			other:
+				"Занимает {mb} в {n} файла. Миниатюры создаются заново при просмотре. Изображения ваших колод не затрагиваются.",
+		},
+	Opciones: "Параметры",
+	"Poner una lista de ejemplo": "Вставить пример списка",
+	"Preguntar antes de reemplazar las cartas": "Спрашивать перед заменой карт",
+	"Qué impresión se elige cuando la lista no dice el set":
+		"Какое издание выбирать, если в списке не указан выпуск",
+	"Reaplicar idioma": "Применить язык заново",
+	Reemplazar: "Заменить",
+	"Solo alta resolución": "Только высокое разрешение",
+	"Solo la pantalla. El PDF siempre sale a la resolución de exportación.":
+		"Только для экрана. PDF всегда создаётся в разрешении экспорта.",
+	"Subir cartas": "Загрузить карты",
+	"Subir reverso": "Загрузить рубашку",
+	"También puedes arrastrar imágenes a la vista previa: sobre una carta la reemplazan; fuera, se añaden.":
+		"Изображения можно также перетащить в предпросмотр: на карту — чтобы заменить её, в другое место — чтобы добавить.",
+	"Vaciar el cuadro (las cartas del deck no se tocan)":
+		"Очистить поле (карты колоды не затрагиваются)",
+	"Volver al reverso genérico": "Вернуть стандартную рубашку",
+	"Vuelve a pedir las cartas no fijadas en el idioma elegido":
+		"Заново запрашивает незакреплённые карты на выбранном языке",
+	"{n} cartas en la lista": {
+		one: "{n} карта в списке",
+		few: "{n} карты в списке",
+		many: "{n} карт в списке",
+		other: "{n} карты в списке",
+	},
+	"{n} cartas · {p} hojas": {
+		one: "{n} карта · листов: {p}",
+		few: "{n} карты · листов: {p}",
+		many: "{n} карт · листов: {p}",
+		other: "{n} карты · листов: {p}",
+	},
+	"{n} líneas sin entender": {
+		one: "{n} строка не распознана",
+		few: "{n} строки не распознаны",
+		many: "{n} строк не распознано",
+		other: "{n} строки не распознано",
+	},
+	"¿Limpiar la caché de miniaturas?": "Очистить кэш миниатюр?",
+	"¿Reemplazar las cartas del deck?": "Заменить карты колоды?",
+	"Demasiadas copias (máximo 999)": "Слишком много копий (максимум 999)",
+	"Falta el nombre de la carta": "Не указано название карты",
+	"La cantidad es 0": "Количество равно 0",
+	"La cantidad no se entiende": "Не удалось прочитать количество",
+	"4 Lightning Bolt\n1 Sol Ring (CMM) 410\n…": "4 Lightning Bolt\n1 Sol Ring (CMM) 410\n…",
+	"Imagen propia": "Своё изображение",
+	"No existe en el idioma pedido: se ha quedado en inglés":
+		"Нет на запрошенном языке: оставлена на английском",
+	"Scryfall aún no tiene la imagen real": "В Scryfall ещё нет настоящего изображения",
+	"Scryfall no tiene imagen": "В Scryfall нет изображения",
+	"Scryfall solo tiene un escaneo de baja resolución":
+		"В Scryfall есть только скан низкого разрешения",
+	"Detectar fichas": "Найти фишки",
+	"Busca las fichas que crean las cartas del deck ya cargado (también las propias vinculadas) y te deja elegir cuáles añadir.":
+		"Ищет фишки, которые создают карты загруженной колоды (в том числе привязанные свои карты), и предлагает выбрать, какие добавить.",
+	"Las fichas que crean las cartas del deck (también las propias vinculadas) y que aún no tiene. Desmarca las que no quieras.":
+		"Фишки, которые создают карты колоды (в том числе привязанные свои карты) и которых в ней ещё нет. Снимите отметку с ненужных.",
+	"Buscando las fichas…": "Поиск фишек…",
+	"No falta ninguna ficha.": "Все фишки на месте.",
+	"{ficha}: la crea {carta}": "{ficha}: создаёт {carta}",
+	"{n} fichas añadidas": {
+		one: "Добавлена {n} фишка",
+		few: "Добавлены {n} фишки",
+		many: "Добавлено {n} фишек",
+		other: "Добавлено {n} фишки",
+	},
+	"Añadir {n} fichas": {
+		one: "Добавить {n} фишку",
+		few: "Добавить {n} фишки",
+		many: "Добавить {n} фишек",
+		other: "Добавить {n} фишки",
+	},
+};

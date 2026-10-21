@@ -1,4 +1,4 @@
-import { AlertTriangle, Info, Loader2, Move } from "lucide-react";
+import { AlertTriangle, Download, Info, Loader2, Move } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ArtFraming } from "@/bindings/ArtFraming";
 import type { Aviso } from "@/bindings/Aviso";
@@ -6,6 +6,8 @@ import type { CapaInfo } from "@/bindings/CapaInfo";
 import type { CardDesign } from "@/bindings/CardDesign";
 import type { DesignLang } from "@/bindings/DesignLang";
 import { useLang } from "@/components/language-provider";
+import { SelectorIdioma } from "@/components/selector-idioma";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -222,19 +224,12 @@ export function VistaPrevia({
 	return (
 		<div className="flex h-full flex-col">
 			<div className="flex shrink-0 items-center gap-2.5 border-b px-3 py-2">
-				<ToggleGroup
-					type="single"
-					size="sm"
-					value={lang}
-					onValueChange={(v) => (v === "es" || v === "en") && setLang(v)}
-				>
-					<ToggleGroupItem value="es" className="px-2.5 text-xs">
-						ES
-					</ToggleGroupItem>
-					<ToggleGroupItem value="en" className="px-2.5 text-xs">
-						EN
-					</ToggleGroupItem>
-				</ToggleGroup>
+				<SelectorIdioma
+					valor={lang}
+					onCambio={setLang}
+					ancho="w-40"
+					ariaLabel={t("Idioma de las cartas diseñadas")}
+				/>
 				{caras > 1 && (
 					<ToggleGroup
 						type="single"
@@ -332,7 +327,13 @@ export function VistaPrevia({
 								) : (
 									<Info className="mt-px size-3.5 shrink-0" />
 								)}
-								{textoAviso(a, t)}
+								<span className="min-w-0 flex-1">{textoAviso(a, t)}</span>
+								{a.kind === "faltanLetras" && (
+									<Button size="xs" variant="outline" onClick={() => setLang(a.lang)}>
+										<Download />
+										{t("Bajar las letras")}
+									</Button>
+								)}
 							</li>
 						))}
 					</ul>

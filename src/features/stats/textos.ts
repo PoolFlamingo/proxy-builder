@@ -1,4 +1,5 @@
 import { paraTraducir } from "@/components/language-provider";
+import { esLang, localeDe } from "@/lib/idiomas";
 
 /** Nombre y aspecto de cada color de maná (fijos: el color tiene significado). */
 export const COLORES: Record<string, { nombre: string; chip: string; barra: string }> = {
@@ -138,7 +139,7 @@ export const BRACKETS: Record<number, { nombre: string; ayuda: string }> = {
 export type Moneda = "eur" | "usd";
 
 export function formatoMoneda(lang: string, moneda: Moneda) {
-	return new Intl.NumberFormat(lang === "en" ? "en-GB" : "es-ES", {
+	return new Intl.NumberFormat(localeDe(esLang(lang) ? lang : "en"), {
 		style: "currency",
 		currency: moneda === "eur" ? "EUR" : "USD",
 	});

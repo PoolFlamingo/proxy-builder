@@ -27,8 +27,11 @@ describe("formatoMoneda", () => {
 		expect(formatoMoneda("en", "usd").format(1234.5)).toBe("US$1,234.50");
 	});
 
-	it("cualquier idioma que no sea el inglés sale en español", () => {
+	it("cada idioma con su formato; uno desconocido, el inglés", () => {
 		expect(plano(formatoMoneda("fr", "eur").format(1.5))).toBe("1,50 €");
+		expect(plano(formatoMoneda("ru", "eur").format(1234.5))).toBe("1 234,50 €");
+		expect(formatoMoneda("ja", "usd").format(3)).toBe("$3.00");
+		expect(formatoMoneda("xx", "eur").format(1234.5)).toBe("€1,234.50");
 	});
 
 	it("redondea a dos decimales", () => {

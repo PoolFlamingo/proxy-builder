@@ -4,6 +4,7 @@ import type { Maquetacion } from "@/bindings/Maquetacion";
 import type { OriginalName } from "@/bindings/OriginalName";
 import type { Palette } from "@/bindings/Palette";
 import { paraTraducir } from "@/components/language-provider";
+import { idioma } from "@/lib/idiomas";
 
 type T = (es: string, p?: Record<string, string | number>) => string;
 
@@ -47,23 +48,25 @@ export function textoAviso(a: Aviso, t: T): string {
 	switch (a.kind) {
 		case "sinTextoOficial":
 			return t(
-				"No hay impresión en español de esta carta: las reglas en español son el texto en inglés. Puedes escribirlas a mano.",
+				"No hay impresión de esta carta en el idioma de diseño: sus reglas son el texto en inglés. Puedes escribirlas a mano.",
 			);
 		case "textoNoCabe":
 			return t("El texto de reglas no cabe ni con la letra más pequeña: sobran {mm} mm.", {
-				mm: a.sobra.toFixed(1),
+				mm: Math.round(a.sobra * 10) / 10,
 			});
 		case "tituloReducido":
 			return a.hueco === "tipo"
 				? t("La línea de tipo no cabía ni estrechada y se ha reducido la letra.")
 				: t("El título no cabía ni estrechado y se ha reducido la letra.");
 		case "reglasEditadas":
-			return t("Las reglas en {idioma} están escritas a mano.", {
-				idioma: a.lang === "es" ? t("español") : t("inglés"),
+			// El idioma, por su nombre propio y entre paréntesis: así la frase
+			// vale en cualquier idioma de la interfaz.
+			return t("Reglas escritas a mano ({idioma}).", {
+				idioma: idioma(a.lang).nativo,
 			});
 		case "faltaNombre":
-			return t("Falta el nombre en {idioma}: se usa el original.", {
-				idioma: a.lang === "es" ? t("español") : t("inglés"),
+			return t("Falta el nombre temático ({idioma}): se usa el original.", {
+				idioma: idioma(a.lang).nativo,
 			});
 		case "letraNoEncontrada":
 			return t("La letra «{familia}» no está: se usa la de la casa.", { familia: a.familia });
@@ -87,12 +90,16 @@ export function textoAviso(a: Aviso, t: T): string {
 			return t("La colección de esta carta ya no existe: se usan los valores de fábrica.");
 		case "sinCinta":
 			return t("El marco de este estilo no tiene cinta: el nombre original va en el pie.");
+		case "faltanLetras":
+			return t("Faltan las letras de {idioma}: sin ellas, sus caracteres salen como cuadrados.", {
+				idioma: idioma(a.lang).nativo,
+			});
 	}
 }
 
 /** Los avisos que impiden dar la carta por buena sin mirarla. */
 export function esGrave(a: Aviso): boolean {
-	return a.kind === "textoNoCabe" || a.kind === "faltanSimbolos";
+	return a.kind === "textoNoCabe" || a.kind === "faltanSimbolos" || a.kind === "faltanLetras";
 }
 
 /** Cómo se llama cada maquetación en el editor. */

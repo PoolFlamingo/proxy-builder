@@ -1,23 +1,14 @@
 import { type Opcion, Selector } from "@/components/campos";
 import { useLang } from "@/components/language-provider";
 import { Checkbox } from "@/components/ui/checkbox";
+import { IDIOMAS_SCRYFALL } from "@/lib/idiomas";
 
 /** Idiomas para filtrar búsquedas (`any` = cualquiera). */
 export function useIdiomasFiltro(): Opcion<string>[] {
 	const { t } = useLang();
 	return [
 		{ valor: "any", etiqueta: t("Cualquier idioma") },
-		{ valor: "en", etiqueta: "English" },
-		{ valor: "es", etiqueta: "Español" },
-		{ valor: "fr", etiqueta: "Français" },
-		{ valor: "de", etiqueta: "Deutsch" },
-		{ valor: "it", etiqueta: "Italiano" },
-		{ valor: "pt", etiqueta: "Português" },
-		{ valor: "ja", etiqueta: "日本語" },
-		{ valor: "ko", etiqueta: "한국어" },
-		{ valor: "ru", etiqueta: "Русский" },
-		{ valor: "zhs", etiqueta: "简体中文" },
-		{ valor: "zht", etiqueta: "繁體中文" },
+		...IDIOMAS_SCRYFALL.map((i) => ({ valor: i.codigo, etiqueta: i.nativo })),
 	];
 }
 

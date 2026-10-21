@@ -1,0 +1,89 @@
+import type { Diccionario } from "../tipos";
+
+// Vista previa: hojas, barra, menú de carta y diálogo de mover.
+export const VISTA: Diccionario = {
+	"Cartas ordenadas": "Uporządkowano karty",
+	"De 1 a {n}. Cada página tiene sus casillas seguidas.":
+		"Od 1 do {n}. Pola każdej strony są numerowane po kolei.",
+	"Mover a posición": "Przenieś na pozycję",
+	"Mover": "Przenieś",
+	"Posición": "Pozycja",
+	"Añadir carta": "Dodaj kartę",
+	"Añadir carta de Scryfall…": "Dodaj kartę ze Scryfall…",
+	"Eliminar las cartas de esta página": "Usuń karty z tej strony",
+	"Página {n} de {total}": "Strona {n} z {total}",
+	"Acercar": "Powiększ",
+	"Alejar": "Pomniejsz",
+	"Volver al 100 %": "Przywróć 100%",
+	"Auto ordenar": "Uporządkuj automatycznie",
+	"Añadir página": "Dodaj stronę",
+	"El deck está vacío": "Talia jest pusta",
+	"Hueco": "Puste pole",
+	"Info de carta": "Informacje o karcie",
+	"Junta las copias, quita los huecos y deja las fijadas en su sitio":
+		"Grupuje kopie, usuwa puste pola i zostawia zablokowane karty na miejscu",
+	"La vista es aproximada; el resultado exacto es el del PDF.":
+		"Podgląd jest przybliżony; dokładny wynik daje PDF.",
+	"Ocultar DFC": "Ukryj DFC",
+	"Pega una lista a la izquierda y pulsa «Cargar lista», o añade cartas una a una.":
+		"Wklej listę po lewej i kliknij „Wczytaj listę” albo dodawaj karty pojedynczo.",
+	"Quita las cartas de doble cara de las hojas y del PDF":
+		"Usuwa karty dwustronne z arkuszy i z pliku PDF",
+	"Se puede deshacer con Ctrl+Z.": "Można cofnąć skrótem Ctrl+Z.",
+	"Todas": "Wszystkie",
+	"Ver reversos": "Pokaż rewersy",
+	"Vista {papel}": "Podgląd {papel}",
+	"{n} cartas de doble cara sin dúplex: su otra cara no se imprime (activa «Pares DFC intercalados» o el dúplex).":
+		{
+			one: "{n} karta dwustronna bez druku dwustronnego: jej druga strona nie zostanie wydrukowana (włącz „Przeplatane pary DFC” lub druk dwustronny).",
+			few: "{n} karty dwustronne bez druku dwustronnego: ich druga strona nie zostanie wydrukowana (włącz „Przeplatane pary DFC” lub druk dwustronny).",
+			many: "{n} kart dwustronnych bez druku dwustronnego: ich druga strona nie zostanie wydrukowana (włącz „Przeplatane pary DFC” lub druk dwustronny).",
+			other:
+				"{n} karty dwustronnej bez druku dwustronnego: ich druga strona nie zostanie wydrukowana (włącz „Przeplatane pary DFC” lub druk dwustronny).",
+		},
+	"{n} cartas sin reverso: el deck no tiene reverso por defecto.": {
+		one: "{n} karta bez rewersu: talia nie ma domyślnego rewersu.",
+		few: "{n} karty bez rewersu: talia nie ma domyślnego rewersu.",
+		many: "{n} kart bez rewersu: talia nie ma domyślnego rewersu.",
+		other: "{n} karty bez rewersu: talia nie ma domyślnego rewersu.",
+	},
+	"{papel} apaisado": "{papel} poziomo",
+	"¿Eliminar las cartas de esta página?": "Usunąć karty z tej strony?",
+	"Cambiar reverso": "Zmień rewers",
+	"Exportar imagen": "Eksportuj obraz",
+	"Frente…": "Awers…",
+	"reverso": "rewers",
+	"Reverso…": "Rewers…",
+	"Imagen guardada: {nombre}": "Zapisano obraz: {nombre}",
+	"PNG, JPEG, WebP, TIFF o BMP, según la extensión del nombre. A los PPP de la calidad del PDF y sin sangrado.":
+		"PNG, JPEG, WebP, TIFF lub BMP, zależnie od rozszerzenia nazwy. W DPI jakości PDF i bez spadu.",
+	"Cambiar variante": "Zmień wydanie",
+	"Desfijar": "Odblokuj",
+	"Editar carta": "Edytuj kartę",
+	"Elegir imagen…": "Wybierz obraz…",
+	"Eliminar las seleccionadas": "Usuń zaznaczone",
+	"Fijar": "Zablokuj",
+	"Mover a posición…": "Przenieś na pozycję…",
+	"Mover antes": "Przenieś wcześniej",
+	"Mover después": "Przenieś później",
+	"Reemplazar imagen…": "Zastąp obraz…",
+	"Usar el reverso del deck": "Użyj rewersu talii",
+	"Idioma de la imagen": "Język obrazu",
+	"Sin indicar": "Nie podano",
+	"Marcadas como variante de diseño, opcional o banquillo: se imprimen, pero no cuentan para el mazo.":
+		"Oznaczone jako wariant projektu, opcjonalne lub sideboard: są drukowane, ale nie liczą się do talii.",
+	"{n} marcadas": "Oznaczone: {n}",
+	"Marca": "Oznaczenie",
+	"Se imprimen igual; no cuentan para el tamaño del mazo, las copias ni las estadísticas.":
+		"Są drukowane normalnie; nie liczą się do rozmiaru talii, limitu kopii ani statystyk.",
+	"Variante de diseño": "Wariant projektu",
+	"VARIANTE": "WARIANT",
+	"Otra versión de una carta que ya está: se escogerá una. De sus copias solo cuenta una para el mazo.":
+		"Inna wersja karty, która już jest w talii: zostanie wybrana jedna. Z jej kopii do talii liczy się tylko jedna.",
+	"Opcional": "Opcjonalna",
+	"OPCIONAL": "OPCJONALNA",
+	"Puede ir o no: no cuenta para el mazo.": "Może trafić do talii lub nie: nie liczy się do talii.",
+	"Banquillo": "Sideboard",
+	"BANQUILLO": "SIDEBOARD",
+	"Del banquillo (sideboard): no cuenta para el mazo.": "Z sideboardu: nie liczy się do talii.",
+};

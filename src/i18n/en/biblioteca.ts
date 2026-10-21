@@ -1,6 +1,7 @@
+import type { Diccionario } from "../tipos";
+
 // Pantalla de la biblioteca de decks y paquetes .pbdeck.
-export const BIBLIOTECA: Record<string, string> = {
-	"Buscar por nombre…": "Search by name…",
+export const BIBLIOTECA: Diccionario = {
 	"Deck exportado ({mb})": "Deck exported ({mb})",
 	Duplicar: "Duplicate",
 	"El deck se borra de la biblioteca. Esto no se puede deshacer.":
@@ -13,7 +14,6 @@ export const BIBLIOTECA: Record<string, string> = {
 	"Liberar espacio": "Free up space",
 	"Los decks se guardan solos mientras trabajas.": "Decks save themselves while you work.",
 	"Más acciones": "More actions",
-	"Ningún deck con ese nombre": "No deck with that name",
 	"No había imágenes sin usar (se guardan 24 h por si acaso).":
 		"There were no unused images (they're kept for 24 h just in case).",
 	"No hay decks guardados": "No saved decks",
@@ -31,7 +31,6 @@ export const BIBLIOTECA: Record<string, string> = {
 	"1 deck elegido": "1 deck selected",
 	"Abierto": "Opened",
 	"Acciones": "Actions",
-	"Alemán": "German",
 	"Alguna": "Any",
 	"Ascendente": "Ascending",
 	"Así se verá:": "Preview:",
@@ -43,8 +42,6 @@ export const BIBLIOTECA: Record<string, string> = {
 	"Calculando colores y precios…": "Working out colours and prices…",
 	"Calculando…": "Calculating…",
 	"Celeste": "Sky",
-	"Chino simplificado": "Simplified Chinese",
-	"Chino tradicional": "Traditional Chinese",
 	"Cinco colores": "Five colours",
 	"Commander": "Commander",
 	"Commander, Español, Por imprimir…": "Commander, Spanish, To print…",
@@ -56,7 +53,6 @@ export const BIBLIOTECA: Record<string, string> = {
 	"Con {n} etiquetas elegidas, enseñar los que tengan:":
 		"With {n} tags selected, show decks that have:",
 	"Construido": "Constructed",
-	"Coreano": "Korean",
 	"Crea etiquetas para ordenar tus decks por formato, idioma, estado…":
 		"Create tags to sort your decks by format, language, status…",
 	"Creado": "Created",
@@ -81,13 +77,10 @@ export const BIBLIOTECA: Record<string, string> = {
 	"Favoritos primero": "Favourites first",
 	"Favoritos": "Favourites",
 	"Filtros": "Filters",
-	"Francés": "French",
 	"Grandes": "Large",
 	"Gris": "Grey",
 	"Imágenes propias: {n} ({v} vinculadas)": "Custom images: {n} ({v} linked)",
 	"Incluye": "Includes",
-	"Italiano": "Italian",
-	"Japonés": "Japanese",
 	"Legal en {f}": "Legal in {f}",
 	"Legal en": "Legal in",
 	"Limitado": "Limited",
@@ -115,7 +108,6 @@ export const BIBLIOTECA: Record<string, string> = {
 	"Por etiqueta": "By tag",
 	"Por idioma": "By language",
 	"Portada": "Cover",
-	"Portugués": "Portuguese",
 	"Precio": "Price",
 	"Propias": "Custom",
 	"Propiedades del deck": "Deck properties",
@@ -127,7 +119,6 @@ export const BIBLIOTECA: Record<string, string> = {
 	"Quitar todos": "Clear all",
 	"Quitar": "Remove",
 	"Rosa": "Pink",
-	"Ruso": "Russian",
 	"Se pondrá a los {n} decks elegidos.": "It will be added to the {n} selected decks.",
 	"Se pondrá al deck elegido.": "It will be added to the selected deck.",
 	"Se quita de los decks que la llevan; los decks no se borran.":

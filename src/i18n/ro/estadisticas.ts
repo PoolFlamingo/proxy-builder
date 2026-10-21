@@ -1,0 +1,231 @@
+import type { Diccionario } from "../tipos";
+
+// Estadísticas completas del deck: pestañas, funciones, probabilidades, precios
+// y legalidad.
+export const ESTADISTICAS: Diccionario = {
+	// Pestañas y cabecera.
+	"Resumen": "Rezumat",
+	"Maná": "Mana",
+	"Funciones": "Roluri",
+	"Probabilidades": "Probabilități",
+	"Precios": "Prețuri",
+	"Leyendo los datos de las cartas…": "Se citesc datele cărților…",
+	"Automático: {c}": "Automat: {c}",
+	"Commander (100)": "Commander (100)",
+	"Construido (60)": "Constructed (60)",
+	"Limitado (40)": "Limited (40)",
+
+	// Resumen.
+	"{n} sin tierras · {t} tokens": "{n} fără terenuri · jetoane: {t}",
+	"{n} sin tierras": "{n} fără terenuri",
+	"{p} % · recomendadas ~{r}": "{p} % · recomandat ~{r}",
+	"Recomendación de la fórmula de Frank Karsten para esta curva: {r} tierras (descuenta {b} cartas baratas de rampa o robo).":
+		"Formula lui Frank Karsten recomandă pentru această curbă {r} terenuri (scade {b} cărți ieftine de ramp sau de tras cărți).",
+	"con tierras {c} · mediana {m}": "cu terenuri {c} · mediană {m}",
+	"Valor de maná": "Valoare de mana",
+	"suma de costes sin tierras": "suma costurilor fără terenuri",
+	"todas con precio": "toate au preț",
+	"Bracket (estimado)": "Bracket (estimat)",
+	"{n} Game Changers": {
+		one: "{n} Game Changer",
+		few: "{n} Game Changers",
+		other: "{n} de Game Changers",
+	},
+	"Probabilidad de 2-4 tierras": "Probabilitatea de 2-4 terenuri",
+	"en la mano inicial": "în mâna de start",
+	"Sin datos de Scryfall (propias sin vincular): no cuentan":
+		"Fără date Scryfall (proprii neasociate): nu se numără",
+	"Más de {n} copias": {
+		one: "Mai mult de {n} copie",
+		few: "Mai mult de {n} copii",
+		other: "Mai mult de {n} de copii",
+	},
+	"El mazo tiene {a} cartas y se esperan {e}.": "Pachetul are {a} cărți; se așteaptă {e}.",
+	"Por tipo": "După tip",
+	"Permanentes y hechizos": "Permanenți și vrăji",
+	"permanentes": "permanenți",
+	"instantáneos y conjuros": "instant-uri și sorcery-uri",
+	"Permanentes": "Permanenți",
+	"Instantáneos y conjuros": "Instant-uri și sorcery-uri",
+	"{c}: {n} cartas, {p} símbolos de maná": {
+		one: "{c}: {n} carte, simboluri de mana: {p}",
+		few: "{c}: {n} cărți, simboluri de mana: {p}",
+		other: "{c}: {n} de cărți, simboluri de mana: {p}",
+	},
+	"{n} con X en el coste": "{n} cu X în cost",
+	"Tokens que usa el deck": "Jetoanele folosite de pachet",
+	"Ninguno en el deck.": "Niciunul în pachet.",
+
+	// Maná.
+	"Símbolos de maná frente a fuentes": "Simboluri de mana față de surse",
+	"Qué parte de los símbolos de color de los costes es de cada color, y qué parte de las tierras lo produce. Si un color pide mucho más de lo que dan las tierras, costará lanzarlo a tiempo.":
+		"Ce parte din simbolurile colorate din costuri ține de fiecare culoare și ce parte din terenuri o produce. Dacă o culoare cere mult mai mult decât dau terenurile, va fi greu să o lansezi la timp.",
+	"Sin datos de maná.": "Fără date de mana.",
+	"Costes": "Costuri",
+	"{n} símbolos · {p} %": {
+		one: "{n} simbol · {p} %",
+		few: "{n} simboluri · {p} %",
+		other: "{n} de simboluri · {p} %",
+	},
+	"{n} tierras · {p} %": {
+		one: "{n} teren · {p} %",
+		few: "{n} terenuri · {p} %",
+		other: "{n} de terenuri · {p} %",
+	},
+	"+ {n} fuentes que no son tierra": {
+		one: "+ {n} sursă care nu e teren",
+		few: "+ {n} surse care nu sunt terenuri",
+		other: "+ {n} de surse care nu sunt terenuri",
+	},
+	"Pocas fuentes para lo que piden los costes: {c}":
+		"Prea puține surse pentru ce cer costurile: {c}",
+	"Cartas por número de colores": "Cărți după numărul de culori",
+	"Cartas de cada color": "Cărți din fiecare culoare",
+	"Incoloras": "Incolore",
+	"Monocolor": "Monocolore",
+	"2 colores": "2 culori",
+	"3 colores": "3 culori",
+	"4 colores": "4 culori",
+	"5 colores": "5 culori",
+
+	// Tipos.
+	"Legendarias": "Legendare",
+	"Básicas": "De bază",
+	"Nevadas": "Înzăpezite",
+	"Mundo": "Lume",
+	"En curso": "În desfășurare",
+	"Fuerza media": "Putere medie",
+	"Resistencia media": "Rezistență medie",
+	"{n} criaturas de fuerza {f}": {
+		one: "{n} creatură cu puterea {f}",
+		few: "{n} creaturi cu puterea {f}",
+		other: "{n} de creaturi cu puterea {f}",
+	},
+	"Subtipos": "Subtipuri",
+	"Ninguno.": "Niciunul.",
+	"Habilidades": "Abilități",
+	"Ninguna.": "Niciuna.",
+	"{n} sets · de {a} a {b}": {
+		one: "{n} set · din {a} până în {b}",
+		few: "{n} seturi · din {a} până în {b}",
+		other: "{n} de seturi · din {a} până în {b}",
+	},
+
+	// Funciones.
+	"Se deduce del texto de reglas de cada carta: es orientativo. Una carta puede tener varias funciones. El botón de la derecha selecciona esas cartas en el deck.":
+		"Se deduce din textul de reguli al fiecărei cărți, deci e orientativ. O carte poate avea mai multe roluri. Butonul din dreapta selectează acele cărți în pachet.",
+	"No se ha detectado ninguna.": "Nu s-a detectat niciunul.",
+	"Cartas de cada función": "Cărți pentru fiecare rol",
+	"Sin cartas: {f}": "Fără cărți: {f}",
+	"Seleccionar estas cartas en el deck": "Selectează aceste cărți în pachet",
+	"{n} cartas seleccionadas: {f}": {
+		one: "{n} carte selectată: {f}",
+		few: "{n} cărți selectate: {f}",
+		other: "{n} de cărți selectate: {f}",
+	},
+	"Rampa": "Ramp",
+	"Da maná o pone tierras en juego (piedras, criaturas de maná, Tesoros…).":
+		"Produce mana sau pune terenuri în joc (artefacte de mana, creaturi de mana, Treasure…).",
+	"Robo": "Tras cărți",
+	"Roba cartas o exilia de la biblioteca para jugarlas.":
+		"Trage cărți sau exilează din bibliotecă pentru a le juca.",
+	"Eliminación": "Eliminare",
+	"Destruye, exilia, hace daño, devuelve a la mano o hace sacrificar un objetivo.":
+		"Distruge, exilează, face daune, întoarce în mână sau obligă la sacrificarea unei ținte.",
+	"Barridos": "Board wipe",
+	"Elimina todas las criaturas (o permanentes) a la vez.":
+		"Elimină toate creaturile (sau permanenții) deodată.",
+	"Contrahechizos": "Contravrăji",
+	"Contrarresta hechizos o habilidades.": "Contracarează vrăji sau abilități.",
+	"Tutores": "Tutori",
+	"Busca en la biblioteca algo que no es una tierra.": "Caută în bibliotecă ceva ce nu e teren.",
+	"Protección": "Protecție",
+	"Da antimaleficio, indestructible, protección, custodia o hace fasear.":
+		"Dă hexproof, indestructible, protecție sau ward, ori face phase out.",
+	"Recursión": "Recuperare",
+	"Recupera cartas del cementerio o deja jugarlas desde allí.":
+		"Recuperează cărți din cimitir sau permite jucarea lor de acolo.",
+	"Fichas": "Jetoane",
+	"Crea fichas.": "Creează jetoane.",
+	"Potenciadores": "Amplificatori",
+	"Da +X/+X a las criaturas que controlas.": "Dă +X/+X creaturilor pe care le controlezi.",
+	"Ganar vidas": "Câștig de viață",
+	"Ganas vidas o tiene vínculo vital.": "Câștigi viață sau are lifelink.",
+	"Moler": "Mill",
+	"Pone cartas de la biblioteca en el cementerio.": "Pune cărți din bibliotecă în cimitir.",
+	"Turnos extra": "Ture extra",
+	"Da un turno adicional.": "Oferă o tură suplimentară.",
+	"Destrucción de tierras": "Distrugerea terenurilor",
+	"Destruye o hace sacrificar tierras en masa, o no las deja enderezar.":
+		"Distruge sau sacrifică terenuri în masă ori le împiedică să se deblocheze.",
+
+	// Probabilidades.
+	"{f} ({n} cartas)": {
+		one: "{f} ({n} carte)",
+		few: "{f} ({n} cărți)",
+		other: "{f} ({n} de cărți)",
+	},
+	"Mano inicial": "Mâna de start",
+	"Turno {n}": "Tura {n}",
+	"El deck está vacío.": "Pachetul este gol.",
+	"Calculadora de robo": "Calculator de tras",
+	"Probabilidad de haber robado al menos una copia antes de un turno, con un mazo de {n} cartas y mano de 7 (sin mulligan).":
+		{
+			one: "Probabilitatea de a fi tras cel puțin o copie până la o anumită tură, cu un pachet de {n} carte și o mână de 7 (fără mulligan).",
+			few: "Probabilitatea de a fi tras cel puțin o copie până la o anumită tură, cu un pachet de {n} cărți și o mână de 7 (fără mulligan).",
+			other:
+				"Probabilitatea de a fi tras cel puțin o copie până la o anumită tură, cu un pachet de {n} de cărți și o mână de 7 (fără mulligan).",
+		},
+	"Empiezo yo": "Încep eu",
+	"Empieza el rival": "Începe adversarul",
+	"{v} cartas vistas": "Cărți văzute: {v}",
+	"Mano": "Mână",
+	"Tierras en la mano inicial": "Terenuri în mâna de start",
+	"{n} de media": "{n} în medie",
+	"{k} tierras: {p}": "Terenuri {k}: {p}",
+	"Manos de 2 a 4 tierras: {p} · con 0-1 o 5+: {q}":
+		"Mâini cu 2-4 terenuri: {p} · cu 0-1 sau 5+: {q}",
+	"Llegar a las tierras de cada turno": "Teren jucat în fiecare tură",
+	"Probabilidad de tener al menos N tierras en el turno N.":
+		"Probabilitatea de a avea cel puțin N terenuri în tura N.",
+	"Turno": "Tura",
+
+	// Precios.
+	"Total": "Total",
+	"Media por carta": "Medie pe carte",
+	"La más cara": "Cea mai scumpă",
+	"Sin precio": "Fără preț",
+	"copias sin precio en {m}": "copii fără preț pe {m}",
+	"Precios de Scryfall (Cardmarket en euros, TCGplayer en dólares) de la impresión elegida, sin foil. Se actualizan una vez al día.":
+		"Prețuri Scryfall (Cardmarket în euro, TCGplayer în dolari) pentru tipărirea aleasă, non-foil. Se actualizează o dată pe zi.",
+	"Copias por precio (euros)": "Copii după preț (euro)",
+	"Cartas, de la más cara a la más barata": "Cărți, de la cea mai scumpă la cea mai ieftină",
+	"Ver menos": "Arată mai puține",
+	"Ver todas ({n})": "Arată toate ({n})",
+	"Carta": "Carte",
+	"Unidad": "Bucata",
+	"Seleccionar en el deck": "Selectează în pachet",
+
+	// Legalidad.
+	"Legalidad por formato": "Legalitate după format",
+	"Según la lista de prohibidas de Scryfall de cada carta. No mira el tamaño del mazo ni las copias (eso va abajo).":
+		"După lista de interdicții Scryfall a fiecărei cărți. Nu verifică dimensiunea pachetului sau copiile (asta e mai jos).",
+	"Construcción como {c}": "Construcție ca {c}",
+	"Tamaño y copias correctos.": "Dimensiunea și copiile sunt corecte.",
+	"Bracket de Commander (estimado)": "Bracket Commander (estimat)",
+	"Es el mínimo que permiten las cartas: no detecta combos ni la intención del mazo, que también cuentan.":
+		"Este minimul permis de cărți: nu detectează combo-urile sau intenția pachetului, care contează și ele.",
+	"Game Changers": "Game Changers",
+	"Destrucción masiva de tierras": "Distrugere masivă de terenuri",
+	"Núcleo": "Nucleu",
+	"Sin Game Changers, sin destrucción masiva de tierras y sin encadenar turnos extra. (El 1, Exhibición, depende del tema del mazo y no se puede deducir.)":
+		"Fără Game Changers, fără distrugere masivă de terenuri și fără ture extra în lanț. (Bracketul 1, Exhibiție, depinde de tema pachetului și nu poate fi dedus.)",
+	"Mejorado": "Îmbunătățit",
+	"Hasta tres Game Changers, sin destrucción masiva de tierras ni combos de dos cartas tempranos.":
+		"Până la trei Game Changers, fără distrugere masivă de terenuri și fără combo-uri timpurii din două cărți.",
+	"Optimizado": "Optimizat",
+	"Sin restricciones: más de tres Game Changers o destrucción masiva de tierras.":
+		"Fără restricții: peste trei Game Changers sau distrugere masivă de terenuri.",
+	"Aparte, por su marca (no cuentan aquí): {v} variantes de diseño, {o} opcionales y {b} en el banquillo.":
+		"Puse deoparte prin marcaj (nu se numără aici): variante de design {v}, opționale {o}, în sideboard {b}.",
+};

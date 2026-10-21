@@ -1,0 +1,23 @@
+import type { Diccionario } from "../tipos";
+
+export const SHELL: Diccionario = {
+	"Scryfall · listo para imprimir": "Scryfall · 인쇄 준비 완료",
+	"Deck": "덱",
+	"Biblioteca": "라이브러리",
+	"Lista de cartas": "카드 목록",
+	"Exportar": "내보내기",
+	"Guardado": "저장됨",
+	"Guardando…": "저장 중…",
+	"Sin guardar": "저장 안 됨",
+	"Error al guardar": "저장 실패",
+	"Deck sin título": "제목 없는 덱",
+	"Proxy Builder {version} está lista": "Proxy Builder {version} 준비 완료",
+	"Se instala al reiniciar; el sistema pedirá tu contraseña.":
+		"다시 시작하면 설치돼요. 시스템에서 비밀번호를 물어봐요.",
+	"Se instala al reiniciar la app.": "앱을 다시 시작하면 설치돼요.",
+	"Reiniciar": "다시 시작",
+	"Reinicia la app con la versión nueva. El sistema pedirá tu contraseña.":
+		"새 버전으로 앱을 다시 시작해요. 시스템에서 비밀번호를 물어봐요.",
+	"Reinicia la app con la versión nueva.": "새 버전으로 앱을 다시 시작해요.",
+	"Actualizar a {version}": "{version}(으)로 업데이트",
+};

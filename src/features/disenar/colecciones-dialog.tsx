@@ -25,8 +25,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { abrirParaImportar } from "@/lib/dialogos";
+import { idioma } from "@/lib/idiomas";
 import { EDICION_NEUTRA, parametros, urlMiniatura } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
+import { conIdioma, porIdioma, tieneIdioma } from "@/lib/por-idioma";
 import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
@@ -412,6 +414,9 @@ function Editor({
 }) {
 	const { t, mensaje, lang } = useLang();
 	const ajustes = useDeck((s) => s.deck?.settings);
+	// La plantilla del pie de otro idioma de diseño, solo si el deck lo usa
+	// (sin ella, sale la inglesa).
+	const langDiseno = ajustes?.designLang ?? "es";
 	const poner = (p: Partial<Collection>) => onChange({ ...c, ...p });
 	const opcionesLetra = useMemo(
 		() => [
@@ -604,6 +609,15 @@ function Editor({
 				valor={c.footerTemplate.en}
 				onChange={(en) => poner({ footerTemplate: { ...c.footerTemplate, en } })}
 			/>
+			{langDiseno !== "es" && langDiseno !== "en" && (
+				<PlantillaPie
+					etiqueta={t("Plantilla del pie ({idioma})", { idioma: idioma(langDiseno).nativo })}
+					valor={
+						tieneIdioma(c.footerTemplate, langDiseno) ? porIdioma(c.footerTemplate, langDiseno) : ""
+					}
+					onChange={(v) => poner({ footerTemplate: conIdioma(c.footerTemplate, langDiseno, v) })}
+				/>
+			)}
 			<p className="text-[11px] leading-relaxed text-muted-foreground">
 				{t(
 					"Fichas: {num} {rarity} {original} {set} {lang} {artist} {credit} {universe} {year} {brush} {star}. Un tabulador separa columnas; una línea nueva, filas; lo que va tras {>}, a la derecha. Vacía, la de fábrica. Si no pone {universe}, {year} ni {credit}, salen solos a la derecha de la última línea.",

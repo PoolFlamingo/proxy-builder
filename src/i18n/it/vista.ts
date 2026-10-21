@@ -1,0 +1,91 @@
+import type { Diccionario } from "../tipos";
+
+// Vista previa: hojas, barra, menú de carta y diálogo de mover.
+export const VISTA: Diccionario = {
+	"Cartas ordenadas": "Carte riordinate",
+	"De 1 a {n}. Cada página tiene sus casillas seguidas.":
+		"Da 1 a {n}. Le caselle di ogni pagina sono numerate di seguito.",
+	"Mover a posición": "Sposta in posizione",
+	Mover: "Sposta",
+	Posición: "Posizione",
+	"Añadir carta": "Aggiungi carta",
+	"Añadir carta de Scryfall…": "Aggiungi carta da Scryfall…",
+	"Eliminar las cartas de esta página": "Elimina le carte di questa pagina",
+	"Página {n} de {total}": "Pagina {n} di {total}",
+	Acercar: "Ingrandisci",
+	Alejar: "Riduci",
+	"Volver al 100 %": "Torna al 100%",
+	"Auto ordenar": "Riordina",
+	"Añadir página": "Aggiungi pagina",
+	"El deck está vacío": "Il mazzo è vuoto",
+	Hueco: "Casella vuota",
+	"Info de carta": "Info carta",
+	"Junta las copias, quita los huecos y deja las fijadas en su sitio":
+		"Raggruppa le copie, toglie le caselle vuote e lascia al loro posto quelle bloccate",
+	"La vista es aproximada; el resultado exacto es el del PDF.":
+		"L'anteprima è approssimativa; il risultato esatto è quello del PDF.",
+	"Ocultar DFC": "Nascondi DFC",
+	"Pega una lista a la izquierda y pulsa «Cargar lista», o añade cartas una a una.":
+		"Incolla una lista a sinistra e premi «Carica lista», oppure aggiungi le carte una alla volta.",
+	"Quita las cartas de doble cara de las hojas y del PDF":
+		"Toglie le carte bifronte dai fogli e dal PDF",
+	"Se puede deshacer con Ctrl+Z.": "Puoi annullare con Ctrl+Z.",
+	Todas: "Tutte",
+	"Ver reversos": "Mostra retri",
+	"Vista {papel}": "Anteprima {papel}",
+	"{n} cartas de doble cara sin dúplex: su otra cara no se imprime (activa «Pares DFC intercalados» o el dúplex).":
+		{
+			one: "{n} carta bifronte senza fronte-retro: l'altra faccia non viene stampata (attiva «Coppie DFC alternate» o il fronte-retro).",
+			many: "{n} carte bifronte senza fronte-retro: l'altra faccia non viene stampata (attiva «Coppie DFC alternate» o il fronte-retro).",
+			other:
+				"{n} carte bifronte senza fronte-retro: l'altra faccia non viene stampata (attiva «Coppie DFC alternate» o il fronte-retro).",
+		},
+	"{n} cartas sin reverso: el deck no tiene reverso por defecto.": {
+		one: "{n} carta senza retro: il mazzo non ha un retro predefinito.",
+		many: "{n} carte senza retro: il mazzo non ha un retro predefinito.",
+		other: "{n} carte senza retro: il mazzo non ha un retro predefinito.",
+	},
+	"{papel} apaisado": "{papel} orizzontale",
+	"¿Eliminar las cartas de esta página?": "Eliminare le carte di questa pagina?",
+	"Cambiar reverso": "Cambia retro",
+	"Exportar imagen": "Esporta immagine",
+	"Frente…": "Fronte…",
+	reverso: "retro",
+	"Reverso…": "Retro…",
+	"Imagen guardada: {nombre}": "Immagine salvata: {nombre}",
+	"PNG, JPEG, WebP, TIFF o BMP, según la extensión del nombre. A los PPP de la calidad del PDF y sin sangrado.":
+		"PNG, JPEG, WebP, TIFF o BMP, in base all'estensione del nome. Ai DPI della qualità del PDF e senza abbondanza.",
+	"Cambiar variante": "Cambia variante",
+	Desfijar: "Sblocca",
+	"Editar carta": "Modifica carta",
+	"Elegir imagen…": "Scegli immagine…",
+	"Eliminar las seleccionadas": "Elimina le selezionate",
+	Fijar: "Blocca",
+	"Mover a posición…": "Sposta in posizione…",
+	"Mover antes": "Sposta prima",
+	"Mover después": "Sposta dopo",
+	"Reemplazar imagen…": "Sostituisci immagine…",
+	"Usar el reverso del deck": "Usa il retro del mazzo",
+	"Idioma de la imagen": "Lingua dell'immagine",
+	"Sin indicar": "Non indicata",
+	"Marcadas como variante de diseño, opcional o banquillo: se imprimen, pero no cuentan para el mazo.":
+		"Segnate come variante di design, opzionale o sideboard: vengono stampate, ma non contano per il mazzo.",
+	"{n} marcadas": {
+		one: "{n} segnata",
+		many: "{n} segnate",
+		other: "{n} segnate",
+	},
+	Marca: "Segno",
+	"Se imprimen igual; no cuentan para el tamaño del mazo, las copias ni las estadísticas.":
+		"Vengono stampate lo stesso; non contano per la dimensione del mazzo, le copie né le statistiche.",
+	"Variante de diseño": "Variante di design",
+	VARIANTE: "VARIANTE",
+	"Otra versión de una carta que ya está: se escogerá una. De sus copias solo cuenta una para el mazo.":
+		"Un'altra versione di una carta già presente: se ne sceglierà una. Delle sue copie ne conta solo una per il mazzo.",
+	Opcional: "Opzionale",
+	OPCIONAL: "OPZIONALE",
+	"Puede ir o no: no cuenta para el mazo.": "Può esserci o no: non conta per il mazzo.",
+	Banquillo: "Sideboard",
+	BANQUILLO: "SIDEBOARD",
+	"Del banquillo (sideboard): no cuenta para el mazo.": "Dal sideboard: non conta per il mazzo.",
+};

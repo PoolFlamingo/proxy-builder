@@ -1,0 +1,72 @@
+import type { Diccionario } from "../tipos";
+
+// Diálogos de cartas: añadir, variantes y editor.
+export const CARTAS: Diccionario = {
+	"Aplicar a todas las cartas": "Застосувати до всіх карт",
+	"Aplicar también a sus copias ({n})": "Застосувати й до її копій ({n})",
+	"Carta y sus {n} copias retocadas": {
+		one: "Карту та її {n} копію змінено",
+		few: "Карту та її {n} копії змінено",
+		many: "Карту та її {n} копій змінено",
+		other: "Карту та її {n} копії змінено",
+	},
+	"Solo los retoques de color; el giro y el encuadre se quedan en esta carta.":
+		"Лише корекція кольору; поворот і кадрування залишаються на цій карті.",
+	"Las que llevan la misma imagen: giro, encuadre y retoques, todo igual.":
+		"Ті, що мають те саме зображення: поворот, кадрування й корекція — усе однаково.",
+	"Aplicar": "Застосувати",
+	"Brillo": "Яскравість",
+	"Calidez": "Теплота",
+	"Carta retocada": "Карту змінено",
+	"Claridad": "Чіткість",
+	"Con este zoom se recorta el pie de la carta (artista y copyright).":
+		"За такого масштабу нижній рядок карти (художник і копірайт) обрізається.",
+	"Contraste": "Контраст",
+	"Desvanecido": "Вицвітання",
+	"Editar {carta}": "Редагувати {carta}",
+	"Encuadre horizontal": "Кадрування по горизонталі",
+	"Encuadre vertical": "Кадрування по вертикалі",
+	"Exposición": "Експозиція",
+	"Girar a la derecha": "Повернути праворуч",
+	"Girar a la izquierda": "Повернути ліворуч",
+	"Giro": "Поворот",
+	"Intensidad": "Насиченість кольорів",
+	"Nitidez": "Різкість",
+	"Reducción de ruido": "Зменшення шуму",
+	"Restablecer todo": "Скинути все",
+	"Retoques aplicados a todas las cartas": "Корекцію застосовано до всіх карт",
+	"Saturación": "Насиченість",
+	"Viñeta": "Віньєтка",
+	"Zoom": "Масштаб",
+	"carta": "карта",
+	"Busca por nombre o con la sintaxis de Scryfall (t:dragon c:r). Doble clic para añadir.":
+		"Шукайте за назвою або синтаксисом Scryfall (t:dragon c:r). Подвійний клік — додати.",
+	"Buscar": "Шукати",
+	"Copias": "Копії",
+	"Escribe un nombre y pulsa Enter.": "Введіть назву й натисніть Enter.",
+	"Nombre de la carta…": "Назва карти…",
+	"Sin resultados.": "Нічого не знайдено.",
+	"{n} resultados": {
+		one: "{n} результат",
+		few: "{n} результати",
+		many: "{n} результатів",
+		other: "{n} результату",
+	},
+	"{n} × {carta} añadida": "Додано {n} × {carta}",
+	"Cualquier idioma": "Будь-яка мова",
+	"Escaneo de baja resolución": "Скан низької роздільності",
+	"Ahora: {set} {num}": "Зараз: {set} {num}",
+	"Cambiar variante de {carta}": "Змінити випуск {carta}",
+	"No hay impresiones con esos filtros.": "Немає випусків із такими фільтрами.",
+	"Reemplazar las {n} copias": {
+		one: "Замінити {n} копію",
+		few: "Замінити всі {n} копії",
+		many: "Замінити всі {n} копій",
+		other: "Замінити всі {n} копії",
+	},
+	"Reemplazar solo esta": "Замінити лише цю",
+	"Variante cambiada en todas las copias de {carta}": "Випуск змінено в усіх копіях {carta}",
+	"Variante cambiada": "Випуск змінено",
+	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)":
+		"Фішка, якої немає в Scryfall (база фішок Cockatrice)",
+};

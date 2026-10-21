@@ -1,0 +1,85 @@
+import type { Diccionario } from "../tipos";
+
+export const VISTA: Diccionario = {
+	"Cartas ordenadas": "Kaarten gesorteerd",
+	"De 1 a {n}. Cada página tiene sus casillas seguidas.":
+		"Van 1 tot {n}. Op elke pagina lopen de vakken op volgorde.",
+	"Mover a posición": "Naar positie verplaatsen",
+	"Mover": "Verplaatsen",
+	"Posición": "Positie",
+	"Añadir carta": "Kaart toevoegen",
+	"Añadir carta de Scryfall…": "Kaart van Scryfall toevoegen…",
+	"Eliminar las cartas de esta página": "Kaarten op deze pagina verwijderen",
+	"Página {n} de {total}": "Pagina {n} van {total}",
+	"Acercar": "Inzoomen",
+	"Alejar": "Uitzoomen",
+	"Volver al 100 %": "Terug naar 100 %",
+	"Auto ordenar": "Automatisch sorteren",
+	"Añadir página": "Pagina toevoegen",
+	"El deck está vacío": "Het deck is leeg",
+	"Hueco": "Leeg vak",
+	"Info de carta": "Kaartinfo",
+	"Junta las copias, quita los huecos y deja las fijadas en su sitio":
+		"Voegt kopieën samen, haalt lege vakken weg en laat vastgezette kaarten op hun plek",
+	"La vista es aproximada; el resultado exacto es el del PDF.":
+		"Het voorbeeld is bij benadering; de PDF is het exacte resultaat.",
+	"Ocultar DFC": "DFC verbergen",
+	"Pega una lista a la izquierda y pulsa «Cargar lista», o añade cartas una a una.":
+		"Plak links een lijst en klik op ‘Lijst laden’, of voeg kaarten een voor een toe.",
+	"Quita las cartas de doble cara de las hojas y del PDF":
+		"Haalt dubbelzijdige kaarten uit de vellen en de PDF",
+	"Se puede deshacer con Ctrl+Z.": "Ongedaan maken kan met Ctrl+Z.",
+	"Todas": "Alle",
+	"Ver reversos": "Achterkanten tonen",
+	"Vista {papel}": "Voorbeeld {papel}",
+	"{n} cartas de doble cara sin dúplex: su otra cara no se imprime (activa «Pares DFC intercalados» o el dúplex).":
+		{
+			one: "{n} dubbelzijdige kaart zonder duplex: de andere kant wordt niet geprint (zet ‘DFC-paren afwisselen’ of duplex aan).",
+			other:
+				"{n} dubbelzijdige kaarten zonder duplex: de andere kant wordt niet geprint (zet ‘DFC-paren afwisselen’ of duplex aan).",
+		},
+	"{n} cartas sin reverso: el deck no tiene reverso por defecto.": {
+		one: "{n} kaart zonder achterkant: het deck heeft geen standaardachterkant.",
+		other: "{n} kaarten zonder achterkant: het deck heeft geen standaardachterkant.",
+	},
+	"{papel} apaisado": "{papel} liggend",
+	"¿Eliminar las cartas de esta página?": "Kaarten op deze pagina verwijderen?",
+	"Cambiar reverso": "Achterkant wijzigen",
+	"Exportar imagen": "Afbeelding exporteren",
+	"Frente…": "Voorkant…",
+	"reverso": "achterkant",
+	"Reverso…": "Achterkant…",
+	"Imagen guardada: {nombre}": "Afbeelding opgeslagen: {nombre}",
+	"PNG, JPEG, WebP, TIFF o BMP, según la extensión del nombre. A los PPP de la calidad del PDF y sin sangrado.":
+		"PNG, JPEG, WebP, TIFF of BMP, volgens de extensie van de bestandsnaam. Met de DPI van de PDF-kwaliteit en zonder afloop.",
+	"Cambiar variante": "Andere druk",
+	"Desfijar": "Losmaken",
+	"Editar carta": "Kaart bewerken",
+	"Elegir imagen…": "Afbeelding kiezen…",
+	"Eliminar las seleccionadas": "Geselecteerde verwijderen",
+	"Fijar": "Vastzetten",
+	"Mover a posición…": "Naar positie verplaatsen…",
+	"Mover antes": "Naar voren",
+	"Mover después": "Naar achteren",
+	"Reemplazar imagen…": "Afbeelding vervangen…",
+	"Usar el reverso del deck": "Achterkant van het deck gebruiken",
+	"Idioma de la imagen": "Taal van de afbeelding",
+	"Sin indicar": "Niet opgegeven",
+	"Marcadas como variante de diseño, opcional o banquillo: se imprimen, pero no cuentan para el mazo.":
+		"Gemarkeerd als ontwerpvariant, optioneel of sideboard: ze worden geprint, maar tellen niet mee voor het deck.",
+	"{n} marcadas": { one: "{n} gemarkeerd", other: "{n} gemarkeerd" },
+	"Marca": "Markering",
+	"Se imprimen igual; no cuentan para el tamaño del mazo, las copias ni las estadísticas.":
+		"Ze worden gewoon geprint; ze tellen niet mee voor de deckgrootte, het aantal kopieën of de statistieken.",
+	"Variante de diseño": "Ontwerpvariant",
+	"VARIANTE": "VARIANT",
+	"Otra versión de una carta que ya está: se escogerá una. De sus copias solo cuenta una para el mazo.":
+		"Een andere versie van een kaart die er al in zit: er wordt er een gekozen. Van de kopieën telt er maar een mee voor het deck.",
+	"Opcional": "Optioneel",
+	"OPCIONAL": "OPTIONEEL",
+	"Puede ir o no: no cuenta para el mazo.": "Mag erin of niet: telt niet mee voor het deck.",
+	"Banquillo": "Sideboard",
+	"BANQUILLO": "SIDEBOARD",
+	"Del banquillo (sideboard): no cuenta para el mazo.":
+		"Uit de sideboard: telt niet mee voor het deck.",
+};

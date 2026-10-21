@@ -1,5 +1,7 @@
+import type { Diccionario } from "../tipos";
+
 // Diseñar: el editor de cartas proxy (vista, formulario, colecciones y recursos).
-export const DISENAR: Record<string, string> = {
+export const DISENAR: Diccionario = {
 	"Grosor del título": "Title weight",
 	"Grosor de la línea de tipo": "Type line weight",
 	"Grosor de las reglas": "Rules text weight",
@@ -41,12 +43,9 @@ export const DISENAR: Record<string, string> = {
 		"{n} large cards don't fit on this paper and won't be printed.",
 	"Traducción sugerida (experimental)": "Suggested translation (experimental)",
 	"Buscar frases oficiales": "Look up official phrases",
-	"Busca en Scryfall las mismas frases en otras cartas que sí están en español y propone su texto oficial. Tarda un poco: una búsqueda por frase.":
-		"Looks up the same phrases on Scryfall in other cards printed in Spanish and suggests their official text. It takes a while: one search per phrase.",
 	"Usar": "Use",
 	"{n} de {total} frases encontradas; lo marcado se queda en inglés.":
 		"{n} of {total} phrases found; the highlighted ones stay in English.",
-	"Usar como reglas en español": "Use as the Spanish rules",
 	"Diseñar el deck": "Design the deck",
 	"Exportar imágenes": "Export images",
 	"{n} borradores hechos": "{n} drafts made",
@@ -60,9 +59,6 @@ export const DISENAR: Record<string, string> = {
 	"{hechas} de {total}": "{hechas} of {total}",
 	"Hacer los borradores": "Make the drafts",
 	"{n} imágenes exportadas": "{n} images exported",
-	"Cada carta diseñada como PNG, a la medida exacta del corte. Se guardan en las carpetas «es» y «en» de la carpeta que elijas, con el nombre «número - nombre».":
-		"Each designed card as a PNG, at the exact trim size. They're saved in the “es” and “en” folders of the folder you choose, named “number - name”.",
-	"Los dos": "Both",
 	"No hay cartas diseñadas.": "There are no designed cards.",
 	"{n} cartas diseñadas": "{n} designed cards",
 	"Elegir carpeta y exportar": "Choose folder and export",
@@ -145,6 +141,7 @@ export const DISENAR: Record<string, string> = {
 	Año: "Year",
 	"Plantilla del pie en español": "Spanish footer template",
 	"Plantilla del pie en inglés": "English footer template",
+	"Plantilla del pie ({idioma})": "Footer template ({idioma})",
 	"Fichas: {num} {rarity} {original} {set} {lang} {artist} {credit} {universe} {year} {brush} {star}. Un tabulador separa columnas; una línea nueva, filas; lo que va tras {>}, a la derecha. Vacía, la de fábrica. Si no pone {universe}, {year} ni {credit}, salen solos a la derecha de la última línea.":
 		"Tokens: {num} {rarity} {original} {set} {lang} {artist} {credit} {universe} {year} {brush} {star}. A tab separates columns; a new line, rows; whatever follows {>} goes on the right. Empty means the default one. If it doesn't use {universe}, {year} or {credit}, they go on the right of the last line on their own.",
 	"Sin símbolos de maná: hace falta conexión la primera vez.":
@@ -184,8 +181,6 @@ export const DISENAR: Record<string, string> = {
 	"Lista para imprimir": "Ready to print",
 	"Las cartas en borrador se ven en el deck, pero así sabes cuáles has revisado.":
 		"Draft cards still show in the deck, but this way you know which ones you've checked.",
-	Español: "Spanish",
-	Inglés: "English",
 	"Nombre temático": "Themed name",
 	"Nombre en {idioma}": "Name in {idioma}",
 	"Texto de ambientación (opcional)": "Flavor text (optional)",
@@ -247,8 +242,6 @@ export const DISENAR: Record<string, string> = {
 	"Uno propio…": "Own one…",
 	"Cambiar emblema…": "Change emblem…",
 	"Estrechado del título propio": "Own title squeeze",
-	"Cuánto se puede estrechar un título largo antes de reducir la letra.":
-		"How much a long title can be squeezed before the font shrinks.",
 	"Estrechar hasta": "Squeeze down to",
 	"Número de colección": "Collector number",
 	"Se pone solo por el orden del deck («Renumerar»); si lo escribes, se queda el tuyo.":
@@ -303,19 +296,12 @@ export const DISENAR: Record<string, string> = {
 	"Descargar de nuevo": "Download again",
 	"{n} cartas renumeradas": "{n} cards renumbered",
 	"La numeración ya estaba al día": "Numbering was already up to date",
-	"No hay impresión en español de esta carta: las reglas en español son el texto en inglés. Puedes escribirlas a mano.":
-		"This card has no Spanish printing: the Spanish rules are the English text. You can write them by hand.",
 	"El texto de reglas no cabe ni con la letra más pequeña: sobran {mm} mm.":
 		"The rules text doesn't fit even at the smallest size: {mm} mm too long.",
 	"La línea de tipo no cabía ni estrechada y se ha reducido la letra.":
 		"The type line didn't fit even squeezed, so the font was made smaller.",
 	"El título no cabía ni estrechado y se ha reducido la letra.":
 		"The title didn't fit even squeezed, so the font was made smaller.",
-	"Las reglas en {idioma} están escritas a mano.": "The rules in {idioma} are hand-written.",
-	español: "Spanish",
-	inglés: "English",
-	"Falta el nombre en {idioma}: se usa el original.":
-		"The name in {idioma} is missing: the original is used.",
 	"La letra «{familia}» no está: se usa la de la casa.":
 		"The font “{familia}” is missing: the built-in one is used.",
 	"Faltan símbolos de maná ({lista}). Descárgalos en «Letras, marcos y símbolos».":
@@ -399,4 +385,20 @@ export const DISENAR: Record<string, string> = {
 		"The text shrinks just enough to fit and, in frames whose box grows, a little before it eats the art. Off, rules text uses the size you choose and the box grows as needed.",
 	"Interlineado de las reglas": "Rules line spacing",
 	"Interlineado del pie": "Footer line spacing",
+	// Idiomas de diseño.
+	"Cada carta diseñada como PNG, a la medida exacta del corte. Cada idioma va a su carpeta («es», «fr»…) dentro de la que elijas, con el nombre «número - nombre».":
+		"Each designed card as a PNG, at the exact cut size. Each language goes to its own folder (“es”, “fr”…) inside the one you choose, named “number - name”.",
+	Idiomas: "Languages",
+	"Preparando las cartas en {idioma}…": "Preparing the cards in {idioma}…",
+	"No hay impresión de esta carta en el idioma de diseño: sus reglas son el texto en inglés. Puedes escribirlas a mano.":
+		"This card has no printing in the design language: its rules are the English text. You can write them by hand.",
+	"Reglas escritas a mano ({idioma}).": "Rules written by hand ({idioma}).",
+	"Falta el nombre temático ({idioma}): se usa el original.":
+		"Missing themed name ({idioma}): the original is used.",
+	"Faltan las letras de {idioma}: sin ellas, sus caracteres salen como cuadrados.":
+		"The {idioma} fonts are missing: without them, its characters show as boxes.",
+	"Busca en Scryfall las mismas frases en otras cartas que sí están en {idioma} y propone su texto oficial. Tarda un poco: una búsqueda por frase.":
+		"Searches Scryfall for the same sentences on other cards that are printed in {idioma} and suggests their official text. It takes a while: one search per sentence.",
+	"Usar como reglas en {idioma}": "Use as rules in {idioma}",
+	"Bajar las letras": "Download the fonts",
 };

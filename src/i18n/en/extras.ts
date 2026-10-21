@@ -1,5 +1,7 @@
+import type { Diccionario } from "../tipos";
+
 // Estadísticas y explorador de sets (Fase 8).
-export const EXTRAS: Record<string, string> = {
+export const EXTRAS: Diccionario = {
 	"Ver un set entero y elegir cartas": "Browse a whole set and pick cards",
 	Sets: "Sets",
 	"Curva, maná, funciones, probabilidades de robo, precios y legalidad":

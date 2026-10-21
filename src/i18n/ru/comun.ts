@@ -1,0 +1,34 @@
+import type { Diccionario } from "../tipos";
+
+export const COMUN: Diccionario = {
+	"No hay conexión o el servidor no responde.": "Нет соединения, или сервер не отвечает.",
+	"El servicio pide ir más despacio. Vuelve a intentarlo en un momento.":
+		"Сервис просит не торопиться. Попробуйте ещё раз чуть позже.",
+	"No se ha encontrado lo que se buscaba.": "Ничего не найдено.",
+	"No se ha podido leer o escribir en el disco.":
+		"Не удалось прочитать или записать данные на диск.",
+	"La biblioteca local ha dado un error.": "Ошибка локальной библиотеки.",
+	"Los datos no son válidos.": "Недопустимые данные.",
+	"Cancelado.": "Отменено.",
+	"No se ha podido generar el PDF.": "Не удалось создать PDF.",
+	"No se ha podido procesar la imagen.": "Не удалось обработать изображение.",
+	"Ese formato de fichero no se admite.": "Этот формат файла не поддерживается.",
+	"Hay un trabajo en marcha; espera a que termine.": "Выполняется задача; дождитесь её завершения.",
+	"Error interno inesperado.": "Непредвиденная внутренняя ошибка.",
+	"Algo ha fallado en la pantalla": "Что-то пошло не так на экране",
+	"Tus decks están a salvo: viven en la biblioteca local, no en esta pantalla. Puedes volver e intentarlo de nuevo.":
+		"Ваши колоды в безопасности: они хранятся в локальной библиотеке, а не на этом экране. Можно вернуться и попробовать снова.",
+	Volver: "Назад",
+	"Recargar la ventana": "Перезагрузить окно",
+	"¿Interrumpir lo que está en marcha?": "Прервать текущую задачу?",
+	"¿Salir sin guardar?": "Выйти без сохранения?",
+	"Lo que has escrito en esta ventana se pierde.": "Всё, что вы ввели в этом окне, будет потеряно.",
+	"Seguir esperando": "Подождать ещё",
+	"Seguir editando": "Продолжить редактирование",
+	"Interrumpir y salir": "Прервать и выйти",
+	"Salir sin guardar": "Выйти без сохранения",
+	Cerrar: "Закрыть",
+	Cancelar: "Отмена",
+	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.":
+		"Если выйти сейчас, задача остановится. Уже отправленное завершится само, но остальное выполнено не будет, а незаконченное не сохранится.",
+};

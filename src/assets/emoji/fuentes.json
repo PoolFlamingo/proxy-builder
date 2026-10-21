@@ -1,0 +1,66 @@
+{
+	"commit": "e20cbc2bbec1926686be9f9bee7d1d2cfa1fea0e",
+	"ficheros": {
+		"emoji_u1f1e7_1f1f7.svg": {
+			"ruta": "third_party/region-flags/waved-svg/emoji_u1f1e7_1f1f7.svg",
+			"sha256": "b75e758dbbbaa6a564761e56b77ec214bb947782a08c2654ce998c8da9d1330c"
+		},
+		"emoji_u1f1e8_1f1f3.svg": {
+			"ruta": "third_party/region-flags/waved-svg/emoji_u1f1e8_1f1f3.svg",
+			"sha256": "616068fca722a36dee01bcc51523c6f738f31ea137536f76e30f179ca0a57771"
+		},
+		"emoji_u1f1e9_1f1ea.svg": {
+			"ruta": "third_party/region-flags/waved-svg/emoji_u1f1e9_1f1ea.svg",
+			"sha256": "1305a4f6d33f181659acb7754941f687ea8752e33b01d7a19bab86b506eb2606"
+		},
+		"emoji_u1f1ea_1f1f8.png": {
+			"ruta": "third_party/region-flags/waved-svg/emoji_u1f1ea_1f1f8.svg",
+			"sha256": "709b451ecb2d26a6857792b2e88d0d6ce7194be2a02c10ae5d4f9e41484a1135",
+			"png": "128 px, Inkscape"
+		},
+		"emoji_u1f1eb_1f1f7.svg": {
+			"ruta": "third_party/region-flags/waved-svg/emoji_u1f1eb_1f1f7.svg",
+			"sha256": "2e2f2a4142345e5ced84977d3fd2bc861095f03ad9128d86ce09a769b0ab7c20"
+		},
+		"emoji_u1f1ec_1f1e7.svg": {
+			"ruta": "third_party/region-flags/waved-svg/emoji_u1f1ec_1f1e7.svg",
+			"sha256": "fc15c2803a82fdb82c2c823c946b63d4b979a556bf5897b09b2d8828a599bf8b"
+		},
+		"emoji_u1f1ee_1f1f9.svg": {
+			"ruta": "third_party/region-flags/waved-svg/emoji_u1f1ee_1f1f9.svg",
+			"sha256": "1a4b2e80535d19a12ade270a1012a7ef3b978fbd004c523b9ed18e0d898adbb7"
+		},
+		"emoji_u1f1ef_1f1f5.svg": {
+			"ruta": "third_party/region-flags/waved-svg/emoji_u1f1ef_1f1f5.svg",
+			"sha256": "8a90ddab1ccfc2d2c192b9112d8090907e01e47bca7ed6ddd63c80034bf961b0"
+		},
+		"emoji_u1f1f0_1f1f7.svg": {
+			"ruta": "third_party/region-flags/waved-svg/emoji_u1f1f0_1f1f7.svg",
+			"sha256": "7177ff77a299cf07b62a1b9ea39fa802ada723be753b09691424b0b6e0fb2fa1"
+		},
+		"emoji_u1f1f3_1f1f1.svg": {
+			"ruta": "third_party/region-flags/waved-svg/emoji_u1f1f3_1f1f1.svg",
+			"sha256": "9e502576c4aaccfeed6c6a4a027cbb45076010c591a3d56bfdbafaeb7fc8aafb"
+		},
+		"emoji_u1f1f5_1f1f1.svg": {
+			"ruta": "third_party/region-flags/waved-svg/emoji_u1f1f5_1f1f1.svg",
+			"sha256": "8babd4d2d88c4dc5673e3f44a7ffe048b0800a044874522d6f03cfa59cd4aee1"
+		},
+		"emoji_u1f1f7_1f1f4.svg": {
+			"ruta": "third_party/region-flags/waved-svg/emoji_u1f1f7_1f1f4.svg",
+			"sha256": "7b24bdeddee92033186e223e3bcb4c2efa4955d5a04f26dffbe0a564391f336f"
+		},
+		"emoji_u1f1f7_1f1fa.svg": {
+			"ruta": "third_party/region-flags/waved-svg/emoji_u1f1f7_1f1fa.svg",
+			"sha256": "9a979d9b0e43492fe37559400c3445ce962ee18a60b2305e580e8d0f1f06c48d"
+		},
+		"emoji_u1f1f9_1f1fc.svg": {
+			"ruta": "third_party/region-flags/waved-svg/emoji_u1f1f9_1f1fc.svg",
+			"sha256": "710a714dfc4710a2cf22b7a0c88504a20f6475987b5f5a9ecc715f76a686ecaf"
+		},
+		"emoji_u1f1fa_1f1e6.svg": {
+			"ruta": "third_party/region-flags/waved-svg/emoji_u1f1fa_1f1e6.svg",
+			"sha256": "701cd4dd63b59f0f85c856d7e9cd55954562c938ca3f3e74934a1da8a1d0c864"
+		}
+	}
+}

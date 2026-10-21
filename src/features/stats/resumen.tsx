@@ -43,14 +43,14 @@ export function Resumen({ s, moneda }: { s: DeckStats; moneda: Moneda }) {
 					})}
 					ayuda={t(
 						"Recomendación de la fórmula de Frank Karsten para esta curva: {r} tierras (descuenta {b} cartas baratas de rampa o robo).",
-						{ r: s.recommendedLands.toFixed(1), b: s.cheapRampDraw },
+						{ r: Math.round(s.recommendedLands * 10) / 10, b: s.cheapRampDraw },
 					)}
 				/>
 				<Cifra
 					titulo={t("Coste medio")}
 					valor={s.averageCmc.toFixed(2)}
 					nota={t("con tierras {c} · mediana {m}", {
-						c: s.averageCmcWithLands.toFixed(2),
+						c: Math.round(s.averageCmcWithLands * 100) / 100,
 						m: s.medianCmc,
 					})}
 				/>

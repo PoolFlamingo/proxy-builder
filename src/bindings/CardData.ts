@@ -18,6 +18,11 @@ rarity: string, frameEffects: Array<string>, colors: Array<string>, colorIdentit
  */
 sinTextoEs: boolean, 
 /**
+ * Los códigos de los demás idiomas sin impresión (su texto es el
+ * Oracle en inglés). Mejor leerlo con `sin_texto_en`.
+ */
+sinTexto?: Array<string>, 
+/**
  * Impresa en tamaño grande (planos, planes, Vanguard).
  */
 oversized: boolean, 

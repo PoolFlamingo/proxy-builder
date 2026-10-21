@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Layers, MoreHorizontal, Star, StickyNote } from "lucide-react";
+import { ArrowDown, ArrowUp, Layers, MoreHorizontal, Pencil, Star, StickyNote } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { DeckDetails } from "@/bindings/DeckDetails";
 import type { DeckSummary } from "@/bindings/DeckSummary";
@@ -353,7 +353,12 @@ function Propias({ det }: { det: DeckDetails }) {
 		>
 			<span className="truncate font-mono tabular-nums">
 				{det.custom > 0 && `${det.custom}`}
-				{det.designed > 0 && <span className="ml-1 text-primary">✎{det.designed}</span>}
+				{det.designed > 0 && (
+					<span className="ml-1 inline-flex items-center gap-0.5 text-primary">
+						<Pencil className="size-2.5" />
+						{det.designed}
+					</span>
+				)}
 			</span>
 		</WithTooltip>
 	);

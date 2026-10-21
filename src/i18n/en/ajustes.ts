@@ -1,4 +1,6 @@
-export const AJUSTES: Record<string, string> = {
+import type { Diccionario } from "../tipos";
+
+export const AJUSTES: Diccionario = {
 	Ajustes: "Settings",
 	"Idioma y aspecto de la aplicación.": "Language and look of the app.",
 	Idioma: "Language",

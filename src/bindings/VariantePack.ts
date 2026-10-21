@@ -3,4 +3,8 @@
 /**
  * Una variante de un estilo de pack.
  */
-export type VariantePack = { id: string, nombreEs: string, nombreEn: string, };
+export type VariantePack = { id: string, 
+/**
+ * Como `EstiloPropio::nombres`.
+ */
+nombres: { [key in string]: string }, };

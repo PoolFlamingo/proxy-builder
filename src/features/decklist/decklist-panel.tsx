@@ -33,6 +33,7 @@ import { Progress } from "@/components/ui/progress";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { WithTooltip } from "@/components/ui/with-tooltip";
+import { IDIOMAS_SCRYFALL } from "@/lib/idiomas";
 import type { AnchoMiniatura } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
 import { useDeck } from "@/stores/deck-store";
@@ -51,19 +52,10 @@ import { EditorLista } from "./editor-lista";
 import { EJEMPLO } from "./ejemplo";
 
 /** Idiomas de Scryfall, con su nombre propio (no se traducen). */
-const IDIOMAS: Opcion<string>[] = [
-	{ valor: "en", etiqueta: "English" },
-	{ valor: "es", etiqueta: "Español" },
-	{ valor: "fr", etiqueta: "Français" },
-	{ valor: "de", etiqueta: "Deutsch" },
-	{ valor: "it", etiqueta: "Italiano" },
-	{ valor: "pt", etiqueta: "Português" },
-	{ valor: "ja", etiqueta: "日本語" },
-	{ valor: "ko", etiqueta: "한국어" },
-	{ valor: "ru", etiqueta: "Русский" },
-	{ valor: "zhs", etiqueta: "简体中文" },
-	{ valor: "zht", etiqueta: "繁體中文" },
-];
+const IDIOMAS: Opcion<string>[] = IDIOMAS_SCRYFALL.map((i) => ({
+	valor: i.codigo,
+	etiqueta: i.nativo,
+}));
 
 function megas(b: number) {
 	return `${(b / 1024 / 1024).toFixed(b > 100 * 1024 * 1024 ? 0 : 1)} MB`;

@@ -131,7 +131,7 @@ export interface Commands {
 	card_link_externa: { args: { fuente: FuenteCarta; id: string }; result: CardMeta };
 	identify_batch: { args: { items: IdentifyRequest[]; ocr: boolean }; result: number };
 	design_draft: {
-		args: { card: DeckCard; usados: string[]; collection: string | null };
+		args: { card: DeckCard; usados: string[]; collection: string | null; lang: DesignLang };
 		result: DesignDraft;
 	};
 	collection_list: { args: Record<string, never>; result: Collection[] };
@@ -173,6 +173,7 @@ export interface Commands {
 		args: { cards: DeckCard[]; usados: string[]; collection: string | null; lang: DesignLang };
 		result: number;
 	};
+	design_complete_lang: { args: { cards: DeckCard[]; lang: DesignLang }; result: number };
 	design_export_png: {
 		args: {
 			cards: DeckCard[];
@@ -184,7 +185,7 @@ export interface Commands {
 		result: number;
 	};
 	design_suggest_translation: {
-		args: { design: CardDesign; cara: number };
+		args: { design: CardDesign; cara: number; lang: DesignLang };
 		result: Sugerencia;
 	};
 	design_structure: {
@@ -242,6 +243,8 @@ export interface Events {
 	"identify://done": import("@/bindings/IdentifyDoneEvent").IdentifyDoneEvent;
 	"design://progress": import("@/bindings/DesignProgressEvent").DesignProgressEvent;
 	"design://done": import("@/bindings/DesignDoneEvent").DesignDoneEvent;
+	"designlang://progress": import("@/bindings/DesignProgressEvent").DesignProgressEvent;
+	"designlang://done": import("@/bindings/DesignDoneEvent").DesignDoneEvent;
 	"designpng://progress": import("@/bindings/DesignPngProgressEvent").DesignPngProgressEvent;
 	"designpng://done": import("@/bindings/DesignPngDoneEvent").DesignPngDoneEvent;
 	"original://progress": import("@/bindings/OriginalProgressEvent").OriginalProgressEvent;

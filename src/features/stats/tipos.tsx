@@ -1,6 +1,7 @@
 import type { DeckStats } from "@/bindings/DeckStats";
 import { useLang } from "@/components/language-provider";
 import { GraficoBarras } from "@/components/ui/grafico-barras";
+import { localeDe } from "@/lib/idiomas";
 import { Bloque, Cifra, Lista } from "./piezas";
 import { RAREZAS, SUPERTIPOS, TIPOS } from "./textos";
 
@@ -9,7 +10,7 @@ export function Tipos({ s }: { s: DeckStats }) {
 	const { t, lang } = useLang();
 	const fecha = (f: string | null) =>
 		f
-			? new Date(f).toLocaleDateString(lang === "en" ? "en-GB" : "es-ES", {
+			? new Date(f).toLocaleDateString(localeDe(lang), {
 					year: "numeric",
 					month: "short",
 				})

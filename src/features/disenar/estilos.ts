@@ -26,12 +26,24 @@ export function propiosDe(packs: PackInfo[], pack: string): EstiloPropio[] {
 	return packs.find((p) => p.id === pack)?.estilosPropios ?? [];
 }
 
+/**
+ * El nombre de un estilo o variante de un pack en el idioma de la interfaz;
+ * si el pack no lo trae, el inglés; si tampoco, su id.
+ */
+export function nombreEnIdioma(
+	nombres: { [k in string]?: string },
+	lang: string,
+	id: string,
+): string {
+	return nombres[lang] ?? nombres.en ?? id;
+}
+
 export function opcionesEstilo(t: T, lang: string, propios: EstiloPropio[], actual?: string) {
 	const opciones = [
 		...ESTILOS.map((e) => ({ valor: e.valor as string, etiqueta: t(e.etiqueta) })),
 		...propios.map((e) => ({
 			valor: `${PREFIJO}${e.id}`,
-			etiqueta: lang === "en" ? e.nombreEn : e.nombreEs,
+			etiqueta: nombreEnIdioma(e.nombres, lang, e.id),
 		})),
 	];
 	// Uno propio que este pack no tiene (se cambió de pack): sigue a la vista.

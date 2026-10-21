@@ -1,0 +1,90 @@
+import type { Diccionario } from "../tipos";
+
+export const VISTA: Diccionario = {
+	"Cartas ordenadas": "Cartes réorganisées",
+	"De 1 a {n}. Cada página tiene sus casillas seguidas.":
+		"De 1 à {n}. Les emplacements de chaque page se suivent.",
+	"Mover a posición": "Déplacer à la position",
+	"Mover": "Déplacer",
+	"Posición": "Position",
+	"Añadir carta": "Ajouter une carte",
+	"Añadir carta de Scryfall…": "Ajouter une carte de Scryfall…",
+	"Eliminar las cartas de esta página": "Supprimer les cartes de cette page",
+	"Página {n} de {total}": "Page {n} sur {total}",
+	"Acercar": "Zoomer",
+	"Alejar": "Dézoomer",
+	"Volver al 100 %": "Revenir à 100 %",
+	"Auto ordenar": "Réorganiser",
+	"Añadir página": "Ajouter une page",
+	"El deck está vacío": "Le deck est vide",
+	"Hueco": "Emplacement vide",
+	"Info de carta": "Infos de la carte",
+	"Junta las copias, quita los huecos y deja las fijadas en su sitio":
+		"Regroupe les exemplaires, retire les emplacements vides et laisse les cartes verrouillées en place",
+	"La vista es aproximada; el resultado exacto es el del PDF.":
+		"L'aperçu est approximatif ; le résultat exact est celui du PDF.",
+	"Ocultar DFC": "Masquer les DFC",
+	"Pega una lista a la izquierda y pulsa «Cargar lista», o añade cartas una a una.":
+		"Collez une liste à gauche et cliquez sur « Charger la liste », ou ajoutez les cartes une à une.",
+	"Quita las cartas de doble cara de las hojas y del PDF":
+		"Retire les cartes double face des feuilles et du PDF",
+	"Se puede deshacer con Ctrl+Z.": "Annulable avec Ctrl+Z.",
+	"Todas": "Toutes",
+	"Ver reversos": "Voir les dos",
+	"Vista {papel}": "Aperçu {papel}",
+	"{n} cartas de doble cara sin dúplex: su otra cara no se imprime (activa «Pares DFC intercalados» o el dúplex).":
+		{
+			"one":
+				"{n} carte double face sans recto verso : son autre face n'est pas imprimée (activez « Paires DFC intercalées » ou le recto verso).",
+			"many":
+				"{n} cartes double face sans recto verso : leur autre face n'est pas imprimée (activez « Paires DFC intercalées » ou le recto verso).",
+			"other":
+				"{n} cartes double face sans recto verso : leur autre face n'est pas imprimée (activez « Paires DFC intercalées » ou le recto verso).",
+		},
+	"{n} cartas sin reverso: el deck no tiene reverso por defecto.": {
+		"one": "{n} carte sans dos : le deck n'a pas de dos par défaut.",
+		"many": "{n} cartes sans dos : le deck n'a pas de dos par défaut.",
+		"other": "{n} cartes sans dos : le deck n'a pas de dos par défaut.",
+	},
+	"{papel} apaisado": "{papel} paysage",
+	"¿Eliminar las cartas de esta página?": "Supprimer les cartes de cette page ?",
+	"Cambiar reverso": "Changer le dos",
+	"Exportar imagen": "Exporter l'image",
+	"Frente…": "Recto…",
+	"reverso": "dos",
+	"Reverso…": "Dos…",
+	"Imagen guardada: {nombre}": "Image enregistrée : {nombre}",
+	"PNG, JPEG, WebP, TIFF o BMP, según la extensión del nombre. A los PPP de la calidad del PDF y sin sangrado.":
+		"PNG, JPEG, WebP, TIFF ou BMP, selon l'extension du nom. À la résolution (PPP) de la qualité du PDF et sans fond perdu.",
+	"Cambiar variante": "Changer d'impression",
+	"Desfijar": "Déverrouiller",
+	"Editar carta": "Modifier la carte",
+	"Elegir imagen…": "Choisir une image…",
+	"Eliminar las seleccionadas": "Supprimer les sélectionnées",
+	"Fijar": "Verrouiller",
+	"Mover a posición…": "Déplacer à la position…",
+	"Mover antes": "Déplacer avant",
+	"Mover después": "Déplacer après",
+	"Reemplazar imagen…": "Remplacer l'image…",
+	"Usar el reverso del deck": "Utiliser le dos du deck",
+	"Idioma de la imagen": "Langue de l'image",
+	"Sin indicar": "Non indiquée",
+	"Marcadas como variante de diseño, opcional o banquillo: se imprimen, pero no cuentan para el mazo.":
+		"Marquées comme variante de design, optionnelle ou réserve : elles sont imprimées, mais ne comptent pas pour le deck.",
+	"{n} marcadas": { "one": "{n} marquée", "many": "{n} marquées", "other": "{n} marquées" },
+	"Marca": "Marque",
+	"Se imprimen igual; no cuentan para el tamaño del mazo, las copias ni las estadísticas.":
+		"Elles sont imprimées quand même ; elles ne comptent ni pour la taille du deck, ni pour les exemplaires, ni pour les statistiques.",
+	"Variante de diseño": "Variante de design",
+	"VARIANTE": "VARIANTE",
+	"Otra versión de una carta que ya está: se escogerá una. De sus copias solo cuenta una para el mazo.":
+		"Une autre version d'une carte déjà présente : une seule sera retenue. Un seul de ses exemplaires compte pour le deck.",
+	"Opcional": "Optionnelle",
+	"OPCIONAL": "OPTIONNELLE",
+	"Puede ir o no: no cuenta para el mazo.":
+		"Peut être incluse ou non : elle ne compte pas pour le deck.",
+	"Banquillo": "Réserve",
+	"BANQUILLO": "RÉSERVE",
+	"Del banquillo (sideboard): no cuenta para el mazo.":
+		"De la réserve (sideboard) : elle ne compte pas pour le deck.",
+};

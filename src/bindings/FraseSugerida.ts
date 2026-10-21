@@ -3,4 +3,8 @@
 /**
  * Una frase y su traducción, si se encontró.
  */
-export type FraseSugerida = { en: string, es: string | null, };
+export type FraseSugerida = { en: string, 
+/**
+ * La frase en el idioma pedido, si se encontró.
+ */
+traducida: string | null, };

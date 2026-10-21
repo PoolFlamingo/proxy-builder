@@ -1,0 +1,33 @@
+import type { Diccionario } from "../tipos";
+
+export const COMUN: Diccionario = {
+	"No hay conexión o el servidor no responde.": "接続がないか、サーバーが応答しません。",
+	"El servicio pide ir más despacio. Vuelve a intentarlo en un momento.":
+		"サービスから速度を落とすよう求められました。しばらくしてからもう一度お試しください。",
+	"No se ha encontrado lo que se buscaba.": "探しているものが見つかりませんでした。",
+	"No se ha podido leer o escribir en el disco.": "ディスクの読み書きができませんでした。",
+	"La biblioteca local ha dado un error.": "ローカルライブラリでエラーが発生しました。",
+	"Los datos no son válidos.": "データが無効です。",
+	"Cancelado.": "キャンセルしました。",
+	"No se ha podido generar el PDF.": "PDF を作成できませんでした。",
+	"No se ha podido procesar la imagen.": "画像を処理できませんでした。",
+	"Ese formato de fichero no se admite.": "このファイル形式には対応していません。",
+	"Hay un trabajo en marcha; espera a que termine.": "処理を実行中です。終わるまでお待ちください。",
+	"Error interno inesperado.": "予期しない内部エラーです。",
+	"Algo ha fallado en la pantalla": "画面で問題が発生しました",
+	"Tus decks están a salvo: viven en la biblioteca local, no en esta pantalla. Puedes volver e intentarlo de nuevo.":
+		"デッキは安全です。この画面ではなくローカルライブラリに保存されています。戻ってもう一度お試しください。",
+	"Volver": "戻る",
+	"Recargar la ventana": "ウィンドウを再読み込み",
+	"¿Interrumpir lo que está en marcha?": "実行中の処理を中断しますか？",
+	"¿Salir sin guardar?": "保存せずに閉じますか？",
+	"Lo que has escrito en esta ventana se pierde.": "このウィンドウで入力した内容は失われます。",
+	"Seguir esperando": "待機を続ける",
+	"Seguir editando": "編集を続ける",
+	"Interrumpir y salir": "中断して閉じる",
+	"Salir sin guardar": "保存せずに閉じる",
+	"Cerrar": "閉じる",
+	"Cancelar": "キャンセル",
+	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.":
+		"今閉じると処理は止まります。送信済みのものはそのまま完了しますが、残りは実行されず、途中のものは保存されません。",
+};

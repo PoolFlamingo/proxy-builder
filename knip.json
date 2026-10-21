@@ -12,7 +12,7 @@
 	},
 	"ignore": ["src/bindings/**"],
 	"ignoreDependencies": ["tw-animate-css", "tailwindcss"],
-	"ignoreBinaries": ["rustfmt"],
+	"ignoreBinaries": ["rustfmt", "inkscape"],
 	"ignoreExportsUsedInFile": {
 		"interface": true,
 		"type": true

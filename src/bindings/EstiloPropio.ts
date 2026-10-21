@@ -5,7 +5,12 @@ import type { VariantePack } from "./VariantePack";
 /**
  * Un estilo propio de un pack de marcos.
  */
-export type EstiloPropio = { id: string, nombreEs: string, nombreEn: string, 
+export type EstiloPropio = { id: string, 
+/**
+ * El nombre por código de idioma, tal como lo trae el pack (la pantalla
+ * elige el de la interfaz o, si no está, el inglés; si no, el id).
+ */
+nombres: { [key in string]: string }, 
 /**
  * El de serie del que hereda (y al que se cae sin el pack).
  */

@@ -154,7 +154,7 @@ export function Probabilidades({ s }: { s: DeckStats }) {
 					titulo={t("Tierras en la mano inicial")}
 					extra={
 						<span className="text-[11px] text-muted-foreground">
-							{t("{n} de media", { n: p.expectedLands.toFixed(2) })}
+							{t("{n} de media", { n: Math.round(p.expectedLands * 100) / 100 })}
 						</span>
 					}
 				>
