@@ -45,6 +45,7 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cancelarTrabajo } from "@/features/decklist/acciones";
+import { ponerIdiomaDiseno } from "@/features/disenar/renumerar";
 import { call } from "@/lib/ipc";
 import { useDeck } from "@/stores/deck-store";
 import { usePlan } from "@/stores/plan-store";
@@ -198,6 +199,27 @@ export function ExportPanel() {
 								</ToggleGroupItem>
 								<ToggleGroupItem value="png" className="h-7 px-2 text-[11px]">
 									PNG
+								</ToggleGroupItem>
+							</ToggleGroup>
+						</Fila>
+						<Fila
+							etiqueta={t("Idioma de las cartas diseñadas")}
+							ayuda={t(
+								"En qué idioma salen en el PDF y en la vista previa las cartas hechas con el diseñador (PROXY). Las imágenes no se tocan.",
+							)}
+						>
+							<ToggleGroup
+								type="single"
+								variant="outline"
+								size="sm"
+								value={s.designLang}
+								onValueChange={(v) => (v === "es" || v === "en") && void ponerIdiomaDiseno(v)}
+							>
+								<ToggleGroupItem value="es" className="h-7 px-2 text-[11px]">
+									ES
+								</ToggleGroupItem>
+								<ToggleGroupItem value="en" className="h-7 px-2 text-[11px]">
+									EN
 								</ToggleGroupItem>
 							</ToggleGroup>
 						</Fila>

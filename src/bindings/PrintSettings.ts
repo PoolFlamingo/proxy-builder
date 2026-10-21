@@ -26,7 +26,8 @@ fillCorners: boolean, cutGuides: CutGuides, edgeDarkening: EdgeDarkening, duplex
  */
 splitEvery: number | null, 
 /**
- * En qué idioma salen las cartas diseñadas (español de fábrica).
+ * En qué idioma salen las cartas diseñadas (inglés de fábrica, como la
+ * app; los decks guardados sin este campo siguen en español).
  */
 designLang: DesignLang, 
 /**
