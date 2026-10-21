@@ -563,7 +563,8 @@ pub struct PrintSettings {
     pub row_offsets: RowOffsets,
     /// Partir el PDF cada N hojas (`None` = un solo fichero).
     pub split_every: Option<u32>,
-    /// En qué idioma salen las cartas diseñadas (español de fábrica).
+    /// En qué idioma salen las cartas diseñadas (inglés de fábrica, como la
+    /// app; los decks guardados sin este campo siguen en español).
     #[serde(default)]
     pub design_lang: crate::diseno::modelo::DesignLang,
     /// Las cartas grandes (planos, planes, Vanguard) llevan en dúplex el
@@ -597,7 +598,7 @@ impl Default for PrintSettings {
             encoding: Encoding::default(),
             row_offsets: RowOffsets::default(),
             split_every: None,
-            design_lang: crate::diseno::modelo::DesignLang::Es,
+            design_lang: crate::diseno::modelo::DesignLang::En,
             big_cards_back: false,
         }
     }

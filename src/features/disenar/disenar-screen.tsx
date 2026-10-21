@@ -31,7 +31,7 @@ import { agrupar, type Grupo } from "./grupos";
 import { ListaCartas } from "./lista-cartas";
 import { useMarcosOriginales } from "./marcos-originales";
 import { usePacksDescargables } from "./packs-descargables";
-import { renumerar } from "./renumerar";
+import { ponerIdiomaDiseno, renumerar } from "./renumerar";
 import { useBorrador } from "./use-borrador";
 import { useResumen } from "./use-resumen";
 import { VistaPrevia } from "./vista-previa";
@@ -44,7 +44,10 @@ import { VistaPrevia } from "./vista-previa";
 export function DisenarScreen() {
 	const { t, mensaje } = useLang();
 	const cartas = useDeck((s) => s.deck?.cards);
-	const langDeck = useDeck((s) => s.deck?.settings.designLang ?? "es");
+	const lang = useDeck((s) => s.deck?.settings.designLang ?? "es");
+	// El idioma de la vista es el del deck: lo que se ve aquí es lo que sale
+	// en el PDF.
+	const setLang = (l: DesignLang) => void ponerIdiomaDiseno(l);
 	const disenando = useUi((s) => s.disenando);
 	const layout = useDefaultLayout({ id: "proxybuilder.paneles.disenar", storage: localStorage });
 	const grupos = useMemo(() => agrupar(cartas ?? []), [cartas]);
@@ -52,7 +55,6 @@ export function DisenarScreen() {
 		() => grupos.find((g) => g.cartas.some((c) => c.id === disenando)) ?? null,
 		[grupos, disenando],
 	);
-	const [lang, setLang] = useState<DesignLang>(langDeck);
 	const [cara, setCara] = useState(0);
 	const [soloEsta, setSoloEsta] = useState(false);
 	const [colecciones, setColecciones] = useState<Collection[]>([]);

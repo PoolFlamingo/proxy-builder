@@ -170,7 +170,9 @@ export function PresetsImpresion() {
 			aplicar={(json) => {
 				const s = JSON.parse(json) as PrintSettings;
 				if (typeof s !== "object" || !s || !("paper" in s)) throw new Error("preset");
-				useDeck.getState().setAjustes((actual) => ({ ...actual, ...s }));
+				// El idioma de las cartas diseñadas es del deck, no de la impresión.
+				const { designLang: _, ...resto } = s;
+				useDeck.getState().setAjustes((actual) => ({ ...actual, ...resto }));
 			}}
 		/>
 	);

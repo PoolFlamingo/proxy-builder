@@ -37,6 +37,9 @@ export const EXPORTAR: Record<string, string> = {
 	"Bajar a 300 PPP": "Lower to 300 DPI",
 	"Bajar a JPEG 90": "Lower to JPEG 90",
 	"Calidad JPEG": "JPEG quality",
+	"Idioma de las cartas diseñadas": "Language of designed cards",
+	"En qué idioma salen en el PDF y en la vista previa las cartas hechas con el diseñador (PROXY). Las imágenes no se tocan.":
+		"The language designed cards (PROXY) come out in, in the PDF and the preview. Images are left as they are.",
 	Calidad: "Quality",
 	"Cancelar exportación": "Cancel export",
 	Cantidad: "Amount",

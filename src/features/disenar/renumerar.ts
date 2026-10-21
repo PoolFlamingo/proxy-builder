@@ -1,5 +1,6 @@
 import { toast } from "sonner";
 import type { DeckCard } from "@/bindings/DeckCard";
+import type { DesignLang } from "@/bindings/DesignLang";
 import { call } from "@/lib/ipc";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
@@ -33,6 +34,15 @@ export async function renumerar(t: T, mensaje: (e: unknown) => string) {
 	} catch (e) {
 		toast.error(mensaje(e));
 	}
+}
+
+/**
+ * Cambia el idioma de las cartas diseñadas del deck y rehace sus miniaturas
+ * (las de la hoja se pintan al guardar el diseño, con el idioma de entonces).
+ */
+export async function ponerIdiomaDiseno(lang: DesignLang) {
+	useDeck.getState().setAjustes((a) => ({ ...a, designLang: lang }));
+	await rehacerMiniaturas();
 }
 
 /**
