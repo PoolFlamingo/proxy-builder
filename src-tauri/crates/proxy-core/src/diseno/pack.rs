@@ -21,7 +21,9 @@ use sha2::{Digest, Sha256};
 /// La 2 (19/10/2026) trae estilos propios, variantes, símbolos, etiquetas,
 /// colores de texto, capas de fondo, escalado `pixel` y mezclas: una app
 /// anterior rechaza un pack que los use en vez de pintarlo mal sin avisar.
-pub const VERSION_PACK: u32 = 2;
+/// La 3 añade a las capas PNG el trozo (`desde`) y la máscara (`mascara`), y
+/// la condición de la caja de reglas elegida (`si.caja`).
+pub const VERSION_PACK: u32 = 3;
 
 /// Lo que puede fallar al cargar un pack (códigos, no prosa).
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
@@ -155,6 +157,12 @@ pub struct Condicion {
     /// La variante del estilo que ha elegido el usuario (`variantes`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub variante: Option<String>,
+    /// Alguna de estas cajas de reglas elegidas en el diseño (`auto`,
+    /// `dark`, `light`, `tint`): el pergamino del despejado Original solo
+    /// con la automática o la clara, para que la oscura y la de tinte sigan
+    /// dejando ver la ilustración.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub caja: Option<Vec<String>>,
 }
 
 /// Lo que se sabe de la carta que se pinta, para las condiciones (`si`).
@@ -171,6 +179,8 @@ pub struct Hechos {
     pub colores: u8,
     pub simbolos: u8,
     pub variante: Option<String>,
+    /// La caja de reglas del diseño (`auto`, `dark`, `light` o `tint`).
+    pub caja: String,
 }
 
 impl Condicion {
@@ -194,6 +204,7 @@ impl Condicion {
                 .variante
                 .as_ref()
                 .is_none_or(|v| h.variante.as_deref() == Some(v.as_str()))
+            && self.caja.as_ref().is_none_or(|c| c.contains(&h.caja))
     }
 }
 
@@ -275,6 +286,17 @@ pub struct Capa {
     /// el alto de la zona. Para las cajas de pixel art que crecen.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tramos: Option<[f32; 2]>,
+    /// Solo este trozo del PNG: un rectángulo en mm medido como si la imagen
+    /// cubriera la carta entera. Sin `en`, va en ese mismo sitio de la
+    /// carta; con ella, estirado a esa zona. Para sacar una pieza de otro
+    /// marco (el pergamino de la caja de reglas del clásico en el despejado).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub desde: Option<ZonaV>,
+    /// Un PNG del pack de la medida de la carta cuya transparencia recorta
+    /// la capa (las máscaras de Card Conjurer: solo la barra del tipo). Con
+    /// `desde`, se recorta el mismo trozo de la máscara.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mascara: Option<String>,
     /// No es una imagen: aquí va el tinte de la caja de reglas (en la zona
     /// `en`) cuando el diseño pide uno (oscura, clara u otro tinte). Para los
     /// marcos de imagen, que traen la caja pintada; con ella, el texto de las
@@ -888,6 +910,17 @@ fn comprobar_capa(
             ))
         };
     }
+    // El trozo y la máscara son de los PNG, y no se mezclan con los tramos.
+    if (c.desde.is_some() || c.mascara.is_some()) && (c.png.is_none() || c.tramos.is_some()) {
+        return Err(PackError::Json(
+            "desde y mascara van en capas png sin tramos".into(),
+        ));
+    }
+    if let Some(m) = &c.mascara {
+        if !imagenes.contains_key(m) {
+            return Err(PackError::FaltaFichero(m.clone()));
+        }
+    }
     match (&c.png, c.svg.is_empty()) {
         (None, false) => {
             if !ficheros.contains_key(&c.svg) {
@@ -1092,7 +1125,10 @@ pub(crate) mod tests {
     }
 
     /// Cambia el `pack.json` como JSON (no como texto: el formato da igual).
-    fn con_json(f: &mut BTreeMap<String, String>, cambio: impl FnOnce(&mut serde_json::Value)) {
+    pub(crate) fn con_json(
+        f: &mut BTreeMap<String, String>,
+        cambio: impl FnOnce(&mut serde_json::Value),
+    ) {
         let mut v: serde_json::Value = serde_json::from_str(&f["pack.json"]).unwrap();
         cambio(&mut v);
         f.insert("pack.json".into(), serde_json::to_string(&v).unwrap());
@@ -1190,6 +1226,15 @@ pub(crate) mod tests {
             simbolos: 3,
             ..Hechos::default()
         }));
+        let caja: Condicion = serde_json::from_str(r#"{"caja": ["auto", "light"]}"#).unwrap();
+        assert!(caja.cumple(&Hechos {
+            caja: "light".into(),
+            ..Hechos::default()
+        }));
+        assert!(!caja.cumple(&Hechos {
+            caja: "tint".into(),
+            ..Hechos::default()
+        }));
         let variante: Condicion = serde_json::from_str(r#"{"variante": "sinDados"}"#).unwrap();
         assert!(!variante.cumple(&Hechos::default()));
         assert!(variante.cumple(&Hechos {
@@ -1198,6 +1243,34 @@ pub(crate) mod tests {
         }));
         // Sin pedir nada, vale siempre.
         assert!(Condicion::default().cumple(&Hechos::default()));
+    }
+
+    #[test]
+    fn el_trozo_y_la_mascara_van_en_capas_png_y_la_mascara_existe() {
+        let prueba = |capa: serde_json::Value| {
+            let (mut f, im) = con_png();
+            con_json(&mut f, |v| {
+                v["estilos"]["borderless"]["capas"] = serde_json::json!([capa]);
+            });
+            Pack::cargar_con_imagenes(f, im).map(|_| ())
+        };
+        let zona = serde_json::json!({ "x": 0, "y": 0, "w": 10, "h": 10 });
+        assert!(prueba(serde_json::json!({ "png": "marco{color}.png", "desde": zona })).is_ok());
+        assert!(prueba(serde_json::json!({ "svg": "despejado/fr.svg", "desde": zona })).is_err());
+        assert!(prueba(
+            serde_json::json!({ "png": "marco{color}.png", "desde": zona, "tramos": [1, 1] })
+        )
+        .is_err());
+        assert_eq!(
+            prueba(serde_json::json!({ "png": "marco{color}.png", "mascara": "no.png" })),
+            Err(PackError::FaltaFichero("no.png".into()))
+        );
+        assert!(
+            prueba(serde_json::json!({ "png": "marco{color}.png", "mascara": "frW.png" })).is_err()
+        );
+        assert!(
+            prueba(serde_json::json!({ "png": "marco{color}.png", "mascara": "fr-W.png" })).is_ok()
+        );
     }
 
     #[test]
@@ -1296,7 +1369,7 @@ pub(crate) mod tests {
             .collect();
         let p = Pack::cargar_con_imagenes(ficheros.clone(), im.clone()).unwrap();
         assert_eq!(p.def.id, "original");
-        for e in ["borderless", "classic"] {
+        for e in ["borderless", "extended", "classic"] {
             p.estilo(e).unwrap();
         }
         // La lista trae justo las que piden las capas: ni una de más ni de menos.
@@ -1306,6 +1379,7 @@ pub(crate) mod tests {
                 for k in PALETAS {
                     pedidas.extend(c.png_para(&p.def, k, &[]));
                 }
+                pedidas.extend(c.mascara.clone());
             }
         }
         let lista: std::collections::BTreeSet<String> = rutas.into_iter().collect();

@@ -1017,6 +1017,74 @@ pub(super) mod imagenes_png {
         guardar(&A_MEDIDA, clave, img.clone(), MAX_A_MEDIDA);
         Some(img)
     }
+
+    /// Como `a_medida`, con solo un trozo del PNG (`recorte`: `[x, y, ancho,
+    /// alto]` en fracciones de la imagen) y, con `mascara`, recortado por la
+    /// transparencia de ese otro PNG (el mismo trozo, a la misma medida).
+    pub fn trozo(
+        pack: &Pack,
+        ruta: &str,
+        recorte: Option<[f32; 4]>,
+        mascara: Option<&str>,
+        w: u32,
+        h: u32,
+        escalado: Escalado,
+    ) -> Option<Arc<RgbaImage>> {
+        if recorte.is_none() && mascara.is_none() {
+            return a_medida(pack, ruta, w, h, escalado);
+        }
+        let clave = format!(
+            "{}/{ruta}[{recorte:?}|{mascara:?}]@{w}x{h}/{escalado:?}",
+            pack.huella
+        );
+        if let Some(i) = buscar(&A_MEDIDA, &clave) {
+            return Some(i);
+        }
+        let a_su_medida = |r: &str| -> Option<RgbaImage> {
+            let o = original(pack, r)?;
+            let (ow, oh) = (o.width() as f64, o.height() as f64);
+            let [x, y, rw, rh] = recorte
+                .unwrap_or([0.0, 0.0, 1.0, 1.0])
+                .map(|v| f64::from(v.clamp(0.0, 1.0)));
+            let (l, t) = (x * ow, y * oh);
+            let (cw, ch) = ((rw * ow).min(ow - l), (rh * oh).min(oh - t));
+            if cw <= 0.0 || ch <= 0.0 {
+                return None;
+            }
+            if escalado == Escalado::Pixel {
+                let (x0, y0) = (l.floor() as u32, t.floor() as u32);
+                let trozo = image::imageops::crop_imm(
+                    o.as_ref(),
+                    x0,
+                    y0,
+                    ((l + cw).ceil() as u32).saturating_sub(x0).max(1),
+                    ((t + ch).ceil() as u32).saturating_sub(y0).max(1),
+                )
+                .to_image();
+                reescalar_pixel(&trozo, w, h)
+            } else {
+                reescalar(&o, w, h, Some((l, t, cw, ch)))
+            }
+        };
+        let mut img = a_su_medida(ruta)?;
+        if let Some(m) = mascara {
+            let m = a_su_medida(m)?;
+            for (p, q) in img.pixels_mut().zip(m.pixels()) {
+                p.0[3] = ((u16::from(p.0[3]) * u16::from(q.0[3]) + 127) / 255) as u8;
+            }
+        }
+        let img = Arc::new(img);
+        guardar(&A_MEDIDA, clave, img.clone(), MAX_A_MEDIDA);
+        Some(img)
+    }
+}
+
+/// Qué parte de un PNG de capa se pinta: un trozo (`[x, y, ancho, alto]` en
+/// fracciones de la imagen; sin él, entera) y la máscara que la recorta.
+#[derive(Debug, Clone, Copy, Default)]
+struct Trozo<'a> {
+    recorte: Option<[f32; 4]>,
+    mascara: Option<&'a str>,
 }
 
 /// La segunda imagen de un marco en degradado: transparente a la izquierda y
@@ -1517,18 +1585,32 @@ impl Carta<'_> {
         let Some(ruta) = capa.png_para(&pack.def, self.clave_color, &self.colores) else {
             return;
         };
-        let z = match &capa.en {
-            Some(z) => match z.evaluar(&self.nums) {
+        // Una variable que esta carta no tiene (caja fija): no va.
+        let desde = match capa.desde.as_ref().map(|d| d.evaluar(&self.nums)) {
+            Some(Ok(d)) => Some(d),
+            Some(Err(_)) => return,
+            None => None,
+        };
+        let z = match (&capa.en, desde) {
+            (Some(z), _) => match z.evaluar(&self.nums) {
                 Ok(z) => z,
-                // Una variable que esta carta no tiene (caja fija): no va.
                 Err(_) => return,
             },
-            None => super::pack::Zona {
+            // El trozo, en su mismo sitio de la carta.
+            (None, Some(d)) => d,
+            (None, None) => super::pack::Zona {
                 x: 0.0,
                 y: 0.0,
                 w: self.l.w_mm,
                 h: self.l.h_mm,
             },
+        };
+        let trozo = Trozo {
+            recorte: desde.map(|d| {
+                let (w, h) = (self.l.w_mm, self.l.h_mm);
+                [d.x / w, d.y / h, d.w / w, d.h / h]
+            }),
+            mascara: capa.mascara.as_deref(),
         };
         let escalado = capa.escalado.unwrap_or(pack.def.escalado);
         if let Some([arriba, abajo]) = capa.tramos {
@@ -1549,19 +1631,25 @@ impl Carta<'_> {
         let de_color = capa.png.as_deref().is_some_and(|p| p.contains("{color}"));
         match self.extra_marco {
             ExtraMarco::Degradado(b) if de_color => {
-                self.png_del_pack(&ruta, z, escalado, mezcla, opacidad);
+                self.png_trozo(&ruta, trozo, z, escalado, mezcla, opacidad);
                 if let Some(ruta_b) = capa.png_para(&pack.def, b, &self.colores) {
-                    self.png_con(&ruta_b, z, escalado, mezcla, opacidad, |img, x0, k| {
-                        fundir_a_la_derecha(img, x0, k)
-                    });
+                    self.png_con(
+                        &ruta_b,
+                        trozo,
+                        z,
+                        escalado,
+                        mezcla,
+                        opacidad,
+                        fundir_a_la_derecha,
+                    );
                 }
             }
             ExtraMarco::Tinte(color) if de_color => {
-                self.png_con(&ruta, z, escalado, mezcla, opacidad, |img, _, _| {
+                self.png_con(&ruta, trozo, z, escalado, mezcla, opacidad, |img, _, _| {
                     tenir(img, color)
                 });
             }
-            _ => self.png_del_pack(&ruta, z, escalado, mezcla, opacidad),
+            _ => self.png_trozo(&ruta, trozo, z, escalado, mezcla, opacidad),
         }
     }
 
@@ -1583,11 +1671,13 @@ impl Carta<'_> {
         ));
     }
 
-    /// Como `png_del_pack`, pasando antes la imagen (ya a su medida) por `f`
+    /// Como `png_trozo`, pasando antes la imagen (ya a su medida) por `f`
     /// con dónde empieza (px del lienzo) y los px por mm.
+    #[allow(clippy::too_many_arguments)]
     fn png_con(
         &mut self,
         ruta: &str,
+        trozo: Trozo<'_>,
         z: super::pack::Zona,
         escalado: super::pack::Escalado,
         mezcla: Mezcla,
@@ -1597,7 +1687,15 @@ impl Carta<'_> {
         let (x, y) = (self.l.x(z.x).round(), self.l.y(z.y).round());
         let tw = (self.l.x(z.x + z.w).round() - x).max(1.0) as u32;
         let th = (self.l.y(z.y + z.h).round() - y).max(1.0) as u32;
-        let Some(img) = imagenes_png::a_medida(self.rec.pack, ruta, tw, th, escalado) else {
+        let Some(img) = imagenes_png::trozo(
+            self.rec.pack,
+            ruta,
+            trozo.recorte,
+            trozo.mascara,
+            tw,
+            th,
+            escalado,
+        ) else {
             return;
         };
         let mut img = (*img).clone();
@@ -1681,11 +1779,27 @@ impl Carta<'_> {
         mezcla: Mezcla,
         opacidad: f32,
     ) {
+        self.png_trozo(ruta, Trozo::default(), z, escalado, mezcla, opacidad);
+    }
+
+    /// Como `png_del_pack`, con solo un trozo del PNG o recortado por una
+    /// máscara (`Trozo`).
+    fn png_trozo(
+        &mut self,
+        ruta: &str,
+        trozo: Trozo<'_>,
+        z: super::pack::Zona,
+        escalado: super::pack::Escalado,
+        mezcla: Mezcla,
+        opacidad: f32,
+    ) {
         let pack = self.rec.pack;
         let (x, y) = (self.l.x(z.x).round(), self.l.y(z.y).round());
         let tw = (self.l.x(z.x + z.w).round() - x).max(1.0) as u32;
         let th = (self.l.y(z.y + z.h).round() - y).max(1.0) as u32;
-        let Some(img) = imagenes_png::a_medida(pack, ruta, tw, th, escalado) else {
+        let Some(img) =
+            imagenes_png::trozo(pack, ruta, trozo.recorte, trozo.mascara, tw, th, escalado)
+        else {
             return;
         };
         if let Some(p) = a_pixmap(&img) {
@@ -2086,6 +2200,13 @@ pub(super) fn hechos_de(e: &DisenoEfectivo, cara: usize) -> Hechos {
         colores: colores_wubrg(e, cara).len() as u8,
         simbolos: f.map_or(0, |f| secuencia(&f.mana_cost).len() as u8),
         variante: e.design.variante_pack.clone(),
+        caja: match e.frame.rules_box {
+            RulesBox::Auto => "auto",
+            RulesBox::Dark => "dark",
+            RulesBox::Light => "light",
+            RulesBox::Tint { .. } => "tint",
+        }
+        .into(),
         ..Hechos::default()
     }
 }
@@ -3732,6 +3853,59 @@ mod tests {
         )
         .unwrap();
         assert_eq!(r.imagen.get_pixel(402, 702).0, [10, 20, 30, 255]);
+    }
+
+    #[test]
+    fn una_capa_png_pinta_solo_su_trozo_y_lo_que_deja_su_mascara() {
+        // Un PNG mitad rojo y mitad verde; una máscara opaca a la izquierda.
+        let mitades = |a: [u8; 4], b: [u8; 4]| {
+            let img = RgbaImage::from_fn(2, 1, |x, _| image::Rgba(if x == 0 { a } else { b }));
+            Arc::new(crate::imaging::encode::png(&img).unwrap())
+        };
+        let (mut f, mut im) = crate::diseno::pack::tests::con_png();
+        im.insert(
+            "mitades.png".into(),
+            mitades([255, 0, 0, 255], [0, 255, 0, 255]),
+        );
+        im.insert("mascara.png".into(), mitades([0, 0, 0, 255], [0, 0, 0, 0]));
+        crate::diseno::pack::tests::con_json(&mut f, |v| {
+            v["estilos"]["borderless"]["capas"] = serde_json::json!([
+                { "png": "marco{color}.png" },
+                // La mitad derecha (verde) en un cuadro de arriba a la izquierda.
+                { "png": "mitades.png", "desde": { "x": 31.5, "y": 0, "w": 31.5, "h": 88 },
+                  "en": { "x": 0, "y": 0, "w": 10, "h": 10 } },
+                // Sin `en`: en su sitio (la mitad derecha de la carta, abajo).
+                { "png": "mitades.png", "desde": { "x": 31.5, "y": 60, "w": 31.5, "h": 28 } },
+                // Entera, pero solo lo que deja la máscara (la mitad izquierda).
+                { "png": "mitades.png", "mascara": "mascara.png",
+                  "en": { "x": 0, "y": 30, "w": 63, "h": 20 } }
+            ]);
+        });
+        let p = Pack::cargar_con_imagenes(f, im).unwrap();
+        let s = Simbolos::nuevos();
+        let rec = recursos(&p, &s);
+        let mut motor = Motor::de_fabrica().unwrap();
+        let mut e = carta(&["G"], "Instant");
+        e.design.style = DesignStyle::Borderless;
+        let r = render(
+            &mut motor,
+            &e,
+            0,
+            DesignLang::Es,
+            &rec,
+            crate::model::CardSize::MTG,
+            630,
+            Salida::Impresion,
+        )
+        .unwrap();
+        // 10 px por mm.
+        let px = |x, y| r.imagen.get_pixel(x, y).0;
+        assert_eq!(px(50, 50), [0, 255, 0, 255]);
+        assert_eq!(px(150, 50), [10, 20, 30, 255]);
+        assert_eq!(px(500, 700), [0, 255, 0, 255]);
+        assert_eq!(px(200, 700), [10, 20, 30, 255]);
+        assert_eq!(px(50, 400), [255, 0, 0, 255]);
+        assert_eq!(px(580, 400), [10, 20, 30, 255]);
     }
 
     #[test]

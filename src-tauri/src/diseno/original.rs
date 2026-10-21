@@ -1,14 +1,18 @@
-//! **Marcos «Original»**: los marcos de imagen de Card Conjurer (M15 normal
-//! y despejado, coronas y cajas de F/R por color). No van en la app ni en el
-//! repositorio: se descargan la primera vez que se piden, de una versión fija
-//! del repositorio público, y se comprueba la huella de cada fichero. Quedan
-//! en `app_data_dir/marcos/original/` como un pack más.
+//! **Marcos «Original»**: los marcos de imagen de Card Conjurer (M15 normal,
+//! extendido y despejado, máscaras, coronas y cajas de F/R por color). No van
+//! en la app ni en el repositorio: se descargan la primera vez que se piden,
+//! de una versión fija del repositorio público, y se comprueba la huella de
+//! cada fichero. Quedan en `app_data_dir/marcos/original/` como un pack más;
+//! si una versión nueva de la app pide imágenes que aún no están, se bajan
+//! solas al arrancar (`completar`).
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
-use proxy_core::diseno::pack::{ORIGINAL, ORIGINAL_IMAGENES};
+use proxy_core::diseno::pack::{Pack, PackError, ORIGINAL, ORIGINAL_IMAGENES};
 use serde::{Deserialize, Serialize};
+use serde_json::{Map, Value};
 use sha2::{Digest, Sha256};
 use ts_rs::TS;
 
@@ -97,6 +101,64 @@ pub fn definicion_al_dia(dir: &Path) {
         if std::fs::read(&ruta).ok().as_deref() != Some(texto.as_bytes()) {
             let _ = escribir_atomico(&ruta, texto.as_bytes());
         }
+    }
+}
+
+/// Carga el pack con lo que haya en disco. Si faltan imágenes (las que pide
+/// una versión nueva de la app y aún no se han bajado), sin los estilos que
+/// las piden: esos caen a los de la casa mientras `completar` las baja. Sin
+/// ningún estilo completo, el error del pack entero.
+pub fn cargar(
+    textos: BTreeMap<String, String>,
+    imagenes: BTreeMap<String, Arc<Vec<u8>>>,
+) -> Result<Pack, PackError> {
+    let entero = Pack::cargar_con_imagenes(textos.clone(), imagenes.clone());
+    if entero.is_ok() {
+        return entero;
+    }
+    let Some(def) = textos
+        .get("pack.json")
+        .and_then(|j| serde_json::from_str::<Value>(j).ok())
+    else {
+        return entero;
+    };
+    let Some(estilos) = def.get("estilos").and_then(Value::as_object) else {
+        return entero;
+    };
+    let con = |quedan: Map<String, Value>| {
+        let mut d = def.clone();
+        d["estilos"] = Value::Object(quedan);
+        let mut t = textos.clone();
+        t.insert("pack.json".into(), d.to_string());
+        Pack::cargar_con_imagenes(t, imagenes.clone())
+    };
+    let completos: Map<String, Value> = estilos
+        .iter()
+        .filter(|(k, v)| con(Map::from_iter([((*k).clone(), (*v).clone())])).is_ok())
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect();
+    if completos.is_empty() {
+        return entero;
+    }
+    con(completos)
+}
+
+/// Al arrancar: si los marcos ya se bajaron (con esta versión de la app o con
+/// otra que pedía menos imágenes) y falta alguna, se baja sola. Sin red se
+/// queda como está; se vuelve a intentar en el siguiente arranque o al
+/// elegirlos.
+pub async fn completar(state: &AppState) {
+    let dir = carpeta(state.diseno.dir());
+    // Basta con ver si falta alguna (sin leerlas): la descarga ya comprueba
+    // las huellas.
+    let Ok(l) = lista() else {
+        return;
+    };
+    if !dir.join("pack.json").exists() || l.imagenes.keys().all(|r| dir.join(r).exists()) {
+        return;
+    }
+    if let Err(e) = descargar(state, &|_, _| {}).await {
+        tracing::warn!(codigo = ?e.code, "marcos originales sin completar");
     }
 }
 
@@ -194,6 +256,41 @@ mod tests {
                 *texto
             );
         }
+    }
+
+    /// Un PNG de 1×1 válido.
+    fn png() -> Arc<Vec<u8>> {
+        let mut b = Vec::new();
+        image::RgbaImage::new(1, 1)
+            .write_to(&mut std::io::Cursor::new(&mut b), image::ImageFormat::Png)
+            .unwrap();
+        Arc::new(b)
+    }
+
+    #[test]
+    fn sin_las_imagenes_nuevas_carga_sin_ese_estilo() {
+        let textos: BTreeMap<String, String> = ORIGINAL
+            .iter()
+            .map(|(k, v)| ((*k).to_string(), (*v).to_string()))
+            .collect();
+        let todas: BTreeMap<String, Arc<Vec<u8>>> = lista()
+            .unwrap()
+            .imagenes
+            .into_keys()
+            .map(|r| (r, png()))
+            .collect();
+        let p = cargar(textos.clone(), todas.clone()).unwrap();
+        assert!(p.estilo("extended").is_ok());
+        // Las de una versión anterior: sin el extendido ni su máscara.
+        let viejas = todas
+            .into_iter()
+            .filter(|(r, _)| !r.starts_with("m15/new/extended/") && !r.ends_with("MaskType.png"))
+            .collect();
+        let p = cargar(textos.clone(), viejas).unwrap();
+        assert!(p.estilo("extended").is_err());
+        assert!(p.estilo("classic").is_ok());
+        // Sin ninguna, el error de siempre.
+        assert!(cargar(textos, BTreeMap::new()).is_err());
     }
 
     #[test]

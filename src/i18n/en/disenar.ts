@@ -28,11 +28,11 @@ export const DISENAR: Record<string, string> = {
 	"Original (descargar)": "Original (download)",
 	"Descargando los marcos originales: {hechas} de {total}":
 		"Downloading the original frames: {hechas} of {total}",
-	"Marcos de imagen de Card Conjurer para los estilos Clásico y Despejado; los demás estilos usan los de la casa.":
-		"Card Conjurer image frames for the Classic and Borderless styles; the other styles use the built-in ones.",
+	"Marcos de imagen de Card Conjurer para los estilos Despejado, Extendido y Clásico; el paisaje usa el de la casa.":
+		"Card Conjurer image frames for the Borderless, Extended and Classic styles; the full-art basic land style uses the built-in one.",
 	"Original (Card Conjurer)": "Original (Card Conjurer)",
-	"Marcos de imagen para Clásico y Despejado (unos 22 MB). Se descargan de GitHub la primera vez.":
-		"Image frames for Classic and Borderless (about 22 MB). They're downloaded from GitHub the first time.",
+	"Marcos de imagen para Despejado, Extendido y Clásico (unos 37 MB). Se descargan de GitHub la primera vez.":
+		"Image frames for Borderless, Extended and Classic (about 37 MB). They're downloaded from GitHub the first time.",
 	"Descargar": "Download",
 	"El marco de este estilo no tiene cinta: el nombre original va en el pie.":
 		"This style's frame has no ribbon: the original name goes in the footer.",

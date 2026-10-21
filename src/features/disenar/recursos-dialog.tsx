@@ -363,7 +363,7 @@ function FilaOriginales({ alTerminar }: { alTerminar: () => void }) {
 					<div className="truncate text-xs font-medium">{t("Original (Card Conjurer)")}</div>
 					<div className="text-[10px] text-muted-foreground">
 						{t(
-							"Marcos de imagen para Clásico y Despejado (unos 22 MB). Se descargan de GitHub la primera vez.",
+							"Marcos de imagen para Despejado, Extendido y Clásico (unos 37 MB). Se descargan de GitHub la primera vez.",
 						)}
 					</div>
 				</div>

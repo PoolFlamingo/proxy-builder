@@ -694,7 +694,7 @@ export function EditorMarco({
 				marco.pack === ID_ORIGINAL && (
 					<p className="text-[11px] text-muted-foreground">
 						{t(
-							"Marcos de imagen de Card Conjurer para los estilos Clásico y Despejado; los demás estilos usan los de la casa.",
+							"Marcos de imagen de Card Conjurer para los estilos Despejado, Extendido y Clásico; el paisaje usa el de la casa.",
 						)}
 					</p>
 				)

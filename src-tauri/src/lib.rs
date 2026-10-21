@@ -73,6 +73,11 @@ pub fn run() {
             registro::iniciar(&rutas.app_log_dir()?);
             let estado = state::AppState::open(paths).map_err(|e| e.to_string())?;
             app.manage(estado);
+            // Los marcos «Original» que pida esta versión y aún no estén.
+            let app1 = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                diseno::original::completar(&app1.state::<state::AppState>()).await;
+            });
             // Por si la página no llega a cargar: a los 3 segundos, se enseña
             // igual.
             let app2 = app.handle().clone();
