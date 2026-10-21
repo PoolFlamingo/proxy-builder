@@ -12,6 +12,7 @@ import {
 	numerosUsados,
 	quitarDiseno,
 	scryfallDe,
+	vecina,
 } from "../grupos";
 
 const img = (c: string): FaceImage => ({
@@ -254,5 +255,29 @@ describe("quitarDiseno", () => {
 		const r = quitarDiseno([a, b], new Set(["b"]));
 		expect(r[0]).toBe(a);
 		expect(r[1]).toBe(b);
+	});
+});
+
+describe("vecina", () => {
+	const gs = agrupar([carta("a1", "A"), carta("a2", "A"), carta("b1", "B"), carta("c1", "C")]);
+
+	it("sin copias salta de carta en carta, desde cualquier copia, y da la vuelta", () => {
+		expect(vecina(gs, "a1", 1, false)).toBe("b1");
+		expect(vecina(gs, "a2", 1, false)).toBe("b1");
+		expect(vecina(gs, "c1", 1, false)).toBe("a1");
+		expect(vecina(gs, "a2", -1, false)).toBe("c1");
+	});
+
+	it("con copias pasa por cada copia en el orden del deck", () => {
+		expect(vecina(gs, "a1", 1, true)).toBe("a2");
+		expect(vecina(gs, "a2", 1, true)).toBe("b1");
+		expect(vecina(gs, "b1", -1, true)).toBe("a2");
+		expect(vecina(gs, "a1", -1, true)).toBe("c1");
+	});
+
+	it("sin carta de partida, la primera o la última; sin cartas, nada", () => {
+		expect(vecina(gs, null, 1, true)).toBe("a1");
+		expect(vecina(gs, null, -1, true)).toBe("c1");
+		expect(vecina([], "a1", 1, true)).toBeNull();
 	});
 });

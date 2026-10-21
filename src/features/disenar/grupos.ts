@@ -39,6 +39,28 @@ export function agrupar(cartas: DeckCard[]): Grupo[] {
 	return [...grupos.values()];
 }
 
+/**
+ * La carta a la que pasan las flechas desde `actual` (la copia que se está
+ * diseñando): la primera de la carta siguiente o, con `porCopias`, la copia
+ * siguiente aunque sea de la misma carta. Da la vuelta al llegar al final.
+ */
+export function vecina(
+	elegibles: Grupo[],
+	actual: string | null,
+	dir: 1 | -1,
+	porCopias: boolean,
+): string | null {
+	const ids = porCopias
+		? elegibles.flatMap((g) => g.cartas.map((c) => c.id))
+		: elegibles.flatMap((g) => (g.cartas[0] ? [g.cartas[0].id] : []));
+	if (ids.length === 0) return null;
+	const i = porCopias
+		? ids.indexOf(actual ?? "")
+		: elegibles.findIndex((g) => g.cartas.some((c) => c.id === actual));
+	if (i < 0) return (dir > 0 ? ids[0] : ids[ids.length - 1]) ?? null;
+	return ids[(i + dir + ids.length) % ids.length] ?? null;
+}
+
 /** El estado de diseño de un grupo (el de su primera copia). */
 export type EstadoDiseno = "sinVincular" | "sinDiseno" | "borrador" | "listo";
 

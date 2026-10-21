@@ -156,6 +156,7 @@
 	"Las cartas en borrador se ven en el deck, pero así sabes cuáles has revisado.": "下書きのカードもデッキに表示されますが、どれを確認済みかがわかります。",
 	"Nombre temático": "テーマ名",
 	"Nombre en {idioma}": "{idioma}での名前",
+	"Línea de tipo en {idioma}": "{idioma}でのタイプ行",
 	"Texto de ambientación (opcional)": "フレイバー・テキスト（任意）",
 	"Ambientación en {idioma}": "{idioma}のフレイバー・テキスト",
 	"Texto de reglas": "ルール・テキスト",
@@ -325,5 +326,8 @@
 	"Faltan las letras de {idioma}: sin ellas, sus caracteres salen como cuadrados.": "{idioma}のフォントがありません。ないと文字が四角で表示されます。",
 	"Busca en Scryfall las mismas frases en otras cartas que sí están en {idioma} y propone su texto oficial. Tarda un poco: una búsqueda por frase.": "{idioma}で印刷された他のカードから同じ文を Scryfall で探し、公式の文言を提案します。1 文ごとに検索するため、少し時間がかかります。",
 	"Usar como reglas en {idioma}": "{idioma}のルール・テキストとして使う",
-	"Bajar las letras": "フォントをダウンロード"
+	"Bajar las letras": "フォントをダウンロード",
+	"Copia:": "コピー:",
+	"Copia {n}": "コピー {n}",
+	"Recorrer también las copias con las flechas": "矢印キーでコピーも順に切り替える"
 }

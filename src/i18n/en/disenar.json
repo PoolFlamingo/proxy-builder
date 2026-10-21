@@ -156,6 +156,7 @@
 	"Las cartas en borrador se ven en el deck, pero así sabes cuáles has revisado.": "Draft cards still show in the deck, but this way you know which ones you've checked.",
 	"Nombre temático": "Themed name",
 	"Nombre en {idioma}": "Name in {idioma}",
+	"Línea de tipo en {idioma}": "Type line in {idioma}",
 	"Texto de ambientación (opcional)": "Flavor text (optional)",
 	"Ambientación en {idioma}": "Flavor text in {idioma}",
 	"Texto de reglas": "Rules text",
@@ -325,5 +326,8 @@
 	"Faltan las letras de {idioma}: sin ellas, sus caracteres salen como cuadrados.": "The {idioma} fonts are missing: without them, its characters show as boxes.",
 	"Busca en Scryfall las mismas frases en otras cartas que sí están en {idioma} y propone su texto oficial. Tarda un poco: una búsqueda por frase.": "Searches Scryfall for the same sentences on other cards that are printed in {idioma} and suggests their official text. It takes a while: one search per sentence.",
 	"Usar como reglas en {idioma}": "Use as rules in {idioma}",
-	"Bajar las letras": "Download the fonts"
+	"Bajar las letras": "Download the fonts",
+	"Copia:": "Copy:",
+	"Copia {n}": "Copy {n}",
+	"Recorrer también las copias con las flechas": "Also step through copies with the arrows"
 }

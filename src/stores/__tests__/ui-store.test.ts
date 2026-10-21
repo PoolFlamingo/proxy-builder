@@ -83,6 +83,7 @@ describe("store de pantalla", () => {
 				"actualizarSola",
 				"addTokens",
 				"calidadVista",
+				"disenarCopias",
 				"imagePolicy",
 				"infoCarta",
 				"lang",

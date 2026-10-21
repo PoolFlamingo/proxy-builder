@@ -156,6 +156,7 @@
 	"Las cartas en borrador se ven en el deck, pero así sabes cuáles has revisado.": "草稿牌仍会显示在套牌中，但这样你能知道哪些已检查过。",
 	"Nombre temático": "主题名称",
 	"Nombre en {idioma}": "{idioma}名称",
+	"Línea de tipo en {idioma}": "{idioma}类型行",
 	"Texto de ambientación (opcional)": "背景叙述（可选）",
 	"Ambientación en {idioma}": "{idioma}背景叙述",
 	"Texto de reglas": "规则叙述",
@@ -325,5 +326,8 @@
 	"Faltan las letras de {idioma}: sin ellas, sus caracteres salen como cuadrados.": "缺少{idioma}字体：没有字体时，其字符会显示为方框。",
 	"Busca en Scryfall las mismas frases en otras cartas que sí están en {idioma} y propone su texto oficial. Tarda un poco: una búsqueda por frase.": "在 Scryfall 上查找其他有{idioma}版本的牌中相同的句子，并给出其官方文字。需要一些时间：每句查找一次。",
 	"Usar como reglas en {idioma}": "用作{idioma}规则",
-	"Bajar las letras": "下载字体"
+	"Bajar las letras": "下载字体",
+	"Copia:": "副本：",
+	"Copia {n}": "副本 {n}",
+	"Recorrer también las copias con las flechas": "用箭头键也切换副本"
 }

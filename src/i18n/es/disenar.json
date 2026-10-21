@@ -156,6 +156,7 @@
 	"Las cartas en borrador se ven en el deck, pero así sabes cuáles has revisado.": "Las cartas en borrador se ven en el deck, pero así sabes cuáles has revisado.",
 	"Nombre temático": "Nombre temático",
 	"Nombre en {idioma}": "Nombre en {idioma}",
+	"Línea de tipo en {idioma}": "Línea de tipo en {idioma}",
 	"Texto de ambientación (opcional)": "Texto de ambientación (opcional)",
 	"Ambientación en {idioma}": "Ambientación en {idioma}",
 	"Texto de reglas": "Texto de reglas",
@@ -325,5 +326,8 @@
 	"Faltan las letras de {idioma}: sin ellas, sus caracteres salen como cuadrados.": "Faltan las letras de {idioma}: sin ellas, sus caracteres salen como cuadrados.",
 	"Busca en Scryfall las mismas frases en otras cartas que sí están en {idioma} y propone su texto oficial. Tarda un poco: una búsqueda por frase.": "Busca en Scryfall las mismas frases en otras cartas que sí están en {idioma} y propone su texto oficial. Tarda un poco: una búsqueda por frase.",
 	"Usar como reglas en {idioma}": "Usar como reglas en {idioma}",
-	"Bajar las letras": "Bajar las letras"
+	"Bajar las letras": "Bajar las letras",
+	"Copia:": "Copia:",
+	"Copia {n}": "Copia {n}",
+	"Recorrer también las copias con las flechas": "Recorrer también las copias con las flechas"
 }

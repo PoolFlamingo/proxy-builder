@@ -46,6 +46,8 @@ export function useBorrador(
 	grupo: Grupo | null,
 	cara: number,
 	lang: DesignLang,
+	/** La copia del grupo que se edita (su posición). */
+	copia: number,
 	/** Cambia cuando cambian colecciones, letras o packs: se vuelve a pintar. */
 	recursos: unknown,
 ) {
@@ -59,7 +61,7 @@ export function useBorrador(
 	const [guardando, setGuardando] = useState(false);
 	// Sube al quitar el diseño: la carta vuelve a pedir un borrador nuevo.
 	const [recarga, setRecarga] = useState(0);
-	const principal = grupo?.cartas[0] ?? null;
+	const principal = grupo?.cartas[copia] ?? grupo?.cartas[0] ?? null;
 	const idPrincipal = principal?.id ?? null;
 	const clave = grupo?.clave ?? null;
 	// Para no pisar un borrador con la respuesta de una carta anterior.
@@ -196,12 +198,15 @@ export function useBorrador(
 		[design, grupo, principal, mensaje],
 	);
 
-	const quitar = useCallback(() => {
-		if (!grupo) return;
-		const ids = new Set(grupo.cartas.map((c) => c.id));
-		useDeck.getState().setCartas((cs) => quitarDiseno(cs, ids));
-		setRecarga((n) => n + 1);
-	}, [grupo]);
+	const quitar = useCallback(
+		(todas: boolean) => {
+			if (!grupo || !principal) return;
+			const ids = new Set(todas ? grupo.cartas.map((c) => c.id) : [principal.id]);
+			useDeck.getState().setCartas((cs) => quitarDiseno(cs, ids));
+			setRecarga((n) => n + 1);
+		},
+		[grupo, principal],
+	);
 
 	const cambiado = JSON.stringify(design) !== JSON.stringify(original);
 

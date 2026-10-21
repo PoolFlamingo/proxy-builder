@@ -184,6 +184,7 @@
 	"Las cartas en borrador se ven en el deck, pero así sabes cuáles has revisado.": "Les cartes en brouillon s'affichent dans le deck, mais ainsi vous savez lesquelles vous avez vérifiées.",
 	"Nombre temático": "Nom thématique",
 	"Nombre en {idioma}": "Nom en {idioma}",
+	"Línea de tipo en {idioma}": "Ligne de type en {idioma}",
 	"Texto de ambientación (opcional)": "Texte d'ambiance (facultatif)",
 	"Ambientación en {idioma}": "Ambiance en {idioma}",
 	"Texto de reglas": "Texte de règles",
@@ -369,5 +370,8 @@
 	"Faltan las letras de {idioma}: sin ellas, sus caracteres salen como cuadrados.": "Il manque les polices pour {idioma} : sans elles, ses caractères s'affichent comme des carrés.",
 	"Busca en Scryfall las mismas frases en otras cartas que sí están en {idioma} y propone su texto oficial. Tarda un poco: una búsqueda por frase.": "Cherche sur Scryfall les mêmes phrases dans d'autres cartes imprimées en {idioma} et propose leur texte officiel. C'est un peu long : une recherche par phrase.",
 	"Usar como reglas en {idioma}": "Utiliser comme règles en {idioma}",
-	"Bajar las letras": "Télécharger les polices"
+	"Bajar las letras": "Télécharger les polices",
+	"Copia:": "Exemplaire :",
+	"Copia {n}": "Exemplaire {n}",
+	"Recorrer también las copias con las flechas": "Parcourir aussi les exemplaires avec les flèches"
 }

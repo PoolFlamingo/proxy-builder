@@ -174,6 +174,7 @@
 	"Las cartas en borrador se ven en el deck, pero así sabes cuáles has revisado.": "Entwürfe erscheinen trotzdem im Deck, aber so weißt du, welche du geprüft hast.",
 	"Nombre temático": "Themenname",
 	"Nombre en {idioma}": "Name auf {idioma}",
+	"Línea de tipo en {idioma}": "Typzeile auf {idioma}",
 	"Texto de ambientación (opcional)": "Flavourtext (optional)",
 	"Ambientación en {idioma}": "Flavourtext auf {idioma}",
 	"Texto de reglas": "Regeltext",
@@ -355,5 +356,8 @@
 	"Faltan las letras de {idioma}: sin ellas, sus caracteres salen como cuadrados.": "Die Schriften für {idioma} fehlen: Ohne sie erscheinen die Zeichen als Kästchen.",
 	"Busca en Scryfall las mismas frases en otras cartas que sí están en {idioma} y propone su texto oficial. Tarda un poco: una búsqueda por frase.": "Sucht auf Scryfall dieselben Sätze auf anderen Karten, die auf {idioma} gedruckt sind, und schlägt deren offiziellen Text vor. Dauert etwas: eine Suche pro Satz.",
 	"Usar como reglas en {idioma}": "Als Regeltext auf {idioma} verwenden",
-	"Bajar las letras": "Schriften herunterladen"
+	"Bajar las letras": "Schriften herunterladen",
+	"Copia:": "Kopie:",
+	"Copia {n}": "Kopie {n}",
+	"Recorrer también las copias con las flechas": "Mit den Pfeilen auch durch die Kopien gehen"
 }

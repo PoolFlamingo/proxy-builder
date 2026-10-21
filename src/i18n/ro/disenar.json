@@ -180,6 +180,7 @@
 	"Las cartas en borrador se ven en el deck, pero así sabes cuáles has revisado.": "Cărțile-ciornă apar în pachet, dar așa știi pe care le-ai verificat.",
 	"Nombre temático": "Nume tematic",
 	"Nombre en {idioma}": "Nume în {idioma}",
+	"Línea de tipo en {idioma}": "Linia de tip în {idioma}",
 	"Texto de ambientación (opcional)": "Text de atmosferă (opțional)",
 	"Ambientación en {idioma}": "Text de atmosferă în {idioma}",
 	"Texto de reglas": "Text de reguli",
@@ -365,5 +366,8 @@
 	"Faltan las letras de {idioma}: sin ellas, sus caracteres salen como cuadrados.": "Lipsesc fonturile pentru {idioma}: fără ele, caracterele apar ca pătrățele.",
 	"Busca en Scryfall las mismas frases en otras cartas que sí están en {idioma} y propone su texto oficial. Tarda un poco: una búsqueda por frase.": "Caută în Scryfall aceleași fraze pe alte cărți tipărite în {idioma} și propune textul lor oficial. Durează puțin: o căutare pe frază.",
 	"Usar como reglas en {idioma}": "Folosește ca reguli în {idioma}",
-	"Bajar las letras": "Descarcă fonturile"
+	"Bajar las letras": "Descarcă fonturile",
+	"Copia:": "Copie:",
+	"Copia {n}": "Copie {n}",
+	"Recorrer también las copias con las flechas": "Parcurge și copiile cu săgețile"
 }
