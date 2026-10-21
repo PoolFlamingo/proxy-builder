@@ -13,32 +13,32 @@ use crate::error::{AppError, AppResult, ErrorCode};
 use crate::state::AppState;
 use crate::store::colecciones;
 
-/// El borrador de una carta del deck: la instantánea mecánica (inglés y
-/// español), los nombres originales como punto de partida y el siguiente
-/// número libre del pie (`usados`: los números que ya hay en el deck).
+/// El borrador de una carta del deck: la instantánea mecánica (inglés,
+/// español y el idioma de diseño del deck, `lang`), los nombres originales
+/// como punto de partida y el siguiente número libre del pie (`usados`: los
+/// números que ya hay en el deck).
 #[tauri::command]
 pub async fn design_draft(
     state: State<'_, AppState>,
     card: DeckCard,
     usados: Vec<String>,
     collection: Option<String>,
+    lang: Option<DesignLang>,
 ) -> AppResult<DesignDraft> {
     let id = borrador::id_scryfall(&card)
         .ok_or_else(|| AppError::new(ErrorCode::InvalidInput).with("motivo", "sin_vincular"))?
         .to_string();
+    let lang = lang.unwrap_or_default();
     let api = state.scryfall.clone();
     let en = borrador::carta_completa(&state.db, api.as_ref(), &id).await?;
-    let es = borrador::impresion_es(&state.db, api.as_ref(), &en).await?;
-    let fundida = borrador::fundida(&state.db, api.as_ref(), &en).await?;
-    let datos = borrador::con_fundida(
-        borrador::datos(&en, es.as_ref(), crate::store::ahora_ms()),
-        fundida,
-    );
+    let datos = borrador::datos_de(&state.db, api.as_ref(), &en, lang).await?;
     let coleccion = match &collection {
         Some(c) => colecciones::get(&state.db, c)?,
         None => None,
     };
-    Ok(borrador::montar(&card, datos, coleccion.as_ref(), &usados))
+    let mut b = borrador::montar(&card, datos, coleccion.as_ref(), &usados);
+    borrador::poner_textos(&mut b.design, lang);
+    Ok(b)
 }
 
 #[tauri::command]
@@ -262,7 +262,37 @@ pub fn design_drafts_for_deck(
     Ok(job_id)
 }
 
-/// Exporta las cartas diseñadas como PNG a una carpeta (`es/` y `en/`). El
+/// Completa el idioma de diseño `lang` en las cartas diseñadas del deck: baja
+/// sus letras si es japonés, coreano o chino, y la impresión de cada carta a
+/// la que le falte. Cada carta hecha llega por `designlang://progress`; el
+/// final, por `designlang://done`. Se cancela con `job_cancel`.
+#[tauri::command]
+pub fn design_complete_lang(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    cards: Vec<DeckCard>,
+    lang: DesignLang,
+) -> AppResult<u32> {
+    let (job_id, cancelado) = state.jobs.alta();
+    tauri::async_runtime::spawn(async move {
+        let estado = app.state::<AppState>();
+        let _marca = estado.trabajo();
+        let r = crate::diseno::idioma::completar_deck(&app, job_id, cards, lang, &cancelado).await;
+        estado.jobs.baja(job_id);
+        let _ = tauri::Emitter::emit(
+            &app,
+            "designlang://done",
+            crate::diseno::lote::DesignDoneEvent {
+                job_id,
+                error: r.err(),
+            },
+        );
+    });
+    Ok(job_id)
+}
+
+/// Exporta las cartas diseñadas como PNG a una carpeta, cada idioma en la
+/// suya (`es/`, `en/`, `fr/`…). El
 /// avance llega por `designpng://progress`; el final, por `designpng://done`.
 #[tauri::command]
 pub fn design_export_png(
@@ -319,15 +349,20 @@ pub fn design_export_png(
     Ok(job_id)
 }
 
-/// Traducción sugerida (experimental) de una cara sin texto español: frases
-/// oficiales idénticas de otras cartas y su línea de tipo. Nunca se aplica
-/// sola: la pantalla la enseña y el usuario decide.
+/// Traducción sugerida (experimental) de una cara sin texto en `lang` (un
+/// idioma con cartas impresas): frases oficiales idénticas de otras cartas y
+/// su línea de tipo. Nunca se aplica sola: la pantalla la enseña y el
+/// usuario decide.
 #[tauri::command]
 pub async fn design_suggest_translation(
     state: State<'_, AppState>,
     design: CardDesign,
     cara: u32,
+    lang: DesignLang,
 ) -> AppResult<crate::diseno::traduccion::Sugerencia> {
+    if lang == DesignLang::En || !lang.impresas() {
+        return Err(AppError::new(ErrorCode::InvalidInput).with("motivo", "idioma"));
+    }
     let f = design
         .card
         .faces
@@ -338,6 +373,7 @@ pub async fn design_suggest_translation(
         &f.name,
         &f.type_line.en,
         &f.rules.en,
+        lang.codigo(),
     )
     .await
 }

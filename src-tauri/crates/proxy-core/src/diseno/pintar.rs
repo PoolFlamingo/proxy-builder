@@ -356,13 +356,63 @@ mod tests {
         let con = bloque(&mut m, "Homologada por el gremio. 👍");
         assert!(con.ancho > sin.ancho + 10.0, "el emoji no ocupa nada");
         let (p, _) = pintar(&con, 0.0, 40.0, Pincel::default(), &Simbolos::nuevos());
-        // El pulgar de Twemoji es amarillo (el texto va en negro).
+        // El pulgar de Noto es amarillo (el texto va en negro).
         assert!(
             p.pixels()
                 .iter()
                 .any(|c| c.alpha() == 255 && c.red() > 200 && c.green() > 150 && c.blue() < 100),
             "no hay píxeles de color"
         );
+    }
+
+    /// Los glifos de un bloque (0 es el `.notdef`: un cuadrado).
+    fn glifos(b: &Bloque) -> Vec<u32> {
+        let mut v = Vec::new();
+        for l in b.layout.lines() {
+            for it in l.items() {
+                if let PositionedLayoutItem::GlyphRun(gr) = it {
+                    v.extend(gr.glyphs().map(|g| g.id));
+                }
+            }
+        }
+        v
+    }
+
+    #[test]
+    fn una_letra_sin_cirilico_ni_rumano_toma_las_de_la_casa() {
+        let mut m = Motor::de_fabrica().unwrap();
+        m.letras
+            .cargar(include_bytes!("../../assets/fuentes/Caladea-Regular.ttf").to_vec())
+            .unwrap();
+        let caladea = Estilo {
+            familia: "Caladea".into(),
+            ..estilo()
+        };
+        for t in ["Привет, світ", "Țară și pășune", "Źdźbło łąki"] {
+            let b =
+                m.m.maquetar(&mut m.letras, &texto::con_simbolos(t), &caladea, None);
+            let g = glifos(&b);
+            assert!(
+                !g.is_empty() && g.iter().all(|g| *g != 0),
+                "«{t}» sale con cuadrados"
+            );
+        }
+    }
+
+    #[test]
+    fn una_bandera_sale_con_sus_colores() {
+        let mut m = Motor::de_fabrica().unwrap();
+        let b = bloque(&mut m, "🇪🇸");
+        let (p, _) = pintar(&b, 0.0, 40.0, Pincel::default(), &Simbolos::nuevos());
+        let hay = |f: &dyn Fn(&tiny_skia::PremultipliedColorU8) -> bool| p.pixels().iter().any(f);
+        assert!(hay(&|c| c.alpha() == 255
+            && c.red() > 150
+            && c.green() < 60
+            && c.blue() < 60));
+        assert!(hay(&|c| c.alpha() == 255
+            && c.red() > 200
+            && c.green() > 150
+            && c.blue() < 80));
     }
 
     #[test]

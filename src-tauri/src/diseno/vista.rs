@@ -349,7 +349,8 @@ pub fn rehacer(
         let Some(d) = &c.design else { continue };
         // Un diseño guardado con el tipo en inglés («Land») se arregla.
         let mut arreglado = d.clone();
-        let tipos = proxy_core::diseno::borrador::arreglar_tipos_es(&mut arreglado.card);
+        let tipos = proxy_core::diseno::borrador::arreglar_tipos_es(&mut arreglado.card)
+            | proxy_core::diseno::borrador::arreglar_tipos(&mut arreglado.card, lang);
         let e = efectivo_de(&arreglado, &cols);
         if !tipos && d.thumb_key.as_deref() == Some(huella_de(state, &e, 0, lang)?.as_str()) {
             continue;
@@ -473,10 +474,12 @@ mod tests {
                 type_line: ByLang {
                     es: "Artefacto".into(),
                     en: "Artifact".into(),
+                    otros: Default::default(),
                 },
                 rules: ByLang {
                     es: "{T}: Agrega {C}{C}.".into(),
                     en: "{T}: Add {C}{C}.".into(),
+                    otros: Default::default(),
                 },
                 ..FaceData::default()
             }],
@@ -607,6 +610,7 @@ mod tests {
                     type_line: ByLang {
                         es: if ficha { "Criatura ficha" } else { "Artefacto" }.into(),
                         en: if ficha { "Token Creature" } else { "Artifact" }.into(),
+                        otros: Default::default(),
                     },
                     ..FaceData::default()
                 }],

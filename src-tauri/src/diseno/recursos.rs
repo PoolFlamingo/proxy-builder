@@ -14,6 +14,7 @@ use std::time::Duration;
 
 use image::RgbaImage;
 use proxy_core::diseno::letras::Letras;
+use proxy_core::diseno::modelo::{DesignLang, Escritura};
 use proxy_core::diseno::pack::{Pack, PackError};
 use proxy_core::diseno::render::{Imagenes, Motor};
 use proxy_core::diseno::simbolos::Simbolos;
@@ -69,8 +70,9 @@ pub struct PackInfo {
 #[ts(export)]
 pub struct EstiloPropio {
     pub id: String,
-    pub nombre_es: String,
-    pub nombre_en: String,
+    /// El nombre por código de idioma, tal como lo trae el pack (la pantalla
+    /// elige el de la interfaz o, si no está, el inglés; si no, el id).
+    pub nombres: BTreeMap<String, String>,
     /// El de serie del que hereda (y al que se cae sin el pack).
     pub base: proxy_core::diseno::modelo::DesignStyle,
     /// Las variantes que se pueden elegir.
@@ -83,8 +85,8 @@ pub struct EstiloPropio {
 #[ts(export)]
 pub struct VariantePack {
     pub id: String,
-    pub nombre_es: String,
-    pub nombre_en: String,
+    /// Como `EstiloPropio::nombres`.
+    pub nombres: BTreeMap<String, String>,
 }
 
 /// Cómo están los símbolos.
@@ -111,6 +113,9 @@ struct Estado {
     fecha_simbolos: Option<i64>,
     packs: BTreeMap<String, Arc<Pack>>,
     letras: Vec<(LetraInfo, Arc<Vec<u8>>)>,
+    /// Las letras de japonés, coreano y chino (`letras_cjk`): idioma, su
+    /// huella y el fichero.
+    cjk: Vec<(DesignLang, String, Arc<Vec<u8>>)>,
 }
 
 /// Los recursos compartidos por todos los renders.
@@ -129,6 +134,37 @@ pub struct Instantanea {
     /// Huella de letras + pack + símbolos (entra en la huella del render).
     pub huella: String,
     pub generacion: u64,
+    /// La huella de cada letra de Asia oriental cargada.
+    pub huellas_cjk: Vec<(DesignLang, String)>,
+}
+
+impl Instantanea {
+    /// La huella de los recursos para un render en `lang`: en japonés,
+    /// coreano y chino, también la de su letra (al bajarla, esas cartas se
+    /// vuelven a pintar; las demás, no).
+    pub fn huella_para(&self, lang: DesignLang) -> String {
+        match self.huellas_cjk.iter().find(|(l, _)| *l == lang) {
+            Some((_, h)) => format!("{}|cjk:{h}", self.huella),
+            None => self.huella.clone(),
+        }
+    }
+}
+
+/// Las letras de Asia oriental ya bajadas (`letras-cjk/<código>.ttf`).
+fn leer_cjk(dir: &Path) -> Vec<(DesignLang, String, Arc<Vec<u8>>)> {
+    let mut v = Vec::new();
+    for lang in DesignLang::TODOS {
+        if matches!(lang.escritura(), Escritura::Latina | Escritura::Cirilica) {
+            continue;
+        }
+        if let Ok(datos) = std::fs::read(
+            dir.join("letras-cjk")
+                .join(format!("{}.ttf", lang.codigo())),
+        ) {
+            v.push((lang, huella(&datos), Arc::new(datos)));
+        }
+    }
+    v
 }
 
 fn leer_letras(dir: &Path) -> Vec<(LetraInfo, Arc<Vec<u8>>)> {
@@ -282,26 +318,21 @@ fn info_de(p: &Pack) -> PackInfo {
             .estilos
             .iter()
             .filter(|(id, _)| !proxy_core::diseno::pack::ESTILOS_DE_SERIE.contains(&id.as_str()))
-            .map(|(id, e)| {
-                let nombre = |l: &str| e.nombre.get(l).cloned().unwrap_or_else(|| id.clone());
-                EstiloPropio {
-                    id: id.clone(),
-                    nombre_es: nombre("es"),
-                    nombre_en: nombre("en"),
-                    base: serde_json::from_value(serde_json::Value::String(
-                        e.base.clone().unwrap_or_else(|| "classic".into()),
-                    ))
-                    .unwrap_or(proxy_core::diseno::modelo::DesignStyle::Classic),
-                    variantes: e
-                        .variantes
-                        .iter()
-                        .map(|(vid, n)| VariantePack {
-                            id: vid.clone(),
-                            nombre_es: n.get("es").cloned().unwrap_or_else(|| vid.clone()),
-                            nombre_en: n.get("en").cloned().unwrap_or_else(|| vid.clone()),
-                        })
-                        .collect(),
-                }
+            .map(|(id, e)| EstiloPropio {
+                id: id.clone(),
+                nombres: e.nombre.clone(),
+                base: serde_json::from_value(serde_json::Value::String(
+                    e.base.clone().unwrap_or_else(|| "classic".into()),
+                ))
+                .unwrap_or(proxy_core::diseno::modelo::DesignStyle::Classic),
+                variantes: e
+                    .variantes
+                    .iter()
+                    .map(|(vid, n)| VariantePack {
+                        id: vid.clone(),
+                        nombres: n.clone(),
+                    })
+                    .collect(),
             })
             .collect(),
         origen: p.def.origen.clone(),
@@ -333,6 +364,7 @@ impl Recursos {
                 fecha_simbolos: fecha,
                 packs: leer_packs(datos),
                 letras: leer_letras(datos),
+                cjk: leer_cjk(datos),
             }),
             generacion: AtomicU64::new(1),
         }
@@ -371,6 +403,7 @@ impl Recursos {
             huella: format!("{}|{}|{}", p.huella, e.huella_simbolos, letras.join(",")),
             pack: p,
             generacion: self.generacion.load(Ordering::SeqCst),
+            huellas_cjk: e.cjk.iter().map(|(l, h, _)| (*l, h.clone())).collect(),
         })
     }
 
@@ -477,6 +510,28 @@ impl Recursos {
         Ok(info)
     }
 
+    /// Si ya está la letra de Asia oriental de `lang`.
+    pub fn tiene_cjk(&self, lang: DesignLang) -> AppResult<bool> {
+        Ok(self.leer()?.cjk.iter().any(|(l, _, _)| *l == lang))
+    }
+
+    /// Guarda la letra de Asia oriental de `lang` (ya comprobada) y la carga
+    /// en los motores.
+    pub fn guardar_cjk(&self, lang: DesignLang, datos: Vec<u8>) -> AppResult<()> {
+        escribir_atomico(
+            &self
+                .dir
+                .join("letras-cjk")
+                .join(format!("{}.ttf", lang.codigo())),
+            &datos,
+        )?;
+        let mut e = self.escribir()?;
+        e.cjk.retain(|(l, _, _)| *l != lang);
+        e.cjk.push((lang, huella(&datos), Arc::new(datos)));
+        self.generacion.fetch_add(1, Ordering::SeqCst);
+        Ok(())
+    }
+
     pub fn quitar_letra(&self, id: &str) -> AppResult<()> {
         if let Ok(entradas) = std::fs::read_dir(self.dir.join("fuentes")) {
             for e in entradas.flatten() {
@@ -563,8 +618,13 @@ impl Recursos {
     /// Ejecuta `f` con el motor de este hilo, rehecho si cambiaron las letras.
     pub fn con_motor<R>(&self, f: impl FnOnce(&mut Motor) -> R) -> AppResult<R> {
         let generacion = self.generacion.load(Ordering::SeqCst);
-        let letras: Vec<Arc<Vec<u8>>> =
-            self.leer()?.letras.iter().map(|(_, d)| d.clone()).collect();
+        let (letras, cjk) = {
+            let e = self.leer()?;
+            let letras: Vec<Arc<Vec<u8>>> = e.letras.iter().map(|(_, d)| d.clone()).collect();
+            let cjk: Vec<(DesignLang, Arc<Vec<u8>>)> =
+                e.cjk.iter().map(|(l, _, d)| (*l, d.clone())).collect();
+            (letras, cjk)
+        };
         MOTOR.with(|celda| {
             let mut c = celda.borrow_mut();
             let rehacer = c.as_ref().is_none_or(|(g, _)| *g != generacion);
@@ -573,6 +633,9 @@ impl Recursos {
                     .map_err(|e| AppError::new(ErrorCode::Internal).with("detalle", e))?;
                 for d in &letras {
                     let _ = m.letras.cargar(d.as_ref().clone());
+                }
+                for (l, d) in &cjk {
+                    let _ = m.letras.cargar_cjk(d.as_ref().clone(), l.escritura());
                 }
                 *c = Some((generacion, m));
             }

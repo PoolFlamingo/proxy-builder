@@ -25,36 +25,191 @@ pub const ESTRECHADO_BASE_DEFECTO: f64 = 1.0;
 /// Hasta dónde se mueve cada texto con los ajustes finos (mm, arriba o abajo).
 pub const AJUSTE_MAX_MM: f64 = 3.0;
 
-/// En qué idioma sale un diseño.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize, TS)]
+/// En qué idioma sale un diseño. Los códigos son los de Scryfall (`pt`,
+/// `zhs`, `zht`), los mismos que la interfaz (`src/lib/idiomas.ts`). El orden
+/// es el de esa tabla y no se cambia: decide el orden de las claves al
+/// guardar un `ByLang`.
+#[derive(
+    Debug, Clone, Copy, Default, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, TS,
+)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub enum DesignLang {
     #[default]
     Es,
     En,
+    Fr,
+    De,
+    It,
+    Pt,
+    Ro,
+    Pl,
+    Nl,
+    Ru,
+    Uk,
+    Ja,
+    Ko,
+    Zhs,
+    Zht,
 }
 
-/// Un valor por idioma.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+/// La escritura de un idioma: decide qué letras hacen falta.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Escritura {
+    Latina,
+    Cirilica,
+    Japonesa,
+    Coreana,
+    ChinaSimplificada,
+    ChinaTradicional,
+}
+
+impl DesignLang {
+    pub const TODOS: [DesignLang; 15] = [
+        DesignLang::Es,
+        DesignLang::En,
+        DesignLang::Fr,
+        DesignLang::De,
+        DesignLang::It,
+        DesignLang::Pt,
+        DesignLang::Ro,
+        DesignLang::Pl,
+        DesignLang::Nl,
+        DesignLang::Ru,
+        DesignLang::Uk,
+        DesignLang::Ja,
+        DesignLang::Ko,
+        DesignLang::Zhs,
+        DesignLang::Zht,
+    ];
+
+    /// El código de Scryfall (y de la interfaz).
+    pub fn codigo(self) -> &'static str {
+        match self {
+            DesignLang::Es => "es",
+            DesignLang::En => "en",
+            DesignLang::Fr => "fr",
+            DesignLang::De => "de",
+            DesignLang::It => "it",
+            DesignLang::Pt => "pt",
+            DesignLang::Ro => "ro",
+            DesignLang::Pl => "pl",
+            DesignLang::Nl => "nl",
+            DesignLang::Ru => "ru",
+            DesignLang::Uk => "uk",
+            DesignLang::Ja => "ja",
+            DesignLang::Ko => "ko",
+            DesignLang::Zhs => "zhs",
+            DesignLang::Zht => "zht",
+        }
+    }
+
+    pub fn de_codigo(codigo: &str) -> Option<DesignLang> {
+        DesignLang::TODOS.into_iter().find(|l| l.codigo() == codigo)
+    }
+
+    /// Si Scryfall tiene cartas impresas en este idioma (si no, el texto de
+    /// reglas sale del Oracle en inglés).
+    pub fn impresas(self) -> bool {
+        !matches!(
+            self,
+            DesignLang::Ro | DesignLang::Pl | DesignLang::Nl | DesignLang::Uk
+        )
+    }
+
+    pub fn escritura(self) -> Escritura {
+        match self {
+            DesignLang::Ru | DesignLang::Uk => Escritura::Cirilica,
+            DesignLang::Ja => Escritura::Japonesa,
+            DesignLang::Ko => Escritura::Coreana,
+            DesignLang::Zhs => Escritura::ChinaSimplificada,
+            DesignLang::Zht => Escritura::ChinaTradicional,
+            _ => Escritura::Latina,
+        }
+    }
+
+    /// BCP-47: elige entre las formas japonesa y china de un ideograma.
+    pub fn locale(self) -> &'static str {
+        match self {
+            DesignLang::Es => "es-ES",
+            DesignLang::En => "en-GB",
+            DesignLang::Fr => "fr-FR",
+            DesignLang::De => "de-DE",
+            DesignLang::It => "it-IT",
+            DesignLang::Pt => "pt-BR",
+            DesignLang::Ro => "ro-RO",
+            DesignLang::Pl => "pl-PL",
+            DesignLang::Nl => "nl-NL",
+            DesignLang::Ru => "ru-RU",
+            DesignLang::Uk => "uk-UA",
+            DesignLang::Ja => "ja-JP",
+            DesignLang::Ko => "ko-KR",
+            DesignLang::Zhs => "zh-Hans-CN",
+            DesignLang::Zht => "zh-Hant-TW",
+        }
+    }
+}
+
+/// Un valor por idioma. Se guarda como `{ "es": …, "en": …, "fr": … }`: `es`
+/// y `en` **siempre** y primero (la 2.5.x los exige e ignora el resto), y los
+/// demás solo si existen. Así un diseño que solo usa español e inglés se
+/// guarda igual, byte a byte, que antes de haber más idiomas.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct ByLang<T> {
     pub es: T,
     pub en: T,
+    /// Los demás idiomas (nunca `es` ni `en`). `ts-rs` no sabe aplanar un
+    /// mapa genérico: en la pantalla se leen y escriben con
+    /// `src/lib/por-idioma.ts`.
+    #[serde(flatten)]
+    #[ts(skip)]
+    pub otros: std::collections::BTreeMap<DesignLang, T>,
+}
+
+/// Se lee a mano para ser tolerante: sin `es` o `en`, vacíos; una clave que
+/// no es de ningún idioma conocido (de una versión más nueva) se ignora.
+impl<'de, T: Deserialize<'de> + Default> Deserialize<'de> for ByLang<T> {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        let mut r = ByLang::default();
+        for (k, v) in std::collections::BTreeMap::<String, T>::deserialize(d)? {
+            match DesignLang::de_codigo(&k) {
+                Some(DesignLang::Es) => r.es = v,
+                Some(DesignLang::En) => r.en = v,
+                Some(l) => {
+                    r.otros.insert(l, v);
+                }
+                None => {}
+            }
+        }
+        Ok(r)
+    }
 }
 
 impl<T> ByLang<T> {
+    /// El valor de `lang`; si es un idioma sin valor propio, el inglés.
     pub fn get(&self, lang: DesignLang) -> &T {
         match lang {
             DesignLang::Es => &self.es,
             DesignLang::En => &self.en,
+            otro => self.otros.get(&otro).unwrap_or(&self.en),
         }
     }
+
+    /// Si `lang` tiene valor propio (`es` y `en` siempre lo tienen).
+    pub fn tiene(&self, lang: DesignLang) -> bool {
+        matches!(lang, DesignLang::Es | DesignLang::En) || self.otros.contains_key(&lang)
+    }
+}
+
+impl<T: Default> ByLang<T> {
+    /// El valor de `lang` para cambiarlo; si no lo tenía, lo crea vacío.
     pub fn get_mut(&mut self, lang: DesignLang) -> &mut T {
         match lang {
             DesignLang::Es => &mut self.es,
             DesignLang::En => &mut self.en,
+            otro => self.otros.entry(otro).or_default(),
         }
     }
 }
@@ -244,6 +399,33 @@ pub struct FaceDesign {
     pub texts: ByLang<FaceTexts>,
 }
 
+impl FaceDesign {
+    /// Los textos de la cara en `lang`. Los idiomas que no son el español ni
+    /// el inglés no toman nada del inglés: sin textos propios, el nombre es
+    /// el impreso y las reglas las oficiales (al elegir un idioma, la app le
+    /// copia el nombre temático, si lo hay).
+    pub fn textos(&self, lang: DesignLang) -> &FaceTexts {
+        static VACIOS: std::sync::LazyLock<FaceTexts> =
+            std::sync::LazyLock::new(FaceTexts::default);
+        match lang {
+            DesignLang::Es => &self.texts.es,
+            DesignLang::En => &self.texts.en,
+            l => self.texts.otros.get(&l).unwrap_or(&VACIOS),
+        }
+    }
+
+    /// Si alguna versión de la cara tiene las reglas escritas a mano.
+    pub fn reglas_a_mano(&self) -> bool {
+        self.texts.es.rules_override.is_some()
+            || self.texts.en.rules_override.is_some()
+            || self
+                .texts
+                .otros
+                .values()
+                .any(|t| t.rules_override.is_some())
+    }
+}
+
 /// Lo mecánico de una cara (o mitad), tal como vino de Scryfall.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -252,13 +434,19 @@ pub struct FaceData {
     /// Nombre en inglés (el original).
     pub name: String,
     pub mana_cost: String,
-    /// Línea de tipo y reglas por idioma: `en` del Oracle, `es` de la
-    /// impresión española (o el Oracle si no hay, con aviso).
+    /// Línea de tipo y reglas por idioma: `en` del Oracle; los demás, de la
+    /// impresión en ese idioma (o el Oracle si no hay, con aviso). Un idioma
+    /// que aún no se ha bajado cae al inglés (`ByLang::get`).
     pub type_line: ByLang<String>,
     pub rules: ByLang<String>,
     /// Nombre impreso en español (para sustituirlo en las reglas).
     #[serde(default)]
     pub printed_name_es: Option<String>,
+    /// Nombre impreso en los demás idiomas, por su código (ni `es`, que va
+    /// arriba y así lo sigue leyendo la 2.5.x, ni `en`, que es `name`).
+    /// Mejor leerlo con `printed_name`.
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub printed_names: std::collections::BTreeMap<String, String>,
     #[serde(default)]
     pub colors: Vec<String>,
     #[serde(default)]
@@ -300,6 +488,10 @@ pub struct CardData {
     /// No hay impresión en español: el texto `es` es el Oracle en inglés.
     #[serde(default)]
     pub sin_texto_es: bool,
+    /// Los códigos de los demás idiomas sin impresión (su texto es el
+    /// Oracle en inglés). Mejor leerlo con `sin_texto_en`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub sin_texto: Vec<String>,
     /// Impresa en tamaño grande (planos, planes, Vanguard).
     #[serde(default)]
     pub oversized: bool,
@@ -320,7 +512,68 @@ pub struct CardData {
     pub fetched_at: i64,
 }
 
+impl FaceData {
+    /// El nombre impreso en `lang` (en inglés, ninguno: es `name`).
+    pub fn printed_name(&self, lang: DesignLang) -> Option<&str> {
+        match lang {
+            DesignLang::Es => self.printed_name_es.as_deref(),
+            DesignLang::En => None,
+            l => self.printed_names.get(l.codigo()).map(String::as_str),
+        }
+    }
+
+    pub fn poner_printed_name(&mut self, lang: DesignLang, nombre: Option<String>) {
+        match lang {
+            DesignLang::Es => self.printed_name_es = nombre,
+            DesignLang::En => {}
+            l => match nombre {
+                Some(n) => {
+                    self.printed_names.insert(l.codigo().to_string(), n);
+                }
+                None => {
+                    self.printed_names.remove(l.codigo());
+                }
+            },
+        }
+    }
+}
+
 impl CardData {
+    /// Si el texto de `lang` es el Oracle en inglés porque no hay impresión
+    /// en ese idioma (o aún no se ha bajado).
+    pub fn sin_texto_en(&self, lang: DesignLang) -> bool {
+        match lang {
+            DesignLang::Es => self.sin_texto_es,
+            DesignLang::En => false,
+            l => {
+                self.sin_texto.iter().any(|c| c == l.codigo())
+                    || self.faces.iter().any(|f| !f.rules.tiene(l))
+            }
+        }
+    }
+
+    pub fn poner_sin_texto(&mut self, lang: DesignLang, sin: bool) {
+        match lang {
+            DesignLang::Es => self.sin_texto_es = sin,
+            DesignLang::En => {}
+            l => {
+                self.sin_texto.retain(|x| x != l.codigo());
+                if sin {
+                    self.sin_texto.push(l.codigo().to_string());
+                    self.sin_texto
+                        .sort_by_key(|c| DesignLang::de_codigo(c).unwrap_or_default());
+                }
+            }
+        }
+    }
+
+    /// Si ya tiene los datos de `lang` (la impresión, o saber que no la hay).
+    pub fn tiene_idioma(&self, lang: DesignLang) -> bool {
+        matches!(lang, DesignLang::Es | DesignLang::En)
+            || self.sin_texto.iter().any(|c| c == lang.codigo())
+            || self.faces.iter().all(|f| f.rules.tiene(lang))
+    }
+
     pub fn es_legendaria(&self) -> bool {
         self.frame_effects.iter().any(|f| f == "legendary")
             || self
@@ -635,7 +888,8 @@ impl CardDesign {
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[ts(export)]
 pub enum Aviso {
-    /// No hay impresión en español: las reglas `es` son el Oracle en inglés.
+    /// No hay impresión en el idioma de diseño: sus reglas son el Oracle en
+    /// inglés.
     SinTextoOficial,
     /// El texto no cabe ni a la letra mínima (`sobra` en mm).
     TextoNoCabe {
@@ -678,6 +932,11 @@ pub enum Aviso {
     /// Se pidió el nombre original en una cinta, pero el marco de este estilo
     /// no la tiene: va en el pie.
     SinCinta,
+    /// El idioma de diseño se escribe con letras que aún no se han bajado
+    /// (japonés, coreano, chino): sin ellas salen cuadrados.
+    FaltanLetras {
+        lang: DesignLang,
+    },
 }
 
 /// Lo que devuelve un borrador: el diseño y sus avisos.
@@ -798,10 +1057,12 @@ pub(crate) mod tests {
             type_line: ByLang {
                 es: "Conjuro".into(),
                 en: "Sorcery".into(),
+                otros: Default::default(),
             },
             rules: ByLang {
                 es: "Destruye todas las criaturas con fuerza de 3 o más.".into(),
                 en: "Destroy all creatures with power 3 or greater.".into(),
+                otros: Default::default(),
             },
             printed_name_es: Some("Ocaso".into()),
             ..FaceData::default()
@@ -829,6 +1090,7 @@ pub(crate) mod tests {
                             ..FaceTexts::default()
                         },
                         en: FaceTexts::default(),
+                        otros: Default::default(),
                     },
                 },
                 FaceDesign::default(),
@@ -909,11 +1171,93 @@ pub(crate) mod tests {
         d.card.faces[0].rules = ByLang {
             es: largo.clone(),
             en: largo.clone(),
+            ..ByLang::default()
         };
         d.faces[0].texts.es.flavor = "“Te daré mi destrucción y la llamaré una bendición.”".into();
         d.faces[0].texts.en.flavor = d.faces[0].texts.es.flavor.clone();
         let una = serde_json::to_string(&d).unwrap().len();
         let total = una * 108;
         assert!(total < 2_000_000, "{total} bytes");
+    }
+
+    // ── Idiomas: compatibilidad con lo guardado por la 2.5.x ───────────────
+
+    #[test]
+    fn cada_idioma_se_guarda_con_su_codigo() {
+        for l in DesignLang::TODOS {
+            assert_eq!(
+                serde_json::to_string(&l).unwrap(),
+                format!("\"{}\"", l.codigo())
+            );
+            assert_eq!(DesignLang::de_codigo(l.codigo()), Some(l));
+        }
+        assert_eq!(
+            DesignLang::TODOS.iter().filter(|l| l.impresas()).count(),
+            11
+        );
+        let mut v = serde_json::to_value(crate::model::PrintSettings::default()).unwrap();
+        v["designLang"] = "es".into();
+        let p: crate::model::PrintSettings = serde_json::from_value(v).unwrap();
+        assert_eq!(p.design_lang, DesignLang::Es);
+    }
+
+    /// 🛑 Un diseño guardado por la 2.5.9 se lee y se vuelve a escribir igual,
+    /// byte a byte.
+    #[test]
+    fn un_diseno_de_antes_se_reescribe_igual() {
+        let json = include_str!("../../tests/compatibilidad/diseno-2.5.9.json").trim();
+        let d: CardDesign = serde_json::from_str(json).unwrap();
+        assert_eq!(serde_json::to_string(&d).unwrap(), json);
+        assert_eq!(d.card.faces[0].printed_name(DesignLang::Es), Some("Ocaso"));
+        assert!(!d.card.sin_texto_en(DesignLang::Es));
+        // Sin datos en francés: cae al inglés y cuenta como sin texto.
+        assert_eq!(
+            d.card.faces[0].rules.get(DesignLang::Fr),
+            &d.card.faces[0].rules.en
+        );
+        assert!(d.card.sin_texto_en(DesignLang::Fr));
+        assert!(!d.card.tiene_idioma(DesignLang::Fr));
+    }
+
+    #[test]
+    fn otro_idioma_se_guarda_tras_es_y_en_y_lo_lee_la_version_de_antes() {
+        let mut b = ByLang {
+            es: "Tierra".to_string(),
+            en: "Land".to_string(),
+            ..ByLang::default()
+        };
+        *b.get_mut(DesignLang::Fr) = "Terrain".into();
+        let json = serde_json::to_string(&b).unwrap();
+        assert_eq!(json, r#"{"es":"Tierra","en":"Land","fr":"Terrain"}"#);
+        // Lo que tenía la 2.5.x: dos campos, sin más.
+        #[derive(Deserialize)]
+        #[allow(dead_code)]
+        struct Antes {
+            es: String,
+            en: String,
+        }
+        let a: Antes = serde_json::from_str(&json).unwrap();
+        assert_eq!(a.en, "Land");
+        // Y una clave de un idioma que esta versión no conoce, se ignora.
+        let b2: ByLang<String> =
+            serde_json::from_str(r#"{"es":"a","en":"b","xx":"c","ja":"d"}"#).unwrap();
+        assert_eq!(b2.get(DesignLang::Ja), "d");
+        assert_eq!(b2.otros.len(), 1);
+        assert!(b2.tiene(DesignLang::Ja) && !b2.tiene(DesignLang::De));
+        assert_eq!(b2.get(DesignLang::De), "b");
+    }
+
+    #[test]
+    fn nombres_impresos_y_sin_texto_por_idioma() {
+        let mut d = diseno_de_prueba().card;
+        d.faces[0].poner_printed_name(DesignLang::Fr, Some("Crépuscule".into()));
+        assert_eq!(d.faces[0].printed_name(DesignLang::Fr), Some("Crépuscule"));
+        assert_eq!(d.faces[0].printed_name(DesignLang::En), None);
+        d.poner_sin_texto(DesignLang::Pl, true);
+        d.poner_sin_texto(DesignLang::De, true);
+        assert_eq!(d.sin_texto, ["de", "pl"]);
+        assert!(d.tiene_idioma(DesignLang::Pl));
+        d.poner_sin_texto(DesignLang::Pl, false);
+        assert_eq!(d.sin_texto, ["de"]);
     }
 }

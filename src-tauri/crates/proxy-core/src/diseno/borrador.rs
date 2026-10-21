@@ -124,15 +124,13 @@ fn quitar_articulos(texto: &str, marca: &str) -> String {
 }
 
 /// Los nombres originales de una cara en un idioma: el de la cara, el de la
-/// carta entera («Dusk // Dawn») y, en español, el impreso.
+/// carta entera («Dusk // Dawn») y el impreso en ese idioma.
 fn originales<'a>(card: &'a CardData, cara: &'a FaceData, lang: DesignLang) -> Vec<&'a str> {
     let mut v = vec![cara.name.as_str()];
     for f in &card.faces {
         v.push(f.name.as_str());
-        if lang == DesignLang::Es {
-            if let Some(n) = &f.printed_name_es {
-                v.push(n);
-            }
+        if let Some(n) = f.printed_name(lang) {
+            v.push(n);
         }
     }
     v
@@ -144,7 +142,7 @@ pub fn reglas_efectivas(d: &CardDesign, cara: usize, lang: DesignLang) -> String
     let Some(datos) = d.card.faces.get(cara) else {
         return String::new();
     };
-    let textos = d.faces.get(cara).map(|f| f.texts.get(lang));
+    let textos = d.faces.get(cara).map(|f| f.textos(lang));
     // Las reglas a mano mandan, pero el nombre original se cambia igual por
     // el propio (la traducción sugerida lo deja con el original).
     let base = textos
@@ -164,7 +162,7 @@ pub fn nombre_efectivo(d: &CardDesign, cara: usize, lang: DesignLang) -> String 
     let propio = d
         .faces
         .get(cara)
-        .map(|f| f.texts.get(lang).name.trim())
+        .map(|f| f.textos(lang).name.trim())
         .unwrap_or("");
     if !propio.is_empty() {
         return propio.to_string();
@@ -172,10 +170,9 @@ pub fn nombre_efectivo(d: &CardDesign, cara: usize, lang: DesignLang) -> String 
     let Some(datos) = d.card.faces.get(cara) else {
         return String::new();
     };
-    match lang {
-        DesignLang::Es => datos.printed_name_es.clone().unwrap_or(datos.name.clone()),
-        DesignLang::En => datos.name.clone(),
-    }
+    datos
+        .printed_name(lang)
+        .map_or_else(|| datos.name.clone(), str::to_string)
 }
 
 /// El nombre original que va en la cinta o en el pie: el inglés de la carta
@@ -310,20 +307,40 @@ pub fn tipo_en_espanol(en: &str) -> Option<String> {
     Some(r)
 }
 
-/// Rellena el tipo en español de las caras que lo traen en inglés (diseños
+/// La línea de tipo en `lang` de una en inglés, sin red (`None` si no se
+/// sabe, y en inglés). El español con su gramática; los demás, con las
+/// frases de `tipos_idiomas`.
+pub fn tipo_traducido(en: &str, lang: DesignLang) -> Option<String> {
+    match lang {
+        DesignLang::Es => tipo_en_espanol(en),
+        DesignLang::En => None,
+        l => super::tipos_idiomas::tipo_en(en, l),
+    }
+}
+
+/// Rellena el tipo en `lang` de las caras que lo traen en inglés (diseños
 /// guardados antes de saber traducirlo). Devuelve si cambió algo.
-pub fn arreglar_tipos_es(card: &mut CardData) -> bool {
+pub fn arreglar_tipos(card: &mut CardData, lang: DesignLang) -> bool {
     let mut cambio = false;
     for f in &mut card.faces {
-        if f.type_line.es.is_empty() || f.type_line.es != f.type_line.en {
+        if !f.type_line.tiene(lang) {
             continue;
         }
-        if let Some(es) = tipo_en_espanol(&f.type_line.en) {
-            f.type_line.es = es;
+        let actual = f.type_line.get(lang);
+        if actual.is_empty() || *actual != f.type_line.en {
+            continue;
+        }
+        if let Some(t) = tipo_traducido(&f.type_line.en, lang) {
+            *f.type_line.get_mut(lang) = t;
             cambio = true;
         }
     }
     cambio
+}
+
+/// `arreglar_tipos` en español.
+pub fn arreglar_tipos_es(card: &mut CardData) -> bool {
+    arreglar_tipos(card, DesignLang::Es)
 }
 
 #[cfg(test)]
@@ -353,6 +370,7 @@ mod tests {
         c.faces[0].type_line = ByLang {
             es: "Land".into(),
             en: "Land".into(),
+            otros: Default::default(),
         };
         assert!(arreglar_tipos_es(&mut c));
         assert_eq!(c.faces[0].type_line.es, "Tierra");
@@ -433,6 +451,7 @@ mod tests {
             rules: ByLang {
                 es: reglas.into(),
                 en: String::new(),
+                otros: Default::default(),
             },
             ..FaceData::default()
         };

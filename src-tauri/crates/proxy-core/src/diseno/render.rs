@@ -75,6 +75,9 @@ impl Motor {
             letras.cargar(f.to_vec())?;
         }
         letras.cargar_emoji(LETRA_DE_EMOJI.to_vec())?;
+        // Las de la casa tienen el latín de todos los idiomas de la app y el
+        // cirílico ruso y ucraniano.
+        letras.respaldos(&["Spectral", "Montserrat"]);
         Ok(Motor {
             letras,
             m: Maquetador::nuevo(),
@@ -90,9 +93,12 @@ const LETRAS_DE_FABRICA: &[&[u8]] = &[
     include_bytes!("../../assets/fuentes/Montserrat-Variable.ttf"),
 ];
 
-/// Twemoji en color (COLR), para los emoji de cualquier texto. Los gráficos son
-/// de Twitter (CC BY 4.0); ver `Twemoji-LICENSE.txt`.
-const LETRA_DE_EMOJI: &[u8] = include_bytes!("../../assets/fuentes/Twemoji-Mozilla.ttf");
+/// Noto Color Emoji (COLRv1), para los emoji de cualquier texto: el fichero
+/// `2D/fonts/Noto-COLRv1.ttf` de `googlefonts/noto-emoji`, commit
+/// `e20cbc2bbec1926686be9f9bee7d1d2cfa1fea0e`, 5.038.236 bytes, SHA-256
+/// `b8e25ea68db82f9e4d0aee921f4420be2be39887bd5c893a2ad98710531f9d0c`.
+/// Licencia OFL 1.1; ver `Noto-COLRv1-LICENSE.txt`.
+pub(crate) const LETRA_DE_EMOJI: &[u8] = include_bytes!("../../assets/fuentes/Noto-COLRv1.ttf");
 
 /// Para qué es el render.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1861,10 +1867,7 @@ impl Carta<'_> {
                 c[3] as f32 / 255.0
             ));
         }
-        let codigo = match lang {
-            DesignLang::Es => "es",
-            DesignLang::En => "en",
-        };
+        let codigo = lang.codigo();
         let texto = def
             .texto
             .get(codigo)
@@ -2247,13 +2250,9 @@ pub(super) fn pie_del_pack(
     pack: &super::pack::PackDef,
 ) -> String {
     let propia = e.pie.template.get(lang);
-    let clave = match lang {
-        DesignLang::Es => "es",
-        DesignLang::En => "en",
-    };
     let del_pack = pack
         .plantilla_pie
-        .get(clave)
+        .get(lang.codigo())
         .or_else(|| pack.plantilla_pie.get("en"));
     match del_pack {
         Some(t) if propia == super::efectivo::PIE_DEFECTO => {
@@ -2270,10 +2269,7 @@ fn pie_con_plantilla(
     plantilla: &str,
 ) -> String {
     let p = &e.pie;
-    let idioma = match lang {
-        DesignLang::Es => "ES",
-        DesignLang::En => "EN",
-    };
+    let idioma = super::textos_motor::codigo_pie(lang);
     let mut t = plantilla.to_string();
     // Universo, año y créditos: si la plantilla no los pone, van a la derecha
     // de la última línea (como el «™ & ©» de las cartas impresas).
@@ -2541,7 +2537,7 @@ pub(super) fn pintar_cara(
     // ── Reglas: maquetar primero, porque la caja que crece mueve el resto.
     if d.faces
         .get(cara)
-        .is_some_and(|f| f.texts.get(lang).rules_override.is_some())
+        .is_some_and(|f| f.textos(lang).rules_override.is_some())
     {
         c.avisos.push(Aviso::ReglasEditadas {
             cara: cara as u32,
@@ -2551,7 +2547,7 @@ pub(super) fn pintar_cara(
     let sabor_txt = d
         .faces
         .get(cara)
-        .map(|f| f.texts.get(lang).flavor.clone())
+        .map(|f| f.textos(lang).flavor.clone())
         .filter(|s| d.options.show_flavor && !s.trim().is_empty())
         .unwrap_or_default();
     let sabor = texto::sabor(&sabor_txt);
@@ -2864,7 +2860,7 @@ pub(super) fn pintar_cara(
     let nombre = nombre_efectivo(d, cara, lang);
     if d.faces
         .get(cara)
-        .is_some_and(|f| f.texts.get(lang).name.trim().is_empty())
+        .is_some_and(|f| f.textos(lang).name.trim().is_empty())
     {
         c.avisos.push(Aviso::FaltaNombre {
             cara: cara as u32,
@@ -2996,8 +2992,11 @@ pub(super) fn pintar_cara(
     }
 
     // ── Avisos.
-    if lang == DesignLang::Es && d.card.sin_texto_es && !c.avisos.contains(&Aviso::SinTextoOficial)
-    {
+    let falta = Aviso::FaltanLetras { lang };
+    if !c.motor.letras.tiene_escritura(lang.escritura()) && !c.avisos.contains(&falta) {
+        c.avisos.push(falta);
+    }
+    if d.card.sin_texto_en(lang) && !c.avisos.contains(&Aviso::SinTextoOficial) {
         c.avisos.push(Aviso::SinTextoOficial);
     }
     Ok(Pieza {
@@ -3432,6 +3431,7 @@ mod tests {
                 type_line: super::super::modelo::ByLang {
                     es: String::new(),
                     en: tipo.into(),
+                    otros: Default::default(),
                 },
                 ..FaceData::default()
             }],
@@ -4035,6 +4035,34 @@ mod tests {
         // La de la colección manda.
         e.pie.template.es = "{num}".into();
         assert_eq!(pie_del_pack(&e, DesignLang::Es, "Dusk", &pack), "0002");
+    }
+
+    #[test]
+    fn el_pie_del_pack_en_su_idioma_o_en_ingles() {
+        let e = carta(&["W"], "Instant");
+        let mut pack = Pack::de_fabrica().unwrap().def;
+        pack.plantilla_pie
+            .insert("en".into(), "EN {lang} {num}".into());
+        pack.plantilla_pie
+            .insert("es".into(), "ES {lang} {num}".into());
+        pack.plantilla_pie
+            .insert("fr".into(), "FR {lang} {num}".into());
+        assert_eq!(
+            pie_del_pack(&e, DesignLang::Fr, "Dusk", &pack),
+            "FR FR 0002"
+        );
+        assert_eq!(
+            pie_del_pack(&e, DesignLang::De, "Dusk", &pack),
+            "EN DE 0002"
+        );
+        assert_eq!(
+            pie_del_pack(&e, DesignLang::Ko, "Dusk", &pack),
+            "EN KR 0002"
+        );
+        assert_eq!(
+            pie_del_pack(&e, DesignLang::Es, "Dusk", &pack),
+            "ES ES 0002"
+        );
     }
 
     fn cara(p: Option<&str>, t: Option<&str>, l: Option<&str>, d: Option<&str>) -> FaceData {

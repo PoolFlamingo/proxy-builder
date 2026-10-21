@@ -84,6 +84,7 @@ fn diseno(card: CardData, estilo: DesignStyle) -> CardDesign {
                     name: f.name.clone(),
                     ..FaceTexts::default()
                 },
+                otros: Default::default(),
             },
         })
         .collect();

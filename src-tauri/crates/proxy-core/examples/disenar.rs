@@ -49,12 +49,15 @@ fn cara(
         type_line: ByLang {
             es: tipo.0.into(),
             en: tipo.1.into(),
+            otros: Default::default(),
         },
         rules: ByLang {
             es: reglas.0.into(),
             en: reglas.1.into(),
+            otros: Default::default(),
         },
         printed_name_es: Some(es_name.into()),
+        printed_names: Default::default(),
         colors: colores.iter().map(|c| c.to_string()).collect(),
         power: fr.map(|f| f.0.into()),
         toughness: fr.map(|f| f.1.into()),
@@ -100,6 +103,7 @@ fn diseno(
                     flavor: String::new(),
                     rules_override: None,
                 },
+                otros: Default::default(),
             },
         }],
         before: BeforeDesign {
@@ -156,6 +160,7 @@ fn coleccion(original: OriginalName, pie: &str) -> Collection {
         footer_template: ByLang {
             es: pie.into(),
             en: pie.into(),
+            otros: Default::default(),
         },
         font_title: None,
         font_rules: None,

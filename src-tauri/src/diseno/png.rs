@@ -1,6 +1,7 @@
 //! **Exportar imágenes PNG** de las cartas diseñadas (Fase 6, paso 6.2 del
 //! plan de la 2.0): cada cara a la medida exacta del corte y a los PPP
-//! pedidos, en `es/` y `en/`, con el nombre `NN - Nombre.png`.
+//! pedidos, cada idioma en su carpeta (`es/`, `en/`, `fr/`…), con el nombre
+//! `NN - Nombre.png`.
 
 use std::collections::HashSet;
 use std::path::Path;
@@ -51,11 +52,9 @@ pub fn nombre_de_fichero(s: &str) -> String {
     limpio.trim().trim_end_matches('.').to_string()
 }
 
+/// Cada idioma en su carpeta, con su código (`es/`, `en/`, `fr/`…).
 fn carpeta(lang: DesignLang) -> &'static str {
-    match lang {
-        DesignLang::Es => "es",
-        DesignLang::En => "en",
-    }
+    lang.codigo()
 }
 
 /// Lo que hay que escribir: una entrada por diseño distinto, cara e idioma
@@ -202,6 +201,7 @@ mod tests {
                 type_line: ByLang {
                     es: "Artefacto".into(),
                     en: "Artifact".into(),
+                    otros: Default::default(),
                 },
                 ..FaceData::default()
             }],
@@ -241,5 +241,19 @@ mod tests {
         )
         .unwrap();
         assert_eq!(std::fs::read(&es).unwrap(), antes);
+        // Otro idioma, en su carpeta.
+        let n = exportar(
+            &s,
+            &cartas,
+            &destino,
+            CardSize::MTG,
+            300,
+            &[DesignLang::Fr],
+            &AtomicBool::new(false),
+            &|_, _| {},
+        )
+        .unwrap();
+        assert_eq!(n, 1);
+        assert!(destino.join("fr/0001 - Sol Ring.png").exists());
     }
 }

@@ -335,14 +335,6 @@ fn parrafos(lineas: &[String]) -> Vec<Parrafo> {
     lineas.iter().flat_map(|l| texto::reglas(l)).collect()
 }
 
-/// Etiqueta de los niveles del leveler según el idioma.
-fn palabra_nivel(lang: DesignLang) -> &'static str {
-    match lang {
-        DesignLang::Es => "NIVEL",
-        DesignLang::En => "LEVEL",
-    }
-}
-
 /// El contenido de la caja según el cuerpo de la cara. Lo que no sigue el
 /// patrón esperado queda como texto normal.
 pub fn contenido(
@@ -444,7 +436,7 @@ pub fn contenido(
                 return texto_normal(sabor);
             }
             let etiqueta = if cuerpo == Cuerpo::Leveler {
-                palabra_nivel(lang).to_string()
+                super::textos_motor::palabra_nivel(lang).to_string()
             } else {
                 String::new()
             };
@@ -1354,7 +1346,10 @@ mod tests {
     fn el_leveler_pone_la_palabra_de_su_idioma() {
         let reglas =
             "Subir de nivel {W}.\nNIVEL 2-6\n3/3\nDaña primero.\nNIVEL 7+\n4/4\nDaña dos veces.";
-        for (lang, palabra) in [(DesignLang::Es, "NIVEL"), (DesignLang::En, "LEVEL")] {
+        for (lang, palabra) in DesignLang::TODOS
+            .iter()
+            .map(|l| (*l, super::super::textos_motor::palabra_nivel(*l)))
+        {
             let c = contenido(Cuerpo::Leveler, reglas, Vec::new(), lang);
             let Contenido::Secciones {
                 secciones,
@@ -1388,6 +1383,19 @@ mod tests {
             &secciones[1].izq,
             Some(Insignia::Nivel { etiqueta, valor }) if etiqueta.is_empty() && valor == "8+"
         ));
+        // Los rangos de cualquier idioma se reconocen («等级2-6», «Lv 7+»).
+        for reglas in [
+            "升级{W}\n等级2-6\n3/3\n先攻\n等级7+\n4/4\n连击",
+            "Lvアップ {W}\nLv 2-6\n3/3\n先制攻撃\nLv 7+\n4/4\n二段攻撃",
+            "Stufe aufsteigen {W}\nSTUFE 2-6\n3/3\nErstschlag\nSTUFE 7+\n4/4\nDoppelschlag",
+        ] {
+            let c = contenido(Cuerpo::Leveler, reglas, Vec::new(), DesignLang::Fr);
+            let Contenido::Secciones { secciones, .. } = &c else {
+                panic!("se esperaban secciones en «{reglas}»");
+            };
+            assert_eq!(secciones.len(), 3, "{reglas}");
+            assert_eq!(secciones[2].fr.as_deref(), Some("4/4"));
+        }
     }
 
     #[test]

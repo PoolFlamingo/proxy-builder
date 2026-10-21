@@ -45,16 +45,13 @@ async fn borrador_de(
     id: &str,
     coleccion: Option<&Collection>,
     usados: &[String],
+    lang: DesignLang,
 ) -> AppResult<CardDesign> {
     let api = estado.scryfall.clone();
     let en = borrador::carta_completa(&estado.db, api.as_ref(), id).await?;
-    let es = borrador::impresion_es(&estado.db, api.as_ref(), &en).await?;
-    let fundida = borrador::fundida(&estado.db, api.as_ref(), &en).await?;
-    let datos = borrador::con_fundida(
-        borrador::datos(&en, es.as_ref(), crate::store::ahora_ms()),
-        fundida,
-    );
+    let datos = borrador::datos_de(&estado.db, api.as_ref(), &en, lang).await?;
     let mut d = borrador::montar(card, datos, coleccion, usados).design;
+    borrador::poner_textos(&mut d, lang);
     let impresas = maquetacion(&d.card).0.caras_impresas();
     for i in 0..d.faces.len() {
         // Las mitades y la aventura comparten la ilustración de la carta;
@@ -100,7 +97,9 @@ pub async fn borradores(
             (None, Some(id)) => {
                 let d = match hechos.get(&id) {
                     Some(d) => Ok(d.clone()),
-                    None => borrador_de(&estado, &card, &id, coleccion.as_ref(), &usados).await,
+                    None => {
+                        borrador_de(&estado, &card, &id, coleccion.as_ref(), &usados, lang).await
+                    }
                 };
                 match d {
                     Ok(d) => {
