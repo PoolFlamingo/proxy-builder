@@ -5,7 +5,7 @@
 //! en español; si no, la del mismo set y número; si no, la más reciente
 //! en español. Sin ninguna, el Oracle con el aviso `sinTextoOficial`.
 
-use proxy_core::diseno::borrador::siguiente_numero;
+use proxy_core::diseno::borrador::{siguiente_numero, tipo_en_espanol};
 use proxy_core::diseno::estructura::limpiar;
 use proxy_core::diseno::modelo::*;
 use proxy_core::model::{CardSource, DeckCard};
@@ -188,7 +188,9 @@ fn cara_de(en: &ScryCard, es: Option<&ScryCard>, i: Option<usize>) -> FaceData {
             None => en.mana_cost.clone().unwrap_or_default(),
         },
         type_line: ByLang {
-            es: tipo_es.unwrap_or_else(|| tipo_en.clone()),
+            es: tipo_es
+                .or_else(|| tipo_en_espanol(&tipo_en))
+                .unwrap_or_else(|| tipo_en.clone()),
             en: tipo_en,
         },
         rules: ByLang {

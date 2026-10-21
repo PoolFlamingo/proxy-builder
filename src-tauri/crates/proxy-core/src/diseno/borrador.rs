@@ -217,10 +217,147 @@ pub fn numero(n: u32, ficha: bool) -> String {
     }
 }
 
+/// (tipo en inglés, español, ¿femenino?)
+const TIPOS: [(&str, &str, bool); 11] = [
+    ("Land", "Tierra", true),
+    ("Creature", "Criatura", true),
+    ("Artifact", "Artefacto", false),
+    ("Enchantment", "Encantamiento", false),
+    ("Instant", "Instantáneo", false),
+    ("Sorcery", "Conjuro", false),
+    ("Planeswalker", "Planeswalker", false),
+    ("Battle", "Batalla", true),
+    ("Plane", "Plano", false),
+    ("Phenomenon", "Fenómeno", false),
+    ("Scheme", "Maquinación", true),
+];
+
+/// Los subtipos que se saben sin red (los que Scryfall no suele dejar en
+/// blanco no hacen falta: los de criatura son demasiados).
+const SUBTIPOS: [(&str, &str); 19] = [
+    ("Plains", "Llanura"),
+    ("Island", "Isla"),
+    ("Swamp", "Pantano"),
+    ("Mountain", "Montaña"),
+    ("Forest", "Bosque"),
+    ("Equipment", "Equipo"),
+    ("Vehicle", "Vehículo"),
+    ("Treasure", "Tesoro"),
+    ("Clue", "Pista"),
+    ("Food", "Comida"),
+    ("Blood", "Sangre"),
+    ("Gold", "Oro"),
+    ("Aura", "Aura"),
+    ("Saga", "Saga"),
+    ("Class", "Clase"),
+    ("Curse", "Maldición"),
+    ("Shrine", "Santuario"),
+    ("Lesson", "Lección"),
+    ("Trap", "Trampa"),
+];
+
+/// La línea de tipo en español de una en inglés, sin red: un solo tipo de
+/// carta (con «Basic» o «Legendary») y subtipos conocidos. `None` si algo no
+/// se sabe (criaturas, fichas, tipos mezclados): ahí manda lo que imprimió
+/// Scryfall. Evita que salga «Land» en una carta en español.
+pub fn tipo_en_espanol(en: &str) -> Option<String> {
+    let (tipos, subtipos) = match en.split_once('—') {
+        Some((a, b)) => (a.trim(), Some(b.trim())),
+        None => (en.trim(), None),
+    };
+    let mut basica = false;
+    let mut legendaria = false;
+    let mut tipo = None;
+    for p in tipos.split_whitespace() {
+        match p {
+            "Basic" => basica = true,
+            "Legendary" => legendaria = true,
+            _ => {
+                let t = TIPOS.iter().find(|t| t.0 == p)?;
+                if tipo.replace(t).is_some() {
+                    return None;
+                }
+            }
+        }
+    }
+    let (_, nombre, femenino) = tipo?;
+    if basica && *nombre != "Tierra" {
+        return None;
+    }
+    let mut r = nombre.to_string();
+    if basica {
+        r.push_str(" básica");
+    }
+    if legendaria {
+        r.push_str(if *femenino {
+            " legendaria"
+        } else {
+            " legendario"
+        });
+    }
+    if let Some(sub) = subtipos {
+        let palabras: Vec<&str> = sub.split_whitespace().collect();
+        if palabras.is_empty() {
+            return None;
+        }
+        let es: Option<Vec<&str>> = palabras
+            .iter()
+            .map(|p| SUBTIPOS.iter().find(|s| s.0 == *p).map(|s| s.1))
+            .collect();
+        r.push_str(" — ");
+        r.push_str(&es?.join(" "));
+    }
+    Some(r)
+}
+
+/// Rellena el tipo en español de las caras que lo traen en inglés (diseños
+/// guardados antes de saber traducirlo). Devuelve si cambió algo.
+pub fn arreglar_tipos_es(card: &mut CardData) -> bool {
+    let mut cambio = false;
+    for f in &mut card.faces {
+        if f.type_line.es.is_empty() || f.type_line.es != f.type_line.en {
+            continue;
+        }
+        if let Some(es) = tipo_en_espanol(&f.type_line.en) {
+            f.type_line.es = es;
+            cambio = true;
+        }
+    }
+    cambio
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::diseno::modelo::{ByLang, FaceTexts};
+
+    #[test]
+    fn tipos_sin_red() {
+        let t = |s| tipo_en_espanol(s).unwrap();
+        assert_eq!(t("Land"), "Tierra");
+        assert_eq!(t("Legendary Land"), "Tierra legendaria");
+        assert_eq!(t("Basic Land — Island"), "Tierra básica — Isla");
+        assert_eq!(
+            t("Legendary Artifact — Equipment"),
+            "Artefacto legendario — Equipo"
+        );
+        assert_eq!(t("Instant"), "Instantáneo");
+        assert_eq!(tipo_en_espanol("Creature — Elf"), None);
+        assert_eq!(tipo_en_espanol("Artifact Creature"), None);
+        assert_eq!(tipo_en_espanol("Token Creature — Bird"), None);
+    }
+
+    #[test]
+    fn arregla_los_tipos_guardados_en_ingles() {
+        let mut c = crate::diseno::modelo::tests::diseno_de_prueba().card;
+        c.faces[0].type_line = ByLang {
+            es: "Land".into(),
+            en: "Land".into(),
+        };
+        assert!(arreglar_tipos_es(&mut c));
+        assert_eq!(c.faces[0].type_line.es, "Tierra");
+        assert!(!arreglar_tipos_es(&mut c));
+    }
 
     #[test]
     fn progenitus_en_espanol_se_sustituye_dos_veces() {
