@@ -4,21 +4,22 @@
 //   node scripts/idiomas.mjs            # falla si a algún idioma le falta algo
 //   node scripts/idiomas.mjs --detalle  # además, lista cada aviso
 //
-// Cada diccionario (`src/i18n/<código>/`, un fichero por área) se indexa por la
-// CADENA FUENTE EN ESPAÑOL y `t()` cae al inglés (y luego al español) cuando
-// no encuentra la entrada. Es un respaldo deliberado, pero hace que una
-// traducción que falta NO se note programando: todo compila y pinta, y el
-// hueco solo se ve con la app en ese idioma. Este script es la forma de
-// enterarse.
+// Cada diccionario (`src/i18n/<código>/`, un JSON por área, que `cargar.ts`
+// funde) se indexa por la CADENA FUENTE EN ESPAÑOL y `t()` cae al inglés (y
+// luego al español) cuando no encuentra la entrada. Es un respaldo deliberado,
+// pero hace que una traducción que falta NO se note programando: todo compila
+// y pinta, y el hueco solo se ve con la app en ese idioma. Este script es la
+// forma de enterarse.
 //
 // Cuenta como «pedido» todo literal dentro de `t("…")` y `paraTraducir("…")`.
 // Por idioma comprueba (fallo): que no falte ninguna cadena, que ninguna esté
-// en dos áreas, que cada traducción (y cada forma de un plural) traiga los
-// mismos `{x}` que la española, que cada plural tenga todas las categorías de
-// `Intl.PluralRules` de su idioma y que solo lleven plural las cadenas con
-// `{n}`. Avisa (sin fallar) de las que sobran y de las idénticas al inglés.
-// Las que deben ser iguales al inglés en un idioma («Deck» en alemán) van en
-// `src/i18n/<código>/identicas.json` (una lista de cadenas fuente).
+// en dos áreas ni dos veces en la misma, que cada traducción (y cada forma de
+// un plural) traiga los mismos `{x}` que la española, que cada plural tenga
+// todas las categorías de `Intl.PluralRules` de su idioma y que solo lleven
+// plural las cadenas con `{n}`. Avisa (sin fallar) de las que sobran y de las
+// idénticas al inglés. Las que deben ser iguales al inglés en un idioma («Deck»
+// en alemán) van en `src/i18n/<código>/identicas.json` (una lista de cadenas
+// fuente).
 
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -95,27 +96,28 @@ export async function leerTabla() {
 }
 
 /**
- * Los diccionarios en disco: código → { areas: { area: objeto }, indice }.
- * `indice` es el texto de su `index.ts`, para ver que funde todas las áreas.
+ * Los diccionarios en disco: código → { areas: { area: objeto }, identicas,
+ * repetidas }. Cada área es un `<área>.json` de la carpeta del idioma.
+ * `repetidas` son las cadenas que salen dos veces en el mismo fichero:
+ * `JSON.parse` se las come en silencio (el TS de antes no las dejaba pasar).
  */
-export async function leerDiccionarios(dir = I18N) {
+export function leerDiccionarios(dir = I18N) {
 	const salida = {};
 	for (const codigo of readdirSync(dir)) {
 		const p = join(dir, codigo);
 		if (!statSync(p).isDirectory() || codigo.startsWith("_")) continue;
 		const areas = {};
+		const repetidas = [];
 		for (const f of readdirSync(p)) {
-			if (f === "index.ts" || !f.endsWith(".ts")) continue;
-			const mod = await importarTs(join(p, f));
-			const valores = Object.values(mod);
-			areas[f.replace(/\.ts$/, "")] =
-				valores.length === 1 ? valores[0] : Object.assign({}, ...valores);
-		}
-		let indice = "";
-		try {
-			indice = readFileSync(join(p, "index.ts"), "utf8");
-		} catch {
-			/* sin index.ts: lo dice comprobar() */
+			if (f === "identicas.json" || !f.endsWith(".json")) continue;
+			const area = f.replace(/\.json$/, "");
+			const texto = readFileSync(join(p, f), "utf8");
+			areas[area] = JSON.parse(texto);
+			const vistas = new Set();
+			for (const m of texto.matchAll(/^\t"((?:[^"\\]|\\.)*)"\s*:/gm)) {
+				if (vistas.has(m[1])) repetidas.push(`repetida en ${area}: "${desescapar(m[1])}"`);
+				vistas.add(m[1]);
+			}
 		}
 		let identicas = [];
 		try {
@@ -123,7 +125,7 @@ export async function leerDiccionarios(dir = I18N) {
 		} catch {
 			/* sin excepciones */
 		}
-		salida[codigo] = { areas, indice, identicas };
+		salida[codigo] = { areas, identicas, repetidas };
 	}
 	return salida;
 }
@@ -135,9 +137,18 @@ const mismos = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
  * Comprueba un idioma. Devuelve `{ errores, avisos, total }` (listas de
  * textos). `en` es el diccionario inglés fundido, para el aviso de idénticas.
  */
-export function comprobar({ codigo, locale, areas, indice, pedidas, areasEn, en, identicas = [] }) {
+export function comprobar({
+	codigo,
+	locale,
+	areas,
+	repetidas = [],
+	pedidas,
+	areasEn,
+	en,
+	identicas = [],
+}) {
 	const permitidas = new Set(identicas);
-	const errores = [];
+	const errores = [...repetidas];
 	const avisos = [];
 	const fundido = new Map();
 	for (const [area, dic] of Object.entries(areas)) {
@@ -147,9 +158,7 @@ export function comprobar({ codigo, locale, areas, indice, pedidas, areasEn, en,
 		}
 	}
 	for (const area of areasEn) {
-		if (!(area in areas)) errores.push(`falta el área ${area}.ts`);
-		else if (!new RegExp(`from "\\./${area}"`).test(indice))
-			errores.push(`index.ts no funde el área ${area}`);
+		if (!(area in areas)) errores.push(`falta el área ${area}.json`);
 	}
 	const categorias = new Intl.PluralRules(locale).resolvedOptions().pluralCategories;
 	for (const [k, origen] of pedidas) {
@@ -194,30 +203,60 @@ export function comprobar({ codigo, locale, areas, indice, pedidas, areasEn, en,
 	return { errores, avisos, total: pedidas.size };
 }
 
+/**
+ * El español es la fuente: su diccionario repite cada cadena como su propia
+ * traducción. Así `src/i18n/es/` tiene los mismos ficheros y claves que el
+ * inglés, y una cadena nueva de `t()` no se escapa sin entrada en español.
+ */
+export function comprobarFuente({ areas, repetidas = [], pedidas, areasEn }) {
+	const errores = [...repetidas];
+	const avisos = [];
+	const vistas = new Set();
+	for (const [area, dic] of Object.entries(areas)) {
+		for (const [k, v] of Object.entries(dic)) {
+			if (vistas.has(k)) errores.push(`en dos áreas (${area}): "${k}"`);
+			vistas.add(k);
+			if (v !== k) errores.push(`en es, el valor no es la fuente: "${k}" → ${JSON.stringify(v)}`);
+		}
+	}
+	for (const area of areasEn) {
+		if (!(area in areas)) errores.push(`falta el área ${area}.json`);
+	}
+	for (const [k, origen] of pedidas) {
+		if (!vistas.has(k)) errores.push(`falta "${k}"  ← ${origen}`);
+	}
+	for (const k of vistas) {
+		if (!pedidas.has(k)) avisos.push(`sobra "${k}"`);
+	}
+	return { errores, avisos, total: pedidas.size };
+}
+
 async function main() {
 	const detalle = process.argv.includes("--detalle");
 	const pedidas = leerPedidas();
 	const tabla = await leerTabla();
-	const dics = await leerDiccionarios();
+	const dics = leerDiccionarios();
 	const areasEn = Object.keys(dics.en?.areas ?? {});
 	const en = Object.assign({}, ...Object.values(dics.en?.areas ?? {}));
 	let mal = false;
 	for (const { codigo, locale } of tabla) {
-		if (codigo === "es") continue;
 		const d = dics[codigo];
 		if (!d) {
 			mal = true;
 			console.error(`✖ ${codigo}: no hay diccionario (src/i18n/${codigo}/)`);
 			continue;
 		}
-		const { errores, avisos, total } = comprobar({
-			codigo,
-			locale,
-			...d,
-			pedidas,
-			areasEn,
-			en,
-		});
+		const { errores, avisos, total } =
+			codigo === "es"
+				? comprobarFuente({ ...d, pedidas, areasEn })
+				: comprobar({
+						codigo,
+						locale,
+						...d,
+						pedidas,
+						areasEn,
+						en,
+					});
 		const nota = avisos.length ? ` (${avisos.length} aviso(s))` : "";
 		if (errores.length) {
 			mal = true;

@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { comprobar } from "../idiomas.mjs";
+import { comprobar, comprobarFuente } from "../idiomas.mjs";
 
 const pedidas = new Map([
 	["Hola", "a.tsx"],
 	["{n} cartas", "a.tsx"],
 	["Deck de {nombre}", "a.tsx"],
 ]);
-const base = { areasEn: ["comun"], indice: 'import { COMUN } from "./comun";', pedidas, en: {} };
+const base = { areasEn: ["comun"], pedidas, en: {} };
 
 describe("comprobar", () => {
 	it("un diccionario completo pasa", () => {
@@ -85,14 +85,57 @@ describe("comprobar", () => {
 		expect(r.avisos).toHaveLength(2);
 	});
 
-	it("falla si index.ts no funde un área", () => {
+	it("falta un área que el inglés tiene", () => {
 		const r = comprobar({
 			...base,
 			codigo: "fr",
 			locale: "fr-FR",
-			indice: "",
-			areas: { comun: {} },
+			pedidas: new Map(),
+			areas: { otra: {} },
 		});
-		expect(r.errores.some((e) => e.includes("no funde"))).toBe(true);
+		expect(r.errores).toEqual(["falta el área comun.json"]);
+	});
+
+	it("lleva las cadenas repetidas dentro de un mismo fichero como fallo", () => {
+		const r = comprobar({
+			...base,
+			codigo: "fr",
+			locale: "fr-FR",
+			repetidas: ['repetida en comun: "Hola"'],
+			areas: {
+				comun: {
+					Hola: "Salut",
+					"{n} cartas": { one: "{n} carte", many: "{n} de cartes", other: "{n} cartes" },
+					"Deck de {nombre}": "Deck de {nombre}",
+				},
+			},
+		});
+		expect(r.errores).toEqual(['repetida en comun: "Hola"']);
+	});
+});
+
+describe("comprobarFuente (español)", () => {
+	it("cada cadena vale lo mismo que su clave: pasa", () => {
+		const r = comprobarFuente({
+			...base,
+			areas: { comun: { Hola: "Hola", "{n} cartas": "{n} cartas" } },
+			pedidas: new Map([
+				["Hola", "a.tsx"],
+				["{n} cartas", "a.tsx"],
+			]),
+		});
+		expect(r.errores).toEqual([]);
+	});
+
+	it("una traducción distinta, una cadena que falta y un área que falta fallan", () => {
+		const r = comprobarFuente({
+			...base,
+			areas: { otra: { Hola: "Hi" } },
+			pedidas: new Map([["Adiós", "a.tsx"]]),
+		});
+		expect(r.errores).toHaveLength(3);
+		expect(r.errores.some((e) => e.includes('el valor no es la fuente: "Hola"'))).toBe(true);
+		expect(r.errores.some((e) => e.includes('falta "Adiós"'))).toBe(true);
+		expect(r.errores.some((e) => e.includes("falta el área comun.json"))).toBe(true);
 	});
 });

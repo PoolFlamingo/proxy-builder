@@ -1,0 +1,19 @@
+{
+	"Scryfall · listo para imprimir": "Scryfall · 可直接打印",
+	"Deck": "套牌",
+	"Biblioteca": "牌组库",
+	"Lista de cartas": "牌表",
+	"Exportar": "导出",
+	"Guardado": "已保存",
+	"Guardando…": "正在保存…",
+	"Sin guardar": "未保存",
+	"Error al guardar": "保存失败",
+	"Deck sin título": "未命名套牌",
+	"Proxy Builder {version} está lista": "Proxy Builder {version} 已就绪",
+	"Se instala al reiniciar; el sistema pedirá tu contraseña.": "重启后安装；系统会要求输入密码。",
+	"Se instala al reiniciar la app.": "重启应用后安装。",
+	"Reiniciar": "重启",
+	"Reinicia la app con la versión nueva. El sistema pedirá tu contraseña.": "以新版本重启应用。系统会要求输入密码。",
+	"Reinicia la app con la versión nueva.": "以新版本重启应用。",
+	"Actualizar a {version}": "更新到 {version}"
+}
