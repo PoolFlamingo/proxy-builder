@@ -49,12 +49,15 @@ fn diseno(c: &Caso) -> CardDesign {
         type_line: ByLang {
             es: c.tipo.into(),
             en: c.tipo_en.into(),
+            otros: Default::default(),
         },
         rules: ByLang {
             es: c.reglas.into(),
             en: c.reglas.into(),
+            otros: Default::default(),
         },
         printed_name_es: Some(c.original.into()),
+        printed_names: Default::default(),
         colors: c.colores.iter().map(|x| x.to_string()).collect(),
         power: c.fr.map(|f| f.0.into()),
         toughness: c.fr.map(|f| f.1.into()),
@@ -83,6 +86,7 @@ fn diseno(c: &Caso) -> CardDesign {
                     rules_override: None,
                 },
                 en: FaceTexts::default(),
+                otros: Default::default(),
             },
         }],
         before: BeforeDesign {
@@ -405,6 +409,195 @@ fn dorados_de_los_casos_base() {
             fallos.push(format!("{}: {d:.2} %", c.archivo));
         }
     }
+    assert!(fallos.is_empty(), "dorados distintos: {fallos:?}");
+}
+
+/// La legendaria de los casos base en otro idioma: su nombre, tipo y reglas
+/// (si `reglas` es `None`, sin impresión: las del inglés).
+fn en_idioma(
+    lang: DesignLang,
+    nombre: &str,
+    tipo: &str,
+    reglas: Option<&str>,
+    sabor: &str,
+) -> CardDesign {
+    let c = casos().into_iter().next().unwrap();
+    let mut d = diseno(&c);
+    let f = &mut d.card.faces[0];
+    *f.type_line.get_mut(lang) = tipo.into();
+    match reglas {
+        Some(r) => *f.rules.get_mut(lang) = r.into(),
+        None => f.rules.en = LEGENDARIA_EN.into(),
+    }
+    d.card.poner_sin_texto(lang, reglas.is_none());
+    d.faces[0].texts.otros.insert(
+        lang,
+        FaceTexts {
+            name: nombre.into(),
+            flavor: sabor.into(),
+            rules_override: None,
+        },
+    );
+    d
+}
+
+const LEGENDARIA_EN: &str = "Flying, vigilance\nWhenever Arcades, the Strategist or another creature you control with defender enters, draw a card.";
+
+/// Los idiomas nuevos (Fase E): latino con acentos, cirílico y uno sin
+/// cartas impresas (tipo de las tablas, reglas en inglés y pie «RO»).
+fn casos_de_idiomas() -> Vec<(&'static str, DesignLang, CardDesign)> {
+    vec![
+        (
+            "idioma-fr",
+            DesignLang::Fr,
+            en_idioma(
+                DesignLang::Fr,
+                "Dame d'Épreuve, dragon ancien",
+                "Créature légendaire — dragon ancien",
+                Some("Vol, vigilance\nÀ chaque fois qu'Arcades, le Stratège ou une autre créature avec le défenseur que vous contrôlez arrive sur le champ de bataille, piochez une carte."),
+                "« Les ailes d'un dragon ne connaissent pas la peur. »",
+            ),
+        ),
+        (
+            "idioma-ru",
+            DesignLang::Ru,
+            en_idioma(
+                DesignLang::Ru,
+                "Госпожа Испытаний, Древний Дракон",
+                "Легендарное Существо — Древний Дракон",
+                Some("Полет, бдительность\nКаждый раз, когда Аркадес, Стратег или другое существо под вашим контролем с защитником выходит на поле битвы, возьмите карту."),
+                "«Крылья дракона не знают страха».",
+            ),
+        ),
+        (
+            "idioma-ro",
+            DesignLang::Ro,
+            en_idioma(
+                DesignLang::Ro,
+                "Doamna Încercării, dragon străvechi",
+                &proxy_core::diseno::borrador::tipo_traducido("Legendary Creature", DesignLang::Ro)
+                    .unwrap(),
+                None,
+                "„Aripile unui dragon nu știu ce-i frica.”",
+            ),
+        ),
+    ]
+}
+
+/// Compara con su dorado (o lo escribe si no está o se pide).
+fn comparar(archivo: &str, imagen: &image::RgbaImage, fallos: &mut Vec<String>) {
+    let ruta = dir().join(format!("{archivo}.png"));
+    if std::env::var("PB_ACTUALIZAR_DORADOS").is_ok() || !ruta.exists() {
+        imagen.save(&ruta).unwrap();
+        return;
+    }
+    let dorado = image::open(&ruta).unwrap().to_rgba8();
+    let d = diferencia(imagen, &dorado);
+    if d >= 0.5 {
+        imagen
+            .save(std::env::temp_dir().join(format!("{archivo}-nuevo.png")))
+            .unwrap();
+        fallos.push(format!("{archivo}: {d:.2} %"));
+    }
+}
+
+#[test]
+fn dorados_en_otros_idiomas() {
+    let (pack, simbolos, artes) = entorno();
+    let rec = Recursos {
+        pack: &pack,
+        simbolos: &simbolos,
+        imagenes: &artes,
+    };
+    let mut motor = Motor::de_fabrica().unwrap();
+    let col = coleccion();
+    let mut fallos = Vec::new();
+    for (archivo, lang, d) in casos_de_idiomas() {
+        let e = efectivo(&d, Some(&col));
+        let r = render(
+            &mut motor,
+            &e,
+            0,
+            lang,
+            &rec,
+            CardSize::MTG,
+            ANCHO,
+            Salida::Impresion,
+        )
+        .unwrap();
+        assert!(
+            !r.avisos
+                .iter()
+                .any(|a| matches!(a, Aviso::FaltanLetras { .. })),
+            "{archivo}: {:?}",
+            r.avisos
+        );
+        // Sin impresión en rumano: el aviso de reglas en inglés.
+        assert_eq!(
+            r.avisos.contains(&Aviso::SinTextoOficial),
+            lang == DesignLang::Ro,
+            "{archivo}: {:?}",
+            r.avisos
+        );
+        comparar(archivo, &r.imagen, &mut fallos);
+    }
+    assert!(fallos.is_empty(), "dorados distintos: {fallos:?}");
+}
+
+/// El japonés, con la letra que la app baja aparte: `PB_CJK=<NotoSansJP[wght].ttf>
+/// cargo test -p proxy-core --test dorados -- --ignored dorado_en_japones`.
+/// Sin la letra, sale el aviso `FaltanLetras`.
+#[test]
+#[ignore]
+fn dorado_en_japones() {
+    let (pack, simbolos, artes) = entorno();
+    let rec = Recursos {
+        pack: &pack,
+        simbolos: &simbolos,
+        imagenes: &artes,
+    };
+    let d = en_idioma(
+        DesignLang::Ja,
+        "試練の淑女、古の竜",
+        "伝説のクリーチャー — エルダー・ドラゴン",
+        Some("飛行、警戒\n策略家、アルカデスかあなたがコントロールしていて防衛を持つ他のクリーチャーが１体戦場に出るたび、カード１枚を引く。"),
+        "「竜の翼は恐れを知らない。」",
+    );
+    let e = efectivo(&d, Some(&coleccion()));
+    let mut motor = Motor::de_fabrica().unwrap();
+    let sin = render(
+        &mut motor,
+        &e,
+        0,
+        DesignLang::Ja,
+        &rec,
+        CardSize::MTG,
+        ANCHO,
+        Salida::Impresion,
+    )
+    .unwrap();
+    assert!(sin.avisos.contains(&Aviso::FaltanLetras {
+        lang: DesignLang::Ja
+    }));
+    let letra = std::fs::read(std::env::var("PB_CJK").expect("PB_CJK")).unwrap();
+    motor.letras.cargar_cjk(letra, Escritura::Japonesa).unwrap();
+    let r = render(
+        &mut motor,
+        &e,
+        0,
+        DesignLang::Ja,
+        &rec,
+        CardSize::MTG,
+        ANCHO,
+        Salida::Impresion,
+    )
+    .unwrap();
+    assert!(!r
+        .avisos
+        .iter()
+        .any(|a| matches!(a, Aviso::FaltanLetras { .. })));
+    let mut fallos = Vec::new();
+    comparar("idioma-ja", &r.imagen, &mut fallos);
     assert!(fallos.is_empty(), "dorados distintos: {fallos:?}");
 }
 
@@ -802,12 +995,15 @@ fn balatro_contra_el_autor() {
             type_line: ByLang {
                 es: s("tipo"),
                 en: s("tipo"),
+                otros: Default::default(),
             },
             rules: ByLang {
                 es: s("reglas"),
                 en: s("reglas"),
+                otros: Default::default(),
             },
             printed_name_es: None,
+            printed_names: Default::default(),
             colors: lista("colores"),
             power: fr.first().cloned(),
             toughness: fr.get(1).cloned(),
@@ -847,6 +1043,7 @@ fn balatro_contra_el_autor() {
                         flavor: String::new(),
                         rules_override: None,
                     },
+                    otros: Default::default(),
                 },
             }],
             before: BeforeDesign {

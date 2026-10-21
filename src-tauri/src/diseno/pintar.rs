@@ -37,7 +37,7 @@ pub fn huella_de(
     lang: DesignLang,
 ) -> AppResult<String> {
     let inst = state.diseno.instantanea(&e.frame.pack)?;
-    Ok(huella(e, lang, cara as usize, &inst.huella))
+    Ok(huella(e, lang, cara as usize, &inst.huella_para(lang)))
 }
 
 /// Pinta una cara de un diseño.
@@ -191,6 +191,7 @@ mod tests {
             type_line: ByLang {
                 es: "Artefacto".into(),
                 en: "Artifact".into(),
+                otros: Default::default(),
             },
             ..FaceData::default()
         }

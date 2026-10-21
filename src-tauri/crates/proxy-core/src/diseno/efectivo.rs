@@ -125,6 +125,15 @@ pub fn efectivo(d: &CardDesign, coleccion: Option<&Collection>) -> DisenoEfectiv
             ByLang {
                 es: plantilla(c.map(|c| &c.footer_template.es)),
                 en: plantilla(c.map(|c| &c.footer_template.en)),
+                otros: c
+                    .map(|c| {
+                        c.footer_template
+                            .otros
+                            .iter()
+                            .map(|(l, t)| (*l, plantilla(Some(t))))
+                            .collect()
+                    })
+                    .unwrap_or_default(),
             }
         },
     };
@@ -174,40 +183,103 @@ pub fn efectivo(d: &CardDesign, coleccion: Option<&Collection>) -> DisenoEfectiv
     }
 }
 
-/// El diseño sin los textos del otro idioma, que no se pintan: así, editar
-/// el inglés no cambia la huella (ni repinta) la vista en español, y al revés.
+/// El diseño sin los textos de los idiomas que no se pintan: así, editar el
+/// inglés no cambia la huella (ni repinta) la vista en español, y al revés.
 /// De las reglas a mano solo cuenta si las hay (las compuestas lo miran en
-/// los dos idiomas). La línea de tipo se queda: la inglesa decide cosas
-/// (criatura, sala…) en los dos.
-fn sin_el_otro_idioma(e: &DisenoEfectivo, lang: DesignLang) -> DisenoEfectivo {
-    let otro = match lang {
-        DesignLang::Es => DesignLang::En,
-        DesignLang::En => DesignLang::Es,
-    };
+/// los dos idiomas). La línea de tipo inglesa se queda: decide cosas
+/// (criatura, sala…) en todos.
+///
+/// 🛑 En español e inglés el resultado es el de antes de haber más idiomas
+/// (los demás no se guardan en la huella): sus cartas no se vuelven a pintar.
+fn solo_su_idioma(e: &DisenoEfectivo, lang: DesignLang) -> DisenoEfectivo {
     let mut e = e.clone();
-    for f in &mut e.design.faces {
-        let t = f.texts.get_mut(otro);
-        *t = FaceTexts {
-            rules_override: t.rules_override.as_ref().map(|_| String::new()),
-            ..FaceTexts::default()
-        };
+    match lang {
+        DesignLang::Es | DesignLang::En => {
+            let otro = if lang == DesignLang::Es {
+                DesignLang::En
+            } else {
+                DesignLang::Es
+            };
+            for f in &mut e.design.faces {
+                let t = f.texts.get_mut(otro);
+                *t = FaceTexts {
+                    rules_override: t.rules_override.as_ref().map(|_| String::new()),
+                    ..FaceTexts::default()
+                };
+                f.texts.otros.clear();
+            }
+            for f in &mut e.design.card.faces {
+                f.rules.get_mut(otro).clear();
+                f.rules.otros.clear();
+                f.type_line.otros.clear();
+                f.printed_names.clear();
+            }
+            e.design.card.sin_texto.clear();
+            e.pie.template.get_mut(otro).clear();
+            e.pie.template.otros.clear();
+        }
+        _ => {
+            // Lo del idioma pintado (o lo inglés de respaldo, si aún no lo
+            // tiene) se queda en su sitio; lo demás, fuera.
+            for f in &mut e.design.faces {
+                let propio = f.texts.otros.remove(&lang);
+                let hechas = f.reglas_a_mano();
+                f.texts = ByLang {
+                    es: FaceTexts {
+                        rules_override: hechas.then(String::new),
+                        ..FaceTexts::default()
+                    },
+                    ..ByLang::default()
+                };
+                if let Some(t) = propio {
+                    f.texts.otros.insert(lang, t);
+                }
+            }
+            for f in &mut e.design.card.faces {
+                let reglas = f.rules.get(lang).clone();
+                let tipo = f.type_line.get(lang).clone();
+                let nombre = f.printed_name(lang).map(str::to_string);
+                f.rules = ByLang {
+                    otros: [(lang, reglas)].into(),
+                    ..ByLang::default()
+                };
+                f.type_line.es.clear();
+                f.type_line.otros = [(lang, tipo)].into();
+                f.printed_name_es = None;
+                f.printed_names.clear();
+                f.poner_printed_name(lang, nombre);
+            }
+            let sin = e.design.card.sin_texto_en(lang);
+            e.design.card.sin_texto_es = false;
+            e.design.card.sin_texto.clear();
+            e.design.card.poner_sin_texto(lang, sin);
+            let plantilla = e.pie.template.get(lang).clone();
+            e.pie.template = ByLang {
+                otros: [(lang, plantilla)].into(),
+                ..ByLang::default()
+            };
+        }
     }
-    for f in &mut e.design.card.faces {
-        f.rules.get_mut(otro).clear();
-    }
-    e.pie.template.get_mut(otro).clear();
     e
 }
 
 /// La huella de un render: el diseño efectivo, el idioma y las huellas de
 /// los recursos (letras, pack, símbolos) y la versión del motor.
+///
+/// Si algún texto lleva emoji, además la letra de emoji: así, al cambiar de
+/// Twemoji a Noto solo se vuelven a pintar las cartas con emoji, y no todas
+/// (como pasaría subiendo `VERSION_MOTOR`).
 pub fn huella(e: &DisenoEfectivo, lang: DesignLang, cara: usize, recursos: &str) -> String {
     let mut h = Sha256::new();
-    h.update(serde_json::to_vec(&sin_el_otro_idioma(e, lang)).unwrap_or_default());
+    let json = serde_json::to_string(&solo_su_idioma(e, lang)).unwrap_or_default();
+    h.update(json.as_bytes());
     h.update(format!(
         "|{lang:?}|{cara}|{recursos}|{}",
         super::VERSION_MOTOR
     ));
+    if json.chars().any(super::emoji::es_emoji) {
+        h.update("|emoji-noto");
+    }
     h.finalize().iter().map(|b| format!("{b:02x}")).collect()
 }
 
@@ -276,6 +348,39 @@ mod tests {
         assert_eq!(e.pie.set_code, "AKH");
         assert_eq!(e.pie.rarity, "R");
         assert_eq!(e.original_name, OriginalName::Footer);
+    }
+
+    /// 🛑 Las huellas de la 2.5.9 (calculadas antes de los idiomas nuevos):
+    /// una carta en español o inglés de antes no se vuelve a pintar ni cambia.
+    #[test]
+    fn las_huellas_en_espanol_e_ingles_son_las_de_antes() {
+        let d = diseno_de_prueba();
+        let c = coleccion();
+        let h = |c: Option<&Collection>, l, cara| huella(&efectivo(&d, c), l, cara, "r");
+        assert_eq!(
+            h(None, DesignLang::Es, 0),
+            "86a126e8ad16c7f75fc082c8d1b650d79c6baf6c30c58f046e2337e56a218df8"
+        );
+        assert_eq!(
+            h(None, DesignLang::Es, 1),
+            "c5722df8bcd52b26a4216543c73b6b6265d57d4483aed3175f1782c8aa996b97"
+        );
+        assert_eq!(
+            h(None, DesignLang::En, 0),
+            "a72dfae88af9007735357f2b81d11b8ede00e8098e7fee737aa67a145c574c9a"
+        );
+        assert_eq!(
+            h(None, DesignLang::En, 1),
+            "7a151574de87a6572b1a0817b23a6bdba95c4c1c8f7f166941dc954100bdd103"
+        );
+        assert_eq!(
+            h(Some(&c), DesignLang::Es, 0),
+            "0d9e033b8987919a222ede3d46b53bc4642097e8e53d5cfb4f57aac3effea19a"
+        );
+        assert_eq!(
+            h(Some(&c), DesignLang::En, 0),
+            "dc973db2ab8aab3618d85a6ce2278ad70d73337c3521e306fe3246c9b0e7c580"
+        );
     }
 
     #[test]

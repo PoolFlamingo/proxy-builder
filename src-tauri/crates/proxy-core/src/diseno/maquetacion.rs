@@ -360,10 +360,12 @@ mod tests {
             type_line: ByLang {
                 es: tipo.into(),
                 en: tipo.into(),
+                otros: Default::default(),
             },
             rules: ByLang {
                 es: reglas.into(),
                 en: reglas.into(),
+                otros: Default::default(),
             },
             ..FaceData::default()
         }

@@ -21,7 +21,7 @@ use super::render::{
     de_pixmap, estilo_para, mascara_redondeada, pie_texto, pintar_cara, Indicador, Motor, Opciones,
     Pieza, Recursos, Render, Salida,
 };
-use super::DisenoError;
+use super::{textos_motor, DisenoError};
 use crate::model::CardSize;
 
 /// Cómo se gira una pieza al pegarla.
@@ -213,19 +213,14 @@ fn partida(
     let sin_fusionar = (maq == Maquetacion::Fusionar).then(|| {
         let mut e2 = e.clone();
         for (i, f) in e2.design.faces.iter_mut().enumerate() {
-            for l in [DesignLang::Es, DesignLang::En] {
-                let reglas = super::borrador::reglas_efectivas(&e.design, i, l);
-                let limpio: Vec<&str> = reglas
-                    .lines()
-                    .filter(|x| !x.starts_with("Fuse") && !x.starts_with("Fusionar"))
-                    .collect();
-                let t = match l {
-                    DesignLang::Es => &mut f.texts.es,
-                    DesignLang::En => &mut f.texts.en,
-                };
-                if t.rules_override.is_none() {
-                    t.rules_override = Some(limpio.join("\n"));
-                }
+            let reglas = super::borrador::reglas_efectivas(&e.design, i, lang);
+            let limpio: Vec<&str> = reglas
+                .lines()
+                .filter(|x| !textos_motor::es_linea_fusionar(x))
+                .collect();
+            let t = f.texts.get_mut(lang);
+            if t.rules_override.is_none() {
+                t.rules_override = Some(limpio.join("\n"));
             }
         }
         e2
@@ -242,9 +237,7 @@ fn partida(
         let mut p = pintar_cara(motor, e_mitades, lang, rec, est, av, &o)?;
         // Las reglas puestas aquí no son «editadas a mano» (salvo que ya lo
         // estuvieran).
-        let a_mano = e.design.faces.get(cara).is_some_and(|f| {
-            f.texts.es.rules_override.is_some() || f.texts.en.rules_override.is_some()
-        });
+        let a_mano = e.design.faces.get(cara).is_some_and(|f| f.reglas_a_mano());
         if sin_fusionar.is_some() && !a_mano {
             p.avisos
                 .retain(|a| !matches!(a, Aviso::ReglasEditadas { .. }));
@@ -316,20 +309,14 @@ fn franja_fusionar(
     let texto = super::borrador::reglas_efectivas(&e.design, 0, lang);
     let linea = texto
         .lines()
-        .find(|l| l.starts_with("Fuse") || l.starts_with("Fusionar"))
-        .unwrap_or(match lang {
-            DesignLang::Es => {
-                "Fusionar (Puedes lanzar una o las dos mitades de esta carta desde tu mano.)"
-            }
-            DesignLang::En => "Fuse (You may cast one or both halves of this card from your hand.)",
-        })
+        .find(|l| textos_motor::es_linea_fusionar(l))
+        .unwrap_or(textos_motor::recordatorio_fusionar(lang))
         .to_string();
     let mut e2 = e.clone();
     if let Some(f) = e2.design.faces.get_mut(0) {
-        f.texts.es.rules_override = Some(linea.clone());
-        f.texts.en.rules_override = Some(linea);
-        f.texts.es.flavor.clear();
-        f.texts.en.flavor.clear();
+        let t = f.texts.get_mut(lang);
+        t.rules_override = Some(linea);
+        t.flavor.clear();
     }
     let p = pintar_cara(motor, &e2, lang, rec, est, std::mem::take(&mut av), &o)?;
     faltan.extend(p.faltan);
@@ -407,7 +394,8 @@ fn pie_suelto(
     let mut e2 = e.clone();
     // Solo el pie: sin nombre ni reglas.
     for f in &mut e2.design.faces {
-        for t in [&mut f.texts.es, &mut f.texts.en] {
+        for l in [DesignLang::Es, DesignLang::En, lang] {
+            let t = f.texts.get_mut(l);
             t.rules_override = Some(String::new());
             t.flavor.clear();
         }
@@ -595,7 +583,7 @@ pub fn render_capa(
     ancho_px: u32,
 ) -> Result<Option<CapaVista>, DisenoError> {
     let d = &e.design;
-    preparar(motor, rec);
+    preparar(motor, rec, lang);
     let (maq, _) = maquetacion(&d.card);
     let cara = cara.min(super::maquetacion::caras_impresas(&d.card) - 1);
     if !es_simple(e, maq, cara) {
@@ -656,7 +644,11 @@ pub fn medida(e: &DisenoEfectivo, card: CardSize) -> (f64, f64) {
 
 /// Lo que el motor toma del pack antes de pintar (los caracteres que su
 /// letra no tiene).
-fn preparar(motor: &mut Motor, rec: &Recursos<'_>) {
+fn preparar(motor: &mut Motor, rec: &Recursos<'_>, lang: DesignLang) {
+    motor.m.locale = match lang {
+        DesignLang::Es | DesignLang::En => None,
+        l => parley::Language::parse(l.locale()).ok(),
+    };
     motor.m.sustituir = rec
         .pack
         .def
@@ -679,7 +671,7 @@ pub fn render(
     salida: Salida,
 ) -> Result<Render, DisenoError> {
     let d = &e.design;
-    preparar(motor, rec);
+    preparar(motor, rec, lang);
     let (maq, desconocido) = maquetacion(&d.card);
     let mut avisos = Vec::new();
     if desconocido {

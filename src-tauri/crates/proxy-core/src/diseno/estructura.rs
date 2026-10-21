@@ -144,9 +144,15 @@ pub struct Tramo {
     pub texto: Vec<String>,
 }
 
+/// La cabecera de un nivel de clase (`{2}{U}: Nivel 2`), en cualquier
+/// idioma: de *Wizard Class* (AFR) en cada uno; el coreano pone el número
+/// delante («2레벨») y el japonés, cifras de ancho completo.
 static NIVEL_CLASE: LazyLock<Regex> = LazyLock::new(|| {
     #[allow(clippy::unwrap_used)]
-    Regex::new(r"^((?:\{[^}]+\})+):\s*(Level|Nivel)\s+(\d+)\s*$").unwrap()
+    Regex::new(
+        r"^((?:\{[^}]+\})+)\s*[:：]\s*(?:(?:Level|Nivel|Niveau|Stufe|Livello|Nível|Уровень|Рівень|Poziom|レベル|等级|等級)\s*[\d０-９]+|[\d０-９]+\s*레벨)\s*$",
+    )
+    .unwrap()
 });
 
 /// Los niveles de una clase: el primero sin cabecera.
@@ -177,6 +183,7 @@ pub fn caso(reglas: &str) -> Vec<Tramo> {
         .map(str::trim)
         .filter(|l| !l.is_empty())
     {
+        // De *Case of the Shattered Pact* (MKM) en cada idioma.
         let cab = [
             "To solve",
             "Solved",
@@ -184,6 +191,20 @@ pub fn caso(reglas: &str) -> Vec<Tramo> {
             "Para resolver",
             "Para resolverlo",
             "Resuelto",
+            "À résoudre",
+            "Résolue",
+            "Lösen",
+            "Gelöst",
+            "Risolvere",
+            "Risolto",
+            "Para Solucionar",
+            "Solucionado",
+            "解明条件",
+            "解明完了",
+            "侦办",
+            "侦结",
+            "偵辦",
+            "偵結",
         ]
         .iter()
         .find_map(|p| {
@@ -192,7 +213,8 @@ pub fn caso(reglas: &str) -> Vec<Tramo> {
             let resto = resto
                 .strip_prefix('—')
                 .or_else(|| resto.strip_prefix('–'))
-                .or_else(|| resto.strip_prefix('-'))?;
+                .or_else(|| resto.strip_prefix('-'))
+                .or_else(|| resto.strip_prefix('～'))?;
             Some((p.to_string(), resto.trim().to_string()))
         });
         match cab {
@@ -212,9 +234,19 @@ pub fn caso(reglas: &str) -> Vec<Tramo> {
     t
 }
 
+/// Un rango de nivel («NIVEL 2-6», «等级2-6», «레벨 3 -7») con la palabra de
+/// cualquier idioma (`textos_motor::palabra_nivel`).
 static RANGO_NIVEL: LazyLock<Regex> = LazyLock::new(|| {
+    let palabras: Vec<String> = super::textos_motor::palabras_nivel()
+        .into_iter()
+        .map(regex::escape)
+        .collect();
     #[allow(clippy::unwrap_used)]
-    Regex::new(r"^(LEVEL|NIVEL)\s+(\d+\s*[-–]\s*\d+|\d+\+)\s*$").unwrap()
+    Regex::new(&format!(
+        r"^({})\s*(\d+\s*[-–]\s*\d+|\d+\+)\s*$",
+        palabras.join("|")
+    ))
+    .unwrap()
 });
 static FR: LazyLock<Regex> = LazyLock::new(|| {
     #[allow(clippy::unwrap_used)]
@@ -416,6 +448,26 @@ pub fn filas_de_mazmorra(salas: &[Sala]) -> Vec<Vec<usize>> {
 
 #[cfg(test)]
 mod tests {
+
+    #[test]
+    fn clases_y_casos_en_otros_idiomas() {
+        // De Wizard Class en francés, coreano y japonés.
+        for (reglas, n) in [
+            ("Il n'y a pas de limite.\n{2}{U} : Niveau 2\nQuand…\n{4}{U} : Niveau 3\nÀ chaque fois…", 3),
+            ("손 제한이 없다.\n{2}{U}: 2레벨\n이 직업이…\n{4}{U}: 3레벨\n당신이…", 3),
+            ("手札の上限はなくなる。\n{2}{U}：レベル２\nこのクラスが…\n{4}{U}：レベル３\nあなたが…", 3),
+            ("你的手牌数量没有上限。\n{2}{U}：等级2\n当此职业…", 2),
+        ] {
+            assert_eq!(clase(reglas).len(), n, "{reglas}");
+        }
+        // Case of the Shattered Pact en francés y chino simplificado.
+        let fr = caso("Quand cette affaire…\nÀ résoudre — Il y a cinq couleurs.\nRésolue — Au début du combat…");
+        assert_eq!(fr.len(), 3);
+        assert_eq!(fr[1].cabecera.as_deref(), Some("À résoudre"));
+        let zh = caso("当此案件进战场时…\n侦办～由你操控之永久物…\n侦结～在你回合的战斗开始时…");
+        assert_eq!(zh.len(), 3);
+        assert_eq!(zh[2].cabecera.as_deref(), Some("侦结"));
+    }
     use super::*;
 
     #[test]

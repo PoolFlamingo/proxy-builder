@@ -1,11 +1,14 @@
 //! **Borrador de un diseño** a partir de la carta de Scryfall.
 //!
-//! El inglés sale del Oracle (Scryfall lo trae en cualquier impresión) y el
-//! español, de la impresión española: la misma si la carta del deck ya está
-//! en español; si no, la del mismo set y número; si no, la más reciente
-//! en español. Sin ninguna, el Oracle con el aviso `sinTextoOficial`.
+//! El inglés sale del Oracle (Scryfall lo trae en cualquier impresión) y cada
+//! otro idioma, de la impresión en ese idioma: la misma si la carta del deck
+//! ya lo está; si no, la más reciente; si no, la del mismo set y número. Sin
+//! ninguna, el Oracle con el aviso `sinTextoOficial`. El español se baja
+//! siempre (como antes de haber más idiomas); los demás, solo el idioma de
+//! diseño del deck (`anadir_idioma`). Rumano, polaco, neerlandés y ucraniano
+//! no tienen cartas: no se busca nada y la línea de tipo sale de las tablas.
 
-use proxy_core::diseno::borrador::{siguiente_numero, tipo_en_espanol};
+use proxy_core::diseno::borrador::{siguiente_numero, tipo_traducido};
 use proxy_core::diseno::estructura::limpiar;
 use proxy_core::diseno::modelo::*;
 use proxy_core::model::{CardSource, DeckCard};
@@ -61,31 +64,46 @@ pub async fn carta_completa<A: CardApi>(db: &Db, api: &A, id: &str) -> AppResult
     Ok(c)
 }
 
-/// La impresión española de una carta, si existe: la de la propia carta si
-/// ya está en español; si no, **la más reciente** (el texto vigente, que en
-/// las reediciones corrige plantillas viejas); si no, la del mismo set y
-/// número. Si esa impresión no trae la línea de tipo (Scryfall se la deja en
-/// blanco en algunas), se toma la de otra carta española con el mismo tipo en
-/// inglés, para que no salga «Land» en una carta en español.
+/// La impresión española de una carta (`impresion` en español).
 pub async fn impresion_es<A: CardApi>(
     db: &Db,
     api: &A,
     c: &ScryCard,
 ) -> AppResult<Option<ScryCard>> {
-    let mut es = buscar_impresion_es(db, api, c).await?;
-    if let Some(e) = es.as_mut() {
-        completar_tipo(api, c, e).await;
-    }
-    Ok(es)
+    impresion(db, api, c, DesignLang::Es).await
 }
 
-/// Rellena en `es` las líneas de tipo que le faltan. Sin red o sin otra carta
-/// con ese tipo, se queda como estaba (la pantalla enseña el inglés).
-async fn completar_tipo<A: CardApi>(api: &A, en: &ScryCard, es: &mut ScryCard) {
+/// La impresión de una carta en `lang`, si existe: la de la propia carta si
+/// ya está en ese idioma; si no, **la más reciente** (el texto vigente, que
+/// en las reediciones corrige plantillas viejas); si no, la del mismo set y
+/// número. Si esa impresión no trae la línea de tipo (Scryfall se la deja en
+/// blanco en algunas), se toma la de otra carta del idioma con el mismo tipo
+/// en inglés, para que no salga «Land» en una carta en español. En inglés y
+/// en los idiomas sin cartas impresas no hay nada que buscar.
+pub async fn impresion<A: CardApi>(
+    db: &Db,
+    api: &A,
+    c: &ScryCard,
+    lang: DesignLang,
+) -> AppResult<Option<ScryCard>> {
+    if lang == DesignLang::En || !lang.impresas() {
+        return Ok(None);
+    }
+    let mut p = buscar_impresion(db, api, c, lang.codigo()).await?;
+    if let Some(e) = p.as_mut() {
+        completar_tipo(api, c, e, lang.codigo()).await;
+    }
+    Ok(p)
+}
+
+/// Rellena en `es` (la impresión en el idioma `codigo`) las líneas de tipo
+/// que le faltan. Sin red o sin otra carta con ese tipo, se queda como
+/// estaba (luego se prueba con las tablas sin red; si no, el inglés).
+async fn completar_tipo<A: CardApi>(api: &A, en: &ScryCard, es: &mut ScryCard, codigo: &str) {
     if es.card_faces.is_empty() {
         if es.printed_type_line.is_none() {
             if let Some(tipo) = en.type_line.as_deref() {
-                es.printed_type_line = traducir_tipo(api, tipo).await.ok().flatten();
+                es.printed_type_line = traducir_tipo(api, tipo, codigo).await.ok().flatten();
             }
         }
         return;
@@ -100,37 +118,38 @@ async fn completar_tipo<A: CardApi>(api: &A, en: &ScryCard, es: &mut ScryCard) {
             .and_then(|f| f.type_line.as_deref())
             .or(en.type_line.as_deref());
         if let Some(tipo) = tipo {
-            cara.printed_type_line = traducir_tipo(api, tipo).await.ok().flatten();
+            cara.printed_type_line = traducir_tipo(api, tipo, codigo).await.ok().flatten();
         }
     }
 }
 
-async fn buscar_impresion_es<A: CardApi>(
+async fn buscar_impresion<A: CardApi>(
     db: &Db,
     api: &A,
     c: &ScryCard,
+    codigo: &str,
 ) -> AppResult<Option<ScryCard>> {
-    if c.lang == "es" {
+    if c.lang == codigo {
         return Ok(Some(c.clone()));
     }
     if let Some(oracle) = &c.oracle_id {
         let mut todas = api
-            .search(&format!("oracleid:{oracle} lang:es"), true, 60)
+            .search(&format!("oracleid:{oracle} lang:{codigo}"), true, 60)
             .await
             .unwrap_or_default();
-        todas.retain(|e| e.lang == "es" && texto_impreso(e));
+        todas.retain(|e| e.lang == codigo && texto_impreso(e));
         todas.sort_by(|a, b| b.released_at.cmp(&a.released_at));
         if let Some(e) = todas.into_iter().next() {
             cache::guardar(db, &e)?;
             return Ok(Some(e));
         }
     }
-    if let Some((e, _)) = cache::leer_impresion(db, &c.set, &c.collector_number, "es")? {
+    if let Some((e, _)) = cache::leer_impresion(db, &c.set, &c.collector_number, codigo)? {
         if e.completa_para_disenar() {
             return Ok(Some(e));
         }
     }
-    let e = api.card_lang(&c.set, &c.collector_number, "es").await?;
+    let e = api.card_lang(&c.set, &c.collector_number, codigo).await?;
     if let Some(e) = &e {
         cache::guardar(db, e)?;
     }
@@ -143,12 +162,35 @@ fn texto_impreso(c: &ScryCard) -> bool {
         || c.printed_type_line.is_some()
 }
 
+/// Línea de tipo, reglas y nombre impresos de una cara (o de la carta, con
+/// `i = None`) en una impresión.
+fn impresos(
+    p: Option<&ScryCard>,
+    i: Option<usize>,
+) -> (Option<String>, Option<String>, Option<String>) {
+    match (p, i) {
+        (Some(p), Some(i)) => {
+            let f = p.card_faces.get(i);
+            (
+                f.and_then(|f| f.printed_type_line.clone()),
+                f.and_then(|f| f.printed_text.as_deref().map(limpiar)),
+                // Alguna impresión trae en cada cara el nombre de la carta
+                // entera («Dusk // Dawn»): ese no vale para la cara.
+                f.and_then(|f| f.printed_name.clone())
+                    .filter(|n| !n.contains(" // ")),
+            )
+        }
+        (Some(p), None) => (
+            p.printed_type_line.clone(),
+            p.printed_text.as_deref().map(limpiar),
+            p.printed_name.clone(),
+        ),
+        (None, _) => (None, None, None),
+    }
+}
+
 fn cara_de(en: &ScryCard, es: Option<&ScryCard>, i: Option<usize>) -> FaceData {
     let fe: Option<&CardFace> = i.and_then(|i| en.card_faces.get(i));
-    let fs: Option<&CardFace> = match (i, es) {
-        (Some(i), Some(es)) => es.card_faces.get(i),
-        _ => None,
-    };
     let o = |a: Option<&String>, b: Option<&String>| a.or(b).cloned();
     let nombre = fe.map_or(en.name.clone(), |f| f.name.clone());
     let tipo_en =
@@ -157,24 +199,7 @@ fn cara_de(en: &ScryCard, es: Option<&ScryCard>, i: Option<usize>) -> FaceData {
         Some(f) => f.oracle_text.clone().unwrap_or_default(),
         None => en.oracle_text.clone().unwrap_or_default(),
     };
-    let (tipo_es, reglas_es, nombre_es) = match es {
-        Some(es) => match i {
-            Some(_) => (
-                fs.and_then(|f| f.printed_type_line.clone()),
-                fs.and_then(|f| f.printed_text.as_deref().map(limpiar)),
-                // Alguna impresión trae en cada cara el nombre de la carta
-                // entera («Dusk // Dawn»): ese no vale para la cara.
-                fs.and_then(|f| f.printed_name.clone())
-                    .filter(|n| !n.contains(" // ")),
-            ),
-            None => (
-                es.printed_type_line.clone(),
-                es.printed_text.as_deref().map(limpiar),
-                es.printed_name.clone(),
-            ),
-        },
-        None => (None, None, None),
-    };
+    let (tipo_es, reglas_es, nombre_es) = impresos(es, i);
     let colores = fe
         .map(|f| f.colors.clone())
         .filter(|c| !c.is_empty())
@@ -189,16 +214,19 @@ fn cara_de(en: &ScryCard, es: Option<&ScryCard>, i: Option<usize>) -> FaceData {
         },
         type_line: ByLang {
             es: tipo_es
-                .or_else(|| tipo_en_espanol(&tipo_en))
+                .or_else(|| tipo_traducido(&tipo_en, DesignLang::Es))
                 .unwrap_or_else(|| tipo_en.clone()),
             en: tipo_en,
+            otros: Default::default(),
         },
         rules: ByLang {
             // Una carta sin texto (una tierra básica) tampoco lo tiene en español.
             es: reglas_es.unwrap_or_else(|| reglas_en.clone()),
             en: reglas_en,
+            otros: Default::default(),
         },
         printed_name_es: nombre_es,
+        printed_names: Default::default(),
         colors: colores,
         power: o(fe.and_then(|f| f.power.as_ref()), en.power.as_ref()),
         toughness: o(fe.and_then(|f| f.toughness.as_ref()), en.toughness.as_ref()),
@@ -242,6 +270,7 @@ pub fn datos(en: &ScryCard, es: Option<&ScryCard>, ahora: i64) -> CardData {
             .or_else(|| en.card_faces.first().and_then(|f| f.artist.clone())),
         faces: caras,
         sin_texto_es: sin_es,
+        sin_texto: Vec::new(),
         oversized: en.oversized.unwrap_or(false),
         hand_modifier: en.hand_modifier.clone(),
         life_modifier: en.life_modifier.clone(),
@@ -250,20 +279,133 @@ pub fn datos(en: &ScryCard, es: Option<&ScryCard>, ahora: i64) -> CardData {
     }
 }
 
-/// Las impresiones españolas de las MDFC traen al final de cada cara la
-/// pestaña de la otra («Tierra / {T}: Agrega {R}.»); el motor ya la pinta.
+/// Las impresiones de las MDFC traen al final de cada cara la pestaña de la
+/// otra («Tierra / {T}: Agrega {R}.»); el motor ya la pinta.
 fn sin_pestana_mdfc(caras: &mut [FaceData]) {
-    let tipos: Vec<String> = caras.iter().map(|c| c.type_line.es.clone()).collect();
+    sin_pestana_mdfc_en(caras, DesignLang::Es);
+}
+
+fn sin_pestana_mdfc_en(caras: &mut [FaceData], lang: DesignLang) {
+    let tipos: Vec<String> = caras
+        .iter()
+        .map(|c| c.type_line.get(lang).clone())
+        .collect();
     for (i, c) in caras.iter_mut().enumerate() {
         let Some(otro) = tipos.get(1 - i.min(1)) else {
             continue;
         };
-        let lineas: Vec<&str> = c.rules.es.lines().collect();
+        if !c.rules.tiene(lang) {
+            continue;
+        }
+        let reglas = c.rules.get(lang).clone();
+        let lineas: Vec<&str> = reglas.lines().collect();
         if let Some(j) = lineas.iter().position(|l| l.trim() == otro.trim()) {
             if j > 0 {
-                c.rules.es = lineas[..j].join("\n");
+                *c.rules.get_mut(lang) = lineas[..j].join("\n");
             }
         }
+    }
+}
+
+/// Añade a la instantánea los textos de `lang` (ni español ni inglés, que
+/// hace `datos`) de la impresión `p` en ese idioma. Sin impresión, el
+/// idioma queda marcado como sin texto (cae al Oracle) y la línea de tipo
+/// sale de las tablas sin red, si se sabe. La carta fundida de un meld (la
+/// segunda cara) se queda con el inglés.
+pub fn anadir_idioma(d: &mut CardData, en: &ScryCard, lang: DesignLang, p: Option<&ScryCard>) {
+    if matches!(lang, DesignLang::Es | DesignLang::En) {
+        return;
+    }
+    let indices: Vec<Option<usize>> = if por_caras(&en.layout) && en.card_faces.len() >= 2 {
+        (0..en.card_faces.len()).map(Some).collect()
+    } else {
+        vec![None]
+    };
+    for (k, i) in indices.into_iter().enumerate() {
+        let Some(f) = d.faces.get_mut(k) else {
+            continue;
+        };
+        let (tipo, reglas, nombre) = impresos(p, i);
+        let tipo = tipo
+            .or_else(|| tipo_traducido(&f.type_line.en, lang))
+            .unwrap_or_else(|| f.type_line.en.clone());
+        *f.type_line.get_mut(lang) = tipo;
+        if p.is_some() {
+            // Una carta sin texto (una tierra básica) tampoco lo tiene en
+            // otro idioma.
+            *f.rules.get_mut(lang) = reglas.unwrap_or_else(|| f.rules.en.clone());
+        } else {
+            f.rules.otros.remove(&lang);
+        }
+        f.poner_printed_name(lang, nombre);
+    }
+    if en.layout == "modal_dfc" {
+        sin_pestana_mdfc_en(&mut d.faces, lang);
+    }
+    let sin = match p {
+        None => true,
+        Some(e) => !texto_impreso(e) && !en.oracle_text.as_deref().unwrap_or("").is_empty(),
+    };
+    d.poner_sin_texto(lang, sin);
+}
+
+/// La instantánea completa de una carta para diseñar en `lang`: el inglés,
+/// el español, la carta fundida de un meld y, si es otro, ese idioma.
+pub async fn datos_de<A: CardApi>(
+    db: &Db,
+    api: &A,
+    en: &ScryCard,
+    lang: DesignLang,
+) -> AppResult<CardData> {
+    let es = impresion_es(db, api, en).await?;
+    let fundida = fundida(db, api, en).await?;
+    let mut d = con_fundida(datos(en, es.as_ref(), crate::store::ahora_ms()), fundida);
+    if !matches!(lang, DesignLang::Es | DesignLang::En) {
+        let p = impresion(db, api, en, lang).await?;
+        anadir_idioma(&mut d, en, lang, p.as_ref());
+    }
+    Ok(d)
+}
+
+/// Los textos de `lang` (ni español ni inglés) de un diseño que aún no los
+/// tiene: el nombre temático, si se puso uno en inglés o en español (si no,
+/// el impreso en ese idioma o el inglés), y el sabor.
+pub fn poner_textos(d: &mut CardDesign, lang: DesignLang) {
+    if matches!(lang, DesignLang::Es | DesignLang::En) {
+        return;
+    }
+    for (i, f) in d.faces.iter_mut().enumerate() {
+        if f.texts.tiene(lang) {
+            continue;
+        }
+        let datos = d.card.faces.get(i);
+        let oficial_en = datos.map_or("", |x| x.name.as_str());
+        let oficial_es = datos
+            .and_then(|x| x.printed_name_es.as_deref())
+            .unwrap_or(oficial_en);
+        let tematico = [
+            (f.texts.en.name.trim(), oficial_en),
+            (f.texts.es.name.trim(), oficial_es),
+        ]
+        .into_iter()
+        .find(|(n, o)| !n.is_empty() && n != o)
+        .map(|(n, _)| n.to_string());
+        let nombre = tematico
+            .or_else(|| datos.and_then(|x| x.printed_name(lang)).map(str::to_string))
+            .unwrap_or_else(|| oficial_en.to_string());
+        let sabor = if f.texts.en.flavor.trim().is_empty() {
+            f.texts.es.flavor.clone()
+        } else {
+            f.texts.en.flavor.clone()
+        };
+        f.texts.otros.insert(
+            lang,
+            FaceTexts {
+                name: nombre,
+                flavor: sabor,
+                ..FaceTexts::default()
+            },
+        );
     }
 }
 
@@ -343,6 +485,7 @@ pub fn montar(
                     name: f.name.clone(),
                     ..FaceTexts::default()
                 },
+                otros: Default::default(),
             },
         })
         .collect();
@@ -476,7 +619,7 @@ mod tests {
             "id":"o","name":"Command Tower","lang":"es","set":"x","collector_number":"1",
             "layout":"normal","type_line":"Land","printed_type_line":"Tierra"
         }));
-        completar_tipo(&ApiTipos(vec![otra]), &en, &mut es).await;
+        completar_tipo(&ApiTipos(vec![otra]), &en, &mut es, "es").await;
         assert_eq!(es.printed_type_line.as_deref(), Some("Tierra"));
         let d = datos(&en, Some(&es), 1);
         assert_eq!(d.faces[0].type_line.es, "Tierra");
@@ -485,8 +628,102 @@ mod tests {
         // Sin ninguna con ese tipo (o sin red) se queda como estaba.
         let mut sola = es.clone();
         sola.printed_type_line = None;
-        completar_tipo(&ApiTipos(Vec::new()), &en, &mut sola).await;
+        completar_tipo(&ApiTipos(Vec::new()), &en, &mut sola, "es").await;
         assert_eq!(sola.printed_type_line, None);
+    }
+
+    /// Apunta cada búsqueda y contesta con lo que tenga.
+    struct ApiApunta(std::sync::Mutex<Vec<String>>, Vec<ScryCard>);
+
+    impl CardApi for ApiApunta {
+        async fn collection(
+            &self,
+            _: &[crate::scryfall::models::Identifier],
+        ) -> AppResult<crate::scryfall::models::Collection> {
+            Err(AppError::new(ErrorCode::Network))
+        }
+        async fn card(&self, _: &str) -> AppResult<Option<ScryCard>> {
+            Ok(None)
+        }
+        async fn card_lang(&self, _: &str, _: &str, l: &str) -> AppResult<Option<ScryCard>> {
+            if let Ok(mut v) = self.0.lock() {
+                v.push(format!("card_lang {l}"));
+            }
+            Ok(None)
+        }
+        async fn search(&self, q: &str, _: bool, _: usize) -> AppResult<Vec<ScryCard>> {
+            if let Ok(mut v) = self.0.lock() {
+                v.push(q.to_string());
+            }
+            Ok(self.1.clone())
+        }
+        async fn download(&self, _: &str) -> AppResult<Vec<u8>> {
+            Err(AppError::new(ErrorCode::Network))
+        }
+    }
+
+    fn progenitus() -> ScryCard {
+        carta(serde_json::json!({
+            "id":"p","oracle_id":"o1","name":"Progenitus","lang":"en","set":"con","collector_number":"121",
+            "layout":"normal","type_line":"Legendary Creature — Hydra Avatar",
+            "oracle_text":"Protection from everything.","rarity":"mythic"
+        }))
+    }
+
+    #[tokio::test]
+    async fn en_frances_se_busca_la_impresion_francesa_y_en_rumano_nada() {
+        let db = Db::in_memory().unwrap();
+        let mut fr = progenitus();
+        fr.lang = "fr".into();
+        fr.printed_name = Some("Progénitus".into());
+        fr.printed_type_line = Some("Créature légendaire — hydre et avatar".into());
+        fr.printed_text = Some("Protection contre tout.".into());
+        let api = ApiApunta(Default::default(), vec![fr]);
+        let en = progenitus();
+        let p = impresion(&db, &api, &en, DesignLang::Fr).await.unwrap();
+        assert_eq!(api.0.lock().unwrap()[0], "oracleid:o1 lang:fr");
+        let mut d = datos(&en, None, 1);
+        anadir_idioma(&mut d, &en, DesignLang::Fr, p.as_ref());
+        let f = &d.faces[0];
+        assert_eq!(f.printed_name(DesignLang::Fr), Some("Progénitus"));
+        assert_eq!(f.rules.get(DesignLang::Fr), "Protection contre tout.");
+        assert_eq!(
+            f.type_line.get(DesignLang::Fr),
+            "Créature légendaire — hydre et avatar"
+        );
+        assert!(!d.sin_texto_en(DesignLang::Fr) && d.tiene_idioma(DesignLang::Fr));
+
+        // En rumano no hay cartas: ninguna búsqueda, reglas en inglés y el
+        // tipo, si se sabe, de las tablas.
+        let api = ApiApunta(Default::default(), Vec::new());
+        assert!(impresion(&db, &api, &en, DesignLang::Ro)
+            .await
+            .unwrap()
+            .is_none());
+        assert!(api.0.lock().unwrap().is_empty());
+        anadir_idioma(&mut d, &en, DesignLang::Ro, None);
+        assert!(d.sin_texto_en(DesignLang::Ro) && d.tiene_idioma(DesignLang::Ro));
+        assert_eq!(
+            d.faces[0].rules.get(DesignLang::Ro),
+            "Protection from everything."
+        );
+        // «Legendary Creature — Hydra Avatar»: los subtipos de criatura no se
+        // saben sin red, así que se queda en inglés.
+        assert_eq!(
+            d.faces[0].type_line.get(DesignLang::Ro),
+            "Legendary Creature — Hydra Avatar"
+        );
+        let mut tierra = carta(serde_json::json!({
+            "id":"t","name":"Plains","lang":"en","set":"x","collector_number":"1",
+            "layout":"normal","type_line":"Basic Land — Plains"
+        }));
+        tierra.oracle_id = None;
+        let mut d = datos(&tierra, None, 1);
+        anadir_idioma(&mut d, &tierra, DesignLang::Pl, None);
+        assert_eq!(
+            d.faces[0].type_line.get(DesignLang::Pl),
+            "Podstawowa kraina — Równina"
+        );
     }
 
     #[test]
@@ -505,6 +742,30 @@ mod tests {
 mod en_vivo {
     use super::*;
     use crate::scryfall::client::Scryfall;
+
+    /// *Llanowar Elves* en alemán: nombre y tipo oficiales.
+    #[tokio::test]
+    #[ignore]
+    async fn llanowar_elves_en_aleman() {
+        let db = Db::in_memory().unwrap();
+        let api = Scryfall::new().unwrap();
+        let r = api
+            .search("!\"Llanowar Elves\" set:m19", false, 1)
+            .await
+            .unwrap();
+        let en = carta_completa(&db, &api, &r[0].id).await.unwrap();
+        let d = datos_de(&db, &api, &en, DesignLang::De).await.unwrap();
+        println!("{:#?}", d.faces[0]);
+        // El nombre alemán vigente (la impresión más reciente).
+        assert_eq!(
+            d.faces[0].printed_name(DesignLang::De),
+            Some("Llanowarelfen")
+        );
+        assert_eq!(
+            d.faces[0].type_line.get(DesignLang::De),
+            "Kreatur — Elf, Druide"
+        );
+    }
 
     /// Las cartas de prueba de los dorados de layouts (Fase 5): baja sus
     /// datos de Scryfall y los deja en `proxy-core/tests/dorados/layouts/datos`.

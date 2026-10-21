@@ -191,6 +191,7 @@ pub fn run() {
             commands::diseno::design_structure,
             commands::diseno::design_suggest_translation,
             commands::diseno::design_drafts_for_deck,
+            commands::diseno::design_complete_lang,
             commands::diseno::design_export_png,
             commands::diseno::design_save,
             commands::diseno::design_remove,

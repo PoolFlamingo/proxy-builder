@@ -283,6 +283,10 @@ pub struct Maquetador {
     /// Caracteres que la letra del pack no tiene y por qué se cambian
     /// (`"—"` → `"-"`). Lo pone cada render con lo que diga el pack.
     pub sustituir: Vec<(String, String)>,
+    /// El idioma del texto: elige entre los respaldos de letras (la forma
+    /// japonesa o china de un ideograma) y las formas locales de la letra.
+    /// En español e inglés no se pone, para que salgan como siempre.
+    pub locale: Option<parley::Language>,
 }
 
 impl Maquetador {
@@ -402,6 +406,9 @@ impl Maquetador {
             estilo.interlinea,
         )));
         b.push_default(StyleProperty::Brush(estilo.color));
+        if let Some(l) = &self.locale {
+            b.push_default(StyleProperty::Locale(Some(*l)));
+        }
         // Cifras de caja alta siempre («3/5», «{2}»): las elzevirianas bajan
         // de la línea y en una carta quedan mal.
         b.push_default(StyleProperty::FontFeatures(parley::FontFeatures::from(

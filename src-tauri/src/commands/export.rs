@@ -554,10 +554,12 @@ mod tests {
                         type_line: ByLang {
                             es: "Artefacto".into(),
                             en: "Artifact".into(),
+                            otros: Default::default(),
                         },
                         rules: ByLang {
                             es: format!("Carta {i} hace cosas."),
                             en: String::new(),
+                            otros: Default::default(),
                         },
                         ..FaceData::default()
                     }],

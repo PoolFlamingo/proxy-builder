@@ -25,6 +25,8 @@ pub mod pintar;
 pub mod render;
 pub mod simbolos;
 pub mod texto;
+pub mod textos_motor;
+pub mod tipos_idiomas;
 
 /// Lo que puede fallar al diseñar.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
