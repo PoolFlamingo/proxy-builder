@@ -335,5 +335,14 @@
 	"Bajar las letras": "Bajar las letras",
 	"Copia:": "Copia:",
 	"Copia {n}": "Copia {n}",
-	"Recorrer también las copias con las flechas": "Recorrer también las copias con las flechas"
+	"Recorrer también las copias con las flechas": "Recorrer también las copias con las flechas",
+	"Crear variante": "Crear variante",
+	"Añade otra copia de esta carta con una copia de este diseño, marcada como variante de diseño: se imprime pero no cuenta para el mazo. Antes se guarda lo que llevas hecho.": "Añade otra copia de esta carta con una copia de este diseño, marcada como variante de diseño: se imprime pero no cuenta para el mazo. Antes se guarda lo que llevas hecho.",
+	"Variante creada (copia {n})": "Variante creada (copia {n})",
+	"Errores": "Errores",
+	"Avisos": "Avisos",
+	"Información": "Información",
+	"No hay ningún error que mostrar.": "No hay ningún error que mostrar.",
+	"No hay ningún aviso que mostrar.": "No hay ningún aviso que mostrar.",
+	"No hay ninguna información que mostrar.": "No hay ninguna información que mostrar."
 }

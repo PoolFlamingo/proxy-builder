@@ -335,5 +335,14 @@
 	"Bajar las letras": "フォントをダウンロード",
 	"Copia:": "コピー:",
 	"Copia {n}": "コピー {n}",
-	"Recorrer también las copias con las flechas": "矢印キーでコピーも順に切り替える"
+	"Recorrer también las copias con las flechas": "矢印キーでコピーも順に切り替える",
+	"Crear variante": "デザイン違いを作る",
+	"Añade otra copia de esta carta con una copia de este diseño, marcada como variante de diseño: se imprime pero no cuenta para el mazo. Antes se guarda lo que llevas hecho.": "このカードのコピーをもう1枚、このデザインのコピー付きで追加し、デザイン違いの印を付けます。印刷されますが、デッキの枚数には数えません。先に今の作業を保存します。",
+	"Variante creada (copia {n})": "デザイン違いを作りました（コピー {n}）",
+	"Errores": "エラー",
+	"Avisos": "警告",
+	"Información": "情報",
+	"No hay ningún error que mostrar.": "表示するエラーはありません。",
+	"No hay ningún aviso que mostrar.": "表示する警告はありません。",
+	"No hay ninguna información que mostrar.": "表示する情報はありません。"
 }

@@ -335,5 +335,14 @@
 	"Bajar las letras": "下载字体",
 	"Copia:": "副本：",
 	"Copia {n}": "副本 {n}",
-	"Recorrer también las copias con las flechas": "用箭头键也切换副本"
+	"Recorrer también las copias con las flechas": "用箭头键也切换副本",
+	"Crear variante": "创建变体",
+	"Añade otra copia de esta carta con una copia de este diseño, marcada como variante de diseño: se imprime pero no cuenta para el mazo. Antes se guarda lo que llevas hecho.": "再添加一张这张牌的副本，并带上这个设计的拷贝，标记为设计变体：会打印，但不计入牌组。会先保存你已做的修改。",
+	"Variante creada (copia {n})": "已创建变体（副本 {n}）",
+	"Errores": "错误",
+	"Avisos": "警告",
+	"Información": "信息",
+	"No hay ningún error que mostrar.": "没有可显示的错误。",
+	"No hay ningún aviso que mostrar.": "没有可显示的警告。",
+	"No hay ninguna información que mostrar.": "没有可显示的信息。"
 }

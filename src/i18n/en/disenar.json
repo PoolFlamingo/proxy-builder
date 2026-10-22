@@ -335,5 +335,14 @@
 	"Bajar las letras": "Download the fonts",
 	"Copia:": "Copy:",
 	"Copia {n}": "Copy {n}",
-	"Recorrer también las copias con las flechas": "Also step through copies with the arrows"
+	"Recorrer también las copias con las flechas": "Also step through copies with the arrows",
+	"Crear variante": "Create variant",
+	"Añade otra copia de esta carta con una copia de este diseño, marcada como variante de diseño: se imprime pero no cuenta para el mazo. Antes se guarda lo que llevas hecho.": "Adds another copy of this card with a copy of this design, marked as a design variant: it is printed but does not count towards the deck. What you have so far is saved first.",
+	"Variante creada (copia {n})": "Variant created (copy {n})",
+	"Errores": "Errors",
+	"Avisos": "Warnings",
+	"Información": "Information",
+	"No hay ningún error que mostrar.": "There are no errors to show.",
+	"No hay ningún aviso que mostrar.": "There are no warnings to show.",
+	"No hay ninguna información que mostrar.": "There is no information to show."
 }

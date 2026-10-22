@@ -379,5 +379,14 @@
 	"Bajar las letras": "Télécharger les polices",
 	"Copia:": "Exemplaire :",
 	"Copia {n}": "Exemplaire {n}",
-	"Recorrer también las copias con las flechas": "Parcourir aussi les exemplaires avec les flèches"
+	"Recorrer también las copias con las flechas": "Parcourir aussi les exemplaires avec les flèches",
+	"Crear variante": "Créer une variante",
+	"Añade otra copia de esta carta con una copia de este diseño, marcada como variante de diseño: se imprime pero no cuenta para el mazo. Antes se guarda lo que llevas hecho.": "Ajoute un autre exemplaire de cette carte avec une copie de ce design, marqué comme variante de design : il est imprimé mais ne compte pas dans le deck. Ce que vous avez fait est d’abord enregistré.",
+	"Variante creada (copia {n})": "Variante créée (exemplaire {n})",
+	"Errores": "Erreurs",
+	"Avisos": "Avertissements",
+	"Información": "Informations",
+	"No hay ningún error que mostrar.": "Aucune erreur à afficher.",
+	"No hay ningún aviso que mostrar.": "Aucun avertissement à afficher.",
+	"No hay ninguna información que mostrar.": "Aucune information à afficher."
 }

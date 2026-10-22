@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Aviso } from "@/bindings/Aviso";
-import { esGrave, MAQUETACIONES, textoAviso } from "../textos";
+import { esGrave, MAQUETACIONES, nivelAviso, textoAviso } from "../textos";
 
 /** Un `t()` de mentira: sin traducir, solo rellena las variables (y marca las que falten). */
 const t = (es: string, p?: Record<string, string | number>) =>
@@ -85,6 +85,15 @@ describe("esGrave", () => {
 	it("solo el texto que no cabe y los símbolos o letras que faltan son graves", () => {
 		const graves = TODOS.filter(esGrave).map((a) => a.kind);
 		expect(graves).toEqual(["textoNoCabe", "faltanSimbolos", "faltanLetras"]);
+	});
+});
+
+describe("nivelAviso", () => {
+	it("los graves son errores, lo que se degrada es aviso y lo demás es información", () => {
+		const nivel = (n: string) => TODOS.filter((a) => nivelAviso(a) === n).map((a) => a.kind);
+		expect(nivel("error")).toEqual(["textoNoCabe", "faltanSimbolos", "faltanLetras"]);
+		expect(nivel("info")).toEqual(["sinTextoOficial", "reglasEditadas"]);
+		expect(nivel("aviso")).toHaveLength(TODOS.length - 5);
 	});
 });
 

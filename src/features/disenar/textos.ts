@@ -102,6 +102,14 @@ export function esGrave(a: Aviso): boolean {
 	return a.kind === "textoNoCabe" || a.kind === "faltanSimbolos" || a.kind === "faltanLetras";
 }
 
+/** Cómo de importante es un aviso: error (grave), aviso (el marco o el texto se degradan) o solo información. */
+export type NivelAviso = "error" | "aviso" | "info";
+
+export function nivelAviso(a: Aviso): NivelAviso {
+	if (esGrave(a)) return "error";
+	return a.kind === "sinTextoOficial" || a.kind === "reglasEditadas" ? "info" : "aviso";
+}
+
 /** Cómo se llama cada maquetación en el editor. */
 export const MAQUETACIONES: Record<Maquetacion, string> = {
 	normal: paraTraducir("Normal"),
