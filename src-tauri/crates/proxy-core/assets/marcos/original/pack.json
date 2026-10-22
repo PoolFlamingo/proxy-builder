@@ -1055,8 +1055,8 @@
 				"x": 0,
 				"y": 0,
 				"w": 63,
-				"h": 79.9,
-				"radio": 0,
+				"h": 81.0,
+				"radio": 3,
 				"soloAbajo": true
 			},
 			"capas": [
@@ -1067,49 +1067,31 @@
 					"png": "m15/borderless/m15GenericShowcaseFrame{color}.png",
 					"desde": {
 						"x": 0,
-						"y": 48.5,
+						"y": 3.0,
 						"w": 63,
-						"h": 6.9
+						"h": 7.3
 					},
 					"en": {
 						"x": 0,
-						"y": 73.0,
+						"y": 72.7,
 						"w": 63,
-						"h": 6.9
-					}
-				},
-				{
-					"png": "m15/borderless/m15GenericShowcaseFrame{color}.png",
-					"desde": {
-						"x": 0,
-						"y": 70,
-						"w": 3.9,
-						"h": 10
-					}
-				},
-				{
-					"png": "m15/borderless/m15GenericShowcaseFrame{color}.png",
-					"desde": {
-						"x": 59.1,
-						"y": 70,
-						"w": 3.9,
-						"h": 10
+						"h": 7.3
 					}
 				},
 				{
 					"png": "m15/regular/m15Frame{color}.png",
-					"mascara": "m15/regular/m15MaskType.png",
+					"mascara": "m15/regular/m15MaskTitle.png",
 					"desde": {
 						"x": 0,
-						"y": 48.5,
+						"y": 3.0,
 						"w": 63,
-						"h": 6.9
+						"h": 7.3
 					},
 					"en": {
 						"x": 0,
-						"y": 73.0,
+						"y": 72.7,
 						"w": 63,
-						"h": 6.9
+						"h": 7.3
 					},
 					"colores": {
 						"colorless": "A"
@@ -1118,9 +1100,9 @@
 			],
 			"huecos": {
 				"titulo": {
-					"x": 10.5,
-					"y": 74.04,
-					"w": 42.0,
+					"x": 10.4,
+					"y": 73.89,
+					"w": 42.2,
 					"h": 4.78,
 					"rol": "titulo",
 					"mayuscula": 2.15,
@@ -1128,14 +1110,14 @@
 					"alinear": "centro"
 				},
 				"simbolo": {
-					"x": 4.1,
-					"y": 74.2,
-					"w": 4.5,
-					"h": 4.5
+					"x": 4.9,
+					"y": 74.42,
+					"w": 4.0,
+					"h": 4.0
 				},
 				"emblema": {
 					"x": 53.4,
-					"y": 74.7,
+					"y": 74.77,
 					"w": 4.6,
 					"h": 3.3
 				},
