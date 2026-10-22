@@ -267,7 +267,7 @@ colección) vale para todos los marcos: sin tocar (`None`) cada marco hace lo
 suyo (se adapta en el despejado de la casa y es fija en los marcos SVG fijos
 de la casa y en el pack `original`, por `fijaDeSerie`); en `true` los marcos
 fijos con `subeCaja` también acortan su caja cuando el texto es corto (hasta
-10 mm, calculado solo), y en `false` la caja se queda siempre en `altoMax`. En
+10 mm, calculado solo), y en `false` la caja se queda siempre en `altoMax`, con el texto centrado en vertical. En
 el marco Balatro no cambia.
 
 ### Layouts de un estilo
