@@ -1042,6 +1042,128 @@
 				"padAbajo": 2.8,
 				"fijaDeSerie": true
 			}
+		},
+		"fullArt": {
+			"arte": {
+				"x": 0,
+				"y": 0,
+				"w": 63,
+				"h": 88
+			},
+			"cajaPorDefecto": "clara",
+			"ventanaArte": {
+				"x": 0,
+				"y": 0,
+				"w": 63,
+				"h": 79.9,
+				"radio": 0,
+				"soloAbajo": true
+			},
+			"capas": [
+				{
+					"svg": "sombra-pie.svg"
+				},
+				{
+					"png": "m15/borderless/m15GenericShowcaseFrame{color}.png",
+					"desde": {
+						"x": 0,
+						"y": 48.5,
+						"w": 63,
+						"h": 6.9
+					},
+					"en": {
+						"x": 0,
+						"y": 73.0,
+						"w": 63,
+						"h": 6.9
+					}
+				},
+				{
+					"png": "m15/borderless/m15GenericShowcaseFrame{color}.png",
+					"desde": {
+						"x": 0,
+						"y": 70,
+						"w": 3.9,
+						"h": 10
+					}
+				},
+				{
+					"png": "m15/borderless/m15GenericShowcaseFrame{color}.png",
+					"desde": {
+						"x": 59.1,
+						"y": 70,
+						"w": 3.9,
+						"h": 10
+					}
+				},
+				{
+					"png": "m15/regular/m15Frame{color}.png",
+					"mascara": "m15/regular/m15MaskType.png",
+					"desde": {
+						"x": 0,
+						"y": 48.5,
+						"w": 63,
+						"h": 6.9
+					},
+					"en": {
+						"x": 0,
+						"y": 73.0,
+						"w": 63,
+						"h": 6.9
+					},
+					"colores": {
+						"colorless": "A"
+					}
+				}
+			],
+			"huecos": {
+				"titulo": {
+					"x": 10.5,
+					"y": 74.04,
+					"w": 42.0,
+					"h": 4.78,
+					"rol": "titulo",
+					"mayuscula": 2.15,
+					"color": "#111111",
+					"alinear": "centro"
+				},
+				"simbolo": {
+					"x": 4.1,
+					"y": 74.2,
+					"w": 4.5,
+					"h": 4.5
+				},
+				"emblema": {
+					"x": 53.4,
+					"y": 74.7,
+					"w": 4.6,
+					"h": 3.3
+				},
+				"tipo": {
+					"x": 0,
+					"y": 0,
+					"w": 0,
+					"h": 0
+				},
+				"reglas": {
+					"x": 0,
+					"y": 0,
+					"w": 0,
+					"h": 0
+				},
+				"pie": {
+					"x": 4.3,
+					"y": 82.08,
+					"w": 43.0,
+					"h": 3.0,
+					"rol": "pie",
+					"mayuscula": 1.0,
+					"color": "#f0f0f0",
+					"tabs": [7.85, 10.25],
+					"interlinea": 1.75
+				}
+			},
+			"radio": 3
 		}
 	}
 }
