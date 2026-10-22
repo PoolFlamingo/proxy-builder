@@ -24,12 +24,12 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { WithTooltip } from "@/components/ui/with-tooltip";
-import { duplicar, nuevoId } from "@/lib/deck-ops";
+import { nuevoId } from "@/lib/deck-ops";
 import { call } from "@/lib/ipc";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
 import { Formulario } from "./formulario";
-import { agrupar, vecina } from "./grupos";
+import { agrupar, conVariante, vecina } from "./grupos";
 import { ListaCartas } from "./lista-cartas";
 import { useMarcosOriginales } from "./marcos-originales";
 import { usePacksDescargables } from "./packs-descargables";
@@ -173,13 +173,7 @@ export function DisenarScreen() {
 		// Lo que se lleva hecho se guarda antes, para que la variante parta de ello.
 		if (b.cambiado && !(await b.guardar(false))) return;
 		const id = nuevoId();
-		useDeck
-			.getState()
-			.setCartas((cs) =>
-				duplicar(cs, [actual.id], () => id).map((c) =>
-					c.id === id ? { ...c, marca: "variante" as const } : c,
-				),
-			);
+		useDeck.getState().setCartas((cs) => conVariante(cs, actual.id, id));
 		setSoloEsta(true);
 		useUi.getState().disenar(id);
 		useUi
