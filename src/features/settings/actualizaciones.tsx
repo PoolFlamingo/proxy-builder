@@ -103,8 +103,8 @@ export function Actualizaciones() {
 					)}
 					{error !== null && <p className="text-[11px] text-destructive">{mensaje(error)}</p>}
 					{info?.notas && paso !== "al-dia" && (
-						<ScrollArea className="max-h-40 rounded-md border">
-							<p className="p-2.5 font-mono text-[11px] whitespace-pre-wrap text-muted-foreground">
+						<ScrollArea className="rounded-md border" viewportClassName="max-h-40">
+							<p className="p-2.5 font-mono text-[11px] break-words whitespace-pre-wrap text-muted-foreground">
 								{info.notas}
 							</p>
 						</ScrollArea>
