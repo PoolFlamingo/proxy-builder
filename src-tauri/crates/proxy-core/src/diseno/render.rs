@@ -2593,6 +2593,9 @@ pub(super) fn pintar_cara(
     let hueco_reglas = c.estilo.huecos.get("reglas").cloned();
     let caja_din = c.estilo.caja.clone();
     let mut caja_txt: Option<(Hecho, Caja)> = None;
+    // La caja que crece, en su alto máximo (altura dinámica apagada): el texto
+    // se centra en ella como en las cajas fijas.
+    let mut caja_creciente_fija = false;
     let mut caja_reglas_mm: Option<Caja> = None;
     if let Some(h) = hueco_reglas {
         let (est, _) = c.estilo_texto(&h);
@@ -2686,6 +2689,7 @@ pub(super) fn pintar_cara(
                 .retoques
                 .rules_box_dynamic
                 .map_or(din.fija_de_serie, |dinamica| !dinamica);
+            caja_creciente_fija = fija;
             let comodo = if fija {
                 None
             } else {
@@ -3008,8 +3012,9 @@ pub(super) fn pintar_cara(
         .and_then(|t| rgba(t))
         .unwrap_or(BLANCO);
     if let Some((hecho, sitio)) = &caja_txt {
-        // En las cajas fijas, el texto normal va centrado en vertical; las
-        // secciones que reparten llenan la caja.
+        // En las cajas fijas (también la que crece con la altura dinámica
+        // apagada), el texto normal va centrado en vertical; las secciones
+        // que reparten llenan la caja.
         let reparte = matches!(contenido, Contenido::Secciones { repartir: true, .. });
         let vertical = c
             .estilo
@@ -3017,7 +3022,7 @@ pub(super) fn pintar_cara(
             .get("reglas")
             .and_then(|h| h.alinear_v)
             .unwrap_or(Alineacion::Centro);
-        let libre = if caja_din.is_some() || reparte {
+        let libre = if (caja_din.is_some() && !caja_creciente_fija) || reparte {
             0.0
         } else {
             let sobra = (sitio.h - hecho.alto() / c.l.ky).max(0.0);
