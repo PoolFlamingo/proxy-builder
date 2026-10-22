@@ -1374,9 +1374,14 @@ pub(crate) mod tests {
             .collect();
         let p = Pack::cargar_con_imagenes(ficheros.clone(), im.clone()).unwrap();
         assert_eq!(p.def.id, "original");
-        for e in ["borderless", "extended", "classic"] {
+        for e in ["borderless", "extended", "classic", "fullArt"] {
             p.estilo(e).unwrap();
         }
+        // Las tierras básicas (paisaje) llevan el marco del pack, no el de la
+        // casa: la barra de mármol, sin la franja oscura.
+        let paisaje = p.estilo("fullArt").unwrap();
+        assert!(paisaje.capas.iter().any(|c| c.png.is_some()));
+        assert!(paisaje.capas.iter().all(|c| c.svg != "paisaje/franja.svg"));
         // La lista trae justo las que piden las capas: ni una de más ni de menos.
         let mut pedidas = std::collections::BTreeSet::new();
         for e in p.def.estilos.values() {
