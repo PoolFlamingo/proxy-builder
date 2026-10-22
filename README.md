@@ -312,6 +312,8 @@ text:
   box automatic or manual. Besides the house pack there are the **original image
   frames** (the Card Conjurer M15s, normal and borderless), which are downloaded
   the first time they are chosen.
+  The rules box can adapt its height to the text (tokens with little text look
+  less cluttered) or stay fixed, on any frame.
 - **Free fonts** to download from the app: classical, medieval or fantasy style
   for the title (Cinzel, Almendra, Uncial Antiqua, Grenze Gotisch…) and very
   legible ones for the rules text, plus a pixel font (Pixelify Sans). In

@@ -317,7 +317,9 @@ traducidos:
 - **Marcos y estilos** de un pack de marcos, con color, corona de legendaria
   y caja de reglas automáticos o a mano. Además del pack de la casa están los
   **marcos originales** de imagen (los M15 de Card Conjurer, normal y
-  despejado), que se descargan la primera vez que se eligen.
+  despejado), que se descargan la primera vez que se eligen. La caja de
+  reglas puede ajustar su altura al texto (los tokens con poco texto quedan
+  más despejados) o quedarse fija, en cualquier marco.
 - **Letras libres** para descargar desde la app: de aire clásico, medieval o
   de fantasía para el título (Cinzel, Almendra, Uncial Antiqua, Grenze
   Gotisch…) y muy legibles para las reglas, además de una pixelada (Pixelify

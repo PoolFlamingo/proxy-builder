@@ -113,7 +113,10 @@ Los estilos que la app conoce son `borderless` (despejado), `extended`,
   fijo en `fondo` y el alto va de `altoMin` a `altoMax`; la barra de tipo va
   encima. Si el texto no cabe ni al máximo, la letra baja de 0,1 pt en 0,1 pt
   hasta 6 pt y, si aun así no cabe, se avisa. Sin `caja`, el hueco `reglas` es
-  fijo y el texto se centra en vertical.
+  fijo y el texto se centra en vertical. La caja mide lo que pide el texto
+  (con poco texto, o ninguno, queda baja y la ilustración llega más abajo);
+  el usuario puede fijarla siempre en `altoMax` con el ajuste fino «Altura
+  según el texto» (`rulesBoxDynamic: false`).
 - **`cajaPorDefecto`**: `tinte` (translúcida del color de la carta) o `clara`.
 - **`capas`**: los SVG que se pintan encima del arte, en orden. Con `si`,
   solo cuando se cumple: `corona` (legendaria en despejado o forzada), `fr`
@@ -193,6 +196,19 @@ tres estilos con el mismo mármol y pergamino:
   tinte encima, y se sigue viendo la ilustración. El borde de la caja es
   siempre el del marco.
 
+Los tres estilos del pack `original` llevan `caja` con `fijaDeSerie`: la caja
+mide `altoMax` de serie y solo se adapta a la altura del texto, como en el
+despejado de la casa, si el usuario activa «Altura según el texto». Como la caja
+viene pintada en el PNG con un alto fijo, el pack la rehace en tres trozos con
+`desde` y `en`: el de arriba (con la barra del tipo) y el de abajo se copian
+tal cual, y el de en medio se estira entre ellos con expresiones sobre `yTipo`
+(`"y": "yTipo+6.9"`, `"h": "73.1 - yTipo"`). Las esquinas laterales del
+despejado van en tiras aparte para que no se estiren. La capa `cajaReglas` y
+`refuerzo-caja.svg` (que usa `{{yReglas}}` y `{{altoReglas}}`) siguen la misma
+altura. Si quieres hacer lo mismo con otro marco de imagen, parte la caja
+en esos tres trozos y revisa `ventanaArte.repintarTras` (cuántas capas se
+pintan antes de repintar el arte) para que el arte no tape la caja.
+
 En el repositorio solo va su `pack.json`, tres SVG propios e
 `imagenes.json` (la lista de PNG con la huella SHA-256 de cada uno y el
 commit fijo del que salen). La app los descarga la primera vez que se eligen
@@ -245,6 +261,14 @@ En los marcos fijos de la casa (extendido y clásico), el arte, la línea de
 tipo, el emblema y las reglas van con `subeCaja`; en la caja que crece
 (despejado), lo pedido se suma a su altura. Un pack que no use `subeCaja` no
 cambia con ese ajuste.
+
+El ajuste fino «Altura según el texto» (`rulesBoxDynamic`, en la carta o en la
+colección) vale para todos los marcos: sin tocar (`None`) cada marco hace lo
+suyo (se adapta en el despejado de la casa y es fija en los marcos SVG fijos
+de la casa y en el pack `original`, por `fijaDeSerie`); en `true` los marcos
+fijos con `subeCaja` también acortan su caja cuando el texto es corto (hasta
+10 mm, calculado solo), y en `false` la caja se queda siempre en `altoMax`. En
+el marco Balatro no cambia.
 
 ### Layouts de un estilo
 
