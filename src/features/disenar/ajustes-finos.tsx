@@ -1,6 +1,6 @@
 import { RotateCcw } from "lucide-react";
 import type { FineTuning } from "@/bindings/FineTuning";
-import { FilaDeslizador, FilaInterruptor } from "@/components/campos";
+import { Fila, FilaDeslizador, FilaInterruptor, Selector } from "@/components/campos";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 
@@ -25,6 +25,7 @@ export function hayAjustes(f: FineTuning | undefined): boolean {
 		f.artFade !== undefined ||
 		f.artFadeExtension !== undefined ||
 		f.rulesBoxHeight !== undefined ||
+		f.rulesBoxDynamic !== undefined ||
 		f.cardRadius !== undefined ||
 		TAMANOS.some((k) => f[k] !== undefined)
 	);
@@ -41,6 +42,12 @@ const TAMANOS = [
 	"footerLineSpacing",
 ] as const;
 type Tamano = (typeof TAMANOS)[number];
+
+/** La altura de la caja de reglas: la del marco, dinámica o fija. */
+type AlturaCaja = "marco" | "dinamica" | "fija";
+
+const alturaDe = (f: FineTuning): AlturaCaja =>
+	f.rulesBoxDynamic === undefined ? "marco" : f.rulesBoxDynamic ? "dinamica" : "fija";
 
 type Posicion = "title" | "cost" | "typeLine" | "emblem" | "rules" | "pt" | "footer";
 
@@ -144,9 +151,26 @@ export function AjustesFinos({
 			<p className="pt-1 text-xs font-semibold">{t("Caja de reglas")}</p>
 			<p className="text-[11px] text-muted-foreground">
 				{t(
-					"Cuánto más alta (en positivo, crece hacia arriba y la ilustración se acorta) o más baja (en negativo, la letra baja si hace falta). A 0, como viene. En los marcos de imagen (Original, Balatro) no cambia.",
+					"Cuánto más alta (en positivo, crece hacia arriba y la ilustración se acorta) o más baja (en negativo, la letra baja si hace falta). A 0, como viene. En el marco Balatro no cambia.",
 				)}
 			</p>
+			<Fila
+				etiqueta={t("Altura según el texto")}
+				ayuda={t(
+					"Dinámica: la caja crece o se encoge según el texto y las fichas con poco texto quedan despejadas. Fija: siempre del alto máximo del marco. Según el marco: lo que decida cada marco (en Clásico y Extendido de la casa es fija).",
+				)}
+			>
+				<Selector
+					valor={alturaDe(valor)}
+					opciones={[
+						{ valor: "marco", etiqueta: t("Según el marco") },
+						{ valor: "dinamica", etiqueta: t("Dinámica") },
+						{ valor: "fija", etiqueta: t("Fija") },
+					]}
+					onChange={(v) => poner({ rulesBoxDynamic: v === "marco" ? undefined : v === "dinamica" })}
+					ancho="w-36"
+				/>
+			</Fila>
 			<FilaDeslizador
 				etiqueta={t("Altura de la caja de reglas")}
 				valor={valor.rulesBoxHeight ?? 0}
