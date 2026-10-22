@@ -385,5 +385,14 @@
 	"Bajar las letras": "Завантажити шрифти",
 	"Copia:": "Копія:",
 	"Copia {n}": "Копія {n}",
-	"Recorrer también las copias con las flechas": "Гортати стрілками й копії"
+	"Recorrer también las copias con las flechas": "Гортати стрілками й копії",
+	"Crear variante": "Створити варіант",
+	"Añade otra copia de esta carta con una copia de este diseño, marcada como variante de diseño: se imprime pero no cuenta para el mazo. Antes se guarda lo que llevas hecho.": "Додає ще одну копію цієї картки з копією цього дизайну, позначену як варіант дизайну: її друкують, але не враховують у колоді. Спочатку зберігається те, що ви вже зробили.",
+	"Variante creada (copia {n})": "Варіант створено (копія {n})",
+	"Errores": "Помилки",
+	"Avisos": "Попередження",
+	"Información": "Інформація",
+	"No hay ningún error que mostrar.": "Немає помилок для показу.",
+	"No hay ningún aviso que mostrar.": "Немає попереджень для показу.",
+	"No hay ninguna información que mostrar.": "Немає інформації для показу."
 }

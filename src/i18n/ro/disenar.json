@@ -375,5 +375,14 @@
 	"Bajar las letras": "Descarcă fonturile",
 	"Copia:": "Copie:",
 	"Copia {n}": "Copie {n}",
-	"Recorrer también las copias con las flechas": "Parcurge și copiile cu săgețile"
+	"Recorrer también las copias con las flechas": "Parcurge și copiile cu săgețile",
+	"Crear variante": "Creează o variantă",
+	"Añade otra copia de esta carta con una copia de este diseño, marcada como variante de diseño: se imprime pero no cuenta para el mazo. Antes se guarda lo que llevas hecho.": "Adaugă o altă copie a acestei cărți, cu o copie a acestui design, marcată ca variantă de design: se tipărește, dar nu se numără în pachet. Mai întâi se salvează ce ai făcut.",
+	"Variante creada (copia {n})": "Variantă creată (copia {n})",
+	"Errores": "Erori",
+	"Avisos": "Avertismente",
+	"Información": "Informații",
+	"No hay ningún error que mostrar.": "Nu există nicio eroare de afișat.",
+	"No hay ningún aviso que mostrar.": "Nu există niciun avertisment de afișat.",
+	"No hay ninguna información que mostrar.": "Nu există nicio informație de afișat."
 }

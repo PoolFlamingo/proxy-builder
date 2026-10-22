@@ -335,5 +335,14 @@
 	"Bajar las letras": "글꼴 다운로드",
 	"Copia:": "사본:",
 	"Copia {n}": "사본 {n}",
-	"Recorrer también las copias con las flechas": "화살표로 사본도 함께 넘기기"
+	"Recorrer también las copias con las flechas": "화살표로 사본도 함께 넘기기",
+	"Crear variante": "변형 만들기",
+	"Añade otra copia de esta carta con una copia de este diseño, marcada como variante de diseño: se imprime pero no cuenta para el mazo. Antes se guarda lo que llevas hecho.": "이 카드의 사본을 이 디자인의 복사본과 함께 하나 더 추가하고 디자인 변형으로 표시합니다. 인쇄는 되지만 덱에는 포함되지 않아요. 먼저 지금까지 한 작업을 저장해요.",
+	"Variante creada (copia {n})": "변형을 만들었어요 (사본 {n})",
+	"Errores": "오류",
+	"Avisos": "경고",
+	"Información": "정보",
+	"No hay ningún error que mostrar.": "표시할 오류가 없어요.",
+	"No hay ningún aviso que mostrar.": "표시할 경고가 없어요.",
+	"No hay ninguna información que mostrar.": "표시할 정보가 없어요."
 }

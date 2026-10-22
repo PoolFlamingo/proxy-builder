@@ -365,5 +365,14 @@
 	"Bajar las letras": "Lettertypen downloaden",
 	"Copia:": "Kopie:",
 	"Copia {n}": "Kopie {n}",
-	"Recorrer también las copias con las flechas": "Ook door de kopieën bladeren met de pijlen"
+	"Recorrer también las copias con las flechas": "Ook door de kopieën bladeren met de pijlen",
+	"Crear variante": "Variant maken",
+	"Añade otra copia de esta carta con una copia de este diseño, marcada como variante de diseño: se imprime pero no cuenta para el mazo. Antes se guarda lo que llevas hecho.": "Voegt nog een kopie van deze kaart toe met een kopie van dit ontwerp, gemarkeerd als ontwerpvariant: ze wordt geprint maar telt niet mee voor het deck. Wat je al hebt gedaan wordt eerst opgeslagen.",
+	"Variante creada (copia {n})": "Variant gemaakt (kopie {n})",
+	"Errores": "Fouten",
+	"Avisos": "Waarschuwingen",
+	"Información": "Informatie",
+	"No hay ningún error que mostrar.": "Er zijn geen fouten om te tonen.",
+	"No hay ningún aviso que mostrar.": "Er zijn geen waarschuwingen om te tonen.",
+	"No hay ninguna información que mostrar.": "Er is geen informatie om te tonen."
 }

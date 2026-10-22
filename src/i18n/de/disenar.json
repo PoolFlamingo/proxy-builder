@@ -365,5 +365,14 @@
 	"Bajar las letras": "Schriften herunterladen",
 	"Copia:": "Kopie:",
 	"Copia {n}": "Kopie {n}",
-	"Recorrer también las copias con las flechas": "Mit den Pfeilen auch durch die Kopien gehen"
+	"Recorrer también las copias con las flechas": "Mit den Pfeilen auch durch die Kopien gehen",
+	"Crear variante": "Variante erstellen",
+	"Añade otra copia de esta carta con una copia de este diseño, marcada como variante de diseño: se imprime pero no cuenta para el mazo. Antes se guarda lo que llevas hecho.": "Fügt eine weitere Kopie dieser Karte mit einer Kopie dieses Designs hinzu, als Designvariante markiert: Sie wird gedruckt, zählt aber nicht zum Deck. Zuvor wird gespeichert, was du bisher gemacht hast.",
+	"Variante creada (copia {n})": "Variante erstellt (Kopie {n})",
+	"Errores": "Fehler",
+	"Avisos": "Warnungen",
+	"Información": "Informationen",
+	"No hay ningún error que mostrar.": "Es gibt keine Fehler anzuzeigen.",
+	"No hay ningún aviso que mostrar.": "Es gibt keine Warnungen anzuzeigen.",
+	"No hay ninguna información que mostrar.": "Es gibt keine Informationen anzuzeigen."
 }

@@ -375,5 +375,14 @@
 	"Bajar las letras": "Scarica i caratteri",
 	"Copia:": "Copia:",
 	"Copia {n}": "Copia {n}",
-	"Recorrer también las copias con las flechas": "Scorri anche le copie con le frecce"
+	"Recorrer también las copias con las flechas": "Scorri anche le copie con le frecce",
+	"Crear variante": "Crea variante",
+	"Añade otra copia de esta carta con una copia de este diseño, marcada como variante de diseño: se imprime pero no cuenta para el mazo. Antes se guarda lo que llevas hecho.": "Aggiunge un’altra copia di questa carta con una copia di questo design, segnata come variante di design: viene stampata ma non conta per il mazzo. Prima si salva ciò che hai fatto.",
+	"Variante creada (copia {n})": "Variante creata (copia {n})",
+	"Errores": "Errori",
+	"Avisos": "Avvisi",
+	"Información": "Informazioni",
+	"No hay ningún error que mostrar.": "Nessun errore da mostrare.",
+	"No hay ningún aviso que mostrar.": "Nessun avviso da mostrare.",
+	"No hay ninguna información que mostrar.": "Nessuna informazione da mostrare."
 }

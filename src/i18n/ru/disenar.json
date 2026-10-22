@@ -385,5 +385,14 @@
 	"Bajar las letras": "Скачать шрифты",
 	"Copia:": "Копия:",
 	"Copia {n}": "Копия {n}",
-	"Recorrer también las copias con las flechas": "Листать стрелками и копии"
+	"Recorrer también las copias con las flechas": "Листать стрелками и копии",
+	"Crear variante": "Создать вариант",
+	"Añade otra copia de esta carta con una copia de este diseño, marcada como variante de diseño: se imprime pero no cuenta para el mazo. Antes se guarda lo que llevas hecho.": "Добавляет ещё одну копию этой карты с копией этого дизайна, помеченную как вариант дизайна: она печатается, но не учитывается в колоде. Сначала сохраняется то, что вы уже сделали.",
+	"Variante creada (copia {n})": "Вариант создан (копия {n})",
+	"Errores": "Ошибки",
+	"Avisos": "Предупреждения",
+	"Información": "Информация",
+	"No hay ningún error que mostrar.": "Нет ошибок для показа.",
+	"No hay ningún aviso que mostrar.": "Нет предупреждений для показа.",
+	"No hay ninguna información que mostrar.": "Нет информации для показа."
 }

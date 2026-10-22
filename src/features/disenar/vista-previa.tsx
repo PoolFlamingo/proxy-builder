@@ -1,4 +1,4 @@
-import { AlertTriangle, Download, Info, Loader2, Move } from "lucide-react";
+import { Loader2, Move } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ArtFraming } from "@/bindings/ArtFraming";
 import type { Aviso } from "@/bindings/Aviso";
@@ -7,8 +7,6 @@ import type { CardDesign } from "@/bindings/CardDesign";
 import type { DesignLang } from "@/bindings/DesignLang";
 import { useLang } from "@/components/language-provider";
 import { SelectorIdioma } from "@/components/selector-idioma";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { WithTooltip } from "@/components/ui/with-tooltip";
@@ -18,7 +16,7 @@ import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { ArteEnVivo } from "./arte-en-vivo";
 import { CARTA_MM, type CambioEncuadre, claveCapa, moverEncuadre } from "./encuadre";
-import { esGrave, textoAviso } from "./textos";
+import { Incidencias } from "./incidencias";
 
 /** Cada cuánto se pasa al diseño el encuadre mientras se arrastra. */
 const EMPUJE_MS = 100;
@@ -311,34 +309,7 @@ export function VistaPrevia({
 					)}
 				</div>
 			</div>
-			{avisos.length > 0 && (
-				<ScrollArea className="max-h-32 shrink-0 border-t">
-					<ul className="flex flex-col gap-1 px-3 py-2">
-						{avisos.map((a) => (
-							<li
-								key={JSON.stringify(a)}
-								className={cn(
-									"flex items-start gap-1.5 text-[11px]",
-									esGrave(a) ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground",
-								)}
-							>
-								{esGrave(a) ? (
-									<AlertTriangle className="mt-px size-3.5 shrink-0" />
-								) : (
-									<Info className="mt-px size-3.5 shrink-0" />
-								)}
-								<span className="min-w-0 flex-1">{textoAviso(a, t)}</span>
-								{a.kind === "faltanLetras" && (
-									<Button size="xs" variant="outline" onClick={() => setLang(a.lang)}>
-										<Download />
-										{t("Bajar las letras")}
-									</Button>
-								)}
-							</li>
-						))}
-					</ul>
-				</ScrollArea>
-			)}
+			<Incidencias avisos={avisos} setLang={setLang} />
 		</div>
 	);
 }

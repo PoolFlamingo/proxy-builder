@@ -385,5 +385,14 @@
 	"Bajar las letras": "Pobierz czcionki",
 	"Copia:": "Kopia:",
 	"Copia {n}": "Kopia {n}",
-	"Recorrer también las copias con las flechas": "Przechodź strzałkami także po kopiach"
+	"Recorrer también las copias con las flechas": "Przechodź strzałkami także po kopiach",
+	"Crear variante": "Utwórz wariant",
+	"Añade otra copia de esta carta con una copia de este diseño, marcada como variante de diseño: se imprime pero no cuenta para el mazo. Antes se guarda lo que llevas hecho.": "Dodaje kolejną kopię tej karty z kopią tego projektu, oznaczoną jako wariant projektu: zostanie wydrukowana, ale nie liczy się do talii. Najpierw zapisuje to, co już zrobiono.",
+	"Variante creada (copia {n})": "Utworzono wariant (kopia {n})",
+	"Errores": "Błędy",
+	"Avisos": "Ostrzeżenia",
+	"Información": "Informacje",
+	"No hay ningún error que mostrar.": "Brak błędów do wyświetlenia.",
+	"No hay ningún aviso que mostrar.": "Brak ostrzeżeń do wyświetlenia.",
+	"No hay ninguna información que mostrar.": "Brak informacji do wyświetlenia."
 }

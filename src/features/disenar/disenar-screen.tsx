@@ -1,6 +1,7 @@
 import {
 	ChevronLeft,
 	ChevronRight,
+	CopyPlus,
 	Hash,
 	ImageDown,
 	Loader2,
@@ -23,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { WithTooltip } from "@/components/ui/with-tooltip";
+import { duplicar, nuevoId } from "@/lib/deck-ops";
 import { call } from "@/lib/ipc";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
@@ -163,6 +165,28 @@ export function DisenarScreen() {
 			};
 		});
 
+	// Otra copia de la carta con el diseño de esta, marcada como variante de
+	// diseño (se imprime, pero no cuenta para el mazo), y a diseñarla.
+	const crearVariante = async () => {
+		const actual = grupo?.cartas[copia];
+		if (!actual) return;
+		// Lo que se lleva hecho se guarda antes, para que la variante parta de ello.
+		if (b.cambiado && !(await b.guardar(false))) return;
+		const id = nuevoId();
+		useDeck
+			.getState()
+			.setCartas((cs) =>
+				duplicar(cs, [actual.id], () => id).map((c) =>
+					c.id === id ? { ...c, marca: "variante" as const } : c,
+				),
+			);
+		setSoloEsta(true);
+		useUi.getState().disenar(id);
+		useUi
+			.getState()
+			.anunciar(t("Variante creada (copia {n})", { n: (grupo?.cartas.length ?? 0) + 1 }));
+	};
+
 	const copias = grupo?.cartas.length ?? 0;
 	const tieneDiseno = !!grupo?.cartas[copia]?.design;
 
@@ -284,24 +308,46 @@ export function DisenarScreen() {
 								/>
 							</div>
 							<div className="flex shrink-0 flex-col gap-2 border-t p-2.5">
-								{copias > 1 && grupo && (
+								{grupo && (
+									<div className="flex flex-wrap items-center gap-1.5">
+										{copias > 1 && (
+											<>
+												<span className="text-xs text-muted-foreground">{t("Copia:")}</span>
+												{grupo.cartas.map((c, i) => (
+													<Button
+														key={c.id}
+														size="sm"
+														variant={i === copia ? "secondary" : "ghost"}
+														className="h-6 min-w-6 px-1.5"
+														onClick={() => i !== copia && saltar(c.id)}
+														aria-label={t("Copia {n}", { n: i + 1 })}
+														aria-pressed={i === copia}
+													>
+														{i + 1}
+													</Button>
+												))}
+											</>
+										)}
+										<WithTooltip
+											content={t(
+												"Añade otra copia de esta carta con una copia de este diseño, marcada como variante de diseño: se imprime pero no cuenta para el mazo. Antes se guarda lo que llevas hecho.",
+											)}
+										>
+											<Button
+												size="sm"
+												variant="outline"
+												className="ml-auto"
+												onClick={() => void crearVariante()}
+												disabled={b.guardando}
+											>
+												<CopyPlus />
+												{t("Crear variante")}
+											</Button>
+										</WithTooltip>
+									</div>
+								)}
+								{copias > 1 && (
 									<>
-										<div className="flex flex-wrap items-center gap-1.5">
-											<span className="text-xs text-muted-foreground">{t("Copia:")}</span>
-											{grupo.cartas.map((c, i) => (
-												<Button
-													key={c.id}
-													size="sm"
-													variant={i === copia ? "secondary" : "ghost"}
-													className="h-6 min-w-6 px-1.5"
-													onClick={() => i !== copia && saltar(c.id)}
-													aria-label={t("Copia {n}", { n: i + 1 })}
-													aria-pressed={i === copia}
-												>
-													{i + 1}
-												</Button>
-											))}
-										</div>
 										<label className="flex items-center gap-2 text-xs">
 											<Checkbox
 												checked={soloEsta}

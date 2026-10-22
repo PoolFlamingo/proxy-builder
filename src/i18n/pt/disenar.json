@@ -375,5 +375,14 @@
 	"Bajar las letras": "Baixar as fontes",
 	"Copia:": "Cópia:",
 	"Copia {n}": "Cópia {n}",
-	"Recorrer también las copias con las flechas": "Percorrer também as cópias com as setas"
+	"Recorrer también las copias con las flechas": "Percorrer também as cópias com as setas",
+	"Crear variante": "Criar variante",
+	"Añade otra copia de esta carta con una copia de este diseño, marcada como variante de diseño: se imprime pero no cuenta para el mazo. Antes se guarda lo que llevas hecho.": "Adiciona outra cópia desta carta com uma cópia deste design, marcada como variante de design: é impressa, mas não conta para o baralho. Antes, o que você fez é salvo.",
+	"Variante creada (copia {n})": "Variante criada (cópia {n})",
+	"Errores": "Erros",
+	"Avisos": "Avisos",
+	"Información": "Informações",
+	"No hay ningún error que mostrar.": "Não há nenhum erro para mostrar.",
+	"No hay ningún aviso que mostrar.": "Não há nenhum aviso para mostrar.",
+	"No hay ninguna información que mostrar.": "Não há nenhuma informação para mostrar."
 }
