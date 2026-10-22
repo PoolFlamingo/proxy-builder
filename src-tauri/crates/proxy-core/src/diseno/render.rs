@@ -769,6 +769,7 @@ fn repintar_ventana(
     radio: f32,
     arte: Option<&ArtePintado>,
     capa: bool,
+    desde_y: f32,
 ) {
     let (w, h) = (l.px.width(), l.px.height());
     let r = radio.clamp(0.0, v.w.min(v.h) / 2.0);
@@ -776,7 +777,14 @@ fn repintar_ventana(
         return;
     };
     for z in &v.repintar {
-        if let Some(rc) = Rect::from_xywh(l.x(z[0]), l.y(z[1]), l.x(z[2]), l.y(z[3])) {
+        // Sin pasar de la barra del tipo, que en la caja que crece baja con
+        // ella: repintar sus extremos se los comería.
+        let y = z[1].max(desde_y);
+        let alto = z[1] + z[3] - y;
+        if alto <= 0.0 {
+            continue;
+        }
+        if let Some(rc) = Rect::from_xywh(l.x(z[0]), l.y(y), l.x(z[2]), l.y(alto)) {
             zonas.fill_path(
                 &PathBuilder::from_rect(rc),
                 FillRule::Winding,
@@ -2456,7 +2464,13 @@ pub(super) fn pintar_cara(
         },
         RulesBox::Dark => ([20, 20, 20, 255], 0.85),
         RulesBox::Light => ([242, 236, 220, 255], 0.92),
-        RulesBox::Tint { hex } => (rgba(hex).unwrap_or(mezcla.tinte), 0.80),
+        // Con opacidad propia (`#rrggbbaa`) manda ella; sin ella, el 80 % de
+        // siempre.
+        RulesBox::Tint { hex } => match rgba(hex) {
+            Some(c) if hex.len() == 9 => ([c[0], c[1], c[2], 255], f32::from(c[3]) / 255.0),
+            Some(c) => (c, 0.80),
+            None => (mezcla.tinte, 0.80),
+        },
     };
     // Más opaca si se pide en los ajustes finos.
     let refuerzo = e.retoques.rules_box_opacity as f32;
@@ -2665,10 +2679,26 @@ pub(super) fn pintar_cara(
             // en ella (con la letra más pequeña si hace falta).
             let sube = c.retoques.rules_box_height.unwrap_or(0.0) as f32;
             let mas = sube.max(0.0);
-            let (mut aj, alto_txt, mut pad_abajo) =
-                encajar(din.alto_max + mas, din.alto_comodo.map(|a| a + mas));
+            // Sin altura dinámica (la pide el usuario en los ajustes finos o
+            // la trae el marco de serie), la caja es siempre del alto máximo
+            // del marco y la letra solo baja si ni así cabe.
+            let fija = c
+                .retoques
+                .rules_box_dynamic
+                .map_or(din.fija_de_serie, |dinamica| !dinamica);
+            let comodo = if fija {
+                None
+            } else {
+                din.alto_comodo.map(|a| a + mas)
+            };
+            let (mut aj, alto_txt, mut pad_abajo) = encajar(din.alto_max + mas, comodo);
             let natural = alto_txt + din.pad_arriba + pad_abajo;
-            let pedida = natural.clamp(din.alto_min, din.alto_max) + sube;
+            let base = if fija {
+                din.alto_max
+            } else {
+                natural.clamp(din.alto_min, din.alto_max)
+            };
+            let pedida = base + sube;
             let alto_caja = if sube < 0.0 {
                 let alto = pedida.max(din.pad_arriba + pad_abajo + 3.0);
                 (aj, _, pad_abajo) = encajar(alto, None);
@@ -2709,11 +2739,11 @@ pub(super) fn pintar_cara(
             ));
         } else if let Some((h, caja)) = c.hueco("reglas") {
             let (est, _) = c.estilo_texto(&h);
-            let caja = Caja {
+            let mut caja = Caja {
                 h: caja.h - franja,
                 ..caja
             };
-            let aj = cuerpos::ajustar(
+            let mut aj = cuerpos::ajustar(
                 &contenido,
                 &mut c.motor.m,
                 &mut c.motor.letras,
@@ -2724,6 +2754,44 @@ pub(super) fn pintar_cara(
                 paso,
                 k,
             );
+            // Altura dinámica pedida en un marco de caja fija (la de serie
+            // es la fija): si el texto cabe, la caja se acorta lo que sobra
+            // (hasta lo que dejan los ajustes finos: 10 mm menos). El marco
+            // la sigue por `subeCaja`; si no lo usa, no pasa nada.
+            if c.retoques.rules_box_dynamic == Some(true) && aj.1 <= 0.0 {
+                let sube = c.nums.get("subeCaja").copied().unwrap_or(0.0);
+                let necesario = aj.0.alto() / c.l.ky + 1.0;
+                let recorte = (caja.h - necesario)
+                    .min(sube + super::modelo::ALTO_CAJA_MAX_MM as f32)
+                    .max(0.0);
+                if recorte > 0.05 {
+                    c.nums.insert("subeCaja", sube - recorte);
+                    match c.hueco("reglas") {
+                        Some((_, otra)) if otra.h - franja < caja.h - 0.01 => {
+                            c.vars
+                                .insert("subeCaja".into(), format!("{}", sube - recorte));
+                            caja = Caja {
+                                h: otra.h - franja,
+                                ..otra
+                            };
+                            aj = cuerpos::ajustar(
+                                &contenido,
+                                &mut c.motor.m,
+                                &mut c.motor.letras,
+                                &est,
+                                c.l.x(caja.w),
+                                c.l.y(caja.h),
+                                tam_min.min(est.tam),
+                                paso,
+                                k,
+                            );
+                        }
+                        _ => {
+                            c.nums.insert("subeCaja", sube);
+                        }
+                    }
+                }
+            }
             if aj.1 > 0.0 {
                 c.avisos.push(Aviso::TextoNoCabe {
                     hueco: "reglas".into(),
@@ -2849,7 +2917,20 @@ pub(super) fn pintar_cara(
         .min(capas.len());
     c.capas(&capas[..corte], &cond);
     if let Some((v, radio)) = &repinta {
-        repintar_ventana(&mut c.l, v, *radio, arte_pintado.as_ref(), o.sin_arte);
+        // La caja que crece deja dicho dónde acaba la barra del tipo.
+        let bajo_tipo = c
+            .vars
+            .get("yReglas")
+            .and_then(|y| y.parse::<f32>().ok())
+            .unwrap_or(0.0);
+        repintar_ventana(
+            &mut c.l,
+            v,
+            *radio,
+            arte_pintado.as_ref(),
+            o.sin_arte,
+            bajo_tipo,
+        );
     }
     c.capas(&capas[corte..], &cond);
 

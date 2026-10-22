@@ -725,10 +725,21 @@ pub struct FineTuning {
     pub art_fade_extension: Option<f64>,
     /// Cuánto (mm) más alta la caja de reglas: crece hacia arriba (y la
     /// ilustración se acorta); negativo, más baja. `None` = la del marco.
-    /// En los marcos de imagen (Original, Balatro) no cambia.
+    /// En los marcos de imagen que traen la caja pintada y fija (Balatro)
+    /// no cambia.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub rules_box_height: Option<f64>,
+    /// ¿La caja de reglas ajusta su altura al texto? `None` = como el marco:
+    /// sí en el despejado de la casa (de su alto mínimo al máximo según el
+    /// texto, así las fichas con poco texto quedan despejadas) y no en los
+    /// de caja fija (clásico y extendido de la casa) ni en los del pack
+    /// Original (`fijaDeSerie`). `true` = también en estos: la caja se acorta
+    /// lo que sobra (hasta 10 mm en los fijos de la casa). `false` = siempre
+    /// del alto máximo del marco.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub rules_box_dynamic: Option<bool>,
     /// Tamaño de cada texto en proporción al del marco (`None` = 1, el del
     /// marco). En las reglas, `None` es «automático»: en las cajas que
     /// crecen, la letra baja un poco antes de comerse el arte; con un valor,
@@ -796,6 +807,7 @@ impl FineTuning {
             rules_box_height: self
                 .rules_box_height
                 .map(|r| r.clamp(-ALTO_CAJA_MAX_MM, ALTO_CAJA_MAX_MM)),
+            rules_box_dynamic: self.rules_box_dynamic,
             title_size: tam(self.title_size),
             type_size: tam(self.type_size),
             rules_size: tam(self.rules_size),

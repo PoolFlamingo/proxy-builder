@@ -462,6 +462,11 @@ pub struct CajaDinamica {
     /// hasta `altoMax` con la letra entera.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub alto_comodo: Option<f32>,
+    /// La caja mide siempre `altoMax` mientras el usuario no pida la altura
+    /// según el texto (ajuste fino `rulesBoxDynamic`). Sin esto, de serie
+    /// se adapta al texto.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub fija_de_serie: bool,
 }
 
 /// Qué caja de reglas lleva el estilo de serie.

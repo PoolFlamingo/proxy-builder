@@ -1194,6 +1194,113 @@ mod tests {
         }
     }
 
+    /// La carta normal con poco texto (como las fichas).
+    fn con_poco_texto() -> DisenoEfectivo {
+        let mut e = normal();
+        for c in &mut e.design.card.faces {
+            c.rules = Default::default();
+        }
+        for f in &mut e.design.faces {
+            f.texts = Default::default();
+        }
+        e
+    }
+
+    #[test]
+    fn la_altura_dinamica_acorta_la_caja_con_poco_texto() {
+        use crate::diseno::modelo::{DesignStyle, FineTuning};
+        let pack = Pack::de_fabrica().unwrap();
+        let s = simbolos(&["2", "W"]);
+        let rec = Recursos {
+            pack: &pack,
+            simbolos: &s,
+            imagenes: &Roja,
+        };
+        let mut motor = Motor::de_fabrica().unwrap();
+        // El despejado (la caja que crece): dinámica de serie; con «fija»,
+        // siempre del alto máximo (la carta cambia); «dinámica» = de serie.
+        let mut pintar_despejado = |dinamica: Option<bool>| {
+            let mut e = con_poco_texto();
+            e.design.style = DesignStyle::Borderless;
+            e.retoques = FineTuning {
+                rules_box_dynamic: dinamica,
+                ..FineTuning::default()
+            };
+            render(
+                &mut motor,
+                &e,
+                0,
+                DesignLang::Es,
+                &rec,
+                CardSize::MTG,
+                300,
+                Salida::Pantalla,
+            )
+            .unwrap()
+            .imagen
+            .into_raw()
+        };
+        let (de_serie, dinamica, fija) = (
+            pintar_despejado(None),
+            pintar_despejado(Some(true)),
+            pintar_despejado(Some(false)),
+        );
+        assert_eq!(de_serie, dinamica);
+        assert_ne!(de_serie, fija);
+
+        // Los marcos de caja fija (extendido y clásico): fijos de serie; con
+        // «dinámica» y poco texto, la caja baja y la ilustración crece.
+        for estilo in [DesignStyle::Extended, DesignStyle::Classic] {
+            let mut alto_arte = |dinamica: Option<bool>| {
+                let mut e = con_poco_texto();
+                e.design.style = estilo;
+                e.retoques = FineTuning {
+                    rules_box_dynamic: dinamica,
+                    ..FineTuning::default()
+                };
+                let c = render_capa(&mut motor, &e, 0, DesignLang::Es, &rec, CardSize::MTG, 400)
+                    .unwrap()
+                    .unwrap();
+                c.arte[3] * 88.0
+            };
+            let (de_serie, fija, dinamica) = (
+                alto_arte(None),
+                alto_arte(Some(false)),
+                alto_arte(Some(true)),
+            );
+            assert!(
+                (de_serie - fija).abs() < 0.01,
+                "{estilo:?}: {de_serie} {fija}"
+            );
+            assert!(
+                dinamica > de_serie + 1.0,
+                "{estilo:?}: {de_serie} {dinamica}"
+            );
+            // Como mucho lo que dejan los ajustes finos (10 mm).
+            assert!(
+                dinamica <= de_serie + 10.01,
+                "{estilo:?}: {de_serie} {dinamica}"
+            );
+        }
+    }
+
+    #[test]
+    fn el_tinte_de_la_caja_respeta_su_opacidad() {
+        use crate::diseno::modelo::{DesignStyle, RulesBox};
+        let s = simbolos(&["2", "W"]);
+        let caja = |hex: &str| {
+            let mut e = normal();
+            e.design.style = DesignStyle::Borderless;
+            e.frame.rules_box = RulesBox::Tint { hex: hex.into() };
+            pintar(&e, 0, 300, &s, Salida::Pantalla).imagen.into_raw()
+        };
+        let (sin, medio, entera) = (caja("#ff0000"), caja("#ff000040"), caja("#ff0000ff"));
+        // Sin opacidad propia, la de siempre (80 %); con ella, la suya.
+        assert_ne!(sin, medio);
+        assert_ne!(sin, entera);
+        assert_ne!(medio, entera);
+    }
+
     // ── Medida ──
 
     #[test]
