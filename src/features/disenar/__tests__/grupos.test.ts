@@ -8,6 +8,7 @@ import {
 	agrupar,
 	antesDe,
 	aplicarAlDeck,
+	conVariante,
 	estadoDe,
 	numerosUsados,
 	quitarDiseno,
@@ -220,6 +221,35 @@ describe("aplicarAlDeck", () => {
 		const r = aplicarAlDeck([a, b], g, "a", sinDiseno, true);
 		expect(r[1].design).toBeUndefined();
 		expect(r[1].id).toBe("b");
+	});
+});
+
+describe("conVariante", () => {
+	it("pone la copia justo detrás, con el mismo diseño y marcada como variante", () => {
+		const d = diseno("0001", "ready");
+		const cs = [
+			carta("a", "s1"),
+			carta("b", "s2", { design: d, marca: "opcional" }),
+			carta("c", "s3"),
+		];
+		const out = conVariante(cs, "b", "nueva");
+		expect(out.map((c) => c.id)).toEqual(["a", "b", "nueva", "c"]);
+		expect(out[2].marca).toBe("variante");
+		expect(out[2].design).toEqual(d);
+		expect(out[2].source).toEqual(cs[1].source);
+		expect(out[2].locked).toBe(false);
+		// La original no cambia.
+		expect(out[1]).toBe(cs[1]);
+	});
+
+	it("la variante es del mismo grupo (sigue siendo la misma carta de Scryfall)", () => {
+		const out = conVariante([carta("a", "s1")], "a", "v");
+		expect(agrupar(out).map((g) => g.cartas.length)).toEqual([2]);
+	});
+
+	it("con un id que no está, no cambia nada", () => {
+		const cs = [carta("a", "s1")];
+		expect(conVariante(cs, "no", "v")).toEqual(cs);
 	});
 });
 

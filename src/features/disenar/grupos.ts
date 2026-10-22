@@ -1,6 +1,7 @@
 import type { BeforeDesign } from "@/bindings/BeforeDesign";
 import type { CardDesign } from "@/bindings/CardDesign";
 import type { DeckCard } from "@/bindings/DeckCard";
+import { duplicar } from "@/lib/deck-ops";
 
 /**
  * Las cartas del deck agrupadas como se diseñan: todas las copias de la misma
@@ -111,6 +112,17 @@ export function aplicarAlDeck(
 			: undefined;
 		return { ...nueva, id: c.id, locked: c.locked, design };
 	});
+}
+
+/**
+ * Otra copia de la carta `id`, justo detrás de ella y con una copia de su
+ * diseño, marcada como variante de diseño (se imprime, pero no cuenta para el
+ * mazo). Si `id` no está, las cartas no cambian.
+ */
+export function conVariante(cartas: DeckCard[], id: string, nuevo: string): DeckCard[] {
+	return duplicar(cartas, [id], () => nuevo).map((c) =>
+		c.id === nuevo ? { ...c, marca: "variante" as const } : c,
+	);
 }
 
 /** Deja las cartas como estaban antes del diseño. */
