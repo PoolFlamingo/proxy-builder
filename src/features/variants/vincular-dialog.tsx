@@ -22,7 +22,7 @@ import { call } from "@/lib/ipc";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
 import { RejillaCartas } from "./rejilla-cartas";
-import { desvincular, vincular } from "./vincular";
+import { cambiaDeCarta, desvincular, vincular } from "./vincular";
 
 /**
  * «Vincular con Scryfall»: decir qué carta real es una imagen propia. Se
@@ -89,8 +89,15 @@ function Contenido({ carta }: { carta: DeckCard }) {
 		if (!c || ocupado !== null) return;
 		setOcupado("vincular");
 		try {
+			const sinDiseno = !!carta.design && cambiaDeCarta(carta, c);
 			const nombre = await vincular(carta.id, c, idiomaPie);
-			useUi.getState().anunciar(t("Vinculada con {carta}", { carta: nombre }));
+			useUi
+				.getState()
+				.anunciar(
+					sinDiseno
+						? t("Vinculada con {carta}. Se ha quitado su diseño anterior.", { carta: nombre })
+						: t("Vinculada con {carta}", { carta: nombre }),
+				);
 			useUi.getState().abrir(null);
 		} catch (e) {
 			toast.error(mensaje(e));

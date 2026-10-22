@@ -56,5 +56,6 @@
 	"Carta de Scryfall": "Scryfall card",
 	"Exacta": "Exact",
 	"Probable": "Probable",
-	"Sin propuesta": "No match"
+	"Sin propuesta": "No match",
+	"Vinculada con {carta}. Se ha quitado su diseño anterior.": "Linked to {carta}. Its previous design was removed."
 }

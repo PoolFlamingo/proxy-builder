@@ -1,6 +1,7 @@
 import type { CardSource } from "@/bindings/CardSource";
 import type { DeckCard } from "@/bindings/DeckCard";
 import type { FuenteCarta } from "@/bindings/FuenteCarta";
+import { quitarDiseno, scryfallDe } from "@/features/disenar/grupos";
 import { call } from "@/lib/ipc";
 import { useDeck } from "@/stores/deck-store";
 
@@ -17,10 +18,22 @@ const esPropia = (c: DeckCard) => c.source.kind === "custom";
 export type Destino = string | { id: string; fuente?: FuenteCarta | null };
 
 /**
+ * ¿Vincular `c` con `destino` la cambia de carta? Entonces su diseño (hecho
+ * con los datos de la anterior) ya no vale.
+ */
+export function cambiaDeCarta(c: DeckCard, destino: Destino): boolean {
+	const d = typeof destino === "string" ? { id: destino, fuente: null } : destino;
+	return !!d.fuente || scryfallDe(c) !== d.id;
+}
+
+/**
  * Vincula la carta `id` (y las copias con su misma imagen) con `destino`: un
  * id de Scryfall o una carta de otra fuente (una ficha de Cockatrice).
  * `idiomaImagen`: el idioma de la imagen si se sabe (el pie leído por el
- * OCR); si no, se queda el que tuviera.
+ * OCR); si no, se queda el que tuviera. Una carta con diseño de otra carta
+ * lo pierde (vuelve a como era antes de diseñarla, con el vínculo nuevo): si
+ * no, el editor seguiría mostrando el diseño de la carta anterior, y «Quitar
+ * diseño» le devolvería el vínculo viejo.
  */
 export async function vincular(
 	id: string,
@@ -39,7 +52,7 @@ export async function vincular(
 		cs.map((c) =>
 			esPropia(c) && (c.id === id || (blob && c.front?.blob === blob))
 				? {
-						...c,
+						...(c.design && cambiaDeCarta(c, destino) ? quitarDiseno([c], new Set([c.id]))[0] : c),
 						source,
 						// La imagen es propia: su estado y su idioma no son los de Scryfall.
 						meta: {

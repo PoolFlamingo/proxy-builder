@@ -56,5 +56,6 @@
 	"Carta de Scryfall": "Carta de Scryfall",
 	"Exacta": "Exacta",
 	"Probable": "Probable",
-	"Sin propuesta": "Sin propuesta"
+	"Sin propuesta": "Sin propuesta",
+	"Vinculada con {carta}. Se ha quitado su diseño anterior.": "Vinculada con {carta}. Se ha quitado su diseño anterior."
 }

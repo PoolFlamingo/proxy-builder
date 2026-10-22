@@ -56,5 +56,6 @@
 	"Carta de Scryfall": "Scryfall のカード",
 	"Exacta": "一致",
 	"Probable": "候補",
-	"Sin propuesta": "候補なし"
+	"Sin propuesta": "候補なし",
+	"Vinculada con {carta}. Se ha quitado su diseño anterior.": "{carta} に紐づけました。以前のデザインは削除しました。"
 }

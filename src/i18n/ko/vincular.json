@@ -56,5 +56,6 @@
 	"Carta de Scryfall": "Scryfall 카드",
 	"Exacta": "정확",
 	"Probable": "유력",
-	"Sin propuesta": "후보 없음"
+	"Sin propuesta": "후보 없음",
+	"Vinculada con {carta}. Se ha quitado su diseño anterior.": "{carta}에 연결했어요. 이전 디자인은 지웠어요."
 }

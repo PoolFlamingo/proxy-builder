@@ -129,6 +129,39 @@ describe("vincular", () => {
 	});
 });
 
+describe("vincular una carta con diseño", () => {
+	const diseno = (id: string, sf: string) =>
+		propia(id, "a", {
+			source: { kind: "custom", scryfallId: sf },
+			front: img("z"),
+			design: {
+				before: {
+					source: { kind: "custom", scryfallId: sf },
+					front: img("a"),
+					back: { kind: "deckDefault" },
+					edits: {},
+				},
+			} as never,
+		});
+
+	beforeEach(() => vi.mocked(call).mockResolvedValue(META as never));
+
+	it("a otra carta: pierde el diseño de la anterior y se queda con el vínculo nuevo", async () => {
+		cargar([diseno("a", "viejo")]);
+		await vincular("a", "nuevo");
+		expect(por("a")?.design).toBeUndefined();
+		expect(por("a")?.source).toEqual({ kind: "custom", scryfallId: "nuevo" });
+		expect(por("a")?.front).toEqual(img("a"));
+	});
+
+	it("a la misma carta: el diseño se conserva", async () => {
+		cargar([diseno("a", "mismo")]);
+		await vincular("a", "mismo");
+		expect(por("a")?.design).toBeDefined();
+		expect(por("a")?.front).toEqual(img("z"));
+	});
+});
+
 describe("desvincular", () => {
 	it("quita el vínculo a la carta y a sus copias con la misma imagen", () => {
 		cargar([
