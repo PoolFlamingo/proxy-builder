@@ -652,6 +652,18 @@ const FABRICA: FrameOptions = {
 	rulesBox: { kind: "auto" },
 };
 
+/** La opacidad (0–100) de un tinte `#rrggbb[aa]`; sin ella, el 80 % de siempre. */
+function opacidadDe(hex: string): number {
+	return hex.length === 9 ? Math.round((Number.parseInt(hex.slice(7, 9), 16) / 255) * 100) : 80;
+}
+
+/** Los dos dígitos del alfa de una opacidad (0–100). */
+function alfaHex(opacidad: number): string {
+	return Math.round((opacidad / 100) * 255)
+		.toString(16)
+		.padStart(2, "0");
+}
+
 export function EditorMarco({
 	marco,
 	onChange,
@@ -664,6 +676,7 @@ export function EditorMarco({
 	const { t, mensaje } = useLang();
 	const paletas = PALETAS.map((p) => ({ valor: p.valor, etiqueta: t(p.etiqueta) }));
 	const color = marco.color;
+	const caja = marco.rulesBox;
 	const originales = useMarcosOriginales();
 	useEffect(() => {
 		if (!originales.info) void originales.cargar();
@@ -839,18 +852,37 @@ export function EditorMarco({
 					ancho="w-44"
 				/>
 			</Fila>
-			{marco.rulesBox.kind === "tint" && (
-				<Fila etiqueta={t("Tinte")}>
-					<input
-						type="color"
-						value={marco.rulesBox.hex}
-						onChange={(e) =>
-							onChange({ ...marco, rulesBox: { kind: "tint", hex: e.target.value } })
+			{caja.kind === "tint" && (
+				<>
+					<Fila etiqueta={t("Tinte")}>
+						<input
+							type="color"
+							value={caja.hex.slice(0, 7)}
+							onChange={(e) =>
+								onChange({
+									...marco,
+									rulesBox: { kind: "tint", hex: e.target.value + caja.hex.slice(7) },
+								})
+							}
+							aria-label={t("Tinte")}
+							className="h-7 w-12 cursor-pointer rounded border bg-transparent"
+						/>
+					</Fila>
+					<FilaDeslizador
+						etiqueta={t("Opacidad del tinte")}
+						valor={opacidadDe(caja.hex)}
+						min={0}
+						max={100}
+						paso={5}
+						sufijo="%"
+						onChange={(v) =>
+							onChange({
+								...marco,
+								rulesBox: { kind: "tint", hex: caja.hex.slice(0, 7) + alfaHex(v) },
+							})
 						}
-						aria-label={t("Tinte")}
-						className="h-7 w-12 cursor-pointer rounded border bg-transparent"
 					/>
-				</Fila>
+				</>
 			)}
 		</div>
 	);
