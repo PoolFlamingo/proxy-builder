@@ -126,7 +126,7 @@
 				"radio": 0,
 				"soloAbajo": true,
 				"repintar": [[0.13, 55, 3.9, 26.1], [58.97, 55, 3.9, 26.1]],
-				"repintarTras": 4
+				"repintarTras": 9
 			},
 			"capas": [
 				{
@@ -142,7 +142,70 @@
 					}
 				},
 				{
-					"png": "m15/borderless/m15GenericShowcaseFrame{color}.png"
+					"png": "m15/borderless/m15GenericShowcaseFrame{color}.png",
+					"desde": {
+						"x": 0,
+						"y": 0,
+						"w": 63,
+						"h": 48.5
+					}
+				},
+				{
+					"png": "m15/borderless/m15GenericShowcaseFrame{color}.png",
+					"desde": {
+						"x": 0,
+						"y": 48.5,
+						"w": 63,
+						"h": 6.9
+					},
+					"en": {
+						"x": 0,
+						"y": "yTipo",
+						"w": 63,
+						"h": 6.9
+					}
+				},
+				{
+					"png": "m15/borderless/m15GenericShowcaseFrame{color}.png",
+					"desde": {
+						"x": 3.9,
+						"y": 55.4,
+						"w": 55.2,
+						"h": 24.6
+					},
+					"en": {
+						"x": 3.9,
+						"y": "yTipo+6.9",
+						"w": 55.2,
+						"h": "73.1 - yTipo"
+					}
+				},
+				{
+					"png": "m15/borderless/m15GenericShowcaseFrame{color}.png",
+					"desde": {
+						"x": 0,
+						"y": 80,
+						"w": 63,
+						"h": 8
+					}
+				},
+				{
+					"png": "m15/borderless/m15GenericShowcaseFrame{color}.png",
+					"desde": {
+						"x": 0,
+						"y": 70,
+						"w": 3.9,
+						"h": 10
+					}
+				},
+				{
+					"png": "m15/borderless/m15GenericShowcaseFrame{color}.png",
+					"desde": {
+						"x": 59.1,
+						"y": 70,
+						"w": 3.9,
+						"h": 10
+					}
 				},
 				{
 					"png": "m15/regular/m15Frame{color}.png",
@@ -154,6 +217,18 @@
 				{
 					"png": "m15/regular/m15Frame{color}.png",
 					"mascara": "m15/regular/m15MaskType.png",
+					"desde": {
+						"x": 0,
+						"y": 48.5,
+						"w": 63,
+						"h": 6.9
+					},
+					"en": {
+						"x": 0,
+						"y": "yTipo",
+						"w": 63,
+						"h": 6.9
+					},
 					"colores": {
 						"colorless": "A"
 					}
@@ -164,7 +239,55 @@
 						"x": 4.72,
 						"y": 55.2,
 						"w": 53.66,
-						"h": 26.2
+						"h": 1.7
+					},
+					"en": {
+						"x": 4.72,
+						"y": "yTipo+6.7",
+						"w": 53.66,
+						"h": 1.7
+					},
+					"colores": {
+						"colorless": "A"
+					},
+					"si": {
+						"caja": ["auto", "light"]
+					}
+				},
+				{
+					"png": "m15/regular/m15Frame{color}.png",
+					"desde": {
+						"x": 4.72,
+						"y": 56.9,
+						"w": 53.66,
+						"h": 22.7
+					},
+					"en": {
+						"x": 4.72,
+						"y": "yTipo+8.4",
+						"w": 53.66,
+						"h": "71.2 - yTipo"
+					},
+					"colores": {
+						"colorless": "A"
+					},
+					"si": {
+						"caja": ["auto", "light"]
+					}
+				},
+				{
+					"png": "m15/regular/m15Frame{color}.png",
+					"desde": {
+						"x": 4.72,
+						"y": 79.6,
+						"w": 53.66,
+						"h": 1.8
+					},
+					"en": {
+						"x": 4.72,
+						"y": 79.6,
+						"w": 53.66,
+						"h": 1.8
 					},
 					"colores": {
 						"colorless": "A"
@@ -177,9 +300,9 @@
 					"cajaReglas": true,
 					"en": {
 						"x": 4.91,
-						"y": 55.06,
+						"y": "yTipo+6.55",
 						"w": 53.43,
-						"h": 25.82
+						"h": "74.34 - yTipo"
 					}
 				},
 				{
@@ -238,7 +361,7 @@
 				},
 				"tipo": {
 					"x": 5.38,
-					"y": 49.54,
+					"y": "yTipo+0.7",
 					"w": 47.3,
 					"h": 4.78,
 					"rol": "tipo",
@@ -247,15 +370,15 @@
 				},
 				"emblema": {
 					"x": 53.4,
-					"y": 50.5,
+					"y": "yTipo+1.7",
 					"w": 4.6,
 					"h": 3.3
 				},
 				"reglas": {
 					"x": 5.42,
-					"y": 55.5,
+					"y": "yReglas",
 					"w": 52.16,
-					"h": 23.35,
+					"h": "altoReglas",
 					"rol": "reglas",
 					"mayuscula": 1.72,
 					"color": "#111111"
@@ -283,14 +406,23 @@
 				}
 			},
 			"radio": 3,
-			"coronaLegendaria": true
+			"coronaLegendaria": true,
+			"caja": {
+				"fondo": 81.8,
+				"altoMin": 12,
+				"altoMax": 26.8,
+				"barraTipo": 6.5,
+				"padArriba": 0.85,
+				"padAbajo": 2.8,
+				"fijaDeSerie": true
+			}
 		},
 		"extended": {
 			"arte": {
 				"x": 0,
 				"y": 7.4,
 				"w": 63,
-				"h": 47.9
+				"h": "yTipo + 0.4"
 			},
 			"cajaPorDefecto": "clara",
 			"capas": [
@@ -302,6 +434,84 @@
 				},
 				{
 					"png": "m15/new/extended/{color}.png",
+					"desde": {
+						"x": 0,
+						"y": 0,
+						"w": 63,
+						"h": 47.5
+					},
+					"colores": {
+						"W": "w",
+						"U": "u",
+						"B": "b",
+						"R": "r",
+						"G": "g",
+						"gold": "m",
+						"artifact": "a",
+						"land": "l",
+						"colorless": "a"
+					}
+				},
+				{
+					"png": "m15/new/extended/{color}.png",
+					"desde": {
+						"x": 0,
+						"y": 47.5,
+						"w": 63,
+						"h": 8.5
+					},
+					"en": {
+						"x": 0,
+						"y": "yTipo",
+						"w": 63,
+						"h": 8.5
+					},
+					"colores": {
+						"W": "w",
+						"U": "u",
+						"B": "b",
+						"R": "r",
+						"G": "g",
+						"gold": "m",
+						"artifact": "a",
+						"land": "l",
+						"colorless": "a"
+					}
+				},
+				{
+					"png": "m15/new/extended/{color}.png",
+					"desde": {
+						"x": 0,
+						"y": 56.0,
+						"w": 63,
+						"h": 17.4
+					},
+					"en": {
+						"x": 0,
+						"y": "yTipo+8.5",
+						"w": 63,
+						"h": "64.9 - yTipo"
+					},
+					"colores": {
+						"W": "w",
+						"U": "u",
+						"B": "b",
+						"R": "r",
+						"G": "g",
+						"gold": "m",
+						"artifact": "a",
+						"land": "l",
+						"colorless": "a"
+					}
+				},
+				{
+					"png": "m15/new/extended/{color}.png",
+					"desde": {
+						"x": 0,
+						"y": 73.4,
+						"w": 63,
+						"h": 14.6
+					},
 					"colores": {
 						"W": "w",
 						"U": "u",
@@ -317,6 +527,18 @@
 				{
 					"png": "m15/regular/m15Frame{color}.png",
 					"mascara": "m15/regular/m15MaskType.png",
+					"desde": {
+						"x": 0,
+						"y": 47.5,
+						"w": 63,
+						"h": 8.5
+					},
+					"en": {
+						"x": 0,
+						"y": "yTipo",
+						"w": 63,
+						"h": 8.5
+					},
 					"colores": {
 						"colorless": "A"
 					}
@@ -325,9 +547,9 @@
 					"cajaReglas": true,
 					"en": {
 						"x": 4.91,
-						"y": 55.35,
+						"y": "yTipo+7.85",
 						"w": 53.18,
-						"h": 26.25
+						"h": "73.75 - yTipo"
 					}
 				},
 				{
@@ -392,7 +614,7 @@
 				},
 				"tipo": {
 					"x": 5.38,
-					"y": 49.54,
+					"y": "yTipo+2.04",
 					"w": 47.3,
 					"h": 4.78,
 					"rol": "tipo",
@@ -401,15 +623,15 @@
 				},
 				"emblema": {
 					"x": 53.4,
-					"y": 50.5,
+					"y": "yTipo+3",
 					"w": 4.6,
 					"h": 3.3
 				},
 				"reglas": {
 					"x": 5.42,
-					"y": 55.75,
+					"y": "yReglas",
 					"w": 52.16,
-					"h": 23.1,
+					"h": "altoReglas",
 					"rol": "reglas",
 					"mayuscula": 1.72,
 					"color": "#111111"
@@ -437,14 +659,23 @@
 				}
 			},
 			"radio": 3,
-			"coronaLegendaria": true
+			"coronaLegendaria": true,
+			"caja": {
+				"fondo": 81.75,
+				"altoMin": 12,
+				"altoMax": 27.09,
+				"barraTipo": 7.16,
+				"padArriba": 1.09,
+				"padAbajo": 2.9,
+				"fijaDeSerie": true
+			}
 		},
 		"classic": {
 			"arte": {
 				"x": 4.83,
 				"y": 9.94,
 				"w": 53.4,
-				"h": 38.98
+				"h": "yTipo - 8.52"
 			},
 			"cajaPorDefecto": "clara",
 			"capas": [
@@ -456,6 +687,78 @@
 				},
 				{
 					"png": "m15/regular/m15Frame{color}.png",
+					"desde": {
+						"x": 0,
+						"y": 0,
+						"w": 63,
+						"h": 40
+					},
+					"colores": {
+						"colorless": "A"
+					}
+				},
+				{
+					"png": "m15/regular/m15Frame{color}.png",
+					"desde": {
+						"x": 0,
+						"y": 40,
+						"w": 63,
+						"h": 7.5
+					},
+					"en": {
+						"x": 0,
+						"y": 40,
+						"w": 63,
+						"h": "yTipo - 40"
+					},
+					"colores": {
+						"colorless": "A"
+					}
+				},
+				{
+					"png": "m15/regular/m15Frame{color}.png",
+					"desde": {
+						"x": 0,
+						"y": 47.5,
+						"w": 63,
+						"h": 8.5
+					},
+					"en": {
+						"x": 0,
+						"y": "yTipo",
+						"w": 63,
+						"h": 8.5
+					},
+					"colores": {
+						"colorless": "A"
+					}
+				},
+				{
+					"png": "m15/regular/m15Frame{color}.png",
+					"desde": {
+						"x": 0,
+						"y": 56.0,
+						"w": 63,
+						"h": 17.4
+					},
+					"en": {
+						"x": 0,
+						"y": "yTipo+8.5",
+						"w": 63,
+						"h": "64.9 - yTipo"
+					},
+					"colores": {
+						"colorless": "A"
+					}
+				},
+				{
+					"png": "m15/regular/m15Frame{color}.png",
+					"desde": {
+						"x": 0,
+						"y": 73.4,
+						"w": 63,
+						"h": 14.6
+					},
 					"colores": {
 						"colorless": "A"
 					}
@@ -464,9 +767,9 @@
 					"cajaReglas": true,
 					"en": {
 						"x": 4.91,
-						"y": 55.35,
+						"y": "yTipo+7.85",
 						"w": 53.18,
-						"h": 26.25
+						"h": "73.75 - yTipo"
 					}
 				},
 				{
@@ -531,7 +834,7 @@
 				},
 				"tipo": {
 					"x": 5.38,
-					"y": 49.54,
+					"y": "yTipo+2.04",
 					"w": 47.3,
 					"h": 4.78,
 					"rol": "tipo",
@@ -540,15 +843,15 @@
 				},
 				"emblema": {
 					"x": 53.4,
-					"y": 50.5,
+					"y": "yTipo+3",
 					"w": 4.6,
 					"h": 3.3
 				},
 				"reglas": {
 					"x": 5.42,
-					"y": 55.75,
+					"y": "yReglas",
 					"w": 52.16,
-					"h": 23.1,
+					"h": "altoReglas",
 					"rol": "reglas",
 					"mayuscula": 1.72,
 					"color": "#111111"
@@ -576,7 +879,16 @@
 				}
 			},
 			"radio": 3,
-			"coronaLegendaria": true
+			"coronaLegendaria": true,
+			"caja": {
+				"fondo": 81.65,
+				"altoMin": 12,
+				"altoMax": 27.15,
+				"barraTipo": 7.0,
+				"padArriba": 1.25,
+				"padAbajo": 2.8,
+				"fijaDeSerie": true
+			}
 		}
 	}
 }

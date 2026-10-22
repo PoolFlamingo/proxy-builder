@@ -36,9 +36,20 @@ artFadeExtension?: number,
 /**
  * Cuánto (mm) más alta la caja de reglas: crece hacia arriba (y la
  * ilustración se acorta); negativo, más baja. `None` = la del marco.
- * En los marcos de imagen (Original, Balatro) no cambia.
+ * En los marcos de imagen que traen la caja pintada y fija (Balatro)
+ * no cambia.
  */
 rulesBoxHeight?: number, 
+/**
+ * ¿La caja de reglas ajusta su altura al texto? `None` = como el marco:
+ * sí en el despejado de la casa (de su alto mínimo al máximo según el
+ * texto, así las fichas con poco texto quedan despejadas) y no en los
+ * de caja fija (clásico y extendido de la casa) ni en los del pack
+ * Original (`fijaDeSerie`). `true` = también en estos: la caja se acorta
+ * lo que sobra (hasta 10 mm en los fijos de la casa). `false` = siempre
+ * del alto máximo del marco.
+ */
+rulesBoxDynamic?: boolean, 
 /**
  * Tamaño de cada texto en proporción al del marco (`None` = 1, el del
  * marco). En las reglas, `None` es «automático»: en las cajas que
