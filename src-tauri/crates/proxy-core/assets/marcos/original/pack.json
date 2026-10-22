@@ -450,6 +450,159 @@
 						"artifact": "a",
 						"land": "l",
 						"colorless": "a"
+					},
+					"si": {
+						"corona": false
+					}
+				},
+				{
+					"png": "m15/new/extended/{color}.png",
+					"desde": {
+						"x": 0,
+						"y": 0,
+						"w": 2.3,
+						"h": 12
+					},
+					"colores": {
+						"W": "w",
+						"U": "u",
+						"B": "b",
+						"R": "r",
+						"G": "g",
+						"gold": "m",
+						"artifact": "a",
+						"land": "l",
+						"colorless": "a"
+					},
+					"si": {
+						"corona": true
+					}
+				},
+				{
+					"png": "m15/new/extended/{color}.png",
+					"desde": {
+						"x": 60.7,
+						"y": 0,
+						"w": 2.3,
+						"h": 12
+					},
+					"colores": {
+						"W": "w",
+						"U": "u",
+						"B": "b",
+						"R": "r",
+						"G": "g",
+						"gold": "m",
+						"artifact": "a",
+						"land": "l",
+						"colorless": "a"
+					},
+					"si": {
+						"corona": true
+					}
+				},
+				{
+					"png": "m15/new/extended/{color}.png",
+					"desde": {
+						"x": 2.2,
+						"y": 0,
+						"w": 0.1,
+						"h": 12
+					},
+					"en": {
+						"x": 2.3,
+						"y": 0,
+						"w": 1.1,
+						"h": 12
+					},
+					"colores": {
+						"W": "w",
+						"U": "u",
+						"B": "b",
+						"R": "r",
+						"G": "g",
+						"gold": "m",
+						"artifact": "a",
+						"land": "l",
+						"colorless": "a"
+					},
+					"si": {
+						"corona": true
+					}
+				},
+				{
+					"png": "m15/new/extended/{color}.png",
+					"desde": {
+						"x": 60.7,
+						"y": 0,
+						"w": 0.1,
+						"h": 12
+					},
+					"en": {
+						"x": 59.6,
+						"y": 0,
+						"w": 1.1,
+						"h": 12
+					},
+					"colores": {
+						"W": "w",
+						"U": "u",
+						"B": "b",
+						"R": "r",
+						"G": "g",
+						"gold": "m",
+						"artifact": "a",
+						"land": "l",
+						"colorless": "a"
+					},
+					"si": {
+						"corona": true
+					}
+				},
+				{
+					"png": "m15/new/extended/{color}.png",
+					"desde": {
+						"x": 3.4,
+						"y": 0,
+						"w": 56.2,
+						"h": 12
+					},
+					"colores": {
+						"W": "w",
+						"U": "u",
+						"B": "b",
+						"R": "r",
+						"G": "g",
+						"gold": "m",
+						"artifact": "a",
+						"land": "l",
+						"colorless": "a"
+					},
+					"si": {
+						"corona": true
+					}
+				},
+				{
+					"png": "m15/new/extended/{color}.png",
+					"desde": {
+						"x": 0,
+						"y": 12,
+						"w": 63,
+						"h": 35.5
+					},
+					"colores": {
+						"W": "w",
+						"U": "u",
+						"B": "b",
+						"R": "r",
+						"G": "g",
+						"gold": "m",
+						"artifact": "a",
+						"land": "l",
+						"colorless": "a"
+					},
+					"si": {
+						"corona": true
 					}
 				},
 				{
