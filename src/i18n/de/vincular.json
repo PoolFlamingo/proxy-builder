@@ -68,5 +68,6 @@
 	"Carta de Scryfall": "Scryfall-Karte",
 	"Exacta": "Exakt",
 	"Probable": "Wahrscheinlich",
-	"Sin propuesta": "Kein Treffer"
+	"Sin propuesta": "Kein Treffer",
+	"Vinculada con {carta}. Se ha quitado su diseño anterior.": "Mit {carta} verknüpft. Das bisherige Design wurde entfernt."
 }

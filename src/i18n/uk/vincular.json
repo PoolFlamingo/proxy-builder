@@ -81,5 +81,6 @@
 	"Carta de Scryfall": "Карта Scryfall",
 	"Exacta": "Точна",
 	"Probable": "Імовірна",
-	"Sin propuesta": "Без пропозиції"
+	"Sin propuesta": "Без пропозиції",
+	"Vinculada con {carta}. Se ha quitado su diseño anterior.": "Пов’язано з {carta}. Попередній дизайн видалено."
 }

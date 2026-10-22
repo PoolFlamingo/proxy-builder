@@ -56,5 +56,6 @@
 	"Carta de Scryfall": "Scryfall 的牌",
 	"Exacta": "完全匹配",
 	"Probable": "可能匹配",
-	"Sin propuesta": "无匹配"
+	"Sin propuesta": "无匹配",
+	"Vinculada con {carta}. Se ha quitado su diseño anterior.": "已关联到 {carta}。其原有设计已移除。"
 }
