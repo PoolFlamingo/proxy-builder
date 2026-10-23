@@ -381,4 +381,29 @@ pub(crate) mod tests {
         assert!(trazos(paginas[0]) >= 1);
         assert_eq!(trazos(paginas[1]), 0);
     }
+
+    /// Medida en milímetros de lo que sale en el PDF, no del plan: si alguien
+    /// toca la geometría o las unidades, la carta impresa no puede cambiar de
+    /// tamaño sin que esto falle.
+    #[test]
+    fn la_carta_sale_en_el_pdf_con_su_tamano_en_milimetros() {
+        for card_size in [CardSize::MTG, CardSize::POKER] {
+            for duplex in [Duplex::Off, Duplex::LongEdge] {
+                let s = PrintSettings {
+                    card_size,
+                    duplex,
+                    bleed_mm: 0.0,
+                    ..Default::default()
+                };
+                let d = deck(9, s);
+                for pagina in rects_de_imagenes(&generar(&d)) {
+                    for (_, _, w, h) in pagina {
+                        let mm = |pts: f32| f64::from(pts) * 25.4 / 72.0;
+                        assert!((mm(w) - card_size.width_mm).abs() < 0.01, "{w} pt de ancho");
+                        assert!((mm(h) - card_size.height_mm).abs() < 0.01, "{h} pt de alto");
+                    }
+                }
+            }
+        }
+    }
 }
