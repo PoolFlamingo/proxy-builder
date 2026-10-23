@@ -51,7 +51,7 @@ export function ListaCartas({
 	const hechas = grupos.filter((g) => estadoDe(g) === "listo").length;
 
 	return (
-		<div className="flex h-full flex-col gap-2.5 p-2.5">
+		<div className="flex h-full flex-col gap-2.5 p-2.5" data-tutorial="disenar-lista">
 			<div className="relative">
 				<Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
 				<Input

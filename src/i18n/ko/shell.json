@@ -15,5 +15,18 @@
 	"Reiniciar": "다시 시작",
 	"Reinicia la app con la versión nueva. El sistema pedirá tu contraseña.": "새 버전으로 앱을 다시 시작해요. 시스템에서 비밀번호를 물어봐요.",
 	"Reinicia la app con la versión nueva.": "새 버전으로 앱을 다시 시작해요.",
-	"Actualizar a {version}": "{version}(으)로 업데이트"
+	"Actualizar a {version}": "{version}(으)로 업데이트",
+	"Guardar y continuar": "저장하고 계속",
+	"¿Cerrar Proxy Builder?": "Proxy Builder를 닫을까요?",
+	"Si cierras ahora, esto se pierde o se interrumpe:": "지금 닫으면 다음 내용이 사라지거나 중단돼요:",
+	"Hay cambios sin guardar en la carta que estás diseñando.": "디자인 중인 카드에 저장하지 않은 변경 사항이 있어요.",
+	"Hay un trabajo en marcha ({fase}).": "작업이 진행 중이에요 ({fase}).",
+	"Hay un trabajo en marcha.": "작업이 진행 중이에요.",
+	"Se está descargando o instalando una actualización.": "업데이트를 내려받거나 설치하는 중이에요.",
+	"Hay un proceso en marcha en una ventana abierta.": "열려 있는 창에서 작업이 진행 중이에요.",
+	"Hay cambios sin guardar en una ventana abierta.": "열려 있는 창에 저장하지 않은 변경 사항이 있어요.",
+	"No se ha podido guardar el deck: se perderán sus últimos cambios.": "덱을 저장하지 못했어요. 마지막 변경 사항이 사라져요.",
+	"Cerrar igualmente": "그래도 닫기",
+	"Guardar y cerrar": "저장하고 닫기",
+	"No se ha podido cerrar la ventana.": "창을 닫지 못했어요."
 }

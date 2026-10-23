@@ -19,6 +19,8 @@ type Preferencias = {
 	actualizarSola: boolean;
 	/** En Diseñar, las flechas pasan también por las copias de cada carta. */
 	disenarCopias: boolean;
+	/** Las pantallas cuyo tutorial ya ha salido (solo sale solo la primera vez). */
+	tutorialesVistos: Vista[];
 };
 
 /** Los diálogos que se abren desde las cartas o las barras. */
@@ -46,6 +48,10 @@ export type Vista = "deck" | "biblioteca" | "disenar";
 
 type UiStore = Preferencias & {
 	vista: Vista;
+	/** El tutorial abierto (el de una pantalla), si lo hay. */
+	tutorial: Vista | null;
+	/** Abre el tutorial de una pantalla (y lo apunta como visto) o lo cierra. */
+	abrirTutorial: (v: Vista | null) => void;
 	setVista: (v: Vista) => void;
 	/** La carta que se está diseñando (id de una copia) en la vista «Diseñar». */
 	disenando: string | null;
@@ -82,6 +88,7 @@ const PREDETERMINADAS: Preferencias = {
 	infoCarta: false,
 	actualizarSola: true,
 	disenarCopias: false,
+	tutorialesVistos: [],
 };
 
 function leer(): Preferencias {
@@ -105,6 +112,7 @@ function guardar(s: Preferencias) {
 		infoCarta: s.infoCarta,
 		actualizarSola: s.actualizarSola,
 		disenarCopias: s.disenarCopias,
+		tutorialesVistos: s.tutorialesVistos,
 	};
 	try {
 		localStorage.setItem(CLAVE, JSON.stringify(p));
@@ -117,6 +125,17 @@ export const useUi = create<UiStore>((set, get) => ({
 	...leer(),
 	vista: "deck",
 	setVista: (vista) => set({ vista }),
+	tutorial: null,
+	abrirTutorial: (tutorial) => {
+		const vistos = get().tutorialesVistos;
+		set({
+			tutorial,
+			...(tutorial && !vistos.includes(tutorial)
+				? { tutorialesVistos: [...vistos, tutorial] }
+				: {}),
+		});
+		guardar(get());
+	},
 	disenando: null,
 	disenar: (id) => {
 		set({ disenando: id, ...(id ? { vista: "disenar" as const } : {}) });

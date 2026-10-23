@@ -345,5 +345,7 @@
 	"Información": "情報",
 	"No hay ningún error que mostrar.": "表示するエラーはありません。",
 	"No hay ningún aviso que mostrar.": "表示する警告はありません。",
-	"No hay ninguna información que mostrar.": "表示する情報はありません。"
+	"No hay ninguna información que mostrar.": "表示する情報はありません。",
+	"Esta parte no lleva ilustración propia: enseña la de la parte 1, como las cartas impresas.": "このパートには専用のイラストがありません。印刷されたカードと同じく、パート 1 のイラストを使います。",
+	"Ir a la parte 1": "パート 1 へ"
 }

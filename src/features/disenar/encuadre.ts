@@ -60,15 +60,48 @@ export function moverEncuadre(f: ArtFraming, c: CambioEncuadre, hueco: HuecoArte
 	};
 }
 
+/** ¿El hueco va girado de lado (la ilustración se ve tumbada)? */
+export const deLado = (giro: number) => Math.abs(Math.abs(giro) - 90) < 1;
+
+/**
+ * El hueco tal como lo ve la ilustración (mm), sin girar: en la mitad de abajo
+ * de una Secuela o en una partida, la pieza va girada y el hueco tumbado.
+ * `arte` es el hueco en fracciones de la carta, como lo da `design_overlay`.
+ */
+export function huecoSinGirar(arte: readonly number[], giro: number): { w: number; h: number } {
+	const w = (arte[2] ?? 0) * CARTA_MM.w;
+	const h = (arte[3] ?? 0) * CARTA_MM.h;
+	return deLado(giro) ? { w: h, h: w } : { w, h };
+}
+
+/**
+ * Un arrastre en la pantalla (fracciones de la carta) visto desde la pieza
+ * girada `giro` grados (positivo, a la derecha): así la ilustración sigue al
+ * ratón aunque esté tumbada.
+ */
+export function arrastreEnLaPieza(c: CambioEncuadre, giro: number): CambioEncuadre {
+	if (!giro || (c.dx === undefined && c.dy === undefined)) return c;
+	const a = (giro * Math.PI) / 180;
+	const [cos, sin] = [Math.round(Math.cos(a)), Math.round(Math.sin(a))];
+	const sx = (c.dx ?? 0) * CARTA_MM.w;
+	const sy = (c.dy ?? 0) * CARTA_MM.h;
+	const px = cos * sx + sin * sy;
+	const py = -sin * sx + cos * sy;
+	return { ...c, dx: px / CARTA_MM.w, dy: py / CARTA_MM.h };
+}
+
 /**
  * Lo que identifica la capa de un diseño (`design_overlay`): todo menos el
- * encuadre de las ilustraciones. Mientras solo cambia el encuadre, la capa
- * sirve.
+ * encuadre de la ilustración que se mueve (la de `cara`). Mientras solo cambia
+ * ese encuadre, la capa sirve. El de las demás sí cuenta: en una compuesta la
+ * capa de una parte lleva pintada la ilustración de la otra con su encuadre.
  */
 export function claveCapa(d: CardDesign, cara: number, lang: DesignLang): string {
 	const sin = {
 		...d,
-		faces: d.faces.map((f) => (f.art ? { ...f, art: { ...f.art, framing: null } } : f)),
+		faces: d.faces.map((f, i) =>
+			i === cara && f.art ? { ...f, art: { ...f.art, framing: null } } : f,
+		),
 	};
 	return `${cara}|${lang}|${JSON.stringify(sin)}`;
 }

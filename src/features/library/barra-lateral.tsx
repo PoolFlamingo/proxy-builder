@@ -66,7 +66,10 @@ export function BarraLateral({
 		});
 	};
 	return (
-		<aside className="flex h-full w-56 shrink-0 flex-col border-r bg-sidebar/40">
+		<aside
+			className="flex h-full w-56 shrink-0 flex-col border-r bg-sidebar/40"
+			data-tutorial="biblioteca-lateral"
+		>
 			<ScrollArea className="min-h-0 flex-1">
 				<div className="flex flex-col gap-0.5 p-2">
 					<Entrada

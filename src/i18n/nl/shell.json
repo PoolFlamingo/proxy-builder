@@ -15,5 +15,18 @@
 	"Reiniciar": "Herstarten",
 	"Reinicia la app con la versión nueva. El sistema pedirá tu contraseña.": "Herstart de app met de nieuwe versie. Het systeem vraagt om je wachtwoord.",
 	"Reinicia la app con la versión nueva.": "Herstart de app met de nieuwe versie.",
-	"Actualizar a {version}": "Bijwerken naar {version}"
+	"Actualizar a {version}": "Bijwerken naar {version}",
+	"Guardar y continuar": "Opslaan en doorgaan",
+	"¿Cerrar Proxy Builder?": "Proxy Builder sluiten?",
+	"Si cierras ahora, esto se pierde o se interrumpe:": "Als je nu sluit, gaat dit verloren of wordt het afgebroken:",
+	"Hay cambios sin guardar en la carta que estás diseñando.": "De kaart die je ontwerpt heeft niet-opgeslagen wijzigingen.",
+	"Hay un trabajo en marcha ({fase}).": "Er loopt een taak ({fase}).",
+	"Hay un trabajo en marcha.": "Er loopt een taak.",
+	"Se está descargando o instalando una actualización.": "Er wordt een update gedownload of geïnstalleerd.",
+	"Hay un proceso en marcha en una ventana abierta.": "Er loopt een proces in een open venster.",
+	"Hay cambios sin guardar en una ventana abierta.": "Een open venster heeft niet-opgeslagen wijzigingen.",
+	"No se ha podido guardar el deck: se perderán sus últimos cambios.": "Het deck kon niet worden opgeslagen: de laatste wijzigingen gaan verloren.",
+	"Cerrar igualmente": "Toch sluiten",
+	"Guardar y cerrar": "Opslaan en sluiten",
+	"No se ha podido cerrar la ventana.": "Het venster kon niet worden gesloten."
 }

@@ -59,6 +59,7 @@ import { PresetsImpresion } from "./presets";
 const TAMANOS = {
 	mtg: { widthMm: 63, heightMm: 88 },
 	poker: { widthMm: 63.5, heightMm: 88.9 },
+	funda: { widthMm: 65, heightMm: 90 },
 };
 
 /**
@@ -121,13 +122,14 @@ export function ExportPanel() {
 		{ valor: "clamp", etiqueta: t("Repetir el borde") },
 		{ valor: "mirror", etiqueta: t("En espejo") },
 	];
-	const tamano = s.cardSize.widthMm === 63.5 ? "poker" : "mtg";
+	const tamano =
+		s.cardSize.widthMm === 65 ? "funda" : s.cardSize.widthMm === 63.5 ? "poker" : "mtg";
 	const edge = s.edgeDarkening;
 	const guias = s.cutGuides;
 
 	return (
 		<section className="flex h-full min-h-0 flex-col [&_[data-slot=button]]:text-xs [&_button[data-slot=tooltip-trigger]]:text-xs">
-			<div className="flex flex-col gap-2 border-b p-2.5">
+			<div className="flex flex-col gap-2 border-b p-2.5" data-tutorial="exportar-boton">
 				<h2 className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
 					{t("Exportar")}
 				</h2>
@@ -168,7 +170,7 @@ export function ExportPanel() {
 			</div>
 
 			<ScrollArea className="min-h-0 flex-1">
-				<div className="flex flex-col gap-2.5 p-2.5">
+				<div className="flex flex-col gap-2.5 p-2.5" data-tutorial="exportar-ajustes">
 					<Seccion id="exp-pdf" titulo={t("PDF")} icono={<FileOutput className="size-3.5" />}>
 						<Fila etiqueta={t("Calidad")}>
 							<ToggleGroup
@@ -288,12 +290,18 @@ export function ExportPanel() {
 							valor={s.landscape}
 							onChange={(v) => poner("landscape", v)}
 						/>
-						<Fila etiqueta={t("Tamaño de carta")}>
+						<Fila
+							etiqueta={t("Tamaño de carta")}
+							ayuda={t(
+								"65 × 90 mm llena justa una funda: es como 1 mm de sangrado, pero con la imagen entera a ese tamaño en vez del borde repetido.",
+							)}
+						>
 							<Selector
 								valor={tamano}
 								opciones={[
 									{ valor: "mtg", etiqueta: "63 × 88 mm" },
 									{ valor: "poker", etiqueta: "63,5 × 88,9 mm" },
+									{ valor: "funda", etiqueta: "65 × 90 mm" },
 								]}
 								onChange={(v) => poner("cardSize", TAMANOS[v])}
 								ancho="w-36"

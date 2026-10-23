@@ -345,5 +345,7 @@
 	"Información": "資訊",
 	"No hay ningún error que mostrar.": "沒有可顯示的錯誤。",
 	"No hay ningún aviso que mostrar.": "沒有可顯示的警告。",
-	"No hay ninguna información que mostrar.": "沒有可顯示的資訊。"
+	"No hay ninguna información que mostrar.": "沒有可顯示的資訊。",
+	"Esta parte no lleva ilustración propia: enseña la de la parte 1, como las cartas impresas.": "這一部分沒有自己的畫作：和印刷的牌一樣，顯示第 1 部分的畫作。",
+	"Ir a la parte 1": "前往第 1 部分"
 }

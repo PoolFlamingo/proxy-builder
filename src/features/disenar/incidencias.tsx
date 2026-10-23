@@ -57,7 +57,10 @@ export function Incidencias({
 	setLang: (l: DesignLang) => void;
 }) {
 	return (
-		<div className="flex h-8 shrink-0 items-center gap-1 border-t px-2">
+		<div
+			className="flex h-8 shrink-0 items-center gap-1 border-t px-2"
+			data-tutorial="disenar-incidencias"
+		>
 			{NIVELES.map((n) => (
 				<Contador
 					key={n.nivel}

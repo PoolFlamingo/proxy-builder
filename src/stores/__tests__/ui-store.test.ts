@@ -88,9 +88,26 @@ describe("store de pantalla", () => {
 				"infoCarta",
 				"lang",
 				"pedirConfirmacionAlCargar",
+				"tutorialesVistos",
 				"zoom",
 			].sort(),
 		);
+	});
+
+	it("abrir un tutorial lo apunta como visto (una vez) y se recuerda; el abierto no", async () => {
+		const ls = almacen();
+		const { useUi } = await store(ls);
+		const s = useUi.getState;
+		expect(s().tutorialesVistos).toEqual([]);
+		s().abrirTutorial("disenar");
+		expect(s().tutorial).toBe("disenar");
+		s().abrirTutorial(null);
+		s().abrirTutorial("disenar");
+		s().abrirTutorial(null);
+		expect(s().tutorial).toBeNull();
+		const guardado = JSON.parse(ls.datos.get(CLAVE) ?? "{}");
+		expect(guardado.tutorialesVistos).toEqual(["disenar"]);
+		expect(guardado.tutorial).toBeUndefined();
 	});
 
 	it("la info de carta se recuerda", async () => {

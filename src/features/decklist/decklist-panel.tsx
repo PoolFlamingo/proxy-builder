@@ -177,7 +177,7 @@ export function DecklistPanel() {
 				onLayoutChanged={layout.onLayoutChanged}
 			>
 				<ResizablePanel id="lista" defaultSize="45" minSize={72}>
-					<div className="flex h-full min-h-0 flex-col p-2.5 pb-1.5">
+					<div className="flex h-full min-h-0 flex-col p-2.5 pb-1.5" data-tutorial="lista-cuadro">
 						<EditorLista
 							valor={texto}
 							onChange={(v) => setSinHistorial({ decklistText: v })}
@@ -188,7 +188,7 @@ export function DecklistPanel() {
 				</ResizablePanel>
 				<ResizableHandle withHandle />
 				<ResizablePanel id="opciones" minSize={160}>
-					<div className="flex h-full min-h-0 flex-col">
+					<div className="flex h-full min-h-0 flex-col" data-tutorial="lista-opciones">
 						<div className="flex shrink-0 flex-col gap-2.5 p-2.5">
 							<div className="flex items-center justify-between text-[11px] text-muted-foreground">
 								<span>{leida ? t("{n} cartas en la lista", { n: leida.cardCount }) : " "}</span>

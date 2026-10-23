@@ -30,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { abrirParaImportar } from "@/lib/dialogos";
 import { idioma } from "@/lib/idiomas";
 import { call } from "@/lib/ipc";
@@ -124,6 +125,7 @@ export function Formulario({
 	design,
 	cambiar,
 	cara,
+	setCara,
 	colecciones,
 	packs,
 	resumen,
@@ -132,6 +134,8 @@ export function Formulario({
 	design: CardDesign;
 	cambiar: Cambiar;
 	cara: number;
+	/** La parte (o cara) que se edita: la misma que elige la vista previa. */
+	setCara: (c: number) => void;
 	colecciones: Collection[];
 	packs: PackInfo[];
 	resumen: Resumen | null;
@@ -140,7 +144,11 @@ export function Formulario({
 }) {
 	const { t } = useLang();
 	return (
-		<Tabs defaultValue="carta" className="flex h-full min-h-0 flex-col gap-0">
+		<Tabs
+			defaultValue="carta"
+			className="flex h-full min-h-0 flex-col gap-0"
+			data-tutorial="disenar-formulario"
+		>
 			<div className="shrink-0 border-b px-2.5 py-2">
 				<TabsList className="w-full">
 					<TabsTrigger value="carta">{t("Carta")}</TabsTrigger>
@@ -163,11 +171,26 @@ export function Formulario({
 							resumen={resumen}
 						/>
 					</TabsContent>
-					<TabsContent value="textos">
+					<TabsContent value="textos" className="flex flex-col gap-3">
+						<SelectorParte design={design} cara={cara} setCara={setCara} resumen={resumen} />
 						<PestanaTextos design={design} cambiar={cambiar} cara={cara} />
 					</TabsContent>
-					<TabsContent value="arte">
-						<PestanaArte design={design} cambiar={cambiar} cara={cara} />
+					<TabsContent value="arte" className="flex flex-col gap-3">
+						<SelectorParte design={design} cara={cara} setCara={setCara} resumen={resumen} />
+						{resumen?.artePropio === false ? (
+							<div className="flex flex-col items-start gap-2 text-xs text-muted-foreground">
+								<p>
+									{t(
+										"Esta parte no lleva ilustración propia: enseña la de la parte 1, como las cartas impresas.",
+									)}
+								</p>
+								<Button size="sm" variant="outline" onClick={() => setCara(0)}>
+									{t("Ir a la parte 1")}
+								</Button>
+							</div>
+						) : (
+							<PestanaArte design={design} cambiar={cambiar} cara={cara} />
+						)}
 					</TabsContent>
 					<TabsContent value="marco">
 						<PestanaMarco
@@ -191,6 +214,45 @@ export function Formulario({
 				</div>
 			</ScrollArea>
 		</Tabs>
+	);
+}
+
+/**
+ * Qué parte (o cara) se edita en las cartas de dos: el mismo selector que el
+ * de la vista previa, aquí al lado de lo que cambia (en una Secuela, la
+ * ilustración de la mitad de abajo se pone con la parte 2).
+ */
+function SelectorParte({
+	design,
+	cara,
+	setCara,
+	resumen,
+}: {
+	design: CardDesign;
+	cara: number;
+	setCara: (c: number) => void;
+	resumen: Resumen | null;
+}) {
+	const { t } = useLang();
+	if (design.faces.length < 2) return null;
+	const caras = (resumen?.carasImpresas ?? 1) > 1;
+	return (
+		<ToggleGroup
+			type="single"
+			size="sm"
+			value={String(cara)}
+			onValueChange={(v) => v && setCara(Number(v))}
+			className="w-full"
+		>
+			{design.faces.map((_, i) => (
+				<ToggleGroupItem key={i} value={String(i)} className="min-w-0 flex-1 gap-1 text-xs">
+					<span className="shrink-0">
+						{caras ? t("Cara {n}", { n: i + 1 }) : t("Parte {n}", { n: i + 1 })}
+					</span>
+					<span className="truncate text-muted-foreground">{design.card.faces[i]?.name}</span>
+				</ToggleGroupItem>
+			))}
+		</ToggleGroup>
 	);
 }
 

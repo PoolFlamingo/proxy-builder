@@ -15,5 +15,18 @@
 	"Reiniciar": "重启",
 	"Reinicia la app con la versión nueva. El sistema pedirá tu contraseña.": "以新版本重启应用。系统会要求输入密码。",
 	"Reinicia la app con la versión nueva.": "以新版本重启应用。",
-	"Actualizar a {version}": "更新到 {version}"
+	"Actualizar a {version}": "更新到 {version}",
+	"Guardar y continuar": "保存并继续",
+	"¿Cerrar Proxy Builder?": "要关闭 Proxy Builder 吗？",
+	"Si cierras ahora, esto se pierde o se interrumpe:": "如果现在关闭，以下内容会丢失或中断：",
+	"Hay cambios sin guardar en la carta que estás diseñando.": "你正在设计的牌有未保存的更改。",
+	"Hay un trabajo en marcha ({fase}).": "有任务正在进行（{fase}）。",
+	"Hay un trabajo en marcha.": "有任务正在进行。",
+	"Se está descargando o instalando una actualización.": "正在下载或安装更新。",
+	"Hay un proceso en marcha en una ventana abierta.": "打开的窗口中有进程正在运行。",
+	"Hay cambios sin guardar en una ventana abierta.": "打开的窗口中有未保存的更改。",
+	"No se ha podido guardar el deck: se perderán sus últimos cambios.": "无法保存套牌：它最近的更改将会丢失。",
+	"Cerrar igualmente": "仍然关闭",
+	"Guardar y cerrar": "保存并关闭",
+	"No se ha podido cerrar la ventana.": "无法关闭窗口。"
 }

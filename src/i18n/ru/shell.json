@@ -15,5 +15,18 @@
 	"Reiniciar": "Перезапустить",
 	"Reinicia la app con la versión nueva. El sistema pedirá tu contraseña.": "Перезапускает приложение с новой версией. Система запросит ваш пароль.",
 	"Reinicia la app con la versión nueva.": "Перезапускает приложение с новой версией.",
-	"Actualizar a {version}": "Обновить до {version}"
+	"Actualizar a {version}": "Обновить до {version}",
+	"Guardar y continuar": "Сохранить и продолжить",
+	"¿Cerrar Proxy Builder?": "Закрыть Proxy Builder?",
+	"Si cierras ahora, esto se pierde o se interrumpe:": "Если вы закроете сейчас, это будет потеряно или прервано:",
+	"Hay cambios sin guardar en la carta que estás diseñando.": "В карте, которую вы оформляете, есть несохранённые изменения.",
+	"Hay un trabajo en marcha ({fase}).": "Выполняется задача ({fase}).",
+	"Hay un trabajo en marcha.": "Выполняется задача.",
+	"Se está descargando o instalando una actualización.": "Загружается или устанавливается обновление.",
+	"Hay un proceso en marcha en una ventana abierta.": "В открытом окне выполняется процесс.",
+	"Hay cambios sin guardar en una ventana abierta.": "В открытом окне есть несохранённые изменения.",
+	"No se ha podido guardar el deck: se perderán sus últimos cambios.": "Не удалось сохранить колоду: её последние изменения будут потеряны.",
+	"Cerrar igualmente": "Всё равно закрыть",
+	"Guardar y cerrar": "Сохранить и закрыть",
+	"No se ha podido cerrar la ventana.": "Не удалось закрыть окно."
 }

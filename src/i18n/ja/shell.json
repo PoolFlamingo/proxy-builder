@@ -15,5 +15,18 @@
 	"Reiniciar": "再起動",
 	"Reinicia la app con la versión nueva. El sistema pedirá tu contraseña.": "新しいバージョンでアプリを再起動します。パスワードを求められます。",
 	"Reinicia la app con la versión nueva.": "新しいバージョンでアプリを再起動します。",
-	"Actualizar a {version}": "{version} に更新"
+	"Actualizar a {version}": "{version} に更新",
+	"Guardar y continuar": "保存して続ける",
+	"¿Cerrar Proxy Builder?": "Proxy Builder を閉じますか？",
+	"Si cierras ahora, esto se pierde o se interrumpe:": "今閉じると、次のものが失われるか中断されます：",
+	"Hay cambios sin guardar en la carta que estás diseñando.": "デザイン中のカードに保存されていない変更があります。",
+	"Hay un trabajo en marcha ({fase}).": "作業が実行中です（{fase}）。",
+	"Hay un trabajo en marcha.": "作業が実行中です。",
+	"Se está descargando o instalando una actualización.": "アップデートをダウンロード中またはインストール中です。",
+	"Hay un proceso en marcha en una ventana abierta.": "開いているウィンドウで処理が実行中です。",
+	"Hay cambios sin guardar en una ventana abierta.": "開いているウィンドウに保存されていない変更があります。",
+	"No se ha podido guardar el deck: se perderán sus últimos cambios.": "デッキを保存できませんでした。最新の変更は失われます。",
+	"Cerrar igualmente": "このまま閉じる",
+	"Guardar y cerrar": "保存して閉じる",
+	"No se ha podido cerrar la ventana.": "ウィンドウを閉じられませんでした。"
 }

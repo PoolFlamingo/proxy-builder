@@ -15,5 +15,18 @@
 	"Reiniciar": "Uruchom ponownie",
 	"Reinicia la app con la versión nueva. El sistema pedirá tu contraseña.": "Uruchamia ponownie aplikację w nowej wersji. System poprosi o hasło.",
 	"Reinicia la app con la versión nueva.": "Uruchamia ponownie aplikację w nowej wersji.",
-	"Actualizar a {version}": "Aktualizuj do {version}"
+	"Actualizar a {version}": "Aktualizuj do {version}",
+	"Guardar y continuar": "Zapisz i kontynuuj",
+	"¿Cerrar Proxy Builder?": "Zamknąć Proxy Builder?",
+	"Si cierras ahora, esto se pierde o se interrumpe:": "Zamknięcie teraz spowoduje utratę lub przerwanie:",
+	"Hay cambios sin guardar en la carta que estás diseñando.": "Karta, którą projektujesz, ma niezapisane zmiany.",
+	"Hay un trabajo en marcha ({fase}).": "Trwa zadanie ({fase}).",
+	"Hay un trabajo en marcha.": "Trwa zadanie.",
+	"Se está descargando o instalando una actualización.": "Trwa pobieranie lub instalowanie aktualizacji.",
+	"Hay un proceso en marcha en una ventana abierta.": "W otwartym oknie trwa proces.",
+	"Hay cambios sin guardar en una ventana abierta.": "Otwarte okno ma niezapisane zmiany.",
+	"No se ha podido guardar el deck: se perderán sus últimos cambios.": "Nie udało się zapisać talii: jej ostatnie zmiany zostaną utracone.",
+	"Cerrar igualmente": "Zamknij mimo to",
+	"Guardar y cerrar": "Zapisz i zamknij",
+	"No se ha podido cerrar la ventana.": "Nie udało się zamknąć okna."
 }

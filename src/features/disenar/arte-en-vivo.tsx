@@ -2,14 +2,16 @@ import { useEffect, useState } from "react";
 import type { ArtFraming } from "@/bindings/ArtFraming";
 import type { CapaInfo } from "@/bindings/CapaInfo";
 import { cn } from "@/lib/utils";
-import { cubreElHueco, geometriaArte } from "./encuadre";
+import { CARTA_MM, cubreElHueco, deLado, geometriaArte, huecoSinGirar } from "./encuadre";
 
 /**
  * La carta montada en la pantalla mientras se mueve la ilustración: fondo
  * negro, la ilustración en su hueco (movida con CSS, al instante) y encima
  * la carta sin ilustración que pinta Rust una sola vez (`design_overlay`).
  * Siempre montada cuando hay capa, para que las dos imágenes estén cargadas
- * antes de hacer falta; `visible` decide si se ve.
+ * antes de hacer falta; `visible` decide si se ve. En las piezas giradas
+ * (la mitad de abajo de una Secuela, las partidas) la ilustración va en una
+ * caja sin girar, del tamaño del hueco tumbado, que se gira entera.
  */
 export function ArteEnVivo({
 	capa,
@@ -34,9 +36,20 @@ export function ArteEnVivo({
 	useEffect(() => onLista(lista), [lista, onLista]);
 
 	const [x, y, w, h] = capa.arte;
-	const extension = capa.extension;
-	// El hueco en milímetros de la carta de 63 × 88: la proporción es lo que cuenta.
-	const g = arte ? geometriaArte(framing, arte.w, arte.h, w * 63, h * 88) : null;
+	const giro = capa.giro ?? 0;
+	// Girada, la extensión del difuminado no va hacia abajo (Rust no la da).
+	const extension = giro ? 0 : capa.extension;
+	// El hueco en milímetros de la carta de 63 × 88 (la proporción es lo que
+	// cuenta), tal como lo ve la ilustración.
+	const sin = huecoSinGirar(capa.arte, giro);
+	const g = arte ? geometriaArte(framing, arte.w, arte.h, sin.w, sin.h) : null;
+	// La caja sin girar, en % del hueco, centrada en él.
+	const caja = deLado(giro)
+		? {
+				w: ((h * CARTA_MM.h) / (w * CARTA_MM.w)) * 100,
+				h: ((w * CARTA_MM.w) / (h * CARTA_MM.h)) * 100,
+			}
+		: { w: 100, h: 100 };
 	return (
 		<div
 			aria-hidden
@@ -67,8 +80,14 @@ export function ArteEnVivo({
 					/>
 				)}
 				<div
-					className="absolute top-0 left-0 w-full"
-					style={{ height: `${(h / (h + extension)) * 100}%` }}
+					className="absolute"
+					style={{
+						width: `${caja.w}%`,
+						height: `${(caja.h * h) / (h + extension)}%`,
+						left: `${(100 - caja.w) / 2}%`,
+						top: `${((100 - caja.h) / 2) * (h / (h + extension))}%`,
+						transform: giro ? `rotate(${giro}deg)` : undefined,
+					}}
 				>
 					<img
 						src={urlArte}

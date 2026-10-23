@@ -15,7 +15,13 @@ import { useImagenViva, useRafaga } from "@/lib/imagen-viva";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { ArteEnVivo } from "./arte-en-vivo";
-import { CARTA_MM, type CambioEncuadre, claveCapa, moverEncuadre } from "./encuadre";
+import {
+	arrastreEnLaPieza,
+	type CambioEncuadre,
+	claveCapa,
+	huecoSinGirar,
+	moverEncuadre,
+} from "./encuadre";
 import { Incidencias } from "./incidencias";
 
 /** Cada cuánto se pasa al diseño el encuadre mientras se arrastra. */
@@ -24,6 +30,9 @@ const EMPUJE_MS = 100;
 const FIN_RUEDA_MS = 200;
 /** El hueco de la ilustración (fracciones de la carta) si aún no hay capa. */
 const HUECO_TIPICO = [0.08, 0.12, 0.84, 0.45] as const;
+/** Tras el último cambio de la carta, cuándo se pide la capa por adelantado
+ *  (para que el primer arrastre ya vaya en directo). */
+const CAPA_ANTES_MS = 500;
 
 /**
  * La carta tal como saldrá, pintada por Rust (el mismo motor que el PDF).
@@ -43,6 +52,7 @@ export function VistaPrevia({
 	setLang,
 	cara,
 	setCara,
+	caraArte,
 	onEncuadre,
 	cargando,
 	carasImpresas,
@@ -58,6 +68,9 @@ export function VistaPrevia({
 	setLang: (l: DesignLang) => void;
 	cara: number;
 	setCara: (c: number) => void;
+	/** La cara del diseño cuya ilustración enseña la parte elegida: ella misma
+	 *  o, en la segunda parte de una aventura o una flip, la primera. */
+	caraArte: number;
 	onEncuadre: (framing: ArtFraming) => void;
 	cargando: boolean;
 	/** 2 en las de doble cara; en las partidas, aventuras… las caras son
@@ -83,11 +96,11 @@ export function VistaPrevia({
 	}, []);
 
 	// ── Capa para mover la ilustración en la pantalla.
-	const arte = design?.faces[cara]?.art ?? null;
+	const arte = design?.faces[caraArte]?.art ?? null;
 	const tieneArte = !!arte;
 	const clave = useMemo(
-		() => (design ? claveCapa(design, cara, lang) : null),
-		[design, cara, lang],
+		() => (design ? claveCapa(design, caraArte, lang) : null),
+		[design, caraArte, lang],
 	);
 	const [capa, setCapa] = useState<(CapaInfo & { clave: string; ancho: AnchoMiniatura }) | null>(
 		null,
@@ -103,7 +116,7 @@ export function VistaPrevia({
 		const k = `${clave}|${ancho}`;
 		if (pedida.current === k) return;
 		pedida.current = k;
-		call("design_overlay", { design, cara, lang, ancho })
+		call("design_overlay", { design, cara: caraArte, lang, ancho })
 			.then((c) => {
 				if (pedida.current !== k) return;
 				setCapa(c ? { ...c, clave, ancho } : null);
@@ -111,8 +124,14 @@ export function VistaPrevia({
 			.catch(() => {
 				if (pedida.current === k) pedida.current = null;
 			});
-	}, [design, clave, tieneArte, cara, lang, ancho]);
-	const capaVale = !!capa && capa.clave === clave && capa.cara === cara;
+	}, [design, clave, tieneArte, caraArte, lang, ancho]);
+	const capaVale = !!capa && capa.clave === clave && capa.cara === caraArte;
+	// Por adelantado, cuando la carta se queda quieta: si no, los primeros
+	// pasos del primer arrastre esperaban a la carta entera.
+	useEffect(() => {
+		const id = setTimeout(pedirCapa, CAPA_ANTES_MS);
+		return () => clearTimeout(id);
+	}, [pedirCapa]);
 
 	// El encuadre mientras se arrastra o se gira la rueda: aquí, al momento;
 	// al diseño, cada `EMPUJE_MS` y al acabar.
@@ -126,12 +145,13 @@ export function VistaPrevia({
 	const mover = (c: CambioEncuadre) => {
 		const base = vivoRef.current ?? arte?.framing;
 		if (!base || !arte) return;
-		// El hueco de la última capa (cambia poco aunque cambien los textos);
-		// sin capa (compuestas), uno típico.
-		const [, , cw, ch] = capa?.arte ?? HUECO_TIPICO;
-		const f = moverEncuadre(base, c, {
-			w: cw * CARTA_MM.w,
-			h: ch * CARTA_MM.h,
+		// El hueco de la última capa (cambia poco aunque cambien los textos)
+		// y, si la pieza va girada, el arrastre visto desde ella; sin capa
+		// todavía, uno típico.
+		const giro = capaVale ? (capa?.giro ?? 0) : 0;
+		const hueco = huecoSinGirar(capaVale && capa ? capa.arte : HUECO_TIPICO, giro);
+		const f = moverEncuadre(base, arrastreEnLaPieza(c, giro), {
+			...hueco,
 			iw: Math.max(1, arte.image.width),
 			ih: Math.max(1, arte.image.height),
 		});
@@ -220,7 +240,7 @@ export function VistaPrevia({
 
 	const caras = design?.faces.length ?? 0;
 	return (
-		<div className="flex h-full flex-col">
+		<div className="flex h-full flex-col" data-tutorial="disenar-vista">
 			<div className="flex shrink-0 items-center gap-2.5 border-b px-3 py-2">
 				<SelectorIdioma
 					valor={lang}

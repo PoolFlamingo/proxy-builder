@@ -27,4 +27,9 @@ radio: [number, number],
 /**
  * La cara del diseño cuya ilustración va en el hueco.
  */
-cara: number, };
+cara: number, 
+/**
+ * Cómo se ve girada la ilustración en el hueco (grados, positivo a la
+ * derecha): 90 en la mitad de abajo de una Secuela, -90 en las partidas.
+ */
+giro: number, };
