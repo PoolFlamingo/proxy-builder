@@ -345,5 +345,7 @@
 	"Información": "정보",
 	"No hay ningún error que mostrar.": "표시할 오류가 없어요.",
 	"No hay ningún aviso que mostrar.": "표시할 경고가 없어요.",
-	"No hay ninguna información que mostrar.": "표시할 정보가 없어요."
+	"No hay ninguna información que mostrar.": "표시할 정보가 없어요.",
+	"Esta parte no lleva ilustración propia: enseña la de la parte 1, como las cartas impresas.": "이 부분에는 자체 일러스트가 없어요. 인쇄된 카드처럼 1부분의 일러스트를 보여 줘요.",
+	"Ir a la parte 1": "1부분으로 이동"
 }

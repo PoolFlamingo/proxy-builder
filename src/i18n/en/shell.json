@@ -15,5 +15,18 @@
 	"Reiniciar": "Restart",
 	"Reinicia la app con la versión nueva. El sistema pedirá tu contraseña.": "Restarts the app with the new version. Your system will ask for your password.",
 	"Reinicia la app con la versión nueva.": "Restarts the app with the new version.",
-	"Actualizar a {version}": "Update to {version}"
+	"Actualizar a {version}": "Update to {version}",
+	"Guardar y continuar": "Save and continue",
+	"¿Cerrar Proxy Builder?": "Close Proxy Builder?",
+	"Si cierras ahora, esto se pierde o se interrumpe:": "If you close now, this is lost or interrupted:",
+	"Hay cambios sin guardar en la carta que estás diseñando.": "The card you're designing has unsaved changes.",
+	"Hay un trabajo en marcha ({fase}).": "A job is running ({fase}).",
+	"Hay un trabajo en marcha.": "A job is running.",
+	"Se está descargando o instalando una actualización.": "An update is being downloaded or installed.",
+	"Hay un proceso en marcha en una ventana abierta.": "A process is running in an open window.",
+	"Hay cambios sin guardar en una ventana abierta.": "An open window has unsaved changes.",
+	"No se ha podido guardar el deck: se perderán sus últimos cambios.": "The deck could not be saved: its latest changes will be lost.",
+	"Cerrar igualmente": "Close anyway",
+	"Guardar y cerrar": "Save and close",
+	"No se ha podido cerrar la ventana.": "The window could not be closed."
 }

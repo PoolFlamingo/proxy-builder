@@ -18,6 +18,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { elegirCarpetaParaExportar } from "@/lib/dialogos";
+import { useEstadoParaCerrar } from "@/lib/dialogos-abiertos";
 import { IDIOMAS } from "@/lib/idiomas";
 import { call } from "@/lib/ipc";
 import { lanzarTrabajo } from "@/lib/trabajos";
@@ -105,6 +106,7 @@ function Contenido() {
 	};
 
 	const enMarcha = progreso !== null;
+	useEstadoParaCerrar({ enCurso: enMarcha, sinGuardar: false });
 	return (
 		<DialogContent className="sm:max-w-md" ocupado={enMarcha} alInterrumpir={cancelar}>
 			<DialogHeader>

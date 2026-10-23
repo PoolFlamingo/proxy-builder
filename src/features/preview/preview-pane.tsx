@@ -168,7 +168,10 @@ export function PreviewPane() {
 
 	return (
 		<section className="flex h-full min-h-0 flex-col bg-muted/30 [&_[data-slot=button]]:text-xs [&_button[data-slot=tooltip-trigger]]:text-xs">
-			<div className="flex flex-wrap items-center gap-1.5 border-b bg-background px-2.5 py-1.5">
+			<div
+				className="flex flex-wrap items-center gap-1.5 border-b bg-background px-2.5 py-1.5"
+				data-tutorial="vista-barra"
+			>
 				<WithTooltip content={t("La vista es aproximada; el resultado exacto es el del PDF.")}>
 					<span className="mr-1 flex items-center gap-1.5 text-xs font-medium">
 						<Eye className="size-3.5 text-muted-foreground" />
@@ -317,7 +320,7 @@ export function PreviewPane() {
 				</div>
 			)}
 
-			<div className="relative min-h-0 flex-1">
+			<div className="relative min-h-0 flex-1" data-tutorial="vista-hojas">
 				<ScrollArea className="h-full" onViewportChange={setViewport}>
 					<RaizScroll.Provider value={viewport}>
 						<DndContext

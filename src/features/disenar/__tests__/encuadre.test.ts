@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { ArtFraming } from "@/bindings/ArtFraming";
 import type { CardDesign } from "@/bindings/CardDesign";
-import { claveCapa, geometriaArte, moverEncuadre } from "../encuadre";
+import {
+	arrastreEnLaPieza,
+	claveCapa,
+	geometriaArte,
+	huecoSinGirar,
+	moverEncuadre,
+} from "../encuadre";
 
 const neutro: ArtFraming = { zoom: 1, offsetX: 0, offsetY: 0, rotation: 0 };
 
@@ -88,6 +94,20 @@ describe("claveCapa", () => {
 		expect(claveCapa(d, 0, "en")).not.toBe(claveCapa(d, 0, "es"));
 		expect(claveCapa(d, 1, "es")).not.toBe(claveCapa(d, 0, "es"));
 	});
+
+	it("el encuadre de la otra parte sí cuenta (va pintada en la capa)", () => {
+		const dos = { ...d, faces: [d.faces[0], d.faces[0]] } as CardDesign;
+		const otraMovida = {
+			...dos,
+			faces: dos.faces.map((f, i) =>
+				i === 0 && f.art ? { ...f, art: { ...f.art, framing: { ...neutro, offsetY: -0.9 } } } : f,
+			),
+		} as CardDesign;
+		// La capa de la parte 2 lleva la ilustración de la 1: cambia.
+		expect(claveCapa(otraMovida, 1, "es")).not.toBe(claveCapa(dos, 1, "es"));
+		// La de la parte 1, no: esa ilustración es la que se mueve.
+		expect(claveCapa(otraMovida, 0, "es")).toBe(claveCapa(dos, 0, "es"));
+	});
 });
 
 describe("geometriaArte", () => {
@@ -117,5 +137,38 @@ describe("geometriaArte", () => {
 		expect(g.tx).toBeCloseTo(-25);
 		expect(g.ty).toBeCloseTo(-25);
 		expect(g.giro).toBe(90);
+	});
+});
+
+describe("piezas giradas", () => {
+	it("el hueco tumbado se ve sin girar con los lados cambiados", () => {
+		// Un hueco de 18,9 × 25,2 mm en la carta (0,3 × 0,2864…).
+		const arte = [0.1, 0.5, 0.3, 25.2 / 88];
+		const recto = huecoSinGirar(arte, 0);
+		expect(recto.w).toBeCloseTo(18.9, 6);
+		expect(recto.h).toBeCloseTo(25.2, 6);
+		const tumbado = huecoSinGirar(arte, 90);
+		expect(tumbado.w).toBeCloseTo(25.2, 6);
+		expect(tumbado.h).toBeCloseTo(18.9, 6);
+		expect(huecoSinGirar(arte, -90).w).toBeCloseTo(25.2, 6);
+	});
+
+	it("girada a la derecha, bajar el ratón la lleva hacia el principio de la pieza", () => {
+		// 3 mm hacia abajo en la pantalla.
+		const c = arrastreEnLaPieza({ dy: 3 / 88 }, 90);
+		// En la pieza (lo de arriba queda a la derecha): 3 mm hacia su derecha.
+		expect((c.dx ?? 0) * 63).toBeCloseTo(3, 6);
+		expect((c.dy ?? 0) * 88).toBeCloseTo(0, 6);
+		// 2 mm a la derecha en la pantalla: 2 mm hacia arriba en la pieza.
+		const d = arrastreEnLaPieza({ dx: 2 / 63 }, 90);
+		expect((d.dy ?? 0) * 88).toBeCloseTo(-2, 6);
+	});
+
+	it("girada a la izquierda, al revés; sin giro, igual; la rueda no se toca", () => {
+		const c = arrastreEnLaPieza({ dx: 2 / 63, dy: 3 / 88 }, -90);
+		expect((c.dx ?? 0) * 63).toBeCloseTo(-3, 6);
+		expect((c.dy ?? 0) * 88).toBeCloseTo(2, 6);
+		expect(arrastreEnLaPieza({ dx: 0.1 }, 0)).toEqual({ dx: 0.1 });
+		expect(arrastreEnLaPieza({ zoom: 0.04 }, 90)).toEqual({ zoom: 0.04 });
 	});
 });

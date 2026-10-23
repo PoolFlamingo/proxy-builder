@@ -2,6 +2,8 @@
 
 /**
  * Tamaño de la carta. Por defecto 63×88 mm (lo que publica Wizards); las
- * alternativas son 63,5×88,9 (2,5×3,5″) y 65×90 mm (funda / bleed 1 mm).
+ * alternativas son 63,5×88,9 (2,5×3,5″) y 65×90, que llena justa una funda:
+ * sale como con 1 mm de sangrado, pero con la imagen entera a ese tamaño en
+ * vez del borde repetido.
  */
 export type CardSize = { widthMm: number, heightMm: number, };

@@ -1,6 +1,7 @@
-import { BookOpen, Brush, Layers, Settings } from "lucide-react";
+import { BookOpen, Brush, CircleHelp, Layers, Settings } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { useDefaultLayout } from "react-resizable-panels";
+import { Confirmar } from "@/components/confirmar";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,9 +9,12 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { SettingsDialog } from "@/features/settings/settings-dialog";
+import { Tutorial, useTutorialInicial } from "@/features/tutorial/tutorial";
 import { useDeck } from "@/stores/deck-store";
-import { useUi } from "@/stores/ui-store";
+import { useEdicion } from "@/stores/edicion-store";
+import { useUi, type Vista } from "@/stores/ui-store";
 import { BotonActualizar, PuntoActualizacion, useAvisoAjustes } from "./actualizacion-automatica";
+import { ConfirmarCierre } from "./confirmar-cierre";
 import { SaveIndicator } from "./save-indicator";
 
 /**
@@ -37,6 +41,18 @@ export function AppShell({
 	const [ajustes, setAjustes] = useState(false);
 	const avisoAjustes = useAvisoAjustes();
 	const layout = useDefaultLayout({ id: "proxybuilder.paneles", storage: localStorage });
+	useTutorialInicial();
+	// Salir de «Diseñar» con la carta sin guardar pregunta, y se puede guardar
+	// ahí mismo (como al cambiar de carta).
+	const [salirDeDisenar, setSalirDeDisenar] = useState<(() => void) | null>(null);
+	const cambiarVista = (v: Vista) => {
+		if (v === vista) return;
+		if (vista === "disenar" && useEdicion.getState().pendiente) {
+			setSalirDeDisenar(() => () => setVista(v));
+			return;
+		}
+		setVista(v);
+	};
 
 	return (
 		<div className="flex h-svh flex-col bg-background text-foreground">
@@ -54,10 +70,11 @@ export function AppShell({
 					type="single"
 					size="sm"
 					data-pestanas=""
+					data-tutorial="pestanas"
 					className="ml-4 shrink-0"
 					value={vista}
 					onValueChange={(v) =>
-						(v === "deck" || v === "disenar" || v === "biblioteca") && setVista(v)
+						(v === "deck" || v === "disenar" || v === "biblioteca") && cambiarVista(v)
 					}
 				>
 					<ToggleGroupItem value="deck" className="gap-1.5 px-3 text-xs">
@@ -77,10 +94,22 @@ export function AppShell({
 				<div className="ml-auto flex items-center gap-2.5">
 					<SaveIndicator />
 					<BotonActualizar />
+					<WithTooltip content={t("Tutorial de esta pantalla")}>
+						<Button
+							size="icon-sm"
+							variant="ghost"
+							data-tutorial="ayuda"
+							onClick={() => useUi.getState().abrirTutorial(vista)}
+							aria-label={t("Tutorial de esta pantalla")}
+						>
+							<CircleHelp className="size-4" />
+						</Button>
+					</WithTooltip>
 					<WithTooltip content={avisoAjustes}>
 						<Button
 							size="sm"
 							variant="ghost"
+							data-tutorial="ajustes"
 							onClick={() => setAjustes(true)}
 							aria-label={avisoAjustes ? `${t("Ajustes")}: ${avisoAjustes}` : t("Ajustes")}
 							className="relative"
@@ -120,6 +149,25 @@ export function AppShell({
 			</main>
 
 			<SettingsDialog open={ajustes} onOpenChange={setAjustes} />
+			<Tutorial />
+			<ConfirmarCierre />
+			<Confirmar
+				abierto={!!salirDeDisenar}
+				onCerrar={() => setSalirDeDisenar(null)}
+				titulo={t("¿Descartar los cambios?")}
+				descripcion={t("Hay cambios sin guardar en esta carta.")}
+				accion={t("Descartar")}
+				destructiva
+				onConfirmar={() => salirDeDisenar?.()}
+				accionAlternativa={{
+					texto: t("Guardar y continuar"),
+					onClick: async () => {
+						const ok = (await useEdicion.getState().pendiente?.guardar()) ?? true;
+						if (ok) salirDeDisenar?.();
+						return ok;
+					},
+				}}
+			/>
 		</div>
 	);
 }
@@ -145,6 +193,7 @@ function NombreDeck() {
 				if (e.key === "Escape") setTexto(nombre);
 			}}
 			aria-label={t("Nombre del deck")}
+			data-tutorial="nombre-deck"
 			className="ml-2 h-7 w-64 border-transparent bg-transparent text-sm font-medium shadow-none hover:border-input focus-visible:border-input"
 		/>
 	);

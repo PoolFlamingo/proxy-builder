@@ -395,5 +395,7 @@
 	"Información": "Інформація",
 	"No hay ningún error que mostrar.": "Немає помилок для показу.",
 	"No hay ningún aviso que mostrar.": "Немає попереджень для показу.",
-	"No hay ninguna información que mostrar.": "Немає інформації для показу."
+	"No hay ninguna información que mostrar.": "Немає інформації для показу.",
+	"Esta parte no lleva ilustración propia: enseña la de la parte 1, como las cartas impresas.": "Ця частина не має власної ілюстрації: вона показує ілюстрацію частини 1, як на друкованих картах.",
+	"Ir a la parte 1": "Перейти до частини 1"
 }

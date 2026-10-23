@@ -10,4 +10,9 @@ export type Resumen = { maquetacion: Maquetacion, carasImpresas: number,
  * El texto partido en habilidades, capítulos, niveles… (vacío si es
  * texto normal o no sigue el patrón).
  */
-partes: Array<Parte>, };
+partes: Array<Parte>, 
+/**
+ * Si esta cara (o parte) lleva su propia ilustración; si no, enseña la
+ * de la primera (la segunda parte de una aventura o una flip).
+ */
+artePropio: boolean, };

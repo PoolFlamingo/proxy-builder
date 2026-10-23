@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useEstadoParaCerrar } from "@/lib/dialogos-abiertos";
 import { call } from "@/lib/ipc";
 import { lanzarTrabajo } from "@/lib/trabajos";
 import { useDeck } from "@/stores/deck-store";
@@ -113,6 +114,7 @@ function Contenido() {
 	};
 
 	const enMarcha = progreso !== null;
+	useEstadoParaCerrar({ enCurso: enMarcha, sinGuardar: false });
 	const ninguna = "__ninguna";
 	return (
 		<DialogContent className="sm:max-w-md" ocupado={enMarcha} alInterrumpir={cancelar}>

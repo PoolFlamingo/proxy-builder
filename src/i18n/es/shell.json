@@ -15,5 +15,18 @@
 	"Reiniciar": "Reiniciar",
 	"Reinicia la app con la versión nueva. El sistema pedirá tu contraseña.": "Reinicia la app con la versión nueva. El sistema pedirá tu contraseña.",
 	"Reinicia la app con la versión nueva.": "Reinicia la app con la versión nueva.",
-	"Actualizar a {version}": "Actualizar a {version}"
+	"Actualizar a {version}": "Actualizar a {version}",
+	"Guardar y continuar": "Guardar y continuar",
+	"¿Cerrar Proxy Builder?": "¿Cerrar Proxy Builder?",
+	"Si cierras ahora, esto se pierde o se interrumpe:": "Si cierras ahora, esto se pierde o se interrumpe:",
+	"Hay cambios sin guardar en la carta que estás diseñando.": "Hay cambios sin guardar en la carta que estás diseñando.",
+	"Hay un trabajo en marcha ({fase}).": "Hay un trabajo en marcha ({fase}).",
+	"Hay un trabajo en marcha.": "Hay un trabajo en marcha.",
+	"Se está descargando o instalando una actualización.": "Se está descargando o instalando una actualización.",
+	"Hay un proceso en marcha en una ventana abierta.": "Hay un proceso en marcha en una ventana abierta.",
+	"Hay cambios sin guardar en una ventana abierta.": "Hay cambios sin guardar en una ventana abierta.",
+	"No se ha podido guardar el deck: se perderán sus últimos cambios.": "No se ha podido guardar el deck: se perderán sus últimos cambios.",
+	"Cerrar igualmente": "Cerrar igualmente",
+	"Guardar y cerrar": "Guardar y cerrar",
+	"No se ha podido cerrar la ventana.": "No se ha podido cerrar la ventana."
 }

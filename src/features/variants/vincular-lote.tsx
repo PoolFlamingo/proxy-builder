@@ -21,6 +21,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { RaizScroll, useVisible } from "@/features/preview/visibilidad";
+import { useEstadoParaCerrar } from "@/lib/dialogos-abiertos";
 import { EDICION_NEUTRA, parametros, urlBusqueda, urlMiniatura } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
 import { lanzarTrabajo } from "@/lib/trabajos";
@@ -191,6 +192,7 @@ function Contenido({ ids, soloSeleccion }: { ids?: string[]; soloSeleccion: bool
 				(progreso.total - progreso.hechas)
 			: Number.NaN;
 	const trabajando = fase === "leyendo" || fase === "aplicando";
+	useEstadoParaCerrar({ enCurso: trabajando, sinGuardar: fase === "revisar" && filas.length > 0 });
 
 	return (
 		<DialogContent

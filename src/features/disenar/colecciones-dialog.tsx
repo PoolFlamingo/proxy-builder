@@ -25,6 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { abrirParaImportar } from "@/lib/dialogos";
+import { useEstadoParaCerrar } from "@/lib/dialogos-abiertos";
 import { idioma } from "@/lib/idiomas";
 import { EDICION_NEUTRA, parametros, urlMiniatura } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
@@ -191,6 +192,7 @@ function Contenido() {
 		}
 	};
 
+	useEstadoParaCerrar({ enCurso: false, sinGuardar: cambiada });
 	return (
 		<DialogContent
 			className="flex h-[min(86vh,760px)] flex-col sm:max-w-4xl"

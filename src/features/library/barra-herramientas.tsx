@@ -61,7 +61,10 @@ export const BarraHerramientas = forwardRef<HTMLInputElement, { acciones: ReactN
 		const p = usePrefsBiblioteca();
 		const { filtros: f, ponerFiltros } = useFiltrosBiblioteca();
 		return (
-			<div className="flex flex-wrap items-center gap-2 border-b px-3 py-2">
+			<div
+				className="flex flex-wrap items-center gap-2 border-b px-3 py-2"
+				data-tutorial="biblioteca-barra"
+			>
 				<WithTooltip content={p.lateral ? t("Ocultar etiquetas") : t("Ver etiquetas")}>
 					<Button
 						size="icon-sm"
@@ -197,7 +200,9 @@ export const BarraHerramientas = forwardRef<HTMLInputElement, { acciones: ReactN
 						))}
 					</ToggleGroup>
 				)}
-				<div className="ml-auto flex items-center gap-1.5">{acciones}</div>
+				<div className="ml-auto flex items-center gap-1.5" data-tutorial="biblioteca-acciones">
+					{acciones}
+				</div>
 			</div>
 		);
 	},

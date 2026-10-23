@@ -11,7 +11,7 @@ import {
 	Undo2,
 	Wand2,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDefaultLayout } from "react-resizable-panels";
 import { toast } from "sonner";
 import type { ArtFraming } from "@/bindings/ArtFraming";
@@ -27,6 +27,7 @@ import { WithTooltip } from "@/components/ui/with-tooltip";
 import { nuevoId } from "@/lib/deck-ops";
 import { call } from "@/lib/ipc";
 import { useDeck } from "@/stores/deck-store";
+import { useEdicion } from "@/stores/edicion-store";
 import { useUi } from "@/stores/ui-store";
 import { Formulario } from "./formulario";
 import { agrupar, conVariante, vecina } from "./grupos";
@@ -124,6 +125,8 @@ export function DisenarScreen() {
 		},
 		[grupo],
 	);
+	// Pasar a la carta de al lado sin más: solo tras guardar («Guardar y
+	// siguiente»).
 	const pasar = useCallback(
 		(dir: 1 | -1) => {
 			const id = vecina(elegibles, disenando, dir, porCopias);
@@ -131,37 +134,64 @@ export function DisenarScreen() {
 		},
 		[elegibles, disenando, porCopias, ir],
 	);
-	useEffect(() => {
-		const tecla = (e: KeyboardEvent) => {
-			if (!e.altKey) return;
-			if (e.key === "ArrowRight") pasar(1);
-			if (e.key === "ArrowLeft") pasar(-1);
-		};
-		window.addEventListener("keydown", tecla);
-		return () => window.removeEventListener("keydown", tecla);
-	}, [pasar]);
 
-	// Lo que se hará si se descartan los cambios sin guardar.
+	// Lo que se hará, tras guardar o descartar, si se sale de una carta con
+	// cambios sin guardar.
 	const [pendiente, setPendiente] = useState<(() => void) | null>(null);
 	const saltar = (id: string) => {
 		if (b.cambiado) return setPendiente(() => () => ir(id));
 		ir(id);
 	};
+	// Las flechas (la barra y Alt+←/→) también preguntan.
+	const pasarConAviso = useCallback(
+		(dir: 1 | -1) => {
+			const id = vecina(elegibles, disenando, dir, porCopias);
+			if (!id) return;
+			if (b.cambiado) setPendiente(() => () => ir(id));
+			else ir(id);
+		},
+		[elegibles, disenando, porCopias, ir, b.cambiado],
+	);
+	useEffect(() => {
+		const tecla = (e: KeyboardEvent) => {
+			if (!e.altKey) return;
+			if (e.key === "ArrowRight") pasarConAviso(1);
+			if (e.key === "ArrowLeft") pasarConAviso(-1);
+		};
+		window.addEventListener("keydown", tecla);
+		return () => window.removeEventListener("keydown", tecla);
+	}, [pasarConAviso]);
 
-	const guardar = async (siguiente: boolean) => {
+	// Guarda la carta (y las copias que toque); `false` si no se pudo.
+	const guardarCarta = async () => {
 		const ok = await b.guardar(!soloEsta);
-		if (!ok) return;
-		useUi.getState().anunciar(t("Diseño guardado"));
-		if (siguiente) pasar(1);
+		if (ok) useUi.getState().anunciar(t("Diseño guardado"));
+		return ok;
 	};
+	const guardar = async (siguiente: boolean) => {
+		if ((await guardarCarta()) && siguiente) pasar(1);
+	};
+	// Con cambios sin guardar, las demás pantallas (cambiar de vista, cerrar la
+	// app) saben guardar esta carta por aquí.
+	const guardarAhora = useRef<() => Promise<boolean>>(async () => false);
+	guardarAhora.current = guardarCarta;
+	const hayCambios = b.cambiado;
+	useEffect(() => {
+		if (!hayCambios) return;
+		useEdicion.getState().poner({ guardar: () => guardarAhora.current() });
+		return () => useEdicion.getState().poner(null);
+	}, [hayCambios]);
 
+	// La segunda parte de una aventura o una flip enseña la ilustración de la
+	// primera: moverla es mover esa.
+	const caraArte = resumen?.artePropio === false ? 0 : cara;
 	const encuadre = (framing: ArtFraming) =>
 		b.cambiar((d) => {
-			const arte = d.faces[cara]?.art;
+			const arte = d.faces[caraArte]?.art;
 			if (!arte) return d;
 			return {
 				...d,
-				faces: d.faces.map((x, i) => (i === cara ? { ...x, art: { ...arte, framing } } : x)),
+				faces: d.faces.map((x, i) => (i === caraArte ? { ...x, art: { ...arte, framing } } : x)),
 			};
 		});
 
@@ -186,11 +216,14 @@ export function DisenarScreen() {
 
 	return (
 		<div className="flex h-full flex-col">
-			<div className="flex shrink-0 items-center gap-2 border-b px-3 py-1.5">
+			<div
+				className="flex shrink-0 items-center gap-2 border-b px-3 py-1.5"
+				data-tutorial="disenar-barra"
+			>
 				<Button
 					size="sm"
 					variant="ghost"
-					onClick={() => pasar(-1)}
+					onClick={() => pasarConAviso(-1)}
 					aria-label={t("Carta anterior")}
 				>
 					<ChevronLeft />
@@ -198,7 +231,7 @@ export function DisenarScreen() {
 				<Button
 					size="sm"
 					variant="ghost"
-					onClick={() => pasar(1)}
+					onClick={() => pasarConAviso(1)}
 					aria-label={t("Carta siguiente")}
 				>
 					<ChevronRight />
@@ -279,6 +312,7 @@ export function DisenarScreen() {
 						setLang={setLang}
 						cara={cara}
 						setCara={setCara}
+						caraArte={caraArte}
 						onEncuadre={encuadre}
 						cargando={b.cargando}
 						carasImpresas={resumen?.carasImpresas ?? 1}
@@ -293,6 +327,7 @@ export function DisenarScreen() {
 									design={b.design}
 									cambiar={b.cambiar}
 									cara={cara}
+									setCara={setCara}
 									colecciones={colecciones}
 									packs={packs}
 									onColeccion={(c) =>
@@ -301,7 +336,10 @@ export function DisenarScreen() {
 									resumen={resumen}
 								/>
 							</div>
-							<div className="flex shrink-0 flex-col gap-2 border-t p-2.5">
+							<div
+								className="flex shrink-0 flex-col gap-2 border-t p-2.5"
+								data-tutorial="disenar-pie"
+							>
 								{grupo && (
 									<div className="flex flex-wrap items-center gap-1.5">
 										{copias > 1 && (
@@ -418,6 +456,14 @@ export function DisenarScreen() {
 				destructiva
 				onConfirmar={() => {
 					pendiente?.();
+				}}
+				accionAlternativa={{
+					texto: t("Guardar y continuar"),
+					onClick: async () => {
+						const ok = await guardarAhora.current();
+						if (ok) pendiente?.();
+						return ok;
+					},
 				}}
 			/>
 		</div>
