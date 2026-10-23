@@ -30,6 +30,7 @@ fn por_caras(layout: &str) -> bool {
             | "transform"
             | "modal_dfc"
             | "adventure"
+            | "prepare"
             | "meld"
             | "battle"
             | "double_faced_token"

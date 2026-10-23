@@ -16,7 +16,7 @@ use tiny_skia::{FilterQuality, Pixmap, PixmapPaint, Transform};
 use super::efectivo::DisenoEfectivo;
 use super::maquetacion::{cuerpo, maquetacion, medida_grande, Cuerpo, Maquetacion};
 use super::modelo::{Aviso, DesignLang};
-use super::pack::EstiloDef;
+use super::pack::{EstiloDef, Pack};
 use super::render::{
     de_pixmap, estilo_para, mascara_redondeada, pie_texto, pintar_cara, Indicador, Motor, Opciones,
     Pieza, Recursos, Render, Salida,
@@ -108,6 +108,11 @@ fn layout_de_cara(
     if cuerpo == Cuerpo::Mazmorra {
         return Some("mazmorra");
     }
+    // Las clases con su propio layout (arte a un lado, niveles al otro) si
+    // el pack lo trae; si no, la caja alta (`estilo_para`).
+    if cuerpo == Cuerpo::Niveles && maq == Maquetacion::Clase {
+        return Some("clase");
+    }
     let _ = cara;
     let ficha = e.design.card.es_ficha()
         || matches!(maq, Maquetacion::Emblema | Maquetacion::FichaDosCaras);
@@ -167,6 +172,10 @@ fn cara_simple(
             o.otra_cara = Some((otra.type_line.get(lang).clone(), otra.mana_cost));
         }
         Maquetacion::Aventura => o.aventura = Some(1),
+        Maquetacion::Preparar => {
+            o.aventura = Some(1);
+            o.libro_derecha = true;
+        }
         _ => {}
     }
     pintar_cara(motor, e, lang, rec, est, avisos, &o)
@@ -293,7 +302,13 @@ fn franja_fusionar(
     faltan: &mut Vec<String>,
 ) -> Result<(), DisenoError> {
     let mut av = Vec::new();
-    let Some(est) = rec.pack.layout("fusionar").cloned() else {
+    // Un pack sin su franja usa la de la casa.
+    let Some(est) = rec
+        .pack
+        .layout("fusionar")
+        .or_else(|| Pack::de_fabrica_compartido().and_then(|p| p.layout("fusionar")))
+        .cloned()
+    else {
         return Ok(());
     };
     let alto_px = lienzo.height();
@@ -384,7 +399,13 @@ fn pie_suelto(
     lienzo: &mut Pixmap,
     faltan: &mut Vec<String>,
 ) -> Result<(), DisenoError> {
-    let Some(est) = rec.pack.layout("pie").cloned() else {
+    // Un pack sin el suyo usa el de la casa.
+    let Some(est) = rec
+        .pack
+        .layout("pie")
+        .or_else(|| Pack::de_fabrica_compartido().and_then(|p| p.layout("pie")))
+        .cloned()
+    else {
         return Ok(());
     };
     let (w, h) = (lienzo.width(), lienzo.height());
