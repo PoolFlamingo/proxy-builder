@@ -91,7 +91,9 @@ le falta una cadena le sale la inglesa.
   `preview` (hojas, casillas, menú, arrastre), `export` (panel derecho,
   alinear filas, presets), `variants` (añadir carta, variantes, rejilla de
   Scryfall), `card-editor`, `library`, `stats`, `set-browser`, `shell`,
-  `disenar` (la vista «Diseñar» del editor de cartas de la 2.0).
+  `disenar` (la vista «Diseñar» del editor de cartas de la 2.0), `tutorial`
+  (el recorrido guiado de cada pantalla: pasos con su ancla `data-tutorial`;
+  sale solo la primera vez y con el botón de ayuda de la barra).
 - `src/stores/`: `deck-store` (deck, historial, autoguardado), `plan-store`
   (el `PagePlan` de Rust con 100 ms de espera), `ui-store` (zoom, selección,
   diálogos, preferencias), `trabajo-store` (el trabajo largo en marcha).
@@ -180,6 +182,18 @@ le falta una cadena le sale la inglesa.
   contraseña) y en el secreto `TAURI_SIGNING_PRIVATE_KEY`; la pública, en
   `tauri.conf.json`. Si se pierde, nadie recibe más actualizaciones.
   `pnpm release` pone las notas en el `latest.json` del borrador.
+- **Salir con cosas a medias pregunta.** Cerrar la ventana
+  (`features/shell/confirmar-cierre.tsx`, `onCloseRequested`) guarda el deck y,
+  si hay un trabajo largo, una actualización bajando, la carta que se diseña
+  sin guardar o un diálogo con algo en curso o sin guardar, frena el cierre y
+  pregunta (`lib/cierre.ts`; con la carta sin guardar, «Guardar y cerrar»).
+  Cambiar de carta o de pantalla desde Diseñar pregunta igual y ofrece
+  «Guardar y continuar» (`Confirmar` con `accionAlternativa`;
+  `stores/edicion-store.ts` dice cómo guardar la carta). Un diálogo con un
+  proceso o cambios propios lo declara con `useEstadoParaCerrar`
+  (`lib/dialogos-abiertos.ts`): `components/ui/` es de solo lectura. 🛑 Cerrar
+  lo hace `destroy()`, con el permiso `core:window:allow-destroy`
+  (`capabilities/default.json`): sin él la ventana no se cierra.
 - La ventana arranca oculta y con fondo oscuro (`tauri.conf.json`) y
   `main.tsx` la enseña tras el primer fotograma (sin destello blanco); el
   window-state no guarda la visibilidad.
@@ -213,7 +227,8 @@ le falta una cadena le sale la inglesa.
     tiny-skia), `render` (una cara sobre un lienzo de cualquier medida),
     `componer` (partidas, secuela, flip, batalla, meld, grandes),
     `maquetacion` (layout de la carta y cuerpo de cada cara), `estructura`
-    (habilidades, capítulos, niveles… del texto), `cuerpos` (secciones con
+    (habilidades, capítulos, niveles… del texto, y el plano de las mazmorras:
+    salas pegadas con sus puertas, como las impresas), `cuerpos` (secciones con
     insignias), `emoji` (emoji en color: Noto Color Emoji COLRv1 incrustada,
     familia genérica de emoji de parley, capas, degradados y modos de fusión
     pintados con `ColorPainter` de skrifa; Pablo, 20 y 21/10/2026),
