@@ -1,7 +1,8 @@
 //! **Cartas compuestas** (Fase 5): las que no son una cara normal.
 //!
 //! - Partidas, Fusionar y Habitación: dos minicartas giradas 90°.
-//! - Secuela: la mitad de arriba normal y la de abajo girada.
+//! - Secuela: la mitad de arriba normal y la de abajo girada a la derecha,
+//!   cada una con su ilustración.
 //! - Flip: dos medias cartas, la de abajo girada 180°, con el arte en medio.
 //! - Batalla: la cara de delante apaisada y girada.
 //! - Meld: el dorso es media carta fundida, girada.
@@ -30,25 +31,35 @@ enum Giro {
     Nada,
     /// 90° a la izquierda: lo de arriba de la pieza queda a la izquierda.
     Izquierda,
+    /// 90° a la derecha: lo de arriba de la pieza queda a la derecha.
+    Derecha,
     Media,
 }
 
+impl Giro {
+    /// En grados, como los gira `tiny-skia` (y CSS): positivo, a la derecha.
+    fn grados(self) -> f32 {
+        match self {
+            Giro::Nada => 0.0,
+            Giro::Izquierda => -90.0,
+            Giro::Derecha => 90.0,
+            Giro::Media => 180.0,
+        }
+    }
+}
+
 /// Pega `src` en el rectángulo `(x, y, w, h)` (px) de `dest`, girada y
-/// encajada sin deformar, centrada.
-fn pegar(dest: &mut Pixmap, src: &Pixmap, x: f32, y: f32, w: f32, h: f32, giro: Giro) {
+/// encajada sin deformar, centrada. Devuelve la transformación (para saber
+/// dónde queda cada punto de la pieza).
+fn pegar(dest: &mut Pixmap, src: &Pixmap, x: f32, y: f32, w: f32, h: f32, giro: Giro) -> Transform {
     let (sw, sh) = (src.width() as f32, src.height() as f32);
     let (rw, rh) = match giro {
-        Giro::Izquierda => (sh, sw),
+        Giro::Izquierda | Giro::Derecha => (sh, sw),
         _ => (sw, sh),
     };
     let s = (w / rw).min(h / rh);
-    let angulo = match giro {
-        Giro::Nada => 0.0,
-        Giro::Izquierda => -90.0,
-        Giro::Media => 180.0,
-    };
     let t = Transform::from_translate(x + w / 2.0, y + h / 2.0)
-        .pre_rotate(angulo)
+        .pre_rotate(giro.grados())
         .pre_scale(s, s)
         .pre_translate(-sw / 2.0, -sh / 2.0);
     dest.draw_pixmap(
@@ -66,6 +77,33 @@ fn pegar(dest: &mut Pixmap, src: &Pixmap, x: f32, y: f32, w: f32, h: f32, giro: 
         t,
         None,
     );
+    t
+}
+
+/// Dónde queda en `dest` (fracciones) el hueco de la ilustración de una
+/// pieza (fracciones de la pieza) pegada con la transformación `t`.
+fn hueco_pegado(hueco: [f32; 4], src: &Pixmap, t: Transform, dest: &Pixmap) -> [f32; 4] {
+    let (sw, sh) = (src.width() as f32, src.height() as f32);
+    let [x, y, w, h] = hueco;
+    let mut p = [
+        tiny_skia::Point::from_xy(x * sw, y * sh),
+        tiny_skia::Point::from_xy((x + w) * sw, (y + h) * sh),
+    ];
+    t.map_points(&mut p);
+    let (dw, dh) = (dest.width() as f32, dest.height() as f32);
+    let (x0, x1) = (p[0].x.min(p[1].x), p[0].x.max(p[1].x));
+    let (y0, y1) = (p[0].y.min(p[1].y), p[0].y.max(p[1].y));
+    [x0 / dw, y0 / dh, (x1 - x0) / dw, (y1 - y0) / dh]
+}
+
+/// El lienzo de una compuesta: negro o, para la capa de la vista en directo,
+/// transparente (la pantalla pone el negro y la ilustración debajo).
+fn lienzo_compuesto(ancho: u32, alto: u32, capa: Option<usize>) -> Result<Pixmap, DisenoError> {
+    let mut l = Pixmap::new(ancho, alto).ok_or(DisenoError::Lienzo)?;
+    if capa.is_none() {
+        l.fill(tiny_skia::Color::BLACK);
+    }
+    Ok(l)
 }
 
 fn estilo(
@@ -183,7 +221,9 @@ fn cara_simple(
 
 /// Dos minicartas giradas: partidas, Fusionar y Habitación. En vertical, la
 /// primera mitad abajo y la segunda arriba (girando la carta a la derecha
-/// se leen de izquierda a derecha).
+/// se leen de izquierda a derecha). Con `capa`, esa mitad va sin ilustración
+/// y la pieza dice dónde queda su hueco (la vista en directo).
+#[allow(clippy::too_many_arguments)]
 fn partida(
     motor: &mut Motor,
     e: &DisenoEfectivo,
@@ -192,9 +232,10 @@ fn partida(
     maq: Maquetacion,
     ancho: u32,
     alto: u32,
+    capa: Option<usize>,
 ) -> Result<Pieza, DisenoError> {
-    let mut lienzo = Pixmap::new(ancho, alto).ok_or(DisenoError::Lienzo)?;
-    lienzo.fill(tiny_skia::Color::BLACK);
+    let mut lienzo = lienzo_compuesto(ancho, alto, capa)?;
+    let mut hueco = None;
     let (aw, ah) = (ancho as f32, alto as f32);
     let k = aw / 63.0;
     // Fusionar: la franja común va a la derecha (abajo, en apaisado).
@@ -242,7 +283,10 @@ fn partida(
         let mut av = Vec::new();
         let cu = cuerpo(&e.design.card, cara);
         let est = estilo(rec, e, None, &mut av)?;
-        let o = Opciones::de(cara, cu, pw.round() as u32, ph.round() as u32);
+        let mut o = Opciones::de(cara, cu, pw.round() as u32, ph.round() as u32);
+        let quitar = capa == Some(cara);
+        o.transparente = quitar;
+        o.sin_arte = quitar;
         let mut p = pintar_cara(motor, e_mitades, lang, rec, est, av, &o)?;
         // Las reglas puestas aquí no son «editadas a mano» (salvo que ya lo
         // estuvieran).
@@ -256,7 +300,7 @@ fn partida(
         } else {
             margen
         };
-        pegar(
+        let t = pegar(
             &mut lienzo,
             &p.px,
             margen,
@@ -265,6 +309,9 @@ fn partida(
             mitad_alto,
             Giro::Izquierda,
         );
+        if quitar {
+            hueco = p.arte.map(|a| hueco_pegado(a, &p.px, t, &lienzo));
+        }
         avisos.extend(p.avisos);
         faltan.extend(p.faltan);
     }
@@ -284,8 +331,9 @@ fn partida(
         px: lienzo,
         avisos,
         faltan,
-        arte: None,
+        arte: hueco,
         arte_extension: 0.0,
+        arte_giro: Giro::Izquierda.grados(),
     })
 }
 
@@ -339,7 +387,10 @@ fn franja_fusionar(
     Ok(())
 }
 
-/// Secuela: la primera mitad arriba, normal; la segunda abajo, girada.
+/// Secuela: la primera mitad arriba, normal; la segunda abajo, girada a la
+/// derecha como en las impresas (su título queda en el borde derecho y se lee
+/// de arriba abajo; las partidas giran al revés).
+#[allow(clippy::too_many_arguments)]
 fn secuela(
     motor: &mut Motor,
     e: &DisenoEfectivo,
@@ -347,9 +398,11 @@ fn secuela(
     rec: &Recursos<'_>,
     ancho: u32,
     alto: u32,
+    capa: Option<usize>,
 ) -> Result<Pieza, DisenoError> {
-    let mut lienzo = Pixmap::new(ancho, alto).ok_or(DisenoError::Lienzo)?;
-    lienzo.fill(tiny_skia::Color::BLACK);
+    let mut lienzo = lienzo_compuesto(ancho, alto, capa)?;
+    // El hueco de la mitad que va sin ilustración (la vista en directo).
+    let mut hueco = None;
     let (aw, ah) = (ancho as f32, alto as f32);
     let k = ah / 88.0;
     let mut avisos = Vec::new();
@@ -361,8 +414,16 @@ fn secuela(
     let alto_a = (aw * ha / wa).round() as u32;
     let mut o = Opciones::de(0, cuerpo(&e.design.card, 0), ancho, alto_a);
     o.sin_pie = true;
+    o.transparente = capa == Some(0);
+    o.sin_arte = capa == Some(0);
     let p = pintar_cara(motor, e, lang, rec, arriba, av, &o)?;
-    pegar(&mut lienzo, &p.px, 0.0, 0.0, aw, alto_a as f32, Giro::Nada);
+    let t = pegar(&mut lienzo, &p.px, 0.0, 0.0, aw, alto_a as f32, Giro::Nada);
+    if capa == Some(0) {
+        hueco = p.arte.map(|a| {
+            let ext = p.arte_extension * alto_a as f32 / ah;
+            (hueco_pegado(a, &p.px, t, &lienzo), ext, Giro::Nada)
+        });
+    }
     avisos.extend(p.avisos);
     faltan.extend(p.faltan);
     // Abajo: un lienzo vertical que se gira.
@@ -373,11 +434,21 @@ fn secuela(
     let region_h = ah - y0 - 4.6 * k;
     let pw = region_h.round() as u32;
     let ph = (region_h * hb / wb).round() as u32;
+    // Con su propia ilustración, como en las impresas (la de la segunda
+    // cara del diseño); un pack sin ventana de arte en `secuelaAbajo` la
+    // deja fuera.
     let mut o = Opciones::de(1, cuerpo(&e.design.card, 1), pw, ph);
     o.sin_pie = true;
-    o.sin_arte = true;
+    o.transparente = capa == Some(1);
+    o.sin_arte = capa == Some(1);
     let p = pintar_cara(motor, e, lang, rec, abajo, av, &o)?;
-    pegar(&mut lienzo, &p.px, 0.0, y0, aw, region_h, Giro::Izquierda);
+    let t = pegar(&mut lienzo, &p.px, 0.0, y0, aw, region_h, Giro::Derecha);
+    if capa == Some(1) {
+        // Girada, la extensión del difuminado no va hacia abajo: sin ella.
+        hueco = p
+            .arte
+            .map(|a| (hueco_pegado(a, &p.px, t, &lienzo), 0.0, Giro::Derecha));
+    }
     avisos.extend(p.avisos);
     faltan.extend(p.faltan);
     pie_suelto(motor, e, lang, rec, &mut lienzo, &mut faltan)?;
@@ -385,8 +456,9 @@ fn secuela(
         px: lienzo,
         avisos,
         faltan,
-        arte: None,
-        arte_extension: 0.0,
+        arte: hueco.map(|h| h.0),
+        arte_extension: hueco.map_or(0.0, |h| h.1),
+        arte_giro: hueco.map_or(0.0, |h| h.2.grados()),
     })
 }
 
@@ -431,6 +503,7 @@ fn pie_suelto(
 /// Flip: media carta arriba y la otra girada 180°, con el arte en medio.
 /// Las dos mitades se pintan sobre la carta entera (el layout `flip` solo
 /// usa la mitad de arriba) y la segunda se gira.
+#[allow(clippy::too_many_arguments)]
 fn flip(
     motor: &mut Motor,
     e: &DisenoEfectivo,
@@ -438,22 +511,30 @@ fn flip(
     rec: &Recursos<'_>,
     ancho: u32,
     alto: u32,
+    capa: Option<usize>,
 ) -> Result<Pieza, DisenoError> {
-    let mut lienzo = Pixmap::new(ancho, alto).ok_or(DisenoError::Lienzo)?;
-    lienzo.fill(tiny_skia::Color::BLACK);
+    let mut lienzo = lienzo_compuesto(ancho, alto, capa)?;
     let (aw, ah) = (ancho as f32, alto as f32);
     let mut avisos = Vec::new();
     let mut faltan = Vec::new();
+    // La ilustración (la de la primera mitad) va en la pieza de arriba.
+    let mut hueco = None;
     for cara in [0usize, 1] {
         let mut av = Vec::new();
         let est = estilo(rec, e, Some("flip"), &mut av)?;
         let mut o = Opciones::de(cara, Cuerpo::Texto, ancho, alto);
+        let quitar = cara == 0 && capa == Some(0);
         o.sin_pie = true;
-        o.transparente = cara == 1;
-        o.sin_arte = cara == 1;
+        o.transparente = cara == 1 || quitar;
+        o.sin_arte = cara == 1 || quitar;
         let p = pintar_cara(motor, e, lang, rec, est, av, &o)?;
         let giro = if cara == 0 { Giro::Nada } else { Giro::Media };
-        pegar(&mut lienzo, &p.px, 0.0, 0.0, aw, ah, giro);
+        let t = pegar(&mut lienzo, &p.px, 0.0, 0.0, aw, ah, giro);
+        if quitar {
+            hueco = p
+                .arte
+                .map(|a| (hueco_pegado(a, &p.px, t, &lienzo), p.arte_extension));
+        }
         avisos.extend(p.avisos);
         faltan.extend(p.faltan);
     }
@@ -462,8 +543,9 @@ fn flip(
         px: lienzo,
         avisos,
         faltan,
-        arte: None,
-        arte_extension: 0.0,
+        arte: hueco.map(|h| h.0),
+        arte_extension: hueco.map_or(0.0, |h| h.1),
+        arte_giro: 0.0,
     })
 }
 
@@ -480,16 +562,19 @@ fn apaisada(
     ancho: u32,
     alto: u32,
     indicador: Option<Indicador>,
+    capa: Option<usize>,
 ) -> Result<Pieza, DisenoError> {
     let mut av = Vec::new();
     let est = estilo(rec, e, Some(layout), &mut av)?;
     // Apaisada: su ancho es el alto de la carta.
     let mut o = Opciones::de(cara, cuerpo(&e.design.card, cara), alto, ancho);
     o.indicador = indicador;
+    let quitar = capa == Some(cara);
+    o.transparente = quitar;
+    o.sin_arte = quitar;
     let p = pintar_cara(motor, e, lang, rec, est, av, &o)?;
-    let mut lienzo = Pixmap::new(ancho, alto).ok_or(DisenoError::Lienzo)?;
-    lienzo.fill(tiny_skia::Color::BLACK);
-    pegar(
+    let mut lienzo = lienzo_compuesto(ancho, alto, capa)?;
+    let t = pegar(
         &mut lienzo,
         &p.px,
         0.0,
@@ -498,12 +583,17 @@ fn apaisada(
         alto as f32,
         Giro::Izquierda,
     );
+    let hueco = p
+        .arte
+        .filter(|_| quitar)
+        .map(|a| hueco_pegado(a, &p.px, t, &lienzo));
     Ok(Pieza {
         px: lienzo,
         avisos: p.avisos,
         faltan: p.faltan,
-        arte: None,
+        arte: hueco,
         arte_extension: 0.0,
+        arte_giro: Giro::Izquierda.grados(),
     })
 }
 
@@ -552,6 +642,7 @@ fn meld_dorso(
         faltan: p.faltan,
         arte: None,
         arte_extension: 0.0,
+        arte_giro: 0.0,
     })
 }
 
@@ -589,10 +680,15 @@ pub struct CapaVista {
     pub radio: [f32; 2],
     /// La cara del diseño cuya ilustración va en el hueco.
     pub cara: usize,
+    /// Cómo se ve girada la ilustración en el hueco (grados, positivo a la
+    /// derecha): 90 en la mitad de abajo de una Secuela, -90 en las partidas.
+    pub giro: f32,
 }
 
-/// La [`CapaVista`] de una cara, si es una cara normal con hueco para la
-/// ilustración (las compuestas y las grandes, no: esas se pintan enteras).
+/// La [`CapaVista`] de una cara o parte con hueco para la ilustración: en las
+/// compuestas y las grandes, la carta entera con ese hueco transparente y
+/// dónde queda (girado, si la pieza va girada). `None` si la parte no lleva
+/// ilustración propia (la segunda de una flip) o es el dorso de un meld.
 #[allow(clippy::too_many_arguments)]
 pub fn render_capa(
     motor: &mut Motor,
@@ -606,14 +702,24 @@ pub fn render_capa(
     let d = &e.design;
     preparar(motor, rec, lang);
     let (maq, _) = maquetacion(&d.card);
+    // La parte del diseño cuya ilustración se mueve (en las partidas y
+    // Secuelas, una de las dos mitades de la única cara impresa).
+    let parte = cara;
     let cara = cara.min(super::maquetacion::caras_impresas(&d.card) - 1);
-    if !es_simple(e, maq, cara) {
+    let simple = es_simple(e, maq, cara);
+    if !simple && !super::maquetacion::arte_propio(&d.card, parte) {
         return Ok(None);
     }
     let (w_mm, h_mm) = medida(e, card);
     let ancho = ancho_px.max(16);
     let alto = (ancho as f64 * h_mm / w_mm).round() as u32;
-    let pieza = cara_simple(motor, e, lang, rec, maq, cara, ancho, alto, true)?;
+    let (pieza, cara) = if simple {
+        let p = cara_simple(motor, e, lang, rec, maq, cara, ancho, alto, true)?;
+        (p, cara)
+    } else {
+        let p = componer_pieza(motor, e, lang, rec, maq, cara, ancho, alto, Some(parte))?;
+        (p, parte)
+    };
     let Some(arte) = pieza.arte else {
         return Ok(None);
     };
@@ -650,6 +756,7 @@ pub fn render_capa(
             .map_or([0, 0, 0], |i| super::render::color_de_borde(&i)),
         radio: [r / ancho as f32, r / alto as f32],
         cara,
+        giro: pieza.arte_giro,
     }))
 }
 
@@ -679,6 +786,60 @@ fn preparar(motor: &mut Motor, rec: &Recursos<'_>, lang: DesignLang) {
         .collect();
 }
 
+/// La carta entera de una cara, pieza a pieza. Con `capa`, esa cara del
+/// diseño (o parte, en las partidas y Secuelas) va sin ilustración y con el
+/// fondo transparente, y la pieza dice dónde queda su hueco: la vista en
+/// directo de las compuestas.
+#[allow(clippy::too_many_arguments)]
+fn componer_pieza(
+    motor: &mut Motor,
+    e: &DisenoEfectivo,
+    lang: DesignLang,
+    rec: &Recursos<'_>,
+    maq: Maquetacion,
+    cara: usize,
+    ancho: u32,
+    alto: u32,
+    capa: Option<usize>,
+) -> Result<Pieza, DisenoError> {
+    let d = &e.design;
+    Ok(match maq {
+        m if m.es_partida() => partida(motor, e, lang, rec, m, ancho, alto, capa)?,
+        Maquetacion::Secuela => secuela(motor, e, lang, rec, ancho, alto, capa)?,
+        Maquetacion::Flip => flip(motor, e, lang, rec, ancho, alto, capa)?,
+        Maquetacion::Batalla if cara == 0 => apaisada(
+            motor,
+            e,
+            lang,
+            rec,
+            "batalla",
+            0,
+            ancho,
+            alto,
+            Some(Indicador::Sol),
+            capa,
+        )?,
+        Maquetacion::Meld if cara == 1 && d.card.faces.len() > 1 => {
+            meld_dorso(motor, e, lang, rec, ancho, alto)?
+        }
+        Maquetacion::Plano => apaisada(motor, e, lang, rec, "plano", 0, ancho, alto, None, capa)?,
+        Maquetacion::Plan | Maquetacion::Vanguard => {
+            let nombre = if maq == Maquetacion::Plan {
+                "plan"
+            } else {
+                "vanguard"
+            };
+            let mut av = Vec::new();
+            let est = estilo(rec, e, Some(nombre), &mut av)?;
+            let mut o = Opciones::de(0, Cuerpo::Texto, ancho, alto);
+            o.transparente = capa == Some(0);
+            o.sin_arte = capa == Some(0);
+            pintar_cara(motor, e, lang, rec, est, av, &o)?
+        }
+        _ => cara_simple(motor, e, lang, rec, maq, cara, ancho, alto, capa.is_some())?,
+    })
+}
+
 /// Pinta una cara de una carta diseñada.
 #[allow(clippy::too_many_arguments)]
 pub fn render(
@@ -704,38 +865,7 @@ pub fn render(
     let ancho = ancho_px.max(16);
     let alto = (ancho as f64 * h_mm / w_mm).round() as u32;
     let cara = cara.min(super::maquetacion::caras_impresas(&d.card) - 1);
-    let pieza = match maq {
-        m if m.es_partida() => partida(motor, e, lang, rec, m, ancho, alto)?,
-        Maquetacion::Secuela => secuela(motor, e, lang, rec, ancho, alto)?,
-        Maquetacion::Flip => flip(motor, e, lang, rec, ancho, alto)?,
-        Maquetacion::Batalla if cara == 0 => apaisada(
-            motor,
-            e,
-            lang,
-            rec,
-            "batalla",
-            0,
-            ancho,
-            alto,
-            Some(Indicador::Sol),
-        )?,
-        Maquetacion::Meld if cara == 1 && d.card.faces.len() > 1 => {
-            meld_dorso(motor, e, lang, rec, ancho, alto)?
-        }
-        Maquetacion::Plano => apaisada(motor, e, lang, rec, "plano", 0, ancho, alto, None)?,
-        Maquetacion::Plan | Maquetacion::Vanguard => {
-            let nombre = if maq == Maquetacion::Plan {
-                "plan"
-            } else {
-                "vanguard"
-            };
-            let mut av = Vec::new();
-            let est = estilo(rec, e, Some(nombre), &mut av)?;
-            let o = Opciones::de(0, Cuerpo::Texto, ancho, alto);
-            pintar_cara(motor, e, lang, rec, est, av, &o)?
-        }
-        _ => cara_simple(motor, e, lang, rec, maq, cara, ancho, alto, false)?,
-    };
+    let pieza = componer_pieza(motor, e, lang, rec, maq, cara, ancho, alto, None)?;
     avisos.extend(pieza.avisos);
     let mut faltan = pieza.faltan;
     faltan.retain(|s| !matches!(s.as_str(), "PINCEL" | "ESTRELLA"));
@@ -1118,6 +1248,39 @@ mod tests {
             let media = dif as f64 / (w * h * 3) as f64;
             assert!(media < 1.0, "{estilo:?}: diferencia media {media}");
         }
+    }
+
+    /// La capa montada como la monta la pantalla (negro, la ilustración, aquí
+    /// roja y lisa, en su hueco, y la capa encima) frente a la carta entera:
+    /// diferencia media por canal.
+    fn montada_frente_a_entera(capa: &CapaVista, entera: &RgbaImage) -> f64 {
+        let (w, h) = entera.dimensions();
+        let [ax, ay, aw, ah] = capa.arte;
+        let (x0, y0) = (ax * w as f32, ay * h as f32);
+        let (x1, y1) = (x0 + aw * w as f32, y0 + ah * h as f32);
+        let mut dif = 0u64;
+        for (x, y, p) in capa.imagen.enumerate_pixels() {
+            let (fx, fy) = (x as f32 + 0.5, y as f32 + 0.5);
+            let fondo = if fx >= x0 && fx < x1 && fy >= y0 && fy < y1 {
+                [220.0, 30.0, 30.0]
+            } else {
+                [0.0, 0.0, 0.0]
+            };
+            let a = p[3] as f32 / 255.0;
+            let q = entera.get_pixel(x, y);
+            if q[3] == 0 {
+                continue;
+            }
+            for k in 0..3 {
+                let m = p[k] as f32 * a + fondo[k] * (1.0 - a);
+                dif += (m - q[k] as f32).abs() as u64;
+            }
+        }
+        dif as f64 / (w * h * 3) as f64
+    }
+
+    #[test]
+    fn las_compuestas_tienen_capa_de_cada_parte_con_su_giro() {
         let pack = Pack::de_fabrica().unwrap();
         let s = simbolos(&["2", "W"]);
         let rec = Recursos {
@@ -1127,19 +1290,70 @@ mod tests {
         };
         let mut motor = Motor::de_fabrica().unwrap();
         let ancho = 400;
-        // En las compuestas no hay capa: se pintan enteras.
-        let partida = con_layout("split", 2);
-        assert!(render_capa(
-            &mut motor,
-            &partida,
-            0,
-            DesignLang::Es,
-            &rec,
-            CardSize::MTG,
-            ancho
-        )
-        .unwrap()
-        .is_none());
+        let con_arte = |mut e: DisenoEfectivo| {
+            let arte = e.design.faces[0].art.clone();
+            for f in &mut e.design.faces {
+                f.art = arte.clone();
+            }
+            e
+        };
+        let partida = con_arte(con_layout("split", 2));
+        let mut secuela = con_arte(con_layout("split", 2));
+        secuela.design.card.keywords.push("Aftermath".into());
+        let flip = con_arte(con_layout("flip", 2));
+        // (diseño, parte, giro esperado o sin capa)
+        for (nombre, e, parte, giro) in [
+            ("partida", &partida, 0, Some(-90.0)),
+            ("partida", &partida, 1, Some(-90.0)),
+            ("secuela", &secuela, 0, Some(0.0)),
+            ("secuela", &secuela, 1, Some(90.0)),
+            ("flip", &flip, 0, Some(0.0)),
+            ("flip", &flip, 1, None),
+        ] {
+            let capa = render_capa(
+                &mut motor,
+                e,
+                parte,
+                DesignLang::Es,
+                &rec,
+                CardSize::MTG,
+                ancho,
+            )
+            .unwrap();
+            let Some(giro) = giro else {
+                assert!(capa.is_none(), "{nombre} {parte}");
+                continue;
+            };
+            let capa = capa.unwrap();
+            assert_eq!((capa.cara, capa.giro), (parte, giro), "{nombre} {parte}");
+            let entera = render(
+                &mut motor,
+                e,
+                0,
+                DesignLang::Es,
+                &rec,
+                CardSize::MTG,
+                ancho,
+                Salida::Pantalla,
+            )
+            .unwrap()
+            .imagen;
+            assert_eq!(capa.imagen.dimensions(), entera.dimensions());
+            let media = montada_frente_a_entera(&capa, &entera);
+            assert!(media < 1.5, "{nombre} {parte}: diferencia media {media}");
+        }
+        // Dónde caen: la primera mitad de una partida, abajo; la segunda,
+        // arriba; la de abajo de una Secuela, abajo y de pie.
+        let hueco = |e: &DisenoEfectivo, parte: usize, motor: &mut Motor| {
+            render_capa(motor, e, parte, DesignLang::Es, &rec, CardSize::MTG, ancho)
+                .unwrap()
+                .unwrap()
+                .arte
+        };
+        assert!(hueco(&partida, 0, &mut motor)[1] > 0.5);
+        assert!(hueco(&partida, 1, &mut motor)[1] < 0.5);
+        let [_, y, w, h] = hueco(&secuela, 1, &mut motor);
+        assert!(y > 0.55 && w * 63.0 < h * 88.0, "{y} {w} {h}");
     }
 
     #[test]
@@ -1417,6 +1631,14 @@ mod tests {
         pegar(&mut d, &pieza(), 0.0, 0.0, 20.0, 40.0, Giro::Izquierda);
         assert!(rojo(&d, 2, 20));
         assert!(azul(&d, 17, 20));
+    }
+
+    #[test]
+    fn girar_a_la_derecha_deja_lo_de_arriba_a_la_derecha() {
+        let mut d = Pixmap::new(20, 40).unwrap();
+        pegar(&mut d, &pieza(), 0.0, 0.0, 20.0, 40.0, Giro::Derecha);
+        assert!(azul(&d, 2, 20));
+        assert!(rojo(&d, 17, 20));
     }
 
     #[test]

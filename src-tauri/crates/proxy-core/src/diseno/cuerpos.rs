@@ -879,123 +879,421 @@ impl Carta<'_> {
     }
 }
 
+/// Grosor de las paredes del plano de una mazmorra (mm).
+const PARED: f32 = 1.05;
+/// Ancho de una puerta (mm).
+const PUERTA: f32 = 3.0;
+/// Margen del texto dentro de una sala, aparte de la pared (mm).
+const MARGEN_SALA: f32 = 0.7;
+/// Lado de las losas del suelo (mm).
+const LOSA: f32 = 2.2;
+
+/// El texto de una sala maquetado a un tamaño.
+struct TextoSala {
+    nombre: Bloque,
+    reglas: CajaTexto,
+    /// Nombre y texto en un solo renglón, uno al lado del otro.
+    en_linea: Option<Bloque>,
+}
+
+impl TextoSala {
+    /// Alto que necesita (px).
+    fn alto(&self, hueco: f32) -> f32 {
+        match &self.en_linea {
+            Some(t) => self.nombre.alto.max(t.alto),
+            None => self.nombre.alto + hueco + self.reglas.alto,
+        }
+    }
+}
+
 impl Carta<'_> {
-    /// Las salas de una mazmorra en filas, unidas por flechas, dentro de la
-    /// caja (mm). Cada sala lleva su nombre y su texto, que se ajusta solo.
+    /// El plano de una mazmorra dentro de la caja (mm), como en las cartas
+    /// impresas: salas pegadas unas a otras, paredes del color del marco,
+    /// suelo de losas y una puerta (con su flecha) en cada pared que se
+    /// cruza; la entrada y la salida quedan abiertas en la pared de fuera.
+    /// Todas las salas llevan el mismo tamaño de letra: el mayor con el que
+    /// caben (cada fila mide lo que piden sus salas y se reparte lo que sobra).
+    /// Si no caben, las salas con poco texto van en un renglón («Dungeon
+    /// Level  Scry 1.», como en la carta) antes de bajar la letra.
     pub(super) fn pintar_mazmorra(
         &mut self,
+        nota: &[String],
         salas: &[estructura::Sala],
         caja: super::render::Caja,
         est: &Estilo,
         tinta: Color,
     ) {
-        let filas = estructura::filas_de_mazmorra(salas);
-        let n = filas.len().max(1) as f32;
-        let hueco_y = 1.9;
-        let alto_fila = (caja.h - hueco_y * (n - 1.0)) / n;
-        let hueco_x = 1.2;
-        // Dónde queda cada sala (mm).
-        let mut sitio = vec![(0.0f32, 0.0f32, 0.0f32, 0.0f32); salas.len()];
-        for (r, fila) in filas.iter().enumerate() {
-            let k = fila.len().max(1) as f32;
-            let w = ((caja.w - hueco_x * (k - 1.0)) / k).min(caja.w * 0.72);
-            let total = w * k + hueco_x * (k - 1.0);
-            let x0 = caja.x + (caja.w - total) / 2.0;
-            let y = caja.y + r as f32 * (alto_fila + hueco_y);
-            for (j, &i) in fila.iter().enumerate() {
-                sitio[i] = (x0 + j as f32 * (w + hueco_x), y, w, alto_fila);
-            }
+        let plano = estructura::plano_de_mazmorra(salas);
+        if plano.filas == 0 {
+            return;
         }
-        let t = super::render::hex(tinta);
-        // Flechas primero, por debajo de las salas.
-        let mut flechas = String::new();
-        for (i, s) in salas.iter().enumerate() {
-            let (x, y, w, h) = sitio[i];
-            for d in &s.lleva_a {
-                let Some(j) = salas.iter().position(|o| &o.nombre == d) else {
-                    continue;
-                };
-                let (xj, yj, wj, _) = sitio[j];
-                let (ax, ay, bx, by) = (x + w / 2.0, y + h, xj + wj / 2.0, yj);
-                flechas.push_str(&format!(
-                    r#"<line x1="{ax}" y1="{ay}" x2="{bx}" y2="{b2}" stroke="{t}" stroke-opacity="0.85" stroke-width="0.32"/><path d="M{l},{p} L{bx},{by} L{r},{p} Z" fill="{t}" fill-opacity="0.9"/>"#,
-                    b2 = by - 0.5,
-                    l = bx - 0.55,
-                    r = bx + 0.55,
-                    p = by - 0.75,
-                ));
-            }
-        }
-        self.forma(&flechas);
-        let mut cajas = String::new();
-        for &(x, y, w, h) in &sitio {
-            cajas.push_str(&format!(
-                r#"<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="0.8" fill="{t}" fill-opacity="0.10" stroke="{t}" stroke-opacity="0.65" stroke-width="0.22"/>"#
-            ));
-        }
-        self.forma(&cajas);
+        let (kx, ky) = (self.l.kx, self.l.ky);
         let centro = Estilo {
             alinear: texto::Alinear::Centro,
             ..est.clone()
         };
-        let pad = 0.5;
-        for (i, s) in salas.iter().enumerate() {
-            let (x, y, w, h) = sitio[i];
-            let (px, py, pw) = (
-                self.l.x(x + pad),
-                self.l.y(y + pad * 0.6),
-                self.l.x(w - 2.0 * pad),
-            );
-            let nombre = vec![Trozo::Texto {
-                texto: s.nombre.clone(),
-                cursiva: false,
-            }];
-            let b =
-                self.motor
-                    .m
-                    .maquetar(&mut self.motor.letras, &nombre, &negrita(&centro), Some(pw));
-            let alto_nombre = b.alto;
-            self.faltan.extend(pintar_bloque(
-                &mut self.l.px.as_mut(),
-                &b,
-                px,
-                py,
-                Pincel::default(),
-                self.rec.simbolos,
-            ));
-            let reglas = texto::reglas(&s.texto);
-            let disponible = self.l.y(h - pad * 1.2) - alto_nombre;
-            let a = ajustar_reglas(
+        // La nota (Undercity) va encima del plano, en cursiva.
+        let mut mapa = caja;
+        if !nota.is_empty() {
+            let parrafos: Vec<Parrafo> = nota
+                .iter()
+                .map(|l| {
+                    vec![Trozo::Texto {
+                        texto: l.clone(),
+                        cursiva: true,
+                    }]
+                })
+                .collect();
+            let c = caja_de_reglas(
                 &mut self.motor.m,
                 &mut self.motor.letras,
-                &reglas,
+                &parrafos,
                 &[],
-                &centro,
-                pw,
-                disponible,
-                centro.tam * 0.6,
-                self.l.x(0.1 * super::MM_POR_PT),
+                &centro.con_tam(centro.tam * 0.9),
+                (caja.w - 2.0 * MARGEN_SALA) * kx,
+                Separaciones::default(),
             );
-            if a.sobra > 0.0 {
+            let alto = c.alto / ky + 0.8;
+            self.faltan.extend(pintar_caja(
+                &mut self.l.px.as_mut(),
+                &c,
+                (caja.x + MARGEN_SALA) * kx,
+                (caja.y + 0.3) * ky,
+                (caja.w - 2.0 * MARGEN_SALA) * kx,
+                tinta,
+                self.rec.simbolos,
+            ));
+            mapa.y += alto;
+            mapa.h -= alto;
+        }
+        let n = salas.len();
+        let sitios = &plano.sitios;
+        // Lo que se come la pared de cada lado: entera la de fuera, la mitad
+        // la que se comparte.
+        let lado = |exterior: bool| if exterior { PARED } else { PARED / 2.0 } + MARGEN_SALA;
+        let ancho_util: Vec<f32> = sitios
+            .iter()
+            .map(|s| (mapa.w * (s.x1 - s.x0) - lado(s.x0 <= 0.0) - lado(s.x1 >= 1.0)).max(2.0) * kx)
+            .collect();
+        let reglas: Vec<Vec<Parrafo>> = salas.iter().map(|s| texto::reglas(&s.texto)).collect();
+        let maquetar = |c: &mut Carta<'_>, tam: f32, en_linea: bool| -> Vec<TextoSala> {
+            let nombre_est = negrita(&centro).con_tam(tam * 1.12);
+            let reglas_est = centro.con_tam(tam);
+            (0..n)
+                .map(|i| {
+                    let nombre_p = vec![Trozo::Texto {
+                        texto: salas[i].nombre.clone(),
+                        cursiva: false,
+                    }];
+                    let nombre = c.motor.m.maquetar(
+                        &mut c.motor.letras,
+                        &nombre_p,
+                        &nombre_est,
+                        Some(ancho_util[i]),
+                    );
+                    let caja = caja_de_reglas(
+                        &mut c.motor.m,
+                        &mut c.motor.letras,
+                        &reglas[i],
+                        &[],
+                        &reglas_est,
+                        ancho_util[i],
+                        Separaciones::default(),
+                    );
+                    let en_linea = (en_linea && reglas[i].len() == 1)
+                        .then(|| {
+                            let inicio = Estilo {
+                                alinear: texto::Alinear::Inicio,
+                                ..reglas_est.clone()
+                            };
+                            let solo = Estilo {
+                                alinear: texto::Alinear::Inicio,
+                                ..nombre_est.clone()
+                            };
+                            let a = c
+                                .motor
+                                .m
+                                .maquetar(&mut c.motor.letras, &nombre_p, &solo, None);
+                            let b = c.motor.m.maquetar(
+                                &mut c.motor.letras,
+                                &reglas[i][0],
+                                &inicio,
+                                None,
+                            );
+                            (a.ancho + tam * 0.9 + b.ancho <= ancho_util[i]).then_some((a, b))
+                        })
+                        .flatten();
+                    match en_linea {
+                        Some((a, b)) => TextoSala {
+                            nombre: a,
+                            reglas: caja,
+                            en_linea: Some(b),
+                        },
+                        None => TextoSala {
+                            nombre,
+                            reglas: caja,
+                            en_linea: None,
+                        },
+                    }
+                })
+                .collect()
+        };
+        // El alto de cada fila (mm) para unos textos.
+        let altos = |textos: &[TextoSala], tam: f32| -> Vec<f32> {
+            let mut h = vec![0.0f32; plano.filas];
+            let pide = |i: usize| {
+                let s = sitios[i];
+                textos[i].alto(tam * 0.25) / ky
+                    + lado(s.fila0 == 0)
+                    + lado(s.fila1 + 1 == plano.filas)
+            };
+            for (i, s) in sitios.iter().enumerate() {
+                if s.fila0 == s.fila1 {
+                    h[s.fila0] = h[s.fila0].max(pide(i));
+                }
+            }
+            let minimo = tam * 1.4 / ky + 2.0 * lado(false);
+            for v in &mut h {
+                *v = v.max(minimo);
+            }
+            // Las salas de varias filas: si no les basta, se reparte lo que
+            // falta entre sus filas.
+            for (i, s) in sitios.iter().enumerate() {
+                if s.fila0 == s.fila1 {
+                    continue;
+                }
+                let tiene: f32 = h[s.fila0..=s.fila1].iter().sum();
+                let falta = pide(i) - tiene;
+                if falta > 0.0 {
+                    let k = (s.fila1 - s.fila0 + 1) as f32;
+                    for v in &mut h[s.fila0..=s.fila1] {
+                        *v += falta / k;
+                    }
+                }
+            }
+            h
+        };
+        let cabe = |h: &[f32]| h.iter().sum::<f32>() <= mapa.h;
+        let tam0 = centro.tam;
+        let tam_min = (tam0 * 0.55).max(4.0);
+        let mut elegido = None;
+        for en_linea in [false, true] {
+            let t = maquetar(self, tam0, en_linea);
+            let h = altos(&t, tam0);
+            if cabe(&h) {
+                elegido = Some((t, h, tam0));
+                break;
+            }
+        }
+        if elegido.is_none() {
+            // Búsqueda binaria sobre el tamaño, de 0,1 pt en 0,1 pt.
+            let paso = 0.1 * super::MM_POR_PT * kx;
+            let pasos = ((tam0 - tam_min) / paso).floor().max(1.0) as u32;
+            let (mut lo, mut hi) = (1u32, pasos);
+            while lo <= hi {
+                let mid = (lo + hi) / 2;
+                let tam = tam0 - mid as f32 * paso;
+                let t = maquetar(self, tam, true);
+                let h = altos(&t, tam);
+                if cabe(&h) {
+                    elegido = Some((t, h, tam));
+                    hi = mid - 1;
+                } else {
+                    lo = mid + 1;
+                }
+            }
+        }
+        let (textos, mut alto_fila, tam) = match elegido {
+            Some(e) => e,
+            None => {
+                let t = maquetar(self, tam_min, true);
+                let h = altos(&t, tam_min);
                 let aviso = super::modelo::Aviso::TextoNoCabe {
                     hueco: "reglas".into(),
-                    sobra: f64::from(a.sobra / self.l.ky),
+                    sobra: f64::from(h.iter().sum::<f32>() - mapa.h),
                 };
                 if !self.avisos.contains(&aviso) {
                     self.avisos.push(aviso);
                 }
+                (t, h, tam_min)
             }
-            let libre = ((disponible - a.caja.alto) / 2.0).max(0.0);
-            let simbolos = self.rec.simbolos;
-            self.faltan.extend(pintar_caja(
-                &mut self.l.px.as_mut(),
-                &a.caja,
-                px,
-                py + alto_nombre + libre,
-                pw,
-                tinta,
-                simbolos,
+        };
+        // Lo que sobra, repartido en proporción: las filas de un renglón
+        // siguen siendo pasillos y las salas grandes, grandes.
+        let total: f32 = alto_fila.iter().sum();
+        if total > 0.0 {
+            let k = mapa.h / total;
+            for v in &mut alto_fila {
+                *v *= k;
+            }
+        }
+        let mut ys = vec![mapa.y];
+        for h in &alto_fila {
+            ys.push(ys[ys.len() - 1] + h);
+        }
+        let x_de = |f: f32| mapa.x + f * mapa.w;
+
+        // ── Suelo, roca, paredes y puertas.
+        let t = super::render::hex(tinta);
+        let suelo_claro = super::render::luminancia(tinta) < 0.5;
+        let pared = self
+            .vars
+            .get(if suelo_claro { "oscuro" } else { "medio" })
+            .cloned()
+            .unwrap_or_else(|| "#2c2c2c".into());
+        let mut svg = format!(
+            r#"<pattern id="losas" patternUnits="userSpaceOnUse" x="{x}" y="{y}" width="{LOSA}" height="{LOSA}"><path d="M{LOSA},0 V{LOSA} H0" fill="none" stroke="{t}" stroke-opacity="0.10" stroke-width="0.07"/></pattern><rect x="{x}" y="{y}" width="{w}" height="{h}" fill="url(#losas)"/>"#,
+            x = mapa.x,
+            y = mapa.y,
+            w = mapa.w,
+            h = mapa.h,
+        );
+        let mut muro = |x0: f32, y0: f32, x1: f32, y1: f32| {
+            if x1 - x0 > 0.01 && y1 - y0 > 0.01 {
+                svg.push_str(&format!(
+                    r##"<rect x="{x0}" y="{y0}" width="{w}" height="{h}" fill="{pared}" stroke="#000" stroke-opacity="0.45" stroke-width="0.1"/>"##,
+                    w = x1 - x0,
+                    h = y1 - y0,
+                ));
+            }
+        };
+        // Roca: lo que ninguna sala ocupa.
+        for r in 0..plano.filas {
+            let ocupado: Vec<(f32, f32)> = sitios
+                .iter()
+                .filter(|s| s.fila0 <= r && s.fila1 >= r)
+                .map(|s| (s.x0, s.x1))
+                .collect();
+            for (a, b) in estructura::tramos_libres(&ocupado) {
+                muro(x_de(a), ys[r], x_de(b), ys[r + 1]);
+            }
+        }
+        let e = PARED / 2.0;
+        // Paredes entre filas, sin las salas que siguen abajo ni las puertas.
+        for r in 0..plano.filas.saturating_sub(1) {
+            let mut abierto: Vec<(f32, f32)> = sitios
+                .iter()
+                .filter(|s| s.fila0 <= r && s.fila1 > r)
+                .map(|s| (s.x0, s.x1))
+                .collect();
+            for p in plano.puertas.iter().filter(|p| p.fila == r) {
+                let m = PUERTA / 2.0 / mapa.w;
+                abierto.push((p.x - m, p.x + m));
+            }
+            for (a, b) in estructura::tramos_libres(&abierto) {
+                let (xa, xb) = (
+                    (x_de(a) - e).max(mapa.x),
+                    (x_de(b) + e).min(mapa.x + mapa.w),
+                );
+                muro(xa, ys[r + 1] - e, xb, ys[r + 1] + e);
+            }
+        }
+        // Paredes entre salas de la misma fila.
+        for s in sitios {
+            for x in [s.x0, s.x1] {
+                if x > 0.001 && x < 0.999 {
+                    muro(x_de(x) - e, ys[s.fila0], x_de(x) + e, ys[s.fila1 + 1]);
+                }
+            }
+        }
+        // La pared de fuera, abierta en la entrada y en la salida.
+        let (x0, y0, x1, y1) = (mapa.x, mapa.y, mapa.x + mapa.w, mapa.y + mapa.h);
+        let con_puertas = !plano.puertas.is_empty();
+        let abiertas = |fila: usize, ultima: bool| -> Vec<(f32, f32)> {
+            if !con_puertas {
+                return Vec::new();
+            }
+            sitios
+                .iter()
+                .enumerate()
+                .filter(|(i, s)| {
+                    if ultima {
+                        s.fila1 == fila && salas[*i].lleva_a.is_empty()
+                    } else {
+                        s.fila0 == fila && *i == 0
+                    }
+                })
+                .map(|(_, s)| {
+                    let c = (s.x0 + s.x1) / 2.0;
+                    let m = PUERTA / 2.0 / mapa.w;
+                    (c - m, c + m)
+                })
+                .collect()
+        };
+        for (a, b) in estructura::tramos_libres(&abiertas(0, false)) {
+            muro(x_de(a), y0, x_de(b), y0 + PARED);
+        }
+        for (a, b) in estructura::tramos_libres(&abiertas(plano.filas - 1, true)) {
+            muro(x_de(a), y1 - PARED, x_de(b), y1);
+        }
+        muro(x0, y0, x0 + PARED, y1);
+        muro(x1 - PARED, y0, x1, y1);
+        // Las puertas: una flecha hacia la sala de abajo.
+        for p in &plano.puertas {
+            let (cx, cy) = (x_de(p.x), ys[p.fila + 1]);
+            svg.push_str(&format!(
+                r##"<path d="M{a},{b} L{c},{b} L{cx},{d} Z" fill="#f4f4f4" stroke="#000" stroke-opacity="0.8" stroke-width="0.14" stroke-linejoin="round"/>"##,
+                a = cx - 0.95,
+                b = cy - 0.5,
+                c = cx + 0.95,
+                d = cy + 0.65,
             ));
+        }
+        self.forma(&svg);
+
+        // ── Los textos, centrados en cada sala.
+        for (i, s) in sitios.iter().enumerate() {
+            let ix = x_de(s.x0) + lado(s.x0 <= 0.0);
+            let iy = ys[s.fila0] + lado(s.fila0 == 0);
+            let iw = ancho_util[i] / kx;
+            let ih = ys[s.fila1 + 1] - lado(s.fila1 + 1 == plano.filas) - iy;
+            let tx = &textos[i];
+            let alto = tx.alto(tam * 0.25) / ky;
+            let y = iy + ((ih - alto) / 2.0).max(0.0);
+            match &tx.en_linea {
+                Some(reglas) => {
+                    let ancho = (tx.nombre.ancho + tam * 0.9 + reglas.ancho) / kx;
+                    let x = ix + (iw - ancho) / 2.0;
+                    // Las dos líneas base a la misma altura.
+                    let base = tx.nombre.base.max(reglas.base);
+                    let arriba = y * ky + (alto * ky - tx.nombre.alto.max(reglas.alto)) / 2.0;
+                    self.faltan.extend(pintar_bloque(
+                        &mut self.l.px.as_mut(),
+                        &tx.nombre,
+                        x * kx,
+                        arriba + base - tx.nombre.base,
+                        Pincel::default(),
+                        self.rec.simbolos,
+                    ));
+                    self.faltan.extend(pintar_bloque(
+                        &mut self.l.px.as_mut(),
+                        reglas,
+                        x * kx + tx.nombre.ancho + tam * 0.9,
+                        arriba + base - reglas.base,
+                        Pincel::default(),
+                        self.rec.simbolos,
+                    ));
+                }
+                None => {
+                    self.faltan.extend(pintar_bloque(
+                        &mut self.l.px.as_mut(),
+                        &tx.nombre,
+                        ix * kx,
+                        y * ky,
+                        Pincel::default(),
+                        self.rec.simbolos,
+                    ));
+                    self.faltan.extend(pintar_caja(
+                        &mut self.l.px.as_mut(),
+                        &tx.reglas,
+                        ix * kx,
+                        y * ky + tx.nombre.alto + tam * 0.25,
+                        ancho_util[i],
+                        tinta,
+                        self.rec.simbolos,
+                    ));
+                }
+            }
         }
     }
 }

@@ -416,21 +416,77 @@ pub fn mazmorra(reglas: &str) -> Vec<Sala> {
         .collect()
 }
 
-/// Las filas de una mazmorra: cada sala en la fila de su camino más largo
-/// desde la primera (las mazmorras oficiales son grafos sin ciclos).
-pub fn filas_de_mazmorra(salas: &[Sala]) -> Vec<Vec<usize>> {
+/// Las líneas de una mazmorra que no son salas (la de Undercity: «You can't
+/// enter this dungeon unless…»). Van encima del plano.
+pub fn nota_de_mazmorra(reglas: &str) -> Vec<String> {
+    limpiar(reglas)
+        .lines()
+        .map(str::trim)
+        .filter(|l| !l.is_empty() && !SALA.is_match(l))
+        .map(str::to_string)
+        .collect()
+}
+
+/// Dónde va una sala en el plano: de qué fila a qué fila (las dos incluidas)
+/// y qué tramo del ancho ocupa (fracciones de 0 a 1).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct SitioSala {
+    pub fila0: usize,
+    pub fila1: usize,
+    pub x0: f32,
+    pub x1: f32,
+}
+
+/// Una puerta: en la pared de debajo de la fila `fila`, a `x` del ancho.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Puerta {
+    pub fila: usize,
+    pub x: f32,
+}
+
+/// El plano de una mazmorra como en las cartas impresas: salas pegadas por
+/// filas, sin huecos entre ellas, y una puerta en cada pared que se cruza.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Plano {
+    pub filas: usize,
+    /// Uno por sala, en el orden del texto.
+    pub sitios: Vec<SitioSala>,
+    pub puertas: Vec<Puerta>,
+}
+
+/// Monta el plano. Cada sala va en la fila de su camino más largo desde la
+/// primera y baja hasta la fila de encima de su primer destino (la Oubliette
+/// de Tomb of Annihilation ocupa dos filas, al lado de las dos salas de su
+/// izquierda); la última llega hasta abajo. En cada fila, las salas nuevas
+/// se reparten a partes iguales el ancho que dejan libre las que vienen de
+/// arriba, cada una lo más cerca posible de las salas de las que viene. Sin
+/// ningún «Leads to» (Baldur's Gate Wilderness), una rejilla sin puertas.
+pub fn plano_de_mazmorra(salas: &[Sala]) -> Plano {
     let n = salas.len();
+    let destinos: Vec<Vec<usize>> = salas
+        .iter()
+        .enumerate()
+        .map(|(i, s)| {
+            s.lleva_a
+                .iter()
+                .filter_map(|d| salas.iter().position(|x| &x.nombre == d))
+                .filter(|&j| j != i)
+                .collect()
+        })
+        .collect();
+    if destinos.iter().all(Vec::is_empty) {
+        return rejilla(n);
+    }
+    // El camino más largo; relajación repetida, como mucho n vueltas (las
+    // mazmorras oficiales son grafos sin ciclos).
     let mut nivel = vec![0usize; n];
-    // Relajación repetida: como mucho n vueltas.
     for _ in 0..n {
         let mut cambio = false;
-        for (i, s) in salas.iter().enumerate() {
-            for d in &s.lleva_a {
-                if let Some(j) = salas.iter().position(|x| &x.nombre == d) {
-                    if nivel[j] < nivel[i] + 1 && j != i {
-                        nivel[j] = nivel[i] + 1;
-                        cambio = true;
-                    }
+        for (i, ds) in destinos.iter().enumerate() {
+            for &j in ds {
+                if nivel[j] < nivel[i] + 1 {
+                    nivel[j] = nivel[i] + 1;
+                    cambio = true;
                 }
             }
         }
@@ -439,11 +495,154 @@ pub fn filas_de_mazmorra(salas: &[Sala]) -> Vec<Vec<usize>> {
         }
     }
     let filas = nivel.iter().copied().max().map_or(0, |m| m + 1);
-    let mut out = vec![Vec::new(); filas];
-    for (i, l) in nivel.iter().enumerate() {
-        out[*l].push(i);
+    let mut fin: Vec<usize> = (0..n)
+        .map(|i| match destinos[i].iter().map(|&j| nivel[j]).min() {
+            Some(m) => m.saturating_sub(1).max(nivel[i]),
+            None => filas - 1,
+        })
+        .collect();
+    let padres: Vec<Vec<usize>> = (0..n)
+        .map(|j| (0..n).filter(|&i| destinos[i].contains(&j)).collect())
+        .collect();
+    let mut x = vec![(0.0f32, 1.0f32); n];
+    for r in 0..filas {
+        let nuevas: Vec<usize> = (0..n).filter(|&i| nivel[i] == r).collect();
+        if nuevas.is_empty() {
+            continue;
+        }
+        let siguen: Vec<usize> = (0..n).filter(|&i| nivel[i] < r && fin[i] >= r).collect();
+        let mut huecos = tramos_libres(&siguen.iter().map(|&i| x[i]).collect::<Vec<_>>());
+        if huecos.is_empty() {
+            // No queda sitio: las que venían de arriba acaban aquí.
+            for &i in &siguen {
+                fin[i] = r - 1;
+            }
+            huecos = vec![(0.0, 1.0)];
+        }
+        let centro = |j: usize, x: &[(f32, f32)]| {
+            let p = &padres[j];
+            if p.is_empty() {
+                0.5
+            } else {
+                p.iter().map(|&i| (x[i].0 + x[i].1) / 2.0).sum::<f32>() / p.len() as f32
+            }
+        };
+        let mut por_hueco: Vec<Vec<(f32, usize)>> = vec![Vec::new(); huecos.len()];
+        for &j in &nuevas {
+            let c = centro(j, &x);
+            let distancia = |&(a, b): &(f32, f32)| {
+                if c < a {
+                    a - c
+                } else if c > b {
+                    c - b
+                } else {
+                    0.0
+                }
+            };
+            let k = (0..huecos.len())
+                .min_by(|&p, &q| distancia(&huecos[p]).total_cmp(&distancia(&huecos[q])))
+                .unwrap_or(0);
+            por_hueco[k].push((c, j));
+        }
+        for (k, mut v) in por_hueco.into_iter().enumerate() {
+            if v.is_empty() {
+                continue;
+            }
+            v.sort_by(|p, q| p.0.total_cmp(&q.0).then(p.1.cmp(&q.1)));
+            let (a, b) = huecos[k];
+            let w = (b - a) / v.len() as f32;
+            for (m, &(_, j)) in v.iter().enumerate() {
+                x[j] = (a + w * m as f32, a + w * (m + 1) as f32);
+            }
+        }
+    }
+    // Una puerta por cada paso de una sala a la de debajo: en medio del
+    // tramo que comparten o, si no comparten, en el borde más cercano.
+    let mut puertas: Vec<Puerta> = Vec::new();
+    for (i, ds) in destinos.iter().enumerate() {
+        for &j in ds {
+            if fin[i] + 1 != nivel[j] {
+                continue;
+            }
+            let (a, b) = (x[i].0.max(x[j].0), x[i].1.min(x[j].1));
+            let px = if b > a {
+                (a + b) / 2.0
+            } else {
+                let m = ((x[i].1 - x[i].0) * 0.2).min(0.05);
+                ((x[j].0 + x[j].1) / 2.0).clamp(x[i].0 + m, x[i].1 - m)
+            };
+            let p = Puerta {
+                fila: fin[i],
+                x: px,
+            };
+            if !puertas
+                .iter()
+                .any(|q| q.fila == p.fila && (q.x - p.x).abs() < 0.01)
+            {
+                puertas.push(p);
+            }
+        }
+    }
+    Plano {
+        filas,
+        sitios: (0..n)
+            .map(|i| SitioSala {
+                fila0: nivel[i],
+                fila1: fin[i],
+                x0: x[i].0,
+                x1: x[i].1,
+            })
+            .collect(),
+        puertas,
+    }
+}
+
+/// Los tramos de 0 a 1 que no tapan los dados.
+pub fn tramos_libres(ocupados: &[(f32, f32)]) -> Vec<(f32, f32)> {
+    let mut o = ocupados.to_vec();
+    o.sort_by(|p, q| p.0.total_cmp(&q.0));
+    let mut out = Vec::new();
+    let mut desde = 0.0f32;
+    for (a, b) in o {
+        if a - desde > 0.001 {
+            out.push((desde, a));
+        }
+        desde = desde.max(b);
+    }
+    if 1.0 - desde > 0.001 {
+        out.push((desde, 1.0));
     }
     out
+}
+
+/// Las salas sin conexiones, en filas de tres (de dos con tres o cuatro
+/// salas); la última fila se reparte el ancho entero.
+fn rejilla(n: usize) -> Plano {
+    let cols = match n {
+        0..=2 => 1,
+        3..=4 => 2,
+        _ => 3,
+    };
+    let filas = n.div_ceil(cols);
+    let sitios = (0..n)
+        .map(|i| {
+            let fila = i / cols;
+            let en_fila = (n - fila * cols).min(cols);
+            let k = (i % cols) as f32;
+            let w = 1.0 / en_fila as f32;
+            SitioSala {
+                fila0: fila,
+                fila1: fila,
+                x0: k * w,
+                x1: (k + 1.0) * w,
+            }
+        })
+        .collect();
+    Plano {
+        filas,
+        sitios,
+        puertas: Vec::new(),
+    }
 }
 
 #[cfg(test)]
@@ -572,18 +771,129 @@ mod tests {
         );
         assert_eq!(s.len(), 9);
         assert_eq!(s[1].lleva_a, ["Goblin Bazaar", "Twisted Caverns"]);
-        let f = filas_de_mazmorra(&s);
+        let p = plano_de_mazmorra(&s);
+        assert_eq!(p.filas, 7);
+        let filas: Vec<(usize, usize)> = p.sitios.iter().map(|x| (x.fila0, x.fila1)).collect();
         assert_eq!(
-            f,
-            vec![
-                vec![0],
-                vec![1],
-                vec![2, 3],
-                vec![4],
-                vec![5, 6],
-                vec![7],
-                vec![8]
+            filas,
+            [
+                (0, 0),
+                (1, 1),
+                (2, 2),
+                (2, 2),
+                (3, 3),
+                (4, 4),
+                (4, 4),
+                (5, 5),
+                (6, 6)
             ]
         );
+        // Las dos salas de en medio, cada una en su mitad.
+        assert_eq!((p.sitios[2].x0, p.sitios[2].x1), (0.0, 0.5));
+        assert_eq!((p.sitios[3].x0, p.sitios[3].x1), (0.5, 1.0));
+        // Dungeon Level abre dos puertas, a la cuarta parte y a las tres
+        // cuartas; Goblin Bazaar y Twisted Caverns, una cada una a Lost Level.
+        let en = |fila: usize| -> Vec<f32> {
+            p.puertas
+                .iter()
+                .filter(|q| q.fila == fila)
+                .map(|q| q.x)
+                .collect()
+        };
+        assert_eq!(en(0), [0.5]);
+        assert_eq!(en(1), [0.25, 0.75]);
+        assert_eq!(en(2), [0.25, 0.75]);
+        assert_eq!(en(5), [0.5]);
+    }
+
+    fn cerca(a: f32, b: f32) -> bool {
+        (a - b).abs() < 0.001
+    }
+
+    #[test]
+    fn la_oubliette_ocupa_dos_filas_como_en_la_carta() {
+        let s = mazmorra(
+            "Trapped Entry — Each player loses 1 life. (Leads to: Veils of Fear, Oubliette)\n\
+             Veils of Fear — Each player loses 2 life. (Leads to: Sandfall Cell)\n\
+             Sandfall Cell — Each player loses 2 life. (Leads to: Cradle of the Death God)\n\
+             Oubliette — Discard a card. (Leads to: Cradle of the Death God)\n\
+             Cradle of the Death God — Create The Atropal.",
+        );
+        let p = plano_de_mazmorra(&s);
+        assert_eq!(p.filas, 4);
+        let o = p.sitios[3];
+        assert_eq!((o.fila0, o.fila1, o.x0, o.x1), (1, 2, 0.5, 1.0));
+        // Sandfall Cell, debajo de Veils of Fear, en el sitio que queda.
+        let c = p.sitios[2];
+        assert_eq!((c.fila0, c.fila1, c.x0, c.x1), (2, 2, 0.0, 0.5));
+        // La puerta de la Oubliette a la Cradle está bajo la fila 2.
+        assert!(p.puertas.iter().any(|q| q.fila == 2 && cerca(q.x, 0.75)));
+        assert!(p.puertas.iter().any(|q| q.fila == 1 && cerca(q.x, 0.25)));
+    }
+
+    #[test]
+    fn las_salas_de_phandelver_se_abren_donde_se_tocan() {
+        let s = mazmorra(
+            "Cave Entrance — Scry 1. (Leads to: Goblin Lair, Mine Tunnels)\n\
+             Goblin Lair — Create a Goblin. (Leads to: Storeroom, Dark Pool)\n\
+             Mine Tunnels — Create a Treasure token. (Leads to: Dark Pool, Fungi Cavern)\n\
+             Storeroom — Put a counter. (Leads to: Temple of Dumathoin)\n\
+             Dark Pool — Each opponent loses 1 life. (Leads to: Temple of Dumathoin)\n\
+             Fungi Cavern — Target creature gets -4/-0. (Leads to: Temple of Dumathoin)\n\
+             Temple of Dumathoin — Draw a card.",
+        );
+        let p = plano_de_mazmorra(&s);
+        let tercio = |i: usize| (p.sitios[i].x0 * 3.0).round() as u32;
+        assert_eq!([tercio(3), tercio(4), tercio(5)], [0, 1, 2]);
+        // Goblin Lair (la mitad izquierda) da al Storeroom y al Dark Pool en
+        // medio de lo que comparten; lo mismo Mine Tunnels.
+        let fila1: Vec<f32> = p
+            .puertas
+            .iter()
+            .filter(|q| q.fila == 1)
+            .map(|q| q.x)
+            .collect();
+        assert_eq!(fila1.len(), 4);
+        for (a, b) in fila1
+            .iter()
+            .zip([1.0 / 6.0, 5.0 / 12.0, 7.0 / 12.0, 5.0 / 6.0])
+        {
+            assert!(cerca(*a, b), "{fila1:?}");
+        }
+    }
+
+    #[test]
+    fn undercity_con_su_nota_y_sin_ella_en_las_salas() {
+        let reglas = "You can't enter this dungeon unless you \"venture into Undercity.\"\n\
+             Secret Entrance — Search your library. (Leads to: Forge, Lost Well)\n\
+             Forge — Put two counters. (Leads to: Trap!, Arena)\n\
+             Lost Well — Scry 2. (Leads to: Arena, Stash)\n\
+             Trap! — Target player loses 5 life. (Leads to: Archives)\n\
+             Arena — Goad target creature. (Leads to: Archives, Catacombs)\n\
+             Stash — Create a Treasure token. (Leads to: Catacombs)\n\
+             Archives — Draw a card. (Leads to: Throne of the Dead Three)\n\
+             Catacombs — Create a Skeleton. (Leads to: Throne of the Dead Three)\n\
+             Throne of the Dead Three — Reveal the top ten cards.";
+        assert_eq!(nota_de_mazmorra(reglas).len(), 1);
+        let s = mazmorra(reglas);
+        assert_eq!(s.len(), 9);
+        let p = plano_de_mazmorra(&s);
+        assert_eq!(p.filas, 5);
+        // Archives a la izquierda y Catacombs a la derecha.
+        assert!(p.sitios[6].x1 <= p.sitios[7].x0 + 0.001);
+        // Ninguna puerta cae fuera de las dos salas que une.
+        assert_eq!(p.puertas.iter().filter(|q| q.fila == 2).count(), 4);
+    }
+
+    #[test]
+    fn sin_conexiones_las_salas_van_en_rejilla() {
+        let texto: Vec<String> = (0..19)
+            .map(|i| format!("Room {i} — Draw a card."))
+            .collect();
+        let p = plano_de_mazmorra(&mazmorra(&texto.join("\n")));
+        assert_eq!(p.filas, 7);
+        assert!(p.puertas.is_empty());
+        let ultima = p.sitios[18];
+        assert_eq!((ultima.fila0, ultima.x0, ultima.x1), (6, 0.0, 1.0));
     }
 }

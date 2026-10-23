@@ -121,6 +121,13 @@ mod tests {
     }
 
     #[test]
+    fn a4_vertical_a_la_medida_de_la_funda_siguen_siendo_3x3() {
+        let (w, h) = PaperFormat::A4.oriented_mm(false);
+        let g = grid(w, h, 65.0, 90.0, 2.0, 5.0, 1.0).unwrap();
+        assert_eq!((g.cols, g.rows), (3, 3));
+    }
+
+    #[test]
     fn a4_apaisado_son_4x2() {
         let g = de(PaperFormat::A4, true);
         assert_eq!((g.cols, g.rows), (4, 2));
