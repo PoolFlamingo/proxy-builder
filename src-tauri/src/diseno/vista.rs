@@ -117,6 +117,10 @@ pub struct CapaInfo {
     pub radio: [f32; 2],
     /// La cara del diseño cuya ilustración va en el hueco.
     pub cara: u32,
+    /// Cómo se ve girada la ilustración en el hueco (grados, positivo a la
+    /// derecha): 90 en la mitad de abajo de una Secuela, -90 en las partidas.
+    #[serde(default)]
+    pub giro: f32,
 }
 
 /// Lados aceptados de la ilustración reducida (`/b/<blob>/<lado>`).
@@ -136,8 +140,8 @@ fn ruta_info_capa(state: &AppState, huella: &str) -> std::path::PathBuf {
         .join(format!("{huella}.json"))
 }
 
-/// Pinta (o saca de la caché) la capa de un diseño. `None` si la cara no la
-/// tiene (compuestas, grandes) o no lleva ilustración.
+/// Pinta (o saca de la caché) la capa de un diseño. `None` si la cara no
+/// lleva ilustración propia o no tiene ilustración.
 pub fn capa(
     state: &AppState,
     d: &CardDesign,
@@ -147,10 +151,17 @@ pub fn capa(
 ) -> AppResult<Option<CapaInfo>> {
     let cols = colecciones_por_id(state)?;
     let mut e = efectivo_de(d, &cols);
-    for f in &mut e.design.faces {
-        if let Some(a) = f.art.as_mut() {
-            a.framing = ArtFraming::default();
-        }
+    // Sin encuadre solo la ilustración que se mueve: así la capa sirve
+    // mientras cambia. La de la otra parte de una compuesta va pintada en la
+    // capa y conserva el suyo (si no, al pasar a la parte 2 la 1 volvía al
+    // encuadre inicial).
+    if let Some(a) = e
+        .design
+        .faces
+        .get_mut(cara as usize)
+        .and_then(|f| f.art.as_mut())
+    {
+        a.framing = ArtFraming::default();
     }
     let h = huella_de(state, &e, cara, lang)?;
     state
@@ -181,6 +192,7 @@ pub fn capa(
         fondo: c.fondo,
         radio: c.radio,
         cara: c.cara as u32,
+        giro: c.giro,
     };
     let _ =
         crate::store::blobs::escribir_atomico(&ruta, &proxy_core::imaging::encode::png(&c.imagen)?);
@@ -587,6 +599,23 @@ mod tests {
             arte_reducido(&s, &"f".repeat(64), 1000).unwrap_err().code,
             ErrorCode::NotFound
         );
+        // Una Secuela: la capa de la parte 2 lleva pintada la ilustración de
+        // la 1 con su encuadre (cambia con él) y no depende del de la 2.
+        d.card.layout = "split".into();
+        d.card.keywords = vec!["Aftermath".into()];
+        d.card.faces.push(d.card.faces[0].clone());
+        d.faces.push(d.faces[0].clone());
+        let p2 = capa(&s, &d, 1, DesignLang::Es, 488).unwrap().unwrap();
+        assert_eq!((p2.cara, p2.giro), (1, 90.0));
+        if let Some(x) = d.faces[1].art.as_mut() {
+            x.framing.zoom = 1.7;
+        }
+        assert_eq!(capa(&s, &d, 1, DesignLang::Es, 488).unwrap().unwrap(), p2);
+        if let Some(x) = d.faces[0].art.as_mut() {
+            x.framing.offset_y = -0.9;
+        }
+        let otra = capa(&s, &d, 1, DesignLang::Es, 488).unwrap().unwrap();
+        assert_ne!(otra.huella, p2.huella);
         let _ = c;
     }
 

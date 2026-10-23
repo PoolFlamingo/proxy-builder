@@ -1,12 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 63 88" width="63" height="88">
 <defs>{{defs}}</defs>
-<!-- Mazmorra: título, banda de arte, tipo y el panel de las salas. -->
+<!-- Mazmorra: el título y, debajo, el panel del plano (sin arte ni tipo, como las impresas). -->
 <path fill-rule="evenodd" fill="#000" d="M-1,-1 H64 V89 H-1 Z M0,0 H63 V77 A6,6 0 0 1 57,83 H6 A6,6 0 0 1 0,77 Z"/>
-<rect x="2.6" y="31.7" width="57.8" height="50.4" fill="{{fondoCaja}}" fill-opacity="{{opacidadCaja}}" stroke="url(#marco)" stroke-width="0.38"/>
+<rect x="0" y="0" width="63" height="83" fill="#0c0c0c"/>
+<rect x="2.6" y="10.4" width="57.8" height="72.0" fill="{{fondoCaja}}" fill-opacity="{{opacidadCaja}}" stroke="url(#marco)" stroke-width="0.38"/>
 <rect x="2.0" y="3.9" width="57.0" height="5.55" rx="1.6" fill="url(#marco)" stroke="#000" stroke-opacity="0.55" stroke-width="0.12"/>
 <rect x="2.0" y="3.9" width="57.0" height="5.55" rx="1.6" fill="url(#brillo)"/>
 <rect x="3.1" y="4.3" width="54.8" height="4.75" rx="1.1" fill="url(#panel)"/>
-<rect x="1.9" y="25.3" width="59.2" height="6.0" rx="1.25" fill="url(#marco)" stroke="#000" stroke-opacity="0.55" stroke-width="0.12"/>
-<rect x="1.9" y="25.3" width="59.2" height="6.0" rx="1.25" fill="url(#brillo)"/>
-<rect x="2.5" y="25.7" width="58.0" height="5.2" rx="0.9" fill="{{tinte}}" fill-opacity="0.94"/>
 </svg>

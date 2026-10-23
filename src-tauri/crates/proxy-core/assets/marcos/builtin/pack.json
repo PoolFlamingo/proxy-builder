@@ -784,9 +784,9 @@
 		"mazmorra": {
 			"arte": {
 				"x": 0,
-				"y": 9.5,
-				"w": 63,
-				"h": 16.0
+				"y": 0,
+				"w": 0,
+				"h": 0
 			},
 			"cajaPorDefecto": "tinte",
 			"capas": [
@@ -803,7 +803,8 @@
 					"rol": "titulo",
 					"mayuscula": 2.15,
 					"color": "#ffffff",
-					"sombra": true
+					"sombra": true,
+					"alinear": "centro"
 				},
 				"coste": {
 					"x": 30.0,
@@ -811,29 +812,13 @@
 					"w": 27.1,
 					"h": 2.35
 				},
-				"tipo": {
-					"x": 3.3,
-					"y": 25.7,
-					"w": 50.6,
-					"h": 5.2,
-					"rol": "tipo",
-					"mayuscula": 1.9,
-					"color": "#ffffff",
-					"sombra": true
-				},
-				"emblema": {
-					"x": 53.9,
-					"y": 26.7,
-					"w": 4.7,
-					"h": 3.2
-				},
 				"reglas": {
-					"x": 3.2,
-					"y": 32.3,
-					"w": 56.6,
-					"h": 49.2,
+					"x": 3.1,
+					"y": 10.9,
+					"w": 56.8,
+					"h": 71.0,
 					"rol": "reglas",
-					"mayuscula": 1.25,
+					"mayuscula": 1.45,
 					"color": "{{tintaCaja}}"
 				},
 				"pie": {
@@ -910,10 +895,10 @@
 		"secuelaAbajo": {
 			"tamano": [33, 63],
 			"arte": {
-				"x": 0,
-				"y": 0,
-				"w": 0,
-				"h": 0
+				"x": 1.6,
+				"y": 6.9,
+				"w": 29.8,
+				"h": 18.6
 			},
 			"cajaPorDefecto": "tinte",
 			"capas": [
@@ -940,7 +925,7 @@
 				},
 				"tipo": {
 					"x": 1.9,
-					"y": 7.2,
+					"y": 26.4,
 					"w": 29.2,
 					"h": 4.6,
 					"rol": "tipo",
@@ -950,9 +935,9 @@
 				},
 				"reglas": {
 					"x": 2.4,
-					"y": 13.2,
+					"y": 32.6,
 					"w": 28.2,
-					"h": 47.6,
+					"h": 28.2,
 					"rol": "reglas",
 					"mayuscula": 1.55,
 					"color": "{{tintaCaja}}"

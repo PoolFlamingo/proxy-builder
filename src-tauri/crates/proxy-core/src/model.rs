@@ -327,8 +327,10 @@ pub fn cuentan(cards: &[DeckCard]) -> (Vec<&DeckCard>, Apartadas) {
 
 // ── Ajustes de impresión ────────────────────────────────────────────────────
 
-/// Tamaño de la carta. Por defecto 63×88 mm (lo que publica Wizards); la
-/// alternativa es 63,5×88,9 (2,5×3,5″).
+/// Tamaño de la carta. Por defecto 63×88 mm (lo que publica Wizards); las
+/// alternativas son 63,5×88,9 (2,5×3,5″) y 65×90, que llena justa una funda:
+/// sale como con 1 mm de sangrado, pero con la imagen entera a ese tamaño en
+/// vez del borde repetido.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
@@ -345,6 +347,10 @@ impl CardSize {
     pub const POKER: CardSize = CardSize {
         width_mm: 63.5,
         height_mm: 88.9,
+    };
+    pub const FUNDA: CardSize = CardSize {
+        width_mm: 65.0,
+        height_mm: 90.0,
     };
 }
 

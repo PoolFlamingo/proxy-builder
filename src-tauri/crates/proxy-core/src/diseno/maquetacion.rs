@@ -126,6 +126,16 @@ pub fn caras_impresas(c: &CardData) -> usize {
     maquetacion(c).0.caras_impresas().min(c.faces.len()).max(1)
 }
 
+/// ¿La cara (o parte) `cara` del diseño se pinta con su propia
+/// ilustración? Cada cara impresa, sí; además, las dos mitades de las
+/// partidas, Fusionar, Habitaciones y Secuelas. La segunda parte de una
+/// aventura, Preparar o flip enseña la de la primera, como las impresas.
+pub fn arte_propio(c: &CardData, cara: usize) -> bool {
+    let (m, _) = maquetacion(c);
+    cara < c.faces.len().max(1)
+        && (cara < caras_impresas(c) || ((m.es_partida() || m == Maquetacion::Secuela) && cara < 2))
+}
+
 /// La maquetación de una carta. El `bool` dice si el layout no se conoce
 /// (cae a `Normal` y se avisa).
 pub fn maquetacion(c: &CardData) -> (Maquetacion, bool) {
@@ -244,6 +254,9 @@ pub struct Resumen {
     /// El texto partido en habilidades, capítulos, niveles… (vacío si es
     /// texto normal o no sigue el patrón).
     pub partes: Vec<Parte>,
+    /// Si esta cara (o parte) lleva su propia ilustración; si no, enseña la
+    /// de la primera (la segunda parte de una aventura o una flip).
+    pub arte_propio: bool,
 }
 
 /// El resumen de una cara de un diseño.
@@ -343,6 +356,7 @@ pub fn resumen(
         maquetacion: m,
         caras_impresas: caras_impresas(&d.card) as u32,
         partes,
+        arte_propio: arte_propio(&d.card, cara),
     }
 }
 

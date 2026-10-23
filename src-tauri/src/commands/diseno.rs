@@ -196,7 +196,9 @@ pub async fn design_register(
 }
 
 /// La carta sin la ilustración y dónde va, para moverla en directo
-/// (`pbimg://…/c/<huella>/<ancho>`). `None` en las compuestas y las grandes.
+/// (`pbimg://…/c/<huella>/<ancho>`). En las compuestas y las grandes, la
+/// carta entera con el hueco de esa parte. `None` si la parte no lleva
+/// ilustración propia.
 #[tauri::command]
 pub async fn design_overlay(
     app: AppHandle,

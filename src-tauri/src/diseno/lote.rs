@@ -6,7 +6,6 @@
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use proxy_core::diseno::maquetacion::maquetacion;
 use proxy_core::diseno::modelo::{CardDesign, Collection, DesignLang};
 use proxy_core::model::DeckCard;
 use serde::Serialize;
@@ -52,15 +51,15 @@ async fn borrador_de(
     let datos = borrador::datos_de(&estado.db, api.as_ref(), &en, lang).await?;
     let mut d = borrador::montar(card, datos, coleccion, usados).design;
     borrador::poner_textos(&mut d, lang);
-    let impresas = maquetacion(&d.card).0.caras_impresas();
     for i in 0..d.faces.len() {
-        // Las mitades y la aventura comparten la ilustración de la carta;
-        // la carta fundida de un meld no tiene la suya aquí.
-        let cara = if i < impresas { i } else { 0 };
+        // La aventura y el flip comparten la ilustración de la carta; las
+        // partidas, Fusionar, Habitaciones y Secuelas se quedan cada una con
+        // su trozo (`desde_scryfall`); la carta fundida de un meld no tiene
+        // la suya aquí.
         if d.card.meld_arriba.is_some() && i == 1 {
             continue;
         }
-        match arte::desde_scryfall(estado, id, cara).await {
+        match arte::desde_scryfall(estado, id, i).await {
             Ok(a) => {
                 if let Some(f) = d.faces.get_mut(i) {
                     f.art = Some(a);

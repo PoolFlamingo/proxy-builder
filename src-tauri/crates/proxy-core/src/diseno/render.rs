@@ -125,7 +125,7 @@ fn mezclar(a: [u8; 4], b: [u8; 4], t: f32) -> [u8; 4] {
     [m(a[0], b[0]), m(a[1], b[1]), m(a[2], b[2]), 255]
 }
 
-fn luminancia(c: [u8; 4]) -> f32 {
+pub(super) fn luminancia(c: [u8; 4]) -> f32 {
     (0.2126 * c[0] as f32 + 0.7152 * c[1] as f32 + 0.0722 * c[2] as f32) / 255.0
 }
 
@@ -2395,6 +2395,9 @@ pub(super) struct Pieza {
     /// Cuánto sigue la ilustración por debajo de su hueco (extensión del
     /// difuminado), en fracciones del alto del lienzo.
     pub(super) arte_extension: f32,
+    /// Cómo se ve girada la ilustración en el hueco (grados, positivo a la
+    /// derecha): la mitad de abajo de una Secuela, 90; una partida, -90.
+    pub(super) arte_giro: f32,
 }
 
 /// Las líneas de la caja de una mazmorra: salas en filas.
@@ -3060,7 +3063,8 @@ pub(super) fn pintar_cara(
         if let Some((h, mut caja)) = c.hueco("reglas") {
             caja.y += e.retoques.rules as f32;
             let (est, _) = c.estilo_texto(&h);
-            c.pintar_mazmorra(&salas, caja, &est, tinta);
+            let nota = estructura::nota_de_mazmorra(&reglas_efectivas(d, cara, lang));
+            c.pintar_mazmorra(&nota, &salas, caja, &est, tinta);
         }
     }
     // Vanguard: los modificadores de mano y vida.
@@ -3108,6 +3112,7 @@ pub(super) fn pintar_cara(
         faltan: c.faltan,
         arte: hueco_arte,
         arte_extension: extension_hueco,
+        arte_giro: 0.0,
     })
 }
 

@@ -14,6 +14,7 @@ pub mod decode;
 pub mod edges;
 pub mod encode;
 pub mod frame;
+pub mod mitades;
 pub mod pipeline;
 pub mod probe;
 

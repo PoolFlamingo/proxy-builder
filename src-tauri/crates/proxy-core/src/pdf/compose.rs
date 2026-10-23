@@ -387,7 +387,7 @@ pub(crate) mod tests {
     /// tamaño sin que esto falle.
     #[test]
     fn la_carta_sale_en_el_pdf_con_su_tamano_en_milimetros() {
-        for card_size in [CardSize::MTG, CardSize::POKER] {
+        for card_size in [CardSize::MTG, CardSize::POKER, CardSize::FUNDA] {
             for duplex in [Duplex::Off, Duplex::LongEdge] {
                 let s = PrintSettings {
                     card_size,
