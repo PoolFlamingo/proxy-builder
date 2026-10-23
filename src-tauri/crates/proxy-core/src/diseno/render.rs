@@ -2110,6 +2110,16 @@ pub(super) fn estilo_para(
     // Las fichas de un pack sin marco de ficha salen con el estilo del propio
     // pack, tal cual, para que se vean como el resto de cartas del tema (nunca
     // con el marco de la casa), y sin aviso.
+    // La clase sin layout propio en el pack: la caja alta, como las demás
+    // cartas con secciones.
+    let layout = match layout {
+        Some("clase")
+            if !base.layouts.contains_key("clase") && rec.pack.layout("clase").is_none() =>
+        {
+            Some("alto")
+        }
+        l => l,
+    };
     let layout = match layout {
         Some("ficha")
             if !base.layouts.contains_key("ficha") && rec.pack.layout("ficha").is_none() =>
@@ -2352,6 +2362,8 @@ pub(super) struct Opciones {
     pub(super) sin_arte: bool,
     /// Aventura: la cara del libro (va dentro de la caja de reglas).
     pub(super) aventura: Option<usize>,
+    /// El libro a la derecha (Preparar) en vez de a la izquierda.
+    pub(super) libro_derecha: bool,
 }
 
 impl Opciones {
@@ -2367,6 +2379,7 @@ impl Opciones {
             sin_pie: false,
             sin_arte: false,
             aventura: None,
+            libro_derecha: false,
         }
     }
 }
@@ -2395,6 +2408,7 @@ fn contenido_de_la_cara(
     if let Some(av) = o.aventura {
         let f = d.card.faces.get(av).cloned().unwrap_or_default();
         return cuerpos::aventura(
+            o.libro_derecha,
             &nombre_efectivo(d, av, lang),
             &f.mana_cost,
             f.type_line.get(lang),

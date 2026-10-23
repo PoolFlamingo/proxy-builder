@@ -81,13 +81,17 @@ pub enum Contenido {
         /// Raya entre secciones.
         rayas: bool,
     },
-    /// Aventura (o presagio): el libro a la izquierda y la criatura a la derecha.
+    /// Aventura (o presagio): el libro a la izquierda y la criatura a la
+    /// derecha. Preparar: al revés, el hechizo a la derecha.
     Aventura {
         cabecera: Parrafo,
         tipo: Parrafo,
+        /// El texto del libro (la otra cara).
         izq: Vec<Parrafo>,
+        /// El texto de la carta.
         der: Vec<Parrafo>,
         sabor: Vec<Parrafo>,
+        libro_derecha: bool,
     },
 }
 
@@ -115,8 +119,13 @@ pub enum Hecho {
         tam: f32,
     },
     Aventura {
+        /// El ancho del libro y dónde empieza.
         ancho_izq: f32,
+        x_libro: f32,
+        /// Dónde empieza el texto de la carta y su ancho.
         x_der: f32,
+        ancho_der: f32,
+        libro_derecha: bool,
         nombre: Bloque,
         tipo: Bloque,
         izq: CajaTexto,
@@ -161,7 +170,21 @@ impl Hecho {
                     }
                 }),
             },
-            Hecho::Aventura { x_der, der, .. } => x_der + ultima(der),
+            Hecho::Aventura {
+                x_der,
+                der,
+                libro_derecha: false,
+                ..
+            } => x_der + ultima(der),
+            // El libro a la derecha llega hasta el borde: la última línea
+            // que cuenta es la más a la derecha de las dos columnas.
+            Hecho::Aventura {
+                x_der,
+                der,
+                x_libro,
+                izq,
+                ..
+            } => (x_der + ultima(der)).max(x_libro + ultima(izq)),
         }
     }
 }
@@ -253,19 +276,29 @@ pub fn maquetar(
             izq,
             der,
             sabor,
+            libro_derecha,
         } => {
             let pad = 0.9 * k;
             let ancho_izq = ancho * 0.48;
-            let x_der = ancho_izq + 1.2 * k;
+            let hueco = 1.2 * k;
+            let (x_libro, x_der) = if *libro_derecha {
+                (ancho - ancho_izq, 0.0)
+            } else {
+                (0.0, ancho_izq + hueco)
+            };
+            let ancho_der = ancho - ancho_izq - hueco;
             let w_izq = ancho_izq - 2.0 * pad;
             let nombre = m.maquetar(letras, cabecera, &negrita(&e), Some(w_izq));
             let tipo_b = m.maquetar(letras, tipo, &e.con_tam(tam * 0.92), Some(w_izq));
             let izq_c = caja_de_reglas(m, letras, izq, &[], &e, w_izq, sep);
-            let der_c = caja_de_reglas(m, letras, der, sabor, &e, ancho - x_der, sep);
+            let der_c = caja_de_reglas(m, letras, der, sabor, &e, ancho_der, sep);
             let alto_izq = 2.0 * pad + nombre.alto + tipo_b.alto + 0.25 * tam + izq_c.alto;
             Hecho::Aventura {
                 ancho_izq,
+                x_libro,
                 x_der,
+                ancho_der,
+                libro_derecha: *libro_derecha,
                 alto: alto_izq.max(der_c.alto),
                 nombre,
                 tipo: tipo_b,
@@ -493,8 +526,10 @@ pub fn contenido(
     }
 }
 
-/// El contenido de una aventura: la cara 1 en el libro y la 0 a la derecha.
+/// El contenido de una aventura: la cara 1 en el libro y la 0 a la derecha
+/// (con `libro_derecha`, como las de Preparar: la 0 a la izquierda).
 pub fn aventura(
+    libro_derecha: bool,
     nombre: &str,
     coste: &str,
     tipo: &str,
@@ -516,6 +551,7 @@ pub fn aventura(
         izq: texto::reglas(&estructura::limpiar(reglas_aventura)),
         der: texto::reglas(&estructura::limpiar(reglas_criatura)),
         sabor,
+        libro_derecha,
     }
 }
 
@@ -662,7 +698,10 @@ impl Carta<'_> {
                 Contenido::Aventura { .. },
                 Hecho::Aventura {
                     ancho_izq,
+                    x_libro,
                     x_der,
+                    ancho_der,
+                    libro_derecha,
                     nombre,
                     tipo,
                     izq,
@@ -673,11 +712,17 @@ impl Carta<'_> {
                 },
             ) => {
                 let pad = 0.9 * self.l.kx;
-                let alto_libro = alto_izq.max(ph);
+                // A la izquierda, el libro llena la caja; a la derecha (Preparar)
+                // se queda por encima de la F/R, que va en esa esquina.
+                let alto_libro = if *libro_derecha {
+                    alto_izq.max(ph - 5.2 * self.l.ky)
+                } else {
+                    alto_izq.max(ph)
+                };
                 // El libro: una página clara con borde.
                 let svg = format!(
                     r##"<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="0.6" fill="{fondo}" fill-opacity="0.16" stroke="{borde}" stroke-opacity="0.7" stroke-width="0.22"/>"##,
-                    x = x,
+                    x = x + x_libro / self.l.kx,
                     y = y,
                     w = ancho_izq / self.l.kx,
                     h = alto_libro / self.l.ky,
@@ -686,11 +731,12 @@ impl Carta<'_> {
                 );
                 self.forma(&svg);
                 let mut yy = py + pad;
+                let bx = px + x_libro;
                 for b in [nombre, tipo] {
                     self.faltan.extend(pintar_bloque(
                         &mut self.l.px.as_mut(),
                         b,
-                        px + pad,
+                        bx + pad,
                         yy,
                         Pincel::default(),
                         self.rec.simbolos,
@@ -702,7 +748,7 @@ impl Carta<'_> {
                 self.faltan.extend(pintar_caja(
                     &mut self.l.px.as_mut(),
                     izq,
-                    px + pad,
+                    bx + pad,
                     yy,
                     ancho_izq - 2.0 * pad,
                     raya,
@@ -713,7 +759,7 @@ impl Carta<'_> {
                     der,
                     px + x_der,
                     py,
-                    pw - x_der,
+                    ancho_der.min(pw - x_der),
                     raya,
                     simbolos,
                 ));
@@ -1175,6 +1221,7 @@ mod tests {
     #[test]
     fn la_aventura_va_en_dos_columnas() {
         let c = aventura(
+            false,
             "Robo en la torre",
             "{1}{U}",
             "Conjuro — Aventura",
@@ -1203,9 +1250,37 @@ mod tests {
     }
 
     #[test]
+    fn preparar_pone_el_hechizo_a_la_derecha() {
+        let c = aventura(
+            true,
+            "Relámpago",
+            "{R}",
+            "Instantáneo",
+            "Hace 3 puntos de daño a cualquier objetivo.",
+            "Daña primero.",
+            Vec::new(),
+        );
+        match hacer(&c) {
+            Hecho::Aventura {
+                ancho_izq,
+                x_libro,
+                x_der,
+                ancho_der,
+                ..
+            } => {
+                assert_eq!(x_der, 0.0);
+                assert!((x_libro + ancho_izq - ANCHO).abs() < 1e-3);
+                // Las dos columnas no se pisan.
+                assert!(x_der + ancho_der <= x_libro + 1e-3);
+            }
+            _ => panic!("se esperaba aventura"),
+        }
+    }
+
+    #[test]
     fn la_cabecera_de_la_aventura_lleva_nombre_y_coste() {
         let Contenido::Aventura { cabecera, tipo, .. } =
-            aventura("Robo", "{1}{U}", "Conjuro", "", "", Vec::new())
+            aventura(false, "Robo", "{1}{U}", "Conjuro", "", "", Vec::new())
         else {
             panic!("se esperaba aventura");
         };

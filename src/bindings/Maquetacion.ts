@@ -3,4 +3,4 @@
 /**
  * Cómo se compone la carta entera.
  */
-export type Maquetacion = "normal" | "ficha" | "planeswalker" | "saga" | "clase" | "caso" | "partida" | "fusionar" | "secuela" | "habitacion" | "aventura" | "flip" | "transformable" | "mdfc" | "batalla" | "meld" | "reversible" | "fichaDosCaras" | "leveler" | "prototipo" | "mutar" | "estacion" | "emblema" | "mazmorra" | "plano" | "plan" | "vanguard";
+export type Maquetacion = "normal" | "ficha" | "planeswalker" | "saga" | "clase" | "caso" | "partida" | "fusionar" | "secuela" | "habitacion" | "aventura" | "preparar" | "flip" | "transformable" | "mdfc" | "batalla" | "meld" | "reversible" | "fichaDosCaras" | "leveler" | "prototipo" | "mutar" | "estacion" | "emblema" | "mazmorra" | "plano" | "plan" | "vanguard";

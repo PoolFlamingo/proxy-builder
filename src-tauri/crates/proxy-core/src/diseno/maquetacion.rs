@@ -27,6 +27,8 @@ pub enum Maquetacion {
     Secuela,
     Habitacion,
     Aventura,
+    /// Preparar: como la aventura, con el hechizo a la derecha.
+    Preparar,
     Flip,
     Transformable,
     Mdfc,
@@ -148,6 +150,7 @@ pub fn maquetacion(c: &CardData) -> (Maquetacion, bool) {
         }
         "flip" => Maquetacion::Flip,
         "adventure" => Maquetacion::Aventura,
+        "prepare" => Maquetacion::Preparar,
         "transform" | "battle" if tiene_palabra(tipo, "Battle") => Maquetacion::Batalla,
         "transform" => Maquetacion::Transformable,
         "modal_dfc" => Maquetacion::Mdfc,
@@ -450,6 +453,14 @@ mod tests {
                     ],
                 ),
                 M::Aventura,
+            ),
+            (
+                carta(
+                    "prepare",
+                    &[],
+                    vec![cara("Creature — Human Wizard", ""), cara("Instant", "")],
+                ),
+                M::Preparar,
             ),
             (
                 carta(
