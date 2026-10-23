@@ -290,8 +290,8 @@ Los usa la Fase 5:
 | Layout | Para qué | Medida |
 |--------|----------|--------|
 | `saga` | Capítulos a la izquierda, arte a la derecha. | 63 × 88 |
-| `mazmorra` | Banda de arte y salas unidas por flechas. | 63 × 88 |
-| `secuelaArriba`, `secuelaAbajo` | Las dos mitades de una Secuela (la de abajo se pega girada). | 63 × 51, 33 × 63 |
+| `mazmorra` | El título y el plano de las salas hasta el pie, sin arte ni línea de tipo (como las impresas). El motor pinta el plano dentro del hueco `reglas`: salas pegadas, paredes con los colores `oscuro`/`medio` de la paleta y puertas con su flecha; el resto del hueco lo pone la capa (su fondo es el suelo). | 63 × 88 |
+| `secuelaArriba`, `secuelaAbajo` | Las dos mitades de una Secuela (la de abajo se pega girada a la derecha, como en las impresas: lo de arriba de su lienzo queda en el borde derecho de la carta). Cada una lleva su ventana de `arte`, con la ilustración de su cara del diseño; un `secuelaAbajo` con el arte a 0 deja la mitad de abajo sin ilustración. | 63 × 51, 33 × 63 |
 | `fusionar` | La franja común de Fusionar. | 88 × 6 |
 | `flip` | La mitad de arriba de una carta flip (la otra es la misma girada 180°). | 63 × 88 |
 | `batalla` | La cara de delante de una batalla, apaisada. | 88 × 63 |
