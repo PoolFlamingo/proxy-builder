@@ -11,10 +11,13 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+      # Los .deb se cachean: el mirror de Ubuntu a veces baja a ~50 kB/s y esos
+      # 55 MB tardaban hasta 20 minutos (el resto del CI son ~3).
       - name: Librerías de Tauri
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          version: 1
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
