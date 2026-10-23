@@ -123,6 +123,7 @@ export const MAQUETACIONES: Record<Maquetacion, string> = {
 	secuela: paraTraducir("Secuela"),
 	habitacion: paraTraducir("Habitación"),
 	aventura: paraTraducir("Aventura"),
+	preparar: paraTraducir("Preparar"),
 	flip: paraTraducir("Flip (Kamigawa)"),
 	transformable: paraTraducir("Transformable (dos caras)"),
 	mdfc: paraTraducir("Doble cara modal"),
