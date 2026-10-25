@@ -285,6 +285,14 @@ pub fn huella(e: &DisenoEfectivo, lang: DesignLang, cara: usize, recursos: &str)
     if e.design.card.es_ficha() {
         h.update("|ficha-estilo-del-pack");
     }
+    // Una MDFC de dos Tierras ya no lleva la pestaña «▶ Tierra»: solo ellas se
+    // vuelven a pintar.
+    let card = &e.design.card;
+    if super::maquetacion::maquetacion(card).0 == super::maquetacion::Maquetacion::Mdfc
+        && super::componer::pestana_redundante(card, lang, cara)
+    {
+        h.update("|mdfc-sin-pestana");
+    }
     h.finalize().iter().map(|b| format!("{b:02x}")).collect()
 }
 

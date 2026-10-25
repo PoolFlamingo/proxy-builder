@@ -16,7 +16,7 @@ use tiny_skia::{FilterQuality, Pixmap, PixmapPaint, Transform};
 
 use super::efectivo::DisenoEfectivo;
 use super::maquetacion::{cuerpo, maquetacion, medida_grande, Cuerpo, Maquetacion};
-use super::modelo::{Aviso, DesignLang};
+use super::modelo::{Aviso, CardData, DesignLang};
 use super::pack::{EstiloDef, Pack};
 use super::render::{
     de_pixmap, estilo_para, mascara_redondeada, pie_texto, pintar_cara, Indicador, Motor, Opciones,
@@ -165,6 +165,16 @@ fn layout_de_cara(
     .then_some("alto")
 }
 
+/// MDFC sin pestaña de la otra cara: no dice nada nuevo cuando es del mismo
+/// tipo y no cuesta nada (las dos son Tierra, como las Pathway).
+pub(super) fn pestana_redundante(card: &CardData, lang: DesignLang, cara: usize) -> bool {
+    let (Some(propia), Some(otra)) = (card.faces.get(cara), card.faces.get(1 - cara.min(1))) else {
+        return false;
+    };
+    otra.mana_cost.is_empty()
+        && propia.type_line.get(lang).trim() == otra.type_line.get(lang).trim()
+}
+
 /// Pinta una cara «simple» (con su cuerpo y, en las de doble cara, su
 /// indicador) a la medida dada.
 #[allow(clippy::too_many_arguments)]
@@ -207,7 +217,9 @@ fn cara_simple(
                 .get(1 - cara.min(1))
                 .cloned()
                 .unwrap_or_default();
-            o.otra_cara = Some((otra.type_line.get(lang).clone(), otra.mana_cost));
+            if !pestana_redundante(&d.card, lang, cara) {
+                o.otra_cara = Some((otra.type_line.get(lang).clone(), otra.mana_cost));
+            }
         }
         Maquetacion::Aventura => o.aventura = Some(1),
         Maquetacion::Preparar => {
@@ -929,6 +941,23 @@ mod tests {
         d.card.faces.truncate(1);
         d.faces.truncate(1);
         efectivo(&d, None)
+    }
+
+    #[test]
+    fn una_mdfc_de_dos_tierras_no_lleva_la_pestana_de_la_otra_cara() {
+        let mut e = con_layout("modal_dfc", 2);
+        let card = &mut e.design.card;
+        for f in &mut card.faces {
+            f.mana_cost = String::new();
+            *f.type_line.get_mut(DesignLang::Es) = "Tierra".into();
+        }
+        assert!(pestana_redundante(card, DesignLang::Es, 0));
+        assert!(pestana_redundante(card, DesignLang::Es, 1));
+        // Un hechizo por el otro lado sí la lleva, y la huella cambia.
+        card.faces[1].mana_cost = "{1}{R}".into();
+        *card.faces[1].type_line.get_mut(DesignLang::Es) = "Conjuro".into();
+        assert!(!pestana_redundante(card, DesignLang::Es, 0));
+        assert!(!pestana_redundante(card, DesignLang::Es, 1));
     }
 
     fn con_layout(layout: &str, caras: usize) -> DisenoEfectivo {
