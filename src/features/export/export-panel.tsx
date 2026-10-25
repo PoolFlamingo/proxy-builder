@@ -111,7 +111,6 @@ export function ExportPanel() {
 	const duplex: Opcion<Duplex>[] = [
 		{ valor: "off", etiqueta: t("Una cara") },
 		{ valor: "longEdge", etiqueta: t("Dúplex, borde largo") },
-		{ valor: "shortEdge", etiqueta: t("Dúplex, borde corto") },
 	];
 	const modos: Opcion<EdgeMode>[] = [
 		{ valor: "contrastEdges", etiqueta: t("Contraste") },

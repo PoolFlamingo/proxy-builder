@@ -35,4 +35,4 @@ bleed: RectMm,
 /**
  * Sangrado completo que trae el render por cada lado (mm).
  */
-bleedFullMm: number, rotate180: boolean, };
+bleedFullMm: number, };
