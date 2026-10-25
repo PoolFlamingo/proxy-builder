@@ -320,7 +320,11 @@ pub fn export_pdf(app: AppHandle, state: State<'_, AppState>, deck: Deck, path: 
                 },
             );
         };
-        let r = exportar(&estado, &deck, &path, &cancelado, &progreso);
+        // Un pánico no puede dejar la pantalla esperando un final que no llega.
+        let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            exportar(&estado, &deck, &path, &cancelado, &progreso)
+        }))
+        .unwrap_or_else(|_| Err(AppError::new(ErrorCode::Internal).with("detalle", "pánico")));
         estado.jobs.baja(job_id);
         let (result, error) = match r {
             Ok(x) => (Some(x), None),
