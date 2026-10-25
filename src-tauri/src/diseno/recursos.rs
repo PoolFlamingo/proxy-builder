@@ -625,10 +625,19 @@ impl Recursos {
                 e.cjk.iter().map(|(l, _, d)| (*l, d.clone())).collect();
             (letras, cjk)
         };
-        MOTOR.with(|celda| {
-            let mut c = celda.borrow_mut();
-            let rehacer = c.as_ref().is_none_or(|(g, _)| *g != generacion);
-            if rehacer {
+        // El motor sale de la celda mientras pinta: el reescalado va en
+        // paralelo (rayon) y, mientras espera, el hilo puede coger otra carta
+        // del mismo trabajo y volver aquí. Con la celda prestada eso era un
+        // pánico que dejaba la exportación colgada; así, el de dentro usa
+        // otro motor (que se guarda para la próxima vez).
+        let guardado = MOTORES.with(|celda| {
+            let mut v = celda.borrow_mut();
+            v.retain(|(g, _)| *g == generacion);
+            v.pop()
+        });
+        let mut m = match guardado {
+            Some((_, m)) => m,
+            None => {
                 let mut m = Motor::de_fabrica()
                     .map_err(|e| AppError::new(ErrorCode::Internal).with("detalle", e))?;
                 for d in &letras {
@@ -637,18 +646,17 @@ impl Recursos {
                 for (l, d) in &cjk {
                     let _ = m.letras.cargar_cjk(d.as_ref().clone(), l.escritura());
                 }
-                *c = Some((generacion, m));
+                m
             }
-            match c.as_mut() {
-                Some((_, m)) => Ok(f(m)),
-                None => Err(AppError::new(ErrorCode::Internal)),
-            }
-        })
+        };
+        let r = f(&mut m);
+        MOTORES.with(|celda| celda.borrow_mut().push((generacion, m)));
+        Ok(r)
     }
 }
 
 thread_local! {
-    static MOTOR: RefCell<Option<(u64, Motor)>> = const { RefCell::new(None) };
+    static MOTORES: RefCell<Vec<(u64, Motor)>> = const { RefCell::new(Vec::new()) };
 }
 
 fn leer_zip(ruta: &Path) -> AppResult<Ficheros> {
@@ -766,6 +774,11 @@ mod tests {
         assert_eq!(info.familias, vec!["Caladea".to_string()]);
         assert!(r.instantanea("builtin").unwrap().generacion > g0);
         assert!(r.con_motor(|m| m.letras.tiene("Caladea")).unwrap());
+        // Dentro de otro render en el mismo hilo (rayon, mientras reescala,
+        // le da al hilo otra carta del trabajo): otro motor, sin pánico.
+        assert!(r
+            .con_motor(|_| r.con_motor(|m| m.letras.tiene("Caladea")).unwrap())
+            .unwrap());
         // Un texto con extensión de letra no vale.
         let falsa = dir.path().join("falsa.ttf");
         std::fs::write(&falsa, b"hola").unwrap();
