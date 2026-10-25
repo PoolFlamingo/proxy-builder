@@ -192,7 +192,8 @@ Cuando termines, decide a qué llega el cambio:
 - **Guías de corte** con el color, grosor y longitud que quieras.
 - **Oscurecer bordes** claros de escaneos viejos (por contraste, negro sólido o
   umbral), sin tocar las cartas de borde blanco o arte completo.
-- **Doble cara**: una cara, dúplex por el borde largo o por el corto.
+- **Doble cara**: una cara o dúplex (los reversos salen siempre derechos,
+  reflejados de izquierda a derecha, nunca girados).
   - La **hoja de calibración** dúplex y **«Alinear filas»** corrigen el
     desplazamiento de tu impresora fila a fila, midiendo con una regla.
 - **Partir el PDF** cada N hojas.

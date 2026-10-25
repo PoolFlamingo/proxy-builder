@@ -190,7 +190,8 @@ When you're done, decide where the change goes:
 - **Cut guides** with the colour, thickness and length you want.
 - **Darken edges**: light borders from old scans (by contrast, solid black or
   threshold), without touching white-border cards or full-art cards.
-- **Double-sided**: one side, duplex along the long edge or the short edge.
+- **Double-sided**: one side or duplex (backs always come out upright,
+  mirrored left to right, never rotated).
   - The duplex **calibration sheet** and **«Alinear filas»** (Align rows) correct
     your printer's offset row by row, measuring with a ruler.
 - **Split the PDF** every N sheets.
