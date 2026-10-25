@@ -82,7 +82,6 @@ pub struct Slot {
     pub bleed: RectMm,
     /// Sangrado completo que trae el render por cada lado (mm).
     pub bleed_full_mm: f64,
-    pub rotate_180: bool,
 }
 
 /// Un segmento de guía de corte, en milímetros.
@@ -255,16 +254,6 @@ fn items(deck: &Deck, warnings: &mut Vec<PlanWarning>) -> Vec<Item> {
     out
 }
 
-/// El eje de volteo del reverso: `true` = espejo horizontal (mirror x), sin
-/// giro; `false` = espejo vertical (mirror y) con giro de 180°.
-fn espejo_horizontal(duplex: Duplex, landscape: bool) -> bool {
-    match (duplex, landscape) {
-        (Duplex::LongEdge, false) | (Duplex::ShortEdge, true) => true,
-        (Duplex::ShortEdge, false) | (Duplex::LongEdge, true) => false,
-        (Duplex::Off, _) => true,
-    }
-}
-
 /// Lados del sangrado (izquierda, derecha, arriba, abajo) de la casilla
 /// `(row, col)` en el marco frontal: completo hacia el exterior de la rejilla,
 /// `min(bleed, gap/2)` hacia otra carta.
@@ -383,7 +372,6 @@ fn paginar(
 ) -> u32 {
     let cap = g.capacity() as usize;
     let duplex = s.duplex != Duplex::Off;
-    let espejo_x = espejo_horizontal(s.duplex, s.landscape);
     let hojas: Vec<&[&Item]> = items.chunks(cap.max(1)).collect();
     for (n, trozo) in hojas.iter().enumerate() {
         let hoja = primera_hoja + n as u32;
@@ -415,7 +403,6 @@ fn paginar(
                 trim,
                 bleed: ampliar(trim, lados, ancho, alto),
                 bleed_full_mm: s.bleed_mm,
-                rotate_180: false,
             });
 
             // Dorso.
@@ -427,25 +414,13 @@ fn paginar(
                     ..base
                 };
                 let [l, r, t, b] = if s.bleed_on_backs { lados } else { [0.0; 4] };
-                let (trim_b, lados_b, giro) = if espejo_x {
-                    (
-                        RectMm {
-                            x: ancho - pre.x - pre.w,
-                            ..pre
-                        },
-                        [r, l, t, b],
-                        false,
-                    )
-                } else {
-                    (
-                        RectMm {
-                            y: alto - pre.y - pre.h,
-                            ..pre
-                        },
-                        [l, r, b, t],
-                        true,
-                    )
+                // El dorso se refleja en x y no se gira jamás: el contenido
+                // sale siempre derecho, también en el PDF.
+                let trim_b = RectMm {
+                    x: ancho - pre.x - pre.w,
+                    ..pre
                 };
+                let lados_b = [r, l, t, b];
                 let bleed_full = if s.bleed_on_backs { s.bleed_mm } else { 0.0 };
                 traseras.push(Slot {
                     index: i as u32,
@@ -458,7 +433,6 @@ fn paginar(
                     trim: trim_b,
                     bleed: ampliar(trim_b, lados_b, ancho, alto),
                     bleed_full_mm: bleed_full,
-                    rotate_180: giro,
                 });
             }
         }
@@ -650,39 +624,33 @@ mod tests {
         // (fila 0, col 0) → su dorso cae donde está la columna 2.
         assert!(cerca(dorso.trim.x, p.cells[2].x), "{dorso:?}");
         assert!(cerca(dorso.trim.y, frente.trim.y));
-        assert!(!dorso.rotate_180);
         assert_eq!(dorso.image, Some(img("b")));
     }
 
     #[test]
-    fn borde_corto_vertical_refleja_las_filas_y_gira() {
-        let s = PrintSettings {
-            duplex: Duplex::ShortEdge,
-            ..Default::default()
-        };
-        let p = plan(&deck(n(9), s)).unwrap();
-        let dorso = &p.pages[1].slots[0];
-        assert!(cerca(dorso.trim.y, p.cells[6].y), "{dorso:?}");
-        assert!(cerca(dorso.trim.x, p.cells[0].x));
-        assert!(dorso.rotate_180);
-    }
-
-    #[test]
-    fn apaisado_borde_largo_gira_y_borde_corto_no() {
-        for (d, gira) in [(Duplex::LongEdge, true), (Duplex::ShortEdge, false)] {
+    fn el_dorso_nunca_se_gira_ni_en_vertical_ni_en_apaisado() {
+        for landscape in [false, true] {
             let s = PrintSettings {
-                duplex: d,
-                landscape: true,
+                duplex: Duplex::LongEdge,
+                landscape,
                 ..Default::default()
             };
-            let p = plan(&deck(n(1), s)).unwrap();
-            assert_eq!(p.pages[1].slots[0].rotate_180, gira, "{d:?}");
+            let p = plan(&deck(n(9), s)).unwrap();
+            let dorso = &p.pages[1].slots[0];
+            // Siempre espejo en x: la fila no cambia.
+            assert!(cerca(dorso.trim.y, p.pages[0].slots[0].trim.y), "{dorso:?}");
         }
     }
 
     #[test]
+    fn borde_corto_de_un_deck_antiguo_se_lee_como_borde_largo() {
+        let d: Duplex = serde_json::from_str("\"shortEdge\"").unwrap();
+        assert_eq!(d, Duplex::LongEdge);
+    }
+
+    #[test]
     fn el_desplazamiento_del_dorso_se_mide_desde_el_frente() {
-        // Borde largo: +1 mm en x (marco frontal) mueve el dorso −1 mm en la página trasera.
+        // +1 mm en x (marco frontal) mueve el dorso −1 mm en la página trasera.
         let mut s = PrintSettings {
             duplex: Duplex::LongEdge,
             ..Default::default()
@@ -694,19 +662,6 @@ mod tests {
         }];
         let con = plan(&deck(n(1), s)).unwrap().pages[1].slots[0].trim;
         assert!(cerca(con.x, sin.x - 1.0), "{sin:?} → {con:?}");
-
-        // Borde corto: +1 mm en y mueve el dorso −1 mm en y.
-        let mut s = PrintSettings {
-            duplex: Duplex::ShortEdge,
-            ..Default::default()
-        };
-        let sin = plan(&deck(n(1), s.clone())).unwrap().pages[1].slots[0].trim;
-        s.row_offsets.back = vec![Offset {
-            x_mm: 0.0,
-            y_mm: 1.0,
-        }];
-        let con = plan(&deck(n(1), s)).unwrap().pages[1].slots[0].trim;
-        assert!(cerca(con.y, sin.y - 1.0), "{sin:?} → {con:?}");
     }
 
     #[test]
@@ -771,7 +726,7 @@ mod tests {
     fn ningun_sangrado_sale_del_papel_en_ningun_formato() {
         for paper in PaperFormat::TODOS {
             for landscape in [false, true] {
-                for duplex in [Duplex::Off, Duplex::LongEdge, Duplex::ShortEdge] {
+                for duplex in [Duplex::Off, Duplex::LongEdge] {
                     let s = PrintSettings {
                         paper,
                         landscape,
@@ -795,30 +750,18 @@ mod tests {
 
     #[test]
     fn el_espejo_aplicado_dos_veces_vuelve_al_sitio() {
-        for (duplex, landscape) in [
-            (Duplex::LongEdge, false),
-            (Duplex::ShortEdge, false),
-            (Duplex::LongEdge, true),
-            (Duplex::ShortEdge, true),
-        ] {
+        for (duplex, landscape) in [(Duplex::LongEdge, false), (Duplex::LongEdge, true)] {
             let s = PrintSettings {
                 duplex,
                 landscape,
                 ..Default::default()
             };
             let p = plan(&deck(n(9), s.clone())).unwrap();
-            let (w, h) = s.paper.oriented_mm(landscape);
+            let (w, _) = s.paper.oriented_mm(landscape);
             for (f, b) in p.pages[0].slots.iter().zip(&p.pages[1].slots) {
-                let vuelta = if espejo_horizontal(duplex, landscape) {
-                    RectMm {
-                        x: w - b.trim.x - b.trim.w,
-                        ..b.trim
-                    }
-                } else {
-                    RectMm {
-                        y: h - b.trim.y - b.trim.h,
-                        ..b.trim
-                    }
+                let vuelta = RectMm {
+                    x: w - b.trim.x - b.trim.w,
+                    ..b.trim
                 };
                 assert!(cerca(vuelta.x, f.trim.x) && cerca(vuelta.y, f.trim.y));
             }

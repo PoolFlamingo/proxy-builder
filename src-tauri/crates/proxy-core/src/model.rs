@@ -441,15 +441,30 @@ impl Default for EdgeDarkening {
     }
 }
 
-/// Impresión a doble cara.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+/// Impresión a doble cara. El dorso sale siempre en vertical, solo reflejado
+/// en horizontal (como el frente visto al trasluz): nunca se gira 180°, así que
+/// no hay modo «borde corto». `shortEdge` sigue leyéndose, de los decks y
+/// `.pbdeck` que lo guardaron, como `LongEdge`.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub enum Duplex {
     #[default]
     Off,
     LongEdge,
-    ShortEdge,
+}
+
+impl<'de> Deserialize<'de> for Duplex {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        match String::deserialize(d)?.as_str() {
+            "off" => Ok(Duplex::Off),
+            "longEdge" | "shortEdge" => Ok(Duplex::LongEdge),
+            otro => Err(serde::de::Error::unknown_variant(
+                otro,
+                &["off", "longEdge"],
+            )),
+        }
+    }
 }
 
 /// Qué hacer con las cartas de doble cara.

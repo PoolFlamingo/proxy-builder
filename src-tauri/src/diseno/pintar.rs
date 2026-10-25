@@ -255,7 +255,6 @@ mod tests {
             trim: r,
             bleed: r,
             bleed_full_mm: 0.0,
-            rotate_180: false,
         }
     }
 

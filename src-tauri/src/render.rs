@@ -192,7 +192,6 @@ mod tests {
                 h: 129.0,
             },
             bleed_full_mm: 1.5,
-            rotate_180: false,
         }
     }
 

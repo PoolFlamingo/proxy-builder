@@ -31,7 +31,7 @@ fn rect(r: &RectMm) -> Option<Rect> {
 }
 
 /// Dibuja una casilla: la imagen (que trae el sangrado completo) recortada a
-/// la caja de sangrado de la casilla y, si toca, girada 180°.
+/// la caja de sangrado de la casilla (siempre derecha, nunca girada).
 pub(crate) fn dibujar_casilla(s: &mut Surface, slot: &Slot, img: Image) -> Result<(), PdfError> {
     let caja = rect(&slot.bleed).ok_or(PdfError::Geometry)?;
     let mut pb = PathBuilder::new();
@@ -43,19 +43,10 @@ pub(crate) fn dibujar_casilla(s: &mut Surface, slot: &Slot, img: Image) -> Resul
     let tam = Size::from_wh(w, h).ok_or(PdfError::Geometry)?;
 
     s.push_clip_path(&recorte, &FillRule::NonZero);
-    let mut pilas = 1;
-    if slot.rotate_180 {
-        let cx = pt(slot.trim.x + slot.trim.w / 2.0);
-        let cy = pt(slot.trim.y + slot.trim.h / 2.0);
-        s.push_transform(&Transform::from_rotate_at(180.0, cx, cy));
-        pilas += 1;
-    }
     s.push_transform(&Transform::from_translate(x, y));
-    pilas += 1;
     s.draw_image(img, tam);
-    for _ in 0..pilas {
-        s.pop();
-    }
+    s.pop();
+    s.pop();
     Ok(())
 }
 
@@ -329,7 +320,6 @@ pub(crate) mod tests {
         for (duplex, landscape) in [
             (Duplex::Off, false),
             (Duplex::LongEdge, false),
-            (Duplex::ShortEdge, false),
             (Duplex::LongEdge, true),
         ] {
             let s = PrintSettings {
