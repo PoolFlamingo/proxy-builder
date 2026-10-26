@@ -478,4 +478,43 @@ mod tests {
         ));
         drop(s);
     }
+
+    /// Contra un despliegue (`server/docs/despliegue.md`): el cliente entra
+    /// por `wss://` a través de nginx y el relé propio solo deja pasar a una
+    /// clave conectada al servidor. `PB_PRUEBA_SERVIDOR=wss://…/v1/ws` y
+    /// `PB_PRUEBA_RELE=https://relay…`.
+    #[tokio::test]
+    #[ignore = "necesita un despliegue (PB_PRUEBA_SERVIDOR y PB_PRUEBA_RELE)"]
+    async fn el_rele_solo_deja_pasar_a_quien_esta_en_el_servidor() {
+        use crate::red::nodo::{crear, Relay};
+        let url = std::env::var("PB_PRUEBA_SERVIDOR").unwrap();
+        let rele: iroh::RelayUrl = std::env::var("PB_PRUEBA_RELE").unwrap().parse().unwrap();
+        let clave = SecretKey::generate();
+        let c = Cliente::arrancar(
+            url,
+            clave.clone(),
+            "Ana".into(),
+            Plataforma::Escritorio,
+            Anotados::default(),
+        );
+        conectado(&c).await;
+        let dentro = crear(clave, Relay::Propio(rele.clone())).await.unwrap();
+        assert!(
+            tokio::time::timeout(Duration::from_secs(15), dentro.online())
+                .await
+                .is_ok(),
+            "la clave conectada no entró en el relé"
+        );
+        let fuera = crear(SecretKey::generate(), Relay::Propio(rele))
+            .await
+            .unwrap();
+        assert!(
+            tokio::time::timeout(Duration::from_secs(6), fuera.online())
+                .await
+                .is_err(),
+            "una clave de fuera entró en el relé"
+        );
+        dentro.close().await;
+        fuera.close().await;
+    }
 }

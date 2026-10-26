@@ -53,7 +53,7 @@ tokio = { version = "1", features = ["rt", "sync", "time", "macros", "io-util"] 
 # La mesa de juego en red (`red/`): conexiones QUIC entre jugadores por clave
 # pública, con camino directo y relé de respaldo. Sin `metrics`; TLS con ring
 # como reqwest. 🛑 `cargo tree -i openssl` sigue vacío con ella.
-iroh = { version = "1.4.1", default-features = false, features = ["tls-ring", "portmapper", "fast-apple-datapath"] }
+iroh = { version = "1.4.1", default-features = false, features = ["tls-ring", "portmapper", "fast-apple-datapath", "platform-verifier"] }
 futures = { version = "0.3", default-features = false, features = ["std", "async-await"] }
 # Los parámetros de render viajan en la URL de la miniatura en base64url.
 base64 = "0.22"

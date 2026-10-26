@@ -45,7 +45,13 @@ pub fn relay_de_entorno() -> Relay {
             tracing::warn!(valor = v, "PB_RELAY no es una URL: se usan los relés de n0");
         }
     }
-    Relay::N0
+    // El relé propio de producción (Fase F, `server/docs/despliegue.md`);
+    // mientras no haya dominio, los de n0.
+    const RELE_PROPIO: Option<&str> = None;
+    match RELE_PROPIO.and_then(|u| u.parse::<RelayUrl>().ok()) {
+        Some(url) => Relay::Propio(url),
+        None => Relay::N0,
+    }
 }
 
 pub(crate) fn de_red(e: impl std::fmt::Display) -> AppError {
@@ -62,7 +68,10 @@ pub async fn crear(clave: SecretKey, relay: Relay) -> AppResult<Endpoint> {
             Endpoint::builder(presets::N0).relay_mode(RelayMode::custom([url.clone()]))
         }
     };
+    // Los certificados del relé, con los del sistema (como reqwest y el
+    // cliente del servidor de salas), no solo los de Mozilla incrustados.
     let ep = b
+        .ca_tls_config(iroh::tls::CaTlsConfig::system())
         .secret_key(clave)
         .alpns(alpns)
         .bind()
