@@ -160,6 +160,27 @@ le falta una cadena le sale la inglesa.
   Fase H. 🛑 Nunca coger `state.db.conn()` y llamar con ella cogida a algo
   que la vuelva a pedir (`settings::set`…): el `Mutex` se bloquea para
   siempre.
+  **En red** (Fases E y F): iroh 1.4.1 (QUIC P2P con relé), en estrella
+  con el host: los invitados mandan intenciones (ALPN `proxy-builder/mesa/1`,
+  tramas de `red/protocolo.rs`), el host resuelve y reparte eventos con la
+  huella cada 50; cada jugador guarda la partida entera, el espectador solo
+  su vista (`red/mirada.rs`, `AppState.mirada`). Imágenes por `/img/1` a
+  través del host (`red/imagenes.rs`, `app_cache_dir/mesa/r/`, se limpian
+  siempre). La clave del nodo en `app_data_dir/identidad/clave`;
+  `PB_PERFIL` (debug) separa varias instancias en la misma máquina
+  (`perfiles/<x>/`). Código directo: comandos `red_*`
+  (`commands/red.rs`, `features/mesa/red/`, `stores/red-store.ts`).
+  Servidor de salas y playgroups: cliente en `red/servidor/` (WebSocket
+  con rustls y los certificados del sistema, nada de OpenSSL; reto firmado
+  con la clave del nodo; `sala.rs` hace la malla, mide RTT y cambia de host
+  cuando el servidor lo elige), comandos `salas_*`, pantalla en
+  `features/salas/` y `stores/salas-store.ts`. El servidor (Node ≥ 22.13,
+  `node:sqlite`, `ws`, `zod`) es un repo aparte, `proxy-builder-server`,
+  clonado en `server/` (ignorado por la app; su protocolo en
+  `server/docs/protocolo.md` y el despliegue con nginx e `iroh-relay`
+  1.4.1 en `server/docs/despliegue.md`). Mientras no haya dominio,
+  `PRODUCCION` (`red/servidor/mod.rs`) y `RELE_PROPIO` (`red/nodo.rs`) son
+  `None`; en debug, `PB_SERVIDOR` y `PB_RELAY` los cambian.
 - Rust: `commands/{cards,decklist,export,identify,layout,library,stats}.rs`,
   `package.rs` (.pbdeck), `render.rs` + `protocol.rs` (miniaturas),
   `ocr.rs` (OCR opcional de la carta entera con `ocrs`, a la resolución
