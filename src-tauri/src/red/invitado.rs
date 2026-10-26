@@ -240,6 +240,11 @@ async fn bucle<M: Mesa>(
             *c = Some(conn.clone());
         }
         let fin = atender(&conn, tx, rx, m, &mesa, union, &salida, &entrada).await;
+        // Sin conexión hasta que vuelva (la sala del servidor lo mira para
+        // avisar de que el host se cayó).
+        if let Ok(mut c) = conexion.lock() {
+            *c = None;
+        }
         // Otra unión (o esta app pasó a anfitrión): esta ya no manda.
         if !es_mia(&mesa, union) {
             return;

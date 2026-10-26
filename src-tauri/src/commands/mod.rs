@@ -14,6 +14,7 @@ pub mod layout;
 pub mod library;
 pub mod mesa;
 pub mod red;
+pub mod salas;
 pub mod sistema;
 pub mod stats;
 pub mod temas;

@@ -44,6 +44,11 @@ uuid = { version = "1", features = ["v4"] }
 # OpenSSL en el árbol (regla de judlex). Tras tocarlo, `cargo tree -i openssl`
 # tiene que salir vacío.
 reqwest = { version = "0.13", default-features = false, features = ["json", "query", "rustls", "gzip"] }
+# El WebSocket del servidor de salas (Fase F): TLS con rustls y el verificador
+# del sistema, como reqwest (`red/servidor/cliente.rs` monta la configuración).
+tokio-tungstenite = { version = "0.30", default-features = false, features = ["connect", "__rustls-tls"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+rustls-platform-verifier = "0.7"
 tokio = { version = "1", features = ["rt", "sync", "time", "macros", "io-util"] }
 # La mesa de juego en red (`red/`): conexiones QUIC entre jugadores por clave
 # pública, con camino directo y relé de respaldo. Sin `metrics`; TLS con ring

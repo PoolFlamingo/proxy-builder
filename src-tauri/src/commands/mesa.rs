@@ -429,7 +429,7 @@ pub fn mesa_guardar(state: State<'_, AppState>) -> AppResult<()> {
 /// Sale de la mesa. Con `guardar`, la partida se queda guardada para
 /// seguirla luego; sin él, se termina y se olvida.
 #[tauri::command]
-pub fn mesa_salir(state: State<'_, AppState>, guardar: bool) -> AppResult<()> {
+pub fn mesa_salir(app: AppHandle, state: State<'_, AppState>, guardar: bool) -> AppResult<()> {
     if guardar {
         guardar_si_toca(&state, true);
     }
@@ -448,9 +448,15 @@ pub fn mesa_salir(state: State<'_, AppState>, guardar: bool) -> AppResult<()> {
         }
         *v = None;
     }
-    // En red, salir de la mesa es salir de la partida.
+    // En red, salir de la mesa es salir de la partida (y de su sala del servidor).
     if let Some(sala) = state.red.quitar_sala() {
         tauri::async_runtime::spawn(sala.cerrar());
+    }
+    if state.red.con_salon(|s| s.is_some()) {
+        if let Some(c) = state.red.con_servidor(|c| c.clone()) {
+            c.mandar(crate::red::servidor::mensajes::AlServidor::SalaSalir);
+        }
+        crate::red::servidor::sala::salir(&app);
     }
     if !guardar {
         guardada::borrar(&state.paths.data);

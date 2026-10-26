@@ -26,6 +26,7 @@ pub mod perfil;
 pub mod protocolo;
 #[cfg(test)]
 mod pruebas;
+pub mod servidor;
 
 use std::sync::Arc;
 
@@ -66,6 +67,10 @@ pub struct Red {
     clave: SecretKey,
     nodo: tokio::sync::Mutex<Option<Endpoint>>,
     sala: std::sync::Mutex<Option<Sala>>,
+    /// El cliente del servidor de salas (Fase F), si se ha conectado.
+    servidor: std::sync::Mutex<Option<Arc<servidor::cliente::Cliente>>>,
+    /// La sala del servidor en la que está esta app.
+    salon: std::sync::Mutex<Option<Arc<servidor::sala::Salon>>>,
 }
 
 impl Red {
@@ -74,7 +79,30 @@ impl Red {
             clave,
             nodo: tokio::sync::Mutex::new(None),
             sala: std::sync::Mutex::new(None),
+            servidor: std::sync::Mutex::new(None),
+            salon: std::sync::Mutex::new(None),
         }
+    }
+
+    /// Con la sala del servidor (si la hay).
+    pub fn con_salon<R>(&self, f: impl FnOnce(&mut Option<Arc<servidor::sala::Salon>>) -> R) -> R {
+        let mut g = match self.salon.lock() {
+            Ok(g) => g,
+            Err(e) => e.into_inner(),
+        };
+        f(&mut g)
+    }
+
+    /// Con el cliente del servidor (si se ha arrancado).
+    pub fn con_servidor<R>(
+        &self,
+        f: impl FnOnce(&mut Option<Arc<servidor::cliente::Cliente>>) -> R,
+    ) -> R {
+        let mut g = match self.servidor.lock() {
+            Ok(g) => g,
+            Err(e) => e.into_inner(),
+        };
+        f(&mut g)
     }
 
     /// Con la sala (si la hay).

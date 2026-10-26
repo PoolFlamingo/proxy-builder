@@ -242,6 +242,22 @@ pub fn run() {
             commands::red::red_unirse,
             commands::red::red_empezar,
             commands::red::red_salir,
+            commands::salas::salas_conectar,
+            commands::salas::salas_estado,
+            commands::salas::salas_playgroups,
+            commands::salas::salas_pg_crear,
+            commands::salas::salas_pg_salir,
+            commands::salas::salas_pg_expulsar,
+            commands::salas::salas_pg_rol,
+            commands::salas::salas_invitar,
+            commands::salas::salas_revocar,
+            commands::salas::salas_usar,
+            commands::salas::salas_sala_crear,
+            commands::salas::salas_sala_unirse,
+            commands::salas::salas_sala_salir,
+            commands::salas::salas_deck,
+            commands::salas::salas_empezar,
+            commands::salas::salas_terminar,
         ])
         .run(tauri::generate_context!());
 

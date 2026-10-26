@@ -10,6 +10,7 @@ import {
 	Swords,
 	Trash2,
 	User,
+	Users,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -33,8 +34,10 @@ import { urlMiniatura } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { useRed } from "@/stores/red-store";
+import { useSalas } from "@/stores/salas-store";
 import { useTrabajo } from "@/stores/trabajo-store";
 import { useUi } from "@/stores/ui-store";
+import { SalasDialog } from "../salas/salas-dialog";
 import { COLORES_JUGADOR } from "./colores";
 import { empezar, retomar, salir } from "./conexion";
 import { ListaDialog } from "./listas/lista-dialog";
@@ -98,6 +101,8 @@ export function EntradaMesa() {
 	const [listaId, setListaId] = useState<string | null>(null);
 	const [editando, setEditando] = useState<{ lista: ListaDeJuego | null } | null>(null);
 	const [red, setRed] = useState(false);
+	const [amigos, setAmigos] = useState(false);
+	const enSalaServidor = useSalas((s) => s.sala !== null);
 	const enSala = useRed((s) => s.papel !== null);
 	const trabajo = useTrabajo((s) => (s.actual?.tipo === "mesa" ? s.actual : null));
 
@@ -180,6 +185,16 @@ export function EntradaMesa() {
 		setOpciones({ ...opciones, ayudas: { ...opciones.ayudas, [k]: v } });
 
 	const guardada = estado?.guardada;
+	/** Lo que la red y las salas necesitan de la entrada: el deck elegido y sus opciones. */
+	const preparar = {
+		deckId: elegido,
+		deckNombre: decks.find((d) => d.id === elegido)?.name ?? null,
+		lista: listaId,
+		sinLista,
+		formato,
+		opciones,
+		nombre: nombre.trim() || t("Jugador"),
+	};
 	return (
 		<div className="flex h-full min-h-0 gap-2.5 p-2.5" data-tutorial="mesa-entrada">
 			<section className="flex min-h-0 flex-1 flex-col gap-2.5 rounded-lg border bg-card/40 p-2.5">
@@ -425,12 +440,21 @@ export function EntradaMesa() {
 					</Button>
 					<Button
 						size="lg"
-						variant={enSala ? "default" : "outline"}
+						variant={enSalaServidor ? "default" : "outline"}
+						onClick={() => setAmigos(true)}
+						data-tutorial="mesa-amigos"
+					>
+						<Users className="size-4" />
+						{enSalaServidor ? t("Volver a la sala") : t("Con amigos…")}
+					</Button>
+					<Button
+						size="lg"
+						variant={enSala && !enSalaServidor ? "default" : "outline"}
 						onClick={() => setRed(true)}
 						data-tutorial="mesa-red"
 					>
 						<Plug className="size-4" />
-						{enSala ? t("Volver a la sala") : t("En red…")}
+						{enSala && !enSalaServidor ? t("Volver a la sala") : t("En red…")}
 					</Button>
 				</div>
 			</aside>
@@ -460,19 +484,8 @@ export function EntradaMesa() {
 					}}
 				/>
 			)}
-			<RedDialog
-				abierto={red}
-				onCerrar={() => setRed(false)}
-				preparar={{
-					deckId: elegido,
-					deckNombre: decks.find((d) => d.id === elegido)?.name ?? null,
-					lista: listaId,
-					sinLista,
-					formato,
-					opciones,
-					nombre: nombre.trim() || t("Jugador"),
-				}}
-			/>
+			<SalasDialog abierto={amigos} onCerrar={() => setAmigos(false)} preparar={preparar} />
+			<RedDialog abierto={red} onCerrar={() => setRed(false)} preparar={preparar} />
 			<TapeteDialog abierto={tapete} onCerrar={() => setTapete(false)} deckId={elegido} />
 			<Confirmar
 				abierto={reemplazar}

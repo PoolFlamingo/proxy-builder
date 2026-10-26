@@ -16,6 +16,9 @@ use crate::error::{AppError, AppResult, ErrorCode};
 
 pub const ALPN_MESA: &[u8] = b"proxy-builder/mesa/1";
 pub const ALPN_IMG: &[u8] = b"proxy-builder/img/1";
+/// La malla de la sala (Fase F): una conexión ligera con cada jugador solo
+/// para medir la latencia y el camino.
+pub const ALPN_PING: &[u8] = b"proxy-builder/ping/1";
 
 /// Por dónde pasa la conexión cuando no hay camino directo.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -51,7 +54,7 @@ pub(crate) fn de_red(e: impl std::fmt::Display) -> AppError {
 
 /// Levanta un nodo con esta clave y estos relés.
 pub async fn crear(clave: SecretKey, relay: Relay) -> AppResult<Endpoint> {
-    let alpns = vec![ALPN_MESA.to_vec(), ALPN_IMG.to_vec()];
+    let alpns = vec![ALPN_MESA.to_vec(), ALPN_IMG.to_vec(), ALPN_PING.to_vec()];
     let b = match &relay {
         Relay::Ninguno => Endpoint::builder(presets::Minimal).relay_mode(RelayMode::Disabled),
         Relay::N0 => Endpoint::builder(presets::N0),

@@ -44,6 +44,7 @@ const MOTIVOS: Partial<Record<ErrorCode, Record<string, string>>> = {
 		deck: paraTraducir("Elige un deck para jugar."),
 	},
 	Network: {
+		sin_servidor: paraTraducir("No hay conexión con el servidor de salas."),
 		sin_respuesta: paraTraducir("El anfitrión no responde."),
 		desconectado: paraTraducir("Se ha perdido la conexión con la partida."),
 	},
@@ -66,7 +67,18 @@ const MOTIVOS: Partial<Record<ErrorCode, Record<string, string>>> = {
 		espectador: paraTraducir("Estás mirando: los espectadores no pueden jugar."),
 		sin_partida: paraTraducir("La partida aún no ha empezado."),
 	},
-	Server: {},
+	// Los códigos del servidor de salas (`params.code`; `server/docs/protocolo.md`).
+	Server: {
+		version: paraTraducir("El servidor de salas usa otra versión: actualiza la app."),
+		firma: paraTraducir("El servidor no ha reconocido esta instalación."),
+		limite: paraTraducir("Has llegado al límite: espera un momento o deja algo libre."),
+		no_existe: paraTraducir("Eso ya no existe en el servidor."),
+		caducada: paraTraducir("La invitación ha caducado o ya se usó del todo."),
+		llena: paraTraducir("Está llena."),
+		sin_permiso: paraTraducir("No tienes permiso para eso."),
+		ya_empezada: paraTraducir("La partida ya ha empezado: puedes entrar a mirar."),
+		mensaje: paraTraducir("El servidor no ha entendido la petición."),
+	},
 };
 
 /** ¿Es un `AppError` de Rust? (Lo que llega del `invoke` es `unknown`.) */

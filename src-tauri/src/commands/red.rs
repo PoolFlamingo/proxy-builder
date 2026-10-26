@@ -67,6 +67,11 @@ fn ocupada() -> AppError {
     AppError::new(ErrorCode::Busy).with("motivo", "partida")
 }
 
+/// En una partida, o en una sala del servidor, no se abre otra por código.
+fn ocupado(state: &AppState) -> bool {
+    state.hay_partida() || state.hay_mirada() || state.red.con_salon(|s| s.is_some())
+}
+
 #[tauri::command]
 pub fn red_estado(state: State<'_, AppState>) -> EstadoRed {
     state.red.con_sala(|s| match s {
@@ -104,7 +109,7 @@ pub async fn red_crear(
     apodo: String,
     deck: Option<String>,
 ) -> AppResult<String> {
-    if state.hay_partida() || state.hay_mirada() {
+    if ocupado(&state) {
         return Err(ocupada());
     }
     if let Some(vieja) = state.red.quitar_sala() {
@@ -180,7 +185,7 @@ pub fn red_unirse(
         lista,
         formato,
     } = peticion;
-    if state.hay_partida() || state.hay_mirada() {
+    if ocupado(&state) {
         return Err(ocupada());
     }
     let codigo = Codigo::de_texto(&codigo)?;

@@ -79,6 +79,9 @@ pub struct Anfitrion {
     pub deck: Mutex<Option<String>>,
     sala: Mutex<Sala>,
     siguiente: AtomicU64,
+    /// Con el servidor de salas no hay secreto: entra quien está en la sala
+    /// (su nodo de iroh es su clave en el servidor).
+    permitidos: Mutex<Option<std::collections::BTreeSet<EndpointId>>>,
 }
 
 /// Cómo queda quien entra.
@@ -108,6 +111,7 @@ impl Anfitrion {
                 pares: Vec::new(),
             }),
             siguiente: AtomicU64::new(1),
+            permitidos: Mutex::new(None),
         })
     }
 
@@ -142,11 +146,25 @@ impl Anfitrion {
                 pares,
             }),
             siguiente: AtomicU64::new(1),
+            permitidos: Mutex::new(None),
         })
     }
 
     pub fn secreto(&self) -> &str {
         &self.secreto
+    }
+
+    /// Solo entran estos nodos (los de la sala del servidor), sin secreto.
+    pub fn permitir_solo(&self, nodos: impl IntoIterator<Item = EndpointId>) {
+        *cerrojo(&self.permitidos) = Some(nodos.into_iter().collect());
+    }
+
+    /// Si este nodo con este secreto puede entrar.
+    fn deja_entrar(&self, nodo: EndpointId, secreto: Option<&str>) -> bool {
+        match cerrojo(&self.permitidos).as_ref() {
+            Some(p) => p.contains(&nodo),
+            None => secreto.is_some_and(|s| mismo_secreto(s, &self.secreto)),
+        }
     }
 
     pub fn empezada(&self) -> bool {
@@ -553,7 +571,12 @@ pub async fn atender<M: Mesa>(ep: Endpoint, anf: Arc<Anfitrion>, mesa: M) {
     }
 }
 
-async fn atender_conexion<M: Mesa>(conn: Connection, anf: Arc<Anfitrion>, mesa: M, yo: EndpointId) {
+pub(crate) async fn atender_conexion<M: Mesa>(
+    conn: Connection,
+    anf: Arc<Anfitrion>,
+    mesa: M,
+    yo: EndpointId,
+) {
     let nodo = conn.remote_id();
     let Ok(Ok((mut tx, mut rx))) = tokio::time::timeout(ESPERA_HOLA, conn.accept_bi()).await else {
         conn.close(1u32.into(), b"sin stream");
@@ -584,7 +607,7 @@ async fn atender_conexion<M: Mesa>(conn: Connection, anf: Arc<Anfitrion>, mesa: 
         || version_catalogo != mesa::VERSION_CATALOGO
     {
         Some("version")
-    } else if !secreto.is_some_and(|s| mismo_secreto(&s, anf.secreto())) {
+    } else if !anf.deja_entrar(nodo, secreto.as_deref()) {
         Some("codigo")
     } else {
         None

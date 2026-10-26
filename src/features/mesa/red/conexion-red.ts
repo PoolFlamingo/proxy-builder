@@ -17,7 +17,7 @@ import { conProgreso, suscribir, suscrito } from "../conexion";
  */
 let escucha: Promise<UnlistenFn> | null = null;
 
-function escuchar(): Promise<UnlistenFn> {
+export function escuchar(): Promise<UnlistenFn> {
 	escucha ??= listen<AvisoRed>("red://aviso", (e) => alAviso(e.payload));
 	return escucha;
 }

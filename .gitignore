@@ -26,3 +26,7 @@ src-tauri/gen
 .env
 .env.*
 !.env.example
+
+# El servidor de salas es un repo aparte (`proxy-builder-server`) clonado aquí
+# dentro (Pablo, 24/10/2026): sus cambios no lanzan el CI de la app.
+server/
