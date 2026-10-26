@@ -776,6 +776,11 @@ pub struct FineTuning {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub title_size: Option<f64>,
+    /// Tamaño de los símbolos del coste de maná (`None` = 1, el del marco):
+    /// más pequeños, dejan más sitio al título.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub cost_size: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub type_size: Option<f64>,
@@ -837,6 +842,7 @@ impl FineTuning {
                 .map(|r| r.clamp(-ALTO_CAJA_MAX_MM, ALTO_CAJA_MAX_MM)),
             rules_box_dynamic: self.rules_box_dynamic,
             title_size: tam(self.title_size),
+            cost_size: tam(self.cost_size),
             type_size: tam(self.type_size),
             rules_size: tam(self.rules_size),
             pt_size: tam(self.pt_size),
@@ -1096,6 +1102,7 @@ pub(crate) mod tests {
         let f = FineTuning {
             rules_size: Some(0.1),
             title_size: Some(9.0),
+            cost_size: Some(0.1),
             rules_line_spacing: Some(0.2),
             footer_line_spacing: Some(3.0),
             ..FineTuning::default()
@@ -1103,6 +1110,7 @@ pub(crate) mod tests {
         .limitado();
         assert_eq!(f.rules_size, Some(TAMANO_TEXTO_MIN));
         assert_eq!(f.title_size, Some(TAMANO_TEXTO_MAX));
+        assert_eq!(f.cost_size, Some(TAMANO_TEXTO_MIN));
         assert_eq!(f.rules_line_spacing, Some(INTERLINEADO_MIN));
         assert_eq!(f.footer_line_spacing, Some(INTERLINEADO_MAX));
         assert_eq!(f.type_size, None);

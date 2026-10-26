@@ -1274,6 +1274,7 @@ impl Carta<'_> {
         let r = &self.retoques;
         let v = match rol {
             "titulo" | "cinta" => r.title_size,
+            "coste" => r.cost_size,
             "tipo" => r.type_size,
             "reglas" => r.rules_size,
             "fr" => r.pt_size,
@@ -1505,7 +1506,9 @@ impl Carta<'_> {
         // Con símbolos propios del pack (las fichas de Balatro): sin la sombra
         // de debajo y con la separación del pack.
         let propios = self.rec.pack.simbolos.is_some();
-        let lado = c.h;
+        // Los símbolos más pequeños (ajustes finos) siguen pegados a la derecha
+        // y centrados en la altura del hueco.
+        let lado = c.h * self.escala_texto("coste");
         let hueco = lado * self.rec.pack.def.separacion_coste.unwrap_or(0.05);
         let n = simbolos.len() as f32;
         let total = n * lado + (n - 1.0) * hueco;
@@ -3870,6 +3873,10 @@ mod tests {
             },
             FineTuning {
                 title_size: Some(0.7),
+                ..FineTuning::default()
+            },
+            FineTuning {
+                cost_size: Some(0.6),
                 ..FineTuning::default()
             },
             FineTuning {
