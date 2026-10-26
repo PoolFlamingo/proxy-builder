@@ -1,6 +1,6 @@
 [package]
 name = "proxy-builder"
-version = "2.7.6"
+version = "2.7.7"
 description = "Proxy Builder — decks proxy de Magic: The Gathering listos para imprimir"
 authors = ["Pablo"]
 edition = "2021"
