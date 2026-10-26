@@ -4,13 +4,27 @@
 //! - `perfil.rs`: `PB_PERFIL`, varias instancias en el mismo equipo (debug).
 //! - `identidad.rs`: la clave de la instalación, el apodo y el avatar.
 //! - `nodo.rs`: el `Endpoint` y sus protocolos.
+//! - `protocolo.rs`: los mensajes de la partida, sus tramas y sus topes.
+//! - `anfitrion.rs` / `invitado.rs`: los dos lados de la partida.
+//! - `codigo.rs`: el código directo (dirección + secreto) para unirse.
+//! - `mesa.rs`: la sesión de la app y los avisos a la pantalla, tras un trait.
+//! - `imagenes.rs`: las imágenes propias de cada jugador.
 //!
 //! Toda entrada que llega de otro equipo es **no confiable**: se valida
 //! antes de tocar nada (tamaños, tipos, permisos en `mesa::resolver`).
 
+pub mod anfitrion;
+pub mod codigo;
+pub mod colores;
 pub mod identidad;
+pub mod imagenes;
+pub mod invitado;
+pub mod mesa;
 pub mod nodo;
 pub mod perfil;
+pub mod protocolo;
+#[cfg(test)]
+mod pruebas;
 
 use iroh::{Endpoint, SecretKey};
 

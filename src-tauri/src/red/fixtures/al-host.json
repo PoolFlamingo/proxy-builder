@@ -1,0 +1,76 @@
+[
+	{
+		"tipo": "hola",
+		"protocolo": 1,
+		"versionApp": "2.7.8",
+		"versionCatalogo": 1,
+		"rol": "jugador",
+		"apodo": "Pablo",
+		"secreto": "00000000000000000000000000000000",
+		"ultimoSeq": null,
+		"epoch": 1
+	},
+	{
+		"tipo": "preparacion",
+		"deck": {
+			"nombre": "Prueba",
+			"cartas": [
+				{
+					"cartaDeck": "c0",
+					"seccion": "mazo",
+					"origen": {
+						"cartaDeck": "c0",
+						"nombre": "Carta 0",
+						"caras": [
+							{
+								"tipo": "propia",
+								"sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+								"ancho": 745,
+								"alto": 1040
+							}
+						],
+						"dorso": {
+							"tipo": "generica"
+						},
+						"scryfallId": null,
+						"info": {
+							"tipo": null,
+							"cmcDecimas": null,
+							"coste": null,
+							"colores": [],
+							"esTierra": false,
+							"esCriatura": false,
+							"esLegendaria": false,
+							"fuerza": null,
+							"resistencia": null,
+							"lealtad": null,
+							"palabrasClave": [],
+							"funciones": [],
+							"bonoFijo": null,
+							"esComandante": false
+						}
+					}
+				}
+			],
+			"tapete": null,
+			"dorso": {
+				"tipo": "generica"
+			}
+		}
+	},
+	{
+		"tipo": "intencion",
+		"id": 7,
+		"accion": {
+			"que": "robar",
+			"n": 1
+		}
+	},
+	{
+		"tipo": "pide",
+		"desdeSeq": 40
+	},
+	{
+		"tipo": "adios"
+	}
+]

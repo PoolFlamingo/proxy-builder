@@ -44,7 +44,7 @@ uuid = { version = "1", features = ["v4"] }
 # OpenSSL en el árbol (regla de judlex). Tras tocarlo, `cargo tree -i openssl`
 # tiene que salir vacío.
 reqwest = { version = "0.13", default-features = false, features = ["json", "query", "rustls", "gzip"] }
-tokio = { version = "1", features = ["rt", "sync", "time", "macros"] }
+tokio = { version = "1", features = ["rt", "sync", "time", "macros", "io-util"] }
 # La mesa de juego en red (`red/`): conexiones QUIC entre jugadores por clave
 # pública, con camino directo y relé de respaldo. Sin `metrics`; TLS con ring
 # como reqwest. 🛑 `cargo tree -i openssl` sigue vacío con ella.

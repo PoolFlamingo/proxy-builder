@@ -6,4 +6,4 @@ import type { VistaMesa } from "./VistaMesa";
 /**
  * Lo que llega a la pantalla por el canal de la mesa.
  */
-export type MensajeMesa = { "tipo": "vista", vista: VistaMesa, registro: Array<Evento>, } | { "tipo": "parche", parche: ParcheVista, evento: Evento, } | { "tipo": "cerrada" };
+export type MensajeMesa = { "tipo": "vista", vista: VistaMesa, registro: Array<Evento>, } | { "tipo": "parche", parche: ParcheVista, evento: Evento, } | { "tipo": "cerrada" } | { "tipo": "rechazo", motivo: string, };

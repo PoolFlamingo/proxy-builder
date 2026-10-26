@@ -67,6 +67,31 @@ pub enum MensajeMesa {
     },
     /// La partida se ha cerrado.
     Cerrada,
+    /// En red: el anfitrión no hizo una intención de esta pantalla (llega
+    /// después, no como respuesta de `mesa_accion`).
+    Rechazo { motivo: String },
+}
+
+/// El papel de la sesión en una partida en red.
+pub enum RedSesion {
+    /// Esta app hace de anfitrión: reparte cada evento a los demás.
+    Anfitrion(std::sync::Arc<crate::red::anfitrion::Anfitrion>),
+    /// Esta app es un invitado: manda sus intenciones al anfitrión y aplica
+    /// los eventos que le llegan.
+    Invitado(crate::red::invitado::Invitado),
+}
+
+/// Lo que pasó con un evento que llega del anfitrión.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Recibido {
+    Aplicado,
+    /// Ya lo tenía (repetido) o es de una época vieja: se tira.
+    Tirado,
+    /// Falta alguno antes: hay que pedirlos desde este `seq`.
+    Hueco(u64),
+    /// No encaja con la copia (o la huella no coincide): hay que pedir la
+    /// partida entera.
+    Desfase,
 }
 
 impl From<Rechazo> for AppError {
@@ -107,6 +132,8 @@ pub struct Sesion {
     /// Cuándo se guardó por última vez (ms de reloj), para no dejar
     /// jugadas sin guardar mucho rato aunque sean pocas.
     pub guardada_ms: u64,
+    /// En red, el papel de esta app; `None`, solitario.
+    pub red: Option<RedSesion>,
 }
 
 /// La partida del motor para esta configuración.
@@ -163,6 +190,68 @@ impl Sesion {
             yo: IdJugador(0),
             sin_guardar: 0,
             guardada_ms: ahora_ms(),
+            red: None,
+        }
+    }
+
+    /// La partida en red que empieza el anfitrión (esta app es el jugador 0).
+    /// Deshacer, solo la última acción propia y si nadie ha hecho nada después.
+    pub fn en_red(
+        config: ConfigMesa,
+        mazos: Vec<DeckDeMesa>,
+        anfitrion: std::sync::Arc<crate::red::anfitrion::Anfitrion>,
+    ) -> AppResult<Sesion> {
+        let p = partida(&config, &mazos, semilla())?;
+        let mut s = Sesion::con_registro(
+            config,
+            mazos,
+            Registro::nuevo(p, ModoDeshacer::UltimaPropia),
+        );
+        s.red = Some(RedSesion::Anfitrion(anfitrion));
+        Ok(s)
+    }
+
+    /// La partida que recibe un invitado (o el anfitrión nuevo, tras migrar).
+    pub fn invitada(
+        partida: Partida,
+        yo: IdJugador,
+        inv: crate::red::invitado::Invitado,
+    ) -> Sesion {
+        let config = ConfigMesa {
+            jugadores: partida
+                .jugadores
+                .iter()
+                .map(|j| JugadorMesa {
+                    deck_id: String::new(),
+                    nombre: j.nombre.clone(),
+                    color: j.color.clone(),
+                    lista: None,
+                })
+                .collect(),
+            formato: partida.formato,
+            variantes: partida.variantes.clone(),
+            opciones: Some(partida.opciones.clone()),
+            intensidad: Intensidad::Apagado,
+        };
+        let mut s = Sesion::con_registro(
+            config,
+            Vec::new(),
+            Registro::nuevo(partida, ModoDeshacer::UltimaPropia),
+        );
+        s.yo = yo;
+        s.red = Some(RedSesion::Invitado(inv));
+        s
+    }
+
+    /// Si la partida se guarda en disco (la del invitado la tiene el anfitrión).
+    pub fn guardable(&self) -> bool {
+        !matches!(self.red, Some(RedSesion::Invitado(_)))
+    }
+
+    pub fn anfitrion(&self) -> Option<&std::sync::Arc<crate::red::anfitrion::Anfitrion>> {
+        match &self.red {
+            Some(RedSesion::Anfitrion(a)) => Some(a),
+            _ => None,
         }
     }
 
@@ -211,7 +300,27 @@ impl Sesion {
     /// Una acción de la pantalla. `como`: a nombre de otro jugador de esta
     /// sesión local (partida local de varios, Fase G).
     pub fn accion(&mut self, accion: Accion, como: Option<IdJugador>) -> AppResult<()> {
+        // El invitado no aplica nada: se lo pide al anfitrión (sin predecir,
+        // decisión D-E2 del plan) y espera el evento.
+        if let Some(RedSesion::Invitado(inv)) = &mut self.red {
+            return inv.enviar(accion);
+        }
         let actor = como.unwrap_or(self.yo);
+        self.hacer(actor, accion, None)
+    }
+
+    /// Una intención de un jugador remoto (en el anfitrión). `id` es el suyo,
+    /// para confirmársela con el evento.
+    pub fn accion_remota(&mut self, jugador: IdJugador, id: u64, accion: Accion) -> AppResult<()> {
+        self.hacer(jugador, accion, Some((jugador, id)))
+    }
+
+    fn hacer(
+        &mut self,
+        actor: IdJugador,
+        accion: Accion,
+        origen: Option<(IdJugador, u64)>,
+    ) -> AppResult<()> {
         let ahora = ahora_ms();
         // El fantasma mira la partida de antes y la de después (solo si está
         // encendido: la copia no sale gratis).
@@ -227,19 +336,65 @@ impl Sesion {
         let reaccion = antes.and_then(|a| {
             mesa::sparring::reaccionar(&a, self.registro.partida(), &hecho.evento, &mut self.azar)
         });
-        self.publicar(hecho);
+        self.publicar(hecho, origen);
         // La reacción, como un evento más de la mesa justo detrás.
         if let Some(reaccion) = reaccion {
             let h = self
                 .registro
                 .de_la_mesa(Cambio::Sparring { reaccion }, ahora)?;
-            self.publicar(h);
+            self.publicar(h, None);
         }
         Ok(())
     }
 
-    /// Apunta un evento hecho y se lo manda a la pantalla.
-    fn publicar(&mut self, hecho: mesa::registro::Hecho) {
+    /// En el invitado: un evento del anfitrión, en orden de `seq`.
+    pub fn recibir(&mut self, ev: Evento, huella: Option<&str>) -> Recibido {
+        let ultimo = self.partida().seq;
+        if ev.seq <= ultimo {
+            return Recibido::Tirado;
+        }
+        if ev.seq > ultimo + 1 {
+            return Recibido::Hueco(ultimo + 1);
+        }
+        let Ok(tocado) = self.registro.recibir(ev.clone()) else {
+            return Recibido::Desfase;
+        };
+        if huella.is_some_and(|h| h != mesa::huella(self.partida())) {
+            tracing::warn!(seq = ev.seq, "la partida no coincide con la del anfitrión");
+            return Recibido::Desfase;
+        }
+        self.publicar(mesa::registro::Hecho { evento: ev, tocado }, None);
+        Recibido::Aplicado
+    }
+
+    /// En el invitado: la partida entera (al volver o si se desfasó).
+    pub fn recibir_partida(&mut self, partida: Partida, yo: IdJugador) {
+        self.registro = Registro::nuevo(partida, ModoDeshacer::UltimaPropia);
+        self.yo = yo;
+        self.mandar(self.mensaje_vista());
+    }
+
+    /// En el invitado: el anfitrión no hizo la intención `id`.
+    pub fn rechazada(&mut self, id: Option<u64>, motivo: String) {
+        if let (Some(RedSesion::Invitado(inv)), Some(id)) = (&mut self.red, id) {
+            inv.confirmada(id);
+        }
+        self.mandar(MensajeMesa::Rechazo { motivo });
+    }
+
+    /// En el invitado: el evento que confirma la intención `id`.
+    pub fn confirmada(&mut self, id: u64) {
+        if let Some(RedSesion::Invitado(inv)) = &mut self.red {
+            inv.confirmada(id);
+        }
+    }
+
+    /// Apunta un evento hecho, se lo manda a la pantalla y, en el anfitrión,
+    /// a los demás (`origen`: de qué intención remota viene).
+    fn publicar(&mut self, hecho: mesa::registro::Hecho, origen: Option<(IdJugador, u64)>) {
+        if let Some(RedSesion::Anfitrion(a)) = &self.red {
+            a.difundir(self.registro.partida(), &hecho, origen);
+        }
         self.sin_guardar += 1;
         if matches!(hecho.evento.cambio, Cambio::Restaurar { .. }) {
             self.mandar(self.mensaje_vista());

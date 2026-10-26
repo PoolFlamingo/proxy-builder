@@ -96,6 +96,10 @@ fn con_sesion<T>(state: &AppState, f: impl FnOnce(&mut Sesion) -> AppResult<T>) 
 fn guardar_si_toca(state: &AppState, forzar: bool) {
     let Ok(mut m) = state.mesa.lock() else { return };
     let Some(s) = m.as_mut() else { return };
+    // La partida de un invitado la guarda su anfitrión.
+    if !s.guardable() {
+        return;
+    }
     let ahora = crate::mesa::sesion::ahora_ms();
     let viejo = s.sin_guardar > 0 && ahora.saturating_sub(s.guardada_ms) >= guardada::CADA_MS;
     if forzar || viejo || s.sin_guardar >= guardada::CADA {

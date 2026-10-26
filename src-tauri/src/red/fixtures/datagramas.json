@@ -1,0 +1,26 @@
+[
+	{
+		"tipo": "latido",
+		"t": 1
+	},
+	{
+		"tipo": "eco",
+		"t": 1,
+		"tHost": 2
+	},
+	{
+		"tipo": "fantasma",
+		"jugador": 1,
+		"carta": 3,
+		"x": 5000,
+		"y": 2000,
+		"t": 9
+	},
+	{
+		"tipo": "senal",
+		"jugador": 0,
+		"carta": null,
+		"a": 1,
+		"t": 9
+	}
+]
