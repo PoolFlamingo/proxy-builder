@@ -556,5 +556,61 @@
 	"Es demasiado (un número o un texto pasa del límite).": "To za dużo (liczba lub tekst przekracza limit).",
 	"Eso no se puede hacer ahora.": "Teraz nie można tego zrobić.",
 	"Lanzar la moneda": "Rzuć monetą",
-	"Hay una partida abierta: termínala o sal de la mesa para actualizar.": "Trwa partia: aby zaktualizować, zakończ ją lub opuść stół."
+	"Hay una partida abierta: termínala o sal de la mesa para actualizar.": "Trwa partia: aby zaktualizować, zakończ ją lub opuść stół.",
+	"Lista para jugar": "Lista do gry",
+	"Ninguna todavía": "Jeszcze brak",
+	"Nueva lista…": "Nowa lista…",
+	"Editar…": "Edytuj…",
+	"Este deck tiene {n} cartas y en Commander se juega con 100: haz una lista con el comandante y 99 más.": {
+		"one": "Ta talia ma {n} kartę, a w Commandera gra się 100 kartami: utwórz listę z commanderem i 99 innymi.",
+		"few": "Ta talia ma {n} karty, a w Commandera gra się 100 kartami: utwórz listę z commanderem i 99 innymi.",
+		"many": "Ta talia ma {n} kart, a w Commandera gra się 100 kartami: utwórz listę z commanderem i 99 innymi.",
+		"other": "Ta talia ma {n} karty, a w Commandera gra się 100 kartami: utwórz listę z commanderem i 99 innymi."
+	},
+	"Lleva {n} cartas y el formato pide al menos {desde}.": {
+		"one": "Ma {n} kartę, a format wymaga co najmniej {desde}.",
+		"few": "Ma {n} karty, a format wymaga co najmniej {desde}.",
+		"many": "Ma {n} kart, a format wymaga co najmniej {desde}.",
+		"other": "Ma {n} karty, a format wymaga co najmniej {desde}."
+	},
+	"Lleva {n} cartas y el formato pide {desde}.": {
+		"one": "Ma {n} kartę, a format wymaga {desde}.",
+		"few": "Ma {n} karty, a format wymaga {desde}.",
+		"many": "Ma {n} kart, a format wymaga {desde}.",
+		"other": "Ma {n} karty, a format wymaga {desde}."
+	},
+	"Lleva {n} cartas y el formato pide de {desde} a {hasta}.": {
+		"one": "Ma {n} kartę, a format wymaga od {desde} do {hasta}.",
+		"few": "Ma {n} karty, a format wymaga od {desde} do {hasta}.",
+		"many": "Ma {n} kart, a format wymaga od {desde} do {hasta}.",
+		"other": "Ma {n} karty, a format wymaga od {desde} do {hasta}."
+	},
+	"Falta el comandante.": "Brak commandera.",
+	"Como mucho, dos comandantes.": "Najwyżej dwóch commanderów.",
+	"{carta} no puede ser comandante.": "{carta} nie może być commanderem.",
+	"Dos comandantes solo con compañero o trasfondo.": "Dwóch commanderów tylko z partnerem lub backgroundem.",
+	"{carta} va {veces} veces.": "{carta} występuje {veces} razy.",
+	"{carta} se sale de la identidad de color del comandante.": "{carta} wykracza poza tożsamość kolorów commandera.",
+	"{n} cartas de la lista ya no están en el deck.": {
+		"one": "{n} karta z listy nie jest już w talii.",
+		"few": "{n} karty z listy nie są już w talii.",
+		"many": "{n} kart z listy nie ma już w talii.",
+		"other": "{n} karty z listy nie ma już w talii."
+	},
+	"Editar la lista para jugar": "Edytuj listę do gry",
+	"Nueva lista para jugar": "Nowa lista do gry",
+	"Elige el comandante (la variante que quieras) y 99 cartas más. El deck no cambia.": "Wybierz commandera (dowolny wariant) i 99 innych kart. Talia się nie zmienia.",
+	"Elige las cartas que se juegan. El deck no cambia.": "Wybierz karty, którymi się gra. Talia się nie zmienia.",
+	"Leyendo las cartas del deck…": "Wczytywanie kart talii…",
+	"Nombre de la lista": "Nazwa listy",
+	"Solo las elegidas": "Tylko wybrane",
+	"Las del deck": "Jak w talii",
+	"Comandante": "Commander",
+	"Ninguna carta del deck puede ser comandante.": "Żadna karta w talii nie może być commanderem.",
+	"Una menos": "Jedna mniej",
+	"Una más": "Jedna więcej",
+	"Se puede guardar a medias, pero así no deja empezar la partida.": "Można zapisać niedokończoną, ale wtedy nie da się rozpocząć gry.",
+	"Este deck tiene más cartas de las que se juegan: elige una lista para jugar.": "Ta talia ma więcej kart, niż się gra: wybierz listę do gry.",
+	"La lista para jugar no vale para este formato: revísala.": "Lista do gry nie pasuje do tego formatu: sprawdź ją.",
+	"Ponle un nombre a la lista.": "Nadaj liście nazwę."
 }

@@ -536,5 +536,51 @@
 	"Es demasiado (un número o un texto pasa del límite).": "That's too much (a number or text exceeds the limit).",
 	"Eso no se puede hacer ahora.": "That can't be done right now.",
 	"Lanzar la moneda": "Flip the coin",
-	"Hay una partida abierta: termínala o sal de la mesa para actualizar.": "A game is open: finish it or leave the table to update."
+	"Hay una partida abierta: termínala o sal de la mesa para actualizar.": "A game is open: finish it or leave the table to update.",
+	"Lista para jugar": "Game list",
+	"Ninguna todavía": "None yet",
+	"Nueva lista…": "New list…",
+	"Editar…": "Edit…",
+	"Este deck tiene {n} cartas y en Commander se juega con 100: haz una lista con el comandante y 99 más.": {
+		"one": "This deck has {n} card and Commander is played with 100: make a list with the commander and 99 more.",
+		"other": "This deck has {n} cards and Commander is played with 100: make a list with the commander and 99 more."
+	},
+	"Lleva {n} cartas y el formato pide al menos {desde}.": {
+		"one": "It has {n} card and the format requires at least {desde}.",
+		"other": "It has {n} cards and the format requires at least {desde}."
+	},
+	"Lleva {n} cartas y el formato pide {desde}.": {
+		"one": "It has {n} card and the format requires {desde}.",
+		"other": "It has {n} cards and the format requires {desde}."
+	},
+	"Lleva {n} cartas y el formato pide de {desde} a {hasta}.": {
+		"one": "It has {n} card and the format requires {desde} to {hasta}.",
+		"other": "It has {n} cards and the format requires {desde} to {hasta}."
+	},
+	"Falta el comandante.": "The commander is missing.",
+	"Como mucho, dos comandantes.": "At most two commanders.",
+	"{carta} no puede ser comandante.": "{carta} can't be a commander.",
+	"Dos comandantes solo con compañero o trasfondo.": "Two commanders only with Partner or a Background.",
+	"{carta} va {veces} veces.": "{carta} appears {veces} times.",
+	"{carta} se sale de la identidad de color del comandante.": "{carta} is outside the commander's color identity.",
+	"{n} cartas de la lista ya no están en el deck.": {
+		"one": "{n} card in the list is no longer in the deck.",
+		"other": "{n} cards in the list are no longer in the deck."
+	},
+	"Editar la lista para jugar": "Edit game list",
+	"Nueva lista para jugar": "New game list",
+	"Elige el comandante (la variante que quieras) y 99 cartas más. El deck no cambia.": "Choose the commander (whichever variant you like) and 99 more cards. The deck doesn't change.",
+	"Elige las cartas que se juegan. El deck no cambia.": "Choose the cards you play with. The deck doesn't change.",
+	"Leyendo las cartas del deck…": "Reading the deck's cards…",
+	"Nombre de la lista": "List name",
+	"Solo las elegidas": "Chosen only",
+	"Las del deck": "As in the deck",
+	"Comandante": "Commander",
+	"Ninguna carta del deck puede ser comandante.": "No card in the deck can be a commander.",
+	"Una menos": "One fewer",
+	"Una más": "One more",
+	"Se puede guardar a medias, pero así no deja empezar la partida.": "You can save it unfinished, but then it won't let you start the game.",
+	"Este deck tiene más cartas de las que se juegan: elige una lista para jugar.": "This deck has more cards than are played: choose a game list.",
+	"La lista para jugar no vale para este formato: revísala.": "The game list isn't valid for this format: review it.",
+	"Ponle un nombre a la lista.": "Give the list a name."
 }

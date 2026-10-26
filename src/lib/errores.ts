@@ -34,6 +34,13 @@ const MOTIVOS: Partial<Record<ErrorCode, Record<string, string>>> = {
 	Busy: {
 		partida: paraTraducir("Hay una partida abierta: termínala o sal de la mesa para actualizar."),
 	},
+	InvalidInput: {
+		falta_lista: paraTraducir(
+			"Este deck tiene más cartas de las que se juegan: elige una lista para jugar.",
+		),
+		lista: paraTraducir("La lista para jugar no vale para este formato: revísala."),
+		lista_sin_nombre: paraTraducir("Ponle un nombre a la lista."),
+	},
 	Rejected: {
 		NoExiste: paraTraducir("Esa carta o ese jugador ya no está ahí."),
 		SinPermiso: paraTraducir("Eso es de otro jugador: no puedes tocarlo."),

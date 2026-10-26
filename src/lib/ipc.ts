@@ -5,6 +5,7 @@ import type { ActualizacionInfo } from "@/bindings/ActualizacionInfo";
 import type { ArchidektImport } from "@/bindings/ArchidektImport";
 import type { ArtRef } from "@/bindings/ArtRef";
 import type { Aviso } from "@/bindings/Aviso";
+import type { AvisoLista } from "@/bindings/AvisoLista";
 import type { CacheStats } from "@/bindings/CacheStats";
 import type { CalibrationTextsInput } from "@/bindings/CalibrationTextsInput";
 import type { CapaInfo } from "@/bindings/CapaInfo";
@@ -13,6 +14,7 @@ import type { CardIdentify } from "@/bindings/CardIdentify";
 import type { CardMeta } from "@/bindings/CardMeta";
 import type { CardSize } from "@/bindings/CardSize";
 import type { CardSummary } from "@/bindings/CardSummary";
+import type { CartaDeLista } from "@/bindings/CartaDeLista";
 import type { Collection } from "@/bindings/Collection";
 import type { ConfigMesa } from "@/bindings/ConfigMesa";
 import type { Deck } from "@/bindings/Deck";
@@ -28,6 +30,7 @@ import type { EstadoMesa } from "@/bindings/EstadoMesa";
 import type { ExportEstimate } from "@/bindings/ExportEstimate";
 import type { FaceImage } from "@/bindings/FaceImage";
 import type { FichaPropuesta } from "@/bindings/FichaPropuesta";
+import type { Formato } from "@/bindings/Formato";
 import type { FormatoLista } from "@/bindings/FormatoLista";
 import type { FuenteCarta } from "@/bindings/FuenteCarta";
 import type { GcReport } from "@/bindings/GcReport";
@@ -36,6 +39,8 @@ import type { IdentifyRequest } from "@/bindings/IdentifyRequest";
 import type { IdJugador } from "@/bindings/IdJugador";
 import type { LetraInfo } from "@/bindings/LetraInfo";
 import type { LetraLibre } from "@/bindings/LetraLibre";
+import type { ListaDeJuego } from "@/bindings/ListaDeJuego";
+import type { ListasDeDeck } from "@/bindings/ListasDeDeck";
 import type { MensajeMesa } from "@/bindings/MensajeMesa";
 import type { NombresIdiomasInfo } from "@/bindings/NombresIdiomasInfo";
 import type { OrigenCarta } from "@/bindings/OrigenCarta";
@@ -254,6 +259,14 @@ export interface Commands {
 		args: { deck: string | null; velo: number; desenfoque: number };
 		result: null;
 	};
+	mesa_listas: { args: { deck: string }; result: ListasDeDeck };
+	mesa_lista_cartas: { args: { deck: string }; result: CartaDeLista[] };
+	mesa_lista_comprobar: {
+		args: { deck: string; formato: Formato; lista: ListaDeJuego };
+		result: AvisoLista[];
+	};
+	mesa_lista_guardar: { args: { deck: string; lista: ListaDeJuego }; result: ListaDeJuego };
+	mesa_lista_borrar: { args: { deck: string; id: string }; result: null };
 }
 
 export function call<C extends keyof Commands>(

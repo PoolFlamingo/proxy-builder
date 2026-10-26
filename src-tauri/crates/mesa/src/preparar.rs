@@ -15,6 +15,7 @@ use crate::azar::Azar;
 use crate::error::Rechazo;
 use crate::formato::{Formato, ModoEquipos, Opciones, Variantes, VIDA_ARCHIENEMIGO};
 use crate::ids::{IdCarta, IdEquipo, IdJugador};
+use crate::lista::ListaDeJuego;
 use crate::modelo::{
     Carta, Designaciones, Equipo, EstadoMulligan, Jugador, OrigenCarta, Partida, RefImagen,
     RefZona, Turno, VidaFantasma, Zona, ZonaComun,
@@ -84,10 +85,22 @@ fn layout_de(c: &DeckCard) -> Vec<String> {
 /// La sección de cada carta del deck en la mesa. Las opcionales y la
 /// maybeboard se quedan fuera; de las variantes, una (como `cuentan`); el
 /// banquillo marcado va al banquillo; los huecos en blanco, fuera.
-pub fn secciones_de_mesa(deck: &Deck) -> Vec<(&DeckCard, Seccion)> {
+pub fn secciones_de_mesa<'a>(
+    deck: &'a Deck,
+    lista: Option<&ListaDeJuego>,
+) -> Vec<(&'a DeckCard, Seccion)> {
     let secciones = secciones_de(&deck.decklist_text);
     let (validas, _) = cuentan(&deck.cards);
     let cuenta: std::collections::BTreeSet<&str> = validas.iter().map(|c| c.id.as_str()).collect();
+    // Con una lista para jugar, solo lo elegido (y lo que no es del mazo:
+    // fichas, planos, planes y el banquillo marcado).
+    let elegidas = lista.map(|l| {
+        let comandantes: std::collections::BTreeSet<&str> =
+            l.comandantes.iter().map(String::as_str).collect();
+        let cartas: std::collections::BTreeSet<&str> =
+            l.cartas.iter().map(String::as_str).collect();
+        (comandantes, cartas)
+    });
     let mut out = Vec::new();
     for c in &deck.cards {
         if matches!(c.source, CardSource::Blank) {
@@ -101,6 +114,16 @@ pub fn secciones_de_mesa(deck: &Deck) -> Vec<(&DeckCard, Seccion)> {
             Seccion::Plano
         } else if layouts.iter().any(|l| l == "scheme") {
             Seccion::Plan
+        } else if let Some((comandantes, cartas)) = &elegidas {
+            if comandantes.contains(c.id.as_str()) {
+                Seccion::Comandante
+            } else if cartas.contains(c.id.as_str()) {
+                Seccion::Mazo
+            } else if c.marca == Some(MarcaCarta::Banquillo) {
+                Seccion::Banquillo
+            } else {
+                continue;
+            }
         } else {
             match c.marca {
                 Some(MarcaCarta::Opcional) => continue,
@@ -118,6 +141,23 @@ pub fn secciones_de_mesa(deck: &Deck) -> Vec<(&DeckCard, Seccion)> {
         out.push((c, s));
     }
     out
+}
+
+/// Las copias de un deck que se pueden elegir para una lista para jugar:
+/// todas menos los huecos en blanco, las fichas, los planos y los planes
+/// (esos van a la partida por su cuenta), marcadas o no.
+pub fn candidatas_de_lista(deck: &Deck) -> Vec<&DeckCard> {
+    let secciones = secciones_de(&deck.decklist_text);
+    deck.cards
+        .iter()
+        .filter(|c| !matches!(c.source, CardSource::Blank))
+        .filter(|c| !es_ficha(c) && seccion_de(&secciones, &c.meta.name) != Section::Tokens)
+        .filter(|c| {
+            !layout_de(c)
+                .iter()
+                .any(|l| l == "planar" || l == "phenomenon" || l == "scheme")
+        })
+        .collect()
 }
 
 /// Un jugador que se sienta a la mesa.

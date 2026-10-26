@@ -359,6 +359,10 @@ printing, with the same images you will print (designed proxies included):
 - **The large view** of the card under the mouse, with a status panel that
   explains every counter and bonus.
 - **Undo as much as you like**, and a game log written in your language.
+- **Decks with more cards than you play** (design variants, alternatives to
+  try other synergies): save **game lists** with the commander (the design
+  variant you want) and 99 more, checked for size, duplicates and colour
+  identity. The deck itself doesn't change.
 - **Your playmat**: an image of yours or a card's art, per deck, with a dark
   veil and blur so the cards stand out.
 - **It never loses a game:** it is saved as you play, and «Play» offers to

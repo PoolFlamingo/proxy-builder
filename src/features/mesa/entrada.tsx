@@ -1,9 +1,22 @@
-import { Image, Loader2, Play, Search, Swords, Trash2, User } from "lucide-react";
+import {
+	Image,
+	ListChecks,
+	Loader2,
+	Pencil,
+	Play,
+	Plus,
+	Search,
+	Swords,
+	Trash2,
+	User,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { DeckSummary } from "@/bindings/DeckSummary";
 import type { EstadoMesa } from "@/bindings/EstadoMesa";
 import type { Formato } from "@/bindings/Formato";
+import type { ListaDeJuego } from "@/bindings/ListaDeJuego";
+import type { ListasDeDeck } from "@/bindings/ListasDeDeck";
 import type { ModoMulligan } from "@/bindings/ModoMulligan";
 import type { Opciones } from "@/bindings/Opciones";
 import { CampoNumero, Fila, FilaInterruptor, Selector } from "@/components/campos";
@@ -20,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { useTrabajo } from "@/stores/trabajo-store";
 import { COLORES_JUGADOR } from "./colores";
 import { empezar, retomar, salir } from "./conexion";
+import { ListaDialog } from "./listas/lista-dialog";
 import { TapeteDialog } from "./tapete-dialog";
 
 /** Los valores de fábrica de un formato (lo mismo que `Opciones::de_fabrica` de Rust). */
@@ -57,6 +71,9 @@ function nombreGuardado(): string {
  * biblioteca, el formato y las opciones, y empezar en solitario; o seguir la
  * partida que quedó a medias.
  */
+/** El valor del selector de listas para jugar con el deck entero (Radix no admite «»). */
+const TODO_EL_DECK = "*";
+
 export function EntradaMesa() {
 	const { t, mensaje } = useLang();
 	const [decks, setDecks] = useState<DeckSummary[]>([]);
@@ -69,6 +86,10 @@ export function EntradaMesa() {
 	const [tapete, setTapete] = useState(false);
 	const [descartar, setDescartar] = useState(false);
 	const [reemplazar, setReemplazar] = useState(false);
+	// Las listas para jugar del deck elegido y la que se usa.
+	const [listas, setListas] = useState<ListasDeDeck | null>(null);
+	const [listaId, setListaId] = useState<string | null>(null);
+	const [editando, setEditando] = useState<{ lista: ListaDeJuego | null } | null>(null);
 	const trabajo = useTrabajo((s) => (s.actual?.tipo === "mesa" ? s.actual : null));
 
 	useEffect(() => {
@@ -83,6 +104,21 @@ export function EntradaMesa() {
 			.then(setEstado)
 			.catch(() => setEstado(null));
 	}, [mensaje]);
+
+	useEffect(() => {
+		setListas(null);
+		setListaId(null);
+		if (!elegido) return;
+		call("mesa_listas", { deck: elegido })
+			.then((l) => {
+				setListas(l);
+				setListaId(l.listas[0]?.id ?? null);
+			})
+			.catch(() => setListas(null));
+	}, [elegido]);
+	/** El deck pasa del tamaño del formato: hay que elegir una lista (como `Construccion::pide_lista`). */
+	const pideLista = formato === "commander" && (listas?.cuentan ?? 0) > 100;
+	const sinLista = pideLista && !listaId;
 
 	// El formato de fábrica, el que se deduce del deck.
 	useEffect(() => {
@@ -118,7 +154,12 @@ export function EntradaMesa() {
 		}
 		await empezar({
 			jugadores: [
-				{ deckId: elegido, nombre: nombre.trim() || t("Jugador"), color: COLORES_JUGADOR[0] },
+				{
+					deckId: elegido,
+					nombre: nombre.trim() || t("Jugador"),
+					color: COLORES_JUGADOR[0],
+					lista: listaId ?? undefined,
+				},
 			],
 			formato,
 			variantes: { equipos: { tipo: "ninguno" }, archenemy: null, planechase: false },
@@ -246,6 +287,54 @@ export function EntradaMesa() {
 							]}
 						/>
 					</Fila>
+					{elegido && listas && (
+						<div className="flex flex-col gap-1.5" data-tutorial="mesa-lista">
+							<Fila etiqueta={t("Lista para jugar")}>
+								{pideLista && listas.listas.length === 0 ? (
+									<span className="text-xs text-muted-foreground">{t("Ninguna todavía")}</span>
+								) : (
+									<Selector<string>
+										valor={listaId ?? TODO_EL_DECK}
+										onChange={(v) => setListaId(v === TODO_EL_DECK ? null : v)}
+										opciones={[
+											...(pideLista
+												? []
+												: [
+														{ valor: "", etiqueta: t("Todo el deck ({n})", { n: listas.cuentan }) },
+													]),
+											...listas.listas.map((l) => ({ valor: l.id, etiqueta: l.nombre })),
+										]}
+									/>
+								)}
+							</Fila>
+							<div className="flex justify-end gap-1.5">
+								<Button size="sm" variant="outline" onClick={() => setEditando({ lista: null })}>
+									<Plus className="size-3.5" />
+									{t("Nueva lista…")}
+								</Button>
+								<Button
+									size="sm"
+									variant="outline"
+									disabled={!listaId}
+									onClick={() =>
+										setEditando({ lista: listas.listas.find((l) => l.id === listaId) ?? null })
+									}
+								>
+									<Pencil className="size-3.5" />
+									{t("Editar…")}
+								</Button>
+							</div>
+							{sinLista && (
+								<p className="flex items-start gap-1.5 rounded-md bg-amber-500/10 p-1.5 text-[11px] text-amber-600 dark:text-amber-300">
+									<ListChecks className="mt-0.5 size-3.5 shrink-0" />
+									{t(
+										"Este deck tiene {n} cartas y en Commander se juega con 100: haz una lista con el comandante y 99 más.",
+										{ n: listas.cuentan },
+									)}
+								</p>
+							)}
+						</div>
+					)}
 					<Fila etiqueta={t("Vidas")}>
 						<CampoNumero
 							valor={opciones.vidaInicial}
@@ -306,7 +395,7 @@ export function EntradaMesa() {
 					)}
 					<Button
 						size="lg"
-						disabled={!elegido || !!trabajo}
+						disabled={!elegido || !!trabajo || sinLista}
 						onClick={pedirSolitario}
 						data-tutorial="mesa-solitario"
 					>
@@ -315,6 +404,32 @@ export function EntradaMesa() {
 					</Button>
 				</div>
 			</aside>
+			{elegido && editando && (
+				<ListaDialog
+					abierto
+					onCerrar={() => setEditando(null)}
+					deckId={elegido}
+					formato={formato}
+					lista={editando.lista}
+					onGuardada={(l) => {
+						setListas((x) =>
+							x
+								? {
+										...x,
+										listas: [...x.listas.filter((y) => y.id !== l.id), l].sort((a, b) =>
+											a.nombre.localeCompare(b.nombre),
+										),
+									}
+								: x,
+						);
+						setListaId(l.id);
+					}}
+					onBorrada={(id) => {
+						setListas((x) => (x ? { ...x, listas: x.listas.filter((y) => y.id !== id) } : x));
+						setListaId((actual) => (actual === id ? null : actual));
+					}}
+				/>
+			)}
 			<TapeteDialog abierto={tapete} onCerrar={() => setTapete(false)} deckId={elegido} />
 			<Confirmar
 				abierto={reemplazar}

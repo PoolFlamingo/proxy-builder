@@ -2,9 +2,13 @@
 //! acciones, suscribirse a su vista y el tapete.
 
 use mesa::accion::Accion;
+use mesa::formato::Formato;
+use mesa::lista::{comprobar, AvisoLista, CartaDeLista, Construccion, ListaDeJuego};
 use mesa::modelo::{OrigenCarta, RefImagen};
+use mesa::preparar::{secciones_de_mesa, Seccion};
 use mesa::vista::VistaMesa;
 use mesa::{IdCarta, IdJugador};
+use proxy_core::model::Deck;
 use serde::Serialize;
 use tauri::ipc::Channel;
 use tauri::{AppHandle, Emitter, Manager, State};
@@ -13,11 +17,12 @@ use ts_rs::TS;
 use crate::error::{AppError, AppResult, ErrorCode};
 use crate::mesa::guardada::{self, ResumenGuardada};
 use crate::mesa::imagenes;
-use crate::mesa::preparar::deck_de_mesa;
+use crate::mesa::preparar::{cartas_de_lista, deck_de_mesa};
 use crate::mesa::sesion::{ConfigMesa, MensajeMesa, Sesion};
 use crate::mesa::tapete::{self, OrigenTapete, Tapete};
 use crate::scryfall::client::CardApi;
 use crate::state::AppState;
+use crate::store::listas;
 
 #[derive(Debug, Clone, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -103,6 +108,38 @@ fn guardar_si_toca(state: &AppState, forzar: bool) {
     }
 }
 
+/// La lista para jugar de un jugador, comprobada. Sin lista, el deck entero,
+/// salvo que tenga más cartas de las que caben en el formato: entonces hay que
+/// elegir una (`motivo: falta_lista`). Una lista que no vale para el formato
+/// no deja empezar (`motivo: lista`).
+async fn lista_para_jugar(
+    state: &AppState,
+    deck: &Deck,
+    id: Option<&str>,
+    formato: Formato,
+) -> AppResult<Option<ListaDeJuego>> {
+    let mal = |motivo: &str| AppError::new(ErrorCode::InvalidInput).with("motivo", motivo);
+    let Some(id) = id else {
+        let cuentan = secciones_de_mesa(deck, None)
+            .iter()
+            .filter(|(_, s)| matches!(s, Seccion::Mazo | Seccion::Comandante | Seccion::Companero))
+            .count() as u32;
+        if Construccion::de(formato).is_some_and(|c| c.pide_lista(cuentan)) {
+            return Err(mal("falta_lista"));
+        }
+        return Ok(None);
+    };
+    let lista = listas::una(&state.db, &deck.id, id)?.ok_or_else(|| mal("lista"))?;
+    let cartas = cartas_de_lista(state, state.scryfall.as_ref(), deck).await?;
+    if comprobar(&cartas, &lista, formato)
+        .iter()
+        .any(AvisoLista::impide)
+    {
+        return Err(mal("lista"));
+    }
+    Ok(Some(lista))
+}
+
 /// Prepara los decks y abre la partida (un trabajo largo con progreso:
 /// pintar las cartas diseñadas puede tardar la primera vez).
 async fn abrir(
@@ -128,7 +165,15 @@ async fn abrir(
                 },
             );
         };
-        let mut m = deck_de_mesa(state, state.scryfall.as_ref(), &deck, &progreso).await?;
+        let lista = lista_para_jugar(state, &deck, j.lista.as_deref(), config.formato).await?;
+        let mut m = deck_de_mesa(
+            state,
+            state.scryfall.as_ref(),
+            &deck,
+            lista.as_ref(),
+            &progreso,
+        )
+        .await?;
         if let Some(t) = tapete::de_deck(state, &j.deck_id)? {
             m.tapete = tapete::para_mesa(state, &t.blob).ok();
         }
@@ -204,7 +249,19 @@ async fn retomar(app: &AppHandle, state: &AppState, job_id: u32) -> AppResult<()
                     },
                 );
             };
-            deck_de_mesa(state, state.scryfall.as_ref(), &deck, &progreso).await?;
+            // La lista pudo borrarse después: solo cambia qué imágenes se preparan.
+            let lista = match &j.lista {
+                Some(id) => listas::una(&state.db, &j.deck_id, id)?,
+                None => None,
+            };
+            deck_de_mesa(
+                state,
+                state.scryfall.as_ref(),
+                &deck,
+                lista.as_ref(),
+                &progreso,
+            )
+            .await?;
         }
     }
     let s = guardada::sesion(g)?;
@@ -494,4 +551,66 @@ pub fn mesa_tapete_ajustes(
         tapete::guardar(&state, deck.as_deref(), Some(&t))?;
     }
     Ok(())
+}
+
+/// Las listas para jugar de un deck y cuántas cartas suyas cuentan (para
+/// saber si hace falta elegir una: más de las que caben en el formato).
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct ListasDeDeck {
+    pub listas: Vec<ListaDeJuego>,
+    pub cuentan: u32,
+}
+
+#[tauri::command]
+pub fn mesa_listas(state: State<'_, AppState>, deck: String) -> AppResult<ListasDeDeck> {
+    let d = crate::store::decks::open(&state.db, &deck)?;
+    let cuentan = secciones_de_mesa(&d, None)
+        .iter()
+        .filter(|(_, s)| matches!(s, Seccion::Mazo | Seccion::Comandante | Seccion::Companero))
+        .count() as u32;
+    Ok(ListasDeDeck {
+        listas: listas::de_deck(&state.db, &deck)?,
+        cuentan,
+    })
+}
+
+/// Las copias elegibles de un deck con sus datos (de Scryfall o del diseño),
+/// para el editor de listas.
+#[tauri::command]
+pub async fn mesa_lista_cartas(
+    state: State<'_, AppState>,
+    deck: String,
+) -> AppResult<Vec<CartaDeLista>> {
+    let d = crate::store::decks::open(&state.db, &deck)?;
+    cartas_de_lista(&state, state.scryfall.as_ref(), &d).await
+}
+
+/// Lo que está mal (o solo avisa) de una lista para un formato.
+#[tauri::command]
+pub async fn mesa_lista_comprobar(
+    state: State<'_, AppState>,
+    deck: String,
+    formato: Formato,
+    lista: ListaDeJuego,
+) -> AppResult<Vec<AvisoLista>> {
+    let d = crate::store::decks::open(&state.db, &deck)?;
+    let cartas = cartas_de_lista(&state, state.scryfall.as_ref(), &d).await?;
+    Ok(comprobar(&cartas, &lista, formato))
+}
+
+/// Guarda (crea o reemplaza) una lista; devuelve la guardada, con su id.
+#[tauri::command]
+pub fn mesa_lista_guardar(
+    state: State<'_, AppState>,
+    deck: String,
+    lista: ListaDeJuego,
+) -> AppResult<ListaDeJuego> {
+    listas::guardar(&state.db, &deck, &lista)
+}
+
+#[tauri::command]
+pub fn mesa_lista_borrar(state: State<'_, AppState>, deck: String, id: String) -> AppResult<()> {
+    listas::borrar(&state.db, &deck, &id)
 }

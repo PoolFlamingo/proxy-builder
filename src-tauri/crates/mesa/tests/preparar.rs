@@ -3,6 +3,7 @@
 mod comun;
 
 use comun::*;
+use mesa::lista::ListaDeJuego;
 use mesa::modelo::{RefZona, Zona};
 use mesa::preparar::{secciones_de_mesa, Seccion};
 use mesa::IdJugador;
@@ -62,7 +63,7 @@ fn yusri() -> Deck {
 }
 
 fn de(deck: &Deck, s: Seccion) -> Vec<String> {
-    secciones_de_mesa(deck)
+    secciones_de_mesa(deck, None)
         .into_iter()
         .filter(|(_, x)| *x == s)
         .map(|(c, _)| c.meta.name.clone())
@@ -76,7 +77,11 @@ fn las_secciones_salen_de_la_lista() {
     assert_eq!(de(&d, Seccion::Banquillo), vec!["Pyroblast"]);
     assert_eq!(de(&d, Seccion::Ficha), vec!["Treasure"]);
     assert_eq!(de(&d, Seccion::Mazo).len(), 3);
-    assert_eq!(secciones_de_mesa(&d).len(), 6, "el hueco en blanco, fuera");
+    assert_eq!(
+        secciones_de_mesa(&d, None).len(),
+        6,
+        "el hueco en blanco, fuera"
+    );
 }
 
 #[test]
@@ -101,6 +106,37 @@ fn las_marcas_cuentan_como_cuentan() {
     );
     assert!(!de(&d, Seccion::Mazo).contains(&"Opt".to_string()));
     assert!(de(&d, Seccion::Banquillo).contains(&"Lightning Bolt".to_string()));
+}
+
+#[test]
+fn con_una_lista_solo_va_lo_elegido() {
+    let mut d = yusri();
+    // Otra variante de diseño de Yusri y una alternativa que no se juega.
+    let mut yusri2 = carta("Yusri, Fortune's Flame");
+    yusri2.id = "yusri-2".into();
+    yusri2.marca = Some(MarcaCarta::Variante);
+    let mut sb = carta("Lightning Bolt");
+    sb.marca = Some(MarcaCarta::Banquillo);
+    d.cards.extend([yusri2, carta("Opt"), sb]);
+    let lista = ListaDeJuego {
+        id: "l".into(),
+        nombre: "Torneo".into(),
+        comandantes: vec!["yusri-2".into()],
+        cartas: vec!["sol2".into(), "Opt-3".into()],
+    };
+    let de_lista = |s: Seccion| -> Vec<String> {
+        secciones_de_mesa(&d, Some(&lista))
+            .into_iter()
+            .filter(|(_, x)| *x == s)
+            .map(|(c, _)| c.id.clone())
+            .collect()
+    };
+    assert_eq!(de_lista(Seccion::Comandante), vec!["yusri-2"]);
+    assert_eq!(de_lista(Seccion::Mazo), vec!["sol2", "Opt-3"]);
+    // Fichas y banquillo marcado siguen; el Pyroblast de la sección
+    // Sideboard de la lista escrita no estaba elegido ni marcado: fuera.
+    assert_eq!(de_lista(Seccion::Ficha).len(), 1);
+    assert_eq!(de_lista(Seccion::Banquillo), vec!["Lightning Bolt-14"]);
 }
 
 #[test]

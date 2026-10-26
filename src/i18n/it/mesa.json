@@ -546,5 +546,56 @@
 	"Es demasiado (un número o un texto pasa del límite).": "È troppo (un numero o un testo supera il limite).",
 	"Eso no se puede hacer ahora.": "Non si può fare adesso.",
 	"Lanzar la moneda": "Lancia la moneta",
-	"Hay una partida abierta: termínala o sal de la mesa para actualizar.": "C'è una partita aperta: finiscila o esci dal tavolo per aggiornare."
+	"Hay una partida abierta: termínala o sal de la mesa para actualizar.": "C'è una partita aperta: finiscila o esci dal tavolo per aggiornare.",
+	"Lista para jugar": "Lista di gioco",
+	"Ninguna todavía": "Ancora nessuna",
+	"Nueva lista…": "Nuova lista…",
+	"Editar…": "Modifica…",
+	"Este deck tiene {n} cartas y en Commander se juega con 100: haz una lista con el comandante y 99 más.": {
+		"one": "Questo mazzo ha {n} carta e il Commander si gioca con 100: crea una lista con il comandante e altre 99.",
+		"many": "Questo mazzo ha {n} carte e il Commander si gioca con 100: crea una lista con il comandante e altre 99.",
+		"other": "Questo mazzo ha {n} carte e il Commander si gioca con 100: crea una lista con il comandante e altre 99."
+	},
+	"Lleva {n} cartas y el formato pide al menos {desde}.": {
+		"one": "Ha {n} carta e il formato ne richiede almeno {desde}.",
+		"many": "Ha {n} carte e il formato ne richiede almeno {desde}.",
+		"other": "Ha {n} carte e il formato ne richiede almeno {desde}."
+	},
+	"Lleva {n} cartas y el formato pide {desde}.": {
+		"one": "Ha {n} carta e il formato ne richiede {desde}.",
+		"many": "Ha {n} carte e il formato ne richiede {desde}.",
+		"other": "Ha {n} carte e il formato ne richiede {desde}."
+	},
+	"Lleva {n} cartas y el formato pide de {desde} a {hasta}.": {
+		"one": "Ha {n} carta e il formato ne richiede da {desde} a {hasta}.",
+		"many": "Ha {n} carte e il formato ne richiede da {desde} a {hasta}.",
+		"other": "Ha {n} carte e il formato ne richiede da {desde} a {hasta}."
+	},
+	"Falta el comandante.": "Manca il comandante.",
+	"Como mucho, dos comandantes.": "Al massimo due comandanti.",
+	"{carta} no puede ser comandante.": "{carta} non può essere un comandante.",
+	"Dos comandantes solo con compañero o trasfondo.": "Due comandanti solo con partner o background.",
+	"{carta} va {veces} veces.": "{carta} compare {veces} volte.",
+	"{carta} se sale de la identidad de color del comandante.": "{carta} è fuori dall'identità di colore del comandante.",
+	"{n} cartas de la lista ya no están en el deck.": {
+		"one": "{n} carta della lista non è più nel mazzo.",
+		"many": "{n} carte della lista non sono più nel mazzo.",
+		"other": "{n} carte della lista non sono più nel mazzo."
+	},
+	"Editar la lista para jugar": "Modifica la lista di gioco",
+	"Nueva lista para jugar": "Nuova lista di gioco",
+	"Elige el comandante (la variante que quieras) y 99 cartas más. El deck no cambia.": "Scegli il comandante (la variante che vuoi) e altre 99 carte. Il mazzo non cambia.",
+	"Elige las cartas que se juegan. El deck no cambia.": "Scegli le carte da giocare. Il mazzo non cambia.",
+	"Leyendo las cartas del deck…": "Lettura delle carte del mazzo…",
+	"Nombre de la lista": "Nome della lista",
+	"Solo las elegidas": "Solo le scelte",
+	"Las del deck": "Come nel mazzo",
+	"Comandante": "Comandante",
+	"Ninguna carta del deck puede ser comandante.": "Nessuna carta del mazzo può essere comandante.",
+	"Una menos": "Una in meno",
+	"Una más": "Una in più",
+	"Se puede guardar a medias, pero así no deja empezar la partida.": "Puoi salvarla incompleta, ma così non permette di iniziare la partita.",
+	"Este deck tiene más cartas de las que se juegan: elige una lista para jugar.": "Questo mazzo ha più carte di quelle che si giocano: scegli una lista di gioco.",
+	"La lista para jugar no vale para este formato: revísala.": "La lista di gioco non è valida per questo formato: controllala.",
+	"Ponle un nombre a la lista.": "Dai un nome alla lista."
 }

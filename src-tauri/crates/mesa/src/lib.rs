@@ -28,6 +28,7 @@ pub mod error;
 pub mod formato;
 pub mod huella;
 pub mod ids;
+pub mod lista;
 pub mod modelo;
 pub mod preparar;
 pub mod registro;

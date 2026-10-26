@@ -29,6 +29,10 @@ pub struct JugadorMesa {
     pub nombre: String,
     /// Color CSS.
     pub color: String,
+    /// La lista para jugar del deck (su id), si se juega solo una parte.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub lista: Option<String>,
 }
 
 /// Lo que elige la pantalla al empezar.
@@ -269,6 +273,7 @@ pub(crate) mod tests {
                 deck_id: "d".into(),
                 nombre: "Yo".into(),
                 color: "#e11d48".into(),
+                lista: None,
             }],
             formato: Formato::Constructed,
             variantes: Variantes::default(),

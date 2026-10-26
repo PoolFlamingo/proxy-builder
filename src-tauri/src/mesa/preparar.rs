@@ -11,13 +11,15 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::LazyLock;
 
+use mesa::lista::{comandante_por_texto, sin_limite_por_texto, CartaDeLista, ListaDeJuego};
 use mesa::modelo::{InfoCarta, OrigenCarta, RefImagen};
-use mesa::preparar::{secciones_de_mesa, CartaDeMesa, DeckDeMesa};
+use mesa::preparar::{candidatas_de_lista, secciones_de_mesa, CartaDeMesa, DeckDeMesa};
 use proxy_core::diseno::modelo::CardData;
 use proxy_core::diseno::render::Salida;
 use proxy_core::imaging::pipeline::{edge_for, render_rgba, RenderSpec, SpecTarget};
 use proxy_core::model::{
     BackSpec, CardEdits, CardSource, Deck, DeckCard, FaceImage, ImageFormat, ImageOrigin,
+    MarcaCarta,
 };
 use rayon::prelude::*;
 use regex::Regex;
@@ -174,6 +176,81 @@ pub fn info_de(c: &DeckCard, s: Option<&ScryCard>) -> InfoCarta {
         funciones,
         bono_fijo: bono_fijo(&oracle),
         es_comandante: false,
+    }
+}
+
+/// Lo que hace falta de cada copia elegible de un deck para hacer una lista
+/// para jugar: de Scryfall (la caché o la red) o, si no, de su diseño.
+pub async fn cartas_de_lista<A: CardApi>(
+    state: &AppState,
+    api: &A,
+    deck: &Deck,
+) -> AppResult<Vec<CartaDeLista>> {
+    let cartas = candidatas_de_lista(deck);
+    let datos = datos_de(state, api, &cartas).await?;
+    Ok(cartas
+        .iter()
+        .map(|c| carta_de_lista(c, id_scryfall(c).and_then(|id| datos.get(id))))
+        .collect())
+}
+
+fn carta_de_lista(c: &DeckCard, s: Option<&ScryCard>) -> CartaDeLista {
+    let (nombre, tipo, oracle, keywords, identidad) = match (s, &c.design) {
+        (Some(s), _) => (
+            s.name.clone(),
+            s.type_line.clone(),
+            s.texto_completo(),
+            s.keywords.clone().unwrap_or_default(),
+            s.color_identity.clone(),
+        ),
+        (None, Some(d)) => {
+            let caras = &d.card.faces;
+            let unir = |f: &dyn Fn(&proxy_core::diseno::modelo::FaceData) -> String, sep: &str| {
+                caras.iter().map(f).collect::<Vec<_>>().join(sep)
+            };
+            (
+                if c.meta.name.is_empty() {
+                    unir(&|f| f.name.clone(), " // ")
+                } else {
+                    c.meta.name.clone()
+                },
+                (!caras.is_empty()).then(|| unir(&|f| f.type_line.en.clone(), " // ")),
+                unir(&|f| f.rules.en.clone(), "\n"),
+                d.card.keywords.clone(),
+                d.card.color_identity.clone(),
+            )
+        }
+        (None, None) => (
+            c.meta.name.clone(),
+            c.meta.type_line.clone(),
+            String::new(),
+            Vec::new(),
+            Vec::new(),
+        ),
+    };
+    let tipo_l = tipo.clone().unwrap_or_default();
+    let (puede, pareja) = comandante_por_texto(&tipo_l, &oracle, &keywords);
+    let basica = tipo_l
+        .split(" // ")
+        .next()
+        .is_some_and(|t| t.to_lowercase().contains("basic"));
+    CartaDeLista {
+        id: c.id.clone(),
+        nombre,
+        tipo,
+        identidad: identidad.iter().filter_map(|x| x.chars().next()).collect(),
+        puede_ser_comandante: puede,
+        con_pareja: pareja,
+        sin_limite: basica || sin_limite_por_texto(&oracle),
+        imagen: c.front.as_ref().map(|f| f.blob.clone()),
+        marca: c.marca.map(|m| {
+            match m {
+                MarcaCarta::Variante => "variante",
+                MarcaCarta::Opcional => "opcional",
+                MarcaCarta::Banquillo => "banquillo",
+            }
+            .to_string()
+        }),
     }
 }
 
@@ -384,9 +461,10 @@ pub async fn deck_de_mesa<A: CardApi>(
     state: &AppState,
     api: &A,
     deck: &Deck,
+    lista: Option<&ListaDeJuego>,
     progreso: &(dyn Fn(u32, u32) + Sync),
 ) -> AppResult<DeckDeMesa> {
-    let secciones = secciones_de_mesa(deck);
+    let secciones = secciones_de_mesa(deck, lista);
     let cartas: Vec<&DeckCard> = secciones.iter().map(|(c, _)| *c).collect();
     let datos = datos_de(state, api, &cartas).await?;
     let ctx = Contexto {
@@ -551,7 +629,9 @@ pub(crate) mod tests {
             schema_version: DECK_SCHEMA_VERSION,
         };
         let antes = PINTADAS.load(Ordering::SeqCst);
-        let m = deck_de_mesa(&s, &SinRed, &deck, &|_, _| {}).await.unwrap();
+        let m = deck_de_mesa(&s, &SinRed, &deck, None, &|_, _| {})
+            .await
+            .unwrap();
         assert_eq!(PINTADAS.load(Ordering::SeqCst) - antes, 3);
         let caras: Vec<&RefImagen> = m.cartas.iter().map(|c| &c.origen.caras[0]).collect();
         assert!(
@@ -569,7 +649,9 @@ pub(crate) mod tests {
         assert!(m.cartas[0].origen.info.es_criatura);
         // La segunda vez, nada que pintar y las mismas referencias.
         let antes = PINTADAS.load(Ordering::SeqCst);
-        let m2 = deck_de_mesa(&s, &SinRed, &deck, &|_, _| {}).await.unwrap();
+        let m2 = deck_de_mesa(&s, &SinRed, &deck, None, &|_, _| {})
+            .await
+            .unwrap();
         assert_eq!(PINTADAS.load(Ordering::SeqCst), antes);
         assert_eq!(m, m2);
         // Y se sirven reducidas.
@@ -622,6 +704,39 @@ pub(crate) mod tests {
         assert_eq!(i.cmc_decimas, Some(20));
         assert_eq!(i.colores, vec!['G']);
         assert_eq!(i.palabras_clave, vec!["Trample".to_string()]);
+    }
+
+    #[test]
+    fn una_disenada_sabe_si_puede_ser_comandante() {
+        let mut c = carta(
+            "kruphix",
+            FaceImage {
+                blob: "1".repeat(64),
+                origin: ImageOrigin::Upload,
+                width: 63,
+                height: 88,
+            },
+        );
+        c.marca = Some(MarcaCarta::Variante);
+        let datos = CardData {
+            color_identity: vec!["G".into(), "U".into()],
+            faces: vec![FaceData {
+                name: "Kruphix, God of Horizons".into(),
+                type_line: ByLang {
+                    es: "Criatura legendaria — Dios".into(),
+                    en: "Legendary Creature — God".into(),
+                    otros: Default::default(),
+                },
+                ..FaceData::default()
+            }],
+            ..CardData::default()
+        };
+        c.design = Some(crate::diseno::borrador::montar(&c, datos, None, &[]).design);
+        let l = carta_de_lista(&c, None);
+        assert!(l.puede_ser_comandante && !l.con_pareja && !l.sin_limite);
+        assert_eq!(l.identidad, vec!['G', 'U']);
+        assert_eq!(l.imagen.as_deref(), Some("1".repeat(64).as_str()));
+        assert_eq!(l.marca.as_deref(), Some("variante"));
     }
 
     #[test]

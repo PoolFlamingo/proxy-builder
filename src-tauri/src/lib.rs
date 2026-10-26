@@ -216,6 +216,11 @@ pub fn run() {
             commands::mesa::mesa_tapete_get,
             commands::mesa::mesa_tapete_set,
             commands::mesa::mesa_tapete_ajustes,
+            commands::mesa::mesa_listas,
+            commands::mesa::mesa_lista_cartas,
+            commands::mesa::mesa_lista_comprobar,
+            commands::mesa::mesa_lista_guardar,
+            commands::mesa::mesa_lista_borrar,
         ])
         .run(tauri::generate_context!());
 

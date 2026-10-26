@@ -556,5 +556,61 @@
 	"Es demasiado (un número o un texto pasa del límite).": "Слишком много (число или текст превышает лимит).",
 	"Eso no se puede hacer ahora.": "Сейчас это сделать нельзя.",
 	"Lanzar la moneda": "Подбросить монету",
-	"Hay una partida abierta: termínala o sal de la mesa para actualizar.": "Открыта партия: завершите её или выйдите из-за стола, чтобы обновить."
+	"Hay una partida abierta: termínala o sal de la mesa para actualizar.": "Открыта партия: завершите её или выйдите из-за стола, чтобы обновить.",
+	"Lista para jugar": "Список для игры",
+	"Ninguna todavía": "Пока нет",
+	"Nueva lista…": "Новый список…",
+	"Editar…": "Изменить…",
+	"Este deck tiene {n} cartas y en Commander se juega con 100: haz una lista con el comandante y 99 más.": {
+		"one": "В этой колоде {n} карта, а в Commander играют колодой из 100: составьте список из командира и ещё 99 карт.",
+		"few": "В этой колоде {n} карты, а в Commander играют колодой из 100: составьте список из командира и ещё 99 карт.",
+		"many": "В этой колоде {n} карт, а в Commander играют колодой из 100: составьте список из командира и ещё 99 карт.",
+		"other": "В этой колоде {n} карты, а в Commander играют колодой из 100: составьте список из командира и ещё 99 карт."
+	},
+	"Lleva {n} cartas y el formato pide al menos {desde}.": {
+		"one": "В нём {n} карта, а формат требует не меньше {desde}.",
+		"few": "В нём {n} карты, а формат требует не меньше {desde}.",
+		"many": "В нём {n} карт, а формат требует не меньше {desde}.",
+		"other": "В нём {n} карты, а формат требует не меньше {desde}."
+	},
+	"Lleva {n} cartas y el formato pide {desde}.": {
+		"one": "В нём {n} карта, а формат требует {desde}.",
+		"few": "В нём {n} карты, а формат требует {desde}.",
+		"many": "В нём {n} карт, а формат требует {desde}.",
+		"other": "В нём {n} карты, а формат требует {desde}."
+	},
+	"Lleva {n} cartas y el formato pide de {desde} a {hasta}.": {
+		"one": "В нём {n} карта, а формат требует от {desde} до {hasta}.",
+		"few": "В нём {n} карты, а формат требует от {desde} до {hasta}.",
+		"many": "В нём {n} карт, а формат требует от {desde} до {hasta}.",
+		"other": "В нём {n} карты, а формат требует от {desde} до {hasta}."
+	},
+	"Falta el comandante.": "Не выбран командир.",
+	"Como mucho, dos comandantes.": "Не больше двух командиров.",
+	"{carta} no puede ser comandante.": "{carta} не может быть командиром.",
+	"Dos comandantes solo con compañero o trasfondo.": "Два командира — только с партнёром или предысторией.",
+	"{carta} va {veces} veces.": "{carta}: копий — {veces}.",
+	"{carta} se sale de la identidad de color del comandante.": "{carta} выходит за цветовую принадлежность командира.",
+	"{n} cartas de la lista ya no están en el deck.": {
+		"one": "{n} карта из списка уже не входит в колоду.",
+		"few": "{n} карты из списка уже не входят в колоду.",
+		"many": "{n} карт из списка уже не входят в колоду.",
+		"other": "{n} карты из списка уже не входят в колоду."
+	},
+	"Editar la lista para jugar": "Изменить список для игры",
+	"Nueva lista para jugar": "Новый список для игры",
+	"Elige el comandante (la variante que quieras) y 99 cartas más. El deck no cambia.": "Выберите командира (любой вариант) и ещё 99 карт. Колода не меняется.",
+	"Elige las cartas que se juegan. El deck no cambia.": "Выберите карты для игры. Колода не меняется.",
+	"Leyendo las cartas del deck…": "Чтение карт колоды…",
+	"Nombre de la lista": "Название списка",
+	"Solo las elegidas": "Только выбранные",
+	"Las del deck": "Как в колоде",
+	"Comandante": "Командир",
+	"Ninguna carta del deck puede ser comandante.": "Ни одна карта колоды не может быть командиром.",
+	"Una menos": "На одну меньше",
+	"Una más": "На одну больше",
+	"Se puede guardar a medias, pero así no deja empezar la partida.": "Можно сохранить незаконченным, но так начать партию не получится.",
+	"Este deck tiene más cartas de las que se juegan: elige una lista para jugar.": "В этой колоде больше карт, чем нужно для игры: выберите список для игры.",
+	"La lista para jugar no vale para este formato: revísala.": "Список для игры не подходит для этого формата: проверьте его.",
+	"Ponle un nombre a la lista.": "Дайте списку название."
 }

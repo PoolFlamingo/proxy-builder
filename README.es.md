@@ -369,6 +369,10 @@ incluidas):
   explica cada contador y cada bono.
 - **Deshacer todo lo que quieras**, y un registro de la partida escrito en tu
   idioma.
+- **Decks con más cartas de las que se juegan** (variantes de diseño,
+  alternativas para probar otras sinergias): guarda **listas para jugar** con
+  el comandante (la variante de diseño que quieras) y 99 más, comprobadas
+  (tamaño, repetidas e identidad de color). El deck no cambia.
 - **Tu tapete**: una imagen tuya o la ilustración de una carta, por deck, con
   un velo oscuro y desenfoque para que las cartas destaquen.
 - **No pierde ninguna partida:** se guarda mientras juegas y «Jugar» ofrece

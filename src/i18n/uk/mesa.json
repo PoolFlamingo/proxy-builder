@@ -561,5 +561,61 @@
 	"Es demasiado (un número o un texto pasa del límite).": "Забагато (число або текст перевищує обмеження).",
 	"Eso no se puede hacer ahora.": "Зараз цього не можна зробити.",
 	"Lanzar la moneda": "Підкинути монету",
-	"Hay una partida abierta: termínala o sal de la mesa para actualizar.": "Відкрито партію: завершіть її або вийдіть з-за столу, щоб оновити."
+	"Hay una partida abierta: termínala o sal de la mesa para actualizar.": "Відкрито партію: завершіть її або вийдіть з-за столу, щоб оновити.",
+	"Lista para jugar": "Список для гри",
+	"Ninguna todavía": "Поки немає",
+	"Nueva lista…": "Новий список…",
+	"Editar…": "Змінити…",
+	"Este deck tiene {n} cartas y en Commander se juega con 100: haz una lista con el comandante y 99 más.": {
+		"one": "У цій колоді {n} карта, а в Commander грають колодою зі 100: складіть список із командира та ще 99 карт.",
+		"few": "У цій колоді {n} карти, а в Commander грають колодою зі 100: складіть список із командира та ще 99 карт.",
+		"many": "У цій колоді {n} карт, а в Commander грають колодою зі 100: складіть список із командира та ще 99 карт.",
+		"other": "У цій колоді {n} карти, а в Commander грають колодою зі 100: складіть список із командира та ще 99 карт."
+	},
+	"Lleva {n} cartas y el formato pide al menos {desde}.": {
+		"one": "У ньому {n} карта, а формат вимагає щонайменше {desde}.",
+		"few": "У ньому {n} карти, а формат вимагає щонайменше {desde}.",
+		"many": "У ньому {n} карт, а формат вимагає щонайменше {desde}.",
+		"other": "У ньому {n} карти, а формат вимагає щонайменше {desde}."
+	},
+	"Lleva {n} cartas y el formato pide {desde}.": {
+		"one": "У ньому {n} карта, а формат вимагає {desde}.",
+		"few": "У ньому {n} карти, а формат вимагає {desde}.",
+		"many": "У ньому {n} карт, а формат вимагає {desde}.",
+		"other": "У ньому {n} карти, а формат вимагає {desde}."
+	},
+	"Lleva {n} cartas y el formato pide de {desde} a {hasta}.": {
+		"one": "У ньому {n} карта, а формат вимагає від {desde} до {hasta}.",
+		"few": "У ньому {n} карти, а формат вимагає від {desde} до {hasta}.",
+		"many": "У ньому {n} карт, а формат вимагає від {desde} до {hasta}.",
+		"other": "У ньому {n} карти, а формат вимагає від {desde} до {hasta}."
+	},
+	"Falta el comandante.": "Не вибрано командира.",
+	"Como mucho, dos comandantes.": "Не більше двох командирів.",
+	"{carta} no puede ser comandante.": "{carta} не може бути командиром.",
+	"Dos comandantes solo con compañero o trasfondo.": "Два командири — лише з партнером або передісторією.",
+	"{carta} va {veces} veces.": "{carta}: копій — {veces}.",
+	"{carta} se sale de la identidad de color del comandante.": "{carta} виходить за межі колірної ідентичності командира.",
+	"{n} cartas de la lista ya no están en el deck.": {
+		"one": "{n} карта зі списку вже не входить до колоди.",
+		"few": "{n} карти зі списку вже не входять до колоди.",
+		"many": "{n} карт зі списку вже не входять до колоди.",
+		"other": "{n} карти зі списку вже не входять до колоди."
+	},
+	"Editar la lista para jugar": "Змінити список для гри",
+	"Nueva lista para jugar": "Новий список для гри",
+	"Elige el comandante (la variante que quieras) y 99 cartas más. El deck no cambia.": "Виберіть командира (будь-який варіант) і ще 99 карт. Колода не змінюється.",
+	"Elige las cartas que se juegan. El deck no cambia.": "Виберіть карти для гри. Колода не змінюється.",
+	"Leyendo las cartas del deck…": "Читання карт колоди…",
+	"Nombre de la lista": "Назва списку",
+	"Solo las elegidas": "Лише вибрані",
+	"Las del deck": "Як у колоді",
+	"Comandante": "Командир",
+	"Ninguna carta del deck puede ser comandante.": "Жодна карта колоди не може бути командиром.",
+	"Una menos": "На одну менше",
+	"Una más": "На одну більше",
+	"Se puede guardar a medias, pero así no deja empezar la partida.": "Можна зберегти незавершеним, але так почати партію не вийде.",
+	"Este deck tiene más cartas de las que se juegan: elige una lista para jugar.": "У цій колоді більше карт, ніж потрібно для гри: виберіть список для гри.",
+	"La lista para jugar no vale para este formato: revísala.": "Список для гри не підходить для цього формату: перевірте його.",
+	"Ponle un nombre a la lista.": "Дайте списку назву."
 }

@@ -7,4 +7,8 @@ export type JugadorMesa = { deckId: string, nombre: string,
 /**
  * Color CSS.
  */
-color: string, };
+color: string, 
+/**
+ * La lista para jugar del deck (su id), si se juega solo una parte.
+ */
+lista?: string, };

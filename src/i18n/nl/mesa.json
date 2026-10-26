@@ -536,5 +536,51 @@
 	"Es demasiado (un número o un texto pasa del límite).": "Dat is te veel (een getal of tekst gaat over de limiet).",
 	"Eso no se puede hacer ahora.": "Dat kan nu niet.",
 	"Lanzar la moneda": "Munt opgooien",
-	"Hay una partida abierta: termínala o sal de la mesa para actualizar.": "Er is een potje bezig: maak het af of verlaat de tafel om bij te werken."
+	"Hay una partida abierta: termínala o sal de la mesa para actualizar.": "Er is een potje bezig: maak het af of verlaat de tafel om bij te werken.",
+	"Lista para jugar": "Speellijst",
+	"Ninguna todavía": "Nog geen",
+	"Nueva lista…": "Nieuwe lijst…",
+	"Editar…": "Bewerken…",
+	"Este deck tiene {n} cartas y en Commander se juega con 100: haz una lista con el comandante y 99 más.": {
+		"one": "Dit deck heeft {n} kaart en Commander speel je met 100: maak een lijst met de commander en 99 andere.",
+		"other": "Dit deck heeft {n} kaarten en Commander speel je met 100: maak een lijst met de commander en 99 andere."
+	},
+	"Lleva {n} cartas y el formato pide al menos {desde}.": {
+		"one": "Er zit {n} kaart in en het formaat vraagt er minstens {desde}.",
+		"other": "Er zitten {n} kaarten in en het formaat vraagt er minstens {desde}."
+	},
+	"Lleva {n} cartas y el formato pide {desde}.": {
+		"one": "Er zit {n} kaart in en het formaat vraagt er {desde}.",
+		"other": "Er zitten {n} kaarten in en het formaat vraagt er {desde}."
+	},
+	"Lleva {n} cartas y el formato pide de {desde} a {hasta}.": {
+		"one": "Er zit {n} kaart in en het formaat vraagt er {desde} tot {hasta}.",
+		"other": "Er zitten {n} kaarten in en het formaat vraagt er {desde} tot {hasta}."
+	},
+	"Falta el comandante.": "De commander ontbreekt.",
+	"Como mucho, dos comandantes.": "Hoogstens twee commanders.",
+	"{carta} no puede ser comandante.": "{carta} kan geen commander zijn.",
+	"Dos comandantes solo con compañero o trasfondo.": "Twee commanders alleen met partner of background.",
+	"{carta} va {veces} veces.": "{carta} zit er {veces} keer in.",
+	"{carta} se sale de la identidad de color del comandante.": "{carta} valt buiten de kleuridentiteit van de commander.",
+	"{n} cartas de la lista ya no están en el deck.": {
+		"one": "{n} kaart uit de lijst zit niet meer in het deck.",
+		"other": "{n} kaarten uit de lijst zitten niet meer in het deck."
+	},
+	"Editar la lista para jugar": "Speellijst bewerken",
+	"Nueva lista para jugar": "Nieuwe speellijst",
+	"Elige el comandante (la variante que quieras) y 99 cartas más. El deck no cambia.": "Kies de commander (de variant die je wilt) en nog 99 kaarten. Het deck verandert niet.",
+	"Elige las cartas que se juegan. El deck no cambia.": "Kies de kaarten waarmee je speelt. Het deck verandert niet.",
+	"Leyendo las cartas del deck…": "Kaarten van het deck lezen…",
+	"Nombre de la lista": "Naam van de lijst",
+	"Solo las elegidas": "Alleen gekozen",
+	"Las del deck": "Zoals in het deck",
+	"Comandante": "Commander",
+	"Ninguna carta del deck puede ser comandante.": "Geen enkele kaart in het deck kan commander zijn.",
+	"Una menos": "Eén minder",
+	"Una más": "Eén meer",
+	"Se puede guardar a medias, pero así no deja empezar la partida.": "Je kunt hem half af opslaan, maar zo kun je het spel niet starten.",
+	"Este deck tiene más cartas de las que se juegan: elige una lista para jugar.": "Dit deck heeft meer kaarten dan er gespeeld worden: kies een speellijst.",
+	"La lista para jugar no vale para este formato: revísala.": "De speellijst is niet geldig voor dit formaat: controleer hem.",
+	"Ponle un nombre a la lista.": "Geef de lijst een naam."
 }

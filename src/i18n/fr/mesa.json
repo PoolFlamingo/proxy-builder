@@ -550,5 +550,56 @@
 	"Es demasiado (un número o un texto pasa del límite).": "C'est trop (un nombre ou un texte dépasse la limite).",
 	"Eso no se puede hacer ahora.": "Impossible de faire cela pour l'instant.",
 	"Lanzar la moneda": "Lancer la pièce",
-	"Hay una partida abierta: termínala o sal de la mesa para actualizar.": "Une partie est en cours : terminez-la ou quittez la table pour mettre à jour."
+	"Hay una partida abierta: termínala o sal de la mesa para actualizar.": "Une partie est en cours : terminez-la ou quittez la table pour mettre à jour.",
+	"Lista para jugar": "Liste de jeu",
+	"Ninguna todavía": "Aucune pour l'instant",
+	"Nueva lista…": "Nouvelle liste…",
+	"Editar…": "Modifier…",
+	"Este deck tiene {n} cartas y en Commander se juega con 100: haz una lista con el comandante y 99 más.": {
+		"one": "Ce deck compte {n} carte et le Commander se joue avec 100 : créez une liste avec le commandant et 99 autres.",
+		"many": "Ce deck compte {n} de cartes et le Commander se joue avec 100 : créez une liste avec le commandant et 99 autres.",
+		"other": "Ce deck compte {n} cartes et le Commander se joue avec 100 : créez une liste avec le commandant et 99 autres."
+	},
+	"Lleva {n} cartas y el formato pide al menos {desde}.": {
+		"one": "Elle compte {n} carte et le format en demande au moins {desde}.",
+		"many": "Elle compte {n} de cartes et le format en demande au moins {desde}.",
+		"other": "Elle compte {n} cartes et le format en demande au moins {desde}."
+	},
+	"Lleva {n} cartas y el formato pide {desde}.": {
+		"one": "Elle compte {n} carte et le format en demande {desde}.",
+		"many": "Elle compte {n} de cartes et le format en demande {desde}.",
+		"other": "Elle compte {n} cartes et le format en demande {desde}."
+	},
+	"Lleva {n} cartas y el formato pide de {desde} a {hasta}.": {
+		"one": "Elle compte {n} carte et le format en demande de {desde} à {hasta}.",
+		"many": "Elle compte {n} de cartes et le format en demande de {desde} à {hasta}.",
+		"other": "Elle compte {n} cartes et le format en demande de {desde} à {hasta}."
+	},
+	"Falta el comandante.": "Il manque le commandant.",
+	"Como mucho, dos comandantes.": "Deux commandants au maximum.",
+	"{carta} no puede ser comandante.": "{carta} ne peut pas être commandant.",
+	"Dos comandantes solo con compañero o trasfondo.": "Deux commandants seulement avec partenaire ou historique.",
+	"{carta} va {veces} veces.": "{carta} figure {veces} fois.",
+	"{carta} se sale de la identidad de color del comandante.": "{carta} sort de l'identité couleur du commandant.",
+	"{n} cartas de la lista ya no están en el deck.": {
+		"one": "{n} carte de la liste n'est plus dans le deck.",
+		"many": "{n} de cartes de la liste ne sont plus dans le deck.",
+		"other": "{n} cartes de la liste ne sont plus dans le deck."
+	},
+	"Editar la lista para jugar": "Modifier la liste de jeu",
+	"Nueva lista para jugar": "Nouvelle liste de jeu",
+	"Elige el comandante (la variante que quieras) y 99 cartas más. El deck no cambia.": "Choisissez le commandant (la variante que vous voulez) et 99 autres cartes. Le deck ne change pas.",
+	"Elige las cartas que se juegan. El deck no cambia.": "Choisissez les cartes qui seront jouées. Le deck ne change pas.",
+	"Leyendo las cartas del deck…": "Lecture des cartes du deck…",
+	"Nombre de la lista": "Nom de la liste",
+	"Solo las elegidas": "Choisies uniquement",
+	"Las del deck": "Comme dans le deck",
+	"Comandante": "Commandant",
+	"Ninguna carta del deck puede ser comandante.": "Aucune carte du deck ne peut être commandant.",
+	"Una menos": "Une de moins",
+	"Una más": "Une de plus",
+	"Se puede guardar a medias, pero así no deja empezar la partida.": "Vous pouvez l'enregistrer inachevée, mais elle ne permettra pas de lancer la partie.",
+	"Este deck tiene más cartas de las que se juegan: elige una lista para jugar.": "Ce deck contient plus de cartes que celles qui sont jouées : choisissez une liste de jeu.",
+	"La lista para jugar no vale para este formato: revísala.": "La liste de jeu n'est pas valide pour ce format : vérifiez-la.",
+	"Ponle un nombre a la lista.": "Donnez un nom à la liste."
 }

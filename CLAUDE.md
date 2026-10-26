@@ -124,6 +124,15 @@ le falta una cadena le sale la inglesa.
   registro lo escribe `features/mesa/textos-eventos.ts` con `t()`. Un
   rechazo llega como `Rejected` con `motivo` (`lib/errores.ts`). Con la mesa
   abierta no se instala una actualización (`Busy`, `motivo: partida`).
+  **Listas para jugar** (Pablo, 26/10/2026): un deck con más cartas de las
+  que se juegan (variantes de diseño, alternativas) elige una lista: el
+  comandante (una copia concreta) y 99 más. `mesa::lista` (dato y
+  comprobación: tamaño, copias salvo básicas, identidad de color; solo
+  avisa de la identidad), tabla `deck_listas` (migración 0005, aparte del
+  deck como las etiquetas: el autoguardado no la pisa; viaja en el
+  `.pbdeck`), `store/listas.rs`, comandos `mesa_lista*` y
+  `features/mesa/listas/`. Commander con más de 100 que cuentan no empieza
+  sin lista (`motivo: falta_lista`).
 - Rust: `commands/{cards,decklist,export,identify,layout,library,stats}.rs`,
   `package.rs` (.pbdeck), `render.rs` + `protocol.rs` (miniaturas),
   `ocr.rs` (OCR opcional de la carta entera con `ocrs`, a la resolución

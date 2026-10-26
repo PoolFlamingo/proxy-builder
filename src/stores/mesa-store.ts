@@ -152,8 +152,8 @@ export const useMesa = create<MesaStore>((set, get) => ({
 			...m,
 			activa: true,
 			seleccion: get().seleccion.filter((id) => id in m.cartas),
-			// Una partida nueva reparte otros ids: lo de debajo del ratón no vale.
-			sobre: m.cartas[get().sobre ?? -1] ? get().sobre : null,
+			// Otra partida (o deshacer) reutiliza ids: lo de debajo del ratón no vale.
+			sobre: !registro && m.cartas[get().sobre ?? -1] ? get().sobre : null,
 		});
 	},
 	recibirParche: (p, ev) => {

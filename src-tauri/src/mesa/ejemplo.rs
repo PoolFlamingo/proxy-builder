@@ -3,6 +3,9 @@
 //! probar la mesa y sacar capturas en una máquina sin Scryfall:
 //!
 //! `PB_DATOS=~/.local/share/com.estigio.proxybuilder PB_CACHE=~/.cache/com.estigio.proxybuilder cargo test --lib deck_de_ejemplo -- --ignored`
+//!
+//! `deck_grande_de_ejemplo` hace otro de 110 cartas (dos variantes del
+//! comandante, alternativas, básicas) para probar las listas para jugar.
 
 #[cfg(test)]
 mod tests {
@@ -198,6 +201,78 @@ mod tests {
         deck.settings = PrintSettings::default();
         deck.schema_version = DECK_SCHEMA_VERSION;
         let _: &Deck = &deck;
+        crate::store::decks::save(&s.db, &deck).unwrap();
+        println!("deck {} con {} cartas", deck.id, deck.cards.len());
+    }
+
+    #[test]
+    #[ignore]
+    fn deck_grande_de_ejemplo() {
+        let datos = std::env::var("PB_DATOS").expect("PB_DATOS");
+        let cache = std::env::var("PB_CACHE").expect("PB_CACHE");
+        let s = AppState::open(Paths {
+            data: datos.into(),
+            cache: cache.into(),
+        })
+        .unwrap();
+        let mut cards = Vec::new();
+        let mut i = 0;
+        // El comandante, en dos variantes de diseño (la segunda, marcada).
+        for k in 0..2 {
+            i += 1;
+            let mut c = carta(
+                i,
+                "Kruphix, dios del horizonte",
+                "{3}{G}{U}",
+                ("Criatura legendaria — Dios", "Legendary Creature — God"),
+                if k == 0 {
+                    "You have no maximum hand size."
+                } else {
+                    "You have no maximum hand size. (Variante)"
+                },
+                Some(("4", "7")),
+            );
+            if let Some(d) = c.design.as_mut() {
+                d.card.color_identity = vec!["G".into(), "U".into()];
+            }
+            if k == 1 {
+                c.marca = Some(proxy_core::model::MarcaCarta::Variante);
+            }
+            cards.push(c);
+        }
+        // 30 básicas.
+        for k in 0..30 {
+            i += 1;
+            let (n, t) = if k % 2 == 0 {
+                ("Bosque", "Forest")
+            } else {
+                ("Isla", "Island")
+            };
+            let es = format!("Tierra básica — {n}");
+            let en = format!("Basic Land — {t}");
+            cards.push(carta(i, n, "", (&es, &en), "", None));
+        }
+        // 78 criaturas distintas (9 de ellas, de más): 110 en total.
+        for k in 0..78 {
+            i += 1;
+            let mut c = carta(
+                i,
+                &format!("Criatura {k:02}"),
+                "{1}{G}",
+                ("Criatura — Bestia", "Creature — Beast"),
+                "",
+                Some(("2", "2")),
+            );
+            if let Some(d) = c.design.as_mut() {
+                d.card.color_identity = vec![if k % 3 == 0 { "U" } else { "G" }.into()];
+            }
+            cards.push(c);
+        }
+        let mut deck = crate::store::decks::create(&s.db, "Mesa grande", None).unwrap();
+        deck.decklist_text = "Commander\n1 Kruphix, dios del horizonte\n".into();
+        deck.cards = cards;
+        deck.settings = PrintSettings::default();
+        deck.schema_version = DECK_SCHEMA_VERSION;
         crate::store::decks::save(&s.db, &deck).unwrap();
         println!("deck {} con {} cartas", deck.id, deck.cards.len());
     }

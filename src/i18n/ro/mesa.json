@@ -546,5 +546,56 @@
 	"Es demasiado (un número o un texto pasa del límite).": "E prea mult (un număr sau un text depășește limita).",
 	"Eso no se puede hacer ahora.": "Asta nu se poate face acum.",
 	"Lanzar la moneda": "Aruncă moneda",
-	"Hay una partida abierta: termínala o sal de la mesa para actualizar.": "Există o partidă deschisă: termin-o sau ieși de la masă pentru a actualiza."
+	"Hay una partida abierta: termínala o sal de la mesa para actualizar.": "Există o partidă deschisă: termin-o sau ieși de la masă pentru a actualiza.",
+	"Lista para jugar": "Listă de joc",
+	"Ninguna todavía": "Niciuna deocamdată",
+	"Nueva lista…": "Listă nouă…",
+	"Editar…": "Editează…",
+	"Este deck tiene {n} cartas y en Commander se juega con 100: haz una lista con el comandante y 99 más.": {
+		"one": "Acest pachet are {n} carte, iar în Commander se joacă cu 100: fă o listă cu commanderul și încă 99.",
+		"few": "Acest pachet are {n} cărți, iar în Commander se joacă cu 100: fă o listă cu commanderul și încă 99.",
+		"other": "Acest pachet are {n} de cărți, iar în Commander se joacă cu 100: fă o listă cu commanderul și încă 99."
+	},
+	"Lleva {n} cartas y el formato pide al menos {desde}.": {
+		"one": "Are {n} carte, iar formatul cere cel puțin {desde}.",
+		"few": "Are {n} cărți, iar formatul cere cel puțin {desde}.",
+		"other": "Are {n} de cărți, iar formatul cere cel puțin {desde}."
+	},
+	"Lleva {n} cartas y el formato pide {desde}.": {
+		"one": "Are {n} carte, iar formatul cere {desde}.",
+		"few": "Are {n} cărți, iar formatul cere {desde}.",
+		"other": "Are {n} de cărți, iar formatul cere {desde}."
+	},
+	"Lleva {n} cartas y el formato pide de {desde} a {hasta}.": {
+		"one": "Are {n} carte, iar formatul cere între {desde} și {hasta}.",
+		"few": "Are {n} cărți, iar formatul cere între {desde} și {hasta}.",
+		"other": "Are {n} de cărți, iar formatul cere între {desde} și {hasta}."
+	},
+	"Falta el comandante.": "Lipsește commanderul.",
+	"Como mucho, dos comandantes.": "Cel mult doi commanderi.",
+	"{carta} no puede ser comandante.": "{carta} nu poate fi commander.",
+	"Dos comandantes solo con compañero o trasfondo.": "Doi commanderi doar cu partner sau background.",
+	"{carta} va {veces} veces.": "{carta} apare de {veces} ori.",
+	"{carta} se sale de la identidad de color del comandante.": "{carta} iese din identitatea de culoare a commanderului.",
+	"{n} cartas de la lista ya no están en el deck.": {
+		"one": "{n} carte din listă nu mai este în pachet.",
+		"few": "{n} cărți din listă nu mai sunt în pachet.",
+		"other": "{n} de cărți din listă nu mai sunt în pachet."
+	},
+	"Editar la lista para jugar": "Editează lista de joc",
+	"Nueva lista para jugar": "Listă de joc nouă",
+	"Elige el comandante (la variante que quieras) y 99 cartas más. El deck no cambia.": "Alege commanderul (varianta pe care o vrei) și încă 99 de cărți. Pachetul nu se schimbă.",
+	"Elige las cartas que se juegan. El deck no cambia.": "Alege cărțile cu care se joacă. Pachetul nu se schimbă.",
+	"Leyendo las cartas del deck…": "Se citesc cărțile pachetului…",
+	"Nombre de la lista": "Numele listei",
+	"Solo las elegidas": "Doar cele alese",
+	"Las del deck": "Ca în pachet",
+	"Comandante": "Commander",
+	"Ninguna carta del deck puede ser comandante.": "Nicio carte din pachet nu poate fi commander.",
+	"Una menos": "Una mai puțin",
+	"Una más": "Una în plus",
+	"Se puede guardar a medias, pero así no deja empezar la partida.": "O poți salva neterminată, dar așa nu poți începe partida.",
+	"Este deck tiene más cartas de las que se juegan: elige una lista para jugar.": "Acest pachet are mai multe cărți decât se joacă: alege o listă de joc.",
+	"La lista para jugar no vale para este formato: revísala.": "Lista de joc nu e validă pentru acest format: verific-o.",
+	"Ponle un nombre a la lista.": "Dă-i un nume listei."
 }
