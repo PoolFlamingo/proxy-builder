@@ -53,5 +53,10 @@
 	"Reemplazar solo esta": "Remplacer seulement celle-ci",
 	"Variante cambiada en todas las copias de {carta}": "Impression changée sur tous les exemplaires de {carta}",
 	"Variante cambiada": "Impression changée",
-	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)": "Jeton absent de Scryfall (base de jetons de Cockatrice)"
+	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)": "Jeton absent de Scryfall (base de jetons de Cockatrice)",
+	"Cambiar carta": "Changer de carte",
+	"Busca la carta que sustituye a esta. Doble clic para cambiar solo esta copia.": "Cherche la carte qui remplace celle-ci. Double-clique pour ne changer que cet exemplaire.",
+	"Cambiar": "Changer",
+	"Cambiar todas las copias": "Changer tous les exemplaires",
+	"Cambiada por {carta}": "Remplacée par {carta}"
 }

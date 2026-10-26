@@ -60,5 +60,10 @@
 	"Reemplazar solo esta": "Заменить только эту",
 	"Variante cambiada en todas las copias de {carta}": "Издание изменено во всех копиях карты {carta}",
 	"Variante cambiada": "Издание изменено",
-	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)": "Фишка, которой нет в Scryfall (база фишек Cockatrice)"
+	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)": "Фишка, которой нет в Scryfall (база фишек Cockatrice)",
+	"Cambiar carta": "Сменить карту",
+	"Busca la carta que sustituye a esta. Doble clic para cambiar solo esta copia.": "Найдите карту, которая заменит эту. Двойной щелчок меняет только эту копию.",
+	"Cambiar": "Сменить",
+	"Cambiar todas las copias": "Сменить все копии",
+	"Cambiada por {carta}": "Заменено на {carta}"
 }

@@ -57,5 +57,10 @@
 	"Reemplazar solo esta": "Înlocuiește doar aceasta",
 	"Variante cambiada en todas las copias de {carta}": "Varianta a fost schimbată la toate copiile {carta}",
 	"Variante cambiada": "Varianta a fost schimbată",
-	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)": "Jeton pe care Scryfall nu îl are (baza de jetoane Cockatrice)"
+	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)": "Jeton pe care Scryfall nu îl are (baza de jetoane Cockatrice)",
+	"Cambiar carta": "Schimbă cartea",
+	"Busca la carta que sustituye a esta. Doble clic para cambiar solo esta copia.": "Caută cartea care o înlocuiește pe aceasta. Dublu clic pentru a schimba doar această copie.",
+	"Cambiar": "Schimbă",
+	"Cambiar todas las copias": "Schimbă toate copiile",
+	"Cambiada por {carta}": "Înlocuită cu {carta}"
 }

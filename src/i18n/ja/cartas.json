@@ -45,5 +45,10 @@
 	"Reemplazar solo esta": "これだけを置き換え",
 	"Variante cambiada en todas las copias de {carta}": "{carta} のすべてのコピーで版を変更しました",
 	"Variante cambiada": "版を変更しました",
-	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)": "Scryfall にないトークン（Cockatrice のトークンデータベース）"
+	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)": "Scryfall にないトークン（Cockatrice のトークンデータベース）",
+	"Cambiar carta": "カードを変更",
+	"Busca la carta que sustituye a esta. Doble clic para cambiar solo esta copia.": "このカードの代わりになるカードを検索します。ダブルクリックでこのコピーだけを変更します。",
+	"Cambiar": "変更",
+	"Cambiar todas las copias": "すべてのコピーを変更",
+	"Cambiada por {carta}": "{carta} に変更しました"
 }

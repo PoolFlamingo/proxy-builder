@@ -45,5 +45,10 @@
 	"Reemplazar solo esta": "Replace only this one",
 	"Variante cambiada en todas las copias de {carta}": "Printing changed on every copy of {carta}",
 	"Variante cambiada": "Printing changed",
-	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)": "Token Scryfall doesn't have (Cockatrice token database)"
+	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)": "Token Scryfall doesn't have (Cockatrice token database)",
+	"Cambiar carta": "Change card",
+	"Busca la carta que sustituye a esta. Doble clic para cambiar solo esta copia.": "Search for the card that replaces this one. Double-click to change only this copy.",
+	"Cambiar": "Change",
+	"Cambiar todas las copias": "Change all copies",
+	"Cambiada por {carta}": "Changed to {carta}"
 }

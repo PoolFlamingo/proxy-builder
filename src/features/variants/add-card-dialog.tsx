@@ -1,4 +1,4 @@
-import { Loader2, Plus, Search } from "lucide-react";
+import { Loader2, Plus, Repeat2, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { CardSummary } from "@/bindings/CardSummary";
@@ -15,6 +15,8 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { scryfallDe } from "@/features/disenar/grupos";
+import { cartaPorId } from "@/features/preview/acciones-carta";
 import { RaizScroll } from "@/features/preview/visibilidad";
 import { insertar, nuevoId, quitar } from "@/lib/deck-ops";
 import { call } from "@/lib/ipc";
@@ -27,22 +29,31 @@ import { traerCarta } from "./traer";
 /**
  * «Añadir carta»: buscar en Scryfall (con su sintaxis o por nombre, con
  * autocompletado), elegir impresión y cantidad, y añadirla al final o en la
- * casilla desde la que se abrió.
+ * casilla desde la que se abrió. Con `cambiar` (el id de una carta del deck)
+ * es «Cambiar carta»: la elegida sustituye a esa copia o a todas las de su
+ * misma carta, y no se elige cantidad.
  */
 export function AddCardDialog() {
 	const dialogo = useUi((s) => s.dialogo);
 	const abierto = dialogo?.tipo === "anadir";
 	const en = dialogo?.tipo === "anadir" ? dialogo.en : undefined;
 	const hueco = dialogo?.tipo === "anadir" ? dialogo.hueco : undefined;
+	const cambiar = dialogo?.tipo === "anadir" ? dialogo.cambiar : undefined;
 	return (
 		<Dialog open={abierto} onOpenChange={(o) => !o && useUi.getState().abrir(null)}>
-			{abierto && <Contenido en={en} hueco={hueco} />}
+			{abierto && <Contenido en={en} hueco={hueco} cambiar={cambiar} />}
 		</Dialog>
 	);
 }
 
-function Contenido({ en, hueco }: { en?: number; hueco?: string }) {
+function Contenido({ en, hueco, cambiar }: { en?: number; hueco?: string; cambiar?: string }) {
 	const { t, mensaje } = useLang();
+	const vieja = cambiar ? cartaPorId(cambiar) : undefined;
+	const viejaScryfall = vieja ? scryfallDe(vieja) : null;
+	// Las copias de la misma carta (con esta), para «cambiar todas».
+	const copias = useDeck((s) =>
+		viejaScryfall ? (s.deck?.cards.filter((c) => scryfallDe(c) === viejaScryfall).length ?? 0) : 0,
+	);
 	const idiomaDeck = useUi((s) => s.lang);
 	const [q, setQ] = useState("");
 	const [sugerencias, setSugerencias] = useState<string[]>([]);
@@ -104,14 +115,46 @@ function Contenido({ en, hueco }: { en?: number; hueco?: string }) {
 		setAnadiendo(true);
 		try {
 			const base = await traerCarta(c);
-			const copias = Array.from({ length: Math.max(1, cantidad) }, (_, i) =>
+			const nuevas = Array.from({ length: Math.max(1, cantidad) }, (_, i) =>
 				i === 0 ? base : { ...base, id: nuevoId() },
 			);
 			// Un hueco en blanco se sustituye: la carta ocupa su posición.
-			useDeck.getState().setCartas((cs) => insertar(hueco ? quitar(cs, [hueco]) : cs, copias, en));
+			useDeck.getState().setCartas((cs) => insertar(hueco ? quitar(cs, [hueco]) : cs, nuevas, en));
 			useUi
 				.getState()
-				.anunciar(t("{n} × {carta} añadida", { n: copias.length, carta: base.meta.name }));
+				.anunciar(t("{n} × {carta} añadida", { n: nuevas.length, carta: base.meta.name }));
+			useUi.getState().abrir(null);
+		} catch (e) {
+			toast.error(mensaje(e));
+		} finally {
+			setAnadiendo(false);
+		}
+	};
+
+	/**
+	 * Cambia la carta del deck por `c`: la copia (`todas`: también las demás
+	 * de su misma carta) se queda con su sitio, lo fijado, la marca y un
+	 * reverso propio; lo demás (retoques, diseño) era de la carta anterior.
+	 */
+	const sustituir = async (todas: boolean, c: CardSummary | null = elegida) => {
+		if (!c || !vieja) return;
+		setAnadiendo(true);
+		try {
+			const base = await traerCarta(c);
+			useDeck.getState().setCartas((cs) =>
+				cs.map((x) =>
+					x.id === vieja.id || (todas && viejaScryfall && scryfallDe(x) === viejaScryfall)
+						? {
+								...base,
+								id: x.id,
+								locked: x.locked,
+								marca: x.marca,
+								back: x.back.kind === "custom" ? x.back : base.back,
+							}
+						: x,
+				),
+			);
+			useUi.getState().anunciar(t("Cambiada por {carta}", { carta: base.meta.name }));
 			useUi.getState().abrir(null);
 		} catch (e) {
 			toast.error(mensaje(e));
@@ -123,11 +166,13 @@ function Contenido({ en, hueco }: { en?: number; hueco?: string }) {
 	return (
 		<DialogContent className="flex max-h-[85vh] flex-col sm:max-w-4xl" ocupado={anadiendo}>
 			<DialogHeader>
-				<DialogTitle>{t("Añadir carta")}</DialogTitle>
+				<DialogTitle>{vieja ? t("Cambiar carta") : t("Añadir carta")}</DialogTitle>
 				<DialogDescription>
-					{t(
-						"Busca por nombre o con la sintaxis de Scryfall (t:dragon c:r). Doble clic para añadir.",
-					)}
+					{vieja
+						? t("Busca la carta que sustituye a esta. Doble clic para cambiar solo esta copia.")
+						: t(
+								"Busca por nombre o con la sintaxis de Scryfall (t:dragon c:r). Doble clic para añadir.",
+							)}
 				</DialogDescription>
 			</DialogHeader>
 			<div className="flex flex-col gap-2.5" data-filtro="">
@@ -184,7 +229,7 @@ function Contenido({ en, hueco }: { en?: number; hueco?: string }) {
 							onElegir={(c) => setElegida(c)}
 							onDoble={(c) => {
 								setElegida(c);
-								void anadir(c);
+								void (vieja ? sustituir(false, c) : anadir(c));
 							}}
 						/>
 					)}
@@ -198,19 +243,40 @@ function Contenido({ en, hueco }: { en?: number; hueco?: string }) {
 							? t("{n} resultados", { n: resultados.length })
 							: ""}
 				</span>
-				<span className="text-xs">{t("Copias")}</span>
-				<CampoNumero
-					valor={cantidad}
-					onChange={(v) => setCantidad(Math.max(1, Math.round(v ?? 1)))}
-					min={1}
-					max={99}
-					paso={1}
-					ancho="w-16"
-				/>
-				<Button size="sm" onClick={() => anadir()} disabled={!elegida || anadiendo}>
-					{anadiendo ? <Loader2 className="animate-spin" /> : <Plus />}
-					{t("Añadir")}
-				</Button>
+				{vieja ? (
+					<>
+						{copias > 1 && (
+							<Button
+								size="sm"
+								variant="outline"
+								onClick={() => sustituir(true)}
+								disabled={!elegida || anadiendo}
+							>
+								{t("Cambiar todas las copias")}
+							</Button>
+						)}
+						<Button size="sm" onClick={() => sustituir(false)} disabled={!elegida || anadiendo}>
+							{anadiendo ? <Loader2 className="animate-spin" /> : <Repeat2 />}
+							{t("Cambiar")}
+						</Button>
+					</>
+				) : (
+					<>
+						<span className="text-xs">{t("Copias")}</span>
+						<CampoNumero
+							valor={cantidad}
+							onChange={(v) => setCantidad(Math.max(1, Math.round(v ?? 1)))}
+							min={1}
+							max={99}
+							paso={1}
+							ancho="w-16"
+						/>
+						<Button size="sm" onClick={() => anadir()} disabled={!elegida || anadiendo}>
+							{anadiendo ? <Loader2 className="animate-spin" /> : <Plus />}
+							{t("Añadir")}
+						</Button>
+					</>
+				)}
 			</DialogFooter>
 		</DialogContent>
 	);

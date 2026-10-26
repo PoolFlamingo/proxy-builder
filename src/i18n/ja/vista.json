@@ -61,5 +61,6 @@
 	"Puede ir o no: no cuenta para el mazo.": "入れても入れなくてもよいカードです。デッキには数えません。",
 	"Banquillo": "サイドボード",
 	"BANQUILLO": "サイドボード",
-	"Del banquillo (sideboard): no cuenta para el mazo.": "サイドボードのカードです。デッキには数えません。"
+	"Del banquillo (sideboard): no cuenta para el mazo.": "サイドボードのカードです。デッキには数えません。",
+	"Cambiar carta…": "カードを変更…"
 }

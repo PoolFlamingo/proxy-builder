@@ -12,6 +12,7 @@ import {
 	Lock,
 	LockOpen,
 	Palette,
+	Repeat2,
 	Replace,
 	Search,
 	SlidersHorizontal,
@@ -115,6 +116,13 @@ export function SlotMenu({ id, children }: { id: string; children: ReactNode }) 
 				>
 					<Palette />
 					{t("Cambiar variante")}
+				</ContextMenuItem>
+				<ContextMenuItem
+					disabled={varias || !esScryfall}
+					onSelect={() => useUi.getState().abrir({ tipo: "anadir", cambiar: id })}
+				>
+					<Repeat2 />
+					{t("Cambiar carta…")}
 				</ContextMenuItem>
 				<ContextMenuItem
 					disabled={varias || !disenable}

@@ -45,5 +45,10 @@
 	"Reemplazar solo esta": "이 카드만 교체",
 	"Variante cambiada en todas las copias de {carta}": "{carta}의 모든 사본에서 판본을 바꿨어요",
 	"Variante cambiada": "판본을 바꿨어요",
-	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)": "Scryfall에 없는 토큰(Cockatrice 토큰 데이터베이스)"
+	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)": "Scryfall에 없는 토큰(Cockatrice 토큰 데이터베이스)",
+	"Cambiar carta": "카드 변경",
+	"Busca la carta que sustituye a esta. Doble clic para cambiar solo esta copia.": "이 카드를 대신할 카드를 검색하세요. 더블 클릭하면 이 사본만 바꿔요.",
+	"Cambiar": "변경",
+	"Cambiar todas las copias": "모든 사본 변경",
+	"Cambiada por {carta}": "{carta}(으)로 바꿨어요"
 }

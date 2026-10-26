@@ -60,5 +60,10 @@
 	"Reemplazar solo esta": "Zastąp tylko tę",
 	"Variante cambiada en todas las copias de {carta}": "Zmieniono wydanie we wszystkich kopiach karty {carta}",
 	"Variante cambiada": "Zmieniono wydanie",
-	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)": "Token, którego nie ma w Scryfall (baza tokenów Cockatrice)"
+	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)": "Token, którego nie ma w Scryfall (baza tokenów Cockatrice)",
+	"Cambiar carta": "Zmień kartę",
+	"Busca la carta que sustituye a esta. Doble clic para cambiar solo esta copia.": "Wyszukaj kartę, która zastąpi tę. Dwukrotne kliknięcie zmienia tylko tę kopię.",
+	"Cambiar": "Zmień",
+	"Cambiar todas las copias": "Zmień wszystkie kopie",
+	"Cambiada por {carta}": "Zastąpiono kartą {carta}"
 }

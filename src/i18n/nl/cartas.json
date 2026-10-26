@@ -51,5 +51,10 @@
 	"Reemplazar solo esta": "Alleen deze vervangen",
 	"Variante cambiada en todas las copias de {carta}": "Druk gewijzigd op alle kopieën van {carta}",
 	"Variante cambiada": "Druk gewijzigd",
-	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)": "Token die Scryfall niet heeft (tokendatabase van Cockatrice)"
+	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)": "Token die Scryfall niet heeft (tokendatabase van Cockatrice)",
+	"Cambiar carta": "Kaart wijzigen",
+	"Busca la carta que sustituye a esta. Doble clic para cambiar solo esta copia.": "Zoek de kaart die deze vervangt. Dubbelklik om alleen deze kopie te wijzigen.",
+	"Cambiar": "Wijzigen",
+	"Cambiar todas las copias": "Alle kopieën wijzigen",
+	"Cambiada por {carta}": "Vervangen door {carta}"
 }

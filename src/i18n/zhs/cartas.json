@@ -45,5 +45,10 @@
 	"Reemplazar solo esta": "仅替换这一张",
 	"Variante cambiada en todas las copias de {carta}": "已更换{carta}所有副本的版本",
 	"Variante cambiada": "版本已更换",
-	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)": "Scryfall 没有的衍生物（Cockatrice 衍生物数据库）"
+	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)": "Scryfall 没有的衍生物（Cockatrice 衍生物数据库）",
+	"Cambiar carta": "更换牌",
+	"Busca la carta que sustituye a esta. Doble clic para cambiar solo esta copia.": "搜索用来替换这张的牌。双击只更换这一份。",
+	"Cambiar": "更换",
+	"Cambiar todas las copias": "更换所有副本",
+	"Cambiada por {carta}": "已换成{carta}"
 }

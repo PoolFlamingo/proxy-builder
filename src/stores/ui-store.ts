@@ -33,7 +33,7 @@ export type Dialogo =
 	 *  (se puede cambiar a todo el deck en el diálogo). */
 	| { tipo: "vincularLote"; ids?: string[]; soloSeleccion?: boolean }
 	/** `en`: posición donde entra; `hueco`: casilla en blanco que la carta sustituye. */
-	| { tipo: "anadir"; en?: number; hueco?: string }
+	| { tipo: "anadir"; en?: number; hueco?: string; cambiar?: string }
 	| { tipo: "moverA"; ids: string[] }
 	| { tipo: "fichas" }
 	| { tipo: "sets" }

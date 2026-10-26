@@ -45,5 +45,10 @@
 	"Reemplazar solo esta": "Reemplazar solo esta",
 	"Variante cambiada en todas las copias de {carta}": "Variante cambiada en todas las copias de {carta}",
 	"Variante cambiada": "Variante cambiada",
-	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)": "Ficha que Scryfall no tiene (base de fichas de Cockatrice)"
+	"Ficha que Scryfall no tiene (base de fichas de Cockatrice)": "Ficha que Scryfall no tiene (base de fichas de Cockatrice)",
+	"Cambiar carta": "Cambiar carta",
+	"Busca la carta que sustituye a esta. Doble clic para cambiar solo esta copia.": "Busca la carta que sustituye a esta. Doble clic para cambiar solo esta copia.",
+	"Cambiar": "Cambiar",
+	"Cambiar todas las copias": "Cambiar todas las copias",
+	"Cambiada por {carta}": "Cambiada por {carta}"
 }
