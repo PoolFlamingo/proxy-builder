@@ -90,6 +90,7 @@
 			"!plans",
 			"!src/bindings",
 			"!src-tauri/crates/proxy-core/tests/compatibilidad",
+			"!src-tauri/crates/mesa/tests/catalogo",
 			"!src/index.css",
 			"!src/themes.css",
 			"!src/fonts.css",

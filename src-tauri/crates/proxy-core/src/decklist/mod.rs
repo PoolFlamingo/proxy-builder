@@ -11,7 +11,7 @@
 
 mod exportar;
 
-pub use exportar::{exportar, FormatoLista};
+pub use exportar::{exportar, seccion_de, secciones_de, FormatoLista};
 
 use std::sync::LazyLock;
 

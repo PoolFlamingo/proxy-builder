@@ -17,7 +17,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 # segundos con `cargo test -p proxy-core`. Mismo patrón que `crates/ai` en
 # judlex. Los perfiles van aquí, en la raíz: en un workspace solo cuentan éstos.
 [workspace]
-members = [".", "crates/proxy-core"]
+members = [".", "crates/proxy-core", "crates/mesa"]
 resolver = "2"
 
 [build-dependencies]
@@ -25,6 +25,8 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 proxy-core = { path = "crates/proxy-core" }
+# El motor de la mesa de juego (`crates/mesa`): puro como `proxy-core`.
+mesa = { path = "crates/mesa" }
 tauri = { version = "2", features = [] }
 tauri-plugin-dialog = "2"
 tauri-plugin-opener = "2"
@@ -109,6 +111,11 @@ debug = false
 # Las dependencias de imagen se compilan optimizadas también en desarrollo:
 # procesar una carta a 600 PPP sin optimizar tarda segundos en vez de
 # milisegundos, y eso hace inservible la vista previa en `tauri dev`.
+opt-level = 2
+
+# El motor de la mesa también: cada acción copia y compara la partida entera
+# (`mesa::aplicar`), y sus tests de propiedad juegan miles.
+[profile.dev.package.mesa]
 opt-level = 2
 
 [profile.dev.build-override]

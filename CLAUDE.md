@@ -102,6 +102,15 @@ le falta una cadena le sale la inglesa.
 - Diálogos de ficheros SOLO por `src/lib/dialogos.ts` (`abrirParaImportar`,
   `guardarParaExportar`): recuerdan en Rust (`commands/carpetas.rs`,
   `app_settings`) la última carpeta de importar y la de exportar, por separado.
+- **Mesa de juego** (Pablo, 24/10/2026; plan `plans/20261024 - mesa-de-juego/`).
+  Motor puro en `src-tauri/crates/mesa` (sin Tauri, red, base de datos, reloj
+  ni azar de fuera; nunca `HashMap` en el modelo): `Intencion` → `resolver`
+  (permisos y azar: semilla por evento) → `Evento` → `aplicar` (total: sobre
+  una copia, `Err` no cambia nada) → `vista`/`parche` por mirador (de una
+  zona oculta solo el número). `registro.rs` deshace con `Cambio::Restaurar`
+  (la partida entera), rehace re-resolviendo intenciones y repite con fotos
+  cada 50. 🛑 `Accion`/`Cambio` nunca se cambian ni se quitan: variante nueva
+  = subir `VERSION_CATALOGO` y escribir `tests/catalogo/v<N>.json`.
 - Rust: `commands/{cards,decklist,export,identify,layout,library,stats}.rs`,
   `package.rs` (.pbdeck), `render.rs` + `protocol.rs` (miniaturas),
   `ocr.rs` (OCR opcional de la carta entera con `ocrs`, a la resolución
@@ -109,7 +118,7 @@ le falta una cadena le sale la inglesa.
   resto; modelos descargados la primera vez a `app_data_dir/modelos/`),
   `scryfall/nombres.rs` (catálogo de nombres de Scryfall en `app_cache_dir`,
   renovado cada semana, para reconocer en local lo que lee el OCR),
-  `proxy-core::{layout,imaging,pdf,stats,decklist}`.
+  `proxy-core::{layout,imaging,pdf,stats,decklist}`, `mesa`.
 - Estadísticas: todo el cálculo en `proxy-core::stats` (`mod.rs` cuenta;
   `funciones.rs` deduce rampa/robo/eliminación… por el texto de reglas;
   `mana.rs` lee costes; `prob.rs` hipergeométrica). `commands/stats.rs` pide

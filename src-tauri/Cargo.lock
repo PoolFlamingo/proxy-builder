@@ -3084,6 +3084,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "mesa"
+version = "0.1.0"
+dependencies = [
+ "proxy-core",
+ "serde",
+ "serde_json",
+ "sha2 0.11.1",
+ "thiserror 2.0.21",
+ "ts-rs",
+]
+
+[[package]]
 name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4054,6 +4066,7 @@ dependencies = [
  "imagesize 0.14.0",
  "krilla",
  "lopdf",
+ "mesa",
  "ocrs",
  "proxy-core",
  "rayon",
