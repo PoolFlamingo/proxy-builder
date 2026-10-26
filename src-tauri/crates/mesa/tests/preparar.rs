@@ -137,6 +137,23 @@ fn con_una_lista_solo_va_lo_elegido() {
     // Sideboard de la lista escrita no estaba elegido ni marcado: fuera.
     assert_eq!(de_lista(Seccion::Ficha).len(), 1);
     assert_eq!(de_lista(Seccion::Banquillo), vec!["Lightning Bolt-14"]);
+
+    // Un compañero elegido sigue yendo aparte.
+    let mut d2 = yusri();
+    d2.decklist_text
+        .push_str("\nCompanion\n1 Lurrus of the Dream-Den\n");
+    d2.cards.push(carta("Lurrus of the Dream-Den"));
+    let con_lurrus = ListaDeJuego {
+        cartas: vec!["Lurrus of the Dream-Den-23".into()],
+        ..lista.clone()
+    };
+    assert_eq!(
+        secciones_de_mesa(&d2, Some(&con_lurrus))
+            .into_iter()
+            .filter(|(_, x)| *x == Seccion::Companero)
+            .count(),
+        1
+    );
 }
 
 #[test]

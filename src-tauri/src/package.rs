@@ -280,7 +280,9 @@ pub fn import<R: Read + Seek>(r: R, blobs: &BlobStore, db: &Db) -> AppResult<Dec
             ids.iter().filter_map(|i| nuevos.get(i).cloned()).collect()
         };
         for l in &b.listas {
-            listas::guardar(
+            // Una lista que no se puede guardar (sin nombre, hecha a mano)
+            // no deja el deck a medias: se salta.
+            let _ = listas::guardar(
                 db,
                 &deck.id,
                 &ListaDeJuego {
@@ -289,7 +291,7 @@ pub fn import<R: Read + Seek>(r: R, blobs: &BlobStore, db: &Db) -> AppResult<Dec
                     comandantes: cambiar(&l.comandantes),
                     cartas: cambiar(&l.cartas),
                 },
-            )?;
+            );
         }
     }
     Ok(deck)

@@ -118,7 +118,12 @@ pub fn secciones_de_mesa<'a>(
             if comandantes.contains(c.id.as_str()) {
                 Seccion::Comandante
             } else if cartas.contains(c.id.as_str()) {
-                Seccion::Mazo
+                // El compañero sigue yendo aparte, como sin lista.
+                if seccion_lista == Section::Companion {
+                    Seccion::Companero
+                } else {
+                    Seccion::Mazo
+                }
             } else if c.marca == Some(MarcaCarta::Banquillo) {
                 Seccion::Banquillo
             } else {

@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { PORTADA } from "@/features/library/vista-cuadricula";
+import { useEstadoParaCerrar } from "@/lib/dialogos-abiertos";
 import { urlMiniatura } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
@@ -106,6 +107,8 @@ export function ListaDialog({
 	// Quien abre puede pasar una función nueva en cada pintado: que no relea.
 	const cerrar = useRef(onCerrar);
 	cerrar.current = onCerrar;
+	// Lo que había al abrir, para saber si hay cambios sin guardar.
+	const alAbrir = useRef("");
 	const commander = formato === "commander";
 	const singleton = commander;
 
@@ -164,6 +167,8 @@ export function ListaDialog({
 	const n = cuantas(eleccion);
 	const pide = commander ? 100 : null;
 	const bloquea = avisos.some(impide);
+	const sinGuardar = todas !== null && JSON.stringify([nombre, eleccion]) !== alAbrir.current;
+	useEstadoParaCerrar({ enCurso: guardando, sinGuardar });
 
 	const guardar = async () => {
 		setGuardando(true);
@@ -231,7 +236,7 @@ export function ListaDialog({
 		<Dialog open={abierto} onOpenChange={(o) => !o && !guardando && onCerrar()}>
 			<DialogContent
 				className="flex h-[88vh] flex-col sm:max-w-6xl"
-				cambiosSinGuardar={false}
+				cambiosSinGuardar={sinGuardar}
 				ocupado={guardando}
 			>
 				<DialogHeader>

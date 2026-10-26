@@ -300,7 +300,10 @@ export function EntradaMesa() {
 											...(pideLista
 												? []
 												: [
-														{ valor: "", etiqueta: t("Todo el deck ({n})", { n: listas.cuentan }) },
+														{
+															valor: TODO_EL_DECK,
+															etiqueta: t("Todo el deck ({n})", { n: listas.cuentan }),
+														},
 													]),
 											...listas.listas.map((l) => ({ valor: l.id, etiqueta: l.nombre })),
 										]}
