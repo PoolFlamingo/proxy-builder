@@ -397,5 +397,7 @@
 	"No hay ningún aviso que mostrar.": "Немає попереджень для показу.",
 	"No hay ninguna información que mostrar.": "Немає інформації для показу.",
 	"Esta parte no lleva ilustración propia: enseña la de la parte 1, como las cartas impresas.": "Ця частина не має власної ілюстрації: вона показує ілюстрацію частини 1, як на друкованих картах.",
-	"Ir a la parte 1": "Перейти до частини 1"
+	"Ir a la parte 1": "Перейти до частини 1",
+	"Estilo y ajustes propios de esta cara": "Власний стиль і налаштування для цього боку",
+	"Apagado, esta cara usa lo mismo que la cara 1: el estilo, el marco, el emblema y los ajustes. Encendido, lo que cambies solo vale para ella.": "Вимкнено: цей бік використовує те саме, що й бік 1 — стиль, рамку, емблему та налаштування. Увімкнено: зміни стосуються лише його."
 }

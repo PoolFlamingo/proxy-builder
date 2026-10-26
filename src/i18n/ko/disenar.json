@@ -347,5 +347,7 @@
 	"No hay ningún aviso que mostrar.": "표시할 경고가 없어요.",
 	"No hay ninguna información que mostrar.": "표시할 정보가 없어요.",
 	"Esta parte no lleva ilustración propia: enseña la de la parte 1, como las cartas impresas.": "이 부분에는 자체 일러스트가 없어요. 인쇄된 카드처럼 1부분의 일러스트를 보여 줘요.",
-	"Ir a la parte 1": "1부분으로 이동"
+	"Ir a la parte 1": "1부분으로 이동",
+	"Estilo y ajustes propios de esta cara": "이 면만의 스타일과 설정",
+	"Apagado, esta cara usa lo mismo que la cara 1: el estilo, el marco, el emblema y los ajustes. Encendido, lo que cambies solo vale para ella.": "끄면 이 면은 1면과 같은 스타일, 프레임, 엠블럼, 설정을 써요. 켜면 바꾼 내용이 이 면에만 적용돼요."
 }

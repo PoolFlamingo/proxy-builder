@@ -391,5 +391,7 @@
 	"No hay ningún aviso que mostrar.": "Aucun avertissement à afficher.",
 	"No hay ninguna información que mostrar.": "Aucune information à afficher.",
 	"Esta parte no lleva ilustración propia: enseña la de la parte 1, como las cartas impresas.": "Cette partie n'a pas d'illustration propre : elle montre celle de la partie 1, comme les cartes imprimées.",
-	"Ir a la parte 1": "Aller à la partie 1"
+	"Ir a la parte 1": "Aller à la partie 1",
+	"Estilo y ajustes propios de esta cara": "Style et réglages propres à cette face",
+	"Apagado, esta cara usa lo mismo que la cara 1: el estilo, el marco, el emblema y los ajustes. Encendido, lo que cambies solo vale para ella.": "Désactivé, cette face reprend ceux de la face 1 : style, cadre, emblème et réglages. Activé, ce que tu changes ne vaut que pour elle."
 }

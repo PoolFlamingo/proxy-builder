@@ -347,5 +347,7 @@
 	"No hay ningún aviso que mostrar.": "没有可显示的警告。",
 	"No hay ninguna información que mostrar.": "没有可显示的信息。",
 	"Esta parte no lleva ilustración propia: enseña la de la parte 1, como las cartas impresas.": "这一部分没有自己的画作：和印刷的牌一样，显示第 1 部分的画作。",
-	"Ir a la parte 1": "转到第 1 部分"
+	"Ir a la parte 1": "转到第 1 部分",
+	"Estilo y ajustes propios de esta cara": "此面使用独立的样式和设置",
+	"Apagado, esta cara usa lo mismo que la cara 1: el estilo, el marco, el emblema y los ajustes. Encendido, lo que cambies solo vale para ella.": "关闭时，此面与第 1 面相同：样式、框、徽记和设置。开启后，你的更改只对这一面生效。"
 }

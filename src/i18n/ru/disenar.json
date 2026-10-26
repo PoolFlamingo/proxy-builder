@@ -397,5 +397,7 @@
 	"No hay ningún aviso que mostrar.": "Нет предупреждений для показа.",
 	"No hay ninguna información que mostrar.": "Нет информации для показа.",
 	"Esta parte no lleva ilustración propia: enseña la de la parte 1, como las cartas impresas.": "У этой части нет своей иллюстрации: она показывает иллюстрацию части 1, как на печатных картах.",
-	"Ir a la parte 1": "Перейти к части 1"
+	"Ir a la parte 1": "Перейти к части 1",
+	"Estilo y ajustes propios de esta cara": "Свой стиль и настройки для этой стороны",
+	"Apagado, esta cara usa lo mismo que la cara 1: el estilo, el marco, el emblema y los ajustes. Encendido, lo que cambies solo vale para ella.": "Выключено: эта сторона использует то же, что сторона 1 — стиль, рамку, эмблему и настройки. Включено: изменения касаются только её."
 }

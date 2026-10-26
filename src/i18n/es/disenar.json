@@ -347,5 +347,7 @@
 	"No hay ningún aviso que mostrar.": "No hay ningún aviso que mostrar.",
 	"No hay ninguna información que mostrar.": "No hay ninguna información que mostrar.",
 	"Esta parte no lleva ilustración propia: enseña la de la parte 1, como las cartas impresas.": "Esta parte no lleva ilustración propia: enseña la de la parte 1, como las cartas impresas.",
-	"Ir a la parte 1": "Ir a la parte 1"
+	"Ir a la parte 1": "Ir a la parte 1",
+	"Estilo y ajustes propios de esta cara": "Estilo y ajustes propios de esta cara",
+	"Apagado, esta cara usa lo mismo que la cara 1: el estilo, el marco, el emblema y los ajustes. Encendido, lo que cambies solo vale para ella.": "Apagado, esta cara usa lo mismo que la cara 1: el estilo, el marco, el emblema y los ajustes. Encendido, lo que cambies solo vale para ella."
 }

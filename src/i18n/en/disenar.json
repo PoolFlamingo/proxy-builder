@@ -347,5 +347,7 @@
 	"No hay ningún aviso que mostrar.": "There are no warnings to show.",
 	"No hay ninguna información que mostrar.": "There is no information to show.",
 	"Esta parte no lleva ilustración propia: enseña la de la parte 1, como las cartas impresas.": "This part has no art of its own: it shows part 1's, like the printed cards.",
-	"Ir a la parte 1": "Go to part 1"
+	"Ir a la parte 1": "Go to part 1",
+	"Estilo y ajustes propios de esta cara": "Own style and settings for this face",
+	"Apagado, esta cara usa lo mismo que la cara 1: el estilo, el marco, el emblema y los ajustes. Encendido, lo que cambies solo vale para ella.": "Off, this face uses the same as face 1: style, frame, emblem and settings. On, what you change only applies to it."
 }

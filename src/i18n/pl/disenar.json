@@ -397,5 +397,7 @@
 	"No hay ningún aviso que mostrar.": "Brak ostrzeżeń do wyświetlenia.",
 	"No hay ninguna información que mostrar.": "Brak informacji do wyświetlenia.",
 	"Esta parte no lleva ilustración propia: enseña la de la parte 1, como las cartas impresas.": "Ta część nie ma własnej ilustracji: pokazuje ilustrację części 1, jak drukowane karty.",
-	"Ir a la parte 1": "Przejdź do części 1"
+	"Ir a la parte 1": "Przejdź do części 1",
+	"Estilo y ajustes propios de esta cara": "Własny styl i ustawienia tej strony",
+	"Apagado, esta cara usa lo mismo que la cara 1: el estilo, el marco, el emblema y los ajustes. Encendido, lo que cambies solo vale para ella.": "Wyłączone: ta strona używa tego samego co strona 1 – stylu, ramki, godła i ustawień. Włączone: to, co zmienisz, dotyczy tylko jej."
 }

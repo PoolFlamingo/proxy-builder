@@ -387,5 +387,7 @@
 	"No hay ningún aviso que mostrar.": "Nessun avviso da mostrare.",
 	"No hay ninguna información que mostrar.": "Nessuna informazione da mostrare.",
 	"Esta parte no lleva ilustración propia: enseña la de la parte 1, como las cartas impresas.": "Questa parte non ha un'illustrazione propria: mostra quella della parte 1, come le carte stampate.",
-	"Ir a la parte 1": "Vai alla parte 1"
+	"Ir a la parte 1": "Vai alla parte 1",
+	"Estilo y ajustes propios de esta cara": "Stile e impostazioni propri di questa faccia",
+	"Apagado, esta cara usa lo mismo que la cara 1: el estilo, el marco, el emblema y los ajustes. Encendido, lo que cambies solo vale para ella.": "Spento, questa faccia usa gli stessi della faccia 1: stile, cornice, emblema e impostazioni. Acceso, quello che cambi vale solo per lei."
 }

@@ -50,6 +50,7 @@ import {
 } from "./estilos";
 import { ID_ORIGINAL, useMarcosOriginales } from "./marcos-originales";
 import { usePacksDescargables } from "./packs-descargables";
+import { cambiarEnCara, conAjustesPropios, proyectar, tieneAjustes } from "./por-cara";
 import { RecortarDialog } from "./recortar-dialog";
 import { rehacerMiniaturas } from "./renumerar";
 import { letraRareza, MAQUETACIONES, NOMBRE_ORIGINAL, PALETAS, RAREZAS } from "./textos";
@@ -143,6 +144,25 @@ export function Formulario({
 	onColeccion?: (c: Collection) => void;
 }) {
 	const { t } = useLang();
+	// Las cartas de dos caras impresas: estilo, marco y ajustes por cara. Las
+	// pestañas editan el diseño proyectado de la cara que se elige.
+	const separadas = (resumen?.carasImpresas ?? 1) > 1;
+	const vista = separadas ? proyectar(design, cara) : design;
+	const cambiarVista = separadas ? cambiarEnCara(cambiar, cara) : cambiar;
+	const porCara = (
+		<AjustesDeCara
+			design={design}
+			cambiar={cambiar}
+			cara={cara}
+			setCara={setCara}
+			resumen={resumen}
+		/>
+	);
+	// Una cara que sigue a la carta no se edita aquí: se le dan antes los suyos.
+	const sigue = separadas && cara > 0 && !tieneAjustes(design, cara);
+	const contenido = (c: React.ReactNode) => (
+		<div className={cn("flex flex-col gap-3", sigue && "pointer-events-none opacity-60")}>{c}</div>
+	);
 	return (
 		<Tabs
 			defaultValue="carta"
@@ -161,15 +181,18 @@ export function Formulario({
 			</div>
 			<ScrollArea className="min-h-0 flex-1">
 				<div className="p-2.5">
-					<TabsContent value="carta">
-						<PestanaCarta
-							design={design}
-							cambiar={cambiar}
-							cara={cara}
-							colecciones={colecciones}
-							packs={packs}
-							resumen={resumen}
-						/>
+					<TabsContent value="carta" className="flex flex-col gap-3">
+						{porCara}
+						{contenido(
+							<PestanaCarta
+								design={vista}
+								cambiar={cambiarVista}
+								cara={cara}
+								colecciones={colecciones}
+								packs={packs}
+								resumen={resumen}
+							/>,
+						)}
 					</TabsContent>
 					<TabsContent value="textos" className="flex flex-col gap-3">
 						<SelectorParte design={design} cara={cara} setCara={setCara} resumen={resumen} />
@@ -192,24 +215,30 @@ export function Formulario({
 							<PestanaArte design={design} cambiar={cambiar} cara={cara} />
 						)}
 					</TabsContent>
-					<TabsContent value="marco">
-						<PestanaMarco
-							design={design}
-							cambiar={cambiar}
-							colecciones={colecciones}
-							packs={packs}
-						/>
+					<TabsContent value="marco" className="flex flex-col gap-3">
+						{porCara}
+						{contenido(
+							<PestanaMarco
+								design={vista}
+								cambiar={cambiarVista}
+								colecciones={colecciones}
+								packs={packs}
+							/>,
+						)}
 					</TabsContent>
 					<TabsContent value="pie">
 						<PestanaPie design={design} cambiar={cambiar} colecciones={colecciones} />
 					</TabsContent>
-					<TabsContent value="ajustes">
-						<PestanaAjustes
-							design={design}
-							cambiar={cambiar}
-							colecciones={colecciones}
-							onColeccion={onColeccion}
-						/>
+					<TabsContent value="ajustes" className="flex flex-col gap-3">
+						{porCara}
+						{contenido(
+							<PestanaAjustes
+								design={vista}
+								cambiar={cambiarVista}
+								colecciones={colecciones}
+								onColeccion={onColeccion}
+							/>,
+						)}
 					</TabsContent>
 				</div>
 			</ScrollArea>
@@ -253,6 +282,43 @@ function SelectorParte({
 				</ToggleGroupItem>
 			))}
 		</ToggleGroup>
+	);
+}
+
+/**
+ * Las cartas de dos caras impresas: qué cara se edita y, en las que no son la
+ * primera, si lleva su propio estilo, marco, emblema y ajustes (de partida,
+ * una copia de los de la carta) o sigue los de la cara 1.
+ */
+function AjustesDeCara({
+	design,
+	cambiar,
+	cara,
+	setCara,
+	resumen,
+}: {
+	design: CardDesign;
+	cambiar: Cambiar;
+	cara: number;
+	setCara: (c: number) => void;
+	resumen: Resumen | null;
+}) {
+	const { t } = useLang();
+	if ((resumen?.carasImpresas ?? 1) < 2) return null;
+	return (
+		<div className="flex flex-col gap-2.5">
+			<SelectorParte design={design} cara={cara} setCara={setCara} resumen={resumen} />
+			{cara > 0 && (
+				<FilaInterruptor
+					etiqueta={t("Estilo y ajustes propios de esta cara")}
+					ayuda={t(
+						"Apagado, esta cara usa lo mismo que la cara 1: el estilo, el marco, el emblema y los ajustes. Encendido, lo que cambies solo vale para ella.",
+					)}
+					valor={tieneAjustes(design, cara)}
+					onChange={(v) => cambiar((d) => conAjustesPropios(d, cara, v))}
+				/>
+			)}
+		</div>
 	);
 }
 

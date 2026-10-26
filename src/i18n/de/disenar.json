@@ -377,5 +377,7 @@
 	"No hay ningún aviso que mostrar.": "Es gibt keine Warnungen anzuzeigen.",
 	"No hay ninguna información que mostrar.": "Es gibt keine Informationen anzuzeigen.",
 	"Esta parte no lleva ilustración propia: enseña la de la parte 1, como las cartas impresas.": "Dieser Teil hat keine eigene Illustration: Er zeigt die von Teil 1, wie die gedruckten Karten.",
-	"Ir a la parte 1": "Zu Teil 1"
+	"Ir a la parte 1": "Zu Teil 1",
+	"Estilo y ajustes propios de esta cara": "Eigener Stil und eigene Einstellungen für diese Seite",
+	"Apagado, esta cara usa lo mismo que la cara 1: el estilo, el marco, el emblema y los ajustes. Encendido, lo que cambies solo vale para ella.": "Aus: Diese Seite verwendet dasselbe wie Seite 1: Stil, Rahmen, Emblem und Einstellungen. An: Was du änderst, gilt nur für sie."
 }
