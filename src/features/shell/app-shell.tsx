@@ -1,5 +1,5 @@
 import { BookOpen, Brush, CircleHelp, Layers, Settings } from "lucide-react";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useDefaultLayout } from "react-resizable-panels";
 import { Confirmar } from "@/components/confirmar";
 import { useLang } from "@/components/language-provider";
@@ -16,6 +16,7 @@ import { useUi, type Vista } from "@/stores/ui-store";
 import { BotonActualizar, PuntoActualizacion, useAvisoAjustes } from "./actualizacion-automatica";
 import { ConfirmarCierre } from "./confirmar-cierre";
 import { SaveIndicator } from "./save-indicator";
+import { useScrollPorVista } from "./scroll-por-vista";
 
 /**
  * El marco de la app, como fabricard: barra superior y, debajo, tres paneles
@@ -42,6 +43,8 @@ export function AppShell({
 	const avisoAjustes = useAvisoAjustes();
 	const layout = useDefaultLayout({ id: "proxybuilder.paneles", storage: localStorage });
 	useTutorialInicial();
+	const principal = useRef<HTMLElement>(null);
+	useScrollPorVista(vista, principal);
 	// Salir de «Diseñar» con la carta sin guardar pregunta, y se puede guardar
 	// ahí mismo (como al cambiar de carta).
 	const [salirDeDisenar, setSalirDeDisenar] = useState<(() => void) | null>(null);
@@ -122,7 +125,7 @@ export function AppShell({
 				</div>
 			</header>
 
-			<main className="min-h-0 flex-1">
+			<main ref={principal} className="min-h-0 flex-1">
 				{vista === "deck" ? (
 					<ResizablePanelGroup
 						orientation="horizontal"
