@@ -1,7 +1,9 @@
 import { Swords } from "lucide-react";
+import type { Intensidad } from "@/bindings/Intensidad";
 import { Fila, FilaDeslizador, FilaInterruptor, Seccion, Selector } from "@/components/campos";
 import { useLang } from "@/components/language-provider";
 import { MODO_RENDIMIENTO } from "@/features/mesa/fps";
+import { INTENSIDADES } from "@/features/mesa/sparring/textos";
 import { type NivelDados, useUi } from "@/stores/ui-store";
 import { AjustesDados } from "./aspecto-dados";
 
@@ -33,6 +35,13 @@ export function AjustesMesa() {
 				valor={m.fantasma}
 				onChange={(v) => set({ fantasma: v })}
 			/>
+			<Fila etiqueta={t("Sparring al empezar en solitario")}>
+				<Selector<Intensidad>
+					valor={m.sparring}
+					onChange={(v) => set({ sparring: v })}
+					opciones={INTENSIDADES.map((i) => ({ valor: i.valor, etiqueta: t(i.nombre) }))}
+				/>
+			</Fila>
 			<FilaInterruptor
 				etiqueta={t("Mantener pulsado abre el menú de la carta")}
 				valor={m.clicSostenido}

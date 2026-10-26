@@ -1,0 +1,906 @@
+[
+	{
+		"nombre": "Swords to Plowshares",
+		"coste": "{W}",
+		"mv": 1,
+		"tipo": "eliminar",
+		"responde": ["criatura"],
+		"exilia": true
+	},
+	{
+		"nombre": "Path to Exile",
+		"coste": "{W}",
+		"mv": 1,
+		"tipo": "eliminar",
+		"responde": ["criatura"],
+		"exilia": true
+	},
+	{
+		"nombre": "Generous Gift",
+		"coste": "{2}{W}",
+		"mv": 3,
+		"tipo": "eliminar",
+		"responde": ["permanente"]
+	},
+	{
+		"nombre": "Beast Within",
+		"coste": "{2}{G}",
+		"mv": 3,
+		"tipo": "eliminar",
+		"responde": ["permanente"]
+	},
+	{
+		"nombre": "Anguished Unmaking",
+		"coste": "{1}{W}{B}",
+		"mv": 3,
+		"tipo": "eliminar",
+		"responde": ["permanente"],
+		"exilia": true
+	},
+	{
+		"nombre": "Assassin's Trophy",
+		"coste": "{B}{G}",
+		"mv": 2,
+		"tipo": "eliminar",
+		"responde": ["permanente"]
+	},
+	{
+		"nombre": "Vindicate",
+		"coste": "{1}{W}{B}",
+		"mv": 3,
+		"tipo": "eliminar",
+		"responde": ["permanente"]
+	},
+	{
+		"nombre": "Despark",
+		"coste": "{W}{B}",
+		"mv": 2,
+		"tipo": "eliminar",
+		"responde": ["permanente"],
+		"exilia": true,
+		"mvMin": 4
+	},
+	{
+		"nombre": "Infernal Grasp",
+		"coste": "{1}{B}",
+		"mv": 2,
+		"tipo": "eliminar",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Go for the Throat",
+		"coste": "{1}{B}",
+		"mv": 2,
+		"tipo": "eliminar",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Doom Blade",
+		"coste": "{1}{B}",
+		"mv": 2,
+		"tipo": "eliminar",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Heartless Act",
+		"coste": "{1}{B}",
+		"mv": 2,
+		"tipo": "eliminar",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Feed the Swarm",
+		"coste": "{1}{B}",
+		"mv": 2,
+		"tipo": "eliminar",
+		"responde": ["criatura", "encantamiento"]
+	},
+	{
+		"nombre": "Deadly Rollick",
+		"coste": "{3}{B}",
+		"mv": 4,
+		"tipo": "eliminar",
+		"responde": ["criatura"],
+		"exilia": true,
+		"gratis": true
+	},
+	{
+		"nombre": "Snuff Out",
+		"coste": "{3}{B}",
+		"mv": 4,
+		"tipo": "eliminar",
+		"responde": ["criatura"],
+		"gratis": true
+	},
+	{
+		"nombre": "Fatal Push",
+		"coste": "{B}",
+		"mv": 1,
+		"tipo": "eliminar",
+		"responde": ["criatura"],
+		"mvMax": 2
+	},
+	{
+		"nombre": "Bloodchief's Thirst",
+		"coste": "{B}",
+		"mv": 1,
+		"tipo": "eliminar",
+		"responde": ["criatura", "planeswalker"],
+		"mvMax": 2
+	},
+	{
+		"nombre": "Tragic Slip",
+		"coste": "{B}",
+		"mv": 1,
+		"tipo": "eliminar",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Rapid Hybridization",
+		"coste": "{U}",
+		"mv": 1,
+		"tipo": "eliminar",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Pongify",
+		"coste": "{U}",
+		"mv": 1,
+		"tipo": "eliminar",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Reality Shift",
+		"coste": "{1}{U}",
+		"mv": 2,
+		"tipo": "eliminar",
+		"responde": ["criatura"],
+		"exilia": true
+	},
+	{
+		"nombre": "Nature's Claim",
+		"coste": "{G}",
+		"mv": 1,
+		"tipo": "eliminar",
+		"responde": ["artefacto", "encantamiento"]
+	},
+	{
+		"nombre": "Krosan Grip",
+		"coste": "{2}{G}",
+		"mv": 3,
+		"tipo": "eliminar",
+		"responde": ["artefacto", "encantamiento"]
+	},
+	{
+		"nombre": "Return to Nature",
+		"coste": "{1}{G}",
+		"mv": 2,
+		"tipo": "eliminar",
+		"responde": ["artefacto", "encantamiento"]
+	},
+	{
+		"nombre": "Abrupt Decay",
+		"coste": "{B}{G}",
+		"mv": 2,
+		"tipo": "eliminar",
+		"responde": ["permanente"],
+		"mvMax": 3
+	},
+	{
+		"nombre": "Putrefy",
+		"coste": "{1}{B}{G}",
+		"mv": 3,
+		"tipo": "eliminar",
+		"responde": ["artefacto", "criatura"]
+	},
+	{
+		"nombre": "Mortify",
+		"coste": "{1}{W}{B}",
+		"mv": 3,
+		"tipo": "eliminar",
+		"responde": ["criatura", "encantamiento"]
+	},
+	{
+		"nombre": "Utter End",
+		"coste": "{2}{W}{B}",
+		"mv": 4,
+		"tipo": "eliminar",
+		"responde": ["permanente"],
+		"exilia": true
+	},
+	{
+		"nombre": "Terminate",
+		"coste": "{B}{R}",
+		"mv": 2,
+		"tipo": "eliminar",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Dreadbore",
+		"coste": "{B}{R}",
+		"mv": 2,
+		"tipo": "eliminar",
+		"responde": ["criatura", "planeswalker"]
+	},
+	{
+		"nombre": "Bedevil",
+		"coste": "{B}{B}{R}",
+		"mv": 3,
+		"tipo": "eliminar",
+		"responde": ["artefacto", "criatura", "planeswalker"]
+	},
+	{
+		"nombre": "Hero's Downfall",
+		"coste": "{1}{B}{B}",
+		"mv": 3,
+		"tipo": "eliminar",
+		"responde": ["criatura", "planeswalker"]
+	},
+	{
+		"nombre": "Murderous Rider",
+		"coste": "{1}{B}{B}",
+		"mv": 3,
+		"tipo": "eliminar",
+		"responde": ["criatura", "planeswalker"]
+	},
+	{
+		"nombre": "Ravenous Chupacabra",
+		"coste": "{2}{B}{B}",
+		"mv": 4,
+		"tipo": "eliminar",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Vraska's Contempt",
+		"coste": "{2}{B}{B}",
+		"mv": 4,
+		"tipo": "eliminar",
+		"responde": ["criatura", "planeswalker"],
+		"exilia": true
+	},
+	{
+		"nombre": "Eat to Extinction",
+		"coste": "{3}{B}",
+		"mv": 4,
+		"tipo": "eliminar",
+		"responde": ["criatura", "planeswalker"],
+		"exilia": true
+	},
+	{
+		"nombre": "Power Word Kill",
+		"coste": "{1}{B}",
+		"mv": 2,
+		"tipo": "eliminar",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Withering Torment",
+		"coste": "{2}{B}",
+		"mv": 3,
+		"tipo": "eliminar",
+		"responde": ["criatura", "encantamiento"]
+	},
+	{
+		"nombre": "Lethal Scheme",
+		"coste": "{2}{B}{B}",
+		"mv": 4,
+		"tipo": "eliminar",
+		"responde": ["criatura", "planeswalker"]
+	},
+	{
+		"nombre": "Stroke of Midnight",
+		"coste": "{2}{W}",
+		"mv": 3,
+		"tipo": "eliminar",
+		"responde": ["permanente"]
+	},
+	{
+		"nombre": "Fateful Absence",
+		"coste": "{1}{W}",
+		"mv": 2,
+		"tipo": "eliminar",
+		"responde": ["criatura", "planeswalker"]
+	},
+	{
+		"nombre": "Get Lost",
+		"coste": "{1}{W}{W}",
+		"mv": 3,
+		"tipo": "eliminar",
+		"responde": ["criatura", "encantamiento", "planeswalker"]
+	},
+	{
+		"nombre": "Vanishing Verse",
+		"coste": "{W}{B}",
+		"mv": 2,
+		"tipo": "eliminar",
+		"responde": ["permanente"],
+		"exilia": true,
+		"monocolor": true
+	},
+	{
+		"nombre": "Prismatic Ending",
+		"coste": "{X}{W}",
+		"mv": 1,
+		"tipo": "eliminar",
+		"responde": ["permanente"],
+		"exilia": true,
+		"mvMax": 2
+	},
+	{
+		"nombre": "Solitude",
+		"coste": "{3}{W}{W}",
+		"mv": 5,
+		"tipo": "eliminar",
+		"responde": ["criatura"],
+		"exilia": true,
+		"gratis": true
+	},
+	{
+		"nombre": "March of Otherworldly Light",
+		"coste": "{X}{W}",
+		"mv": 1,
+		"tipo": "eliminar",
+		"responde": ["artefacto", "criatura", "encantamiento"],
+		"exilia": true
+	},
+	{
+		"nombre": "Banishing Light",
+		"coste": "{2}{W}",
+		"mv": 3,
+		"tipo": "eliminar",
+		"responde": ["permanente"],
+		"exilia": true
+	},
+	{
+		"nombre": "Oblivion Ring",
+		"coste": "{2}{W}",
+		"mv": 3,
+		"tipo": "eliminar",
+		"responde": ["permanente"],
+		"exilia": true
+	},
+	{
+		"nombre": "Detention Sphere",
+		"coste": "{1}{W}{U}",
+		"mv": 3,
+		"tipo": "eliminar",
+		"responde": ["permanente"],
+		"exilia": true
+	},
+	{
+		"nombre": "Council's Judgment",
+		"coste": "{1}{W}{W}",
+		"mv": 3,
+		"tipo": "eliminar",
+		"responde": ["permanente"],
+		"exilia": true,
+		"noApunta": true
+	},
+	{
+		"nombre": "Wear // Tear",
+		"coste": "{1}{R}",
+		"mv": 2,
+		"tipo": "eliminar",
+		"responde": ["artefacto", "encantamiento"]
+	},
+	{
+		"nombre": "Ossification",
+		"coste": "{1}{W}",
+		"mv": 2,
+		"tipo": "eliminar",
+		"responde": ["criatura", "planeswalker"],
+		"exilia": true
+	},
+	{
+		"nombre": "Damn",
+		"coste": "{B}{B}",
+		"mv": 2,
+		"tipo": "eliminar",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Cyclonic Rift",
+		"coste": "{1}{U}",
+		"mv": 2,
+		"tipo": "devolver",
+		"responde": ["permanente"]
+	},
+	{
+		"nombre": "Into the Roil",
+		"coste": "{1}{U}",
+		"mv": 2,
+		"tipo": "devolver",
+		"responde": ["permanente"]
+	},
+	{
+		"nombre": "Unsummon",
+		"coste": "{U}",
+		"mv": 1,
+		"tipo": "devolver",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Boomerang",
+		"coste": "{U}{U}",
+		"mv": 2,
+		"tipo": "devolver",
+		"responde": ["permanente"]
+	},
+	{
+		"nombre": "Repulse",
+		"coste": "{2}{U}",
+		"mv": 3,
+		"tipo": "devolver",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Venser, Shaper Savant",
+		"coste": "{2}{U}{U}",
+		"mv": 4,
+		"tipo": "devolver",
+		"responde": ["permanente"]
+	},
+	{
+		"nombre": "Echoing Truth",
+		"coste": "{1}{U}",
+		"mv": 2,
+		"tipo": "devolver",
+		"responde": ["permanente"]
+	},
+	{
+		"nombre": "Chain of Vapor",
+		"coste": "{U}",
+		"mv": 1,
+		"tipo": "devolver",
+		"responde": ["permanente"]
+	},
+	{
+		"nombre": "Snap",
+		"coste": "{1}{U}",
+		"mv": 2,
+		"tipo": "devolver",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Plaguecrafter",
+		"coste": "{2}{B}",
+		"mv": 3,
+		"tipo": "sacrificio",
+		"responde": ["criatura"],
+		"noApunta": true
+	},
+	{
+		"nombre": "Fleshbag Marauder",
+		"coste": "{2}{B}",
+		"mv": 3,
+		"tipo": "sacrificio",
+		"responde": ["criatura"],
+		"noApunta": true
+	},
+	{
+		"nombre": "Diabolic Edict",
+		"coste": "{1}{B}",
+		"mv": 2,
+		"tipo": "sacrificio",
+		"responde": ["criatura"],
+		"noApunta": true
+	},
+	{
+		"nombre": "Liliana's Triumph",
+		"coste": "{1}{B}",
+		"mv": 2,
+		"tipo": "sacrificio",
+		"responde": ["criatura"],
+		"noApunta": true
+	},
+	{
+		"nombre": "Sheoldred's Edict",
+		"coste": "{1}{B}",
+		"mv": 2,
+		"tipo": "sacrificio",
+		"responde": ["criatura"],
+		"noApunta": true
+	},
+	{
+		"nombre": "Chainer's Edict",
+		"coste": "{1}{B}",
+		"mv": 2,
+		"tipo": "sacrificio",
+		"responde": ["criatura"],
+		"noApunta": true
+	},
+	{
+		"nombre": "Innocent Blood",
+		"coste": "{B}",
+		"mv": 1,
+		"tipo": "sacrificio",
+		"responde": ["criatura"],
+		"noApunta": true
+	},
+	{
+		"nombre": "Merciless Executioner",
+		"coste": "{2}{B}",
+		"mv": 3,
+		"tipo": "sacrificio",
+		"responde": ["criatura"],
+		"noApunta": true
+	},
+	{
+		"nombre": "Annihilating Glare",
+		"coste": "{B}",
+		"mv": 1,
+		"tipo": "sacrificio",
+		"responde": ["criatura"],
+		"noApunta": true
+	},
+	{
+		"nombre": "Counterspell",
+		"coste": "{U}{U}",
+		"mv": 2,
+		"tipo": "contrarrestar",
+		"responde": ["todo"]
+	},
+	{
+		"nombre": "Arcane Denial",
+		"coste": "{1}{U}",
+		"mv": 2,
+		"tipo": "contrarrestar",
+		"responde": ["todo"]
+	},
+	{
+		"nombre": "Swan Song",
+		"coste": "{U}",
+		"mv": 1,
+		"tipo": "contrarrestar",
+		"responde": ["encantamiento", "instantaneo", "conjuro"]
+	},
+	{
+		"nombre": "Negate",
+		"coste": "{1}{U}",
+		"mv": 2,
+		"tipo": "contrarrestar",
+		"responde": ["noCriatura"]
+	},
+	{
+		"nombre": "Dovin's Veto",
+		"coste": "{W}{U}",
+		"mv": 2,
+		"tipo": "contrarrestar",
+		"responde": ["noCriatura"]
+	},
+	{
+		"nombre": "Mana Drain",
+		"coste": "{U}{U}",
+		"mv": 2,
+		"tipo": "contrarrestar",
+		"responde": ["todo"]
+	},
+	{
+		"nombre": "Force of Will",
+		"coste": "{3}{U}{U}",
+		"mv": 5,
+		"tipo": "contrarrestar",
+		"responde": ["todo"],
+		"gratis": true
+	},
+	{
+		"nombre": "Force of Negation",
+		"coste": "{1}{U}{U}",
+		"mv": 3,
+		"tipo": "contrarrestar",
+		"responde": ["noCriatura"],
+		"gratis": true
+	},
+	{
+		"nombre": "Fierce Guardianship",
+		"coste": "{2}{U}",
+		"mv": 3,
+		"tipo": "contrarrestar",
+		"responde": ["noCriatura"],
+		"gratis": true
+	},
+	{
+		"nombre": "Pact of Negation",
+		"coste": "{0}",
+		"mv": 0,
+		"tipo": "contrarrestar",
+		"responde": ["todo"],
+		"gratis": true
+	},
+	{
+		"nombre": "Flusterstorm",
+		"coste": "{U}",
+		"mv": 1,
+		"tipo": "contrarrestar",
+		"responde": ["instantaneo", "conjuro"]
+	},
+	{
+		"nombre": "Delay",
+		"coste": "{1}{U}",
+		"mv": 2,
+		"tipo": "contrarrestar",
+		"responde": ["todo"]
+	},
+	{
+		"nombre": "Essence Scatter",
+		"coste": "{1}{U}",
+		"mv": 2,
+		"tipo": "contrarrestar",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Mana Leak",
+		"coste": "{1}{U}",
+		"mv": 2,
+		"tipo": "contrarrestar",
+		"responde": ["todo"]
+	},
+	{
+		"nombre": "Dispel",
+		"coste": "{U}",
+		"mv": 1,
+		"tipo": "contrarrestar",
+		"responde": ["instantaneo"]
+	},
+	{
+		"nombre": "An Offer You Can't Refuse",
+		"coste": "{U}",
+		"mv": 1,
+		"tipo": "contrarrestar",
+		"responde": ["noCriatura"]
+	},
+	{
+		"nombre": "Spell Pierce",
+		"coste": "{U}",
+		"mv": 1,
+		"tipo": "contrarrestar",
+		"responde": ["noCriatura"]
+	},
+	{
+		"nombre": "Absorb",
+		"coste": "{W}{U}{U}",
+		"mv": 3,
+		"tipo": "contrarrestar",
+		"responde": ["todo"]
+	},
+	{
+		"nombre": "Cryptic Command",
+		"coste": "{1}{U}{U}{U}",
+		"mv": 4,
+		"tipo": "contrarrestar",
+		"responde": ["todo"]
+	},
+	{
+		"nombre": "Saw It Coming",
+		"coste": "{1}{U}{U}",
+		"mv": 3,
+		"tipo": "contrarrestar",
+		"responde": ["todo"]
+	},
+	{
+		"nombre": "Didn't Say Please",
+		"coste": "{1}{U}{U}",
+		"mv": 3,
+		"tipo": "contrarrestar",
+		"responde": ["todo"]
+	},
+	{
+		"nombre": "Lose Focus",
+		"coste": "{1}{U}",
+		"mv": 2,
+		"tipo": "contrarrestar",
+		"responde": ["todo"]
+	},
+	{
+		"nombre": "Mystic Snake",
+		"coste": "{1}{G}{U}{U}",
+		"mv": 4,
+		"tipo": "contrarrestar",
+		"responde": ["todo"]
+	},
+	{
+		"nombre": "Summary Dismissal",
+		"coste": "{2}{U}{U}",
+		"mv": 4,
+		"tipo": "contrarrestar",
+		"responde": ["todo"]
+	},
+	{
+		"nombre": "Disallow",
+		"coste": "{1}{U}{U}",
+		"mv": 3,
+		"tipo": "contrarrestar",
+		"responde": ["todo"]
+	},
+	{
+		"nombre": "Daze",
+		"coste": "{1}{U}",
+		"mv": 2,
+		"tipo": "contrarrestar",
+		"responde": ["todo"],
+		"gratis": true
+	},
+	{
+		"nombre": "Miscast",
+		"coste": "{U}",
+		"mv": 1,
+		"tipo": "contrarrestar",
+		"responde": ["todo"]
+	},
+	{
+		"nombre": "Make Disappear",
+		"coste": "{1}{U}",
+		"mv": 2,
+		"tipo": "contrarrestar",
+		"responde": ["todo"]
+	},
+	{
+		"nombre": "Syncopate",
+		"coste": "{X}{U}",
+		"mv": 1,
+		"tipo": "contrarrestar",
+		"responde": ["todo"]
+	},
+	{
+		"nombre": "Wrath of God",
+		"coste": "{2}{W}{W}",
+		"mv": 4,
+		"tipo": "barrer",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Day of Judgment",
+		"coste": "{2}{W}{W}",
+		"mv": 4,
+		"tipo": "barrer",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Damnation",
+		"coste": "{2}{B}{B}",
+		"mv": 4,
+		"tipo": "barrer",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Toxic Deluge",
+		"coste": "{2}{B}",
+		"mv": 3,
+		"tipo": "barrer",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Blasphemous Act",
+		"coste": "{8}{R}",
+		"mv": 9,
+		"tipo": "barrer",
+		"responde": ["criatura"],
+		"paga": 3
+	},
+	{
+		"nombre": "Austere Command",
+		"coste": "{4}{W}{W}",
+		"mv": 6,
+		"tipo": "barrer",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Supreme Verdict",
+		"coste": "{1}{W}{W}{U}",
+		"mv": 4,
+		"tipo": "barrer",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Farewell",
+		"coste": "{4}{W}{W}",
+		"mv": 6,
+		"tipo": "barrer",
+		"responde": ["criatura"],
+		"exilia": true
+	},
+	{
+		"nombre": "Sunfall",
+		"coste": "{3}{W}{W}",
+		"mv": 5,
+		"tipo": "barrer",
+		"responde": ["criatura"],
+		"exilia": true
+	},
+	{
+		"nombre": "Vanquish the Horde",
+		"coste": "{6}{W}{W}",
+		"mv": 8,
+		"tipo": "barrer",
+		"responde": ["criatura"],
+		"paga": 5
+	},
+	{
+		"nombre": "Depopulate",
+		"coste": "{2}{W}{W}",
+		"mv": 4,
+		"tipo": "barrer",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Doomskar",
+		"coste": "{3}{W}{W}",
+		"mv": 5,
+		"tipo": "barrer",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Crux of Fate",
+		"coste": "{3}{B}{B}",
+		"mv": 5,
+		"tipo": "barrer",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Merciless Eviction",
+		"coste": "{4}{W}{B}",
+		"mv": 6,
+		"tipo": "barrer",
+		"responde": ["criatura"],
+		"exilia": true
+	},
+	{
+		"nombre": "Anger of the Gods",
+		"coste": "{1}{R}{R}",
+		"mv": 3,
+		"tipo": "barrer",
+		"responde": ["criatura"],
+		"exilia": true
+	},
+	{
+		"nombre": "Rout",
+		"coste": "{3}{W}{W}",
+		"mv": 5,
+		"tipo": "barrer",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Fumigate",
+		"coste": "{3}{W}{W}",
+		"mv": 5,
+		"tipo": "barrer",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Extinction Event",
+		"coste": "{3}{B}",
+		"mv": 4,
+		"tipo": "barrer",
+		"responde": ["criatura"],
+		"exilia": true
+	},
+	{
+		"nombre": "Decree of Pain",
+		"coste": "{6}{B}{B}",
+		"mv": 8,
+		"tipo": "barrer",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Blood on the Snow",
+		"coste": "{4}{B}{B}",
+		"mv": 6,
+		"tipo": "barrer",
+		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Hour of Revelation",
+		"coste": "{3}{W}{W}{W}",
+		"mv": 6,
+		"tipo": "barrer",
+		"responde": ["criatura"],
+		"paga": 4
+	},
+	{
+		"nombre": "Kindred Dominance",
+		"coste": "{5}{B}{B}",
+		"mv": 7,
+		"tipo": "barrer",
+		"responde": ["criatura"]
+	}
+]

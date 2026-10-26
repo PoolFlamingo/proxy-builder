@@ -448,6 +448,46 @@ pub async fn mesa_origen_scryfall(
     state: State<'_, AppState>,
     scryfall_id: String,
 ) -> AppResult<OrigenCarta> {
+    origen_de_scryfall(&state, scryfall_id).await
+}
+
+/// La carta con la que reacciona el fantasma del sparring. Las cartas del
+/// fantasma van por nombre (`mesa/assets/sparring/cartas.json`): la primera
+/// vez se busca en Scryfall y su id se recuerda en `app_settings`
+/// (`mesa.sparring.<nombre>`).
+#[tauri::command]
+pub async fn mesa_sparring_carta(
+    state: State<'_, AppState>,
+    nombre: String,
+) -> AppResult<OrigenCarta> {
+    if mesa::sparring::cartas::por_nombre(&nombre).is_none() {
+        return Err(AppError::new(ErrorCode::InvalidInput));
+    }
+    let clave = format!("mesa.sparring.{nombre}");
+    let id = match crate::store::settings::get(&state.db, &clave)? {
+        Some(id) if imagenes::es_id_scryfall(&id) => id,
+        _ => {
+            let col = state
+                .scryfall
+                .collection(&[crate::scryfall::models::Identifier::Name {
+                    name: nombre.clone(),
+                }])
+                .await?;
+            let c = col
+                .data
+                .into_iter()
+                .next()
+                .ok_or_else(|| AppError::new(ErrorCode::NotFound))?;
+            crate::scryfall::cache::guardar(&state.db, &c)?;
+            crate::store::settings::set(&state.db, &clave, &c.id)?;
+            c.id
+        }
+    };
+    origen_de_scryfall(&state, id).await
+}
+
+/// Una carta de Scryfall como origen de la mesa, con sus imágenes preparadas.
+async fn origen_de_scryfall(state: &AppState, scryfall_id: String) -> AppResult<OrigenCarta> {
     if !imagenes::es_id_scryfall(&scryfall_id) {
         return Err(AppError::new(ErrorCode::InvalidInput));
     }
@@ -470,11 +510,11 @@ pub async fn mesa_origen_scryfall(
             continue;
         };
         let cara = i as u8;
-        let ruta = imagenes::ruta_scryfall(&state, &scryfall_id, cara);
+        let ruta = imagenes::ruta_scryfall(state, &scryfall_id, cara);
         if !ruta.exists() {
             let bytes = api.download(&url).await?;
             let img = proxy_core::imaging::decode::decode(&bytes)?;
-            imagenes::guardar_scryfall(&state, &scryfall_id, cara, &img)?;
+            imagenes::guardar_scryfall(state, &scryfall_id, cara, &img)?;
         }
         caras.push(RefImagen::Scryfall {
             id: scryfall_id.clone(),

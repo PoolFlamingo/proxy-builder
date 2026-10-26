@@ -4,6 +4,7 @@ import type { Evento } from "@/bindings/Evento";
 import type { IdCarta } from "@/bindings/IdCarta";
 import { paraTraducir } from "@/components/language-provider";
 import type { Mesa } from "@/stores/mesa-store";
+import { lineaRegistro } from "./sparring/textos";
 
 type T = (es: string, vars?: Record<string, string | number>) => string;
 
@@ -176,12 +177,21 @@ export function textoDeEvento(ev: Evento, m: Pick<Mesa, "cartas" | "jugadores">,
 			return c.deshecho === null
 				? t("{quien} empieza otra partida", { quien })
 				: t("{quien} deshace", { quien });
-		case "sparring":
-			return t("El fantasma responde con {carta}", { carta: c.reaccion.carta.nombre });
+		case "sparring": {
+			const r = c.reaccion;
+			return lineaRegistro(r, r.objetivo.length > 0 ? nombresCartas(m, r.objetivo, t) : "", t);
+		}
 		case "accion":
 			break;
 	}
 	const a = c.accion;
+	if (a.que === "decidirSparring") {
+		return a.decision === "aceptar"
+			? t("{quien} resuelve la reacción del fantasma", { quien })
+			: a.decision === "teniaRespuesta"
+				? t("{quien} tenía respuesta para el fantasma", { quien })
+				: t("{quien} dice que la reacción del fantasma no aplica", { quien });
+	}
 	const vars: Record<string, string | number> = { quien };
 	if ("cartas" in a && Array.isArray(a.cartas)) vars.cartas = nombresCartas(m, a.cartas, t);
 	if ("carta" in a && typeof a.carta === "number") vars.carta = nombreCarta(m, a.carta, t);

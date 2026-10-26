@@ -252,6 +252,7 @@ export interface Commands {
 	mesa_salir: { args: { guardar: boolean }; result: null };
 	mesa_info_carta: { args: { carta: IdCarta }; result: ReglasCarta };
 	mesa_origen_scryfall: { args: { scryfallId: string }; result: OrigenCarta };
+	mesa_sparring_carta: { args: { nombre: string }; result: OrigenCarta };
 	mesa_tapete_get: { args: { deck: string | null }; result: Tapete | null };
 	mesa_tapete_set: {
 		args: { deck: string | null; origen: OrigenTapete | null; velo: number; desenfoque: number };

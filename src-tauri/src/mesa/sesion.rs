@@ -213,6 +213,10 @@ impl Sesion {
     pub fn accion(&mut self, accion: Accion, como: Option<IdJugador>) -> AppResult<()> {
         let actor = como.unwrap_or(self.yo);
         let ahora = ahora_ms();
+        // El fantasma mira la partida de antes y la de después (solo si está
+        // encendido: la copia no sale gratis).
+        let antes = (self.partida().sparring.intensidad != Intensidad::Apagado)
+            .then(|| self.partida().clone());
         let hecho = if accion == Accion::Reiniciar {
             let p = partida(&self.config, &self.mazos, semilla())?;
             self.registro.reemplazar(actor, p, ahora)?
@@ -220,6 +224,22 @@ impl Sesion {
             self.registro
                 .procesar(&Intencion { actor, accion }, &mut self.azar, ahora)?
         };
+        let reaccion = antes.and_then(|a| {
+            mesa::sparring::reaccionar(&a, self.registro.partida(), &hecho.evento, &mut self.azar)
+        });
+        self.publicar(hecho);
+        // La reacción, como un evento más de la mesa justo detrás.
+        if let Some(reaccion) = reaccion {
+            let h = self
+                .registro
+                .de_la_mesa(Cambio::Sparring { reaccion }, ahora)?;
+            self.publicar(h);
+        }
+        Ok(())
+    }
+
+    /// Apunta un evento hecho y se lo manda a la pantalla.
+    fn publicar(&mut self, hecho: mesa::registro::Hecho) {
         self.sin_guardar += 1;
         if matches!(hecho.evento.cambio, Cambio::Restaurar { .. }) {
             self.mandar(self.mensaje_vista());
@@ -230,7 +250,6 @@ impl Sesion {
                 evento: Box::new(hecho.evento),
             });
         }
-        Ok(())
     }
 }
 
@@ -335,6 +354,79 @@ pub(crate) mod tests {
         let e = s.accion(Accion::PasarTurno, None).unwrap_err();
         assert_eq!(e.code, ErrorCode::Rejected);
         assert_eq!(e.params["motivo"], "NoSePuede");
+    }
+
+    /// Con «Despiadado», jugar criaturas en la ronda 6 acaba trayendo una
+    /// reacción; «Resolverla» quita la carta y deshacer la devuelve.
+    #[test]
+    fn el_fantasma_reacciona_y_deshacer_lo_devuelve_todo() {
+        use mesa::accion::{Destino, Sitio, ZonaDestino};
+        use mesa::modelo::{Pos, RefZona, Zona};
+        use mesa::sparring::{Decision, TipoReaccion};
+        let mut c = config();
+        c.intensidad = Intensidad::Despiadado;
+        let mut s = Sesion::nueva(c, vec![mazo()]).unwrap();
+        s.azar = Azar::new(42);
+        s.accion(Accion::QuedarseCon { al_fondo: vec![] }, None)
+            .unwrap();
+        for _ in 0..5 {
+            s.accion(Accion::PasarTurno, None).unwrap();
+        }
+        assert_eq!(s.partida().turno.ronda, 6);
+        let yo = s.yo;
+        let campo = RefZona::de(yo, Zona::Campo);
+        let biblioteca = RefZona::de(yo, Zona::Biblioteca);
+        for _ in 0..30 {
+            // Una criatura de la biblioteca, directa al campo.
+            let Some(id) =
+                s.partida().zona(&biblioteca).iter().copied().find(|c| {
+                    s.partida().cartas[c].origen.info.tipo.as_deref() == Some("Creature")
+                })
+            else {
+                break;
+            };
+            s.accion(
+                Accion::Mover {
+                    cartas: vec![id],
+                    a: Destino {
+                        zona: ZonaDestino::De(Zona::Campo),
+                        jugador: Some(yo),
+                        sitio: Sitio::EnCampo(Pos::nueva(5_000, 5_000)),
+                    },
+                    como: None,
+                },
+                None,
+            )
+            .unwrap();
+            let Some(r) = s.partida().sparring.reacciones.last().cloned() else {
+                continue;
+            };
+            // Llegó como evento de la mesa, justo detrás.
+            let ultimo = s.registro.eventos.last().unwrap();
+            assert_eq!(ultimo.actor, mesa::accion::Actor::Mesa);
+            assert_eq!(ultimo.seq, r.reaccion.id);
+            let antes = s.partida().clone();
+            let eleccion = (r.reaccion.tipo == TipoReaccion::Sacrificio).then_some(id);
+            s.accion(
+                Accion::DecidirSparring {
+                    reaccion: r.reaccion.id,
+                    decision: Decision::Aceptar,
+                    eleccion,
+                },
+                None,
+            )
+            .unwrap();
+            let quitada = r.reaccion.objetivo.first().copied().unwrap_or(id);
+            if r.reaccion.tipo != TipoReaccion::Barrer {
+                assert!(!s.partida().zona(&campo).contains(&quitada));
+            }
+            // Deshacer la decisión lo devuelve todo.
+            s.accion(Accion::Deshacer { hasta: None }, None).unwrap();
+            assert_eq!(s.partida().cartas, antes.cartas);
+            assert_eq!(s.partida().zonas, antes.zonas);
+            return;
+        }
+        panic!("el fantasma no reaccionó");
     }
 
     #[test]

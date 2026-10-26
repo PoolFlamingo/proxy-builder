@@ -2058,7 +2058,8 @@ fn decidir_sparring(
             };
             let destino = match r.reaccion.tipo {
                 TipoReaccion::Contrarrestar => {
-                    if z != RefZona::comun(ZonaComun::Pila) {
+                    // En la pila, o ya en el campo si se jugó sin pasar por ella.
+                    if z != RefZona::comun(ZonaComun::Pila) && !z.es_campo() {
                         continue;
                     }
                     RefZona::de(c.dueno, Zona::Cementerio)

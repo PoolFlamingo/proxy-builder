@@ -1,7 +1,16 @@
-//! **El sparring**: el rival fantasma del solitario.
+//! **El sparring**: el rival fantasma del solitario, que reacciona a algunas
+//! jugadas con contrahechizos, eliminaciones y barridos (como el de
+//! Playgroup: tablas, no IA).
 //!
-//! Aquí solo están sus datos (lo que se guarda en la partida, se deshace y
-//! se repite como todo lo demás). Cuándo y cómo reacciona es la Fase D.
+//! - Aquí, sus datos: lo que se guarda en la partida (`Partida.sparring`), se
+//!   deshace y se repite como todo lo demás.
+//! - `reacciones.rs`: cuándo y cómo reacciona (`reaccionar`).
+//! - `amenaza.rs`: cuánto pesa cada carta como amenaza.
+//! - `cartas.rs`: las cartas del fantasma (`assets/sparring/cartas.json`).
+//!
+//! La reacción llega como `Cambio::Sparring` con `Actor::Mesa` (la mete la
+//! sesión de la app tras cada evento del jugador) y el jugador la decide con
+//! `Accion::DecidirSparring`.
 
 use std::collections::BTreeMap;
 
@@ -9,6 +18,12 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use crate::ids::IdCarta;
+
+pub mod amenaza;
+pub mod cartas;
+mod reacciones;
+
+pub use reacciones::{clave_tipo, factor, reaccionar};
 
 /// Cuánto molesta el fantasma. De fábrica, apagado.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, TS)]

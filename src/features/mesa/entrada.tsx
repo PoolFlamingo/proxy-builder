@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import type { DeckSummary } from "@/bindings/DeckSummary";
 import type { EstadoMesa } from "@/bindings/EstadoMesa";
 import type { Formato } from "@/bindings/Formato";
+import type { Intensidad } from "@/bindings/Intensidad";
 import type { ListaDeJuego } from "@/bindings/ListaDeJuego";
 import type { ListasDeDeck } from "@/bindings/ListasDeDeck";
 import type { ModoMulligan } from "@/bindings/ModoMulligan";
@@ -31,9 +32,11 @@ import { urlMiniatura } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { useTrabajo } from "@/stores/trabajo-store";
+import { useUi } from "@/stores/ui-store";
 import { COLORES_JUGADOR } from "./colores";
 import { empezar, retomar, salir } from "./conexion";
 import { ListaDialog } from "./listas/lista-dialog";
+import { INTENSIDADES } from "./sparring/textos";
 import { TapeteDialog } from "./tapete-dialog";
 
 /** Los valores de fábrica de un formato (lo mismo que `Opciones::de_fabrica` de Rust). */
@@ -80,6 +83,7 @@ export function EntradaMesa() {
 	const [estado, setEstado] = useState<EstadoMesa | null>(null);
 	const [filtro, setFiltro] = useState("");
 	const [elegido, setElegido] = useState<string | null>(null);
+	const sparring = useUi((s) => s.mesa.sparring);
 	const [formato, setFormato] = useState<Formato>("commander");
 	const [opciones, setOpciones] = useState<Opciones>(() => opcionesDeFabrica("commander", 1));
 	const [nombre, setNombre] = useState(nombreGuardado);
@@ -164,7 +168,7 @@ export function EntradaMesa() {
 			formato,
 			variantes: { equipos: { tipo: "ninguno" }, archenemy: null, planechase: false },
 			opciones,
-			intensidad: "apagado",
+			intensidad: sparring,
 		});
 	};
 
@@ -384,6 +388,13 @@ export function EntradaMesa() {
 						valor={opciones.ayudas.contadoresAlEntrar}
 						onChange={(v) => ayuda("contadoresAlEntrar", v)}
 					/>
+					<Fila etiqueta={t("Sparring (rival fantasma)")}>
+						<Selector<Intensidad>
+							valor={sparring}
+							onChange={(v) => useUi.getState().setMesa({ sparring: v })}
+							opciones={INTENSIDADES.map((i) => ({ valor: i.valor, etiqueta: t(i.nombre) }))}
+						/>
+					</Fila>
 					<Button size="sm" variant="outline" disabled={!elegido} onClick={() => setTapete(true)}>
 						<Image className="size-3.5" />
 						{t("Tapete de este deck…")}

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { ImagePolicy } from "@/bindings/ImagePolicy";
+import type { Intensidad } from "@/bindings/Intensidad";
 import type { AnchoMiniatura } from "@/lib/image-url";
 
 /**
@@ -51,6 +52,10 @@ export type PreferenciasMesa = {
 	volumen: number;
 	/** Sonido al tirar dados y lanzar monedas. */
 	sonidoDados: boolean;
+	/** La intensidad del sparring con la que empieza el solitario. */
+	sparring: Intensidad;
+	/** Si ya se enseñó la tarjeta de «Cómo funciona» del sparring. */
+	sparringVisto: boolean;
 	/** Mantener pulsado el botón izquierdo abre el menú de la carta. */
 	clicSostenido: boolean;
 	/** Al adjuntar un aura o equipo con un «+N/+N» fijo, ofrecer sumarlo. */
@@ -72,6 +77,8 @@ export const MESA_DE_FABRICA: PreferenciasMesa = {
 	dados: "auto",
 	volumen: 60,
 	sonidoDados: true,
+	sparring: "apagado",
+	sparringVisto: false,
 	clicSostenido: false,
 	ofrecerBono: true,
 	fantasma: true,

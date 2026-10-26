@@ -213,6 +213,7 @@ pub fn run() {
             commands::mesa::mesa_salir,
             commands::mesa::mesa_info_carta,
             commands::mesa::mesa_origen_scryfall,
+            commands::mesa::mesa_sparring_carta,
             commands::mesa::mesa_tapete_get,
             commands::mesa::mesa_tapete_set,
             commands::mesa::mesa_tapete_ajustes,

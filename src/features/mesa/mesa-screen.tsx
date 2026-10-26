@@ -17,6 +17,7 @@ import { COMO } from "./dialogos/terminar";
 import { EntradaMesa } from "./entrada";
 import { ContadorFps, VigiaFps } from "./fps";
 import { Mulligan } from "./mulligan";
+import { ReaccionPendiente } from "./sparring/reaccion";
 import { Tablero } from "./tablero";
 import { VidaJugador } from "./vida-jugador";
 import { VistaGrande } from "./vista-grande";
@@ -86,6 +87,7 @@ function Mesa({ deckId }: { deckId: string | null }) {
 				<VidaJugador jugador={yo} />
 			</div>
 			<CapaDados />
+			<ReaccionPendiente />
 			<VistaGrande />
 			<Mulligan />
 			<FinDePartida />

@@ -133,6 +133,17 @@ le falta una cadena le sale la inglesa.
   `.pbdeck`), `store/listas.rs`, comandos `mesa_lista*` y
   `features/mesa/listas/`. Commander con más de 100 que cuentan no empieza
   sin lista (`motivo: falta_lista`).
+  **Sparring** (Fase D): el rival fantasma del solitario, como el de
+  Playgroup (tablas, no IA). `mesa::sparring::reaccionar(antes, después,
+  evento, azar)` (contrarresta al lanzar, elimina/devuelve/sacrificio al
+  llegar al campo, barre al pasar con criaturas); la sesión mete la reacción
+  como `Cambio::Sparring` de la mesa y el jugador decide con
+  `DecidirSparring`. Bases, ritmo e intensidades arriba de
+  `sparring/reacciones.rs`, calibradas con `tests/sparring.rs` (500
+  partidas por intensidad, reparto de Playgroup ±5 puntos); las 122 cartas
+  del fantasma en `mesa/assets/sparring/cartas.json`, por nombre
+  (`mesa_sparring_carta` las busca en Scryfall). Pantalla en
+  `features/mesa/sparring/`.
   **Dados y monedas** (`features/mesa/dados/`): el resultado lo decide Rust
   y la animación solo lo enseña. Tres niveles (Ajustes > Mesa): 3D con
   three.js y física de Rapier determinista (`fisica.ts` simula entera la

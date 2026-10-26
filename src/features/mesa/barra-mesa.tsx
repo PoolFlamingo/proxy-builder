@@ -22,6 +22,7 @@ import { useMesa } from "@/stores/mesa-store";
 import { hacer } from "./acciones";
 import * as op from "./operaciones";
 import { usePantalla } from "./pantalla";
+import { BotonSparring } from "./sparring/boton";
 
 /** Minutos y segundos desde `desde` (ms). */
 export function cronometro(desde: number, ahora: number): string {
@@ -61,8 +62,9 @@ function Boton({
 
 /**
  * **La barra de la mesa** (`capturas/pablo/00.jpg`): turno y ronda con su
- * reloj, pausa, deshacer y rehacer, azar, fichas, registro, tapete, atajos y
- * lo de la partida (reiniciar, terminar, editar el deck, salir).
+ * reloj, pausa, deshacer y rehacer, azar, fichas, registro, tapete, atajos,
+ * el sparring (en solitario) y lo de la partida (reiniciar, terminar, editar
+ * el deck, salir).
  */
 export function BarraMesa({
 	onSalir,
@@ -90,7 +92,7 @@ export function BarraMesa({
 			className="absolute top-2 left-1/2 z-[7000] flex -translate-x-1/2 items-center gap-1 rounded-xl border border-white/10 bg-black/60 px-2 py-1 text-white shadow-lg backdrop-blur-md"
 			data-tutorial="mesa-barra"
 		>
-			<span className="px-1.5 text-xs font-medium tabular-nums">
+			<span className="px-1.5 text-xs font-medium whitespace-nowrap tabular-nums">
 				{mulligan || !turno || turno.numero === 0
 					? t("Mulligan")
 					: t("Turno {n} · ronda {r}", { n: turno.numero, r: turno.ronda })}
@@ -133,6 +135,7 @@ export function BarraMesa({
 			<Boton ayuda={t("Pantalla completa")} onClick={() => void pantallaCompleta()}>
 				<Expand className="size-4" />
 			</Boton>
+			<BotonSparring />
 			<span className="mx-0.5 h-5 w-px bg-white/15" />
 			<Boton ayuda={t("Reiniciar (misma lista, nueva partida)")} onClick={onReiniciar}>
 				<RotateCcw className="size-4" />
