@@ -3,4 +3,4 @@
 /**
  * Qué ha ido mal, en una palabra. La pantalla tiene un texto por cada uno.
  */
-export type ErrorCode = "Network" | "RateLimited" | "NotFound" | "Io" | "Db" | "InvalidInput" | "Cancelled" | "Pdf" | "Image" | "Unsupported" | "Busy" | "Internal";
+export type ErrorCode = "Network" | "RateLimited" | "NotFound" | "Io" | "Db" | "InvalidInput" | "Cancelled" | "Pdf" | "Image" | "Unsupported" | "Busy" | "Internal" | "Rejected" | "Server";

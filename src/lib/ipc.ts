@@ -1,4 +1,5 @@
-import { invoke } from "@tauri-apps/api/core";
+import { type Channel, invoke } from "@tauri-apps/api/core";
+import type { Accion } from "@/bindings/Accion";
 import type { ActualizacionEstado } from "@/bindings/ActualizacionEstado";
 import type { ActualizacionInfo } from "@/bindings/ActualizacionInfo";
 import type { ArchidektImport } from "@/bindings/ArchidektImport";
@@ -13,6 +14,7 @@ import type { CardMeta } from "@/bindings/CardMeta";
 import type { CardSize } from "@/bindings/CardSize";
 import type { CardSummary } from "@/bindings/CardSummary";
 import type { Collection } from "@/bindings/Collection";
+import type { ConfigMesa } from "@/bindings/ConfigMesa";
 import type { Deck } from "@/bindings/Deck";
 import type { DeckCard } from "@/bindings/DeckCard";
 import type { DeckDetails } from "@/bindings/DeckDetails";
@@ -22,16 +24,22 @@ import type { DeckSummary } from "@/bindings/DeckSummary";
 import type { DescargableInfo } from "@/bindings/DescargableInfo";
 import type { DesignDraft } from "@/bindings/DesignDraft";
 import type { DesignLang } from "@/bindings/DesignLang";
+import type { EstadoMesa } from "@/bindings/EstadoMesa";
 import type { ExportEstimate } from "@/bindings/ExportEstimate";
 import type { FaceImage } from "@/bindings/FaceImage";
 import type { FichaPropuesta } from "@/bindings/FichaPropuesta";
 import type { FormatoLista } from "@/bindings/FormatoLista";
 import type { FuenteCarta } from "@/bindings/FuenteCarta";
 import type { GcReport } from "@/bindings/GcReport";
+import type { IdCarta } from "@/bindings/IdCarta";
 import type { IdentifyRequest } from "@/bindings/IdentifyRequest";
+import type { IdJugador } from "@/bindings/IdJugador";
 import type { LetraInfo } from "@/bindings/LetraInfo";
 import type { LetraLibre } from "@/bindings/LetraLibre";
+import type { MensajeMesa } from "@/bindings/MensajeMesa";
 import type { NombresIdiomasInfo } from "@/bindings/NombresIdiomasInfo";
+import type { OrigenCarta } from "@/bindings/OrigenCarta";
+import type { OrigenTapete } from "@/bindings/OrigenTapete";
 import type { OriginalInfo } from "@/bindings/OriginalInfo";
 import type { PackInfo } from "@/bindings/PackInfo";
 import type { PagePlan } from "@/bindings/PagePlan";
@@ -39,6 +47,7 @@ import type { ParsedDecklist } from "@/bindings/ParsedDecklist";
 import type { Preset } from "@/bindings/Preset";
 import type { PresetKind } from "@/bindings/PresetKind";
 import type { PrintSettings } from "@/bindings/PrintSettings";
+import type { ReglasCarta } from "@/bindings/ReglasCarta";
 import type { ResolveOptions } from "@/bindings/ResolveOptions";
 import type { Resumen } from "@/bindings/Resumen";
 import type { SaveResult } from "@/bindings/SaveResult";
@@ -46,9 +55,11 @@ import type { SetInfo } from "@/bindings/SetInfo";
 import type { SimbolosInfo } from "@/bindings/SimbolosInfo";
 import type { Sugerencia } from "@/bindings/Sugerencia";
 import type { Tag } from "@/bindings/Tag";
+import type { Tapete } from "@/bindings/Tapete";
 import type { TemaCatalogo } from "@/bindings/TemaCatalogo";
 import type { TemaInstalado } from "@/bindings/TemaInstalado";
 import type { TipoCarpeta } from "@/bindings/TipoCarpeta";
+import type { VistaMesa } from "@/bindings/VistaMesa";
 
 /**
  * **La única puerta a Rust.** Cada comando de `src-tauri/src/commands/` tiene
@@ -224,6 +235,25 @@ export interface Commands {
 	preset_list: { args: { kind: PresetKind }; result: Preset[] };
 	preset_save: { args: { kind: PresetKind; name: string; json: string }; result: Preset };
 	preset_delete: { args: { id: string }; result: null };
+	mesa_empezar: { args: { config: ConfigMesa }; result: number };
+	mesa_retomar: { args: Record<string, never>; result: number };
+	mesa_estado: { args: Record<string, never>; result: EstadoMesa };
+	mesa_suscribir: { args: { canal: Channel<MensajeMesa> }; result: null };
+	mesa_vista: { args: Record<string, never>; result: VistaMesa };
+	mesa_accion: { args: { accion: Accion; como: IdJugador | null }; result: null };
+	mesa_guardar: { args: Record<string, never>; result: null };
+	mesa_salir: { args: { guardar: boolean }; result: null };
+	mesa_info_carta: { args: { carta: IdCarta }; result: ReglasCarta };
+	mesa_origen_scryfall: { args: { scryfallId: string }; result: OrigenCarta };
+	mesa_tapete_get: { args: { deck: string | null }; result: Tapete | null };
+	mesa_tapete_set: {
+		args: { deck: string | null; origen: OrigenTapete | null; velo: number; desenfoque: number };
+		result: Tapete | null;
+	};
+	mesa_tapete_ajustes: {
+		args: { deck: string | null; velo: number; desenfoque: number };
+		result: null;
+	};
 }
 
 export function call<C extends keyof Commands>(
@@ -251,6 +281,8 @@ export interface Events {
 	"packs://progress": import("@/bindings/DescargaProgressEvent").DescargaProgressEvent;
 	"names://progress": import("@/bindings/NombresProgressEvent").NombresProgressEvent;
 	"update://progress": import("@/bindings/ActualizacionProgressEvent").ActualizacionProgressEvent;
+	"mesa://progress": import("@/bindings/MesaProgressEvent").MesaProgressEvent;
+	"mesa://done": import("@/bindings/MesaDoneEvent").MesaDoneEvent;
 }
 
 /** Escucha un evento de Rust. Devuelve la función que deja de escuchar. */

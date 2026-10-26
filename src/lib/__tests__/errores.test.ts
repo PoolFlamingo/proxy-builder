@@ -20,4 +20,24 @@ describe("mensajeDeError", () => {
 		expect(mensajeDeError(new Error("boom"), t)).toBe("boom");
 		expect(mensajeDeError("texto", t)).toBe("texto");
 	});
+
+	it("un rechazo de la mesa sale con el texto de su motivo", () => {
+		const e = { code: "Rejected", params: { motivo: "SinPermiso" } };
+		expect(mensajeDeError(e, t)).toBe(
+			'Eso es de otro jugador: no puedes tocarlo.|{"motivo":"SinPermiso"}',
+		);
+		// Un motivo desconocido, con el texto general.
+		const otro = { code: "Rejected", params: { motivo: "Nuevo" } };
+		expect(mensajeDeError(otro, t)).toBe('La mesa no deja hacer eso ahora.|{"motivo":"Nuevo"}');
+	});
+
+	it("actualizar con la mesa abierta dice que se acabe la partida", () => {
+		const e = { code: "Busy", params: { motivo: "partida" } };
+		expect(mensajeDeError(e, t)).toBe(
+			'Hay una partida abierta: termínala o sal de la mesa para actualizar.|{"motivo":"partida"}',
+		);
+		expect(mensajeDeError({ code: "Busy", params: {} }, t)).toBe(
+			"Hay un trabajo en marcha; espera a que termine.|{}",
+		);
+	});
 });

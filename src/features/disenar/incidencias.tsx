@@ -2,7 +2,7 @@ import { AlertTriangle, Download, Info, OctagonAlert } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Aviso } from "@/bindings/Aviso";
 import type { DesignLang } from "@/bindings/DesignLang";
-import { useLang } from "@/components/language-provider";
+import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -21,22 +21,22 @@ const NIVELES: {
 		nivel: "error",
 		icono: OctagonAlert,
 		color: "text-destructive",
-		titulo: "Errores",
-		vacio: "No hay ningún error que mostrar.",
+		titulo: paraTraducir("Errores"),
+		vacio: paraTraducir("No hay ningún error que mostrar."),
 	},
 	{
 		nivel: "aviso",
 		icono: AlertTriangle,
 		color: "text-amber-700 dark:text-amber-400",
-		titulo: "Avisos",
-		vacio: "No hay ningún aviso que mostrar.",
+		titulo: paraTraducir("Avisos"),
+		vacio: paraTraducir("No hay ningún aviso que mostrar."),
 	},
 	{
 		nivel: "info",
 		icono: Info,
 		color: "text-muted-foreground",
-		titulo: "Información",
-		vacio: "No hay ninguna información que mostrar.",
+		titulo: paraTraducir("Información"),
+		vacio: paraTraducir("No hay ninguna información que mostrar."),
 	},
 ];
 

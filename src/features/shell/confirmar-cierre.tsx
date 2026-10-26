@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Confirmar } from "@/components/confirmar";
 import { useLang } from "@/components/language-provider";
 import { cancelarTrabajo } from "@/features/decklist/acciones";
+import { guardar as guardarPartida } from "@/features/mesa/conexion";
 import { hayPendientes, type Pendientes, pendientes } from "@/lib/cierre";
 import { guardarAhora } from "@/stores/deck-store";
 import { useEdicion } from "@/stores/edicion-store";
@@ -47,6 +48,7 @@ export function ConfirmarCierre() {
 						return;
 					}
 					const guardado = await guardarElDeck();
+					await guardarPartida();
 					const p = pendientes(!guardado);
 					if (!hayPendientes(p)) return;
 					e.preventDefault();
@@ -75,6 +77,7 @@ export function ConfirmarCierre() {
 	const cerrar = async () => {
 		if (pend?.trabajo != null) cancelarTrabajo();
 		await guardarElDeck();
+		await guardarPartida();
 		try {
 			await getCurrentWindow().destroy();
 		} catch {
@@ -94,6 +97,8 @@ export function ConfirmarCierre() {
 	if (pend?.actualizando) razones.push(t("Se está descargando o instalando una actualización."));
 	if (pend?.dialogoEnCurso) razones.push(t("Hay un proceso en marcha en una ventana abierta."));
 	if (pend?.dialogoSinGuardar) razones.push(t("Hay cambios sin guardar en una ventana abierta."));
+	if (pend?.partida)
+		razones.push(t("Hay una partida en la mesa: se guarda y podrás seguirla al volver."));
 	if (pend?.deck)
 		razones.push(t("No se ha podido guardar el deck: se perderán sus últimos cambios."));
 

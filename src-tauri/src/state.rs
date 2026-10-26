@@ -43,6 +43,8 @@ pub struct AppState {
     pub detalles: crate::biblioteca::CacheDetalles,
     /// Cuántas miniaturas se procesan a la vez (una por núcleo).
     pub renders: tokio::sync::Semaphore,
+    /// La partida de la mesa de juego, si hay una abierta.
+    pub mesa: Mutex<Option<crate::mesa::sesion::Sesion>>,
     /// Trabajos de resolución/exportación en marcha (la limpieza de imágenes
     /// no corre mientras haya alguno).
     trabajos: AtomicUsize,
@@ -74,12 +76,19 @@ impl AppState {
                     .map(|n| n.get())
                     .unwrap_or(4),
             ),
+            mesa: Mutex::new(None),
             trabajos: AtomicUsize::new(0),
         })
     }
 
+    /// Hay un trabajo en marcha o una partida abierta: ni la limpieza de
+    /// imágenes ni la actualización (que reinicia la app) deben correr.
     pub fn ocupado(&self) -> bool {
-        self.trabajos.load(Ordering::SeqCst) > 0
+        self.trabajos.load(Ordering::SeqCst) > 0 || self.hay_partida()
+    }
+
+    pub fn hay_partida(&self) -> bool {
+        self.mesa.lock().map(|m| m.is_some()).unwrap_or(false)
     }
 
     /// Marca un trabajo en marcha hasta que se suelte el guardián.

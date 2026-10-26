@@ -286,18 +286,20 @@ fn pos_libre(q: &Partida, j: IdJugador, info: &InfoCarta) -> Pos {
         .iter()
         .filter_map(|id| q.cartas.get(id).and_then(|c| c.pos))
         .collect();
-    for k in 0..13u16 {
-        let x = 400 + k * 720;
+    // Huecos de 9 % de ancho, el primero lejos del borde: en una pantalla
+    // ancha una carta ocupa un 8 % y pegada al borde se cortaría.
+    for k in 0..11u16 {
+        let x = 600 + k * 900;
         let libre = ocupadas
             .iter()
-            .all(|p| p.x.abs_diff(x) >= 360 || p.y.abs_diff(y) >= 1_200);
+            .all(|p| p.x.abs_diff(x) >= 450 || p.y.abs_diff(y) >= 1_200);
         if libre {
             return Pos::nueva(x, y);
         }
     }
     // Todo lleno: encima de lo último, un poco movida.
     let n = ocupadas.len() as u16;
-    Pos::nueva(400 + (n % 40) * 220, y.saturating_add(300))
+    Pos::nueva(600 + (n % 40) * 220, y.saturating_add(300))
 }
 
 /// Saca una carta de su zona.
@@ -464,7 +466,8 @@ fn robar(q: &mut Partida, j: IdJugador, n: u32) -> Result<u32, Rechazo> {
         let Some(id) = arriba_de(q, &biblioteca(j)) else {
             break;
         };
-        mover(q, id, RefZona::de(j, Zona::Mano), Hueco::Abajo)?;
+        // A la mano, al final (su «arriba»).
+        mover(q, id, RefZona::de(j, Zona::Mano), Hueco::Arriba)?;
         robadas += 1;
     }
     Ok(robadas)

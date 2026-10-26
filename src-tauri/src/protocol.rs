@@ -11,6 +11,8 @@
 //! - `/c/<huella>/<ancho>` → esa carta sin la ilustración (`design_overlay`),
 //!   para mover la ilustración por debajo mientras se arrastra.
 //! - `/b/<sha256>/<lado>` → una ilustración del almacén reducida.
+//! - `/m/<sha256>/<ancho>` y `/m/s/<id de Scryfall>/<cara>/<ancho>` → una
+//!   imagen de la mesa de juego (`mesa/imagenes.rs`).
 
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
@@ -26,6 +28,8 @@ pub const ESQUEMA: &str = "pbimg";
 /// Anchos de miniatura que se aceptan (el del trim, sin sangrado).
 pub const ANCHOS: [u32; 6] = [146, 244, 488, 672, 745, 1000];
 const MAX_PARAMS: usize = 2048;
+/// Anchos de las imágenes de la mesa: los de siempre y el del tapete.
+pub const ANCHOS_MESA: [u32; 7] = [146, 244, 488, 672, 745, 1000, 1920];
 
 #[derive(Debug, PartialEq)]
 pub enum Ruta {
@@ -57,6 +61,11 @@ pub enum Ruta {
     /// Una letra de un tema de tweakcn instalado (`/f/<huella>.woff2`).
     Letra {
         huella: String,
+    },
+    /// Una imagen de la mesa de juego.
+    Mesa {
+        imagen: crate::mesa::imagenes::ImagenMesa,
+        ancho: u32,
     },
 }
 
@@ -128,6 +137,27 @@ pub fn leer_ruta(ruta: &str) -> Result<Ruta, Fallo> {
             Ok(Ruta::Extra {
                 pack: (*pack).to_string(),
                 indice: n.parse().map_err(|_| Fallo::Mala)?,
+            })
+        }
+        ["m", "s", id, cara, ancho] if crate::mesa::imagenes::es_id_scryfall(id) => {
+            let ancho: u32 = ancho.parse().map_err(|_| Fallo::Mala)?;
+            let cara: u8 = cara.parse().map_err(|_| Fallo::Mala)?;
+            if !ANCHOS_MESA.contains(&ancho) || cara > 1 {
+                return Err(Fallo::Mala);
+            }
+            Ok(Ruta::Mesa {
+                imagen: crate::mesa::imagenes::ImagenMesa::Scryfall((*id).to_string(), cara),
+                ancho,
+            })
+        }
+        ["m", sha, ancho] if es_huella(sha) => {
+            let ancho: u32 = ancho.parse().map_err(|_| Fallo::Mala)?;
+            if !ANCHOS_MESA.contains(&ancho) {
+                return Err(Fallo::Mala);
+            }
+            Ok(Ruta::Mesa {
+                imagen: crate::mesa::imagenes::ImagenMesa::Propia((*sha).to_string()),
+                ancho,
             })
         }
         ["f", fichero] => match fichero.strip_suffix(".woff2") {
@@ -215,6 +245,20 @@ async fn atender<R: tauri::Runtime>(app: tauri::AppHandle<R>, ruta: String) -> R
             match crate::diseno::descargables::extra_por_indice(&estado, &pack, indice) {
                 Ok(b) => respuesta(StatusCode::OK, "image/png", b),
                 Err(_) => vacia(StatusCode::NOT_FOUND),
+            }
+        }
+        Ok(Ruta::Mesa { imagen, ancho }) => {
+            let app2 = app.clone();
+            let r = tauri::async_runtime::spawn_blocking(move || {
+                crate::mesa::imagenes::servir(&app2.state::<AppState>(), &imagen, ancho)
+            })
+            .await;
+            match r {
+                Ok(Ok(bytes)) => respuesta(StatusCode::OK, "image/jpeg", bytes),
+                Ok(Err(e)) if e.code == crate::error::ErrorCode::NotFound => {
+                    vacia(StatusCode::NOT_FOUND)
+                }
+                _ => vacia(StatusCode::INTERNAL_SERVER_ERROR),
             }
         }
         Ok(Ruta::Letra { huella }) => match crate::temas::letra(&estado.paths.data, &huella) {
@@ -357,6 +401,34 @@ mod tests {
                 indice: 12
             })
         );
+    }
+
+    #[test]
+    fn las_rutas_de_la_mesa() {
+        let h = "a".repeat(64);
+        let id = "0000579f-7b35-4ed3-b44c-db2a538066fe";
+        assert!(matches!(
+            leer_ruta(&format!("/m/{h}/488")),
+            Ok(Ruta::Mesa { ancho: 488, .. })
+        ));
+        assert!(matches!(
+            leer_ruta(&format!("/m/{h}/1920")),
+            Ok(Ruta::Mesa { ancho: 1920, .. })
+        ));
+        assert!(matches!(
+            leer_ruta(&format!("/m/s/{id}/1/244")),
+            Ok(Ruta::Mesa { ancho: 244, .. })
+        ));
+        for mala in [
+            format!("/m/{h}/500"),
+            format!("/m/{h}"),
+            format!("/m/s/{id}/2/244"),
+            "/m/s/../0/244".to_string(),
+            format!("/m/s/{}/0/244", "z".repeat(36)),
+            "/m/../../x/488".to_string(),
+        ] {
+            assert!(leer_ruta(&mala).is_err(), "{mala}");
+        }
     }
 
     #[test]

@@ -43,6 +43,11 @@ pub enum ErrorCode {
     Busy,
     /// Fallo interno inesperado (un error de programación).
     Internal,
+    /// La mesa de juego no acepta esa acción (`params.motivo`: el
+    /// `mesa::Rechazo`, «SinPermiso», «ZonaVacia»…).
+    Rejected,
+    /// El servidor de salas ha dicho que no (`params.code`; Fase F).
+    Server,
 }
 
 /// El error de un comando: un código y, si hace falta, datos para el texto

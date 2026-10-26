@@ -113,3 +113,29 @@ wezen / істота; comandante = commander (los cuatro; en ucraniano «ком�
 | deshacer / rehacer | undo / redo | annuler / rétablir | rückgängig / wiederholen | annulla / ripeti | desfazer / refazer | anulează / refă | cofnij / ponów | ongedaan maken / opnieuw | отменить / повторить | скасувати / повторити | 元に戻す / やり直す | 실행 취소 / 다시 실행 | 撤销 / 重做 | 復原 / 重做 |
 | descargar | download | télécharger | herunterladen | scarica | baixar | descarcă | pobierz | downloaden | скачать | завантажити | ダウンロード | 다운로드 | 下载 | 下載 |
 | caché | cache | cache | Cache | cache | cache | cache | pamięć podręczna | cache | кэш | кеш | キャッシュ | 캐시 | 缓存 | 快取 |
+
+## Términos de la mesa de juego
+
+Las acciones de juego de `mesa.json`. En los idiomas con cartas impresas,
+los de las reglas oficiales; en `ro`, `pl`, `nl` y `uk`, lo habitual en su
+comunidad (a menudo el inglés). Con `*`, sin confirmar en una carta oficial.
+En chino, mulligan es «调度 / 調度» (el término oficial). En ruso, `Moler` de
+otras áreas dice «Милл»: en la mesa se usa «перемолоть».
+
+| Español | en | fr | de | it | pt | ro | pl | nl | ru | uk | ja | ko | zhs | zht |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| girar | tap | engager | tappen | tappare | virar | rotește | tapnij | tappen | повернуть | повернути | タップ | 탭 | 横置 | 橫置 |
+| enderezar | untap | dégager | enttappen | stappare | desvirar | îndreaptă | odtapnij | untappen | развернуть | розвернути | アンタップ | 언탭 | 重置 | 重置 |
+| escrutar | scry | regard | Hellsicht | profetizzare | vidência | scry | scry | scry | предсказание | передбачити | 占術 | 점술 | 占卜 | 占卜 |
+| vigilar | surveil | surveillance | überwachen | sorvegliare | vigiar | surveil | surveil | surveil | слежка | спостерігати | 諜報 | 감시 | 刺探 | 刺探 |
+| moler | mill | meuler | mahlen | macinare | moer | mill | mill | millen | перемолоть | перемолоти | 切削 | 갈아내기 * | 磨牌 | 磨牌 |
+| manifestar | manifest | manifester | manifestieren | manifestare | manifestar | manifestă | manifest | manifesteren | явить | проявити | 予示 | 현시 | 显化 | 顯化 |
+| campo | battlefield | champ de bataille | Schlachtfeld | campo di battaglia | campo de batalha | câmpul de luptă | pole bitwy | slagveld | поле битвы | поле бою | 戦場 | 전장 | 战场 | 戰場 |
+| mando | command zone | zone de commandement | Kommandozone | zona di comando | zona de comando | zona de comandă | strefa dowodzenia | command zone | командная зона | командна зона | 統率領域 | 사령부 * | 统帅区 | 統帥區 |
+| pila | stack | pile | Stapel | pila | pilha | stivă | stack | stack | стек | стек | スタック | 스택 | 堆叠 | 堆疊 |
+| boca abajo | face down | face cachée | verdeckt | a faccia in giù | com a face para baixo | cu fața în jos | zakryta | face-down | лицом вниз | лицем донизу | 裏向き | 뒷면으로 | 牌面朝下 | 牌面朝下 |
+| mulligan | mulligan | mulligan | Mulligan | mulligan | mulligan | mulligan | mulligan | mulligan | муллиган | муліган | マリガン | 멀리건 | 调度 | 調度 |
+| bolita (marcador de mesa) | marker | pastille | Markierung | pallino | bolinha | bulină | kulka | bolletje | шарик | кулька | マーカー | 마커 | 标记点 | 標記點 |
+| montón (cartas como una) | pile | tas | Haufen | mucchio | monte | grămadă | stos | stapel | стопка | стос | 束 | 더미 | 牌叠 | 牌疊 |
+| fantasma (rival del solitario) | ghost | fantôme | Geist | fantasma | fantasma | fantoma | Duch | Spook | Призрак | привид | ゴースト | 유령 | 幻影 | 幻影 |
+| tapete | playmat | tapis de jeu | Spielmatte | tappetino | playmat | playmat | mata | speelmat | коврик | плеймат | プレイマット | 플레이매트 | 游戏垫 | 遊戲墊 |

@@ -20,6 +20,29 @@ const TEXTOS: Record<ErrorCode, string> = {
 	Unsupported: paraTraducir("Ese formato de fichero no se admite."),
 	Busy: paraTraducir("Hay un trabajo en marcha; espera a que termine."),
 	Internal: paraTraducir("Error interno inesperado."),
+	Rejected: paraTraducir("La mesa no deja hacer eso ahora."),
+	Server: paraTraducir("El servidor de salas ha dado un error."),
+};
+
+/**
+ * Los rechazos de la mesa (`mesa::Rechazo`, en `params.motivo`), la
+ * actualización que espera a la partida (`Busy` con `motivo: partida`) y los
+ * errores del servidor de salas (`params.code`), con su texto propio. Lo que
+ * no esté aquí sale con el texto general de su código.
+ */
+const MOTIVOS: Partial<Record<ErrorCode, Record<string, string>>> = {
+	Busy: {
+		partida: paraTraducir("Hay una partida abierta: termínala o sal de la mesa para actualizar."),
+	},
+	Rejected: {
+		NoExiste: paraTraducir("Esa carta o ese jugador ya no está ahí."),
+		SinPermiso: paraTraducir("Eso es de otro jugador: no puedes tocarlo."),
+		ZonaVacia: paraTraducir("No queda ninguna carta ahí."),
+		FueraDeTurno: paraTraducir("Solo el jugador activo puede hacer eso."),
+		Limite: paraTraducir("Es demasiado (un número o un texto pasa del límite)."),
+		NoSePuede: paraTraducir("Eso no se puede hacer ahora."),
+	},
+	Server: {},
 };
 
 /** ¿Es un `AppError` de Rust? (Lo que llega del `invoke` es `unknown`.) */
@@ -34,7 +57,11 @@ export function mensajeDeError(
 	e: unknown,
 	t: (es: string, vars?: Record<string, string | number>) => string,
 ): string {
-	if (esAppError(e)) return t(TEXTOS[e.code], e.params);
+	if (esAppError(e)) {
+		const clave = e.params.motivo ?? e.params.code;
+		const propio = clave ? MOTIVOS[e.code]?.[clave] : undefined;
+		return t(propio ?? TEXTOS[e.code], e.params);
+	}
 	if (e instanceof Error) return e.message;
 	return String(e);
 }

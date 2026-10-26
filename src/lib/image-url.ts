@@ -109,3 +109,25 @@ export function urlArte(blob: string, lado: LadoArte): string {
 export function urlExtra(pack: string, indice: number): string {
 	return `${raiz()}x/${encodeURIComponent(pack)}/${indice}`;
 }
+
+/** Anchos de las imágenes de la mesa (los de siempre y el del tapete). */
+export type AnchoMesa = AnchoMiniatura | 1920;
+
+/**
+ * Una imagen de la mesa de juego (`src-tauri/src/mesa/imagenes.rs`): la de
+ * una cara preparada (`propia`) o la de Scryfall sin retoques. La genérica
+ * (el reverso de la app) no tiene URL: la pinta la pantalla.
+ */
+export function urlMesa(
+	ref: import("@/bindings/RefImagen").RefImagen,
+	ancho: AnchoMesa,
+): string | null {
+	switch (ref.tipo) {
+		case "propia":
+			return `${raiz()}m/${ref.sha256}/${ancho}`;
+		case "scryfall":
+			return `${raiz()}m/s/${ref.id}/${ref.cara}/${ancho}`;
+		default:
+			return null;
+	}
+}

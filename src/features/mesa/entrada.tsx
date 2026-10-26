@@ -1,0 +1,341 @@
+import { Image, Loader2, Play, Search, Swords, Trash2, User } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import type { DeckSummary } from "@/bindings/DeckSummary";
+import type { EstadoMesa } from "@/bindings/EstadoMesa";
+import type { Formato } from "@/bindings/Formato";
+import type { ModoMulligan } from "@/bindings/ModoMulligan";
+import type { Opciones } from "@/bindings/Opciones";
+import { CampoNumero, Fila, FilaInterruptor, Selector } from "@/components/campos";
+import { Confirmar } from "@/components/confirmar";
+import { useLang } from "@/components/language-provider";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { PORTADA } from "@/features/library/vista-cuadricula";
+import { urlMiniatura } from "@/lib/image-url";
+import { call } from "@/lib/ipc";
+import { cn } from "@/lib/utils";
+import { useTrabajo } from "@/stores/trabajo-store";
+import { COLORES_JUGADOR } from "./colores";
+import { empezar, retomar, salir } from "./conexion";
+import { TapeteDialog } from "./tapete-dialog";
+
+/** Los valores de fábrica de un formato (lo mismo que `Opciones::de_fabrica` de Rust). */
+export function opcionesDeFabrica(formato: Formato, jugadores: number): Opciones {
+	return {
+		vidaInicial: formato === "commander" ? 40 : 20,
+		manoInicial: 7,
+		mulligan: formato === "commander" ? "londresPrimeroGratis" : "londres",
+		primeroNoRoba: jugadores <= 2,
+		ayudas: {
+			robarAlEmpezar: true,
+			enderezarAlEmpezar: true,
+			impuestoAutomatico: true,
+			contadoresAlEntrar: true,
+			avisarVidaCero: true,
+		},
+		limiteVeneno: 10,
+		limiteComandante: 21,
+		todosTocanTodo: false,
+	};
+}
+
+const CLAVE_NOMBRE = "proxybuilder.mesa.nombre";
+
+function nombreGuardado(): string {
+	try {
+		return localStorage.getItem(CLAVE_NOMBRE) ?? "";
+	} catch {
+		return "";
+	}
+}
+
+/**
+ * **La entrada a la mesa** (pestaña «Jugar»): elegir un deck de la
+ * biblioteca, el formato y las opciones, y empezar en solitario; o seguir la
+ * partida que quedó a medias.
+ */
+export function EntradaMesa() {
+	const { t, mensaje } = useLang();
+	const [decks, setDecks] = useState<DeckSummary[]>([]);
+	const [estado, setEstado] = useState<EstadoMesa | null>(null);
+	const [filtro, setFiltro] = useState("");
+	const [elegido, setElegido] = useState<string | null>(null);
+	const [formato, setFormato] = useState<Formato>("commander");
+	const [opciones, setOpciones] = useState<Opciones>(() => opcionesDeFabrica("commander", 1));
+	const [nombre, setNombre] = useState(nombreGuardado);
+	const [tapete, setTapete] = useState(false);
+	const [descartar, setDescartar] = useState(false);
+	const [reemplazar, setReemplazar] = useState(false);
+	const trabajo = useTrabajo((s) => (s.actual?.tipo === "mesa" ? s.actual : null));
+
+	useEffect(() => {
+		call("deck_list")
+			.then((d) => {
+				setDecks(d);
+				const reciente = [...d].sort((a, b) => (b.openedAt ?? 0) - (a.openedAt ?? 0))[0];
+				if (reciente) setElegido((e) => e ?? reciente.id);
+			})
+			.catch((e) => toast.error(mensaje(e)));
+		call("mesa_estado")
+			.then(setEstado)
+			.catch(() => setEstado(null));
+	}, [mensaje]);
+
+	// El formato de fábrica, el que se deduce del deck.
+	useEffect(() => {
+		if (!elegido) return;
+		call("deck_details", { ids: [elegido] })
+			.then(([d]) => {
+				if (!d) return;
+				const f: Formato =
+					d.kind === "commander" ? "commander" : d.kind === "limited" ? "limited" : "constructed";
+				setFormato(f);
+				setOpciones(opcionesDeFabrica(f, 1));
+			})
+			.catch(() => {});
+	}, [elegido]);
+
+	const visibles = useMemo(() => {
+		const f = filtro.trim().toLowerCase();
+		return decks.filter((d) => !f || d.name.toLowerCase().includes(f));
+	}, [decks, filtro]);
+
+	/** Empezar; con una partida a medias, antes se pregunta (se perdería). */
+	const pedirSolitario = () => {
+		if (!elegido) return;
+		if (estado?.guardada) setReemplazar(true);
+		else void solitario();
+	};
+	const solitario = async () => {
+		if (!elegido) return;
+		try {
+			localStorage.setItem(CLAVE_NOMBRE, nombre);
+		} catch {
+			/* sin almacenamiento */
+		}
+		await empezar({
+			jugadores: [
+				{ deckId: elegido, nombre: nombre.trim() || t("Jugador"), color: COLORES_JUGADOR[0] },
+			],
+			formato,
+			variantes: { equipos: { tipo: "ninguno" }, archenemy: null, planechase: false },
+			opciones,
+			intensidad: "apagado",
+		});
+	};
+
+	const cambiarFormato = (f: Formato) => {
+		setFormato(f);
+		setOpciones(opcionesDeFabrica(f, 1));
+	};
+	const ayuda = (k: keyof Opciones["ayudas"], v: boolean) =>
+		setOpciones({ ...opciones, ayudas: { ...opciones.ayudas, [k]: v } });
+
+	const guardada = estado?.guardada;
+	return (
+		<div className="flex h-full min-h-0 gap-2.5 p-2.5" data-tutorial="mesa-entrada">
+			<section className="flex min-h-0 flex-1 flex-col gap-2.5 rounded-lg border bg-card/40 p-2.5">
+				<div className="flex items-center gap-2.5">
+					<Swords className="size-4 text-primary" />
+					<h2 className="text-sm font-semibold">{t("Elige un deck")}</h2>
+					<div className="relative ml-auto w-64">
+						<Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+						<Input
+							value={filtro}
+							onChange={(e) => setFiltro(e.target.value)}
+							placeholder={t("Buscar deck…")}
+							className="h-7 pl-7 text-xs"
+						/>
+					</div>
+				</div>
+				<ScrollArea className="min-h-0 flex-1">
+					<div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2.5 p-1">
+						{visibles.map((d) => (
+							<button
+								key={d.id}
+								type="button"
+								onClick={() => setElegido(d.id)}
+								onDoubleClick={() => {
+									setElegido(d.id);
+									pedirSolitario();
+								}}
+								className={cn(
+									"flex flex-col gap-1.5 rounded-lg border bg-card p-1.5 text-left transition hover:border-primary/60",
+									elegido === d.id && "ring-2 ring-primary",
+								)}
+							>
+								<div className="aspect-[63/88] overflow-hidden rounded-md bg-muted">
+									{d.thumbnail && (
+										<img
+											src={urlMiniatura(d.thumbnail, PORTADA, 244)}
+											alt=""
+											loading="lazy"
+											className="size-full object-cover"
+										/>
+									)}
+								</div>
+								<span className="line-clamp-2 text-xs font-medium">{d.name}</span>
+								<span className="text-[10px] text-muted-foreground">
+									{t("{n} cartas", { n: d.cardCount })}
+								</span>
+							</button>
+						))}
+						{visibles.length === 0 && (
+							<p className="col-span-full p-6 text-center text-xs text-muted-foreground">
+								{decks.length === 0
+									? t("No hay decks en la biblioteca. Monta uno en la pestaña Deck.")
+									: t("Ningún deck coincide con la búsqueda.")}
+							</p>
+						)}
+					</div>
+				</ScrollArea>
+			</section>
+
+			<aside className="flex w-80 shrink-0 flex-col gap-2.5">
+				{guardada && (
+					<section className="flex flex-col gap-2.5 rounded-lg border border-primary/40 bg-primary/5 p-2.5">
+						<h3 className="text-xs font-semibold">{t("Partida a medias")}</h3>
+						<p className="text-xs text-muted-foreground">
+							{t("{deck} · turno {turno}", {
+								deck: guardada.mazos.join(", "),
+								turno: guardada.turno,
+							})}
+						</p>
+						<div className="flex gap-2.5">
+							<Button
+								size="sm"
+								className="flex-1"
+								disabled={!!trabajo}
+								onClick={() => void retomar()}
+							>
+								<Play className="size-3.5" />
+								{t("Seguir la partida")}
+							</Button>
+							<Button size="sm" variant="outline" onClick={() => setDescartar(true)}>
+								<Trash2 className="size-3.5" />
+								{t("Descartar")}
+							</Button>
+						</div>
+					</section>
+				)}
+				<section className="flex flex-col gap-2.5 rounded-lg border bg-card/40 p-2.5">
+					<Fila etiqueta={t("Tu nombre")}>
+						<div className="relative">
+							<User className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+							<Input
+								value={nombre}
+								onChange={(e) => setNombre(e.target.value)}
+								placeholder={t("Jugador")}
+								maxLength={24}
+								className="h-7 w-36 pl-7 text-xs"
+							/>
+						</div>
+					</Fila>
+					<Fila etiqueta={t("Formato")}>
+						<Selector<Formato>
+							valor={formato}
+							onChange={cambiarFormato}
+							opciones={[
+								{ valor: "commander", etiqueta: "Commander" },
+								{ valor: "constructed", etiqueta: t("60 cartas") },
+								{ valor: "limited", etiqueta: t("Limitado") },
+								{ valor: "libre", etiqueta: t("Libre") },
+							]}
+						/>
+					</Fila>
+					<Fila etiqueta={t("Vidas")}>
+						<CampoNumero
+							valor={opciones.vidaInicial}
+							onChange={(v) => setOpciones({ ...opciones, vidaInicial: v ?? 20 })}
+							min={1}
+							max={999}
+							paso={1}
+						/>
+					</Fila>
+					<Fila etiqueta={t("Mulligan")}>
+						<Selector<ModoMulligan>
+							valor={opciones.mulligan}
+							onChange={(m) => setOpciones({ ...opciones, mulligan: m })}
+							opciones={[
+								{ valor: "londres", etiqueta: t("Londres") },
+								{ valor: "londresPrimeroGratis", etiqueta: t("Londres, el primero gratis") },
+								{ valor: "amistoso", etiqueta: t("Amistoso") },
+								{ valor: "libre", etiqueta: t("Libre") },
+							]}
+						/>
+					</Fila>
+					<FilaInterruptor
+						etiqueta={t("Robar al empezar el turno")}
+						valor={opciones.ayudas.robarAlEmpezar}
+						onChange={(v) => ayuda("robarAlEmpezar", v)}
+					/>
+					<FilaInterruptor
+						etiqueta={t("Enderezar al empezar el turno")}
+						valor={opciones.ayudas.enderezarAlEmpezar}
+						onChange={(v) => ayuda("enderezarAlEmpezar", v)}
+					/>
+					<FilaInterruptor
+						etiqueta={t("El primero no roba")}
+						valor={opciones.primeroNoRoba}
+						onChange={(v) => setOpciones({ ...opciones, primeroNoRoba: v })}
+					/>
+					<FilaInterruptor
+						etiqueta={t("Sumar el impuesto del comandante")}
+						valor={opciones.ayudas.impuestoAutomatico}
+						onChange={(v) => ayuda("impuestoAutomatico", v)}
+					/>
+					<FilaInterruptor
+						etiqueta={t("Contadores al entrar (lealtad, sagas)")}
+						valor={opciones.ayudas.contadoresAlEntrar}
+						onChange={(v) => ayuda("contadoresAlEntrar", v)}
+					/>
+					<Button size="sm" variant="outline" disabled={!elegido} onClick={() => setTapete(true)}>
+						<Image className="size-3.5" />
+						{t("Tapete de este deck…")}
+					</Button>
+				</section>
+				<div className="mt-auto flex flex-col gap-2.5">
+					{trabajo && (
+						<div className="flex flex-col gap-1">
+							<span className="text-xs text-muted-foreground">{trabajo.fase}</span>
+							<Progress value={trabajo.total ? (trabajo.hechas / trabajo.total) * 100 : 0} />
+						</div>
+					)}
+					<Button
+						size="lg"
+						disabled={!elegido || !!trabajo}
+						onClick={pedirSolitario}
+						data-tutorial="mesa-solitario"
+					>
+						{trabajo ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
+						{t("Solitario")}
+					</Button>
+				</div>
+			</aside>
+			<TapeteDialog abierto={tapete} onCerrar={() => setTapete(false)} deckId={elegido} />
+			<Confirmar
+				abierto={reemplazar}
+				onCerrar={() => setReemplazar(false)}
+				titulo={t("¿Empezar otra partida?")}
+				descripcion={t("La partida a medias se pierde.")}
+				accion={t("Empezar otra")}
+				destructiva
+				onConfirmar={() => void solitario()}
+			/>
+			<Confirmar
+				abierto={descartar}
+				onCerrar={() => setDescartar(false)}
+				titulo={t("¿Descartar la partida?")}
+				descripcion={t("La partida a medias se pierde.")}
+				accion={t("Descartar")}
+				destructiva
+				onConfirmar={() => {
+					void salir().then(() => setEstado({ abierta: false, deckIds: [], guardada: null }));
+				}}
+			/>
+		</div>
+	);
+}

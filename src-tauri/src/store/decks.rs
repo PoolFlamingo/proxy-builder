@@ -313,6 +313,15 @@ pub fn delete(db: &Db, id: &str) -> AppResult<()> {
         "DELETE FROM blob_refs WHERE owner_kind = 'deck' AND owner_id = ?1",
         [id],
     )?;
+    // El tapete del deck en la mesa de juego (`mesa/tapete.rs`).
+    tx.execute(
+        "DELETE FROM blob_refs WHERE owner_kind = 'mesa' AND owner_id = ?1",
+        [id],
+    )?;
+    tx.execute(
+        "DELETE FROM app_settings WHERE key = ?1",
+        [format!("mesa.tapete.{id}")],
+    )?;
     tx.commit()?;
     Ok(())
 }

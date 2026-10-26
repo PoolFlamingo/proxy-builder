@@ -87,6 +87,7 @@ describe("store de pantalla", () => {
 				"imagePolicy",
 				"infoCarta",
 				"lang",
+				"mesa",
 				"pedirConfirmacionAlCargar",
 				"tutorialesVistos",
 				"zoom",
@@ -108,6 +109,16 @@ describe("store de pantalla", () => {
 		const guardado = JSON.parse(ls.datos.get(CLAVE) ?? "{}");
 		expect(guardado.tutorialesVistos).toEqual(["disenar"]);
 		expect(guardado.tutorial).toBeUndefined();
+	});
+
+	it("los ajustes de la mesa se recuerdan y se completan con los de fábrica", async () => {
+		const ls = almacen({ [CLAVE]: JSON.stringify({ mesa: { tamanoCartas: 150 } }) });
+		const { useUi, MESA_DE_FABRICA } = await store(ls);
+		expect(useUi.getState().mesa).toEqual({ ...MESA_DE_FABRICA, tamanoCartas: 150 });
+		useUi.getState().setMesa({ sombras: false });
+		const guardado = JSON.parse(ls.datos.get(CLAVE) ?? "{}");
+		expect(guardado.mesa.sombras).toBe(false);
+		expect(guardado.mesa.tamanoCartas).toBe(150);
 	});
 
 	it("la info de carta se recuerda", async () => {

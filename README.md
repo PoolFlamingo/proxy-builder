@@ -340,6 +340,36 @@ Designed cards are printed to the PDF from their design, at the export resolutio
 
 ---
 
+## Play your deck
+
+The **Play** tab lays your deck out on a virtual table to try it before
+printing, with the same images you will print (designed proxies included):
+
+- **Solo games** with the opening hand and the mulligan rule you choose
+  (London, London with the first one free, friendly or free), turns, life,
+  poison, commander damage and player counters.
+- **Everything with the mouse or the keyboard:** drag cards between the hand,
+  the battlefield and the zones; each card's menu taps, flips, adds counters,
+  changes power and toughness, attaches, targets or sends it anywhere; and every
+  action has a shortcut (the list is one click away).
+- **The library tools you need:** draw, mill, scry, surveil, look at the top or
+  bottom, search (with filters by type and colour), reveal until (cascade,
+  discover…), tokens (from the deck, quick ones like Treasure or Food, any from
+  Scryfall or a blank one), dice and coins.
+- **The large view** of the card under the mouse, with a status panel that
+  explains every counter and bonus.
+- **Undo as much as you like**, and a game log written in your language.
+- **Your playmat**: an image of yours or a card's art, per deck, with a dark
+  veil and blur so the cards stand out.
+- **It never loses a game:** it is saved as you play, and «Play» offers to
+  continue it after closing the app.
+
+![A game in progress](docs/presentacion/en/mesa.jpg)
+
+![Each card's menu on the table](docs/presentacion/en/mesa-menu.jpg)
+
+---
+
 ## Under the hood
 
 - **Native application** built with Tauri and Rust: everything heavy (searches,

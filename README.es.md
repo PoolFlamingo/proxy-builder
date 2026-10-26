@@ -348,6 +348,38 @@ exportación.
 
 ---
 
+## Jugar con tu deck
+
+La pestaña **Jugar** pone tu deck en una mesa virtual para probarlo antes de
+imprimirlo, con las mismas imágenes que vas a imprimir (proxies diseñadas
+incluidas):
+
+- **Partidas en solitario** con la mano inicial y la regla de mulligan que
+  elijas (Londres, Londres con el primero gratis, amistoso o libre), turnos,
+  vidas, venenos, daño de comandante y contadores de jugador.
+- **Todo con el ratón o el teclado:** arrastra cartas entre la mano, el campo y
+  las zonas; el menú de cada carta la gira, la transforma, le pone contadores,
+  le cambia la fuerza y la resistencia, la adjunta, señala objetivos o la manda
+  a cualquier sitio; y cada acción tiene su atajo (la lista, a un clic).
+- **Lo que hace falta con la biblioteca:** robar, moler, escrutar, vigilar,
+  mirar las de arriba o abajo, buscar (con filtros por tipo y color), revelar
+  hasta (cascada, descubrir…), fichas (las del deck, rápidas como Tesoro o
+  Comida, cualquiera de Scryfall o una libre), dados y monedas.
+- **La vista grande** de la carta bajo el ratón, con un panel de estado que
+  explica cada contador y cada bono.
+- **Deshacer todo lo que quieras**, y un registro de la partida escrito en tu
+  idioma.
+- **Tu tapete**: una imagen tuya o la ilustración de una carta, por deck, con
+  un velo oscuro y desenfoque para que las cartas destaquen.
+- **No pierde ninguna partida:** se guarda mientras juegas y «Jugar» ofrece
+  seguirla al volver a abrir la app.
+
+![Una partida en marcha](docs/presentacion/mesa.jpg)
+
+![El menú de cada carta en la mesa](docs/presentacion/mesa-menu.jpg)
+
+---
+
 ## Por dentro
 
 - **Aplicación nativa** hecha con Tauri y Rust: todo lo pesado (búsquedas,

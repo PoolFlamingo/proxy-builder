@@ -50,6 +50,12 @@ futures = { version = "0.3", default-features = false, features = ["std", "async
 base64 = "0.22"
 rayon = "1.12"
 krilla = { version = "0.8.2", default-features = false, features = ["raster-images", "simple-text"] }
+# La mesa de juego: la semilla de cada partida (entropía del sistema), el
+# texto de reglas («+N/+N» de auras y equipos) y la partida en curso
+# comprimida (`mesa/guardada.rs`, con el mismo zlib-rs que ya usa `zip`).
+getrandom = "0.3"
+regex = "1"
+flate2 = { version = "1", default-features = false, features = ["zlib-rs"] }
 # Registro de lo que hace la app (cada petición de red queda apuntada).
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std"] }

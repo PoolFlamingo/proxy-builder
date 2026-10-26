@@ -1,4 +1,4 @@
-import { BookOpen, Brush, CircleHelp, Layers, Settings } from "lucide-react";
+import { BookOpen, Brush, CircleHelp, Layers, Settings, Swords } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useDefaultLayout } from "react-resizable-panels";
 import { Confirmar } from "@/components/confirmar";
@@ -29,12 +29,14 @@ export function AppShell({
 	derecha,
 	biblioteca,
 	disenar,
+	mesa,
 }: {
 	izquierda: ReactNode;
 	centro: ReactNode;
 	derecha: ReactNode;
 	biblioteca: ReactNode;
 	disenar: ReactNode;
+	mesa: ReactNode;
 }) {
 	const { t } = useLang();
 	const vista = useUi((s) => s.vista);
@@ -77,7 +79,8 @@ export function AppShell({
 					className="ml-4 shrink-0"
 					value={vista}
 					onValueChange={(v) =>
-						(v === "deck" || v === "disenar" || v === "biblioteca") && cambiarVista(v)
+						(v === "deck" || v === "disenar" || v === "biblioteca" || v === "mesa") &&
+						cambiarVista(v)
 					}
 				>
 					<ToggleGroupItem value="deck" className="gap-1.5 px-3 text-xs">
@@ -92,8 +95,12 @@ export function AppShell({
 						<BookOpen className="size-3.5" />
 						{t("Biblioteca")}
 					</ToggleGroupItem>
+					<ToggleGroupItem value="mesa" className="gap-1.5 px-3 text-xs">
+						<Swords className="size-3.5" />
+						{t("Jugar")}
+					</ToggleGroupItem>
 				</ToggleGroup>
-				{vista !== "biblioteca" && <NombreDeck />}
+				{vista !== "biblioteca" && vista !== "mesa" && <NombreDeck />}
 				<div className="ml-auto flex items-center gap-2.5">
 					<SaveIndicator />
 					<BotonActualizar />
@@ -146,6 +153,8 @@ export function AppShell({
 					</ResizablePanelGroup>
 				) : vista === "disenar" ? (
 					disenar
+				) : vista === "mesa" ? (
+					mesa
 				) : (
 					biblioteca
 				)}

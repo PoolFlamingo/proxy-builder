@@ -24,6 +24,7 @@ describe("pendientes al cerrar la app", () => {
 			dialogoSinGuardar: false,
 			edicion: false,
 			deck: false,
+			partida: false,
 		});
 		expect(hayPendientes(p)).toBe(false);
 	});

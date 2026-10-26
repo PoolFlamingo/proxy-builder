@@ -38,7 +38,8 @@ pub async fn update_download(
 }
 
 /// Instala la versión bajada y reinicia. No con un trabajo largo en marcha
-/// (un PDF a medias se perdería).
+/// (un PDF a medias se perdería) ni con la mesa abierta: la actualización
+/// espera a que se acabe la partida o se salga de ella (`motivo: partida`).
 #[tauri::command]
 pub async fn update_install(
     app: AppHandle,
@@ -46,6 +47,9 @@ pub async fn update_install(
     state: State<'_, AppState>,
     version: String,
 ) -> AppResult<()> {
+    if state.hay_partida() {
+        return Err(AppError::new(ErrorCode::Busy).with("motivo", "partida"));
+    }
     if state.ocupado() {
         return Err(AppError::new(ErrorCode::Busy));
     }

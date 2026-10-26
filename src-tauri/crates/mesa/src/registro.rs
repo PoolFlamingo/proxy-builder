@@ -96,6 +96,23 @@ impl Registro {
         &self.actual
     }
 
+    /// Los eventos que siguen contando, en orden: sin lo deshecho, sin lo
+    /// de antes de reiniciar y sin los propios `Restaurar` (el registro que
+    /// se enseña).
+    pub fn vigentes(&self) -> Vec<&Evento> {
+        let mut v: Vec<&Evento> = Vec::new();
+        for ev in &self.eventos {
+            match &ev.cambio {
+                Cambio::Restaurar {
+                    deshecho: Some(k), ..
+                } => v.retain(|e| e.seq < *k),
+                Cambio::Restaurar { deshecho: None, .. } => v.clear(),
+                _ => v.push(ev),
+            }
+        }
+        v
+    }
+
     pub fn se_puede_rehacer(&self) -> bool {
         !self.rehacer.is_empty()
     }

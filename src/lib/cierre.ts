@@ -1,6 +1,7 @@
 import { estadoDeLosDialogos } from "@/lib/dialogos-abiertos";
 import { useActualizacion } from "@/stores/actualizacion-store";
 import { useEdicion } from "@/stores/edicion-store";
+import { useMesa } from "@/stores/mesa-store";
 import { useTrabajo } from "@/stores/trabajo-store";
 
 /**
@@ -20,6 +21,8 @@ export type Pendientes = {
 	edicion: boolean;
 	/** El deck no se ha podido guardar (se perderían sus últimos cambios). */
 	deck: boolean;
+	/** Hay una partida abierta en la mesa (se guarda y se puede seguir). */
+	partida: boolean;
 };
 
 /**
@@ -36,6 +39,7 @@ export function pendientes(deckSinGuardar = false): Pendientes {
 		dialogoSinGuardar: dialogos.sinGuardar,
 		edicion: useEdicion.getState().pendiente !== null,
 		deck: deckSinGuardar,
+		partida: useMesa.getState().activa,
 	};
 }
 
@@ -47,6 +51,7 @@ export function hayPendientes(p: Pendientes): boolean {
 		p.dialogoEnCurso ||
 		p.dialogoSinGuardar ||
 		p.edicion ||
-		p.deck
+		p.deck ||
+		p.partida
 	);
 }

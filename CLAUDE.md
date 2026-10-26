@@ -93,10 +93,13 @@ le falta una cadena le sale la inglesa.
   Scryfall), `card-editor`, `library`, `stats`, `set-browser`, `shell`,
   `disenar` (la vista «Diseñar» del editor de cartas de la 2.0), `tutorial`
   (el recorrido guiado de cada pantalla: pasos con su ancla `data-tutorial`;
-  sale solo la primera vez y con el botón de ayuda de la barra).
+  sale solo la primera vez y con el botón de ayuda de la barra), `mesa`
+  (la pestaña «Jugar»: entrada, tablero, menús, diálogos, atajos).
 - `src/stores/`: `deck-store` (deck, historial, autoguardado), `plan-store`
   (el `PagePlan` de Rust con 100 ms de espera), `ui-store` (zoom, selección,
-  diálogos, preferencias), `trabajo-store` (el trabajo largo en marcha).
+  diálogos, preferencias, `mesa` = Ajustes > Mesa), `trabajo-store` (el
+  trabajo largo en marcha), `mesa-store` (la vista del motor y sus parches;
+  selectores con referencias estables: `NINGUNA` o `useShallow`).
 - `src/lib/trabajos.ts`: lanzar un trabajo de Rust con eventos de progreso
   (escucha antes de lanzar). `src/lib/image-url.ts`: URLs de `pbimg://`.
 - Diálogos de ficheros SOLO por `src/lib/dialogos.ts` (`abrirParaImportar`,
@@ -111,6 +114,16 @@ le falta una cadena le sale la inglesa.
   (la partida entera), rehace re-resolviendo intenciones y repite con fotos
   cada 50. 🛑 `Accion`/`Cambio` nunca se cambian ni se quitan: variante nueva
   = subir `VERSION_CATALOGO` y escribir `tests/catalogo/v<N>.json`.
+  La app: `src-tauri/src/mesa/` (`preparar.rs` del deck a la mesa, con las
+  imágenes a 745 px en `app_cache_dir/mesa/` servidas por `pbimg://…/m/`;
+  `sesion.rs` la partida abierta, que manda vista y parches por un
+  `tauri::ipc::Channel`; `guardada.rs` en `app_data_dir/partidas/actual.json.gz`
+  cada 50 eventos, a los 20 s con algo sin guardar y al salir; `tapete.rs`
+  con `blob_refs` de tipo `mesa`) y `commands/mesa.rs`. La pantalla nunca
+  decide reglas: manda `Accion` por `mesa_accion` y pinta lo que vuelve; el
+  registro lo escribe `features/mesa/textos-eventos.ts` con `t()`. Un
+  rechazo llega como `Rejected` con `motivo` (`lib/errores.ts`). Con la mesa
+  abierta no se instala una actualización (`Busy`, `motivo: partida`).
 - Rust: `commands/{cards,decklist,export,identify,layout,library,stats}.rs`,
   `package.rs` (.pbdeck), `render.rs` + `protocol.rs` (miniaturas),
   `ocr.rs` (OCR opcional de la carta entera con `ocrs`, a la resolución

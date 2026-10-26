@@ -15,6 +15,7 @@ pub mod diseno;
 pub mod error;
 pub mod fuentes;
 pub mod jobs;
+pub mod mesa;
 pub mod ocr;
 pub mod originales;
 pub mod package;
@@ -202,6 +203,19 @@ pub fn run() {
             commands::diseno::art_from_blob,
             commands::diseno::art_from_scryfall,
             commands::diseno::art_from_card,
+            commands::mesa::mesa_empezar,
+            commands::mesa::mesa_retomar,
+            commands::mesa::mesa_estado,
+            commands::mesa::mesa_suscribir,
+            commands::mesa::mesa_vista,
+            commands::mesa::mesa_accion,
+            commands::mesa::mesa_guardar,
+            commands::mesa::mesa_salir,
+            commands::mesa::mesa_info_carta,
+            commands::mesa::mesa_origen_scryfall,
+            commands::mesa::mesa_tapete_get,
+            commands::mesa::mesa_tapete_set,
+            commands::mesa::mesa_tapete_ajustes,
         ])
         .run(tauri::generate_context!());
 

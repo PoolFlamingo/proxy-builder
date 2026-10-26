@@ -84,6 +84,13 @@ fn deshacer_hasta_una_linea_del_registro() {
     )
     .unwrap();
     assert_eq!(huella(r.partida()), objetivo);
+    // El registro que se enseña ya no tiene lo deshecho ni el `Restaurar`.
+    let vigentes = r.vigentes();
+    assert!(vigentes.iter().all(|e| e.seq < desde));
+    assert_eq!(
+        vigentes.len(),
+        r.eventos.iter().filter(|e| e.seq < desde).count()
+    );
 }
 
 #[test]

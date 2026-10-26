@@ -91,6 +91,7 @@
 			"!src/bindings",
 			"!src-tauri/crates/proxy-core/tests/compatibilidad",
 			"!src-tauri/crates/mesa/tests/catalogo",
+			"!src/stores/__tests__/fixtures",
 			"!src/index.css",
 			"!src/themes.css",
 			"!src/fonts.css",
