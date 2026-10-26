@@ -45,6 +45,8 @@ pub struct AppState {
     pub renders: tokio::sync::Semaphore,
     /// La partida de la mesa de juego, si hay una abierta.
     pub mesa: Mutex<Option<crate::mesa::sesion::Sesion>>,
+    /// La identidad y el nodo de la partida en red.
+    pub red: crate::red::Red,
     /// Trabajos de resolución/exportación en marcha (la limpieza de imágenes
     /// no corre mientras haya alguno).
     trabajos: AtomicUsize,
@@ -59,6 +61,7 @@ impl AppState {
         crate::store::decks::rellenar_refs(&db)?;
         let blobs = BlobStore::new(paths.data.join("blobs"));
         let diseno = crate::diseno::recursos::Recursos::abrir(&paths.data);
+        let red = crate::red::Red::nueva(crate::red::identidad::cargar_o_crear(&paths.data)?);
         Ok(AppState {
             db,
             blobs,
@@ -77,6 +80,7 @@ impl AppState {
                     .unwrap_or(4),
             ),
             mesa: Mutex::new(None),
+            red,
             trabajos: AtomicUsize::new(0),
         })
     }

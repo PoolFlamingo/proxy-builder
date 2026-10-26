@@ -20,6 +20,7 @@ pub mod ocr;
 pub mod originales;
 pub mod package;
 pub mod protocol;
+pub mod red;
 pub mod registro;
 pub mod render;
 pub mod scryfall;
@@ -29,24 +30,31 @@ pub mod temas;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // `PB_PERFIL` (solo en debug): varias instancias con sus propios datos.
+    let perfil = red::perfil::actual();
     let constructor = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(actualizar::Actualizador::default());
 
-    #[cfg(desktop)]
     // La ventana arranca oculta (sin el destello blanco del primer
     // fotograma) y la enseña la pantalla cuando ya está pintada: el estado
-    // guardado no debe enseñarla antes.
-    let constructor = constructor.plugin(
-        tauri_plugin_window_state::Builder::new()
-            .with_state_flags(
-                tauri_plugin_window_state::StateFlags::all()
-                    & !tauri_plugin_window_state::StateFlags::VISIBLE,
-            )
-            .build(),
-    );
+    // guardado no debe enseñarla antes. Con perfil, sin estado guardado (las
+    // instancias se pisarían la posición).
+    #[cfg(desktop)]
+    let constructor = if perfil.is_none() {
+        constructor.plugin(
+            tauri_plugin_window_state::Builder::new()
+                .with_state_flags(
+                    tauri_plugin_window_state::StateFlags::all()
+                        & !tauri_plugin_window_state::StateFlags::VISIBLE,
+                )
+                .build(),
+        )
+    } else {
+        constructor
+    };
 
     // En cuanto la página ha cargado, la ventana se enseña (con su fondo
     // oscuro, sin destello blanco). No se espera a que pinte la pantalla:
@@ -64,14 +72,16 @@ pub fn run() {
         .register_asynchronous_uri_scheme_protocol(protocol::ESQUEMA, protocol::manejador);
 
     let resultado = constructor
-        .setup(|app| {
+        .setup(move |app| {
             use tauri::Manager;
             let rutas = app.path();
+            let p = perfil.as_deref();
             let paths = state::Paths {
-                data: rutas.app_data_dir()?,
-                cache: rutas.app_cache_dir()?,
+                data: red::perfil::carpeta(&rutas.app_data_dir()?, p),
+                cache: red::perfil::carpeta(&rutas.app_cache_dir()?, p),
             };
-            registro::iniciar(&rutas.app_log_dir()?);
+            registro::iniciar(&red::perfil::carpeta(&rutas.app_log_dir()?, p));
+            crear_ventana(app, p, &paths.cache)?;
             let estado = state::AppState::open(paths).map_err(|e| e.to_string())?;
             app.manage(estado);
             // Los marcos «Original» que pida esta versión y aún no estén.
@@ -225,6 +235,8 @@ pub fn run() {
             commands::mesa::mesa_lista_comprobar,
             commands::mesa::mesa_lista_guardar,
             commands::mesa::mesa_lista_borrar,
+            commands::red::red_identidad,
+            commands::red::red_identidad_set,
         ])
         .run(tauri::generate_context!());
 
@@ -233,4 +245,32 @@ pub fn run() {
         eprintln!("Proxy Builder no ha podido arrancar: {e}");
         std::process::exit(1);
     }
+}
+
+/// La ventana principal, desde su configuración (`tauri.conf.json`, que la
+/// tiene con `create: false`). Con perfil, con su propio directorio de la
+/// vista web (otro `localStorage`) y el perfil en el título.
+fn crear_ventana(
+    app: &tauri::App,
+    perfil: Option<&str>,
+    cache: &std::path::Path,
+) -> tauri::Result<()> {
+    let Some(cfg) = app
+        .config()
+        .app
+        .windows
+        .iter()
+        .find(|w| w.label == "main")
+        .cloned()
+    else {
+        return Ok(());
+    };
+    let mut b = tauri::WebviewWindowBuilder::from_config(app.handle(), &cfg)?;
+    if let Some(p) = perfil {
+        b = b
+            .data_directory(cache.join("webview"))
+            .title(format!("{} · {p}", cfg.title));
+    }
+    b.build()?;
+    Ok(())
 }

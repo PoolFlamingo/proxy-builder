@@ -36,6 +36,7 @@ import type { FormatoLista } from "@/bindings/FormatoLista";
 import type { FuenteCarta } from "@/bindings/FuenteCarta";
 import type { GcReport } from "@/bindings/GcReport";
 import type { IdCarta } from "@/bindings/IdCarta";
+import type { Identidad } from "@/bindings/Identidad";
 import type { IdentifyRequest } from "@/bindings/IdentifyRequest";
 import type { IdJugador } from "@/bindings/IdJugador";
 import type { LetraInfo } from "@/bindings/LetraInfo";
@@ -265,6 +266,8 @@ export interface Commands {
 	mesa_dados_get: { args: Record<string, never>; result: VistaAspectoDados };
 	mesa_dados_set: { args: { aspecto: AspectoDados }; result: VistaAspectoDados };
 	mesa_dados_imagen: { args: { ruta: string | null }; result: VistaAspectoDados };
+	red_identidad: { args: Record<string, never>; result: Identidad };
+	red_identidad_set: { args: { apodo: string; avatar: string | null }; result: Identidad };
 	mesa_listas: { args: { deck: string }; result: ListasDeDeck };
 	mesa_lista_cartas: { args: { deck: string }; result: CartaDeLista[] };
 	mesa_lista_comprobar: {
