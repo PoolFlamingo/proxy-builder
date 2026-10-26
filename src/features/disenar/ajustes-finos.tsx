@@ -34,6 +34,7 @@ export function hayAjustes(f: FineTuning | undefined): boolean {
 /** El tamaño de cada texto (en proporción al del marco; sin él, el del marco). */
 const TAMANOS = [
 	"titleSize",
+	"costSize",
 	"typeSize",
 	"rulesSize",
 	"ptSize",
@@ -77,6 +78,7 @@ export function AjustesFinos({
 	];
 	const tamanos: [Exclude<Tamano, "rulesLineSpacing" | "footerLineSpacing">, string][] = [
 		["titleSize", t("Título")],
+		["costSize", t("Símbolos de maná")],
 		["typeSize", t("Línea de tipo")],
 		["rulesSize", t("Texto de reglas")],
 		["ptSize", t("Fuerza/resistencia")],

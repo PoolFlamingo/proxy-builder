@@ -57,7 +57,12 @@ rulesBoxDynamic?: boolean,
  * la letra es esa y la caja crece lo que haga falta (y solo baja si ni
  * al máximo cabe). El título y el tipo se estrechan como siempre.
  */
-titleSize?: number, typeSize?: number, rulesSize?: number, ptSize?: number, footerSize?: number, 
+titleSize?: number, 
+/**
+ * Tamaño de los símbolos del coste de maná (`None` = 1, el del marco):
+ * más pequeños, dejan más sitio al título.
+ */
+costSize?: number, typeSize?: number, rulesSize?: number, ptSize?: number, footerSize?: number, 
 /**
  * Interlineado de las reglas y del pie, en proporción al del marco
  * (`None` = 1).

@@ -349,5 +349,6 @@
 	"Esta parte no lleva ilustración propia: enseña la de la parte 1, como las cartas impresas.": "このパートには専用のイラストがありません。印刷されたカードと同じく、パート 1 のイラストを使います。",
 	"Ir a la parte 1": "パート 1 へ",
 	"Estilo y ajustes propios de esta cara": "この面専用のスタイルと設定",
-	"Apagado, esta cara usa lo mismo que la cara 1: el estilo, el marco, el emblema y los ajustes. Encendido, lo que cambies solo vale para ella.": "オフの場合、この面は1面と同じスタイル・枠・エンブレム・設定を使います。オンにすると、変更はこの面だけに反映されます。"
+	"Apagado, esta cara usa lo mismo que la cara 1: el estilo, el marco, el emblema y los ajustes. Encendido, lo que cambies solo vale para ella.": "オフの場合、この面は1面と同じスタイル・枠・エンブレム・設定を使います。オンにすると、変更はこの面だけに反映されます。",
+	"Símbolos de maná": "マナ・シンボル"
 }
