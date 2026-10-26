@@ -744,5 +744,20 @@
 	"La partida empezó sin ti: no habías elegido deck.": "Partida a început fără tine: nu alesesești un pachet.",
 	"Demasiadas acciones seguidas: espera un momento.": "Prea multe acțiuni la rând: așteaptă puțin.",
 	"Estás mirando: los espectadores no pueden jugar.": "Privești: spectatorii nu pot juca.",
-	"La partida aún no ha empezado.": "Partida n-a început încă."
+	"La partida aún no ha empezado.": "Partida n-a început încă.",
+	"En red, ver cómo mueven los demás y mostrarles mi cursor": "Online, vezi cum se mișcă ceilalți și le arăți cursorul meu",
+	"En red, Alt + clic en una carta o en un jugador avisa a todos con un aro.": "Online, Alt + clic pe o carte sau pe un jucător îi avertizează pe toți cu un inel.",
+	"Cartas originales en mi idioma": "Cărți originale în limba mea",
+	"Identidad en red": "Identitate online",
+	"Tu identidad es lo que te reconoce en las partidas y los playgroups. Guárdala para jugar con ella desde otro equipo o para recuperarla. Quien tenga el fichero puede jugar como tú: no lo compartas.": "Identitatea ta este ceea ce te recunoaște în partide și în playgroup-uri. Salveaz-o ca să joci cu ea de pe alt calculator sau ca s-o recuperezi. Cine are fișierul poate juca în locul tău: nu-l da mai departe.",
+	"Exportar identidad…": "Exportă identitatea…",
+	"Importar identidad…": "Importă identitatea…",
+	"Identidad exportada.": "Identitate exportată.",
+	"¿Cambiar la identidad?": "Schimbi identitatea?",
+	"Este equipo pasará a ser el de la identidad del fichero. La de ahora se queda como copia en la carpeta de datos de la app.": "Acest calculator va prelua identitatea din fișier. Cea actuală rămâne ca o copie în folderul de date al aplicației.",
+	"Identidad cambiada.": "Identitate schimbată.",
+	"Sal de la partida o de la sala antes de cambiar la identidad.": "Ieși din partidă sau din sală înainte de a schimba identitatea.",
+	"Ese fichero no es una identidad de Proxy Builder.": "Fișierul acela nu este o identitate Proxy Builder.",
+	"Copiar enlace": "Copiază linkul",
+	"Hay una partida en marcha: sal de ella para usar el enlace.": "O partidă este în desfășurare: ieși din ea ca să folosești linkul."
 }

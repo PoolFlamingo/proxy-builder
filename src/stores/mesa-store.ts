@@ -12,6 +12,7 @@ import type { VistaGeneral } from "@/bindings/VistaGeneral";
 import type { VistaJugador } from "@/bindings/VistaJugador";
 import type { VistaMesa } from "@/bindings/VistaMesa";
 import type { VistaZona } from "@/bindings/VistaZona";
+import { conOriginales, useOriginales } from "./originales-store";
 
 /**
  * **La mesa en pantalla.** Guarda la vista que manda Rust (`mesa::vista`)
@@ -58,7 +59,8 @@ export const MESA_VACIA: Mesa = {
 /** La mesa entera desde una vista. */
 export function desdeVista(v: VistaMesa): Mesa {
 	const cartas: Record<number, VistaCarta> = {};
-	for (const c of v.cartas) cartas[c.id] = c;
+	const orig = useOriginales.getState();
+	for (const c of v.cartas) cartas[c.id] = conOriginales(c, orig);
 	const zonas: Record<string, VistaZona> = {};
 	for (const z of v.zonas) zonas[claveZona(z.zona)] = z;
 	const jugadores: Record<number, VistaJugador> = {};
@@ -88,7 +90,8 @@ export function conParche(m: Mesa, p: ParcheVista): Mesa | null {
 	if (p.cartas.length > 0 || p.quitadas.length > 0) {
 		cartas = { ...m.cartas };
 		for (const id of p.quitadas) delete cartas[id];
-		for (const c of p.cartas) cartas[c.id] = c;
+		const orig = useOriginales.getState();
+		for (const c of p.cartas) cartas[c.id] = conOriginales(c, orig);
 	}
 	let zonas = m.zonas;
 	if (p.zonas.length > 0) {
@@ -142,6 +145,8 @@ type MesaStore = Mesa & {
 	setSobre: (id: IdCarta | null) => void;
 	inspeccionar: (id: IdCarta | null) => void;
 	mirar: (j: IdJugador | null) => void;
+	/** Pone al día las caras de las cartas con el modo «originales» (E9). */
+	reaplicarOriginales: () => void;
 };
 
 export const useMesa = create<MesaStore>((set, get) => ({
@@ -177,7 +182,8 @@ export const useMesa = create<MesaStore>((set, get) => ({
 		});
 		return true;
 	},
-	cerrar: () =>
+	cerrar: () => {
+		useOriginales.getState().limpiar();
 		set({
 			...MESA_VACIA,
 			activa: false,
@@ -186,7 +192,8 @@ export const useMesa = create<MesaStore>((set, get) => ({
 			sobre: null,
 			inspeccion: null,
 			mirando: null,
-		}),
+		});
+	},
 	seleccionar: (seleccion) => set({ seleccion }),
 	alternar: (id) => {
 		const s = get().seleccion;
@@ -195,6 +202,19 @@ export const useMesa = create<MesaStore>((set, get) => ({
 	setSobre: (sobre) => set({ sobre }),
 	inspeccionar: (inspeccion) => set({ inspeccion }),
 	mirar: (j) => set({ mirando: j === get().yo ? null : j, seleccion: [] }),
+	reaplicarOriginales: () => {
+		const orig = useOriginales.getState();
+		const cartas = get().cartas;
+		let nuevas: Record<number, VistaCarta> | null = null;
+		for (const c of Object.values(cartas)) {
+			const n = conOriginales(c, orig);
+			if (n !== c) {
+				nuevas ??= { ...cartas };
+				nuevas[c.id] = n;
+			}
+		}
+		if (nuevas) set({ cartas: nuevas });
+	},
 }));
 
 /** De quién es el tablero que se ve: el que se mira o el propio. */

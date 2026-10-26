@@ -11,6 +11,7 @@
 	{
 		"tipo": "fantasma",
 		"jugador": 1,
+		"tablero": 0,
 		"carta": 3,
 		"x": 5000,
 		"y": 2000,
@@ -22,5 +23,21 @@
 		"carta": null,
 		"a": 1,
 		"t": 9
+	},
+	{
+		"tipo": "enlaces",
+		"filas": [
+			{
+				"jugador": 0,
+				"rttMs": 0,
+				"directo": true
+			},
+			{
+				"jugador": 1,
+				"rttMs": 42,
+				"directo": false
+			}
+		],
+		"t": 10
 	}
 ]

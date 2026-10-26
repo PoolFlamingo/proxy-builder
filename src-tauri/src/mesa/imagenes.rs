@@ -71,8 +71,13 @@ pub fn guardar_propia(state: &AppState, img: &RgbaImage) -> AppResult<RefImagen>
 
 /// Guarda la imagen de una carta de Scryfall sin retoques.
 pub fn guardar_scryfall(state: &AppState, id: &str, cara: u8, img: &RgbaImage) -> AppResult<()> {
+    guardar_scryfall_en(&carpeta(state), id, cara, img)
+}
+
+/// Lo mismo, dentro de la carpeta de la mesa `carpeta`.
+pub fn guardar_scryfall_en(carpeta: &Path, id: &str, cara: u8, img: &RgbaImage) -> AppResult<()> {
     let jpg = proxy_core::imaging::encode::jpeg(img, CALIDAD)?;
-    escribir_atomico(&ruta_scryfall(state, id, cara), &jpg)
+    escribir_atomico(&scryfall_en(carpeta, id, cara), &jpg)
 }
 
 /// Lo ya preparado de una cara, por su clave (lo que la hace única: la

@@ -4,6 +4,7 @@
 pub mod dados;
 pub mod guardada;
 pub mod imagenes;
+pub mod originales;
 pub mod preparar;
 pub mod sesion;
 pub mod tapete;

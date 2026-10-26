@@ -21,6 +21,12 @@ type SalasStore = {
 	deck: string | null;
 	/** Lo que esta app mide hacia cada otro de la sala. */
 	enlaces: Record<string, EnlaceSala>;
+	/**
+	 * El código de un enlace `proxybuilder://unirse/…` que acaba de abrir la
+	 * app: «Jugar con amigos» lo pone en «Unirse con un código» y espera a que
+	 * la persona pulse «Unirse».
+	 */
+	enlaceEntrante: string | null;
 	poner: (c: Partial<Omit<SalasStore, "poner" | "sinSala">>) => void;
 	sinSala: () => void;
 };
@@ -34,6 +40,7 @@ export const useSalas = create<SalasStore>((set) => ({
 	como: null,
 	deck: null,
 	enlaces: {},
+	enlaceEntrante: null,
 	poner: (c) => set(c),
 	sinSala: () => set({ sala: null, como: null, deck: null, enlaces: {} }),
 }));

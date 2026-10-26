@@ -668,5 +668,20 @@
 	"La partida empezó sin ti: no habías elegido deck.": "ゲームはあなた抜きで始まりました：デッキが選ばれていませんでした。",
 	"Demasiadas acciones seguidas: espera un momento.": "操作が連続しすぎです：少し待ってください。",
 	"Estás mirando: los espectadores no pueden jugar.": "観戦中です：観戦者はプレイできません。",
-	"La partida aún no ha empezado.": "ゲームはまだ始まっていません。"
+	"La partida aún no ha empezado.": "ゲームはまだ始まっていません。",
+	"En red, ver cómo mueven los demás y mostrarles mi cursor": "オンラインで、他のプレイヤーの動きを見て、自分のカーソルも見せる",
+	"En red, Alt + clic en una carta o en un jugador avisa a todos con un aro.": "オンラインでは、カードやプレイヤーを Alt + クリックすると、全員にリングで知らせます。",
+	"Cartas originales en mi idioma": "オリジナルのカードを自分の言語で表示",
+	"Identidad en red": "オンラインのID",
+	"Tu identidad es lo que te reconoce en las partidas y los playgroups. Guárdala para jugar con ella desde otro equipo o para recuperarla. Quien tenga el fichero puede jugar como tú: no lo compartas.": "IDは、対戦やプレイグループであなたを見分けるためのものです。別のパソコンで使ったり復元したりできるよう保存しておきましょう。このファイルを持っている人はあなたとしてプレイできます。共有しないでください。",
+	"Exportar identidad…": "IDを書き出す…",
+	"Importar identidad…": "IDを読み込む…",
+	"Identidad exportada.": "IDを書き出しました。",
+	"¿Cambiar la identidad?": "IDを切り替えますか?",
+	"Este equipo pasará a ser el de la identidad del fichero. La de ahora se queda como copia en la carpeta de datos de la app.": "このパソコンはファイルのIDになります。現在のIDはアプリのデータフォルダにバックアップとして残ります。",
+	"Identidad cambiada.": "IDを切り替えました。",
+	"Sal de la partida o de la sala antes de cambiar la identidad.": "IDを切り替える前に、対戦またはルームから退出してください。",
+	"Ese fichero no es una identidad de Proxy Builder.": "そのファイルはProxy BuilderのIDではありません。",
+	"Copiar enlace": "リンクをコピー",
+	"Hay una partida en marcha: sal de ella para usar el enlace.": "対戦中です。リンクを使うには対戦から抜けてください。"
 }

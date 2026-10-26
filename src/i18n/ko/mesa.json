@@ -668,5 +668,20 @@
 	"La partida empezó sin ti: no habías elegido deck.": "게임이 당신 없이 시작되었습니다: 덱을 고르지 않았습니다.",
 	"Demasiadas acciones seguidas: espera un momento.": "연속 동작이 너무 많습니다: 잠시 기다리세요.",
 	"Estás mirando: los espectadores no pueden jugar.": "관전 중입니다: 관전자는 플레이할 수 없습니다.",
-	"La partida aún no ha empezado.": "게임이 아직 시작되지 않았습니다."
+	"La partida aún no ha empezado.": "게임이 아직 시작되지 않았습니다.",
+	"En red, ver cómo mueven los demás y mostrarles mi cursor": "온라인에서 다른 사람의 움직임을 보고 내 커서를 보여 주기",
+	"En red, Alt + clic en una carta o en un jugador avisa a todos con un aro.": "온라인에서는 카드나 플레이어를 Alt + 클릭하면 모두에게 링으로 알립니다.",
+	"Cartas originales en mi idioma": "원본 카드를 내 언어로 보기",
+	"Identidad en red": "온라인 신원",
+	"Tu identidad es lo que te reconoce en las partidas y los playgroups. Guárdala para jugar con ella desde otro equipo o para recuperarla. Quien tenga el fichero puede jugar como tú: no lo compartas.": "신원은 게임과 플레이그룹에서 나를 알아보게 하는 정보입니다. 다른 컴퓨터에서 사용하거나 복구할 수 있도록 저장해 두세요. 이 파일을 가진 사람은 나로서 플레이할 수 있으니 공유하지 마세요.",
+	"Exportar identidad…": "신원 내보내기…",
+	"Importar identidad…": "신원 가져오기…",
+	"Identidad exportada.": "신원을 내보냈습니다.",
+	"¿Cambiar la identidad?": "신원을 바꿀까요?",
+	"Este equipo pasará a ser el de la identidad del fichero. La de ahora se queda como copia en la carpeta de datos de la app.": "이 컴퓨터는 파일에 담긴 신원을 사용하게 됩니다. 현재 신원은 앱 데이터 폴더에 백업으로 남습니다.",
+	"Identidad cambiada.": "신원을 바꿨습니다.",
+	"Sal de la partida o de la sala antes de cambiar la identidad.": "신원을 바꾸기 전에 게임이나 방에서 나가세요.",
+	"Ese fichero no es una identidad de Proxy Builder.": "해당 파일은 Proxy Builder 신원이 아닙니다.",
+	"Copiar enlace": "링크 복사",
+	"Hay una partida en marcha: sal de ella para usar el enlace.": "게임이 진행 중입니다. 링크를 사용하려면 게임에서 나가세요."
 }

@@ -58,6 +58,11 @@
 		}
 	},
 	"plugins": {
+		"deep-link": {
+			"desktop": {
+				"schemes": ["proxybuilder"]
+			}
+		},
 		"updater": {
 			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ3QUQ1QjE0NkQ0M0Y1NDUKUldSRjlVTnRGRnV0MTZ5cFZHd3FCZ1NjaHgyRU9OZXBDVklNZkhzemo3VXpyek53dmM0dUJkanIK",
 			"endpoints": [

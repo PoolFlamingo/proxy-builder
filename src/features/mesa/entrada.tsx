@@ -103,6 +103,11 @@ export function EntradaMesa() {
 	const [red, setRed] = useState(false);
 	const [amigos, setAmigos] = useState(false);
 	const enSalaServidor = useSalas((s) => s.sala !== null);
+	const enlaceEntrante = useSalas((s) => s.enlaceEntrante);
+	// Un enlace de invitación abre «Con amigos…» con el código puesto.
+	useEffect(() => {
+		if (enlaceEntrante) setAmigos(true);
+	}, [enlaceEntrante]);
 	const enSala = useRed((s) => s.papel !== null);
 	const trabajo = useTrabajo((s) => (s.actual?.tipo === "mesa" ? s.actual : null));
 
@@ -484,7 +489,14 @@ export function EntradaMesa() {
 					}}
 				/>
 			)}
-			<SalasDialog abierto={amigos} onCerrar={() => setAmigos(false)} preparar={preparar} />
+			<SalasDialog
+				abierto={amigos}
+				onCerrar={() => {
+					setAmigos(false);
+					useSalas.getState().poner({ enlaceEntrante: null });
+				}}
+				preparar={preparar}
+			/>
 			<RedDialog abierto={red} onCerrar={() => setRed(false)} preparar={preparar} />
 			<TapeteDialog abierto={tapete} onCerrar={() => setTapete(false)} deckId={elegido} />
 			<Confirmar

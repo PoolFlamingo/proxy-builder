@@ -1,11 +1,48 @@
-import { Eye, Heart, Loader2, WifiOff } from "lucide-react";
+import { Eye, Heart, Languages, Loader2, Wifi, WifiOff } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
+import { ContenidoContextual } from "@/components/contenido-contextual";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
+import { ContextMenu, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
+import { WithTooltip } from "@/components/ui/with-tooltip";
 import { cn } from "@/lib/utils";
 import { tableroDe, useMesa } from "@/stores/mesa-store";
+import { useOriginales } from "@/stores/originales-store";
 import { useRed } from "@/stores/red-store";
+import { useVivo } from "@/stores/vivo-store";
 import { salir } from "../conexion";
+import { senalar } from "../en-vivo/emitir";
+import { alternarOriginales } from "../originales";
+
+/** Verde, ámbar o rojo según lo que tarda el ida y vuelta. */
+export function colorDeLatencia(rttMs: number): string {
+	if (rttMs < 80) return "text-emerald-400";
+	if (rttMs < 200) return "text-amber-400";
+	return "text-red-400";
+}
+
+/** La latencia de un jugador con el anfitrión y si el camino es directo o por el relé. */
+function Latencia({ id }: { id: number }) {
+	const { t } = useLang();
+	const e = useRed((s) => s.enlaces.find((f) => f.jugador === id));
+	if (!e) return null;
+	const ayuda = e.directo
+		? t("{ms} ms · directo", { ms: e.rttMs })
+		: t("{ms} ms · por relé", { ms: e.rttMs });
+	return (
+		<WithTooltip content={ayuda}>
+			<span
+				className={cn(
+					"flex items-center gap-0.5 text-[10px] tabular-nums",
+					colorDeLatencia(e.rttMs),
+				)}
+			>
+				<Wifi className={cn("size-3", !e.directo && "opacity-60")} />
+				{e.rttMs}
+			</span>
+		</WithTooltip>
+	);
+}
 
 /**
  * **Los jugadores de la mesa** (con más de uno): su color, su nombre y su
@@ -18,7 +55,10 @@ export function SelectorTablero() {
 	const jugadores = useMesa((s) => s.jugadores);
 	const yo = useMesa((s) => s.yo);
 	const viendo = useMesa(tableroDe);
-	const espectador = useRed((s) => s.papel === "espectador");
+	const papel = useRed((s) => s.papel);
+	const espectador = papel === "espectador";
+	const senales = useVivo((s) => s.senales);
+	const originales = useOriginales((s) => s.modos);
 	if (asientos.length < 2) return null;
 	return (
 		<div className="absolute top-2 left-2 z-[7000] flex flex-col gap-1 rounded-xl border border-white/10 bg-black/60 p-1 text-white shadow-lg backdrop-blur-md">
@@ -32,25 +72,42 @@ export function SelectorTablero() {
 				const j = jugadores[id];
 				if (!j) return null;
 				return (
-					<button
-						key={id}
-						type="button"
-						onClick={() => useMesa.getState().mirar(id)}
-						className={cn(
-							"flex items-center gap-1.5 rounded-lg px-1.5 py-1 text-left text-xs transition hover:bg-white/10",
-							viendo === id && "bg-white/15",
-							j.eliminado && "opacity-50",
-						)}
-					>
-						<span className="size-2.5 shrink-0 rounded-full" style={{ background: j.color }} />
-						<span className="max-w-32 truncate font-medium">
-							{id === yo ? t("{nombre} (tú)", { nombre: j.nombre }) : j.nombre}
-						</span>
-						<span className="ml-auto flex items-center gap-0.5 pl-1.5 text-white/70 tabular-nums">
-							<Heart className="size-3" />
-							{j.vida}
-						</span>
-					</button>
+					<ContextMenu key={id}>
+						<ContextMenuTrigger asChild>
+							<button
+								type="button"
+								onClick={(e) => {
+									// Alt + clic: un aro de aviso sobre el jugador, en todas las pantallas.
+									if (e.altKey && papel !== null) senalar(null, id);
+									else useMesa.getState().mirar(id);
+								}}
+								className={cn(
+									"flex items-center gap-1.5 rounded-lg px-1.5 py-1 text-left text-xs transition hover:bg-white/10",
+									viendo === id && "bg-white/15",
+									j.eliminado && "opacity-50",
+									senales.some((s) => s.a === id) && "animate-pulse ring-2 ring-primary",
+								)}
+							>
+								<span className="size-2.5 shrink-0 rounded-full" style={{ background: j.color }} />
+								<span className="max-w-32 truncate font-medium">
+									{id === yo ? t("{nombre} (tú)", { nombre: j.nombre }) : j.nombre}
+								</span>
+								{papel !== null && <Latencia id={id} />}
+								{originales[id] && <Languages className="size-3 text-white/60" />}
+								<span className="ml-auto flex items-center gap-0.5 pl-1.5 text-white/70 tabular-nums">
+									<Heart className="size-3" />
+									{j.vida}
+								</span>
+							</button>
+						</ContextMenuTrigger>
+						<ContenidoContextual className="w-64 text-xs">
+							<ContextMenuItem onSelect={() => alternarOriginales(id)}>
+								<Languages />
+								{originales[id] ? "✓ " : ""}
+								{t("Cartas originales en mi idioma")}
+							</ContextMenuItem>
+						</ContenidoContextual>
+					</ContextMenu>
 				);
 			})}
 		</div>

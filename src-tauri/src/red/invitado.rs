@@ -347,6 +347,13 @@ async fn atender<M: Mesa>(
         mesa.clone(),
         None,
     ));
+    // Latidos, enlaces y movimiento en vivo, por datagramas (E7, E10).
+    let latencia = tokio::spawn(super::latencia::atender_invitado(
+        conn.clone(),
+        mesa.clone(),
+        std::sync::Arc::new(super::latencia::ahora_ms),
+        super::latencia::CADA_LATIDO,
+    ));
     // Tras volver, las intenciones que no se llegaron a confirmar.
     mesa.con(|m| {
         if let Some(Some(crate::mesa::sesion::RedSesion::Invitado(i))) = m.as_ref().map(|s| &s.red)
@@ -372,6 +379,7 @@ async fn atender<M: Mesa>(
     };
     escritor.abort();
     imagenes.abort();
+    latencia.abort();
     if !matches!(fin, Fin::Cortada) {
         conn.close(0u32.into(), b"fin");
     }

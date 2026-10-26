@@ -42,6 +42,7 @@ const MOTIVOS: Partial<Record<ErrorCode, Record<string, string>>> = {
 		lista_sin_nombre: paraTraducir("Ponle un nombre a la lista."),
 		codigo: paraTraducir("Ese código no es válido: cópialo entero, empieza por PB1-."),
 		deck: paraTraducir("Elige un deck para jugar."),
+		identidad: paraTraducir("Ese fichero no es una identidad de Proxy Builder."),
 	},
 	Network: {
 		sin_servidor: paraTraducir("No hay conexión con el servidor de salas."),

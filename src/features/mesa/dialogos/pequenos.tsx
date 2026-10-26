@@ -383,7 +383,8 @@ export function AtajosDialog() {
 					<DialogDescription>
 						{t(
 							"Sobre la biblioteca, del 1 al 9 roba esas cartas. Doble clic en una carta del campo la gira.",
-						)}
+						)}{" "}
+						{t("En red, Alt + clic en una carta o en un jugador avisa a todos con un aro.")}
 					</DialogDescription>
 				</DialogHeader>
 				<ScrollArea viewportClassName="max-h-[60vh]">

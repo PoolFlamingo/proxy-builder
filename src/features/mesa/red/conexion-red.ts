@@ -7,6 +7,8 @@ import { paraTraducir, traduccionSuelta } from "@/components/language-provider";
 import { mensajeDeError } from "@/lib/errores";
 import { call } from "@/lib/ipc";
 import { useRed } from "@/stores/red-store";
+import { useUi } from "@/stores/ui-store";
+import { useVivo } from "@/stores/vivo-store";
 import { conProgreso, suscribir, suscrito } from "../conexion";
 
 /**
@@ -40,6 +42,23 @@ function alAviso(a: AvisoRed) {
 			break;
 		case "perdida":
 			r.poner({ conexion: "perdida" });
+			break;
+		case "enlaces":
+			r.poner({ desfaseMs: a.desfaseMs, enlaces: a.filas });
+			break;
+		case "fantasma":
+			if (useUi.getState().mesa.movimientoEnVivo) {
+				useVivo
+					.getState()
+					.fantasma(
+						a.jugador,
+						{ tablero: a.tablero, carta: a.carta, x: a.x, y: a.y },
+						performance.now(),
+					);
+			}
+			break;
+		case "senal":
+			useVivo.getState().senal(a.jugador, a.carta, a.a, performance.now());
 			break;
 		case "cerrada":
 			toast(traduccionSuelta(paraTraducir("El anfitrión ha cerrado la partida.")));
@@ -110,4 +129,5 @@ export async function salirDeRed() {
 		/* ya no estaba */
 	}
 	useRed.getState().olvidar();
+	useVivo.getState().limpiar();
 }

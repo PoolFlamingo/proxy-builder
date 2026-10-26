@@ -14,9 +14,10 @@ use super::anfitrion::{atender, empezar_partida, Anfitrion};
 use super::codigo::{secreto_nuevo, Codigo};
 use super::imagenes::{la_tengo, ruta_cruda, traer_propia, Por};
 use super::invitado::{unirse, Conexion, Union};
+use super::latencia;
 use super::mesa::{AvisoRed, Mesa, MesaEnMemoria};
-use super::nodo::{crear, Relay};
-use super::protocolo::Rol;
+use super::nodo::{crear, Relay, ALPN_MESA};
+use super::protocolo::{datagrama_de_bytes, Datagrama, Enlace, Rol};
 use crate::mesa::imagenes::propia_en;
 use crate::mesa::sesion::tests::mazo;
 use crate::mesa::sesion::{ConfigMesa, JugadorMesa, RedSesion};
@@ -505,4 +506,237 @@ async fn las_imagenes_propias_llegan_por_el_anfitrion_y_con_su_huella() {
     for m in [&p.host.mesa, &b.mesa, &c.mesa] {
         let _ = std::fs::remove_dir_all(&m.carpeta);
     }
+}
+
+fn avisos(m: &MesaEnMemoria) -> Vec<AvisoRed> {
+    m.avisos.lock().map(|v| v.clone()).unwrap_or_default()
+}
+
+/// La última tabla de enlaces que apuntó una mesa, con su desfase.
+fn ultimos_enlaces(m: &MesaEnMemoria) -> Option<(i32, Vec<Enlace>)> {
+    avisos(m).into_iter().rev().find_map(|a| match a {
+        AvisoRed::Enlaces { desfase_ms, filas } => Some((desfase_ms, filas)),
+        _ => None,
+    })
+}
+
+#[tokio::test]
+async fn cada_jugador_sabe_su_latencia_y_si_va_directo() {
+    let p = partida(2).await;
+    for j in &p.invitados {
+        esperar("la tabla de enlaces con los tres", || {
+            ultimos_enlaces(&j.mesa).is_some_and(|(_, f)| f.len() == 3)
+        })
+        .await;
+        let (desfase, filas) = ultimos_enlaces(&j.mesa).unwrap();
+        // Mismo reloj, misma máquina: el desfase es casi nada.
+        assert!(desfase.abs() < 200, "desfase {desfase}");
+        for f in &filas {
+            assert!(f.directo, "{f:?} debería ir directo");
+            assert!(f.rtt_ms < 50, "{f:?}");
+        }
+    }
+    esperar("la tabla del anfitrión", || {
+        ultimos_enlaces(&p.host.mesa).is_some_and(|(d, f)| d == 0 && f.len() == 3)
+    })
+    .await;
+}
+
+#[tokio::test]
+async fn el_reloj_del_anfitrion_se_calcula_aunque_el_de_aqui_vaya_atrasado() {
+    let _ = tracing_subscriber::fmt()
+        .with_test_writer()
+        .with_max_level(tracing::Level::INFO)
+        .try_init();
+    let host = crear(SecretKey::generate(), Relay::Ninguno).await.unwrap();
+    let guest = crear(SecretKey::generate(), Relay::Ninguno).await.unwrap();
+    // Un anfitrión de mentira: su reloj va 5 s por delante.
+    let ep = host.clone();
+    tokio::spawn(async move {
+        while let Some(i) = ep.accept().await {
+            let Ok(conn) = i.await else { continue };
+            tokio::spawn(async move {
+                while let Ok(b) = conn.read_datagram().await {
+                    if let Some(Datagrama::Latido { t }) = datagrama_de_bytes(&b) {
+                        let t_host = latencia::ahora_ms() + 5_000;
+                        latencia::enviar(&conn, &Datagrama::Eco { t, t_host });
+                    }
+                }
+            });
+        }
+    });
+    let conn = guest.connect(host.addr(), ALPN_MESA).await.unwrap();
+    let mesa = MesaEnMemoria::default();
+    let tarea = tokio::spawn(latencia::atender_invitado(
+        conn,
+        mesa.clone(),
+        Arc::new(latencia::ahora_ms),
+        Duration::from_millis(50),
+    ));
+    esperar("diez ecos", || {
+        avisos(&mesa)
+            .iter()
+            .filter(|a| matches!(a, AvisoRed::Enlaces { .. }))
+            .count()
+            >= 10
+    })
+    .await;
+    let (desfase, filas) = ultimos_enlaces(&mesa).unwrap();
+    assert!((desfase - 5_000).abs() <= 200, "desfase {desfase}");
+    let mio = filas.iter().find(|f| f.jugador == IdJugador(0)).unwrap();
+    assert!(mio.directo && mio.rtt_ms < 50, "{mio:?}");
+    tarea.abort();
+}
+
+fn fantasmas(m: &MesaEnMemoria) -> Vec<(IdJugador, IdJugador, Option<mesa::IdCarta>, u16, u16)> {
+    avisos(m)
+        .into_iter()
+        .filter_map(|a| match a {
+            AvisoRed::Fantasma {
+                jugador,
+                tablero,
+                carta,
+                x,
+                y,
+            } => Some((jugador, tablero, carta, x, y)),
+            _ => None,
+        })
+        .collect()
+}
+
+#[tokio::test]
+async fn el_fantasma_de_un_invitado_llega_al_anfitrion_y_a_los_demas_con_su_nombre() {
+    let p = partida(2).await;
+    quedarse_todos(&p).await;
+    let conn = p.invitados[0]
+        .conexion
+        .as_ref()
+        .unwrap()
+        .conexion()
+        .unwrap();
+    // Dice ser el jugador 7 y se sale del tablero: el anfitrión lo corrige.
+    latencia::enviar(
+        &conn,
+        &Datagrama::Fantasma {
+            jugador: IdJugador(7),
+            tablero: IdJugador(1),
+            carta: None,
+            x: 60_000,
+            y: 2_000,
+            t: 1,
+        },
+    );
+    let esperado = (IdJugador(1), IdJugador(1), None, 10_000, 2_000);
+    esperar("el fantasma en el anfitrión", || {
+        fantasmas(&p.host.mesa).contains(&esperado)
+    })
+    .await;
+    esperar("el fantasma en el otro invitado", || {
+        fantasmas(&p.invitados[1].mesa).contains(&esperado)
+    })
+    .await;
+    // A quien lo mueve no se le devuelve.
+    tokio::time::sleep(Duration::from_millis(200)).await;
+    assert!(fantasmas(&p.invitados[0].mesa).is_empty());
+    // Uno repetido o más viejo se tira.
+    latencia::enviar(
+        &conn,
+        &Datagrama::Fantasma {
+            jugador: IdJugador(1),
+            tablero: IdJugador(1),
+            carta: None,
+            x: 1,
+            y: 1,
+            t: 1,
+        },
+    );
+    tokio::time::sleep(Duration::from_millis(200)).await;
+    assert_eq!(fantasmas(&p.host.mesa).len(), 1);
+}
+
+#[tokio::test]
+async fn al_espectador_solo_le_llega_el_movimiento_de_lo_que_ve() {
+    let p = partida(1).await;
+    quedarse_todos(&p).await;
+    let esp = Jugador {
+        mesa: MesaEnMemoria::default(),
+        ep: crear(SecretKey::generate(), Relay::Ninguno).await.unwrap(),
+        conexion: None,
+    };
+    unirse(
+        esp.ep.clone(),
+        Union {
+            codigo: p.codigo.clone(),
+            apodo: "Mira".into(),
+            rol: Rol::Espectador,
+            deck: None,
+        },
+        esp.mesa.clone(),
+    )
+    .await
+    .unwrap();
+    esperar("la vista del espectador", || {
+        esp.mesa.mirada(|v| v.is_some())
+    })
+    .await;
+    // Una carta de la mano del invitado (oculta) y otra del campo del anfitrión.
+    let oculta = p.invitados[0].mesa.con(|s| {
+        s.as_ref()
+            .unwrap()
+            .partida()
+            .zona(&RefZona::de(IdJugador(1), Zona::Mano))[0]
+    });
+    let visible = p.host.mesa.con(|s| {
+        let s = s.as_mut().unwrap();
+        let c = s.partida().zona(&RefZona::de(IdJugador(0), Zona::Mano))[0];
+        s.accion(
+            Accion::Mover {
+                cartas: vec![c],
+                a: Destino {
+                    zona: ZonaDestino::De(Zona::Campo),
+                    jugador: Some(IdJugador(0)),
+                    sitio: Sitio::EnCampo(Pos::nueva(5_000, 5_000)),
+                },
+                como: None,
+            },
+            None,
+        )
+        .unwrap();
+        c
+    });
+    todos_iguales(&p).await;
+    let conn = p.invitados[0]
+        .conexion
+        .as_ref()
+        .unwrap()
+        .conexion()
+        .unwrap();
+    let mover = |carta, t| {
+        latencia::enviar(
+            &conn,
+            &Datagrama::Fantasma {
+                jugador: IdJugador(1),
+                tablero: IdJugador(1),
+                carta: Some(carta),
+                x: 100,
+                y: 100,
+                t,
+            },
+        )
+    };
+    mover(oculta, 1);
+    mover(visible, 2);
+    esperar("el fantasma de la carta visible", || {
+        fantasmas(&esp.mesa).iter().any(|f| f.2 == Some(visible))
+    })
+    .await;
+    assert!(
+        !fantasmas(&esp.mesa).iter().any(|f| f.2 == Some(oculta)),
+        "al espectador no se le cuenta lo que no ve"
+    );
+    // Los jugadores sí ven el movimiento de la oculta (desde su lado, un dorso).
+    esperar("la oculta en el anfitrión", || {
+        fantasmas(&p.host.mesa).iter().any(|f| f.2 == Some(oculta))
+    })
+    .await;
 }

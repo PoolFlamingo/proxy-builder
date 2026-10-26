@@ -62,6 +62,8 @@ export type PreferenciasMesa = {
 	ofrecerBono: boolean;
 	/** La vida del fantasma en solitario. */
 	fantasma: boolean;
+	/** En red: mandar el cursor y la carta que se arrastra, y ver los de los demás. */
+	movimientoEnVivo: boolean;
 	/** Los contadores de jugador que se enseñan junto a la vida. */
 	trackers: string[];
 };
@@ -82,6 +84,7 @@ export const MESA_DE_FABRICA: PreferenciasMesa = {
 	clicSostenido: false,
 	ofrecerBono: true,
 	fantasma: true,
+	movimientoEnVivo: true,
 	trackers: [],
 };
 

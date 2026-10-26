@@ -18,7 +18,7 @@ import { useDados } from "./dados/cola";
  */
 let canal: Channel<MensajeMesa> | null = null;
 
-async function pedirVista() {
+export async function pedirVista() {
 	try {
 		useMesa.getState().recibirVista(await call("mesa_vista"));
 	} catch (e) {

@@ -80,12 +80,16 @@ export function BarraMesa({
 	const turno = useMesa((s) => s.general?.turno ?? null);
 	const pausada = useMesa((s) => s.general?.pausada ?? false);
 	const mulligan = useMesa((s) => s.general?.mulligan != null);
-	const [ahora, setAhora] = useState(Date.now());
+	// El turno cuenta desde la hora del anfitrión: aquí se corrige con el
+	// desfase que mide Rust (0 en solitario y en el propio anfitrión).
+	const desfase = useRed((s) => s.desfaseMs);
+	const [ahora, setAhora] = useState(Date.now() + desfase);
 	useEffect(() => {
+		setAhora(Date.now() + desfase);
 		if (pausada) return;
-		const i = window.setInterval(() => setAhora(Date.now()), 1000);
+		const i = window.setInterval(() => setAhora(Date.now() + desfase), 1000);
 		return () => window.clearInterval(i);
-	}, [pausada]);
+	}, [pausada, desfase]);
 	const abrir = usePantalla((s) => s.abrir);
 	// En red: el sparring no va, reiniciar y terminar son del anfitrión, y
 	// quien mira no toca nada de la partida.

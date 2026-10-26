@@ -4,12 +4,13 @@
 
 use std::sync::{Arc, Mutex};
 
+use mesa::{IdCarta, IdJugador};
 use serde::Serialize;
 use tauri::{Emitter, Manager};
 use ts_rs::TS;
 
 use super::mirada::Mirada;
-use super::protocolo::EnSala;
+use super::protocolo::{EnSala, Enlace};
 use crate::mesa::sesion::Sesion;
 use crate::state::AppState;
 
@@ -36,6 +37,30 @@ pub enum AvisoRed {
     /// El anfitrión no dejó entrar (versión distinta, código malo, llena…).
     Rechazada {
         motivo: String,
+    },
+    /// Cómo va el enlace de cada jugador con el anfitrión y cuánto va el reloj
+    /// de aquí por detrás del suyo (`desfase_ms`: se suma a `Date.now()` para
+    /// el temporizador del turno).
+    #[serde(rename_all = "camelCase")]
+    Enlaces {
+        desfase_ms: i32,
+        filas: Vec<Enlace>,
+    },
+    /// Alguien arrastra una carta (o mueve su cursor, sin carta) por un
+    /// tablero, en coordenadas 0–10.000. Nada de esto se guarda.
+    #[serde(rename_all = "camelCase")]
+    Fantasma {
+        jugador: IdJugador,
+        tablero: IdJugador,
+        carta: Option<IdCarta>,
+        x: u16,
+        y: u16,
+    },
+    /// Alguien señala una carta o a un jugador (un aro de 2 s).
+    Senal {
+        jugador: IdJugador,
+        carta: Option<IdCarta>,
+        a: Option<IdJugador>,
     },
 }
 

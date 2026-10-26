@@ -255,6 +255,8 @@ export interface Commands {
 	preset_delete: { args: { id: string }; result: null };
 	mesa_empezar: { args: { config: ConfigMesa }; result: number };
 	mesa_retomar: { args: Record<string, never>; result: number };
+	enlace_pendiente: { args: Record<string, never>; result: string | null };
+	enlace_invitacion: { args: { codigo: string }; result: string | null };
 	mesa_estado: { args: Record<string, never>; result: EstadoMesa };
 	mesa_suscribir: { args: { canal: Channel<MensajeMesa> }; result: null };
 	mesa_vista: { args: Record<string, never>; result: VistaMesa };
@@ -263,6 +265,7 @@ export interface Commands {
 	mesa_salir: { args: { guardar: boolean }; result: null };
 	mesa_info_carta: { args: { carta: IdCarta }; result: ReglasCarta };
 	mesa_origen_scryfall: { args: { scryfallId: string }; result: OrigenCarta };
+	mesa_originales: { args: { ids: string[]; idioma: string }; result: null };
 	mesa_sparring_carta: { args: { nombre: string }; result: OrigenCarta };
 	mesa_tapete_get: { args: { deck: string | null }; result: Tapete | null };
 	mesa_tapete_set: {
@@ -278,11 +281,18 @@ export interface Commands {
 	mesa_dados_imagen: { args: { ruta: string | null }; result: VistaAspectoDados };
 	red_identidad: { args: Record<string, never>; result: Identidad };
 	red_identidad_set: { args: { apodo: string; avatar: string | null }; result: Identidad };
+	red_identidad_exportar: { args: { ruta: string }; result: null };
+	red_identidad_importar: { args: { ruta: string }; result: Identidad };
 	red_estado: { args: Record<string, never>; result: EstadoRed };
 	red_crear: { args: { apodo: string; deck: string | null }; result: string };
 	red_unirse: { args: { peticion: PeticionUnion }; result: number };
 	red_empezar: { args: { config: ConfigMesa }; result: number };
 	red_salir: { args: Record<string, never>; result: null };
+	mesa_fantasma: {
+		args: { tablero: IdJugador; carta: IdCarta | null; x: number; y: number };
+		result: null;
+	};
+	mesa_senal: { args: { carta: IdCarta | null; a: IdJugador | null }; result: null };
 	salas_conectar: { args: { apodo: string }; result: EstadoSalas };
 	salas_estado: { args: Record<string, never>; result: EstadoSalas };
 	salas_playgroups: { args: Record<string, never>; result: Playgroup[] };
@@ -343,6 +353,7 @@ export interface Events {
 	"packs://progress": import("@/bindings/DescargaProgressEvent").DescargaProgressEvent;
 	"names://progress": import("@/bindings/NombresProgressEvent").NombresProgressEvent;
 	"update://progress": import("@/bindings/ActualizacionProgressEvent").ActualizacionProgressEvent;
+	"salas://enlace": string;
 	"mesa://progress": import("@/bindings/MesaProgressEvent").MesaProgressEvent;
 	"mesa://done": import("@/bindings/MesaDoneEvent").MesaDoneEvent;
 }

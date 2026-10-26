@@ -1,4 +1,16 @@
-import { Crown, Eye, EyeOff, Flag, Flame, Hash, Heart, Moon, Skull, Sun } from "lucide-react";
+import {
+	Crown,
+	Eye,
+	EyeOff,
+	Flag,
+	Flame,
+	Hash,
+	Heart,
+	Languages,
+	Moon,
+	Skull,
+	Sun,
+} from "lucide-react";
 import { useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import type { IdJugador } from "@/bindings/IdJugador";
@@ -16,10 +28,12 @@ import {
 } from "@/components/ui/context-menu";
 import { cn } from "@/lib/utils";
 import { useMesa } from "@/stores/mesa-store";
+import { useOriginales } from "@/stores/originales-store";
 import { useUi } from "@/stores/ui-store";
 import { hacer } from "./acciones";
 import { CONTADORES_JUGADOR } from "./colores";
 import * as op from "./operaciones";
+import { alternarOriginales } from "./originales";
 import { pedirNumero, usePantalla } from "./pantalla";
 
 /** Lo que se espera a que paren los clics de vida para mandarlos juntos, en ms. */
@@ -156,6 +170,7 @@ function MenuJugador({ jugador, children }: { jugador: IdJugador; children: Reac
 		useShallow((s) => Object.values(s.cartas).filter((c) => c.origen?.info.esComandante)),
 	);
 	const trackers = useUi((s) => s.mesa.trackers);
+	const originales = useOriginales((s) => s.modos[jugador] === true);
 	if (!j) return <>{children}</>;
 	const alternarTracker = (tipo: string) =>
 		useUi.getState().setMesa({
@@ -299,6 +314,11 @@ function MenuJugador({ jugador, children }: { jugador: IdJugador; children: Reac
 				<ContextMenuItem onSelect={() => hacer({ que: "revelarMano", si: !j.manoRevelada })}>
 					{j.manoRevelada ? <EyeOff /> : <Eye />}
 					{j.manoRevelada ? t("Ocultar la mano") : t("Revelar la mano")}
+				</ContextMenuItem>
+				<ContextMenuItem onSelect={() => alternarOriginales(jugador)}>
+					<Languages />
+					{originales ? "✓ " : ""}
+					{t("Cartas originales en mi idioma")}
 				</ContextMenuItem>
 				<ContextMenuItem onSelect={() => usePantalla.getState().abrir({ tipo: "terminar" })}>
 					<Flag />

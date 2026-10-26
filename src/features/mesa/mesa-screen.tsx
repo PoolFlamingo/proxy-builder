@@ -18,6 +18,7 @@ import { COMO } from "./dialogos/terminar";
 import { EntradaMesa } from "./entrada";
 import { ContadorFps, VigiaFps } from "./fps";
 import { Mulligan } from "./mulligan";
+import { useOriginalesAlDia } from "./originales";
 import { refrescarRed } from "./red/conexion-red";
 import { AvisoConexion, SelectorTablero } from "./red/estado-red";
 import { ReaccionPendiente } from "./sparring/reaccion";
@@ -60,6 +61,7 @@ function Mesa({ deckId }: { deckId: string | null }) {
 	const { t } = useLang();
 	const yo = useMesa((s) => s.yo ?? 0);
 	const papel = useRed((s) => s.papel);
+	useOriginalesAlDia();
 	const [preguntaSalir, setPreguntaSalir] = useState(false);
 	const [preguntaReiniciar, setPreguntaReiniciar] = useState(false);
 	const [preguntaEditar, setPreguntaEditar] = useState(false);

@@ -37,8 +37,8 @@ use super::codigo::mismo_secreto;
 use super::mesa::{AvisoRed, Mesa};
 use super::nodo::{ALPN_IMG, ALPN_MESA};
 use super::protocolo::{
-    escribir_del_host, leer_al_host, leer_hola, version_app, AlHost, DelHost, EnSala, NodoJugador,
-    Rol, PROTOCOLO,
+    datagrama_a_bytes, escribir_del_host, leer_al_host, leer_hola, version_app, AlHost, Datagrama,
+    DelHost, EnSala, Enlace, NodoJugador, Rol, PROTOCOLO,
 };
 
 /// Cada cuántos eventos va la huella de la partida.
@@ -64,6 +64,8 @@ struct Par {
     /// La última intención aplicada (las de antes se tiran).
     ultimo_id: u64,
     ritmo: VecDeque<Instant>,
+    /// Lo último que se midió de su conexión: RTT (ms) y si va directa.
+    enlace: Option<(u32, bool)>,
 }
 
 struct Sala {
@@ -133,6 +135,7 @@ impl Anfitrion {
                     conn: None,
                     ultimo_id: 0,
                     ritmo: VecDeque::new(),
+                    enlace: None,
                 })
             })
             .collect();
@@ -259,6 +262,7 @@ impl Anfitrion {
             conn: None,
             ultimo_id: 0,
             ritmo: VecDeque::new(),
+            enlace: None,
         });
         Ok(Admision {
             conexion,
@@ -282,6 +286,66 @@ impl Anfitrion {
             .iter()
             .find(|p| p.jugador == Some(jugador) && p.tx.is_some())
             .and_then(|p| p.conn.clone())
+    }
+
+    /// El jugador de esta conexión, si juega y la partida ya empezó.
+    pub fn jugador_de(&self, conexion: u64) -> Option<IdJugador> {
+        let s = cerrojo(&self.sala);
+        if !s.empezada {
+            return None;
+        }
+        s.pares
+            .iter()
+            .find(|p| p.conexion == conexion && p.rol == Rol::Jugador)
+            .and_then(|p| p.jugador)
+    }
+
+    /// Apunta lo que se midió de la conexión de alguien.
+    pub fn poner_enlace(&self, conexion: u64, rtt_ms: u32, directo: bool) {
+        let mut s = cerrojo(&self.sala);
+        if let Some(p) = s.pares.iter_mut().find(|p| p.conexion == conexion) {
+            p.enlace = Some((rtt_ms, directo));
+        }
+    }
+
+    /// El enlace de cada jugador conectado con el anfitrión (el suyo, el 0,
+    /// va primero con 0 ms).
+    pub fn enlaces(&self) -> Vec<Enlace> {
+        let s = cerrojo(&self.sala);
+        let mut v = vec![Enlace {
+            jugador: IdJugador(0),
+            rtt_ms: 0,
+            directo: true,
+        }];
+        v.extend(s.pares.iter().filter(|p| p.tx.is_some()).filter_map(|p| {
+            let (rtt_ms, directo) = p.enlace?;
+            Some(Enlace {
+                jugador: p.jugador.filter(|_| p.rol == Rol::Jugador)?,
+                rtt_ms,
+                directo,
+            })
+        }));
+        v
+    }
+
+    /// Reparte un datagrama a los conectados, salvo a `excepto`. A los
+    /// espectadores solo si `a_espectadores` (lo que no ven, no se les cuenta).
+    pub fn repartir(&self, d: &Datagrama, excepto: Option<IdJugador>, a_espectadores: bool) {
+        let Some(bytes) = datagrama_a_bytes(d) else {
+            return;
+        };
+        let bytes = bytes::Bytes::from(bytes);
+        let s = cerrojo(&self.sala);
+        for p in s.pares.iter() {
+            let Some(conn) = &p.conn else { continue };
+            if p.tx.is_none() || (p.jugador.is_some() && p.jugador == excepto) {
+                continue;
+            }
+            if p.rol == Rol::Espectador && !a_espectadores {
+                continue;
+            }
+            let _ = conn.send_datagram(bytes.clone());
+        }
     }
 
     /// Corta la conexión de un jugador (expulsarlo, o en las pruebas).
@@ -651,6 +715,14 @@ pub(crate) async fn atender_conexion<M: Mesa>(
         mesa.clone(),
         Some(anf.clone()),
     ));
+    // Latidos, enlaces y movimiento en vivo, por datagramas (E7, E10).
+    let latencia = tokio::spawn(super::latencia::atender_host(
+        conn.clone(),
+        anf.clone(),
+        mesa.clone(),
+        adm.conexion,
+        super::latencia::CADA_LATIDO,
+    ));
     // Lo que sale hacia él, en orden, por su propia tarea.
     let escritor = tokio::spawn(async move {
         while let Some(m) = entrada.recv().await {
@@ -763,4 +835,5 @@ pub(crate) async fn atender_conexion<M: Mesa>(
     drop(salida);
     escritor.abort();
     imagenes.abort();
+    latencia.abort();
 }

@@ -176,7 +176,23 @@ impl AlHost {
     }
 }
 
-/// Los datagramas: se tiran si llegan viejos (`t`).
+/// Cómo va el enlace de un jugador con el anfitrión.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct Enlace {
+    pub jugador: IdJugador,
+    /// Ida y vuelta, en milisegundos (0 en el propio anfitrión).
+    pub rtt_ms: u32,
+    /// Camino directo (`true`) o por el relé (`false`).
+    pub directo: bool,
+}
+
+/// Las coordenadas de un `Fantasma` van de 0 a este valor (como `Pos`).
+pub const COORD_MAX: u16 = 10_000;
+
+/// Los datagramas: se tiran si llegan viejos (`t`, el reloj de quien los
+/// manda: se compara solo con los anteriores del mismo jugador).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(
     tag = "tipo",
@@ -189,9 +205,12 @@ pub enum Datagrama {
     /// Host → jugador: el latido de vuelta, con la hora del host.
     Eco { t: u64, t_host: u64 },
     /// Por dónde va una carta que se arrastra (o el cursor, sin carta), en
-    /// coordenadas del tablero de su dueño (0–10.000).
+    /// coordenadas del `tablero` sobre el que está (0–10.000). `jugador` es
+    /// quien arrastra: lo pone el anfitrión según la conexión, nunca se fía
+    /// de lo que dice quien lo manda.
     Fantasma {
         jugador: IdJugador,
+        tablero: IdJugador,
         carta: Option<IdCarta>,
         x: u16,
         y: u16,
@@ -204,6 +223,8 @@ pub enum Datagrama {
         a: Option<IdJugador>,
         t: u64,
     },
+    /// Anfitrión → jugador, cada 2 s: cómo va el enlace de cada uno con él.
+    Enlaces { filas: Vec<Enlace>, t: u64 },
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -512,6 +533,7 @@ mod tests {
             Datagrama::Eco { t: 1, t_host: 2 },
             Datagrama::Fantasma {
                 jugador: IdJugador(1),
+                tablero: IdJugador(0),
                 carta: Some(IdCarta(3)),
                 x: 5_000,
                 y: 2_000,
@@ -521,6 +543,14 @@ mod tests {
                 jugador: IdJugador(0),
                 carta: None,
                 a: Some(IdJugador(1)),
+                t: 9,
+            },
+            Datagrama::Enlaces {
+                filas: vec![Enlace {
+                    jugador: IdJugador(1),
+                    rtt_ms: 23,
+                    directo: true,
+                }],
                 t: 9,
             },
         ] {
@@ -579,6 +609,7 @@ mod tests {
             Datagrama::Eco { t: 1, t_host: 2 },
             Datagrama::Fantasma {
                 jugador: IdJugador(1),
+                tablero: IdJugador(0),
                 carta: Some(IdCarta(3)),
                 x: 5_000,
                 y: 2_000,
@@ -589,6 +620,21 @@ mod tests {
                 carta: None,
                 a: Some(IdJugador(1)),
                 t: 9,
+            },
+            Datagrama::Enlaces {
+                filas: vec![
+                    Enlace {
+                        jugador: IdJugador(0),
+                        rtt_ms: 0,
+                        directo: true,
+                    },
+                    Enlace {
+                        jugador: IdJugador(1),
+                        rtt_ms: 42,
+                        directo: false,
+                    },
+                ],
+                t: 10,
             },
         ];
         let escribir = |n: &str, j: String| std::fs::write(dir.join(n), j + "\n").unwrap();
@@ -609,7 +655,7 @@ mod tests {
         assert!(!del.is_empty());
         let dg: Vec<Datagrama> =
             serde_json::from_str(include_str!("fixtures/datagramas.json")).unwrap();
-        assert_eq!(dg.len(), 4);
+        assert_eq!(dg.len(), 5);
     }
 
     #[tokio::test]

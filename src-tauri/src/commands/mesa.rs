@@ -528,6 +528,84 @@ pub async fn mesa_origen_scryfall(
     origen_de_scryfall(&state, scryfall_id).await
 }
 
+/// Cuántas cartas se aceptan en una petición de originales.
+const MAX_ORIGINALES: usize = 1000;
+
+/// **Originales en mi idioma** (E9): resuelve, por orden y a su ritmo, la
+/// impresión en `idioma` (o la inglesa) de cada carta de Scryfall de `ids`
+/// y avisa de cada una por `mesa://originales` (`OriginalMesa`). Vuelve en
+/// seguida; lo ya resuelto se reenvía sin repetir peticiones. Es solo de
+/// esta pantalla: no se manda a nadie.
+#[tauri::command]
+pub fn mesa_originales(app: AppHandle, ids: Vec<String>, idioma: String) -> AppResult<()> {
+    use crate::mesa::originales::{idioma_de_cartas, localizar, reclamar, terminar, Toca};
+    let idioma = idioma_de_cartas(&idioma)
+        .ok_or_else(|| AppError::new(ErrorCode::InvalidInput))?
+        .to_string();
+    let mut vistos = std::collections::BTreeSet::new();
+    let ids: Vec<String> = ids
+        .into_iter()
+        .filter(|i| imagenes::es_id_scryfall(i) && vistos.insert(i.clone()))
+        .take(MAX_ORIGINALES)
+        .collect();
+    tauri::async_runtime::spawn(async move {
+        let state = app.state::<AppState>();
+        for id in ids {
+            match reclamar(&id, &idioma) {
+                Toca::Esperar => continue,
+                Toca::Reenviar(o) => {
+                    let _ = app.emit("mesa://originales", o);
+                    continue;
+                }
+                Toca::Resolver => {}
+            }
+            let hecho = async {
+                let carta = match crate::scryfall::cache::leer(&state.db, &id)? {
+                    Some((c, _)) => c,
+                    None => {
+                        let c = state
+                            .scryfall
+                            .card(&id)
+                            .await?
+                            .ok_or_else(|| AppError::new(ErrorCode::NotFound))?;
+                        crate::scryfall::cache::guardar(&state.db, &c)?;
+                        c
+                    }
+                };
+                localizar(
+                    state.scryfall.as_ref(),
+                    &imagenes::carpeta(&state),
+                    &carta,
+                    &idioma,
+                )
+                .await
+            }
+            .await;
+            match hecho {
+                // Sin otra impresión: se queda como está (y se anota, para no
+                // preguntar otra vez).
+                Ok(caras) => {
+                    let caras = caras.unwrap_or_default();
+                    terminar(&id, &idioma, Some(caras.clone()));
+                    let _ = app.emit(
+                        "mesa://originales",
+                        crate::mesa::originales::OriginalMesa {
+                            scryfall_id: id,
+                            idioma: idioma.clone(),
+                            caras,
+                        },
+                    );
+                }
+                Err(e) => {
+                    tracing::warn!("originales de {id}: {e:?}");
+                    terminar(&id, &idioma, None);
+                }
+            }
+        }
+    });
+    Ok(())
+}
+
 /// La carta con la que reacciona el fantasma del sparring. Las cartas del
 /// fantasma van por nombre (`mesa/assets/sparring/cartas.json`): la primera
 /// vez se busca en Scryfall y su id se recuerda en `app_settings`

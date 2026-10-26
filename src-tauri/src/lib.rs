@@ -12,6 +12,7 @@ pub mod archidekt;
 pub mod biblioteca;
 pub mod commands;
 pub mod diseno;
+pub mod enlace;
 pub mod error;
 pub mod fuentes;
 pub mod jobs;
@@ -32,11 +33,28 @@ pub mod temas;
 pub fn run() {
     // `PB_PERFIL` (solo en debug): varias instancias con sus propios datos.
     let perfil = red::perfil::actual();
-    let constructor = tauri::Builder::default()
+    // Una sola instancia: un enlace `proxybuilder://` abre la primera y se
+    // lo pasa. Va la primera (lo pide el plugin) y no con `PB_PERFIL`, que
+    // existe justo para abrir varias a la vez.
+    #[cfg(desktop)]
+    let constructor = if perfil.is_none() {
+        tauri::Builder::default().plugin(tauri_plugin_single_instance::init(|app, argv, _| {
+            enlace::recibir(app, argv);
+        }))
+    } else {
+        tauri::Builder::default()
+    };
+    #[cfg(not(desktop))]
+    let constructor = tauri::Builder::default();
+    let constructor = constructor
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(actualizar::Actualizador::default());
+
+    // Los enlaces `proxybuilder://unirse/<código>` (`enlace.rs`).
+    #[cfg(desktop)]
+    let constructor = constructor.plugin(tauri_plugin_deep_link::init());
 
     // La ventana arranca oculta (sin el destello blanco del primer
     // fotograma) y la enseña la pantalla cuando ya está pintada: el estado
@@ -80,6 +98,24 @@ pub fn run() {
                 data: red::perfil::carpeta(&rutas.app_data_dir()?, p),
                 cache: red::perfil::carpeta(&rutas.app_cache_dir()?, p),
             };
+            #[cfg(desktop)]
+            {
+                use tauri_plugin_deep_link::DeepLinkExt;
+                let h = app.handle().clone();
+                app.deep_link().on_open_url(move |e| {
+                    enlace::recibir(&h, e.urls().iter().map(|u| u.as_str().to_owned()));
+                });
+                // El que abrió la app, si la abrió un enlace.
+                if let Ok(Some(urls)) = app.deep_link().get_current() {
+                    enlace::recibir(app.handle(), urls.iter().map(|u| u.as_str().to_owned()));
+                }
+                // AppImage y las pruebas (`pnpm tauri dev`) no pasan por un
+                // instalador que registre el esquema: se registra aquí.
+                #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
+                if let Err(e) = app.deep_link().register_all() {
+                    tracing::warn!("no se pudo registrar proxybuilder://: {e}");
+                }
+            }
             registro::iniciar(&red::perfil::carpeta(&rutas.app_log_dir()?, p));
             crear_ventana(app, p, &paths.cache)?;
             let estado = state::AppState::open(paths).map_err(|e| e.to_string())?;
@@ -223,6 +259,9 @@ pub fn run() {
             commands::mesa::mesa_salir,
             commands::mesa::mesa_info_carta,
             commands::mesa::mesa_origen_scryfall,
+            commands::mesa::mesa_originales,
+            enlace::enlace_pendiente,
+            enlace::enlace_invitacion,
             commands::mesa::mesa_sparring_carta,
             commands::mesa::mesa_tapete_get,
             commands::mesa::mesa_tapete_set,
@@ -237,11 +276,15 @@ pub fn run() {
             commands::mesa::mesa_lista_borrar,
             commands::red::red_identidad,
             commands::red::red_identidad_set,
+            commands::red::red_identidad_exportar,
+            commands::red::red_identidad_importar,
             commands::red::red_estado,
             commands::red::red_crear,
             commands::red::red_unirse,
             commands::red::red_empezar,
             commands::red::red_salir,
+            commands::red::mesa_fantasma,
+            commands::red::mesa_senal,
             commands::salas::salas_conectar,
             commands::salas::salas_estado,
             commands::salas::salas_playgroups,

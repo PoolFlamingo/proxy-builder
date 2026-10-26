@@ -181,6 +181,18 @@ le falta una cadena le sale la inglesa.
   1.4.1 en `server/docs/despliegue.md`). Mientras no haya dominio,
   `PRODUCCION` (`red/servidor/mod.rs`) y `RELE_PROPIO` (`red/nodo.rs`) son
   `None`; en debug, `PB_SERVIDOR` y `PB_RELAY` los cambian.
+  **Tiempo real y enlaces** (Fase E cerrada): `red/latencia.rs` manda por
+  datagramas latido/eco (RTT y desfase de reloj con el host, que cuenta el
+  temporizador del turno), la tabla de enlaces (`AvisoRed::Enlaces`) y los
+  fantasmas/aros (`mesa_fantasma`, `mesa_senal`; el host pone el remitente,
+  60/s por jugador, al espectador solo lo que ve). «Originales en mi idioma»
+  es solo de pantalla (`mesa/originales.rs`, `mesa_originales`). Con
+  `RELE_PROPIO` puesto se usan el propio **y** los de n0 (`Relay::PropioYN0`).
+  Identidad exportable/importable (`red_identidad_exportar/importar`, `Busy`
+  con partida o sala). Enlaces `proxybuilder://unirse/<código>` en
+  `enlace.rs` (`tauri-plugin-deep-link` + single-instance, este solo sin
+  `PB_PERFIL`; `rust-ini` fijado a 0.21.1 en `Cargo.lock`); el enlace solo
+  rellena «Unirse con un código», unirse lo pulsa la persona.
 - Rust: `commands/{cards,decklist,export,identify,layout,library,stats}.rs`,
   `package.rs` (.pbdeck), `render.rs` + `protocol.rs` (miniaturas),
   `ocr.rs` (OCR opcional de la carta entera con `ocrs`, a la resolución

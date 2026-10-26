@@ -1,5 +1,16 @@
-import { Check, Copy, Crown, Eye, LogIn, LogOut, MoreHorizontal, Play, Shield } from "lucide-react";
-import { useState } from "react";
+import {
+	Check,
+	Copy,
+	Crown,
+	Eye,
+	Link2,
+	LogIn,
+	LogOut,
+	MoreHorizontal,
+	Play,
+	Shield,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import type { Formato } from "@/bindings/Formato";
 import type { Playgroup } from "@/bindings/Playgroup";
 import { CampoNumero, Fila, FilaInterruptor, Selector } from "@/components/campos";
@@ -13,6 +24,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { call } from "@/lib/ipc";
 import { useSalas } from "@/stores/salas-store";
 import type { Preparacion } from "../mesa/red/red-dialog";
 import {
@@ -27,25 +39,41 @@ import {
 /** Un código de invitación con su botón de copiar. */
 export function CodigoInvitacion({ codigo }: { codigo: string }) {
 	const { t } = useLang();
-	const [copiado, setCopiado] = useState(false);
+	const [copiado, setCopiado] = useState<"codigo" | "enlace" | null>(null);
+	const [enlace, setEnlace] = useState<string | null>(null);
 	const bonito = `${codigo.slice(0, 5)}-${codigo.slice(5)}`;
+	// El enlace lo escribe Rust (su formato vive en `enlace.rs`); se pide al
+	// mostrar el código para que copiarlo sea un clic sin esperas.
+	useEffect(() => {
+		let vivo = true;
+		setEnlace(null);
+		call("enlace_invitacion", { codigo })
+			.then((e) => vivo && setEnlace(e))
+			.catch(() => {});
+		return () => {
+			vivo = false;
+		};
+	}, [codigo]);
+	const copiar = (texto: string, que: "codigo" | "enlace") => {
+		void navigator.clipboard.writeText(texto);
+		setCopiado(que);
+		window.setTimeout(() => setCopiado(null), 1500);
+	};
 	return (
 		<div className="flex items-center gap-1.5">
 			<code className="rounded-md border bg-muted/40 px-2 py-1 font-mono text-sm tracking-widest select-text">
 				{bonito}
 			</code>
-			<Button
-				size="sm"
-				variant="outline"
-				onClick={() => {
-					void navigator.clipboard.writeText(bonito);
-					setCopiado(true);
-					window.setTimeout(() => setCopiado(false), 1500);
-				}}
-			>
-				{copiado ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-				{copiado ? t("Copiado") : t("Copiar")}
+			<Button size="sm" variant="outline" onClick={() => copiar(bonito, "codigo")}>
+				{copiado === "codigo" ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+				{copiado === "codigo" ? t("Copiado") : t("Copiar")}
 			</Button>
+			{enlace && (
+				<Button size="sm" variant="outline" onClick={() => copiar(enlace, "enlace")}>
+					{copiado === "enlace" ? <Check className="size-3.5" /> : <Link2 className="size-3.5" />}
+					{copiado === "enlace" ? t("Copiado") : t("Copiar enlace")}
+				</Button>
+			)}
 		</div>
 	);
 }

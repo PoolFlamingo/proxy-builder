@@ -763,5 +763,20 @@
 	"La partida empezó sin ti: no habías elegido deck.": "Партия началась без вас: вы не выбрали колоду.",
 	"Demasiadas acciones seguidas: espera un momento.": "Слишком много действий подряд: подождите немного.",
 	"Estás mirando: los espectadores no pueden jugar.": "Вы наблюдаете: зрители не могут играть.",
-	"La partida aún no ha empezado.": "Партия ещё не началась."
+	"La partida aún no ha empezado.": "Партия ещё не началась.",
+	"En red, ver cómo mueven los demás y mostrarles mi cursor": "В сети видеть, как двигаются остальные, и показывать им мой курсор",
+	"En red, Alt + clic en una carta o en un jugador avisa a todos con un aro.": "В сетевой игре Alt + щелчок по карте или игроку привлекает внимание всех кольцом.",
+	"Cartas originales en mi idioma": "Оригинальные карты на моём языке",
+	"Identidad en red": "Сетевая личность",
+	"Tu identidad es lo que te reconoce en las partidas y los playgroups. Guárdala para jugar con ella desde otro equipo o para recuperarla. Quien tenga el fichero puede jugar como tú: no lo compartas.": "Ваша личность — то, по чему вас узнают в партиях и плейгруппах. Сохраните её, чтобы играть с другого компьютера или восстановить. Любой, у кого есть этот файл, сможет играть от вашего имени: не передавайте его.",
+	"Exportar identidad…": "Экспортировать личность…",
+	"Importar identidad…": "Импортировать личность…",
+	"Identidad exportada.": "Личность экспортирована.",
+	"¿Cambiar la identidad?": "Сменить личность?",
+	"Este equipo pasará a ser el de la identidad del fichero. La de ahora se queda como copia en la carpeta de datos de la app.": "Этот компьютер примет личность из файла. Текущая останется копией в папке данных приложения.",
+	"Identidad cambiada.": "Личность сменена.",
+	"Sal de la partida o de la sala antes de cambiar la identidad.": "Выйдите из партии или комнаты, прежде чем менять личность.",
+	"Ese fichero no es una identidad de Proxy Builder.": "Этот файл не является личностью Proxy Builder.",
+	"Copiar enlace": "Скопировать ссылку",
+	"Hay una partida en marcha: sal de ella para usar el enlace.": "Идёт партия: выйди из неё, чтобы использовать ссылку."
 }

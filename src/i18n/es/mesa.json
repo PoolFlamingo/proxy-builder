@@ -668,5 +668,20 @@
 	"La partida empezó sin ti: no habías elegido deck.": "La partida empezó sin ti: no habías elegido deck.",
 	"Demasiadas acciones seguidas: espera un momento.": "Demasiadas acciones seguidas: espera un momento.",
 	"Estás mirando: los espectadores no pueden jugar.": "Estás mirando: los espectadores no pueden jugar.",
-	"La partida aún no ha empezado.": "La partida aún no ha empezado."
+	"La partida aún no ha empezado.": "La partida aún no ha empezado.",
+	"En red, ver cómo mueven los demás y mostrarles mi cursor": "En red, ver cómo mueven los demás y mostrarles mi cursor",
+	"En red, Alt + clic en una carta o en un jugador avisa a todos con un aro.": "En red, Alt + clic en una carta o en un jugador avisa a todos con un aro.",
+	"Cartas originales en mi idioma": "Cartas originales en mi idioma",
+	"Identidad en red": "Identidad en red",
+	"Tu identidad es lo que te reconoce en las partidas y los playgroups. Guárdala para jugar con ella desde otro equipo o para recuperarla. Quien tenga el fichero puede jugar como tú: no lo compartas.": "Tu identidad es lo que te reconoce en las partidas y los playgroups. Guárdala para jugar con ella desde otro equipo o para recuperarla. Quien tenga el fichero puede jugar como tú: no lo compartas.",
+	"Exportar identidad…": "Exportar identidad…",
+	"Importar identidad…": "Importar identidad…",
+	"Identidad exportada.": "Identidad exportada.",
+	"¿Cambiar la identidad?": "¿Cambiar la identidad?",
+	"Este equipo pasará a ser el de la identidad del fichero. La de ahora se queda como copia en la carpeta de datos de la app.": "Este equipo pasará a ser el de la identidad del fichero. La de ahora se queda como copia en la carpeta de datos de la app.",
+	"Identidad cambiada.": "Identidad cambiada.",
+	"Sal de la partida o de la sala antes de cambiar la identidad.": "Sal de la partida o de la sala antes de cambiar la identidad.",
+	"Ese fichero no es una identidad de Proxy Builder.": "Ese fichero no es una identidad de Proxy Builder.",
+	"Copiar enlace": "Copiar enlace",
+	"Hay una partida en marcha: sal de ella para usar el enlace.": "Hay una partida en marcha: sal de ella para usar el enlace."
 }

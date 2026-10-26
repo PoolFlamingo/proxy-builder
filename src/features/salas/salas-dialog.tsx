@@ -192,6 +192,13 @@ function UnirseConCodigo({ apodo }: { apodo: string }) {
 	const [como, setComo] = useState<ComoEnSala>("jugador");
 	const [ocupado, setOcupado] = useState(false);
 	const sala = useSalas((s) => s.sala);
+	const entrante = useSalas((s) => s.enlaceEntrante);
+	// El código de un enlace de invitación entra aquí; unirse lo decide la persona.
+	useEffect(() => {
+		if (!entrante) return;
+		setCodigo(`${entrante.slice(0, 5)}-${entrante.slice(5)}`);
+		useSalas.getState().poner({ enlaceEntrante: null });
+	}, [entrante]);
 	const usar = async () => {
 		setOcupado(true);
 		if (await usarCodigo(codigo.trim(), como, apodo)) setCodigo("");

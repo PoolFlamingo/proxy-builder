@@ -763,5 +763,20 @@
 	"La partida empezó sin ti: no habías elegido deck.": "Gra zaczęła się bez ciebie: nie wybrałeś talii.",
 	"Demasiadas acciones seguidas: espera un momento.": "Za dużo akcji naraz: poczekaj chwilę.",
 	"Estás mirando: los espectadores no pueden jugar.": "Oglądasz: widzowie nie mogą grać.",
-	"La partida aún no ha empezado.": "Gra jeszcze się nie zaczęła."
+	"La partida aún no ha empezado.": "Gra jeszcze się nie zaczęła.",
+	"En red, ver cómo mueven los demás y mostrarles mi cursor": "Online: widzieć, jak poruszają się inni, i pokazywać im mój kursor",
+	"En red, Alt + clic en una carta o en un jugador avisa a todos con un aro.": "Online Alt + kliknięcie karty lub gracza zwraca uwagę wszystkich pierścieniem.",
+	"Cartas originales en mi idioma": "Oryginalne karty w moim języku",
+	"Identidad en red": "Tożsamość online",
+	"Tu identidad es lo que te reconoce en las partidas y los playgroups. Guárdala para jugar con ella desde otro equipo o para recuperarla. Quien tenga el fichero puede jugar como tú: no lo compartas.": "Twoja tożsamość to to, po czym rozpoznają cię w partiach i playgroupach. Zapisz ją, aby grać z niej na innym komputerze lub ją odzyskać. Kto ma plik, może grać jako ty: nie udostępniaj go.",
+	"Exportar identidad…": "Eksportuj tożsamość…",
+	"Importar identidad…": "Importuj tożsamość…",
+	"Identidad exportada.": "Tożsamość wyeksportowana.",
+	"¿Cambiar la identidad?": "Zmienić tożsamość?",
+	"Este equipo pasará a ser el de la identidad del fichero. La de ahora se queda como copia en la carpeta de datos de la app.": "Ten komputer przejmie tożsamość z pliku. Obecna zostanie jako kopia w folderze danych aplikacji.",
+	"Identidad cambiada.": "Tożsamość zmieniona.",
+	"Sal de la partida o de la sala antes de cambiar la identidad.": "Wyjdź z partii lub pokoju, zanim zmienisz tożsamość.",
+	"Ese fichero no es una identidad de Proxy Builder.": "Ten plik nie jest tożsamością Proxy Buildera.",
+	"Copiar enlace": "Kopiuj link",
+	"Hay una partida en marcha: sal de ella para usar el enlace.": "Trwa rozgrywka: wyjdź z niej, aby użyć linku."
 }

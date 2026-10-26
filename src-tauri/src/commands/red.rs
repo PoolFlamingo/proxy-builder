@@ -5,6 +5,7 @@ use std::time::Duration;
 
 use mesa::formato::Formato;
 use mesa::sparring::Intensidad;
+use mesa::{IdCarta, IdJugador};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, State};
 use ts_rs::TS;
@@ -25,7 +26,7 @@ use crate::state::AppState;
 /// La identidad con la que se juega en red (clave pública, apodo, avatar).
 #[tauri::command]
 pub fn red_identidad(state: State<'_, AppState>) -> AppResult<Identidad> {
-    identidad::leer(&state.db, state.red.clave())
+    identidad::leer(&state.db, &state.red.clave())
 }
 
 /// Cambia el apodo y el avatar (una huella de blob o ninguno).
@@ -36,7 +37,29 @@ pub fn red_identidad_set(
     avatar: Option<String>,
 ) -> AppResult<Identidad> {
     identidad::guardar(&state.db, &apodo, avatar.as_deref())?;
-    identidad::leer(&state.db, state.red.clave())
+    identidad::leer(&state.db, &state.red.clave())
+}
+
+/// Guarda la identidad de la instalación en `ruta` (un fichero que permite
+/// jugar como esta instalación: la pantalla avisa de que no se comparta).
+#[tauri::command]
+pub fn red_identidad_exportar(state: State<'_, AppState>, ruta: String) -> AppResult<()> {
+    identidad::exportar(&state.red.clave(), std::path::Path::new(&ruta))
+}
+
+/// Cambia la identidad de esta instalación por la de un fichero exportado.
+/// Con una partida, una sala o un salón abiertos no se puede (`Busy`).
+#[tauri::command]
+pub async fn red_identidad_importar(
+    state: State<'_, AppState>,
+    ruta: String,
+) -> AppResult<Identidad> {
+    if state.red.ocupada() || state.hay_partida() || state.hay_mirada() {
+        return Err(AppError::new(ErrorCode::Busy).with("motivo", "partida"));
+    }
+    let nueva = identidad::importar(&state.paths.data, std::path::Path::new(&ruta))?;
+    state.red.cambiar_clave(nueva).await;
+    identidad::leer(&state.db, &state.red.clave())
 }
 
 /// Qué hace esta app en la partida en red.
@@ -284,6 +307,27 @@ pub fn red_empezar(
         terminar(&app, job_id, r);
     });
     Ok(job_id)
+}
+
+/// Movimiento en vivo (E7): la pantalla arrastra una carta (o mueve su
+/// cursor, sin carta) por el tablero de `tablero`, en coordenadas 0–10.000.
+/// Va por datagrama al anfitrión, que lo reparte; sin partida en red o
+/// siendo espectador, no hace nada. Nada de esto se guarda.
+#[tauri::command]
+pub fn mesa_fantasma(
+    state: State<'_, AppState>,
+    tablero: IdJugador,
+    carta: Option<IdCarta>,
+    x: u16,
+    y: u16,
+) {
+    crate::red::latencia::mover_fantasma(&state, tablero, carta, x, y);
+}
+
+/// Señala una carta o a un jugador: un aro de 2 s en todas las pantallas.
+#[tauri::command]
+pub fn mesa_senal(state: State<'_, AppState>, carta: Option<IdCarta>, a: Option<IdJugador>) {
+    crate::red::latencia::senalar(&state, carta, a);
 }
 
 /// Sale de la partida en red (en la sala o empezada): el anfitrión la

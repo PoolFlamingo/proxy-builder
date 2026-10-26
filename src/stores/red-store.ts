@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { Enlace } from "@/bindings/Enlace";
 import type { EnSala } from "@/bindings/EnSala";
 import type { PapelRed } from "@/bindings/PapelRed";
 
@@ -19,6 +20,13 @@ type RedStore = {
 	conexion: EstadoConexion;
 	/** El intento de reconexión en curso (1–5). */
 	intento: number;
+	/**
+	 * Lo que hay que sumar a la hora de aquí (`Date.now()`) para tener la del
+	 * anfitrión (E10): el temporizador del turno cuenta desde la suya.
+	 */
+	desfaseMs: number;
+	/** Cómo va el enlace de cada jugador con el anfitrión (RTT y camino). */
+	enlaces: Enlace[];
 	poner: (cambios: Partial<Omit<RedStore, "poner" | "olvidar">>) => void;
 	olvidar: () => void;
 };
@@ -30,6 +38,8 @@ const VACIA = {
 	empezada: false,
 	conexion: "conectada" as const,
 	intento: 0,
+	desfaseMs: 0,
+	enlaces: [] as Enlace[],
 };
 
 export const useRed = create<RedStore>((set) => ({

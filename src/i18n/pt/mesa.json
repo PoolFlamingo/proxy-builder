@@ -740,5 +740,20 @@
 	"La partida empezó sin ti: no habías elegido deck.": "A partida começou sem você: você não tinha escolhido um deck.",
 	"Demasiadas acciones seguidas: espera un momento.": "Ações demais seguidas: espere um momento.",
 	"Estás mirando: los espectadores no pueden jugar.": "Você está assistindo: os espectadores não podem jogar.",
-	"La partida aún no ha empezado.": "A partida ainda não começou."
+	"La partida aún no ha empezado.": "A partida ainda não começou.",
+	"En red, ver cómo mueven los demás y mostrarles mi cursor": "Online, ver como os outros movem as cartas e mostrar o meu cursor",
+	"En red, Alt + clic en una carta o en un jugador avisa a todos con un aro.": "Online, Alt + clique numa carta ou num jogador avisa todos com um anel.",
+	"Cartas originales en mi idioma": "Cartas originais no meu idioma",
+	"Identidad en red": "Identidade online",
+	"Tu identidad es lo que te reconoce en las partidas y los playgroups. Guárdala para jugar con ella desde otro equipo o para recuperarla. Quien tenga el fichero puede jugar como tú: no lo compartas.": "A tua identidade é o que te reconhece nas partidas e nos playgroups. Guarda-a para jogares com ela noutro computador ou para a recuperares. Quem tiver o ficheiro pode jogar como tu: não o partilhes.",
+	"Exportar identidad…": "Exportar identidade…",
+	"Importar identidad…": "Importar identidade…",
+	"Identidad exportada.": "Identidade exportada.",
+	"¿Cambiar la identidad?": "Mudar de identidade?",
+	"Este equipo pasará a ser el de la identidad del fichero. La de ahora se queda como copia en la carpeta de datos de la app.": "Este computador passará a ter a identidade do ficheiro. A atual fica como cópia na pasta de dados da app.",
+	"Identidad cambiada.": "Identidade alterada.",
+	"Sal de la partida o de la sala antes de cambiar la identidad.": "Sai da partida ou da sala antes de mudar de identidade.",
+	"Ese fichero no es una identidad de Proxy Builder.": "Esse ficheiro não é uma identidade do Proxy Builder.",
+	"Copiar enlace": "Copiar link",
+	"Hay una partida en marcha: sal de ella para usar el enlace.": "Há uma partida em andamento: saia dela para usar o link."
 }

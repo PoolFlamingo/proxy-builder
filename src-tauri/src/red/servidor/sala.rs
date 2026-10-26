@@ -37,6 +37,7 @@ use crate::mesa::sesion::{ConfigMesa, JugadorMesa, RedSesion};
 use crate::red::anfitrion::{atender_conexion, empezar_partida, Anfitrion};
 use crate::red::codigo::Codigo;
 use crate::red::invitado::{unirse, Union};
+use crate::red::latencia::medir;
 use crate::red::mesa::{AvisoRed, Mesa, MesaDeApp};
 use crate::red::nodo::{ALPN_IMG, ALPN_MESA, ALPN_PING};
 use crate::red::protocolo::Rol;
@@ -418,16 +419,6 @@ async fn aceptar(app: AppHandle, ep: Endpoint) {
             }
         });
     }
-}
-
-/// Lo que se mide de una conexión: el RTT y si el camino es directo.
-fn medir(conn: &Connection) -> Option<(u32, bool)> {
-    let caminos = conn.paths();
-    let p = caminos.iter().find(|p| p.is_selected())?;
-    Some((
-        u32::try_from(p.rtt().as_millis()).unwrap_or(u32::MAX),
-        p.is_ip(),
-    ))
 }
 
 async fn malla(app: AppHandle, salon: std::sync::Weak<Salon>) {

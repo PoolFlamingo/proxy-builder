@@ -92,7 +92,7 @@ pub async fn salas_conectar(
             let apodo = if apodo.is_empty() { "?" } else { apodo };
             let c = Cliente::arrancar(
                 url,
-                state.red.clave().clone(),
+                state.red.clave(),
                 apodo.chars().take(32).collect(),
                 Plataforma::Escritorio,
                 AvisosApp(app.clone()),

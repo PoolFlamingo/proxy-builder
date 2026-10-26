@@ -9,6 +9,7 @@
 //! - `codigo.rs`: el código directo (dirección + secreto) para unirse.
 //! - `mesa.rs`: la sesión de la app y los avisos a la pantalla, tras un trait.
 //! - `imagenes.rs`: las imágenes propias de cada jugador.
+//! - `latencia.rs`: RTT, camino y reloj con el anfitrión; el movimiento en vivo.
 //!
 //! Toda entrada que llega de otro equipo es **no confiable**: se valida
 //! antes de tocar nada (tamaños, tipos, permisos en `mesa::resolver`).
@@ -19,6 +20,7 @@ pub mod colores;
 pub mod identidad;
 pub mod imagenes;
 pub mod invitado;
+pub mod latencia;
 pub mod mesa;
 pub mod mirada;
 pub mod nodo;
@@ -64,7 +66,7 @@ impl Sala {
 
 /// La red de la app: la clave y, mientras hace falta, el nodo levantado.
 pub struct Red {
-    clave: SecretKey,
+    clave: std::sync::RwLock<SecretKey>,
     nodo: tokio::sync::Mutex<Option<Endpoint>>,
     sala: std::sync::Mutex<Option<Sala>>,
     /// El cliente del servidor de salas (Fase F), si se ha conectado.
@@ -76,7 +78,7 @@ pub struct Red {
 impl Red {
     pub fn nueva(clave: SecretKey) -> Self {
         Red {
-            clave,
+            clave: std::sync::RwLock::new(clave),
             nodo: tokio::sync::Mutex::new(None),
             sala: std::sync::Mutex::new(None),
             servidor: std::sync::Mutex::new(None),
@@ -119,8 +121,28 @@ impl Red {
         self.con_sala(Option::take)
     }
 
-    pub fn clave(&self) -> &SecretKey {
-        &self.clave
+    /// La clave de la instalación (una copia: puede cambiar al importar otra identidad).
+    pub fn clave(&self) -> SecretKey {
+        match self.clave.read() {
+            Ok(g) => g.clone(),
+            Err(e) => e.into_inner().clone(),
+        }
+    }
+
+    /// Cambia la identidad: cierra el nodo y el cliente del servidor (que se
+    /// levantarán de nuevo con la clave nueva cuando haga falta).
+    pub async fn cambiar_clave(&self, nueva: SecretKey) {
+        self.parar().await;
+        self.con_servidor(|c| *c = None);
+        match self.clave.write() {
+            Ok(mut g) => *g = nueva,
+            Err(e) => *e.into_inner() = nueva,
+        }
+    }
+
+    /// Si hay una partida en red o una sala del servidor abiertas.
+    pub fn ocupada(&self) -> bool {
+        self.con_sala(|s| s.is_some()) || self.con_salon(|s| s.is_some())
     }
 
     /// El nodo, levantándolo si aún no lo está.
@@ -129,7 +151,7 @@ impl Red {
         if let Some(ep) = n.as_ref().filter(|e| !e.is_closed()) {
             return Ok(ep.clone());
         }
-        let ep = nodo::crear(self.clave.clone(), nodo::relay_de_entorno()).await?;
+        let ep = nodo::crear(self.clave(), nodo::relay_de_entorno()).await?;
         *n = Some(ep.clone());
         Ok(ep)
     }
@@ -139,5 +161,31 @@ impl Red {
         if let Some(ep) = self.nodo.lock().await.take() {
             ep.close().await;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn al_cambiar_la_identidad_el_nodo_se_levanta_con_la_clave_nueva() {
+        let a = SecretKey::generate();
+        let b = SecretKey::generate();
+        let red = Red::nueva(a.clone());
+        assert!(!red.ocupada());
+        // El nodo se levanta con la clave de ahora (sin relé: solo local).
+        let ep = nodo::crear(red.clave(), nodo::Relay::Ninguno)
+            .await
+            .unwrap();
+        assert_eq!(ep.id(), a.public());
+        ep.close().await;
+        red.cambiar_clave(b.clone()).await;
+        assert_eq!(red.clave().public(), b.public());
+        let ep = nodo::crear(red.clave(), nodo::Relay::Ninguno)
+            .await
+            .unwrap();
+        assert_eq!(ep.id(), b.public());
+        ep.close().await;
     }
 }

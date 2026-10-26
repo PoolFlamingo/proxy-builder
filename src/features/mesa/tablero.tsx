@@ -15,6 +15,8 @@ import { atajoDe, teclaDe } from "./atajos";
 import { type AlPulsar, CartaMesa } from "./carta-mesa";
 import { COLORES } from "./colores";
 import { abanico, type Disposicion, disponer, posAPx, pxAPos, type Rect } from "./disposicion";
+import * as vivo from "./en-vivo/emitir";
+import { FantasmasVivos } from "./en-vivo/fantasmas";
 import { caraVisible, DorsoGenerico, ImagenCarta } from "./imagen-carta";
 import { MenuBiblioteca, MenuCampo, MenuZona } from "./menus/menu-zonas";
 import * as op from "./operaciones";
@@ -73,6 +75,11 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 			e.stopPropagation();
 			const m = useMesa.getState();
 			const pantalla = usePantalla.getState();
+			// Alt + clic: un aro de aviso sobre la carta, en todas las pantallas (en red).
+			if (e.altKey) {
+				vivo.senalar(c.id, null);
+				return;
+			}
 			// Elegir objetivo (adjuntar, flecha).
 			if (pantalla.modo) {
 				const md = pantalla.modo;
@@ -123,6 +130,8 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 				if (!empezado && !pasaUmbral(p.x - p0.x, p.y - p0.y)) return;
 				empezado = true;
 				window.clearTimeout(sostenido);
+				// En red, los demás ven la carta moverse (20 por segundo).
+				vivo.arrastre(tableroDe(useMesa.getState()), c.id, pxAPos(dispRef.current.campo, p.x, p.y));
 				usePantalla.getState().setArrastre({
 					ids,
 					desde: enCampo
@@ -142,7 +151,10 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 				window.removeEventListener("pointerup", suelta);
 				usePantalla.getState().setArrastre(null);
 				if (!empezado) return;
-				soltar(ids, punto(ev), p0, enCampo, dispRef.current);
+				// La carta deja de verse en vuelo; queda el cursor.
+				const f = punto(ev);
+				vivo.cursor(tableroDe(useMesa.getState()), pxAPos(dispRef.current.campo, f.x, f.y), true);
+				soltar(ids, f, p0, enCampo, dispRef.current);
 			};
 			window.addEventListener("pointermove", mueve);
 			window.addEventListener("pointerup", suelta);
@@ -201,6 +213,23 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 		window.addEventListener("pointerup", suelta);
 	};
 
+	// ── El cursor, para que los demás lo vean (en red) ──
+	useEffect(() => {
+		const el = caja.current;
+		if (!el) return;
+		const alMover = (e: PointerEvent) => {
+			if (usePantalla.getState().arrastre) return;
+			const r = el.getBoundingClientRect();
+			const campo = dispRef.current.campo;
+			vivo.cursor(
+				tableroDe(useMesa.getState()),
+				pxAPos(campo, e.clientX - r.left, e.clientY - r.top),
+			);
+		};
+		el.addEventListener("pointermove", alMover);
+		return () => el.removeEventListener("pointermove", alMover);
+	}, []);
+
 	// ── Atajos de teclado ──
 	useEffect(() => {
 		const alTeclear = (e: KeyboardEvent) => {
@@ -256,6 +285,7 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 			<Mano disp={disp} alPulsar={alPulsar} alDobleClic={alDobleClic} />
 			<Zonas disp={disp} alPulsar={alPulsar} />
 			<Fantasma disp={disp} />
+			<FantasmasVivos disp={disp} />
 			<Arrastrado disp={disp} />
 			{recuadro && (
 				<div

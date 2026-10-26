@@ -6,6 +6,7 @@ import { MODO_RENDIMIENTO } from "@/features/mesa/fps";
 import { INTENSIDADES } from "@/features/mesa/sparring/textos";
 import { type NivelDados, useUi } from "@/stores/ui-store";
 import { AjustesDados } from "./aspecto-dados";
+import { IdentidadRed } from "./identidad-red";
 
 /**
  * **Ajustes > Mesa** (`capturas/pablo/19.jpg`): jugar, tablero, dados y
@@ -34,6 +35,11 @@ export function AjustesMesa() {
 				etiqueta={t("Ver la vida del fantasma en solitario")}
 				valor={m.fantasma}
 				onChange={(v) => set({ fantasma: v })}
+			/>
+			<FilaInterruptor
+				etiqueta={t("En red, ver cómo mueven los demás y mostrarles mi cursor")}
+				valor={m.movimientoEnVivo}
+				onChange={(v) => set({ movimientoEnVivo: v })}
 			/>
 			<Fila etiqueta={t("Sparring al empezar en solitario")}>
 				<Selector<Intensidad>
@@ -72,6 +78,7 @@ export function AjustesMesa() {
 				onChange={(v) => set({ panelEstado: v })}
 			/>
 			<AjustesDados />
+			<IdentidadRed />
 			<h4 className="text-[11px] font-semibold text-muted-foreground uppercase">
 				{t("Rendimiento")}
 			</h4>

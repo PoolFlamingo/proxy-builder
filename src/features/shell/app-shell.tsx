@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { WithTooltip } from "@/components/ui/with-tooltip";
+import { useEnlacesEntrantes } from "@/features/salas/enlaces-entrantes";
 import { SettingsDialog } from "@/features/settings/settings-dialog";
 import { Tutorial, useTutorialInicial } from "@/features/tutorial/tutorial";
 import { useDeck } from "@/stores/deck-store";
@@ -58,6 +59,8 @@ export function AppShell({
 		}
 		setVista(v);
 	};
+
+	useEnlacesEntrantes(() => cambiarVista("mesa"));
 
 	return (
 		<div className="flex h-svh flex-col bg-background text-foreground">

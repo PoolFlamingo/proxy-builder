@@ -668,5 +668,20 @@
 	"La partida empezó sin ti: no habías elegido deck.": "对局在你不在时开始了：你没有选择套牌。",
 	"Demasiadas acciones seguidas: espera un momento.": "连续操作太多：请稍等片刻。",
 	"Estás mirando: los espectadores no pueden jugar.": "你在观战：观战者不能进行游戏。",
-	"La partida aún no ha empezado.": "对局尚未开始。"
+	"La partida aún no ha empezado.": "对局尚未开始。",
+	"En red, ver cómo mueven los demás y mostrarles mi cursor": "联机时,查看其他人的移动并向他们显示我的光标",
+	"En red, Alt + clic en una carta o en un jugador avisa a todos con un aro.": "联机时,按住 Alt 并单击卡牌或玩家,会用光环提醒所有人。",
+	"Cartas originales en mi idioma": "以我的语言显示原版卡牌",
+	"Identidad en red": "联机身份",
+	"Tu identidad es lo que te reconoce en las partidas y los playgroups. Guárdala para jugar con ella desde otro equipo o para recuperarla. Quien tenga el fichero puede jugar como tú: no lo compartas.": "身份用于在对局和玩家组中识别你。保存它,就能在另一台电脑上使用或恢复。拿到该文件的人可以冒充你游玩:请勿分享。",
+	"Exportar identidad…": "导出身份…",
+	"Importar identidad…": "导入身份…",
+	"Identidad exportada.": "身份已导出。",
+	"¿Cambiar la identidad?": "要更换身份吗?",
+	"Este equipo pasará a ser el de la identidad del fichero. La de ahora se queda como copia en la carpeta de datos de la app.": "此电脑将使用文件中的身份。当前身份会作为备份保留在应用的数据文件夹中。",
+	"Identidad cambiada.": "身份已更换。",
+	"Sal de la partida o de la sala antes de cambiar la identidad.": "更换身份前,请先退出对局或房间。",
+	"Ese fichero no es una identidad de Proxy Builder.": "该文件不是 Proxy Builder 的身份文件。",
+	"Copiar enlace": "复制链接",
+	"Hay una partida en marcha: sal de ella para usar el enlace.": "对局正在进行：请先退出对局再使用该链接。"
 }

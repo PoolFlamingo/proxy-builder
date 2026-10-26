@@ -725,5 +725,20 @@
 	"La partida empezó sin ti: no habías elegido deck.": "Die Partie hat ohne dich begonnen: Du hattest kein Deck gewählt.",
 	"Demasiadas acciones seguidas: espera un momento.": "Zu viele Aktionen hintereinander: Warte einen Moment.",
 	"Estás mirando: los espectadores no pueden jugar.": "Du schaust zu: Zuschauer können nicht spielen.",
-	"La partida aún no ha empezado.": "Die Partie hat noch nicht begonnen."
+	"La partida aún no ha empezado.": "Die Partie hat noch nicht begonnen.",
+	"En red, ver cómo mueven los demás y mostrarles mi cursor": "Online sehen, wie die anderen ihre Karten bewegen, und ihnen meinen Cursor zeigen",
+	"En red, Alt + clic en una carta o en un jugador avisa a todos con un aro.": "Online macht Alt + Klick auf eine Karte oder einen Spieler alle mit einem Ring aufmerksam.",
+	"Cartas originales en mi idioma": "Originalkarten in meiner Sprache",
+	"Identidad en red": "Online-Identität",
+	"Tu identidad es lo que te reconoce en las partidas y los playgroups. Guárdala para jugar con ella desde otro equipo o para recuperarla. Quien tenga el fichero puede jugar como tú: no lo compartas.": "Deine Identität erkennt dich in Partien und Playgroups wieder. Sichere sie, um von einem anderen Rechner damit zu spielen oder sie wiederherzustellen. Wer die Datei hat, kann als du spielen: gib sie nicht weiter.",
+	"Exportar identidad…": "Identität exportieren …",
+	"Importar identidad…": "Identität importieren …",
+	"Identidad exportada.": "Identität exportiert.",
+	"¿Cambiar la identidad?": "Identität wechseln?",
+	"Este equipo pasará a ser el de la identidad del fichero. La de ahora se queda como copia en la carpeta de datos de la app.": "Dieser Rechner übernimmt die Identität aus der Datei. Die aktuelle bleibt als Sicherung im Datenordner der App.",
+	"Identidad cambiada.": "Identität gewechselt.",
+	"Sal de la partida o de la sala antes de cambiar la identidad.": "Verlasse die Partie oder den Raum, bevor du die Identität wechselst.",
+	"Ese fichero no es una identidad de Proxy Builder.": "Diese Datei ist keine Proxy-Builder-Identität.",
+	"Copiar enlace": "Link kopieren",
+	"Hay una partida en marcha: sal de ella para usar el enlace.": "Es läuft eine Partie: Verlasse sie, um den Link zu verwenden."
 }

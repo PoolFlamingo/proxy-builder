@@ -725,5 +725,20 @@
 	"La partida empezó sin ti: no habías elegido deck.": "Het spel is zonder jou begonnen: je had geen deck gekozen.",
 	"Demasiadas acciones seguidas: espera un momento.": "Te veel acties achter elkaar: wacht even.",
 	"Estás mirando: los espectadores no pueden jugar.": "Je kijkt toe: toeschouwers kunnen niet spelen.",
-	"La partida aún no ha empezado.": "Het spel is nog niet begonnen."
+	"La partida aún no ha empezado.": "Het spel is nog niet begonnen.",
+	"En red, ver cómo mueven los demás y mostrarles mi cursor": "Online zien hoe de anderen bewegen en ze mijn cursor laten zien",
+	"En red, Alt + clic en una carta o en un jugador avisa a todos con un aro.": "Online waarschuwt Alt + klik op een kaart of speler iedereen met een ring.",
+	"Cartas originales en mi idioma": "Originele kaarten in mijn taal",
+	"Identidad en red": "Online identiteit",
+	"Tu identidad es lo que te reconoce en las partidas y los playgroups. Guárdala para jugar con ella desde otro equipo o para recuperarla. Quien tenga el fichero puede jugar como tú: no lo compartas.": "Je identiteit is wat je herkent in potjes en playgroups. Bewaar hem om er vanaf een andere computer mee te spelen of om hem terug te halen. Wie het bestand heeft, kan als jou spelen: deel het niet.",
+	"Exportar identidad…": "Identiteit exporteren…",
+	"Importar identidad…": "Identiteit importeren…",
+	"Identidad exportada.": "Identiteit geëxporteerd.",
+	"¿Cambiar la identidad?": "Identiteit wijzigen?",
+	"Este equipo pasará a ser el de la identidad del fichero. La de ahora se queda como copia en la carpeta de datos de la app.": "Deze computer neemt de identiteit uit het bestand over. De huidige blijft als back-up in de gegevensmap van de app.",
+	"Identidad cambiada.": "Identiteit gewijzigd.",
+	"Sal de la partida o de la sala antes de cambiar la identidad.": "Verlaat het potje of de ruimte voordat je de identiteit wijzigt.",
+	"Ese fichero no es una identidad de Proxy Builder.": "Dat bestand is geen Proxy Builder-identiteit.",
+	"Copiar enlace": "Link kopiëren",
+	"Hay una partida en marcha: sal de ella para usar el enlace.": "Er loopt een partij: verlaat die om de link te gebruiken."
 }
