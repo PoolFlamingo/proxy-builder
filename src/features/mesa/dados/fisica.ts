@@ -30,7 +30,18 @@ export type Grabacion = {
 	piezas: { pos: Float32Array; rot: Float32Array }[];
 	/** Por pieza: la cara que quedó para leer (dados) o si quedó arriba el lado A (monedas). */
 	finales: { cara: number; ladoA: boolean }[];
+	/** Los choques, en orden: en qué cuadro, qué pieza y con qué fuerza (0–1). Para el sonido. */
+	golpes: Golpe[];
 };
+
+export type Golpe = { cuadro: number; pieza: number; fuerza: number };
+
+/** Un cambio de velocidad mayor que este (sin la gravedad) es un choque. */
+const UMBRAL_GOLPE = 1.4;
+/** El cambio que suena a todo volumen. */
+const GOLPE_FUERTE = 14;
+/** Cuadros mínimos entre dos golpes de la misma pieza. */
+const ENTRE_GOLPES = 4;
 
 type Motor = typeof Rapier;
 let cargado: Promise<Motor> | null = null;
@@ -112,10 +123,21 @@ export async function simular(piezas: Pieza[], semilla: number): Promise<Grabaci
 		let quietos = 0;
 		let empujones = 0;
 		let n = 0;
+		const golpes: Golpe[] = [];
+		const ultimoGolpe = piezas.map(() => -ENTRE_GOLPES);
 		for (; n < MAX_CUADROS; n++) {
+			const antes = cuerpos.map((c) => c.linvel());
 			mundo.step();
 			let quieto = true;
 			cuerpos.forEach((c, i) => {
+				// Lo que cambió la velocidad aparte de la gravedad: un choque.
+				const v0 = antes[i];
+				const v1 = c.linvel();
+				const dv = Math.hypot(v1.x - v0.x, v1.y - v0.y + 40 / HZ, v1.z - v0.z);
+				if (dv > UMBRAL_GOLPE && n - ultimoGolpe[i] >= ENTRE_GOLPES) {
+					ultimoGolpe[i] = n;
+					golpes.push({ cuadro: n, pieza: i, fuerza: Math.min(1, dv / GOLPE_FUERTE) });
+				}
 				const t = c.translation();
 				const q = c.rotation();
 				pos[i].set([t.x, t.y, t.z], n * 3);
@@ -152,6 +174,7 @@ export async function simular(piezas: Pieza[], semilla: number): Promise<Grabaci
 				const l = lectura(piezas[i], c.rotation());
 				return { cara: l.cara, ladoA: l.ladoA };
 			}),
+			golpes: golpes.filter((g) => g.cuadro < cuadros),
 		};
 	} finally {
 		mundo.free();

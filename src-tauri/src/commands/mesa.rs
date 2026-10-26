@@ -15,6 +15,7 @@ use tauri::{AppHandle, Emitter, Manager, State};
 use ts_rs::TS;
 
 use crate::error::{AppError, AppResult, ErrorCode};
+use crate::mesa::dados::{self, AspectoDados, VistaAspectoDados};
 use crate::mesa::guardada::{self, ResumenGuardada};
 use crate::mesa::imagenes;
 use crate::mesa::preparar::{cartas_de_lista, deck_de_mesa};
@@ -551,6 +552,40 @@ pub fn mesa_tapete_ajustes(
         tapete::guardar(&state, deck.as_deref(), Some(&t))?;
     }
     Ok(())
+}
+
+/// El aspecto de los dados y la moneda de quien juega.
+#[tauri::command]
+pub fn mesa_dados_get(state: State<'_, AppState>) -> AppResult<VistaAspectoDados> {
+    dados::vista(&state)
+}
+
+/// Guarda el aspecto de los dados (la imagen, la que ya tenía o ninguna).
+#[tauri::command]
+pub fn mesa_dados_set(
+    state: State<'_, AppState>,
+    aspecto: AspectoDados,
+) -> AppResult<VistaAspectoDados> {
+    dados::guardar(&state, &aspecto)?;
+    dados::vista(&state)
+}
+
+/// Pone una imagen del equipo en los dados (o la quita, con `ruta: null`).
+#[tauri::command]
+pub fn mesa_dados_imagen(
+    state: State<'_, AppState>,
+    ruta: Option<String>,
+) -> AppResult<VistaAspectoDados> {
+    let imagen = match ruta {
+        Some(r) => Some(dados::importar_imagen(&state, std::path::Path::new(&r))?),
+        None => None,
+    };
+    let aspecto = AspectoDados {
+        imagen,
+        ..dados::leer(&state)?
+    };
+    dados::guardar(&state, &aspecto)?;
+    dados::vista(&state)
 }
 
 /// Las listas para jugar de un deck y cuántas cartas suyas cuentan (para

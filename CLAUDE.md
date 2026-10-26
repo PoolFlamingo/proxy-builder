@@ -139,7 +139,16 @@ le falta una cadena le sale la inglesa.
   tirada, mira qué cara quedó arriba y `conResultado` le pone el número del
   motor), CSS 3D low poly (`css3d.tsx`, la pose final ya calculada) y 2D
   (`plano.tsx`). three y Rapier van con `import()` en trozos aparte; Rapier
-  necesita `'wasm-unsafe-eval'` en la CSP.
+  necesita `'wasm-unsafe-eval'` en la CSP. El aspecto de cada jugador
+  (color, números, acabado, imagen propia, metal de la moneda; Pablo,
+  26/10/2026) lo guarda `mesa/dados.rs` (`app_settings` `mesa.dados`, la
+  imagen en blobs con `blob_refs` `mesa`/`dados`, a la pantalla como `data:`
+  URL para que WebGL pueda usarla); `texturas.ts` pinta el fondo de las
+  caras para los tres niveles. Sonido sintetizado (`sonidos.ts`, Web Audio,
+  sin ficheros) con los golpes que graba la física; los demás sonidos, en la
+  Fase H. 🛑 Nunca coger `state.db.conn()` y llamar con ella cogida a algo
+  que la vuelva a pedir (`settings::set`…): el `Mutex` se bloquea para
+  siempre.
 - Rust: `commands/{cards,decklist,export,identify,layout,library,stats}.rs`,
   `package.rs` (.pbdeck), `render.rs` + `protocol.rs` (miniaturas),
   `ocr.rs` (OCR opcional de la carta entera con `ocrs`, a la resolución

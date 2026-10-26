@@ -47,6 +47,10 @@ export type PreferenciasMesa = {
 	fps: boolean;
 	/** Cómo se pintan las tiradas. */
 	dados: NivelDados;
+	/** Volumen de los sonidos de la mesa (0–100). */
+	volumen: number;
+	/** Sonido al tirar dados y lanzar monedas. */
+	sonidoDados: boolean;
 	/** Mantener pulsado el botón izquierdo abre el menú de la carta. */
 	clicSostenido: boolean;
 	/** Al adjuntar un aura o equipo con un «+N/+N» fijo, ofrecer sumarlo. */
@@ -66,6 +70,8 @@ export const MESA_DE_FABRICA: PreferenciasMesa = {
 	sombras: true,
 	fps: false,
 	dados: "auto",
+	volumen: 60,
+	sonidoDados: true,
 	clicSostenido: false,
 	ofrecerBono: true,
 	fantasma: true,

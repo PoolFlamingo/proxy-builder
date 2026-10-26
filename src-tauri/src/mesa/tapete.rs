@@ -83,6 +83,8 @@ pub fn guardar(state: &AppState, deck: Option<&str>, t: Option<&Tapete>) -> AppR
             )?;
             let j = serde_json::to_string(t)
                 .map_err(|e| AppError::new(ErrorCode::Internal).with("detalle", e))?;
+            // La conexión se suelta antes de `settings::set`, que la vuelve a pedir.
+            drop(c);
             settings::set(&state.db, &clave(deck), &j)
         }
         None => {
@@ -156,4 +158,31 @@ pub fn para_mesa(state: &AppState, blob: &str) -> AppResult<RefImagen> {
     let r = imagenes::guardar_propia(state, &img)?;
     imagenes::al_indice(state, &clave, &r);
     Ok(r)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::state::Paths;
+
+    #[test]
+    fn guardar_y_quitar_un_tapete() {
+        let dir = tempfile::tempdir().unwrap();
+        let s = AppState::open(Paths {
+            data: dir.path().join("data"),
+            cache: dir.path().join("cache"),
+        })
+        .unwrap();
+        let t = Tapete {
+            blob: "a".repeat(64),
+            velo: 40,
+            desenfoque: 2,
+        };
+        // Antes se quedaba esperando la conexión que ya tenía cogida.
+        guardar(&s, Some("d1"), Some(&t)).unwrap();
+        assert_eq!(propio(&s, Some("d1")).unwrap(), Some(t.clone()));
+        assert_eq!(de_deck(&s, "d1").unwrap(), Some(t));
+        guardar(&s, Some("d1"), None).unwrap();
+        assert_eq!(propio(&s, Some("d1")).unwrap(), None);
+    }
 }

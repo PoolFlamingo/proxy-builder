@@ -3,10 +3,12 @@ import { Fila, FilaDeslizador, FilaInterruptor, Seccion, Selector } from "@/comp
 import { useLang } from "@/components/language-provider";
 import { MODO_RENDIMIENTO } from "@/features/mesa/fps";
 import { type NivelDados, useUi } from "@/stores/ui-store";
+import { AjustesDados } from "./aspecto-dados";
 
 /**
- * **Ajustes > Mesa** (`capturas/pablo/19.jpg`): jugar, tablero y
- * rendimiento. Los sonidos llegan con la Fase H.
+ * **Ajustes > Mesa** (`capturas/pablo/19.jpg`): jugar, tablero, dados y
+ * monedas (aspecto y sonido, `aspecto-dados.tsx`) y rendimiento. El resto de
+ * sonidos de la mesa llega con la Fase H.
  */
 export function AjustesMesa() {
 	const { t } = useLang();
@@ -60,6 +62,7 @@ export function AjustesMesa() {
 				valor={m.panelEstado}
 				onChange={(v) => set({ panelEstado: v })}
 			/>
+			<AjustesDados />
 			<h4 className="text-[11px] font-semibold text-muted-foreground uppercase">
 				{t("Rendimiento")}
 			</h4>

@@ -24,6 +24,21 @@ describe("física de los dados (Rapier determinista)", () => {
 		expect(Array.from(a.piezas[0].pos)).toEqual(Array.from(b.piezas[0].pos));
 		expect(Array.from(a.piezas[2].rot)).toEqual(Array.from(b.piezas[2].rot));
 		expect(a.finales).toEqual(b.finales);
+		expect(a.golpes).toEqual(b.golpes);
+	});
+
+	it("graba los golpes de cada pieza, en orden y con fuerza de 0 a 1", async () => {
+		const g = await simular(
+			[{ forma: "dado", tipo: 6 }, { forma: "dado", tipo: 20 }, { forma: "moneda" }],
+			99,
+		);
+		for (const pieza of [0, 1, 2]) expect(g.golpes.some((x) => x.pieza === pieza)).toBe(true);
+		g.golpes.forEach((x, i) => {
+			expect(x.fuerza).toBeGreaterThan(0);
+			expect(x.fuerza).toBeLessThanOrEqual(1);
+			expect(x.cuadro).toBeLessThan(g.cuadros);
+			if (i > 0) expect(x.cuadro).toBeGreaterThanOrEqual(g.golpes[i - 1].cuadro);
+		});
 	});
 
 	it("300 tiradas: se paran a tiempo, no salen de la mesa y la cara es la del motor", async () => {

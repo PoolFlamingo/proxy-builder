@@ -1,17 +1,26 @@
 import * as THREE from "three";
+import { type Estilo, METALES } from "./aspecto";
 import type { PiezaTirada, Tirada } from "./cola";
 import { ANCHO, FONDO, type Grabacion, HZ, MONEDA, simular } from "./fisica";
 import { esquinasD4, geometria, planoCara, textoCara } from "./geometria";
 import { tipoDe, valoresPintados } from "./piezas";
 import { CAOS, CARA, CRUZ, PLANESWALK } from "./simbolos";
+import { LADO_FONDO, trozoDeCara } from "./texturas";
 
 /**
  * **Los dados en 3D** (three.js + Rapier): una escena transparente encima
  * del tablero. Cada tirada se simula entera (`fisica.ts`), se pintan los
  * números con el resultado del motor en la cara que quedó arriba y se
  * reproduce la grabación. Este módulo se carga aparte (`import()`), solo al
- * tirar con el 3D activo.
+ * tirar con el 3D activo. El aspecto (`Estilo`) pone el fondo de las caras,
+ * el color de los números, el material y el metal de la moneda.
  */
+
+/** Cómo se pintan los números y símbolos. */
+type Tinta = { relleno: string; trazo: string };
+
+/** Lo que suena: cada golpe de la física, cuando ocurre. */
+export type AlGolpe = (moneda: boolean, fuerza: number) => void;
 
 /** Píxeles de la textura por cara. */
 const CELDA = 128;
@@ -26,12 +35,13 @@ function pintar(
 	r: number,
 	cosa: Pintable,
 	pequeno: boolean,
+	tinta: Tinta,
 ) {
 	if (!cosa) return;
 	ctx.save();
 	ctx.translate(cx, cy);
-	ctx.fillStyle = "#fff";
-	ctx.strokeStyle = "rgba(0,0,0,0.55)";
+	ctx.fillStyle = tinta.relleno;
+	ctx.strokeStyle = tinta.trazo;
 	ctx.lineJoin = "round";
 	if ("texto" in cosa) {
 		const t = cosa.texto;
@@ -81,8 +91,32 @@ function contenido(p: PiezaTirada, valores: number[], i: number): Pintable {
 	return { texto: textoCara(p.tipo, valores[i], p.decenas) };
 }
 
+/** El material de cada acabado (el color y el dibujo van en la textura). */
+function material(e: Estilo, tex: THREE.Texture): THREE.Material {
+	const comun = { map: tex, flatShading: true };
+	switch (e.imagen ? "liso" : e.acabado) {
+		case "nacarado":
+			return new THREE.MeshStandardMaterial({ ...comun, roughness: 0.25, metalness: 0.2 });
+		case "marmol":
+			return new THREE.MeshStandardMaterial({ ...comun, roughness: 0.2, metalness: 0.05 });
+		case "purpurina":
+			return new THREE.MeshStandardMaterial({ ...comun, roughness: 0.3, metalness: 0.45 });
+		case "translucido":
+			return new THREE.MeshStandardMaterial({
+				...comun,
+				roughness: 0.15,
+				metalness: 0,
+				transparent: true,
+				opacity: 0.78,
+			});
+		default:
+			return new THREE.MeshStandardMaterial({ ...comun, roughness: 0.45, metalness: 0.05 });
+	}
+}
+
 /** La malla de un dado: cada cara con su trozo de textura (números ya cambiados). */
-function mallaDado(p: PiezaTirada, cara: number, color: string): THREE.Mesh {
+function mallaDado(p: PiezaTirada, cara: number, e: Estilo, fondo: HTMLCanvasElement): THREE.Mesh {
+	const tinta = { relleno: e.numeros, trazo: e.contorno };
 	const t = tipoDe(p) ?? 6;
 	const g = geometria(t);
 	const valores = valoresPintados(p, cara);
@@ -96,7 +130,7 @@ function mallaDado(p: PiezaTirada, cara: number, color: string): THREE.Mesh {
 	const pos: number[] = [];
 	const uv: number[] = [];
 	if (ctx) {
-		ctx.fillStyle = color;
+		ctx.fillStyle = e.color;
 		ctx.fillRect(0, 0, lienzo.width, lienzo.height);
 	}
 	for (let i = 0; i < n; i++) {
@@ -121,16 +155,28 @@ function mallaDado(p: PiezaTirada, cara: number, color: string): THREE.Mesh {
 			// la primera esquina quede arriba del todo.
 			const cx = (col + 0.5) * CELDA;
 			const cy = (fila + 0.5) * CELDA;
+			const [fx, fy, fl] = trozoDeCara(e, i);
+			ctx.drawImage(
+				fondo,
+				fx,
+				fy,
+				Math.min(fl, LADO_FONDO),
+				Math.min(fl, LADO_FONDO),
+				col * CELDA,
+				fila * CELDA,
+				CELDA,
+				CELDA,
+			);
 			const cosa = contenido(p, valores, i);
 			if (cosa && "esquinas" in cosa) {
 				const [x0, y0] = pl.puntos[0];
 				ctx.save();
 				ctx.translate(cx, cy);
 				ctx.rotate(Math.atan2(x0, y0));
-				pintar(ctx, 0, 0, CELDA * 0.5 * (pl.radio * k * 2), cosa, false);
+				pintar(ctx, 0, 0, CELDA * 0.5 * (pl.radio * k * 2), cosa, false, tinta);
 				ctx.restore();
 			} else {
-				pintar(ctx, cx, cy, CELDA * 0.5, cosa, t >= 12 || t === 4 || t === 8);
+				pintar(ctx, cx, cy, CELDA * 0.5, cosa, t >= 12 || t === 4 || t === 8, tinta);
 			}
 		}
 	}
@@ -141,19 +187,14 @@ function mallaDado(p: PiezaTirada, cara: number, color: string): THREE.Mesh {
 	const tex = new THREE.CanvasTexture(lienzo);
 	tex.colorSpace = THREE.SRGBColorSpace;
 	tex.anisotropy = 4;
-	const mat = new THREE.MeshStandardMaterial({
-		map: tex,
-		flatShading: true,
-		roughness: 0.45,
-		metalness: 0.05,
-	});
-	const m = new THREE.Mesh(geo, mat);
+	const m = new THREE.Mesh(geo, material(e, tex));
 	m.castShadow = true;
 	return m;
 }
 
 /** La moneda: un cilindro con la corona y la cruz; arriba, lo que diga el motor. */
-function mallaMoneda(cara: boolean, ladoAArriba: boolean): THREE.Mesh {
+function mallaMoneda(cara: boolean, ladoAArriba: boolean, e: Estilo): THREE.Mesh {
+	const metal = METALES[e.moneda];
 	const tapa = (simbolo: string) => {
 		const c = document.createElement("canvas");
 		c.width = c.height = CELDA;
@@ -167,11 +208,14 @@ function mallaMoneda(cara: boolean, ladoAArriba: boolean): THREE.Mesh {
 				CELDA / 2,
 				CELDA / 2,
 			);
-			grad.addColorStop(0, "#f8d77a");
-			grad.addColorStop(1, "#b8862b");
+			grad.addColorStop(0, metal.claro);
+			grad.addColorStop(1, metal.oscuro);
 			ctx.fillStyle = grad;
 			ctx.fillRect(0, 0, CELDA, CELDA);
-			pintar(ctx, CELDA / 2, CELDA / 2, CELDA * 0.42, { simbolo }, false);
+			pintar(ctx, CELDA / 2, CELDA / 2, CELDA * 0.42, { simbolo }, false, {
+				relleno: metal.simbolo,
+				trazo: metal.trazo,
+			});
 		}
 		const t = new THREE.CanvasTexture(c);
 		t.colorSpace = THREE.SRGBColorSpace;
@@ -181,7 +225,7 @@ function mallaMoneda(cara: boolean, ladoAArriba: boolean): THREE.Mesh {
 	const arriba = ladoAArriba === cara ? CARA : CRUZ;
 	const abajo = arriba === CARA ? CRUZ : CARA;
 	const canto = new THREE.MeshStandardMaterial({
-		color: "#c9992f",
+		color: metal.canto,
 		roughness: 0.4,
 		metalness: 0.6,
 	});
@@ -261,7 +305,12 @@ export class EscenaDados {
 	}
 
 	/** Simula y reproduce una tirada; se resuelve al pararse los dados. */
-	async tirar(t: Tirada, color: string): Promise<void> {
+	async tirar(
+		t: Tirada,
+		estilo: Estilo,
+		fondo: HTMLCanvasElement,
+		alGolpe?: AlGolpe,
+	): Promise<void> {
 		const pedido = ++this.pedido;
 		const grabacion: Grabacion = await simular(
 			t.piezas.map((p) =>
@@ -273,19 +322,28 @@ export class EscenaDados {
 		this.limpiar();
 		this.piezas = t.piezas.map((p, i) => {
 			const f = grabacion.finales[i];
-			const m = p.forma === "moneda" ? mallaMoneda(p.cara, f.ladoA) : mallaDado(p, f.cara, color);
+			const m =
+				p.forma === "moneda"
+					? mallaMoneda(p.cara, f.ladoA, estilo)
+					: mallaDado(p, f.cara, estilo, fondo);
 			this.escena.add(m);
 			return m;
 		});
 		this.medir();
 		await new Promise<void>((listo) => {
 			const inicio = performance.now();
+			let sonados = 0;
 			const cuadro = () => {
 				if (pedido !== this.pedido) return listo();
 				const k = Math.min(
 					grabacion.cuadros - 1,
 					Math.floor(((performance.now() - inicio) / 1000) * HZ),
 				);
+				// Los golpes de la física hasta este cuadro, al sonido.
+				while (sonados < grabacion.golpes.length && grabacion.golpes[sonados].cuadro <= k) {
+					const g = grabacion.golpes[sonados++];
+					alGolpe?.(t.piezas[g.pieza]?.forma === "moneda", g.fuerza);
+				}
 				grabacion.piezas.forEach((g, i) => {
 					const m = this.piezas[i];
 					m.position.set(g.pos[k * 3], g.pos[k * 3 + 1], g.pos[k * 3 + 2]);

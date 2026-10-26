@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { type Estilo, METALES } from "./aspecto";
 import { entre, generador } from "./azar";
 import type { PiezaTirada, Tirada } from "./cola";
 import { textoCara } from "./geometria";
 import { CAOS, CARA, CRUZ, PLANESWALK } from "./simbolos";
+import { agitarDados, golpeDado, golpeMoneda, lanzarMoneda } from "./sonidos";
 
 /**
  * **Los dados en 2D**, lo más sencillo: la silueta de cada dado girando un
@@ -22,54 +24,85 @@ const SILUETA: Record<number, string> = {
 	20: "50,3 92,27 92,73 50,97 8,73 8,27",
 };
 
-function Pieza({ p, color, valor }: { p: PiezaTirada; color: string; valor: React.ReactNode }) {
-	if (p.forma === "moneda")
+function Pieza({
+	p,
+	estilo,
+	fondo,
+	valor,
+}: {
+	p: PiezaTirada;
+	estilo: Estilo;
+	fondo: string;
+	valor: React.ReactNode;
+}) {
+	const id = useId();
+	if (p.forma === "moneda") {
+		const metal = METALES[estilo.moneda];
 		return (
 			<div
 				className="flex size-14 items-center justify-center rounded-full shadow-lg"
 				style={{
-					background: "radial-gradient(circle at 40% 35%, #f8d77a, #b8862b)",
-					boxShadow: "inset 0 0 0 3px #9a6f1f",
+					background: `radial-gradient(circle at 40% 35%, ${metal.claro}, ${metal.oscuro})`,
+					boxShadow: `inset 0 0 0 3px ${metal.borde}`,
 				}}
 			>
 				{valor}
 			</div>
 		);
+	}
 	const lados = p.forma === "planar" ? 6 : p.tipo;
 	return (
 		<div className="relative size-16 drop-shadow-lg">
 			<svg viewBox="0 0 100 100" className="absolute inset-0" aria-hidden>
+				<defs>
+					<pattern id={id} patternUnits="userSpaceOnUse" width={100} height={100}>
+						<image href={fondo} width={100} height={100} preserveAspectRatio="xMidYMid slice" />
+					</pattern>
+				</defs>
 				<polygon
 					points={SILUETA[lados] ?? SILUETA[6]}
-					fill={color}
+					fill={`url(#${CSS.escape(id)})`}
+					fillOpacity={estilo.acabado === "translucido" && !estilo.imagen ? 0.82 : 1}
 					stroke="rgba(0,0,0,.35)"
 					strokeWidth={3}
 				/>
 			</svg>
-			<div className="absolute inset-0 flex items-center justify-center pt-1 text-lg font-bold text-white [text-shadow:0_0_3px_rgba(0,0,0,.6)]">
+			<div
+				className="absolute inset-0 flex items-center justify-center pt-1 text-lg font-bold"
+				style={{ color: estilo.numeros, textShadow: `0 0 3px ${estilo.contorno}` }}
+			>
 				{valor}
 			</div>
 		</div>
 	);
 }
 
-function Simbolo({ d }: { d: string }) {
+function Simbolo({ d, relleno, trazo }: { d: string; relleno: string; trazo: string }) {
 	return (
 		<svg viewBox="0 0 100 100" className="size-8" aria-hidden>
-			<path d={d} fill="#fff" stroke="rgba(0,0,0,.5)" strokeWidth={5} paintOrder="stroke" />
+			<path d={d} fill={relleno} stroke={trazo} strokeWidth={5} paintOrder="stroke" />
 		</svg>
 	);
 }
 
 /** Lo que enseña una pieza (al final, el resultado; mientras gira, otro al azar). */
-function cara(p: PiezaTirada, r: () => number, final: boolean): React.ReactNode {
-	if (p.forma === "moneda") return <Simbolo d={(final ? p.cara : r() < 0.5) ? CARA : CRUZ} />;
+function cara(p: PiezaTirada, r: () => number, final: boolean, e: Estilo): React.ReactNode {
+	if (p.forma === "moneda") {
+		const metal = METALES[e.moneda];
+		return (
+			<Simbolo
+				d={(final ? p.cara : r() < 0.5) ? CARA : CRUZ}
+				relleno={metal.simbolo}
+				trazo={metal.trazo}
+			/>
+		);
+	}
 	if (p.forma === "planar") {
 		const c = final ? p.cara : (["planeswalk", "caos", "nada"] as const)[Math.floor(r() * 3)];
 		return c === "planeswalk" ? (
-			<Simbolo d={PLANESWALK} />
+			<Simbolo d={PLANESWALK} relleno={e.numeros} trazo={e.contorno} />
 		) : c === "caos" ? (
-			<Simbolo d={CAOS} />
+			<Simbolo d={CAOS} relleno={e.numeros} trazo={e.contorno} />
 		) : null;
 	}
 	const v = final
@@ -80,11 +113,14 @@ function cara(p: PiezaTirada, r: () => number, final: boolean): React.ReactNode 
 
 export function DadosPlanos({
 	tirada,
-	color,
+	estilo,
+	fondo,
 	alAcabar,
 }: {
 	tirada: Tirada;
-	color: string;
+	estilo: Estilo;
+	/** El fondo de las caras (`data:` URL de `texturas.urlFondo`). */
+	fondo: string;
 	alAcabar: () => void;
 }) {
 	const caja = useRef<HTMLDivElement>(null);
@@ -111,8 +147,15 @@ export function DadosPlanos({
 				{ duration: DURA, delay: i * 40, easing: "cubic-bezier(.2,.7,.3,1)", fill: "forwards" },
 			),
 		);
-		// Mientras gira, los números cambian.
+		// Mientras gira, los números cambian y suenan en la mano; al parar, cada uno cae.
 		const id = window.setInterval(() => setPaso((n) => n + 1), 70);
+		const monedas = tirada.piezas.every((p) => p.forma === "moneda");
+		if (monedas) lanzarMoneda();
+		else agitarDados(tirada.piezas.length, (DURA * 0.6) / 1000);
+		animaciones.forEach((a, i) => {
+			a.onfinish = () =>
+				tirada.piezas[i]?.forma === "moneda" ? golpeMoneda(0.6) : golpeDado(0.55);
+		});
 		let vivo = true;
 		void Promise.all(animaciones.map((a) => a.finished)).then(() => {
 			window.clearInterval(id);
@@ -125,14 +168,14 @@ export function DadosPlanos({
 			window.clearInterval(id);
 			for (const a of animaciones) a.cancel();
 		};
-	}, [tirada.semilla]);
+	}, [tirada.semilla, tirada.piezas]);
 
 	return (
 		<div ref={caja} className="absolute inset-0 flex items-center justify-center">
 			<div className="flex max-w-[70%] flex-wrap items-center justify-center gap-3">
 				{tirada.piezas.map((p, i) => (
 					<div key={i} data-pieza={i}>
-						<Pieza p={p} color={color} valor={cara(p, r.current, parado)} />
+						<Pieza p={p} estilo={estilo} fondo={fondo} valor={cara(p, r.current, parado, estilo)} />
 					</div>
 				))}
 			</div>

@@ -4,6 +4,7 @@ import type { ActualizacionEstado } from "@/bindings/ActualizacionEstado";
 import type { ActualizacionInfo } from "@/bindings/ActualizacionInfo";
 import type { ArchidektImport } from "@/bindings/ArchidektImport";
 import type { ArtRef } from "@/bindings/ArtRef";
+import type { AspectoDados } from "@/bindings/AspectoDados";
 import type { Aviso } from "@/bindings/Aviso";
 import type { AvisoLista } from "@/bindings/AvisoLista";
 import type { CacheStats } from "@/bindings/CacheStats";
@@ -64,6 +65,7 @@ import type { Tapete } from "@/bindings/Tapete";
 import type { TemaCatalogo } from "@/bindings/TemaCatalogo";
 import type { TemaInstalado } from "@/bindings/TemaInstalado";
 import type { TipoCarpeta } from "@/bindings/TipoCarpeta";
+import type { VistaAspectoDados } from "@/bindings/VistaAspectoDados";
 import type { VistaMesa } from "@/bindings/VistaMesa";
 
 /**
@@ -259,6 +261,9 @@ export interface Commands {
 		args: { deck: string | null; velo: number; desenfoque: number };
 		result: null;
 	};
+	mesa_dados_get: { args: Record<string, never>; result: VistaAspectoDados };
+	mesa_dados_set: { args: { aspecto: AspectoDados }; result: VistaAspectoDados };
+	mesa_dados_imagen: { args: { ruta: string | null }; result: VistaAspectoDados };
 	mesa_listas: { args: { deck: string }; result: ListasDeDeck };
 	mesa_lista_cartas: { args: { deck: string }; result: CartaDeLista[] };
 	mesa_lista_comprobar: {
