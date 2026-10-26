@@ -35,7 +35,10 @@ export function AzarDialog() {
 		}
 		return null;
 	});
-	const tirar = (dados: [number, number][]) => void hacer({ que: "tirarDados", dados });
+	// Al tirar se cierra: la tirada y su resultado salen sobre la mesa (`dados/capa.tsx`).
+	const lanzar = (a: Parameters<typeof hacer>[0]) =>
+		void hacer(a).then((ok) => ok && usePantalla.getState().abrir(null));
+	const tirar = (dados: [number, number][]) => lanzar({ que: "tirarDados", dados });
 	return (
 		<Dialog open onOpenChange={(o) => !o && usePantalla.getState().abrir(null)}>
 			<DialogContent className="sm:max-w-md" cambiosSinGuardar={false}>
@@ -51,7 +54,7 @@ export function AzarDialog() {
 					<div className="flex flex-wrap items-center gap-2.5 text-xs">
 						<Button
 							size="sm"
-							onClick={() => void hacer({ que: "moneda", cuantas: 1, hastaPerder, pulgares })}
+							onClick={() => lanzar({ que: "moneda", cuantas: 1, hastaPerder, pulgares })}
 						>
 							<Coins className="size-3.5" />
 							{t("Lanzar la moneda")}
@@ -84,7 +87,7 @@ export function AzarDialog() {
 						<Button size="sm" variant="outline" onClick={() => tirar([[100, 1]])}>
 							d100
 						</Button>
-						<Button size="sm" variant="outline" onClick={() => void hacer({ que: "dadoPlanar" })}>
+						<Button size="sm" variant="outline" onClick={() => lanzar({ que: "dadoPlanar" })}>
 							{t("Dado planar")}
 						</Button>
 					</div>

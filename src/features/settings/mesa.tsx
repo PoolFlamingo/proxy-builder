@@ -2,7 +2,7 @@ import { Swords } from "lucide-react";
 import { Fila, FilaDeslizador, FilaInterruptor, Seccion, Selector } from "@/components/campos";
 import { useLang } from "@/components/language-provider";
 import { MODO_RENDIMIENTO } from "@/features/mesa/fps";
-import { useUi } from "@/stores/ui-store";
+import { type NivelDados, useUi } from "@/stores/ui-store";
 
 /**
  * **Ajustes > Mesa** (`capturas/pablo/19.jpg`): jugar, tablero y
@@ -71,6 +71,18 @@ export function AjustesMesa() {
 						{ valor: "146", etiqueta: t("Baja") },
 						{ valor: "244", etiqueta: t("Media") },
 						{ valor: "488", etiqueta: t("Alta") },
+					]}
+				/>
+			</Fila>
+			<Fila etiqueta={t("Dados y monedas")}>
+				<Selector<NivelDados>
+					valor={m.dados}
+					onChange={(v) => set({ dados: v })}
+					opciones={[
+						{ valor: "auto", etiqueta: t("Automático") },
+						{ valor: "3d", etiqueta: t("3D con física") },
+						{ valor: "css", etiqueta: t("3D ligero") },
+						{ valor: "2d", etiqueta: t("2D") },
 					]}
 				/>
 			</Fila>

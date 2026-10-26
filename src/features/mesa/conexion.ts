@@ -8,6 +8,7 @@ import { call } from "@/lib/ipc";
 import { lanzarTrabajo } from "@/lib/trabajos";
 import { useMesa } from "@/stores/mesa-store";
 import { useTrabajo } from "@/stores/trabajo-store";
+import { useDados } from "./dados/cola";
 
 /**
  * **La pantalla y la partida de Rust.** Se suscribe por un canal
@@ -32,6 +33,8 @@ function alMensaje(m: MensajeMesa) {
 			break;
 		case "parche":
 			if (!s.recibirParche(m.parche, m.evento)) void pedirVista();
+			// Las tiradas, a la capa de los dados.
+			useDados.getState().encolar(m.evento);
 			break;
 		case "cerrada":
 			s.cerrar();

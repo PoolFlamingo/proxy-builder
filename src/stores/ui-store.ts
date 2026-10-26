@@ -25,6 +25,12 @@ type Preferencias = {
 	mesa: PreferenciasMesa;
 };
 
+/**
+ * Cómo se pintan los dados y las monedas: 3D (three.js y física), CSS 3D
+ * (low poly, sin WebGL), 2D o lo mejor que aguante el equipo.
+ */
+export type NivelDados = "auto" | "3d" | "css" | "2d";
+
 /** Los ajustes de la mesa de juego (Ajustes > Mesa). */
 export type PreferenciasMesa = {
 	/** Tamaño de las cartas del campo, en % (25–200). */
@@ -39,6 +45,8 @@ export type PreferenciasMesa = {
 	sombras: boolean;
 	/** Contador de fotogramas (depuración). */
 	fps: boolean;
+	/** Cómo se pintan las tiradas. */
+	dados: NivelDados;
 	/** Mantener pulsado el botón izquierdo abre el menú de la carta. */
 	clicSostenido: boolean;
 	/** Al adjuntar un aura o equipo con un «+N/+N» fijo, ofrecer sumarlo. */
@@ -57,6 +65,7 @@ export const MESA_DE_FABRICA: PreferenciasMesa = {
 	reducirAnimaciones: false,
 	sombras: true,
 	fps: false,
+	dados: "auto",
 	clicSostenido: false,
 	ofrecerBono: true,
 	fantasma: true,

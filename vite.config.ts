@@ -8,6 +8,13 @@ const host = process.env.TAURI_DEV_HOST;
 // https://vite.dev/config/
 export default defineConfig(async () => ({
 	plugins: [react(), tailwindcss()],
+	// Los dados 3D se cargan con `import()` al tirar: sin esto, en desarrollo
+	// Vite los descubre entonces, los optimiza y recarga la página.
+	// Y el escaneo de dependencias, solo desde la app (no los `.html` de `plans/`).
+	optimizeDeps: {
+		entries: ["index.html"],
+		include: ["three", "@dimforge/rapier3d-deterministic-compat"],
+	},
 
 	resolve: {
 		alias: {

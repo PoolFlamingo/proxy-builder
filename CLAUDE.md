@@ -133,6 +133,13 @@ le falta una cadena le sale la inglesa.
   `.pbdeck`), `store/listas.rs`, comandos `mesa_lista*` y
   `features/mesa/listas/`. Commander con más de 100 que cuentan no empieza
   sin lista (`motivo: falta_lista`).
+  **Dados y monedas** (`features/mesa/dados/`): el resultado lo decide Rust
+  y la animación solo lo enseña. Tres niveles (Ajustes > Mesa): 3D con
+  three.js y física de Rapier determinista (`fisica.ts` simula entera la
+  tirada, mira qué cara quedó arriba y `conResultado` le pone el número del
+  motor), CSS 3D low poly (`css3d.tsx`, la pose final ya calculada) y 2D
+  (`plano.tsx`). three y Rapier van con `import()` en trozos aparte; Rapier
+  necesita `'wasm-unsafe-eval'` en la CSP.
 - Rust: `commands/{cards,decklist,export,identify,layout,library,stats}.rs`,
   `package.rs` (.pbdeck), `render.rs` + `protocol.rs` (miniaturas),
   `ocr.rs` (OCR opcional de la carta entera con `ocrs`, a la resolución

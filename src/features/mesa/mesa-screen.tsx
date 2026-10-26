@@ -11,6 +11,7 @@ import { hacer } from "./acciones";
 import { AyudasTurno } from "./ayudas-turno";
 import { BarraMesa } from "./barra-mesa";
 import { guardar, salir, suscribir, suscrito } from "./conexion";
+import { CapaDados } from "./dados/capa";
 import { DialogosMesa } from "./dialogos";
 import { COMO } from "./dialogos/terminar";
 import { EntradaMesa } from "./entrada";
@@ -84,6 +85,7 @@ function Mesa({ deckId }: { deckId: string | null }) {
 				<AyudasTurno />
 				<VidaJugador jugador={yo} />
 			</div>
+			<CapaDados />
 			<VistaGrande />
 			<Mulligan />
 			<FinDePartida />
