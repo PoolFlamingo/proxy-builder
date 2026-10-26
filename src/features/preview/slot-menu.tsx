@@ -23,10 +23,10 @@ import {
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 import type { MarcaCarta } from "@/bindings/MarcaCarta";
+import { ContenidoContextual } from "@/components/contenido-contextual";
 import { useLang } from "@/components/language-provider";
 import {
 	ContextMenu,
-	ContextMenuContent,
 	ContextMenuItem,
 	ContextMenuRadioGroup,
 	ContextMenuRadioItem,
@@ -88,7 +88,7 @@ export function SlotMenu({ id, children }: { id: string; children: ReactNode }) 
 	return (
 		<ContextMenu onOpenChange={abrirMenu}>
 			<ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-			<ContextMenuContent className="w-72 text-xs">
+			<ContenidoContextual className="w-72 text-xs">
 				{carta?.source.kind === "blank" && !varias && (
 					<>
 						<ContextMenuItem onSelect={() => anadirEnHueco(id)}>
@@ -269,7 +269,7 @@ export function SlotMenu({ id, children }: { id: string; children: ReactNode }) 
 					{varias ? t("Eliminar las seleccionadas") : t("Eliminar")}
 					<ContextMenuShortcut>Supr</ContextMenuShortcut>
 				</ContextMenuItem>
-			</ContextMenuContent>
+			</ContenidoContextual>
 		</ContextMenu>
 	);
 }

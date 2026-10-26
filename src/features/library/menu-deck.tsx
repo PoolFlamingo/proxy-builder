@@ -13,11 +13,11 @@ import {
 } from "lucide-react";
 import { type ComponentType, createContext, type ReactNode, useContext } from "react";
 import type { DeckSummary } from "@/bindings/DeckSummary";
+import { ContenidoContextual } from "@/components/contenido-contextual";
 import { useLang } from "@/components/language-provider";
 import {
 	ContextMenu,
 	ContextMenuCheckboxItem,
-	ContextMenuContent,
 	ContextMenuItem,
 	ContextMenuSeparator,
 	ContextMenuSub,
@@ -225,9 +225,9 @@ export function MenuContextualDeck({ deck, children }: { deck: DeckSummary; chil
 	return (
 		<ContextMenu>
 			<ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-			<ContextMenuContent className="text-xs">
+			<ContenidoContextual className="text-xs">
 				<Items deck={deck} M={CONTEXTUAL} />
-			</ContextMenuContent>
+			</ContenidoContextual>
 		</ContextMenu>
 	);
 }
