@@ -7,6 +7,7 @@ import { mensajeDeError } from "@/lib/errores";
 import { call } from "@/lib/ipc";
 import { lanzarTrabajo } from "@/lib/trabajos";
 import { useMesa } from "@/stores/mesa-store";
+import { useRed } from "@/stores/red-store";
 import { useTrabajo } from "@/stores/trabajo-store";
 import { useDados } from "./dados/cola";
 
@@ -37,7 +38,14 @@ function alMensaje(m: MensajeMesa) {
 			useDados.getState().encolar(m.evento);
 			break;
 		case "cerrada":
+			canal = null;
 			s.cerrar();
+			break;
+		// En red: el anfitrión no hizo algo que se pidió desde aquí.
+		case "rechazo":
+			toast.error(
+				mensajeDeError({ code: "Rejected", params: { motivo: m.motivo } }, traduccionSuelta),
+			);
 			break;
 	}
 }
@@ -61,8 +69,15 @@ export function suscrito(): boolean {
 	return canal !== null;
 }
 
-/** Prepara los decks y abre la partida (con el progreso en la barra de trabajos). */
-async function conProgreso(lanzar: () => Promise<number>): Promise<boolean> {
+/**
+ * Lanza un trabajo de la mesa (preparar los decks) con el progreso en la
+ * barra de trabajos y, al acabar bien, `despues` (de fábrica, suscribirse a
+ * la partida abierta).
+ */
+export async function conProgreso(
+	lanzar: () => Promise<number>,
+	despues: () => Promise<boolean> = suscribir,
+): Promise<boolean> {
 	const fase = traduccionSuelta("Preparando la mesa…");
 	useTrabajo.getState().empezar("mesa", fase);
 	try {
@@ -77,7 +92,7 @@ async function conProgreso(lanzar: () => Promise<number>): Promise<boolean> {
 			toast.error(mensajeDeError(fin.error, traduccionSuelta));
 			return false;
 		}
-		return await suscribir();
+		return await despues();
 	} catch (e) {
 		toast.error(mensajeDeError(e, traduccionSuelta));
 		return false;
@@ -99,6 +114,8 @@ export async function salir(guardar = false) {
 	await call("mesa_salir", { guardar });
 	canal = null;
 	useMesa.getState().cerrar();
+	// En red, salir de la mesa es salir de la partida (Rust ya la dejó).
+	useRed.getState().olvidar();
 }
 
 /** Guarda la partida en su fichero (al cambiar de pantalla o cerrar). */

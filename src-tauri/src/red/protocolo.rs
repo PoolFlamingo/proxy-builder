@@ -218,7 +218,7 @@ pub enum ErrorTrama {
     Invalido(&'static str),
 }
 
-async fn escribir_trama<W: AsyncWrite + Unpin>(
+pub(crate) async fn escribir_trama<W: AsyncWrite + Unpin>(
     w: &mut W,
     bytes: &[u8],
     tope: usize,
@@ -234,7 +234,10 @@ async fn escribir_trama<W: AsyncWrite + Unpin>(
 }
 
 /// Lee una trama de como mucho `tope` bytes: si dice ser mayor, ni se lee.
-async fn leer_trama<R: AsyncRead + Unpin>(r: &mut R, tope: usize) -> Result<Vec<u8>, ErrorTrama> {
+pub(crate) async fn leer_trama<R: AsyncRead + Unpin>(
+    r: &mut R,
+    tope: usize,
+) -> Result<Vec<u8>, ErrorTrama> {
     let mut largo = [0u8; 4];
     r.read_exact(&mut largo).await?;
     let n = u32::from_be_bytes(largo) as usize;

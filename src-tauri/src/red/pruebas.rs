@@ -12,18 +12,23 @@ use mesa::{Azar, IdJugador};
 
 use super::anfitrion::{atender, empezar_partida, Anfitrion};
 use super::codigo::{secreto_nuevo, Codigo};
-use super::invitado::{unirse, Union};
+use super::imagenes::{la_tengo, ruta_cruda, traer_propia, Por};
+use super::invitado::{unirse, Conexion, Union};
 use super::mesa::{AvisoRed, Mesa, MesaEnMemoria};
 use super::nodo::{crear, Relay};
 use super::protocolo::Rol;
+use crate::mesa::imagenes::propia_en;
 use crate::mesa::sesion::tests::mazo;
 use crate::mesa::sesion::{ConfigMesa, JugadorMesa, RedSesion};
 use mesa::formato::{Formato, Variantes};
+use mesa::modelo::RefImagen;
+use mesa::preparar::DeckDeMesa;
 use mesa::sparring::Intensidad;
 
 struct Jugador {
     mesa: MesaEnMemoria,
     ep: Endpoint,
+    conexion: Option<Conexion>,
 }
 
 struct Partida3 {
@@ -60,6 +65,12 @@ fn pendientes(m: &MesaEnMemoria) -> usize {
 
 /// Un anfitrión y `n` invitados en la sala, y la partida empezada.
 async fn partida(n: usize) -> Partida3 {
+    partida_con((0..n).map(|_| mazo()).collect()).await
+}
+
+/// Lo mismo, con el deck de cada invitado.
+async fn partida_con(decks: Vec<DeckDeMesa>) -> Partida3 {
+    let n = decks.len();
     let _ = tracing_subscriber::fmt()
         .with_test_writer()
         .with_max_level(tracing::Level::INFO)
@@ -67,6 +78,7 @@ async fn partida(n: usize) -> Partida3 {
     let host = Jugador {
         mesa: MesaEnMemoria::default(),
         ep: crear(SecretKey::generate(), Relay::Ninguno).await.unwrap(),
+        conexion: None,
     };
     let anf = Anfitrion::nuevo("Host".into(), secreto_nuevo());
     *anf.deck.lock().unwrap() = Some("Prueba".into());
@@ -76,24 +88,28 @@ async fn partida(n: usize) -> Partida3 {
         secreto: anf.secreto().to_string(),
     };
     let mut invitados = Vec::new();
-    for i in 0..n {
-        let j = Jugador {
+    for (i, deck) in decks.into_iter().enumerate() {
+        let mut j = Jugador {
             mesa: MesaEnMemoria::default(),
             ep: crear(SecretKey::generate(), Relay::Ninguno).await.unwrap(),
+            conexion: None,
         };
-        unirse(
+        let c = unirse(
             j.ep.clone(),
             Union {
                 codigo: codigo.clone(),
                 apodo: format!("Invitado {i}"),
                 rol: Rol::Jugador,
-                deck: Some(mazo()),
+                deck: Some(deck),
             },
             j.mesa.clone(),
         )
         .await
         .unwrap();
+        j.conexion = Some(c);
         invitados.push(j);
+        // Que lleguen en orden (el asiento es el orden de llegada).
+        esperar("el deck en la sala", || anf.para_empezar().len() == i + 1).await;
     }
     esperar("los decks de la sala", || anf.para_empezar().len() == n).await;
     let config = ConfigMesa {
@@ -351,4 +367,142 @@ async fn si_se_va_el_anfitrion_otro_sigue_la_partida() {
     assert_eq!(huella(&c.mesa), huella(&b.mesa));
     let despues = seq(&b.mesa).unwrap();
     assert!(despues > antes + 50, "{antes} → {despues}");
+}
+
+#[tokio::test]
+async fn el_espectador_no_ve_lo_oculto_hasta_que_se_revela() {
+    let p = partida(1).await;
+    quedarse_todos(&p).await;
+    let esp = Jugador {
+        mesa: MesaEnMemoria::default(),
+        ep: crear(SecretKey::generate(), Relay::Ninguno).await.unwrap(),
+        conexion: None,
+    };
+    unirse(
+        esp.ep.clone(),
+        Union {
+            codigo: p.codigo.clone(),
+            apodo: "Mira".into(),
+            rol: Rol::Espectador,
+            deck: None,
+        },
+        esp.mesa.clone(),
+    )
+    .await
+    .unwrap();
+    let version = |m: &MesaEnMemoria| m.mirada(|v| v.as_ref().map(|v| v.vista.version));
+    esperar("la vista del espectador", || version(&esp.mesa).is_some()).await;
+    // Nada de una mano ni de una biblioteca lleva su identidad.
+    let ocultas = |m: &MesaEnMemoria| {
+        m.mirada(|v| {
+            v.as_ref().map_or(0, |v| {
+                v.vista
+                    .cartas
+                    .iter()
+                    .filter(|c| {
+                        matches!(
+                            c.zona,
+                            RefZona::De {
+                                zona: Zona::Mano | Zona::Biblioteca,
+                                ..
+                            }
+                        ) && c.origen.is_some()
+                    })
+                    .count()
+            })
+        })
+    };
+    assert_eq!(ocultas(&esp.mesa), 0);
+    // El anfitrión baja una carta de la mano: el espectador la ve entonces.
+    let carta = p.host.mesa.con(|s| {
+        let s = s.as_mut().unwrap();
+        let c = s.partida().zona(&RefZona::de(IdJugador(0), Zona::Mano))[0];
+        s.accion(
+            Accion::Mover {
+                cartas: vec![c],
+                a: Destino {
+                    zona: ZonaDestino::De(Zona::Campo),
+                    jugador: Some(IdJugador(0)),
+                    sitio: Sitio::EnCampo(Pos::nueva(5_000, 5_000)),
+                },
+                como: None,
+            },
+            None,
+        )
+        .unwrap();
+        c
+    });
+    let ultima = seq(&p.host.mesa);
+    esperar("el parche del espectador", || version(&esp.mesa) == ultima).await;
+    let vista = esp.mesa.mirada(|v| {
+        v.as_ref()
+            .and_then(|v| v.vista.cartas.iter().find(|c| c.id == carta).cloned())
+    });
+    assert!(vista.and_then(|c| c.origen).is_some());
+    assert_eq!(ocultas(&esp.mesa), 0);
+    // Y no puede jugar.
+    let r = esp.mesa.con(|s| s.is_none());
+    assert!(r, "el espectador no tiene partida");
+}
+
+#[tokio::test]
+async fn las_imagenes_propias_llegan_por_el_anfitrion_y_con_su_huella() {
+    use sha2::{Digest, Sha256};
+    let huella = |b: &[u8]| -> String {
+        Sha256::digest(b)
+            .iter()
+            .map(|x| format!("{x:02x}"))
+            .collect()
+    };
+    let img = image::RgbaImage::from_pixel(100, 140, image::Rgba([200, 30, 30, 255]));
+    let jpg = proxy_core::imaging::encode::jpeg(&img, 85).unwrap();
+    let buena = huella(&jpg);
+    // Una que dice ser otra cosa: su fichero no tiene esa huella.
+    let falsa = huella(b"otra cosa");
+    let mut deck = mazo();
+    deck.cartas[0].origen.caras[0] = RefImagen::Propia {
+        sha256: buena.clone(),
+        ancho: 100,
+        alto: 140,
+    };
+    deck.cartas[1].origen.caras[0] = RefImagen::Propia {
+        sha256: falsa.clone(),
+        ancho: 100,
+        alto: 140,
+    };
+    let p = partida_con(vec![deck, mazo()]).await;
+    let b = &p.invitados[0];
+    let c = &p.invitados[1];
+    let escribir = |ruta: std::path::PathBuf, bytes: &[u8]| {
+        std::fs::create_dir_all(ruta.parent().unwrap()).unwrap();
+        std::fs::write(ruta, bytes).unwrap();
+    };
+    escribir(propia_en(&b.mesa.carpeta, &buena), &jpg);
+    escribir(propia_en(&b.mesa.carpeta, &falsa), &jpg);
+    // C se la pide al anfitrión, que se la pide a B.
+    let conn = c.conexion.as_ref().unwrap().conexion().unwrap();
+    traer_propia(&c.mesa, Por::Invitado(conn.clone()), &buena)
+        .await
+        .unwrap();
+    assert!(la_tengo(&c.mesa.carpeta, &buena));
+    assert_eq!(
+        std::fs::read(ruta_cruda(&c.mesa.carpeta, &buena)).unwrap(),
+        jpg
+    );
+    // El anfitrión se quedó con una copia (para el siguiente que la pida).
+    assert!(la_tengo(&p.host.mesa.carpeta, &buena));
+    // La falsa no llega a nadie.
+    assert!(traer_propia(&c.mesa, Por::Invitado(conn), &falsa)
+        .await
+        .is_err());
+    assert!(!la_tengo(&c.mesa.carpeta, &falsa));
+    // Y lo que no es de la partida no se sirve.
+    assert!(
+        traer_propia(&c.mesa, Por::Anfitrion(p.anf.clone()), &huella(b"nada"))
+            .await
+            .is_err()
+    );
+    for m in [&p.host.mesa, &b.mesa, &c.mesa] {
+        let _ = std::fs::remove_dir_all(&m.carpeta);
+    }
 }

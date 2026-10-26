@@ -4,6 +4,7 @@ import {
 	Loader2,
 	Pencil,
 	Play,
+	Plug,
 	Plus,
 	Search,
 	Swords,
@@ -31,11 +32,13 @@ import { PORTADA } from "@/features/library/vista-cuadricula";
 import { urlMiniatura } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
+import { useRed } from "@/stores/red-store";
 import { useTrabajo } from "@/stores/trabajo-store";
 import { useUi } from "@/stores/ui-store";
 import { COLORES_JUGADOR } from "./colores";
 import { empezar, retomar, salir } from "./conexion";
 import { ListaDialog } from "./listas/lista-dialog";
+import { RedDialog } from "./red/red-dialog";
 import { INTENSIDADES } from "./sparring/textos";
 import { TapeteDialog } from "./tapete-dialog";
 
@@ -94,6 +97,8 @@ export function EntradaMesa() {
 	const [listas, setListas] = useState<ListasDeDeck | null>(null);
 	const [listaId, setListaId] = useState<string | null>(null);
 	const [editando, setEditando] = useState<{ lista: ListaDeJuego | null } | null>(null);
+	const [red, setRed] = useState(false);
+	const enSala = useRed((s) => s.papel !== null);
 	const trabajo = useTrabajo((s) => (s.actual?.tipo === "mesa" ? s.actual : null));
 
 	useEffect(() => {
@@ -151,11 +156,6 @@ export function EntradaMesa() {
 	};
 	const solitario = async () => {
 		if (!elegido) return;
-		try {
-			localStorage.setItem(CLAVE_NOMBRE, nombre);
-		} catch {
-			/* sin almacenamiento */
-		}
 		await empezar({
 			jugadores: [
 				{
@@ -272,7 +272,14 @@ export function EntradaMesa() {
 							<User className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
 							<Input
 								value={nombre}
-								onChange={(e) => setNombre(e.target.value)}
+								onChange={(e) => {
+									setNombre(e.target.value);
+									try {
+										localStorage.setItem(CLAVE_NOMBRE, e.target.value);
+									} catch {
+										/* sin almacenamiento */
+									}
+								}}
 								placeholder={t("Jugador")}
 								maxLength={24}
 								className="h-7 w-36 pl-7 text-xs"
@@ -416,6 +423,15 @@ export function EntradaMesa() {
 						{trabajo ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
 						{t("Solitario")}
 					</Button>
+					<Button
+						size="lg"
+						variant={enSala ? "default" : "outline"}
+						onClick={() => setRed(true)}
+						data-tutorial="mesa-red"
+					>
+						<Plug className="size-4" />
+						{enSala ? t("Volver a la sala") : t("En red…")}
+					</Button>
 				</div>
 			</aside>
 			{elegido && editando && (
@@ -444,6 +460,19 @@ export function EntradaMesa() {
 					}}
 				/>
 			)}
+			<RedDialog
+				abierto={red}
+				onCerrar={() => setRed(false)}
+				preparar={{
+					deckId: elegido,
+					deckNombre: decks.find((d) => d.id === elegido)?.name ?? null,
+					lista: listaId,
+					sinLista,
+					formato,
+					opciones,
+					nombre: nombre.trim() || t("Jugador"),
+				}}
+			/>
 			<TapeteDialog abierto={tapete} onCerrar={() => setTapete(false)} deckId={elegido} />
 			<Confirmar
 				abierto={reemplazar}

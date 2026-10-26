@@ -48,6 +48,9 @@ const PERMITIDOS: &[(&str, &str)] = &[
     ("tweakcn.com", "/r/themes/"),
     ("fonts.googleapis.com", "/css"),
     ("fonts.gstatic.com", "/s/"),
+    // Las imágenes de Scryfall de las cartas de los demás en la mesa en red
+    // (`red/imagenes.rs`): sin pasar por la API ni por su limitador.
+    ("cards.scryfall.io", "/"),
 ];
 
 const NAVEGADOR: &str =
@@ -255,6 +258,30 @@ pub fn limpiar_imagen(bytes: &[u8]) -> AppResult<Vec<u8>> {
     }
 }
 
+/// Como `limpiar_imagen`, pero guardando la proporción (un tapete apaisado
+/// no se deforma) y siempre en JPEG 85: se reduce, si hace falta, para caber
+/// en `ancho_max` × `alto_max`.
+pub fn limpiar_imagen_con(bytes: &[u8], ancho_max: u32, alto_max: u32) -> AppResult<Vec<u8>> {
+    let medidas = imagesize::blob_size(bytes)
+        .map_err(|_| AppError::new(ErrorCode::Image).with("motivo", "no_es_imagen"))?;
+    if medidas.width > LADO_MAXIMO || medidas.height > LADO_MAXIMO {
+        return Err(AppError::new(ErrorCode::Image).with("motivo", "demasiado_grande"));
+    }
+    let img = decode::decode(bytes)?;
+    let (w, h) = (img.width().max(1), img.height().max(1));
+    let escala = (f64::from(ancho_max) / f64::from(w))
+        .min(f64::from(alto_max) / f64::from(h))
+        .min(1.0);
+    let img = if escala < 1.0 {
+        let nw = ((f64::from(w) * escala).round() as u32).max(1);
+        let nh = ((f64::from(h) * escala).round() as u32).max(1);
+        image::imageops::resize(&img, nw, nh, image::imageops::FilterType::Lanczos3)
+    } else {
+        img
+    };
+    Ok(encode::jpeg(&img, 85)?)
+}
+
 /// Una ficha de Cockatrice para las rejillas de búsqueda (miniatura por el
 /// protocolo, que la baja con `Externo`).
 pub fn resumen_cockatrice(
@@ -389,6 +416,20 @@ pub async fn carta_cockatrice(state: &AppState, id: &str) -> AppResult<DeckCard>
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn limpiar_con_medida_guarda_la_proporcion() {
+        let img = image::RgbaImage::from_pixel(2400, 1000, image::Rgba([10, 200, 30, 255]));
+        let png = proxy_core::imaging::encode::png(&img).unwrap();
+        let jpg = super::limpiar_imagen_con(&png, 2560, 1600).unwrap();
+        assert!(jpg.starts_with(&[0xFF, 0xD8]));
+        let m = imagesize::blob_size(&jpg).unwrap();
+        assert_eq!((m.width, m.height), (2400, 1000));
+        let jpg = super::limpiar_imagen_con(&png, 745, 1040).unwrap();
+        let m = imagesize::blob_size(&jpg).unwrap();
+        assert_eq!((m.width, m.height), (745, 310));
+        assert!(super::limpiar_imagen_con(b"no soy una imagen", 745, 1040).is_err());
+    }
+
     use super::*;
 
     #[test]

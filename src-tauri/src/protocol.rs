@@ -248,11 +248,19 @@ async fn atender<R: tauri::Runtime>(app: tauri::AppHandle<R>, ruta: String) -> R
             }
         }
         Ok(Ruta::Mesa { imagen, ancho }) => {
-            let app2 = app.clone();
-            let r = tauri::async_runtime::spawn_blocking(move || {
-                crate::mesa::imagenes::servir(&app2.state::<AppState>(), &imagen, ancho)
-            })
-            .await;
+            let servir = |imagen: crate::mesa::imagenes::ImagenMesa| {
+                let app2 = app.clone();
+                tauri::async_runtime::spawn_blocking(move || {
+                    crate::mesa::imagenes::servir(&app2.state::<AppState>(), &imagen, ancho)
+                })
+            };
+            let mut r = servir(imagen.clone()).await;
+            // En red, la de otro jugador se trae ahora (primero lo que se ve).
+            if matches!(&r, Ok(Err(e)) if e.code == crate::error::ErrorCode::NotFound)
+                && crate::red::imagenes::asegurar(&app, &imagen).await.is_ok()
+            {
+                r = servir(imagen).await;
+            }
             match r {
                 Ok(Ok(bytes)) => respuesta(StatusCode::OK, "image/jpeg", bytes),
                 Ok(Err(e)) if e.code == crate::error::ErrorCode::NotFound => {

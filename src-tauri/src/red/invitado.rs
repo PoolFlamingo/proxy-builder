@@ -23,6 +23,7 @@ use tokio::sync::{mpsc, Mutex};
 
 use super::codigo::Codigo;
 use super::mesa::{AvisoRed, Mesa};
+use super::mirada::{Mirada, Visto};
 use super::nodo::{de_red, ALPN_MESA};
 use super::protocolo::{
     escribir_al_host, leer_del_host, version_app, AlHost, DelHost, NodoJugador, Rol, PROTOCOLO,
@@ -150,9 +151,36 @@ async fn conectar(
     Ok((conn, tx, rx, primera))
 }
 
+/// Una unión en marcha: por dónde mandar y la tarea que la atiende.
+#[derive(Debug)]
+pub struct Conexion {
+    pub tx: mpsc::UnboundedSender<AlHost>,
+    pub tarea: tokio::task::AbortHandle,
+    /// La conexión de ahora con el anfitrión (cambia al reconectar): por
+    /// ella se le piden las imágenes.
+    pub actual: Arc<std::sync::Mutex<Option<Connection>>>,
+}
+
+impl Conexion {
+    pub fn conexion(&self) -> Option<Connection> {
+        match self.actual.lock() {
+            Ok(g) => g.clone(),
+            Err(e) => e.into_inner().clone(),
+        }
+    }
+
+    /// Se despide del anfitrión y deja de atenderlo.
+    pub async fn salir(self) {
+        let _ = self.tx.send(AlHost::Adios);
+        // Un momento para que el adiós salga antes de cortar.
+        tokio::time::sleep(Duration::from_millis(150)).await;
+        self.tarea.abort();
+    }
+}
+
 /// Se une a una partida: conecta (o devuelve por qué no) y deja una tarea
 /// atendiendo al anfitrión hasta que acabe.
-pub async fn unirse<M: Mesa>(ep: Endpoint, u: Union, mesa: M) -> AppResult<()> {
+pub async fn unirse<M: Mesa>(ep: Endpoint, u: Union, mesa: M) -> AppResult<Conexion> {
     let (conn, mut tx, rx, primera) = conectar(&ep, &u, None, 1).await?;
     if let Some(deck) = &u.deck {
         escribir_al_host(&mut tx, &AlHost::Preparacion { deck: deck.clone() })
@@ -162,16 +190,32 @@ pub async fn unirse<M: Mesa>(ep: Endpoint, u: Union, mesa: M) -> AppResult<()> {
     let (salida, entrada) = mpsc::unbounded_channel::<AlHost>();
     let entrada = Arc::new(Mutex::new(entrada));
     let union = UNIONES.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-    tokio::spawn(bucle(
+    let para_salir = salida.clone();
+    let actual = Arc::new(std::sync::Mutex::new(Some(conn.clone())));
+    let tarea = tokio::spawn(bucle(
         ep,
         u,
         mesa,
         union,
-        salida,
-        entrada,
+        Canales {
+            salida,
+            entrada,
+            conexion: actual.clone(),
+        },
         (conn, tx, rx, primera),
     ));
-    Ok(())
+    Ok(Conexion {
+        tx: para_salir,
+        tarea: tarea.abort_handle(),
+        actual,
+    })
+}
+
+/// Lo que el bucle de una unión comparte con quien lo lanzó.
+struct Canales {
+    salida: mpsc::UnboundedSender<AlHost>,
+    entrada: Arc<Mutex<mpsc::UnboundedReceiver<AlHost>>>,
+    conexion: Arc<std::sync::Mutex<Option<Connection>>>,
 }
 
 async fn bucle<M: Mesa>(
@@ -179,15 +223,22 @@ async fn bucle<M: Mesa>(
     u: Union,
     mesa: M,
     union: u64,
-    salida: mpsc::UnboundedSender<AlHost>,
-    entrada: Arc<Mutex<mpsc::UnboundedReceiver<AlHost>>>,
+    canales: Canales,
     primera: (Connection, SendStream, RecvStream, DelHost),
 ) {
+    let Canales {
+        salida,
+        entrada,
+        conexion,
+    } = canales;
     let mut actual = Some(primera);
     loop {
         let Some((conn, tx, rx, m)) = actual.take() else {
             return;
         };
+        if let Ok(mut c) = conexion.lock() {
+            *c = Some(conn.clone());
+        }
         let fin = atender(&conn, tx, rx, m, &mesa, union, &salida, &entrada).await;
         // Otra unión (o esta app pasó a anfitrión): esta ya no manda.
         if !es_mia(&mesa, union) {
@@ -195,7 +246,7 @@ async fn bucle<M: Mesa>(
         }
         match fin {
             Fin::Cerrada => {
-                mesa.con(|m| *m = None);
+                cerrar(&mesa);
                 mesa.avisar(AvisoRed::Cerrada);
                 return;
             }
@@ -212,15 +263,18 @@ async fn bucle<M: Mesa>(
             }
             mesa.avisar(AvisoRed::Reconectando { intento });
             tokio::time::sleep(Duration::from_secs(1 << (intento - 1))).await;
-            let (ultimo, epoch) = mesa.con(|m| {
-                m.as_ref().map_or((None, 1), |s| {
-                    let epoch = match &s.red {
-                        Some(crate::mesa::sesion::RedSesion::Invitado(i)) => i.epoch,
-                        _ => 1,
-                    };
-                    (Some(s.partida().seq), epoch)
+            let (ultimo, epoch) = mesa
+                .con(|m| {
+                    m.as_ref().map(|s| {
+                        let epoch = match &s.red {
+                            Some(crate::mesa::sesion::RedSesion::Invitado(i)) => i.epoch,
+                            _ => 1,
+                        };
+                        (Some(s.partida().seq), epoch)
+                    })
                 })
-            });
+                .or_else(|| mesa.mirada(|m| m.as_ref().map(|v| (Some(v.vista.version), v.epoch))))
+                .unwrap_or((None, 1));
             match conectar(&ep, &u, ultimo, epoch).await {
                 Ok(c) => {
                     mesa.avisar(AvisoRed::Conectada);
@@ -242,6 +296,22 @@ async fn bucle<M: Mesa>(
             return;
         }
     }
+}
+
+/// El anfitrión cerró la partida: la pantalla se entera y se olvida.
+fn cerrar<M: Mesa>(mesa: &M) {
+    mesa.con(|m| {
+        if let Some(s) = m.as_mut() {
+            s.cerrar();
+        }
+        *m = None;
+    });
+    mesa.mirada(|m| {
+        if let Some(v) = m.as_mut() {
+            v.cerrar();
+        }
+        *m = None;
+    });
 }
 
 /// Atiende una conexión con el anfitrión hasta que se corta o se cierra.
@@ -266,6 +336,12 @@ async fn atender<M: Mesa>(
             }
         }
     });
+    // Los streams que abra el anfitrión piden imágenes de esta app.
+    let imagenes = tokio::spawn(super::imagenes::servir_conexion(
+        conn.clone(),
+        mesa.clone(),
+        None,
+    ));
     // Tras volver, las intenciones que no se llegaron a confirmar.
     mesa.con(|m| {
         if let Some(Some(crate::mesa::sesion::RedSesion::Invitado(i))) = m.as_ref().map(|s| &s.red)
@@ -290,6 +366,7 @@ async fn atender<M: Mesa>(
         }
     };
     escritor.abort();
+    imagenes.abort();
     if !matches!(fin, Fin::Cortada) {
         conn.close(0u32.into(), b"fin");
     }
@@ -371,8 +448,34 @@ fn recibir<M: Mesa>(
                 s.rechazada(id, motivo);
             }
         }),
-        // Los espectadores (E11) los atiende `espectador.rs`.
-        DelHost::VistaEspectador { .. } | DelHost::ParcheEspectador { .. } => {}
+        DelHost::VistaEspectador { epoch, vista } => {
+            let nueva = mesa.mirada(|m| match m.as_mut() {
+                Some(v) => {
+                    v.vista_entera(epoch, *vista);
+                    false
+                }
+                None => {
+                    *m = Some(Mirada::nueva(epoch, *vista));
+                    true
+                }
+            });
+            if nueva {
+                mesa.avisar(AvisoRed::Empezada);
+            }
+        }
+        DelHost::ParcheEspectador {
+            epoch,
+            parche,
+            evento,
+        } => {
+            let r = mesa.mirada(|m| {
+                m.as_mut()
+                    .map(|v| v.parche(epoch, *parche, evento.map(|e| *e)))
+            });
+            if r == Some(Visto::Falta) {
+                let _ = salida.send(AlHost::Pide { desde_seq: 0 });
+            }
+        }
         DelHost::Cerrada => return Some(Fin::Cerrada),
     }
     None

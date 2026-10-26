@@ -21,6 +21,7 @@ use crate::mesa::imagenes;
 use crate::mesa::preparar::{cartas_de_lista, deck_de_mesa};
 use crate::mesa::sesion::{ConfigMesa, MensajeMesa, Sesion};
 use crate::mesa::tapete::{self, OrigenTapete, Tapete};
+use crate::red::mirada::Mirada;
 use crate::scryfall::client::CardApi;
 use crate::state::AppState;
 use crate::store::listas;
@@ -145,6 +146,53 @@ async fn lista_para_jugar(
     Ok(Some(lista))
 }
 
+/// De qué trabajo y de qué deck es el progreso que se emite.
+#[derive(Debug, Clone, Copy)]
+pub struct Progreso {
+    pub job_id: u32,
+    pub mazo: u32,
+    pub mazos: u32,
+}
+
+/// Prepara un deck para la mesa (con su lista y su tapete), emitiendo
+/// `mesa://progress`.
+pub async fn preparar_mazo(
+    app: &AppHandle,
+    state: &AppState,
+    p: Progreso,
+    deck_id: &str,
+    lista: Option<&str>,
+    formato: Formato,
+) -> AppResult<mesa::preparar::DeckDeMesa> {
+    let deck = crate::store::decks::open(&state.db, deck_id)?;
+    let app2 = app.clone();
+    let progreso = move |hechas: u32, total: u32| {
+        let _ = app2.emit(
+            "mesa://progress",
+            MesaProgressEvent {
+                job_id: p.job_id,
+                mazo: p.mazo,
+                mazos: p.mazos,
+                hechas,
+                total,
+            },
+        );
+    };
+    let lista = lista_para_jugar(state, &deck, lista, formato).await?;
+    let mut m = deck_de_mesa(
+        state,
+        state.scryfall.as_ref(),
+        &deck,
+        lista.as_ref(),
+        &progreso,
+    )
+    .await?;
+    if let Some(t) = tapete::de_deck(state, deck_id)? {
+        m.tapete = tapete::para_mesa(state, &t.blob).ok();
+    }
+    Ok(m)
+}
+
 /// Prepara los decks y abre la partida (un trabajo largo con progreso:
 /// pintar las cartas diseñadas puede tardar la primera vez).
 async fn abrir(
@@ -156,33 +204,22 @@ async fn abrir(
     let mut mazos = Vec::new();
     let n = config.jugadores.len() as u32;
     for (i, j) in config.jugadores.iter().enumerate() {
-        let deck = crate::store::decks::open(&state.db, &j.deck_id)?;
-        let app2 = app.clone();
-        let progreso = move |hechas: u32, total: u32| {
-            let _ = app2.emit(
-                "mesa://progress",
-                MesaProgressEvent {
-                    job_id,
-                    mazo: i as u32,
-                    mazos: n,
-                    hechas,
-                    total,
-                },
-            );
+        let progreso = Progreso {
+            job_id,
+            mazo: i as u32,
+            mazos: n,
         };
-        let lista = lista_para_jugar(state, &deck, j.lista.as_deref(), config.formato).await?;
-        let mut m = deck_de_mesa(
-            state,
-            state.scryfall.as_ref(),
-            &deck,
-            lista.as_ref(),
-            &progreso,
-        )
-        .await?;
-        if let Some(t) = tapete::de_deck(state, &j.deck_id)? {
-            m.tapete = tapete::para_mesa(state, &t.blob).ok();
-        }
-        mazos.push(m);
+        mazos.push(
+            preparar_mazo(
+                app,
+                state,
+                progreso,
+                &j.deck_id,
+                j.lista.as_deref(),
+                config.formato,
+            )
+            .await?,
+        );
     }
     let s = Sesion::nueva(config, mazos)?;
     guardada::guardar(&state.paths.data, &s)?;
@@ -303,7 +340,7 @@ pub fn mesa_retomar(app: AppHandle, state: State<'_, AppState>) -> u32 {
 
 #[tauri::command]
 pub fn mesa_estado(state: State<'_, AppState>) -> AppResult<EstadoMesa> {
-    let abierta = state.hay_partida();
+    let abierta = state.hay_partida() || state.hay_mirada();
     let deck_ids = state
         .mesa
         .lock()
@@ -339,8 +376,19 @@ pub fn mesa_estado(state: State<'_, AppState>) -> AppResult<EstadoMesa> {
 }
 
 /// La pantalla se suscribe a la mesa: recibe la vista y luego los parches.
+/// Con lo que ve un espectador, si lo es (`None`: no hay mirada).
+fn con_mirada<T>(state: &AppState, f: impl FnOnce(&mut Mirada) -> T) -> Option<T> {
+    let mut m = state.mirada.lock().ok()?;
+    m.as_mut().map(f)
+}
+
 #[tauri::command]
 pub fn mesa_suscribir(state: State<'_, AppState>, canal: Channel<MensajeMesa>) -> AppResult<()> {
+    if !state.hay_partida() {
+        if let Some(()) = con_mirada(&state, |v| v.suscribir(canal.clone())) {
+            return Ok(());
+        }
+    }
     con_sesion(&state, |s| {
         s.suscribir(canal);
         Ok(())
@@ -349,6 +397,11 @@ pub fn mesa_suscribir(state: State<'_, AppState>, canal: Channel<MensajeMesa>) -
 
 #[tauri::command]
 pub fn mesa_vista(state: State<'_, AppState>) -> AppResult<VistaMesa> {
+    if !state.hay_partida() {
+        if let Some(v) = con_mirada(&state, |v| v.vista.clone()) {
+            return Ok(v);
+        }
+    }
     con_sesion(&state, |s| Ok(s.vista()))
 }
 
@@ -358,6 +411,9 @@ pub fn mesa_accion(
     accion: Accion,
     como: Option<IdJugador>,
 ) -> AppResult<()> {
+    if !state.hay_partida() && state.hay_mirada() {
+        return Err(AppError::new(ErrorCode::Rejected).with("motivo", "espectador"));
+    }
     con_sesion(&state, |s| s.accion(accion, como))?;
     guardar_si_toca(&state, false);
     Ok(())
@@ -385,6 +441,17 @@ pub fn mesa_salir(state: State<'_, AppState>, guardar: bool) -> AppResult<()> {
         s.cerrar();
     }
     *m = None;
+    drop(m);
+    if let Ok(mut v) = state.mirada.lock() {
+        if let Some(v) = v.as_mut() {
+            v.cerrar();
+        }
+        *v = None;
+    }
+    // En red, salir de la mesa es salir de la partida.
+    if let Some(sala) = state.red.quitar_sala() {
+        tauri::async_runtime::spawn(sala.cerrar());
+    }
     if !guardar {
         guardada::borrar(&state.paths.data);
     }

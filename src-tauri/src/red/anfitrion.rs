@@ -257,6 +257,15 @@ impl Anfitrion {
         }
     }
 
+    /// La conexión de un jugador conectado (para pedirle sus imágenes).
+    pub fn conexion_de(&self, jugador: IdJugador) -> Option<Connection> {
+        let s = cerrojo(&self.sala);
+        s.pares
+            .iter()
+            .find(|p| p.jugador == Some(jugador) && p.tx.is_some())
+            .and_then(|p| p.conn.clone())
+    }
+
     /// Corta la conexión de un jugador (expulsarlo, o en las pruebas).
     pub fn cortar(&self, jugador: IdJugador) {
         let s = cerrojo(&self.sala);
@@ -613,6 +622,12 @@ async fn atender_conexion<M: Mesa>(conn: Connection, anf: Arc<Anfitrion>, mesa: 
         }
     };
     anf.poner_conexion(adm.conexion, conn.clone());
+    // Los demás streams que abra son peticiones de imágenes.
+    let imagenes = tokio::spawn(super::imagenes::servir_conexion(
+        conn.clone(),
+        mesa.clone(),
+        Some(anf.clone()),
+    ));
     // Lo que sale hacia él, en orden, por su propia tarea.
     let escritor = tokio::spawn(async move {
         while let Some(m) = entrada.recv().await {
@@ -724,4 +739,5 @@ async fn atender_conexion<M: Mesa>(conn: Connection, anf: Arc<Anfitrion>, mesa: 
     }
     drop(salida);
     escritor.abort();
+    imagenes.abort();
 }

@@ -7,7 +7,7 @@ import { useLang } from "@/components/language-provider";
 import { urlArte, urlMesa } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
-import { cartasDe, cuantasEn, NINGUNA, useMesa } from "@/stores/mesa-store";
+import { cartasDe, cuantasEn, NINGUNA, tableroDe, useMesa } from "@/stores/mesa-store";
 import { useUi } from "@/stores/ui-store";
 import { destino, hacer, mover, sitio, zonaComun, zonaDe } from "./acciones";
 import { destinoDeSoltar, pasaUmbral } from "./arrastre";
@@ -36,7 +36,7 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 	const { t } = useLang();
 	const caja = useRef<HTMLDivElement>(null);
 	const [tam, setTam] = useState({ w: 0, h: 0 });
-	const yo = useMesa((s) => s.yo ?? 0);
+	const yo = useMesa(tableroDe);
 	const tamano = useUi((s) => s.mesa.tamanoCartas);
 	const hayBanquillo = useMesa((s) => cuantasEn(s, zonaDe(yo, "banquillo")) > 0);
 	const tapete = useMesa((s) => s.jugadores[yo]?.tapete ?? null);
@@ -285,7 +285,7 @@ function soltar(
 	const d = destinoDeSoltar(disp, p.x, p.y);
 	if (!d) return;
 	const m = useMesa.getState();
-	const yo = m.yo ?? 0;
+	const yo = tableroDe(m);
 	if (d.zona.tipo === "de" && d.zona.zona === "campo" && d.sitio.tipo === "enCampo") {
 		if (desdeCampo) {
 			// Cada una a su sitio, manteniendo las distancias.
@@ -378,7 +378,7 @@ function Campo({
 	alPulsar: AlPulsar;
 	alDobleClic: (c: VistaCarta) => void;
 }) {
-	const yo = useMesa((s) => s.yo ?? 0);
+	const yo = useMesa(tableroDe);
 	const ids = useMesa((s) => cartasDe(s, zonaDe(yo, "campo")));
 	const cartas = useMesa((s) => s.cartas);
 	const { w, h } = disp.carta;
@@ -477,10 +477,16 @@ function Mano({
 	alDobleClic: (c: VistaCarta) => void;
 }) {
 	const { t } = useLang();
-	const yo = useMesa((s) => s.yo ?? 0);
+	const yo = useMesa(tableroDe);
 	const ids = useMesa((s) => cartasDe(s, zonaDe(yo, "mano")));
+	// La mano de otro (en red): solo cuántas, boca abajo.
+	const ocultas = useMesa((s) =>
+		s.zonas[`${yo}:mano`]?.cartas == null ? cuantasEn(s, zonaDe(yo, "mano")) : 0,
+	);
+	const dorso = useMesa((s) => s.jugadores[yo]?.dorso ?? null);
 	const { w, h } = disp.cartaPequena;
-	const pos = abanico(disp.mano, ids.length, { w, h });
+	const n = ids.length + ocultas;
+	const pos = abanico(disp.mano, n, { w, h });
 	return (
 		<>
 			<div
@@ -488,11 +494,30 @@ function Mano({
 				style={{ left: disp.mano.x, width: disp.mano.w, top: disp.mano.y - 14 }}
 				data-tutorial="mesa-mano"
 			>
-				{ids.length === 1
-					? t("Una carta en la mano")
-					: t("{n} cartas en la mano", { n: ids.length })}
+				{n === 1 ? t("Una carta en la mano") : t("{n} cartas en la mano", { n })}
 			</div>
-			{ids.map((id, i) => {
+			{Array.from({ length: ocultas }, (_, i) => {
+				const p = pos[i];
+				if (!p) return null;
+				return (
+					<div
+						key={i}
+						className="pointer-events-none absolute"
+						style={{
+							left: p.x - w / 2,
+							top: p.y - h / 2,
+							width: w,
+							height: h,
+							transform: `rotate(${p.giro}deg)`,
+							zIndex: 1000 + i,
+						}}
+					>
+						{dorso ? <ImagenCarta imagen={dorso} ancho={244} /> : <DorsoGenerico />}
+					</div>
+				);
+			})}
+			{ids.map((id, j) => {
+				const i = ocultas + j;
 				const p = pos[i];
 				if (!p) return null;
 				return (
@@ -519,7 +544,7 @@ function Mano({
 /** Biblioteca, cementerio, exilio, mando y banquillo. */
 function Zonas({ disp, alPulsar }: { disp: Disposicion; alPulsar: AlPulsar }) {
 	const { t } = useLang();
-	const yo = useMesa((s) => s.yo ?? 0);
+	const yo = useMesa(tableroDe);
 	const lib = useMesa((s) => s.zonas[`${yo}:biblioteca`]);
 	const dorso = useMesa((s) => s.jugadores[yo]?.dorso ?? null);
 	// La de arriba solo se pinta revelada si se juega así; mirarla
@@ -626,7 +651,7 @@ function ZonaArriba({
 	alPulsar: AlPulsar;
 	hacerZona: (r: Rect, nombre: string, hijo: React.ReactNode, n: number) => React.ReactNode;
 }) {
-	const yo = useMesa((s) => s.yo ?? 0);
+	const yo = useMesa(tableroDe);
 	const v = useMesa((s) => s.zonas[`${yo}:${zona}`]);
 	const ids = v?.cartas ?? [];
 	const arriba = ids[ids.length - 1];
@@ -668,7 +693,7 @@ function ZonaArriba({
 
 /** Las bolitas de colores del campo. */
 function Bolitas({ campo }: { campo: Rect }) {
-	const yo = useMesa((s) => s.yo ?? 0);
+	const yo = useMesa(tableroDe);
 	const bolitas = useMesa((s) => s.general?.bolitas ?? NINGUNA);
 	const lado = { S: 12, M: 18, L: 26 };
 	return (

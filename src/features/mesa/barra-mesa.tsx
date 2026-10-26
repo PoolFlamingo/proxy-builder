@@ -19,6 +19,7 @@ import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { useMesa } from "@/stores/mesa-store";
+import { useRed } from "@/stores/red-store";
 import { hacer } from "./acciones";
 import * as op from "./operaciones";
 import { usePantalla } from "./pantalla";
@@ -86,6 +87,12 @@ export function BarraMesa({
 		return () => window.clearInterval(i);
 	}, [pausada]);
 	const abrir = usePantalla((s) => s.abrir);
+	// En red: el sparring no va, reiniciar y terminar son del anfitrión, y
+	// quien mira no toca nada de la partida.
+	const papel = useRed((s) => s.papel);
+	const enRed = papel !== null;
+	const manda = papel === null || papel === "anfitrion";
+	const juega = papel !== "espectador";
 
 	return (
 		<div
@@ -102,50 +109,62 @@ export function BarraMesa({
 					{cronometro(Number(turno.desdeMs), ahora)}
 				</span>
 			)}
-			<Boton
-				ayuda={pausada ? t("Seguir") : t("Pausar")}
-				onClick={() => void hacer({ que: "pausar", si: !pausada })}
-				activo={pausada}
-			>
-				{pausada ? <Play className="size-4" /> : <Pause className="size-4" />}
-			</Boton>
-			<span className="mx-0.5 h-5 w-px bg-white/15" />
-			<Boton ayuda={t("Deshacer (Ctrl+Z)")} onClick={() => void op.deshacer()}>
-				<Undo2 className="size-4" />
-			</Boton>
-			<Boton ayuda={t("Rehacer (Ctrl+Y)")} onClick={() => void op.rehacer()}>
-				<Redo2 className="size-4" />
-			</Boton>
-			<span className="mx-0.5 h-5 w-px bg-white/15" />
-			<Boton ayuda={t("Dados y monedas")} onClick={() => abrir({ tipo: "azar" })}>
-				<Dices className="size-4" />
-			</Boton>
-			<Boton ayuda={t("Crear ficha")} onClick={() => abrir({ tipo: "fichas" })}>
-				<SquareStack className="size-4" />
-			</Boton>
+			{juega && (
+				<>
+					<Boton
+						ayuda={pausada ? t("Seguir") : t("Pausar")}
+						onClick={() => void hacer({ que: "pausar", si: !pausada })}
+						activo={pausada}
+					>
+						{pausada ? <Play className="size-4" /> : <Pause className="size-4" />}
+					</Boton>
+					<span className="mx-0.5 h-5 w-px bg-white/15" />
+					<Boton ayuda={t("Deshacer (Ctrl+Z)")} onClick={() => void op.deshacer()}>
+						<Undo2 className="size-4" />
+					</Boton>
+					<Boton ayuda={t("Rehacer (Ctrl+Y)")} onClick={() => void op.rehacer()}>
+						<Redo2 className="size-4" />
+					</Boton>
+					<span className="mx-0.5 h-5 w-px bg-white/15" />
+					<Boton ayuda={t("Dados y monedas")} onClick={() => abrir({ tipo: "azar" })}>
+						<Dices className="size-4" />
+					</Boton>
+					<Boton ayuda={t("Crear ficha")} onClick={() => abrir({ tipo: "fichas" })}>
+						<SquareStack className="size-4" />
+					</Boton>
+				</>
+			)}
 			<Boton ayuda={t("Registro de la partida")} onClick={() => abrir({ tipo: "registro" })}>
 				<History className="size-4" />
 			</Boton>
-			<Boton ayuda={t("Tapete")} onClick={() => abrir({ tipo: "tapete" })}>
-				<Image className="size-4" />
-			</Boton>
+			{juega && (
+				<Boton ayuda={t("Tapete")} onClick={() => abrir({ tipo: "tapete" })}>
+					<Image className="size-4" />
+				</Boton>
+			)}
 			<Boton ayuda={t("Atajos de teclado (?)")} onClick={() => abrir({ tipo: "atajos" })}>
 				<Keyboard className="size-4" />
 			</Boton>
 			<Boton ayuda={t("Pantalla completa")} onClick={() => void pantallaCompleta()}>
 				<Expand className="size-4" />
 			</Boton>
-			<BotonSparring />
+			{!enRed && <BotonSparring />}
 			<span className="mx-0.5 h-5 w-px bg-white/15" />
-			<Boton ayuda={t("Reiniciar (misma lista, nueva partida)")} onClick={onReiniciar}>
-				<RotateCcw className="size-4" />
-			</Boton>
-			<Boton ayuda={t("Terminar la partida")} onClick={() => abrir({ tipo: "terminar" })}>
-				<Flag className="size-4" />
-			</Boton>
-			<Boton ayuda={t("Editar este deck")} onClick={onEditarDeck}>
-				<Pencil className="size-4" />
-			</Boton>
+			{manda && (
+				<>
+					<Boton ayuda={t("Reiniciar (misma lista, nueva partida)")} onClick={onReiniciar}>
+						<RotateCcw className="size-4" />
+					</Boton>
+					<Boton ayuda={t("Terminar la partida")} onClick={() => abrir({ tipo: "terminar" })}>
+						<Flag className="size-4" />
+					</Boton>
+				</>
+			)}
+			{!enRed && (
+				<Boton ayuda={t("Editar este deck")} onClick={onEditarDeck}>
+					<Pencil className="size-4" />
+				</Boton>
+			)}
 			<Boton ayuda={t("Salir de la mesa")} onClick={onSalir}>
 				<LogOut className="size-4" />
 			</Boton>

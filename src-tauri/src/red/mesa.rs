@@ -8,6 +8,7 @@ use serde::Serialize;
 use tauri::{Emitter, Manager};
 use ts_rs::TS;
 
+use super::mirada::Mirada;
 use super::protocolo::EnSala;
 use crate::mesa::sesion::Sesion;
 use crate::state::AppState;
@@ -41,17 +42,35 @@ pub enum AvisoRed {
 pub trait Mesa: Clone + Send + Sync + 'static {
     /// Hace algo con la sesión abierta (si la hay).
     fn con<R>(&self, f: impl FnOnce(&mut Option<Sesion>) -> R) -> R;
+    /// Lo que ve un espectador (no tiene sesión).
+    fn mirada<R>(&self, f: impl FnOnce(&mut Option<Mirada>) -> R) -> R;
     fn avisar(&self, aviso: AvisoRed);
+    /// La carpeta de las imágenes de la mesa (`app_cache_dir/mesa/`).
+    fn carpeta(&self) -> std::path::PathBuf;
 }
 
 /// La de la app: la sesión de `AppState.mesa` y los avisos por evento.
-#[derive(Clone)]
-pub struct MesaDeApp(pub tauri::AppHandle);
+pub struct MesaDeApp<Rt: tauri::Runtime = tauri::Wry>(pub tauri::AppHandle<Rt>);
 
-impl Mesa for MesaDeApp {
+impl<Rt: tauri::Runtime> Clone for MesaDeApp<Rt> {
+    fn clone(&self) -> Self {
+        MesaDeApp(self.0.clone())
+    }
+}
+
+impl<Rt: tauri::Runtime> Mesa for MesaDeApp<Rt> {
     fn con<R>(&self, f: impl FnOnce(&mut Option<Sesion>) -> R) -> R {
         let estado = self.0.state::<AppState>();
         let mut g = match estado.mesa.lock() {
+            Ok(g) => g,
+            Err(e) => e.into_inner(),
+        };
+        f(&mut g)
+    }
+
+    fn mirada<R>(&self, f: impl FnOnce(&mut Option<Mirada>) -> R) -> R {
+        let estado = self.0.state::<AppState>();
+        let mut g = match estado.mirada.lock() {
             Ok(g) => g,
             Err(e) => e.into_inner(),
         };
@@ -63,13 +82,37 @@ impl Mesa for MesaDeApp {
             tracing::warn!(error = %e, "no se pudo avisar a la pantalla");
         }
     }
+
+    fn carpeta(&self) -> std::path::PathBuf {
+        crate::mesa::imagenes::carpeta(&self.0.state::<AppState>())
+    }
 }
 
 /// Para los tests: una sesión en memoria y los avisos apuntados.
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct MesaEnMemoria {
     pub sesion: Arc<Mutex<Option<Sesion>>>,
+    pub mirada: Arc<Mutex<Option<Mirada>>>,
     pub avisos: Arc<Mutex<Vec<AvisoRed>>>,
+    /// Una carpeta temporal propia para las imágenes.
+    pub carpeta: std::path::PathBuf,
+}
+
+impl Default for MesaEnMemoria {
+    fn default() -> Self {
+        static N: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        let n = N.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        MesaEnMemoria {
+            sesion: Arc::default(),
+            mirada: Arc::default(),
+            avisos: Arc::default(),
+            carpeta: std::env::temp_dir().join(format!(
+                "pb-mesa-{}-{n}-{}",
+                std::process::id(),
+                crate::mesa::sesion::semilla()
+            )),
+        }
+    }
 }
 
 impl Mesa for MesaEnMemoria {
@@ -81,9 +124,21 @@ impl Mesa for MesaEnMemoria {
         f(&mut g)
     }
 
+    fn mirada<R>(&self, f: impl FnOnce(&mut Option<Mirada>) -> R) -> R {
+        let mut g = match self.mirada.lock() {
+            Ok(g) => g,
+            Err(e) => e.into_inner(),
+        };
+        f(&mut g)
+    }
+
     fn avisar(&self, aviso: AvisoRed) {
         if let Ok(mut v) = self.avisos.lock() {
             v.push(aviso);
         }
+    }
+
+    fn carpeta(&self) -> std::path::PathBuf {
+        self.carpeta.clone()
     }
 }

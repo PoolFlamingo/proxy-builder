@@ -196,6 +196,13 @@ export const PASOS: Record<Vista, Paso[]> = {
 			),
 		},
 		{
+			ancla: "mesa-red",
+			titulo: paraTraducir("Jugar en red"),
+			texto: paraTraducir(
+				"Crea una partida y pasa el código a tus amigos, o pega el suyo para jugar o mirar. Las cartas propias y los tapetes de cada uno llegan solos.",
+			),
+		},
+		{
 			ancla: "mesa-barra",
 			titulo: paraTraducir("La barra de la mesa"),
 			texto: paraTraducir(

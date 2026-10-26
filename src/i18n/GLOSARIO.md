@@ -139,3 +139,7 @@ otras áreas dice «Милл»: en la mesa se usa «перемолоть».
 | montón (cartas como una) | pile | tas | Haufen | mucchio | monte | grămadă | stos | stapel | стопка | стос | 束 | 더미 | 牌叠 | 牌疊 |
 | fantasma (rival del solitario) | ghost | fantôme | Geist | fantasma | fantasma | fantoma | Duch | Spook | Призрак | привид | ゴースト | 유령 | 幻影 | 幻影 |
 | tapete | playmat | tapis de jeu | Spielmatte | tappetino | playmat | playmat | mata | speelmat | коврик | плеймат | プレイマット | 플레이매트 | 游戏垫 | 遊戲墊 |
+| anfitrión (partida en red) | host | hôte | Gastgeber | host | anfitrião | gazdă | gospodarz | host | хост | хост | ホスト | 호스트 | 主机 | 主機 |
+| sala (de espera) | lobby | salon | Lobby | stanza | sala | sală | poczekalnia | lobby | лобби | лобі | ロビー | 대기실 | 房间 | 房間 |
+| espectador | spectator | spectateur | Zuschauer | spettatore | espectador | spectator | widz | toeschouwer | зритель | глядач | 観戦者 | 관전자 | 观战者 | 觀戰者 |
+| código (para unirse) | code | code | Code | codice | código | cod | kod | code | код | код | コード | 코드 | 代码 | 代碼 |

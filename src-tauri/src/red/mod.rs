@@ -20,20 +20,52 @@ pub mod identidad;
 pub mod imagenes;
 pub mod invitado;
 pub mod mesa;
+pub mod mirada;
 pub mod nodo;
 pub mod perfil;
 pub mod protocolo;
 #[cfg(test)]
 mod pruebas;
 
+use std::sync::Arc;
+
 use iroh::{Endpoint, SecretKey};
 
 use crate::error::AppResult;
+
+/// La partida en red de esta app (en la sala o ya empezada).
+pub enum Sala {
+    /// Esta app la abrió: atiende a los que llegan con `codigo`.
+    Anfitrion {
+        anf: Arc<anfitrion::Anfitrion>,
+        tarea: tokio::task::AbortHandle,
+        codigo: String,
+    },
+    /// Esta app se unió a la de otro.
+    Invitado {
+        conexion: invitado::Conexion,
+        rol: protocolo::Rol,
+    },
+}
+
+impl Sala {
+    /// Sale: el anfitrión la cierra para todos; el invitado se despide.
+    pub async fn cerrar(self) {
+        match self {
+            Sala::Anfitrion { anf, tarea, .. } => {
+                anf.cerrar();
+                tarea.abort();
+            }
+            Sala::Invitado { conexion, .. } => conexion.salir().await,
+        }
+    }
+}
 
 /// La red de la app: la clave y, mientras hace falta, el nodo levantado.
 pub struct Red {
     clave: SecretKey,
     nodo: tokio::sync::Mutex<Option<Endpoint>>,
+    sala: std::sync::Mutex<Option<Sala>>,
 }
 
 impl Red {
@@ -41,7 +73,22 @@ impl Red {
         Red {
             clave,
             nodo: tokio::sync::Mutex::new(None),
+            sala: std::sync::Mutex::new(None),
         }
+    }
+
+    /// Con la sala (si la hay).
+    pub fn con_sala<R>(&self, f: impl FnOnce(&mut Option<Sala>) -> R) -> R {
+        let mut g = match self.sala.lock() {
+            Ok(g) => g,
+            Err(e) => e.into_inner(),
+        };
+        f(&mut g)
+    }
+
+    /// Quita la sala (para cerrarla fuera del cerrojo).
+    pub fn quitar_sala(&self) -> Option<Sala> {
+        self.con_sala(Option::take)
     }
 
     pub fn clave(&self) -> &SecretKey {

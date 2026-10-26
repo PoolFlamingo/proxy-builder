@@ -10,7 +10,7 @@
 //! La pantalla las pide por `pbimg://…/m/<sha256>/<ancho>` y
 //! `/m/s/<id>/<cara>/<ancho>`, reducidas a los `ANCHOS` de siempre.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use image::RgbaImage;
 use mesa::modelo::RefImagen;
@@ -29,12 +29,21 @@ pub fn carpeta(state: &AppState) -> PathBuf {
 }
 
 pub fn ruta_propia(state: &AppState, sha: &str) -> PathBuf {
-    let dos = sha.get(..2).unwrap_or("00");
-    carpeta(state).join(dos).join(format!("{sha}.jpg"))
+    propia_en(&carpeta(state), sha)
 }
 
 pub fn ruta_scryfall(state: &AppState, id: &str, cara: u8) -> PathBuf {
-    carpeta(state).join("s").join(format!("{id}-{cara}.jpg"))
+    scryfall_en(&carpeta(state), id, cara)
+}
+
+/// `ruta_propia` dentro de la carpeta de la mesa `carpeta`.
+pub fn propia_en(carpeta: &Path, sha: &str) -> PathBuf {
+    let dos = sha.get(..2).unwrap_or("00");
+    carpeta.join(dos).join(format!("{sha}.jpg"))
+}
+
+pub fn scryfall_en(carpeta: &Path, id: &str, cara: u8) -> PathBuf {
+    carpeta.join("s").join(format!("{id}-{cara}.jpg"))
 }
 
 /// Un id de Scryfall (un uuid): solo hexadecimal y guiones.

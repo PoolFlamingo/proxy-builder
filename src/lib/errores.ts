@@ -40,6 +40,15 @@ const MOTIVOS: Partial<Record<ErrorCode, Record<string, string>>> = {
 		),
 		lista: paraTraducir("La lista para jugar no vale para este formato: revísala."),
 		lista_sin_nombre: paraTraducir("Ponle un nombre a la lista."),
+		codigo: paraTraducir("Ese código no es válido: cópialo entero, empieza por PB1-."),
+		deck: paraTraducir("Elige un deck para jugar."),
+	},
+	Network: {
+		sin_respuesta: paraTraducir("El anfitrión no responde."),
+		desconectado: paraTraducir("Se ha perdido la conexión con la partida."),
+	},
+	NotFound: {
+		sin_sala: paraTraducir("No hay ninguna partida en red abierta."),
 	},
 	Rejected: {
 		NoExiste: paraTraducir("Esa carta o ese jugador ya no está ahí."),
@@ -48,6 +57,14 @@ const MOTIVOS: Partial<Record<ErrorCode, Record<string, string>>> = {
 		FueraDeTurno: paraTraducir("Solo el jugador activo puede hacer eso."),
 		Limite: paraTraducir("Es demasiado (un número o un texto pasa del límite)."),
 		NoSePuede: paraTraducir("Eso no se puede hacer ahora."),
+		codigo: paraTraducir("El código no es el de esta partida: pide uno nuevo al anfitrión."),
+		version: paraTraducir("Tenéis versiones distintas de la app: actualizad los dos."),
+		llena: paraTraducir("La partida está llena."),
+		empezada: paraTraducir("La partida ya ha empezado: puedes entrar a mirar."),
+		sin_deck: paraTraducir("La partida empezó sin ti: no habías elegido deck."),
+		ritmo: paraTraducir("Demasiadas acciones seguidas: espera un momento."),
+		espectador: paraTraducir("Estás mirando: los espectadores no pueden jugar."),
+		sin_partida: paraTraducir("La partida aún no ha empezado."),
 	},
 	Server: {},
 };

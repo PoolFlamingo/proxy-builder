@@ -28,6 +28,7 @@ import type { DescargableInfo } from "@/bindings/DescargableInfo";
 import type { DesignDraft } from "@/bindings/DesignDraft";
 import type { DesignLang } from "@/bindings/DesignLang";
 import type { EstadoMesa } from "@/bindings/EstadoMesa";
+import type { EstadoRed } from "@/bindings/EstadoRed";
 import type { ExportEstimate } from "@/bindings/ExportEstimate";
 import type { FaceImage } from "@/bindings/FaceImage";
 import type { FichaPropuesta } from "@/bindings/FichaPropuesta";
@@ -51,6 +52,7 @@ import type { OriginalInfo } from "@/bindings/OriginalInfo";
 import type { PackInfo } from "@/bindings/PackInfo";
 import type { PagePlan } from "@/bindings/PagePlan";
 import type { ParsedDecklist } from "@/bindings/ParsedDecklist";
+import type { PeticionUnion } from "@/bindings/PeticionUnion";
 import type { Preset } from "@/bindings/Preset";
 import type { PresetKind } from "@/bindings/PresetKind";
 import type { PrintSettings } from "@/bindings/PrintSettings";
@@ -268,6 +270,11 @@ export interface Commands {
 	mesa_dados_imagen: { args: { ruta: string | null }; result: VistaAspectoDados };
 	red_identidad: { args: Record<string, never>; result: Identidad };
 	red_identidad_set: { args: { apodo: string; avatar: string | null }; result: Identidad };
+	red_estado: { args: Record<string, never>; result: EstadoRed };
+	red_crear: { args: { apodo: string; deck: string | null }; result: string };
+	red_unirse: { args: { peticion: PeticionUnion }; result: number };
+	red_empezar: { args: { config: ConfigMesa }; result: number };
+	red_salir: { args: Record<string, never>; result: null };
 	mesa_listas: { args: { deck: string }; result: ListasDeDeck };
 	mesa_lista_cartas: { args: { deck: string }; result: CartaDeLista[] };
 	mesa_lista_comprobar: {

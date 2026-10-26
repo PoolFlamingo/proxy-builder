@@ -47,6 +47,8 @@ pub struct AppState {
     pub mesa: Mutex<Option<crate::mesa::sesion::Sesion>>,
     /// La identidad y el nodo de la partida en red.
     pub red: crate::red::Red,
+    /// Lo que ve esta app si mira una partida en red como espectador.
+    pub mirada: Mutex<Option<crate::red::mirada::Mirada>>,
     /// Trabajos de resolución/exportación en marcha (la limpieza de imágenes
     /// no corre mientras haya alguno).
     trabajos: AtomicUsize,
@@ -80,6 +82,7 @@ impl AppState {
                     .unwrap_or(4),
             ),
             mesa: Mutex::new(None),
+            mirada: Mutex::new(None),
             red,
             trabajos: AtomicUsize::new(0),
         })
@@ -93,6 +96,11 @@ impl AppState {
 
     pub fn hay_partida(&self) -> bool {
         self.mesa.lock().map(|m| m.is_some()).unwrap_or(false)
+    }
+
+    /// Si esta app mira una partida en red como espectador.
+    pub fn hay_mirada(&self) -> bool {
+        self.mirada.lock().map(|m| m.is_some()).unwrap_or(false)
     }
 
     /// Marca un trabajo en marcha hasta que se suelte el guardián.

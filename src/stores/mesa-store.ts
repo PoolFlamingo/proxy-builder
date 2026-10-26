@@ -125,6 +125,11 @@ type MesaStore = Mesa & {
 	/** La carta que se inspecciona (detalle con su texto). */
 	inspeccion: IdCarta | null;
 	/**
+	 * De quién es el tablero que se ve (`null`: el propio). En red, para mirar
+	 * el de un rival; los tableros a la vez llegan con la Fase G.
+	 */
+	mirando: IdJugador | null;
+	/**
 	 * La vista entera. Con `registro` (al suscribirse, deshacer o reiniciar)
 	 * también cambia el registro: lo deshecho y lo de antes ya no sale.
 	 */
@@ -136,6 +141,7 @@ type MesaStore = Mesa & {
 	alternar: (id: IdCarta) => void;
 	setSobre: (id: IdCarta | null) => void;
 	inspeccionar: (id: IdCarta | null) => void;
+	mirar: (j: IdJugador | null) => void;
 };
 
 export const useMesa = create<MesaStore>((set, get) => ({
@@ -145,6 +151,7 @@ export const useMesa = create<MesaStore>((set, get) => ({
 	seleccion: [],
 	sobre: null,
 	inspeccion: null,
+	mirando: null,
 	recibirVista: (v, registro) => {
 		const m = desdeVista(v);
 		set({
@@ -178,6 +185,7 @@ export const useMesa = create<MesaStore>((set, get) => ({
 			seleccion: [],
 			sobre: null,
 			inspeccion: null,
+			mirando: null,
 		}),
 	seleccionar: (seleccion) => set({ seleccion }),
 	alternar: (id) => {
@@ -186,7 +194,13 @@ export const useMesa = create<MesaStore>((set, get) => ({
 	},
 	setSobre: (sobre) => set({ sobre }),
 	inspeccionar: (inspeccion) => set({ inspeccion }),
+	mirar: (j) => set({ mirando: j === get().yo ? null : j, seleccion: [] }),
 }));
+
+/** De quién es el tablero que se ve: el que se mira o el propio. */
+export function tableroDe(m: Pick<MesaStore, "mirando" | "yo">): IdJugador {
+	return m.mirando ?? m.yo ?? 0;
+}
 
 /** Un array vacío que es siempre el mismo (los selectores no deben crear uno nuevo). */
 export const NINGUNA: never[] = [];

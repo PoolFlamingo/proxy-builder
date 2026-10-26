@@ -237,6 +237,11 @@ pub fn run() {
             commands::mesa::mesa_lista_borrar,
             commands::red::red_identidad,
             commands::red::red_identidad_set,
+            commands::red::red_estado,
+            commands::red::red_crear,
+            commands::red::red_unirse,
+            commands::red::red_empezar,
+            commands::red::red_salir,
         ])
         .run(tauri::generate_context!());
 

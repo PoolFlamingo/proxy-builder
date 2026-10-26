@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { call } from "@/lib/ipc";
 import { abrirDeck } from "@/stores/deck-store";
 import { useMesa } from "@/stores/mesa-store";
+import { useRed } from "@/stores/red-store";
 import { useUi } from "@/stores/ui-store";
 import { hacer } from "./acciones";
 import { AyudasTurno } from "./ayudas-turno";
@@ -17,6 +18,8 @@ import { COMO } from "./dialogos/terminar";
 import { EntradaMesa } from "./entrada";
 import { ContadorFps, VigiaFps } from "./fps";
 import { Mulligan } from "./mulligan";
+import { refrescarRed } from "./red/conexion-red";
+import { AvisoConexion, SelectorTablero } from "./red/estado-red";
 import { ReaccionPendiente } from "./sparring/reaccion";
 import { Tablero } from "./tablero";
 import { VidaJugador } from "./vida-jugador";
@@ -34,6 +37,7 @@ export function MesaScreen() {
 
 	useEffect(() => {
 		let vivo = true;
+		void refrescarRed();
 		call("mesa_estado")
 			.then(async (e) => {
 				setDeckIds(e.deckIds);
@@ -55,6 +59,7 @@ export function MesaScreen() {
 function Mesa({ deckId }: { deckId: string | null }) {
 	const { t } = useLang();
 	const yo = useMesa((s) => s.yo ?? 0);
+	const papel = useRed((s) => s.papel);
 	const [preguntaSalir, setPreguntaSalir] = useState(false);
 	const [preguntaReiniciar, setPreguntaReiniciar] = useState(false);
 	const [preguntaEditar, setPreguntaEditar] = useState(false);
@@ -86,6 +91,8 @@ function Mesa({ deckId }: { deckId: string | null }) {
 				<AyudasTurno />
 				<VidaJugador jugador={yo} />
 			</div>
+			<SelectorTablero />
+			<AvisoConexion />
 			<CapaDados />
 			<ReaccionPendiente />
 			<VistaGrande />
@@ -94,22 +101,38 @@ function Mesa({ deckId }: { deckId: string | null }) {
 			<DialogosMesa deckId={deckId2} />
 			<ContadorFps />
 			<VigiaFps />
-			<Confirmar
-				abierto={preguntaSalir}
-				onCerrar={() => setPreguntaSalir(false)}
-				titulo={t("¿Salir de la mesa?")}
-				descripcion={t("Puedes dejar la partida guardada para seguirla luego o terminarla.")}
-				accion={t("Terminarla")}
-				destructiva
-				onConfirmar={() => void salir(false)}
-				accionAlternativa={{
-					texto: t("Dejarla para luego"),
-					onClick: async () => {
-						await salir(true);
-						return true;
-					},
-				}}
-			/>
+			{papel ? (
+				<Confirmar
+					abierto={preguntaSalir}
+					onCerrar={() => setPreguntaSalir(false)}
+					titulo={t("¿Salir de la partida?")}
+					descripcion={
+						papel === "anfitrion"
+							? t("Eres el anfitrión: la partida se cierra para todos.")
+							: t("Los demás siguen jugando sin ti.")
+					}
+					accion={t("Salir")}
+					destructiva
+					onConfirmar={() => void salir(false)}
+				/>
+			) : (
+				<Confirmar
+					abierto={preguntaSalir}
+					onCerrar={() => setPreguntaSalir(false)}
+					titulo={t("¿Salir de la mesa?")}
+					descripcion={t("Puedes dejar la partida guardada para seguirla luego o terminarla.")}
+					accion={t("Terminarla")}
+					destructiva
+					onConfirmar={() => void salir(false)}
+					accionAlternativa={{
+						texto: t("Dejarla para luego"),
+						onClick: async () => {
+							await salir(true);
+							return true;
+						},
+					}}
+				/>
+			)}
 			<Confirmar
 				abierto={preguntaReiniciar}
 				onCerrar={() => setPreguntaReiniciar(false)}
