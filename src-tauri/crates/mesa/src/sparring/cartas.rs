@@ -28,6 +28,10 @@ pub enum Categoria {
     NoCriatura,
     /// Cualquier hechizo.
     Todo,
+    /// Cualquier tierra (las que se quitan: las fuertes).
+    Tierra,
+    /// Una tierra que no es básica.
+    TierraNoBasica,
 }
 
 impl Categoria {
@@ -43,6 +47,8 @@ impl Categoria {
             Categoria::Permanente => !t.tierra && !t.instantaneo && !t.conjuro,
             Categoria::NoCriatura => !t.criatura,
             Categoria::Todo => true,
+            Categoria::Tierra => t.tierra,
+            Categoria::TierraNoBasica => t.tierra && !t.basica,
         }
     }
 }

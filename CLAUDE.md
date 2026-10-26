@@ -136,11 +136,11 @@ le falta una cadena le sale la inglesa.
   **Sparring** (Fase D): el rival fantasma del solitario, como el de
   Playgroup (tablas, no IA). `mesa::sparring::reaccionar(antes, después,
   evento, azar)` (contrarresta al lanzar, elimina/devuelve/sacrificio al
-  llegar al campo, barre al pasar con criaturas); la sesión mete la reacción
+  llegar al campo, barre al pasar con criaturas; de las tierras solo quita las muy fuertes —legendarias o `TIERRAS_FUERTES`—, y las rocas y elfos de maná pesan menos; Pablo, 26/10/2026); la sesión mete la reacción
   como `Cambio::Sparring` de la mesa y el jugador decide con
   `DecidirSparring`. Bases, ritmo e intensidades arriba de
   `sparring/reacciones.rs`, calibradas con `tests/sparring.rs` (500
-  partidas por intensidad, reparto de Playgroup ±5 puntos); las 122 cartas
+  partidas por intensidad, reparto de Playgroup ±5 puntos); las 128 cartas
   del fantasma en `mesa/assets/sparring/cartas.json`, por nombre
   (`mesa_sparring_carta` las busca en Scryfall). Pantalla en
   `features/mesa/sparring/`.

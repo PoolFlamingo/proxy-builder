@@ -47,7 +47,7 @@ export function ComoFunciona({
 					</p>
 					<p>
 						{t(
-							"Tiene sus límites: no lanza lo que no podría pagar (en la ronda N tiene N manás, salvo las gratis como Force of Will), respeta el antimaleficio y nunca toca tus tierras.",
+							"Tiene sus límites: no lanza lo que no podría pagar (en la ronda N tiene N manás, salvo las gratis como Force of Will), respeta el antimaleficio y de tus tierras solo toca las muy fuertes, como Gaea's Cradle.",
 						)}
 					</p>
 					<p>

@@ -7,8 +7,8 @@
 //! - **lanza** algo (de la mano o el mando a la pila, o un permanente que
 //!   no es tierra directo al campo) → puede contrarrestarlo;
 //! - **llega** al campo un permanente que no es tierra (al resolverse o
-//!   puesto a mano) → puede eliminarlo, devolverlo a la mano o hacer
-//!   sacrificar una criatura;
+//!   puesto a mano), o una tierra muy fuerte → puede eliminarlo, devolverlo
+//!   a la mano o hacer sacrificar una criatura;
 //! - **pasa el turno** con criaturas → puede barrer.
 //!
 //! La probabilidad de cada una es `base × ritmo de la ronda × intensidad ×
@@ -22,7 +22,8 @@
 //! Límites del fantasma: en la ronda N tiene N manás (salvo las cartas
 //! gratis); respeta antimaleficio y velo (busca otro objetivo o se espera;
 //! los sacrificios y los barridos no apuntan); no destruye lo indestructible
-//! (sí lo exilia); nunca apunta a tierras ni a lo que solo da maná; y como
+//! (sí lo exilia); de las tierras solo apunta a las muy fuertes
+//! (`amenaza::tierra_fuerte`); y como
 //! mucho reacciona una vez por ronda (tres en «Despiadado»), nunca con una
 //! reacción sin decidir y nunca durante el mulligan.
 
@@ -178,8 +179,9 @@ fn movidas(antes: &Partida, despues: &Partida, j: IdJugador) -> (Vec<IdCarta>, V
         if ahora == pila && desde_la_mano {
             lanzadas.push(*id);
         }
-        if ahora == campo && !tierra {
-            if desde_la_mano {
+        if ahora == campo {
+            // Las tierras no se lanzan; llegar, sí (las fuertes se quitan).
+            if desde_la_mano && !tierra {
                 lanzadas.push(*id);
             }
             llegadas.push(*id);
@@ -243,7 +245,12 @@ pub fn reaccionar(
             return Some(r);
         }
     }
-    let &id = llegadas.last()?;
+    // Lo último que llegó y pesa algo (una tierra básica no cuenta).
+    let id = llegadas
+        .iter()
+        .rev()
+        .copied()
+        .find(|c| ctx.peso_de(*c) > 0.0)?;
     ctx.al_llegar(id)
 }
 
@@ -269,7 +276,7 @@ impl Contexto<'_> {
         self.p
             .cartas
             .get(&id)
-            .map_or(0.0, |c| peso(&c.origen.info, c.es_ficha))
+            .map_or(0.0, |c| peso(&c.origen.info, &c.origen.nombre, c.es_ficha))
     }
 
     /// Las cartas del fantasma de este tipo que puede pagar en esta ronda.

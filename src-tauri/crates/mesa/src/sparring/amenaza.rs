@@ -3,8 +3,10 @@
 //! cada carta al llegar); aquí no hay esos datos y se estima con lo que la
 //! app sabe de ella (`InfoCarta`): el coste, si es el comandante y sus
 //! funciones (`proxy_core::stats::funciones`). Las rocas de maná y las
-//! criaturas que solo dan maná pesan 0 (Playgroup tampoco las quita: están
-//! por debajo de su 1 %), y las tierras nunca.
+//! criaturas que dan maná pesan algo menos que las demás (Playgroup no las
+//! quita; en las mesas de Pablo, sí). De las tierras, solo las muy fuertes:
+//! las legendarias (Gaea's Cradle, Serra's Sanctum…) y unas pocas más
+//! (`TIERRAS_FUERTES`); las básicas y las normales, nunca.
 
 use crate::modelo::{Carta, InfoCarta};
 
@@ -19,6 +21,7 @@ pub struct Tipos {
     pub instantaneo: bool,
     pub conjuro: bool,
     pub tierra: bool,
+    pub basica: bool,
 }
 
 pub fn tipos(info: &InfoCarta) -> Tipos {
@@ -34,6 +37,7 @@ pub fn tipos(info: &InfoCarta) -> Tipos {
         instantaneo: tiene("instant"),
         conjuro: tiene("sorcery"),
         tierra: info.es_tierra || tiene("land"),
+        basica: tiene("basic"),
     }
 }
 
@@ -57,7 +61,37 @@ pub fn indestructible(info: &InfoCarta, carta: Option<&Carta>) -> bool {
     tiene_palabra(info, carta, "Indestructible")
 }
 
-/// Una roca de maná o una criatura que solo da maná: no se quita.
+/// Tierras que no son legendarias pero se quitan igual (las que más pesan en
+/// Commander), por su nombre en inglés.
+const TIERRAS_FUERTES: [&str; 14] = [
+    "Cabal Coffers",
+    "Cabal Stronghold",
+    "Field of the Dead",
+    "Maze of Ith",
+    "Glacial Chasm",
+    "Kor Haven",
+    "Volrath's Stronghold",
+    "Thespian's Stage",
+    "Ancient Tomb",
+    "Mishra's Workshop",
+    "Gemstone Caverns",
+    "Homeward Path",
+    "Yavimaya, Cradle of Growth",
+    "Dark Depths",
+];
+
+/// Si una tierra es de las que el fantasma quita.
+pub fn tierra_fuerte(info: &InfoCarta, nombre: &str) -> bool {
+    let n = nombre.split(" // ").next().unwrap_or(nombre).trim();
+    info.es_legendaria
+        || info
+            .tipo
+            .as_deref()
+            .is_some_and(|t| t.to_lowercase().contains("legendary"))
+        || TIERRAS_FUERTES.iter().any(|t| t.eq_ignore_ascii_case(n))
+}
+
+/// Una roca de maná o una criatura pequeña que da maná: pesa menos.
 fn solo_da_mana(info: &InfoCarta, t: &Tipos) -> bool {
     info.funciones.iter().any(|f| f == "ramp") && (!t.criatura || info.cmc() <= 2)
 }
@@ -75,12 +109,22 @@ const POR_FUNCION: [(&str, f64); 9] = [
     ("recursion", 1.1),
 ];
 
-/// El peso de una carta como amenaza: ~0,5 (barata y sin más) a 2,5 (el
-/// comandante caro que roba y busca). 0 = no se quita nunca.
-pub fn peso(info: &InfoCarta, es_ficha: bool) -> f64 {
+/// Lo que pesa una tierra fuerte.
+const PESO_TIERRA: f64 = 1.5;
+/// Cuánto pesa lo que solo da maná respecto a otra carta igual.
+const POR_MANA: f64 = 0.7;
+
+/// El peso de una carta como amenaza: ~0,4 (una roca barata) a 2,5 (el
+/// comandante caro que roba y busca). 0 = no se quita nunca (las tierras
+/// que no son fuertes).
+pub fn peso(info: &InfoCarta, nombre: &str, es_ficha: bool) -> f64 {
     let t = tipos(info);
-    if t.tierra || solo_da_mana(info, &t) {
-        return 0.0;
+    if t.tierra && !t.criatura && !t.artefacto {
+        return if !t.basica && tierra_fuerte(info, nombre) {
+            PESO_TIERRA
+        } else {
+            0.0
+        };
     }
     let mv = f64::from(info.cmc().min(7));
     let mut p = 0.55 + 0.15 * mv;
@@ -94,6 +138,9 @@ pub fn peso(info: &InfoCarta, es_ficha: bool) -> f64 {
         if info.funciones.iter().any(|x| x == f) {
             p *= k;
         }
+    }
+    if solo_da_mana(info, &t) {
+        p *= POR_MANA;
     }
     if es_ficha {
         p *= 0.6;
@@ -116,37 +163,50 @@ mod tests {
     }
 
     #[test]
-    fn tierras_rocas_y_elfos_no_se_quitan() {
-        assert_eq!(peso(&info("Basic Land — Forest", 0), false), 0.0);
+    fn de_las_tierras_solo_las_fuertes() {
+        assert_eq!(peso(&info("Basic Land — Forest", 0), "Forest", false), 0.0);
+        assert_eq!(peso(&info("Land", 0), "Command Tower", false), 0.0);
+        let cuna = InfoCarta {
+            es_legendaria: true,
+            ..info("Legendary Land", 0)
+        };
+        assert!(peso(&cuna, "Gaea's Cradle", false) > 1.0);
+        assert!(peso(&info("Land", 0), "Cabal Coffers", false) > 1.0);
+        // Una legendaria básica (Snow-Covered…) no: solo las fuertes.
+        let basica = InfoCarta {
+            es_legendaria: true,
+            ..info("Legendary Basic Land — Forest", 0)
+        };
+        assert_eq!(peso(&basica, "Forest", false), 0.0);
+    }
+
+    #[test]
+    fn rocas_y_elfos_pesan_menos_pero_se_quitan() {
         let roca = InfoCarta {
             funciones: vec!["ramp".into()],
-            ..info("Artifact", 1)
+            ..info("Artifact", 2)
         };
-        assert_eq!(peso(&roca, false), 0.0);
         let elfo = InfoCarta {
             funciones: vec!["ramp".into()],
             ..info("Creature — Elf Druid", 1)
         };
-        assert_eq!(peso(&elfo, false), 0.0);
-        // Una criatura grande que además da maná sí cuenta.
-        let grande = InfoCarta {
-            funciones: vec!["ramp".into()],
-            ..info("Creature — Dragon", 6)
-        };
-        assert!(peso(&grande, false) > 1.0);
+        let artefacto = peso(&info("Artifact", 2), "Otro", false);
+        assert!(peso(&roca, "Sol Ring", false) > 0.0);
+        assert!(peso(&roca, "Sol Ring", false) < artefacto);
+        assert!(peso(&elfo, "Llanowar Elves", false) > 0.0);
     }
 
     #[test]
     fn el_comandante_y_las_funciones_pesan_mas() {
-        let oso = peso(&info("Creature — Bear", 2), false);
+        let oso = peso(&info("Creature — Bear", 2), "Oso", false);
         let jefe = InfoCarta {
             es_comandante: true,
             funciones: vec!["draw".into(), "tutor".into()],
             ..info("Legendary Creature — Human", 4)
         };
-        assert!(peso(&jefe, false) > 2.0 * oso);
-        assert!(peso(&info("Creature — Bear", 2), true) < oso);
-        assert!(peso(&jefe, false) <= 2.5);
+        assert!(peso(&jefe, "Jefe", false) > 2.0 * oso);
+        assert!(peso(&info("Creature — Bear", 2), "Oso", true) < oso);
+        assert!(peso(&jefe, "Jefe", false) <= 2.5);
     }
 
     #[test]

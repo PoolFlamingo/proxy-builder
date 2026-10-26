@@ -9,7 +9,7 @@ use mesa::accion::{ComoMover, Destino, Sitio, ZonaDestino};
 use mesa::formato::{Formato, Opciones, Variantes};
 use mesa::modelo::{InfoCarta, Partida, Pos, RefZona, Zona, ZonaComun};
 use mesa::preparar::{iniciar, CartaDeMesa, Config, DeckDeMesa, JugadorNuevo, Seccion};
-use mesa::sparring::amenaza::{protegida, tipos};
+use mesa::sparring::amenaza::{peso, protegida, tipos};
 use mesa::sparring::cartas::por_nombre;
 use mesa::sparring::{reaccionar, Decision, Intensidad, ReaccionSparring, TipoReaccion};
 use mesa::{Accion, Azar, Cambio, IdCarta, IdJugador, Intencion, ModoDeshacer, Registro};
@@ -33,7 +33,11 @@ fn carta(nombre: &str, tipo: &str, cmc: u16, extra: impl Fn(&mut InfoCarta)) -> 
 /// indestructible.
 fn deck() -> DeckDeMesa {
     let mut c = Vec::new();
-    for i in 0..37 {
+    // Una tierra legendaria muy fuerte, que sí se puede quitar.
+    c.push(carta("Gaea's Cradle", "Legendary Land", 0, |inf| {
+        inf.es_legendaria = true
+    }));
+    for i in 0..36 {
         c.push(carta(
             &format!("Island {i}"),
             "Basic Land — Island",
@@ -313,7 +317,11 @@ fn comprobar(p: &Partida, re: &ReaccionSparring) {
     for id in &re.objetivo {
         let c = &p.cartas[id];
         let info = &c.origen.info;
-        assert!(!tipos(info).tierra, "nunca a una tierra");
+        assert!(
+            !tipos(info).tierra || peso(info, &c.origen.nombre, false) > 0.0,
+            "de las tierras, solo las fuertes"
+        );
+        assert!(!c.origen.nombre.starts_with("Island"), "nunca a una básica");
         let (z, _) = p.donde(*id).expect("está en la mesa");
         match re.tipo {
             TipoReaccion::Contrarrestar => assert!(z == pila || z == campo),
@@ -460,4 +468,25 @@ fn resolver_una_reaccion_y_deshacer_lo_devuelve_todo() {
         }
     }
     panic!("ninguna eliminación en 200 partidas");
+}
+
+#[test]
+fn quita_tierras_fuertes_pero_nunca_las_basicas() {
+    let mut cuna = 0;
+    for s in 0..200 {
+        let mut j = Juego::nuevo(s, Intensidad::Despiadado);
+        for _ in 0..RONDAS {
+            j.ronda();
+        }
+        for re in &j.reacciones {
+            for id in &re.objetivo {
+                let nombre = &j.p().cartas[id].origen.nombre;
+                assert!(!nombre.starts_with("Island"));
+                if nombre == "Gaea's Cradle" {
+                    cuna += 1;
+                }
+            }
+        }
+    }
+    assert!(cuna > 0, "Gaea's Cradle nunca fue objetivo");
 }

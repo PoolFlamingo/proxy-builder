@@ -108,9 +108,11 @@ export function ReaccionPendiente() {
 				<div className="flex min-w-0 flex-col gap-1.5">
 					<p className="font-medium">
 						{r.carta.nombre}{" "}
-						<span className="rounded border px-1 font-mono text-[10px] text-muted-foreground">
-							{r.carta.coste}
-						</span>
+						{r.carta.coste && (
+							<span className="rounded border px-1 font-mono text-[10px] text-muted-foreground">
+								{r.carta.coste}
+							</span>
+						)}
 					</p>
 					<h4 className="text-[10px] font-semibold text-primary uppercase">
 						{t("¿Por qué ahora?")}

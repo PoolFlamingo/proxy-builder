@@ -20,14 +20,14 @@
 		"coste": "{2}{W}",
 		"mv": 3,
 		"tipo": "eliminar",
-		"responde": ["permanente"]
+		"responde": ["permanente", "tierra"]
 	},
 	{
 		"nombre": "Beast Within",
 		"coste": "{2}{G}",
 		"mv": 3,
 		"tipo": "eliminar",
-		"responde": ["permanente"]
+		"responde": ["permanente", "tierra"]
 	},
 	{
 		"nombre": "Anguished Unmaking",
@@ -42,14 +42,14 @@
 		"coste": "{B}{G}",
 		"mv": 2,
 		"tipo": "eliminar",
-		"responde": ["permanente"]
+		"responde": ["permanente", "tierra"]
 	},
 	{
 		"nombre": "Vindicate",
 		"coste": "{1}{W}{B}",
 		"mv": 3,
 		"tipo": "eliminar",
-		"responde": ["permanente"]
+		"responde": ["permanente", "tierra"]
 	},
 	{
 		"nombre": "Despark",
@@ -397,6 +397,51 @@
 		"mv": 2,
 		"tipo": "eliminar",
 		"responde": ["criatura"]
+	},
+	{
+		"nombre": "Strip Mine",
+		"coste": "",
+		"mv": 0,
+		"tipo": "eliminar",
+		"responde": ["tierra"]
+	},
+	{
+		"nombre": "Wasteland",
+		"coste": "",
+		"mv": 0,
+		"tipo": "eliminar",
+		"responde": ["tierraNoBasica"]
+	},
+	{
+		"nombre": "Ghost Quarter",
+		"coste": "",
+		"mv": 0,
+		"tipo": "eliminar",
+		"responde": ["tierra"]
+	},
+	{
+		"nombre": "Tectonic Edge",
+		"coste": "",
+		"mv": 0,
+		"tipo": "eliminar",
+		"responde": ["tierraNoBasica"],
+		"paga": 4
+	},
+	{
+		"nombre": "Field of Ruin",
+		"coste": "",
+		"mv": 0,
+		"tipo": "eliminar",
+		"responde": ["tierraNoBasica"],
+		"paga": 3
+	},
+	{
+		"nombre": "Boseiju, Who Endures",
+		"coste": "",
+		"mv": 0,
+		"tipo": "eliminar",
+		"responde": ["artefacto", "encantamiento", "tierraNoBasica"],
+		"paga": 2
 	},
 	{
 		"nombre": "Cyclonic Rift",
