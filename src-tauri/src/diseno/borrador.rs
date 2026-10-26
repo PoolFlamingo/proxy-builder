@@ -488,6 +488,7 @@ pub fn montar(
                 },
                 otros: Default::default(),
             },
+            ajustes: None,
         })
         .collect();
     let numero = siguiente_numero(usados.iter().map(String::as_str), datos.es_ficha());

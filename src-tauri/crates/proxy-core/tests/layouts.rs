@@ -86,6 +86,7 @@ fn diseno(card: CardData, estilo: DesignStyle) -> CardDesign {
                 },
                 otros: Default::default(),
             },
+            ajustes: None,
         })
         .collect();
     CardDesign {

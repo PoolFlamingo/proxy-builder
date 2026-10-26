@@ -36,7 +36,10 @@ pub fn huella_de(
     cara: u32,
     lang: DesignLang,
 ) -> AppResult<String> {
-    let inst = state.diseno.instantanea(&e.frame.pack)?;
+    // El pack es el de la cara, que puede llevar un marco propio.
+    let inst = state
+        .diseno
+        .instantanea(&e.de_cara(cara as usize).frame.pack)?;
     Ok(huella(e, lang, cara as usize, &inst.huella_para(lang)))
 }
 
@@ -50,7 +53,9 @@ pub fn pintar(
     ancho: u32,
     salida: Salida,
 ) -> AppResult<Render> {
-    let inst = state.diseno.instantanea(&e.frame.pack)?;
+    let inst = state
+        .diseno
+        .instantanea(&e.de_cara(cara as usize).frame.pack)?;
     let imagenes = ImagenesDelAlmacen {
         db: &state.db,
         blobs: &state.blobs,
@@ -76,7 +81,9 @@ pub fn pintar_capa(
     lang: DesignLang,
     ancho: u32,
 ) -> AppResult<Option<CapaVista>> {
-    let inst = state.diseno.instantanea(&e.frame.pack)?;
+    let inst = state
+        .diseno
+        .instantanea(&e.de_cara(cara as usize).frame.pack)?;
     let imagenes = ImagenesDelAlmacen {
         db: &state.db,
         blobs: &state.blobs,

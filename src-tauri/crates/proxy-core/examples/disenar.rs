@@ -105,6 +105,7 @@ fn diseno(
                 },
                 otros: Default::default(),
             },
+            ajustes: None,
         }],
         before: BeforeDesign {
             source: CardSource::Blank,

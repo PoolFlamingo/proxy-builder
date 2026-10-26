@@ -711,13 +711,15 @@ pub fn render_capa(
     card: CardSize,
     ancho_px: u32,
 ) -> Result<Option<CapaVista>, DisenoError> {
-    let d = &e.design;
     preparar(motor, rec, lang);
-    let (maq, _) = maquetacion(&d.card);
+    let (maq, _) = maquetacion(&e.design.card);
     // La parte del diseño cuya ilustración se mueve (en las partidas y
     // Secuelas, una de las dos mitades de la única cara impresa).
     let parte = cara;
-    let cara = cara.min(super::maquetacion::caras_impresas(&d.card) - 1);
+    let cara = cara.min(super::maquetacion::caras_impresas(&e.design.card) - 1);
+    // Con los ajustes propios de la cara, si los tiene.
+    let e = e.de_cara(cara);
+    let d = &e.design;
     let simple = es_simple(e, maq, cara);
     if !simple && !super::maquetacion::arte_propio(&d.card, parte) {
         return Ok(None);
@@ -864,9 +866,12 @@ pub fn render(
     ancho_px: u32,
     salida: Salida,
 ) -> Result<Render, DisenoError> {
-    let d = &e.design;
     preparar(motor, rec, lang);
-    let (maq, desconocido) = maquetacion(&d.card);
+    let (maq, desconocido) = maquetacion(&e.design.card);
+    let cara = cara.min(super::maquetacion::caras_impresas(&e.design.card) - 1);
+    // Con los ajustes propios de la cara, si los tiene.
+    let e = e.de_cara(cara);
+    let d = &e.design;
     let mut avisos = Vec::new();
     if desconocido {
         avisos.push(Aviso::LayoutDesconocido {
@@ -876,7 +881,6 @@ pub fn render(
     let (w_mm, h_mm) = medida(e, card);
     let ancho = ancho_px.max(16);
     let alto = (ancho as f64 * h_mm / w_mm).round() as u32;
-    let cara = cara.min(super::maquetacion::caras_impresas(&d.card) - 1);
     let pieza = componer_pieza(motor, e, lang, rec, maq, cara, ancho, alto, None)?;
     avisos.extend(pieza.avisos);
     let mut faltan = pieza.faltan;
@@ -930,6 +934,7 @@ mod tests {
     use super::*;
     use crate::diseno::efectivo::efectivo;
     use crate::diseno::modelo::tests::diseno_de_prueba;
+    use crate::diseno::modelo::AjustesCara;
     use crate::diseno::pack::Pack;
     use crate::diseno::render::SinImagenes;
     use crate::diseno::simbolos::Simbolos;
@@ -1824,6 +1829,71 @@ mod tests {
         e.design.card.oversized = true;
         let r = pintar(&e, 0, 89, &s, Salida::Impresion);
         assert_eq!(r.imagen.dimensions(), (89, 127));
+    }
+
+    /// Una MDFC (dos caras impresas) con la cara 2 en otro estilo.
+    fn mdfc_con_la_cara_2_en_clasico() -> (DisenoEfectivo, DisenoEfectivo) {
+        let mut e = con_layout("modal_dfc", 2);
+        let mut d = e.design.clone();
+        d.style = crate::diseno::modelo::DesignStyle::Borderless;
+        d.faces[1].ajustes = Some(AjustesCara {
+            style: crate::diseno::modelo::DesignStyle::Classic,
+            estilo_pack: None,
+            variante_pack: None,
+            frame: None,
+            emblem: d.emblem.clone(),
+            options: d.options.clone(),
+        });
+        let con = efectivo(&d, None);
+        d.faces[1].ajustes = None;
+        e.design = d;
+        (con, efectivo(&e.design, None))
+    }
+
+    #[test]
+    fn cada_cara_de_una_mdfc_se_pinta_con_su_estilo() {
+        let s = simbolos(&["2", "W"]);
+        let (con, sin) = mdfc_con_la_cara_2_en_clasico();
+        assert_eq!(
+            con.de_cara(1).design.style,
+            crate::diseno::modelo::DesignStyle::Classic
+        );
+        assert_eq!(
+            con.de_cara(0).design.style,
+            crate::diseno::modelo::DesignStyle::Borderless
+        );
+        // La cara 1 sale igual que sin ajustes propios; la 2, distinta.
+        let a = pintar(&con, 0, 90, &s, Salida::Pantalla);
+        let b = pintar(&sin, 0, 90, &s, Salida::Pantalla);
+        assert_eq!(a.imagen, b.imagen);
+        let a = pintar(&con, 1, 90, &s, Salida::Pantalla);
+        let b = pintar(&sin, 1, 90, &s, Salida::Pantalla);
+        assert_ne!(a.imagen, b.imagen);
+    }
+
+    #[test]
+    fn los_ajustes_de_una_cara_no_cambian_la_huella_de_la_otra() {
+        use crate::diseno::efectivo::huella;
+        let (con, sin) = mdfc_con_la_cara_2_en_clasico();
+        let h = |e: &DisenoEfectivo, c| huella(e, DesignLang::Es, c, "r");
+        assert_eq!(h(&con, 0), h(&sin, 0));
+        assert_ne!(h(&con, 1), h(&sin, 1));
+        // Sin ajustes propios no hay nada de más en el diseño efectivo.
+        assert!(sin.caras.is_empty());
+    }
+
+    #[test]
+    fn una_compuesta_ignora_los_ajustes_de_cara() {
+        let mut d = diseno_de_prueba(); // partida: una sola cara impresa
+        d.faces[1].ajustes = Some(AjustesCara {
+            style: crate::diseno::modelo::DesignStyle::Classic,
+            estilo_pack: None,
+            variante_pack: None,
+            frame: None,
+            emblem: d.emblem.clone(),
+            options: d.options.clone(),
+        });
+        assert!(efectivo(&d, None).caras.is_empty());
     }
 
     #[test]

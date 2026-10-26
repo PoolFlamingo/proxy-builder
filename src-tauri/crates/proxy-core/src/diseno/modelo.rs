@@ -397,6 +397,34 @@ pub struct FaceDesign {
     #[ts(optional)]
     pub art: Option<ArtRef>,
     pub texts: ByLang<FaceTexts>,
+    /// Estilo y ajustes propios de esta cara, distintos de los de la carta
+    /// (solo en las de dos caras impresas). Sin escribirse si no hay, por la
+    /// huella de los diseños de antes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub ajustes: Option<AjustesCara>,
+}
+
+/// Lo que una cara lleva por su cuenta en vez de lo de la carta: el estilo
+/// (de serie o del pack, con su variante), el marco, el emblema y las
+/// opciones (reglas, sabor, estrechado, ajustes finos). Cada campo vale como
+/// en la carta: un `None` sigue a la colección y a la fábrica.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct AjustesCara {
+    pub style: DesignStyle,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub estilo_pack: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub variante_pack: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub frame: Option<FrameOptions>,
+    pub emblem: EmblemChoice,
+    pub options: DesignOptions,
 }
 
 impl FaceDesign {
@@ -863,6 +891,25 @@ pub struct CardDesign {
 }
 
 impl CardDesign {
+    /// El diseño tal como se pinta la cara `cara`: con los ajustes propios de
+    /// esa cara (si los tiene) en el sitio de los de la carta. Ninguna cara
+    /// del resultado lleva ajustes propios.
+    pub fn de_la_cara(&self, cara: usize) -> CardDesign {
+        let mut d = self.clone();
+        if let Some(a) = self.faces.get(cara).and_then(|f| f.ajustes.clone()) {
+            d.style = a.style;
+            d.estilo_pack = a.estilo_pack;
+            d.variante_pack = a.variante_pack;
+            d.frame = a.frame;
+            d.emblem = a.emblem;
+            d.options = a.options;
+        }
+        for f in &mut d.faces {
+            f.ajustes = None;
+        }
+        d
+    }
+
     /// Todas las imágenes del diseño (para `blob_refs` y los paquetes): el
     /// arte de cada cara, el emblema propio y lo de antes.
     pub fn blobs(&self) -> Vec<&str> {
@@ -880,6 +927,15 @@ impl CardDesign {
             .collect();
         if let EmblemChoice::Own { image } = &self.emblem {
             v.push(&image.blob);
+        }
+        for f in &self.faces {
+            if let Some(AjustesCara {
+                emblem: EmblemChoice::Own { image },
+                ..
+            }) = &f.ajustes
+            {
+                v.push(&image.blob);
+            }
         }
         if let Some(f) = &self.before.front {
             v.push(&f.blob);
@@ -1104,6 +1160,7 @@ pub(crate) mod tests {
                         en: FaceTexts::default(),
                         otros: Default::default(),
                     },
+                    ajustes: None,
                 },
                 FaceDesign::default(),
             ],

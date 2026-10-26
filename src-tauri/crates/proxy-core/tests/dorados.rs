@@ -88,6 +88,7 @@ fn diseno(c: &Caso) -> CardDesign {
                 en: FaceTexts::default(),
                 otros: Default::default(),
             },
+            ajustes: None,
         }],
         before: BeforeDesign {
             source: CardSource::Blank,
@@ -1045,6 +1046,7 @@ fn balatro_contra_el_autor() {
                     },
                     otros: Default::default(),
                 },
+                ajustes: None,
             }],
             before: BeforeDesign {
                 source: CardSource::Blank,

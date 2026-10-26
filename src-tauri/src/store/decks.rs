@@ -569,6 +569,7 @@ mod tests {
                     framing: ArtFraming::default(),
                 }),
                 texts: ByLang::default(),
+                ajustes: None,
             }],
             before: BeforeDesign {
                 source: card.source.clone(),

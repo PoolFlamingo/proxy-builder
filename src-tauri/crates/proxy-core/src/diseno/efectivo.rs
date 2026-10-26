@@ -54,6 +54,22 @@ pub struct DisenoEfectivo {
     pub retoques: FineTuning,
     /// La colección pedida no existe (se borró): se usa la fábrica y se avisa.
     pub coleccion_perdida: bool,
+    /// El diseño efectivo de las caras con ajustes propios (una entrada por
+    /// cara; vacío si ninguna los tiene). Sin escribirse si está vacío, por la
+    /// huella de los diseños de antes.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub caras: Vec<Option<Box<DisenoEfectivo>>>,
+}
+
+impl DisenoEfectivo {
+    /// Lo que pinta la cara `cara`: lo suyo si tiene ajustes propios y, si no,
+    /// lo de la carta.
+    pub fn de_cara(&self, cara: usize) -> &DisenoEfectivo {
+        self.caras
+            .get(cara)
+            .and_then(|c| c.as_deref())
+            .unwrap_or(self)
+    }
 }
 
 /// La letra de rareza de Scryfall.
@@ -74,8 +90,28 @@ fn o(a: &Option<String>, b: Option<&Option<String>>, defecto: &str) -> String {
         .unwrap_or_else(|| defecto.to_string())
 }
 
-/// Aplica la colección (si la hay y existe) y la fábrica.
+/// Aplica la colección (si la hay y existe) y la fábrica. En las cartas de dos
+/// caras impresas, también lo de cada cara que tenga ajustes propios.
 pub fn efectivo(d: &CardDesign, coleccion: Option<&Collection>) -> DisenoEfectivo {
+    let mut e = efectivo_de_carta(d, coleccion);
+    if super::maquetacion::caras_impresas(&d.card) > 1
+        && d.faces.iter().any(|f| f.ajustes.is_some())
+    {
+        e.caras = d
+            .faces
+            .iter()
+            .enumerate()
+            .map(|(i, f)| {
+                f.ajustes
+                    .as_ref()
+                    .map(|_| Box::new(efectivo_de_carta(&d.de_la_cara(i), coleccion)))
+            })
+            .collect();
+    }
+    e
+}
+
+fn efectivo_de_carta(d: &CardDesign, coleccion: Option<&Collection>) -> DisenoEfectivo {
     let c = coleccion.filter(|c| d.collection.as_deref() == Some(c.id.as_str()));
     let perdida = d.collection.is_some() && c.is_none();
     let frame = d
@@ -154,6 +190,11 @@ pub fn efectivo(d: &CardDesign, coleccion: Option<&Collection>) -> DisenoEfectiv
     let mut design = d.clone();
     design.thumb_key = None;
     design.status = DesignStatus::Draft;
+    // Los ajustes de cada cara van aparte (`caras`): cambiar los de una no
+    // repinta las demás.
+    for f in &mut design.faces {
+        f.ajustes = None;
+    }
     DisenoEfectivo {
         design,
         frame,
@@ -180,6 +221,7 @@ pub fn efectivo(d: &CardDesign, coleccion: Option<&Collection>) -> DisenoEfectiv
             .unwrap_or_default()
             .limitado(),
         coleccion_perdida: perdida,
+        caras: Vec::new(),
     }
 }
 
@@ -271,6 +313,10 @@ fn solo_su_idioma(e: &DisenoEfectivo, lang: DesignLang) -> DisenoEfectivo {
 /// (como pasaría subiendo `VERSION_MOTOR`).
 pub fn huella(e: &DisenoEfectivo, lang: DesignLang, cara: usize, recursos: &str) -> String {
     let mut h = Sha256::new();
+    // Solo cuenta lo de esta cara: sin los ajustes propios de las demás.
+    let mut e = e.de_cara(cara).clone();
+    e.caras = Vec::new();
+    let e = &e;
     let json = serde_json::to_string(&solo_su_idioma(e, lang)).unwrap_or_default();
     h.update(json.as_bytes());
     h.update(format!(
