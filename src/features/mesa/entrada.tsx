@@ -41,29 +41,11 @@ import { SalasDialog } from "../salas/salas-dialog";
 import { COLORES_JUGADOR } from "./colores";
 import { empezar, retomar, salir } from "./conexion";
 import { ListaDialog } from "./listas/lista-dialog";
+import { opcionesDeFabrica } from "./opciones-fabrica";
+import { PartidaLocalDialog } from "./partida-local";
 import { RedDialog } from "./red/red-dialog";
 import { INTENSIDADES } from "./sparring/textos";
 import { TapeteDialog } from "./tapete-dialog";
-
-/** Los valores de fábrica de un formato (lo mismo que `Opciones::de_fabrica` de Rust). */
-export function opcionesDeFabrica(formato: Formato, jugadores: number): Opciones {
-	return {
-		vidaInicial: formato === "commander" ? 40 : 20,
-		manoInicial: 7,
-		mulligan: formato === "commander" ? "londresPrimeroGratis" : "londres",
-		primeroNoRoba: jugadores <= 2,
-		ayudas: {
-			robarAlEmpezar: true,
-			enderezarAlEmpezar: true,
-			impuestoAutomatico: true,
-			contadoresAlEntrar: true,
-			avisarVidaCero: true,
-		},
-		limiteVeneno: 10,
-		limiteComandante: 21,
-		todosTocanTodo: false,
-	};
-}
 
 const CLAVE_NOMBRE = "proxybuilder.mesa.nombre";
 
@@ -102,6 +84,7 @@ export function EntradaMesa() {
 	const [editando, setEditando] = useState<{ lista: ListaDeJuego | null } | null>(null);
 	const [red, setRed] = useState(false);
 	const [amigos, setAmigos] = useState(false);
+	const [local, setLocal] = useState(false);
 	const enSalaServidor = useSalas((s) => s.sala !== null);
 	const enlaceEntrante = useSalas((s) => s.enlaceEntrante);
 	// Un enlace de invitación abre «Con amigos…» con el código puesto.
@@ -179,6 +162,7 @@ export function EntradaMesa() {
 			variantes: { equipos: { tipo: "ninguno" }, archenemy: null, planechase: false },
 			opciones,
 			intensidad: sparring,
+			equipos: [],
 		});
 	};
 
@@ -452,6 +436,10 @@ export function EntradaMesa() {
 						<Users className="size-4" />
 						{enSalaServidor ? t("Volver a la sala") : t("Con amigos…")}
 					</Button>
+					<Button size="lg" variant="outline" disabled={!!trabajo} onClick={() => setLocal(true)}>
+						<User className="size-4" />
+						{t("Partida local…")}
+					</Button>
 					<Button
 						size="lg"
 						variant={enSala && !enSalaServidor ? "default" : "outline"}
@@ -496,6 +484,12 @@ export function EntradaMesa() {
 					useSalas.getState().poner({ enlaceEntrante: null });
 				}}
 				preparar={preparar}
+			/>
+			<PartidaLocalDialog
+				abierto={local}
+				onCerrar={() => setLocal(false)}
+				decks={decks}
+				deckInicial={elegido}
 			/>
 			<RedDialog abierto={red} onCerrar={() => setRed(false)} preparar={preparar} />
 			<TapeteDialog abierto={tapete} onCerrar={() => setTapete(false)} deckId={elegido} />

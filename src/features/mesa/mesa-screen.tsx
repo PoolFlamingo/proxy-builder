@@ -9,7 +9,6 @@ import { useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
 import { useUi } from "@/stores/ui-store";
 import { hacer } from "./acciones";
-import { AyudasTurno } from "./ayudas-turno";
 import { BarraMesa } from "./barra-mesa";
 import { guardar, salir, suscribir, suscrito } from "./conexion";
 import { CapaDados } from "./dados/capa";
@@ -17,13 +16,13 @@ import { DialogosMesa } from "./dialogos";
 import { COMO } from "./dialogos/terminar";
 import { EntradaMesa } from "./entrada";
 import { ContadorFps, VigiaFps } from "./fps";
+import { Mesas } from "./mesas";
+import { useSeguirTurno } from "./mirar";
 import { Mulligan } from "./mulligan";
 import { useOriginalesAlDia } from "./originales";
 import { refrescarRed } from "./red/conexion-red";
 import { AvisoConexion, SelectorTablero } from "./red/estado-red";
 import { ReaccionPendiente } from "./sparring/reaccion";
-import { Tablero } from "./tablero";
-import { VidaJugador } from "./vida-jugador";
 import { VistaGrande } from "./vista-grande";
 
 /**
@@ -59,9 +58,9 @@ export function MesaScreen() {
 
 function Mesa({ deckId }: { deckId: string | null }) {
 	const { t } = useLang();
-	const yo = useMesa((s) => s.yo ?? 0);
 	const papel = useRed((s) => s.papel);
 	useOriginalesAlDia();
+	useSeguirTurno();
 	const [preguntaSalir, setPreguntaSalir] = useState(false);
 	const [preguntaReiniciar, setPreguntaReiniciar] = useState(false);
 	const [preguntaEditar, setPreguntaEditar] = useState(false);
@@ -80,19 +79,12 @@ function Mesa({ deckId }: { deckId: string | null }) {
 
 	return (
 		<div className="relative isolate size-full overflow-hidden bg-black">
-			<Tablero deckId={deckId2} />
+			<Mesas deckId={deckId2} />
 			<BarraMesa
 				onSalir={() => setPreguntaSalir(true)}
 				onEditarDeck={() => setPreguntaEditar(true)}
 				onReiniciar={() => setPreguntaReiniciar(true)}
 			/>
-			<div
-				className="absolute right-3 z-[7000] flex flex-col items-end gap-1.5"
-				style={{ bottom: "calc(min(220px, max(90px, 22%)) + 24px)" }}
-			>
-				<AyudasTurno />
-				<VidaJugador jugador={yo} />
-			</div>
 			<SelectorTablero />
 			<AvisoConexion />
 			<CapaDados />

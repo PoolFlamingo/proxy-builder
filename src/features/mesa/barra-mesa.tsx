@@ -23,6 +23,7 @@ import { useRed } from "@/stores/red-store";
 import { hacer } from "./acciones";
 import * as op from "./operaciones";
 import { usePantalla } from "./pantalla";
+import { SelectorDisposicion } from "./selector-disposicion";
 import { BotonSparring } from "./sparring/boton";
 
 /** Minutos y segundos desde `desde` (ms). */
@@ -152,6 +153,7 @@ export function BarraMesa({
 			<Boton ayuda={t("Pantalla completa")} onClick={() => void pantallaCompleta()}>
 				<Expand className="size-4" />
 			</Boton>
+			<SelectorDisposicion className="text-white hover:bg-white/10 hover:text-white" />
 			{!enRed && <BotonSparring />}
 			<span className="mx-0.5 h-5 w-px bg-white/15" />
 			{manda && (

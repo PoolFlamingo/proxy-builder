@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { ImagePolicy } from "@/bindings/ImagePolicy";
 import type { Intensidad } from "@/bindings/Intensidad";
+import type { ConfigDisposicion } from "@/features/mesa/disposicion";
 import type { AnchoMiniatura } from "@/lib/image-url";
 
 /**
@@ -64,8 +65,12 @@ export type PreferenciasMesa = {
 	fantasma: boolean;
 	/** En red: mandar el cursor y la carta que se arrastra, y ver los de los demás. */
 	movimientoEnVivo: boolean;
+	/** En una partida local de varios, pasar a mirar al jugador del turno. */
+	seguirTurno: boolean;
 	/** Los contadores de jugador que se enseñan junto a la vida. */
 	trackers: string[];
+	/** Cómo se reparten los tableros, recordado por número de jugadores. */
+	disposicion: Record<number, ConfigDisposicion>;
 };
 
 export const MESA_DE_FABRICA: PreferenciasMesa = {
@@ -85,7 +90,9 @@ export const MESA_DE_FABRICA: PreferenciasMesa = {
 	ofrecerBono: true,
 	fantasma: true,
 	movimientoEnVivo: true,
+	seguirTurno: false,
 	trackers: [],
+	disposicion: {},
 };
 
 /** Los diálogos que se abren desde las cartas o las barras. */

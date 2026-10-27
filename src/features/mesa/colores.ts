@@ -45,6 +45,9 @@ export const COLORES_JUGADOR = [
 	"#65a30d",
 ] as const;
 
+/** Los colores de los equipos (hasta 5: con 10 jugadores, parejas). */
+export const COLORES_EQUIPO = ["#f43f5e", "#3b82f6", "#22c55e", "#f59e0b", "#a855f7"] as const;
+
 /** Los contadores de carta más usados, con su nombre (el tipo es el inglés de las reglas). */
 export const CONTADORES_CARTA: { tipo: string; nombre: string }[] = [
 	{ tipo: "+1/+1", nombre: "+1/+1" },

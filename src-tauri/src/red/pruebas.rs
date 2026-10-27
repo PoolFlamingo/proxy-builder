@@ -119,11 +119,13 @@ async fn partida_con(decks: Vec<DeckDeMesa>) -> Partida3 {
             nombre: "Host".into(),
             color: "#e11d48".into(),
             lista: None,
+            equipo: None,
         }],
         formato: Formato::Constructed,
         variantes: Variantes::default(),
         opciones: None,
         intensidad: Intensidad::Apagado,
+        equipos: Vec::new(),
     };
     empezar_partida(&anf, &host.mesa, host.ep.id(), config, mazo()).unwrap();
     for j in &invitados {

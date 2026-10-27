@@ -405,6 +405,13 @@ pub fn mesa_vista(state: State<'_, AppState>) -> AppResult<VistaMesa> {
     con_sesion(&state, |s| Ok(s.vista()))
 }
 
+/// Pasa a mirar (y a jugar) como otro jugador de la partida local. En red,
+/// `Rejected { motivo: "red" }`.
+#[tauri::command]
+pub fn mesa_mirar_como(state: State<'_, AppState>, jugador: IdJugador) -> AppResult<()> {
+    con_sesion(&state, |s| s.cambiar_yo(jugador))
+}
+
 #[tauri::command]
 pub fn mesa_accion(
     state: State<'_, AppState>,

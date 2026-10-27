@@ -255,6 +255,7 @@ pub fn run() {
             commands::mesa::mesa_suscribir,
             commands::mesa::mesa_vista,
             commands::mesa::mesa_accion,
+            commands::mesa::mesa_mirar_como,
             commands::mesa::mesa_guardar,
             commands::mesa::mesa_salir,
             commands::mesa::mesa_info_carta,

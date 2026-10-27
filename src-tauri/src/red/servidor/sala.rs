@@ -324,11 +324,13 @@ async fn empezar_cuando_esten(app: AppHandle, salon: Arc<Salon>, anf: Arc<Anfitr
             nombre: salon.apodo.clone(),
             color: colores::de_asiento(0),
             lista: listo.lista.clone(),
+            equipo: None,
         }],
         formato,
         variantes: Variantes::default(),
         opciones: None,
         intensidad: Intensidad::Apagado,
+        equipos: Vec::new(),
     };
     let mesa = MesaDeApp(app.clone());
     match empezar_partida(&anf, &mesa, salon.yo, config, listo.mazo.clone()) {

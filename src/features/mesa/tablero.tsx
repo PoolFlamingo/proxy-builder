@@ -1,5 +1,6 @@
 import { Eye, Layers } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import type { IdCarta } from "@/bindings/IdCarta";
 import type { Tapete as TapeteGuardado } from "@/bindings/Tapete";
 import type { VistaCarta } from "@/bindings/VistaCarta";
@@ -17,6 +18,7 @@ import { COLORES } from "./colores";
 import { abanico, type Disposicion, disponer, posAPx, pxAPos, type Rect } from "./disposicion";
 import * as vivo from "./en-vivo/emitir";
 import { FantasmasVivos } from "./en-vivo/fantasmas";
+import { ataqueAUnCompanero } from "./equipos";
 import { caraVisible, DorsoGenerico, ImagenCarta } from "./imagen-carta";
 import { MenuBiblioteca, MenuCampo, MenuZona } from "./menus/menu-zonas";
 import * as op from "./operaciones";
@@ -87,6 +89,14 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 				if (md.tipo === "adjuntar" && md.carta !== c.id) {
 					void op.adjuntar(md.carta, c.id);
 				} else if (md.tipo === "flecha" && md.de !== c.id) {
+					const origen = m.cartas[md.de];
+					if (
+						md.flecha === "ataque" &&
+						origen &&
+						ataqueAUnCompanero(m.jugadores, m.variantes, origen.controlador, c.controlador)
+					) {
+						toast.warning(t("Ese jugador es de tu equipo y el fuego amigo está apagado."));
+					}
 					void hacer({
 						que: "flecha",
 						de: { tipo: "carta", id: md.de },

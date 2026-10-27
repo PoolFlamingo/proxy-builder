@@ -2,7 +2,7 @@ import { Channel } from "@tauri-apps/api/core";
 import { toast } from "sonner";
 import type { ConfigMesa } from "@/bindings/ConfigMesa";
 import type { MensajeMesa } from "@/bindings/MensajeMesa";
-import { traduccionSuelta } from "@/components/language-provider";
+import { paraTraducir, traduccionSuelta } from "@/components/language-provider";
 import { mensajeDeError } from "@/lib/errores";
 import { call } from "@/lib/ipc";
 import { lanzarTrabajo } from "@/lib/trabajos";
@@ -69,6 +69,9 @@ export function suscrito(): boolean {
 	return canal !== null;
 }
 
+/** El texto de la barra de trabajos al preparar los decks. */
+const PREPARANDO = paraTraducir("Preparando la mesa…");
+
 /**
  * Lanza un trabajo de la mesa (preparar los decks) con el progreso en la
  * barra de trabajos y, al acabar bien, `despues` (de fábrica, suscribirse a
@@ -78,7 +81,7 @@ export async function conProgreso(
 	lanzar: () => Promise<number>,
 	despues: () => Promise<boolean> = suscribir,
 ): Promise<boolean> {
-	const fase = traduccionSuelta("Preparando la mesa…");
+	const fase = traduccionSuelta(PREPARANDO);
 	useTrabajo.getState().empezar("mesa", fase);
 	try {
 		const trabajo = await lanzarTrabajo("mesa://progress", "mesa://done", lanzar, (p) => {

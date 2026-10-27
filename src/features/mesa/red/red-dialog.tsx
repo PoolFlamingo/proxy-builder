@@ -188,6 +188,7 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 			variantes: { equipos: { tipo: "ninguno" }, archenemy: null, planechase: false },
 			opciones: preparar.opciones,
 			intensidad: "apagado",
+			equipos: [],
 		});
 
 	const conDeck = sala.filter((j) => j.rol === "jugador" && j.deck).length;

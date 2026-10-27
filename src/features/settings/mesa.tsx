@@ -41,6 +41,11 @@ export function AjustesMesa() {
 				valor={m.movimientoEnVivo}
 				onChange={(v) => set({ movimientoEnVivo: v })}
 			/>
+			<FilaInterruptor
+				etiqueta={t("En partida local, pasar a mirar al jugador del turno")}
+				valor={m.seguirTurno}
+				onChange={(v) => set({ seguirTurno: v })}
+			/>
 			<Fila etiqueta={t("Sparring al empezar en solitario")}>
 				<Selector<Intensidad>
 					valor={m.sparring}

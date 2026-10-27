@@ -589,6 +589,7 @@ pub fn empezar_partida<M: Mesa>(
             },
             color: super::colores::de_asiento(i + 1),
             lista: None,
+            equipo: None,
         });
         mazos.push(d);
         asignados.push((conexion, j));

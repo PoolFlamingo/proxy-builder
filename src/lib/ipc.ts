@@ -260,6 +260,7 @@ export interface Commands {
 	mesa_estado: { args: Record<string, never>; result: EstadoMesa };
 	mesa_suscribir: { args: { canal: Channel<MensajeMesa> }; result: null };
 	mesa_vista: { args: Record<string, never>; result: VistaMesa };
+	mesa_mirar_como: { args: { jugador: IdJugador }; result: null };
 	mesa_accion: { args: { accion: Accion; como: IdJugador | null }; result: null };
 	mesa_guardar: { args: Record<string, never>; result: null };
 	mesa_salir: { args: { guardar: boolean }; result: null };

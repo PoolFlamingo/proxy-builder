@@ -9,11 +9,11 @@
 
 use mesa::accion::{Accion, Evento, Intencion};
 use mesa::formato::{Formato, Opciones, Variantes};
-use mesa::modelo::Partida;
+use mesa::modelo::{Equipo, Partida};
 use mesa::preparar::{iniciar, Config, DeckDeMesa, JugadorNuevo};
 use mesa::sparring::Intensidad;
 use mesa::vista::{parche, vista, ParcheVista, VistaMesa};
-use mesa::{Azar, Cambio, IdJugador, Mirador, ModoDeshacer, Rechazo, Registro};
+use mesa::{Azar, Cambio, IdEquipo, IdJugador, Mirador, ModoDeshacer, Rechazo, Registro};
 use serde::{Deserialize, Serialize};
 use tauri::ipc::Channel;
 use ts_rs::TS;
@@ -33,6 +33,10 @@ pub struct JugadorMesa {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub lista: Option<String>,
+    /// Su equipo (de los de `ConfigMesa.equipos`), si se juega por equipos.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub equipo: Option<IdEquipo>,
 }
 
 /// Lo que elige la pantalla al empezar.
@@ -46,6 +50,9 @@ pub struct ConfigMesa {
     /// `None`: las de fábrica del formato.
     pub opciones: Option<Opciones>,
     pub intensidad: Intensidad,
+    /// Los equipos de la partida (Fase G); los de 2HG los monta el motor solo.
+    #[serde(default)]
+    pub equipos: Vec<Equipo>,
 }
 
 /// Lo que llega a la pantalla por el canal de la mesa.
@@ -155,11 +162,11 @@ fn partida(config: &ConfigMesa, mazos: &[DeckDeMesa], semilla: u64) -> AppResult
             .map(|(j, m)| JugadorNuevo {
                 nombre: j.nombre.clone(),
                 color: j.color.clone(),
-                equipo: None,
+                equipo: j.equipo,
                 mazo: m.clone(),
             })
             .collect(),
-        equipos: Vec::new(),
+        equipos: config.equipos.clone(),
         primero: None,
     };
     let id = format!("{semilla:016x}");
@@ -226,12 +233,14 @@ impl Sesion {
                     nombre: j.nombre.clone(),
                     color: j.color.clone(),
                     lista: None,
+                    equipo: j.equipo,
                 })
                 .collect(),
             formato: partida.formato,
             variantes: partida.variantes.clone(),
             opciones: Some(partida.opciones.clone()),
             intensidad: Intensidad::Apagado,
+            equipos: partida.equipos.clone(),
         };
         let mut s = Sesion::con_registro(
             config,
@@ -305,8 +314,30 @@ impl Sesion {
         if let Some(RedSesion::Invitado(inv)) = &mut self.red {
             return inv.enviar(accion);
         }
+        // Actuar a nombre de otro solo tiene sentido en una partida local
+        // (quien manda el portátil); en red cada uno es quien es.
+        if self.red.is_some() && como.is_some_and(|c| c != self.yo) {
+            return Err(AppError::new(ErrorCode::Rejected).with("motivo", "como"));
+        }
         let actor = como.unwrap_or(self.yo);
         self.hacer(actor, accion, None)
+    }
+
+    /// Pasa a mirar (y a jugar) como otro jugador de la partida local: la
+    /// vista se vuelve a calcular con lo que ese jugador puede ver, su mano
+    /// incluida, y se manda entera. En red no se puede.
+    pub fn cambiar_yo(&mut self, jugador: IdJugador) -> AppResult<()> {
+        if self.red.is_some() {
+            return Err(AppError::new(ErrorCode::Rejected).with("motivo", "red"));
+        }
+        if self.partida().jugador(jugador).is_none() {
+            return Err(AppError::new(ErrorCode::Rejected).with("motivo", "no_existe"));
+        }
+        if jugador != self.yo {
+            self.yo = jugador;
+            self.mandar(self.mensaje_vista());
+        }
+        Ok(())
     }
 
     /// Una intención de un jugador remoto (en el anfitrión). `id` es el suyo,
@@ -448,11 +479,13 @@ pub(crate) mod tests {
                 nombre: "Yo".into(),
                 color: "#e11d48".into(),
                 lista: None,
+                equipo: None,
             }],
             formato: Formato::Constructed,
             variantes: Variantes::default(),
             opciones: None,
             intensidad: Intensidad::Apagado,
+            equipos: Vec::new(),
         }
     }
 
@@ -582,6 +615,64 @@ pub(crate) mod tests {
             return;
         }
         panic!("el fantasma no reaccionó");
+    }
+
+    /// Dos jugadores en el mismo equipo (partida local de la Fase G).
+    fn local_de_dos() -> Sesion {
+        let mut c = config();
+        c.jugadores.push(JugadorMesa {
+            deck_id: "d2".into(),
+            nombre: "Rival".into(),
+            color: "#2563eb".into(),
+            lista: None,
+            equipo: None,
+        });
+        Sesion::nueva(c, vec![mazo(), mazo()]).unwrap()
+    }
+
+    fn mano_visible(s: &Sesion, de: u8) -> Option<Vec<mesa::IdCarta>> {
+        let z = mesa::modelo::RefZona::de(IdJugador(de), mesa::modelo::Zona::Mano);
+        s.vista()
+            .zonas
+            .into_iter()
+            .find(|v| v.zona == z)
+            .and_then(|v| v.cartas)
+    }
+
+    #[test]
+    fn en_local_mirar_como_otro_enseña_su_mano_y_oculta_la_del_anterior() {
+        let mut s = local_de_dos();
+        assert!(mano_visible(&s, 0).is_some_and(|m| m.len() == 7));
+        assert!(mano_visible(&s, 1).is_none());
+        s.cambiar_yo(IdJugador(1)).unwrap();
+        assert_eq!(s.vista().yo, Some(IdJugador(1)));
+        assert!(mano_visible(&s, 1).is_some_and(|m| m.len() == 7));
+        assert!(mano_visible(&s, 0).is_none());
+        // Un jugador que no existe no cambia nada.
+        assert!(s.cambiar_yo(IdJugador(7)).is_err());
+        assert_eq!(s.yo, IdJugador(1));
+        // Y las acciones salen a nombre del que mira.
+        s.accion(Accion::QuedarseCon { al_fondo: vec![] }, None)
+            .unwrap();
+        assert!(s
+            .partida()
+            .mulligan
+            .as_ref()
+            .is_some_and(|m| m.decididos == vec![IdJugador(1)]));
+    }
+
+    #[test]
+    fn en_red_no_se_puede_mirar_ni_actuar_como_otro() {
+        let mut s = local_de_dos();
+        s.red = Some(RedSesion::Anfitrion(
+            crate::red::anfitrion::Anfitrion::nuevo("A".into(), "s".into()),
+        ));
+        let e = s.cambiar_yo(IdJugador(1)).unwrap_err();
+        assert_eq!(e.code, ErrorCode::Rejected);
+        let e = s
+            .accion(Accion::QuedarseCon { al_fondo: vec![] }, Some(IdJugador(1)))
+            .unwrap_err();
+        assert_eq!(e.code, ErrorCode::Rejected);
     }
 
     #[test]
