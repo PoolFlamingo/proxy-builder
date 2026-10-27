@@ -1,10 +1,11 @@
-import { Eye, Layers } from "lucide-react";
+import { Eye, EyeOff, Layers } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { IdCarta } from "@/bindings/IdCarta";
 import type { Tapete as TapeteGuardado } from "@/bindings/Tapete";
 import type { VistaCarta } from "@/bindings/VistaCarta";
 import { useLang } from "@/components/language-provider";
+import { WithTooltip } from "@/components/ui/with-tooltip";
 import { urlArte, urlMesa } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,7 @@ import { useUi } from "@/stores/ui-store";
 import { MS_SOLTADA, type Origen, origenDe, soltadaSigue, useVivo } from "@/stores/vivo-store";
 import { destino, hacer, mover, sitio, zonaComun, zonaDe } from "./acciones";
 import { destinoDeSoltar, pasaUmbral } from "./arrastre";
+import { cartaDeArribaRevelada } from "./arriba-biblioteca";
 import { atajoDe, teclaDe } from "./atajos";
 import { type AlPulsar, CartaMesa } from "./carta-mesa";
 import { COLORES } from "./colores";
@@ -644,10 +646,12 @@ function Zonas({ disp, alPulsar }: { disp: Disposicion; alPulsar: AlPulsar }) {
 	const yo = useMesa(tableroDe);
 	const lib = useMesa((s) => s.zonas[`${yo}:biblioteca`]);
 	const dorso = useMesa((s) => s.jugadores[yo]?.dorso ?? null);
-	// La de arriba solo se pinta revelada si se juega así; mirarla
-	// (escrutar, mirar) no la pone boca arriba en la mesa.
-	const revelada = useMesa((s) => s.jugadores[yo]?.deArribaRevelada ?? false);
-	const arribaLib = revelada ? (lib?.visibles.find(([i]) => i === 0)?.[1] ?? null) : null;
+	// La de arriba se pinta boca arriba si se juega así o si se acaba de revelar;
+	// mirarla (escrutar, mirar) no la pone boca arriba en la mesa.
+	const cartaArriba = useMesa((s) => cartaDeArribaRevelada(s, yo));
+	const arribaLib = cartaArriba?.id ?? null;
+	// Revelada a todos (no por jugar así): se puede dejar de revelar con el botón.
+	const arribaRevelada = cartaArriba?.revelada ?? false;
 	const z = disp.zonas;
 	const zona = (r: Rect, nombre: string, hijo: React.ReactNode, n: number) => (
 		<div
@@ -667,8 +671,17 @@ function Zonas({ disp, alPulsar }: { disp: Disposicion; alPulsar: AlPulsar }) {
 		<>
 			<MenuBiblioteca jugador={yo}>
 				<div
-					onPointerEnter={() => usePantalla.getState().setZonaSobre("biblioteca")}
-					onPointerLeave={() => usePantalla.getState().setZonaSobre(null)}
+					onPointerEnter={() => {
+						usePantalla.getState().setZonaSobre("biblioteca");
+						// La revelada se lee en grande, como cualquier carta de la mesa.
+						if (arribaLib !== null) useMesa.getState().setSobre(arribaLib);
+					}}
+					onPointerLeave={() => {
+						usePantalla.getState().setZonaSobre(null);
+						if (arribaLib !== null && useMesa.getState().sobre === arribaLib) {
+							useMesa.getState().setSobre(null);
+						}
+					}}
 					// Pulsar la propia roba; la de otro no hace nada sin querer (va por el menú).
 					onClick={() => yo === useMesa.getState().yo && void op.robar()}
 					className="cursor-pointer"
@@ -679,7 +692,25 @@ function Zonas({ disp, alPulsar }: { disp: Disposicion; alPulsar: AlPulsar }) {
 						t("Biblioteca"),
 						(lib?.cuantas ?? 0) > 0 &&
 							(arribaLib !== null ? (
-								<CartaSuelta id={arribaLib} />
+								<>
+									<CartaSuelta id={arribaLib} />
+									{arribaRevelada && (
+										<WithTooltip content={t("Dejar de revelar la de arriba")}>
+											<button
+												type="button"
+												aria-label={t("Dejar de revelar la de arriba")}
+												onPointerDown={(e) => e.stopPropagation()}
+												onClick={(e) => {
+													e.stopPropagation();
+													void op.hacerPor(yo, { que: "ocultarArriba", n: 1 });
+												}}
+												className="absolute top-1 right-1 flex size-6 items-center justify-center rounded-full bg-black/75 text-white ring-1 ring-white/40 hover:bg-primary"
+											>
+												<EyeOff className="size-3.5" />
+											</button>
+										</WithTooltip>
+									)}
+								</>
 							) : dorso ? (
 								<ImagenCarta imagen={dorso} ancho={244} />
 							) : (

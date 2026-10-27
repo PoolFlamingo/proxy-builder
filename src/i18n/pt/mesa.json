@@ -1185,5 +1185,7 @@
 	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "Aparece no campo de batalha de {quien}. Clique na que quiser criar.",
 	"Scryfall no ha encontrado nada. Prueba con el nombre de la ficha, como «Beast».": "O Scryfall não encontrou nada. Tente o nome da ficha, como «Beast».",
 	"Cementerios y exilios": "Cemitérios e exílio",
-	"Ver todas las cartas ({zona})": "Ver todas as cartas ({zona})"
+	"Ver todas las cartas ({zona})": "Ver todas as cartas ({zona})",
+	"Dejar de revelar la de arriba": "Deixar de revelar a de cima",
+	"{quien} deja de revelar la carta de arriba": "{quien} deixa de revelar a carta de cima"
 }

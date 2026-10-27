@@ -76,6 +76,7 @@ impl Accion {
                 | Accion::Manifestar { .. }
                 | Accion::ExiliarDeArriba { .. }
                 | Accion::RevelarArriba { .. }
+                | Accion::OcultarArriba { .. }
                 | Accion::DeArribaRevelada { .. }
                 | Accion::Barajar
                 | Accion::Rueda { .. }
@@ -602,6 +603,12 @@ pub enum Accion {
         exilio: Vec<IdCarta>,
     },
     RevelarArriba {
+        n: u32,
+    },
+    /// Deja de estar revelado lo de arriba de la biblioteca (lo contrario de
+    /// `RevelarArriba`): solo lo que estaba visto por todos; lo que alguien
+    /// mira por su cuenta no cambia. Catálogo v2.
+    OcultarArriba {
         n: u32,
     },
     Excavar {

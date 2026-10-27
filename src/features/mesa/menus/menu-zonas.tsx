@@ -37,6 +37,7 @@ import {
 import { useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
 import { hacer } from "../acciones";
+import { cartaDeArribaRevelada } from "../arriba-biblioteca";
 import { teclaPara } from "../atajos";
 import { COLORES } from "../colores";
 import * as op from "../operaciones";
@@ -53,6 +54,8 @@ export function MenuBiblioteca({ jugador, children }: { jugador: IdJugador; chil
 	const yo = useMesa((s) => s.yo ?? 0);
 	const nombre = useMesa((s) => s.jugadores[jugador]?.nombre ?? "");
 	const revelada = useMesa((s) => s.jugadores[jugador]?.deArribaRevelada ?? false);
+	// La de arriba está boca arriba por una revelación (no por jugar así): se puede desrevelar.
+	const arribaVista = useMesa((s) => cartaDeArribaRevelada(s, jugador)?.revelada ?? false);
 	// En la biblioteca de otro, lo que se hace es por él (o lo mira quien juega).
 	const ajena = jugador !== yo;
 	const soloMira = useRed((s) => s.papel === "espectador");
@@ -155,6 +158,12 @@ export function MenuBiblioteca({ jugador, children }: { jugador: IdJugador; chil
 					<Eye />
 					{t("Revelar la de arriba")}
 				</ContextMenuItem>
+				{arribaVista && (
+					<ContextMenuItem onSelect={() => op.hacerPor(jugador, { que: "ocultarArriba", n: 1 })}>
+						<EyeOff />
+						{t("Dejar de revelar la de arriba")}
+					</ContextMenuItem>
+				)}
 				<ContextMenuItem
 					onSelect={() => op.hacerPor(jugador, { que: "deArribaRevelada", si: !revelada })}
 				>

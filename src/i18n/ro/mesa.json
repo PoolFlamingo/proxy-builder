@@ -1185,5 +1185,7 @@
 	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "Apare pe câmpul de luptă al lui {quien}. Apasă pe cea pe care vrei să o creezi.",
 	"Scryfall no ha encontrado nada. Prueba con el nombre de la ficha, como «Beast».": "Scryfall nu a găsit nimic. Încearcă numele jetonului, de exemplu „Beast”.",
 	"Cementerios y exilios": "Cimitire și exil",
-	"Ver todas las cartas ({zona})": "Vezi toate cărțile ({zona})"
+	"Ver todas las cartas ({zona})": "Vezi toate cărțile ({zona})",
+	"Dejar de revelar la de arriba": "Nu mai dezvălui cartea de deasupra",
+	"{quien} deja de revelar la carta de arriba": "{quien} nu mai dezvăluie cartea de deasupra"
 }

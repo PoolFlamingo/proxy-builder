@@ -1171,5 +1171,7 @@
 	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "Verschijnt op het slagveld van {quien}. Klik op degene die je wilt maken.",
 	"Scryfall no ha encontrado nada. Prueba con el nombre de la ficha, como «Beast».": "Scryfall heeft niets gevonden. Probeer de naam van de token, zoals „Beast”.",
 	"Cementerios y exilios": "Kerkhoven en Exile",
-	"Ver todas las cartas ({zona})": "Alle kaarten bekijken ({zona})"
+	"Ver todas las cartas ({zona})": "Alle kaarten bekijken ({zona})",
+	"Dejar de revelar la de arriba": "Bovenste kaart niet meer tonen",
+	"{quien} deja de revelar la carta de arriba": "{quien} toont de bovenste kaart niet meer"
 }

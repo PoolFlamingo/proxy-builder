@@ -1117,5 +1117,7 @@
 	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "Sale en el campo de {quien}. Pulsa la que quieras crear.",
 	"Scryfall no ha encontrado nada. Prueba con el nombre de la ficha, como «Beast».": "Scryfall no ha encontrado nada. Prueba con el nombre de la ficha, como «Beast».",
 	"Cementerios y exilios": "Cementerios y exilios",
-	"Ver todas las cartas ({zona})": "Ver todas las cartas ({zona})"
+	"Ver todas las cartas ({zona})": "Ver todas las cartas ({zona})",
+	"Dejar de revelar la de arriba": "Dejar de revelar la de arriba",
+	"{quien} deja de revelar la carta de arriba": "{quien} deja de revelar la carta de arriba"
 }

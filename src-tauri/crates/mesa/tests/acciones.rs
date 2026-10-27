@@ -50,6 +50,7 @@ fn nombre(a: &Accion) -> &'static str {
         Accion::Mirar { .. } => "Mirar",
         Accion::Ordenar { .. } => "Ordenar",
         Accion::RevelarArriba { .. } => "RevelarArriba",
+        Accion::OcultarArriba { .. } => "OcultarArriba",
         Accion::Excavar { .. } => "Excavar",
         Accion::ResolverExcavacion { .. } => "ResolverExcavacion",
         Accion::Buscar { .. } => "Buscar",
@@ -388,6 +389,15 @@ fn cada_accion_del_catalogo() {
     let lib = m.zona(YO, Zona::Biblioteca);
     assert_eq!(&lib[..2], &[tres[2], tres[1]]);
     assert_eq!(*lib.last().unwrap(), tres[0]);
+    m.haz(Accion::RevelarArriba { n: 1 });
+    let arriba = m.zona(YO, Zona::Biblioteca)[0];
+    assert_eq!(m.c(arriba).vista_por, Vista::Todos);
+    m.haz(Accion::OcultarArriba { n: 1 });
+    assert_eq!(
+        m.c(arriba).vista_por,
+        Vista::Nadie,
+        "deja de estar revelada"
+    );
     m.haz(Accion::RevelarArriba { n: 1 });
     assert_eq!(m.c(lib[0]).vista_por, Vista::Todos);
     m.haz(Accion::Excavar {
@@ -758,6 +768,7 @@ const TODAS: &[&str] = &[
     "Mirar",
     "Ordenar",
     "RevelarArriba",
+    "OcultarArriba",
     "Excavar",
     "ResolverExcavacion",
     "Buscar",

@@ -1207,5 +1207,7 @@
 	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "Появляется на поле боя {quien}. Нажми на ту, которую хочешь создать.",
 	"Scryfall no ha encontrado nada. Prueba con el nombre de la ficha, como «Beast».": "Scryfall ничего не нашёл. Попробуй название жетона, например «Beast».",
 	"Cementerios y exilios": "Кладбища и изгнание",
-	"Ver todas las cartas ({zona})": "Показать все карты ({zona})"
+	"Ver todas las cartas ({zona})": "Показать все карты ({zona})",
+	"Dejar de revelar la de arriba": "Перестать показывать верхнюю карту",
+	"{quien} deja de revelar la carta de arriba": "{quien} перестаёт показывать верхнюю карту"
 }

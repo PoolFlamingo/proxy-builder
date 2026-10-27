@@ -51,6 +51,7 @@ export const FRASES: Record<Accion["que"], string> = {
 	mirar: paraTraducir("{quien} mira {n} cartas de una biblioteca"),
 	ordenar: paraTraducir("{quien} coloca las cartas que miraba"),
 	revelarArriba: paraTraducir("{quien} revela {n} cartas de su biblioteca"),
+	ocultarArriba: paraTraducir("{quien} deja de revelar la carta de arriba"),
 	excavar: paraTraducir("{quien} revela cartas de su biblioteca"),
 	resolverExcavacion: paraTraducir("{quien} decide qué hace con lo revelado"),
 	buscar: paraTraducir("{quien} está buscando en su biblioteca"),

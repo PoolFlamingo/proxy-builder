@@ -1171,5 +1171,7 @@
 	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "Sie erscheint auf dem Spielfeld von {quien}. Klicke auf die, die du erstellen willst.",
 	"Scryfall no ha encontrado nada. Prueba con el nombre de la ficha, como «Beast».": "Scryfall hat nichts gefunden. Versuche es mit dem Namen der Spielmarke, z. B. „Beast“.",
 	"Cementerios y exilios": "Friedhöfe und Exil",
-	"Ver todas las cartas ({zona})": "Alle Karten ansehen ({zona})"
+	"Ver todas las cartas ({zona})": "Alle Karten ansehen ({zona})",
+	"Dejar de revelar la de arriba": "Oberste Karte nicht mehr aufdecken",
+	"{quien} deja de revelar la carta de arriba": "{quien} deckt die oberste Karte nicht mehr auf"
 }

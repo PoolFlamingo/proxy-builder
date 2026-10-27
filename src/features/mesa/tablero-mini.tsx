@@ -13,6 +13,7 @@ import { useOriginales } from "@/stores/originales-store";
 import { useRed } from "@/stores/red-store";
 import { enVuelo, origenDe, useVivo } from "@/stores/vivo-store";
 import { zonaDe } from "./acciones";
+import { cartaDeArribaRevelada } from "./arriba-biblioteca";
 import { Bocadillo, InsigniaSenal } from "./chat";
 import { abanico, posAPx } from "./disposicion";
 import { senalar } from "./en-vivo/emitir";
@@ -35,6 +36,8 @@ type DatosMini = {
 	/** Las cartas de la mano que este mirador ve (la de un compañero); el resto, reversos. */
 	manoVista: VistaCarta[];
 	biblioteca: number;
+	/** La de arriba, si está boca arriba (revelada). */
+	arribaBiblioteca: VistaCarta | null;
 	/** La de arriba de cada zona a la vista (la última de la lista) y cuántas hay. */
 	cementerio: ArribaMini;
 	exilio: ArribaMini;
@@ -78,6 +81,7 @@ export function datosMini(
 		mano: cuantasEn(m, zonaDe(jugador, "mano")),
 		manoVista,
 		biblioteca: cuantasEn(m, zonaDe(jugador, "biblioteca")),
+		arribaBiblioteca: cartaDeArribaRevelada(m, jugador),
 		activo: m.general?.turno.activo === jugador,
 		equipo: j?.equipo != null ? m.general?.equipos.find((e) => e.id === j.equipo) : undefined,
 	};
@@ -94,6 +98,7 @@ export function igualMini(a: DatosMini, b: DatosMini): boolean {
 		a.mano === b.mano &&
 		igualesLista(a.manoVista, b.manoVista) &&
 		a.biblioteca === b.biblioteca &&
+		a.arribaBiblioteca === b.arribaBiblioteca &&
 		igualArriba(a.cementerio, b.cementerio) &&
 		igualArriba(a.exilio, b.exilio) &&
 		igualArriba(a.mando, b.mando) &&
@@ -308,9 +313,9 @@ function ZonasMini({ d, w, h, ancho }: { d: DatosMini; w: number; h: number; anc
 	zonas.push({
 		clave: "biblioteca",
 		nombre: t("Biblioteca"),
-		carta: null,
+		carta: d.arribaBiblioteca,
 		n: d.biblioteca,
-		dorso: true,
+		dorso: d.arribaBiblioteca === null,
 	});
 	zonas.push({ clave: "cementerio", nombre: t("Cementerio"), ...d.cementerio });
 	zonas.push({ clave: "exilio", nombre: t("Exilio"), ...d.exilio });

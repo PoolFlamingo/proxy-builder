@@ -57,6 +57,7 @@ export const CATEGORIAS_DE_ACCION: Record<Accion["que"], CategoriaEvento> = {
 	mirar: "biblioteca",
 	ordenar: "biblioteca",
 	revelarArriba: "biblioteca",
+	ocultarArriba: "biblioteca",
 	excavar: "biblioteca",
 	resolverExcavacion: "biblioteca",
 	buscar: "biblioteca",

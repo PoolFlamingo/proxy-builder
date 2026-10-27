@@ -1207,5 +1207,7 @@
 	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "Pojawia się na polu bitwy gracza {quien}. Kliknij tę, którą chcesz stworzyć.",
 	"Scryfall no ha encontrado nada. Prueba con el nombre de la ficha, como «Beast».": "Scryfall nic nie znalazł. Spróbuj wpisać nazwę żetonu, np. „Beast”.",
 	"Cementerios y exilios": "Cmentarze i wygnanie",
-	"Ver todas las cartas ({zona})": "Zobacz wszystkie karty ({zona})"
+	"Ver todas las cartas ({zona})": "Zobacz wszystkie karty ({zona})",
+	"Dejar de revelar la de arriba": "Przestań ujawniać wierzchnią kartę",
+	"{quien} deja de revelar la carta de arriba": "{quien} przestaje ujawniać wierzchnią kartę"
 }

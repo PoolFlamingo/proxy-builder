@@ -1117,5 +1117,7 @@
 	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "{quien}의 전장에 나와요. 만들 것을 누르세요.",
 	"Scryfall no ha encontrado nada. Prueba con el nombre de la ficha, como «Beast».": "Scryfall에서 찾지 못했어요. 토큰 이름(예: 「Beast」)으로 검색해 보세요.",
 	"Cementerios y exilios": "무덤과 추방",
-	"Ver todas las cartas ({zona})": "모든 카드 보기 ({zona})"
+	"Ver todas las cartas ({zona})": "모든 카드 보기 ({zona})",
+	"Dejar de revelar la de arriba": "맨 위 카드 공개 그만하기",
+	"{quien} deja de revelar la carta de arriba": "{quien}이(가) 맨 위 카드 공개를 그만둠"
 }

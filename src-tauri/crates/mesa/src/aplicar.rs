@@ -1199,6 +1199,20 @@ fn accion_(q: &mut Partida, a: &Accion, ctx: &mut Ctx, seq: u64) -> Result<(), R
             }
             Ok(())
         }
+        Accion::OcultarArriba { n } => {
+            limite(*n)?;
+            let lib = q.zona(&biblioteca(yo)).to_vec();
+            if lib.is_empty() {
+                return Err(Rechazo::ZonaVacia);
+            }
+            for id in lib.into_iter().take(*n as usize) {
+                let c = carta_mut(q, id)?;
+                if c.vista_por == Vista::Todos {
+                    c.vista_por = Vista::Nadie;
+                }
+            }
+            Ok(())
+        }
         Accion::Excavar {
             forma,
             filtro,

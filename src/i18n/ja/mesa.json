@@ -1117,5 +1117,7 @@
 	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "{quien} の戦場に出ます。作りたいものを押してください。",
 	"Scryfall no ha encontrado nada. Prueba con el nombre de la ficha, como «Beast».": "Scryfall では見つかりませんでした。トークンの名前（例：「Beast」）で試してください。",
 	"Cementerios y exilios": "墓地と追放領域",
-	"Ver todas las cartas ({zona})": "すべてのカードを見る（{zona}）"
+	"Ver todas las cartas ({zona})": "すべてのカードを見る（{zona}）",
+	"Dejar de revelar la de arriba": "一番上のカードの公開をやめる",
+	"{quien} deja de revelar la carta de arriba": "{quien} が一番上のカードの公開をやめる"
 }

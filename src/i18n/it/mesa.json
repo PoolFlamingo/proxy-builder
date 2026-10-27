@@ -1185,5 +1185,7 @@
 	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "Compare sul campo di battaglia di {quien}. Premi quella che vuoi creare.",
 	"Scryfall no ha encontrado nada. Prueba con el nombre de la ficha, como «Beast».": "Scryfall non ha trovato nulla. Prova con il nome della pedina, come «Beast».",
 	"Cementerios y exilios": "Cimiteri ed esilio",
-	"Ver todas las cartas ({zona})": "Vedi tutte le carte ({zona})"
+	"Ver todas las cartas ({zona})": "Vedi tutte le carte ({zona})",
+	"Dejar de revelar la de arriba": "Smetti di rivelare la prima carta",
+	"{quien} deja de revelar la carta de arriba": "{quien} smette di rivelare la prima carta"
 }

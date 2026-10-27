@@ -1171,5 +1171,7 @@
 	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "It appears on {quien}'s battlefield. Click the one you want to create.",
 	"Scryfall no ha encontrado nada. Prueba con el nombre de la ficha, como «Beast».": "Scryfall found nothing. Try the name of the token, like “Beast”.",
 	"Cementerios y exilios": "Graveyards and exile",
-	"Ver todas las cartas ({zona})": "See all cards ({zona})"
+	"Ver todas las cartas ({zona})": "See all cards ({zona})",
+	"Dejar de revelar la de arriba": "Stop revealing the top card",
+	"{quien} deja de revelar la carta de arriba": "{quien} stops revealing the top card"
 }
