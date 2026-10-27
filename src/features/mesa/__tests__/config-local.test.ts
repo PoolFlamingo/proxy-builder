@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
 	AJUSTES_LOCALES,
+	type AjustesLocal,
 	type AsientoLocal,
+	ajustesTrasOrden,
+	ajustesTrasQuitar,
+	aplicarOrden,
 	construirConfig,
+	ordenAlAzar,
+	ordenTrasMover,
 	problemaDeEquipos,
 } from "../config-local";
 
@@ -128,5 +134,62 @@ describe("Archenemy y Planechase", () => {
 	it("Dos Cabezas empieza con 30 vidas", () => {
 		const c = construirConfig(cuatro, { ...AJUSTES_LOCALES, modo: "dosCabezas" }, nombre);
 		expect(c.opciones?.vidaInicial).toBe(30);
+	});
+});
+
+describe("orden de los asientos", () => {
+	it("mover un asiento lo lleva a su sitio y deja los demás en orden", () => {
+		expect(ordenTrasMover(4, 0, 2)).toEqual([1, 2, 0, 3]);
+		expect(ordenTrasMover(4, 3, 0)).toEqual([3, 0, 1, 2]);
+		expect(ordenTrasMover(4, 1, 1)).toEqual([0, 1, 2, 3]);
+	});
+
+	it("mover con índices fuera de rango no rompe nada", () => {
+		expect(ordenTrasMover(3, 7, 0)).toEqual([0, 1, 2]);
+		expect(ordenTrasMover(3, 0, 99)).toEqual([1, 2, 0]);
+		expect(ordenTrasMover(3, 2, -4)).toEqual([2, 0, 1]);
+	});
+
+	it("al azar es una permutación y depende del azar que se le da", () => {
+		for (const n of [1, 2, 5, 10]) {
+			const o = ordenAlAzar(n);
+			expect([...o].sort((a, b) => a - b)).toEqual(Array.from({ length: n }, (_, i) => i));
+		}
+		expect(ordenAlAzar(4, () => 0)).toEqual([1, 2, 3, 0]);
+		expect(ordenAlAzar(4, () => 0.999)).toEqual([0, 1, 2, 3]);
+	});
+
+	it("aplica el orden a una lista", () => {
+		expect(aplicarOrden(["a", "b", "c"], [2, 0, 1])).toEqual(["c", "a", "b"]);
+	});
+
+	const base: AjustesLocal = { ...AJUSTES_LOCALES, primero: 0, archienemigo: 2 };
+
+	it("el primero y el archienemigo siguen siendo los mismos jugadores", () => {
+		// El jugador de la posición 0 pasa a la 2, y los otros suben una.
+		const a = ajustesTrasOrden(base, ordenTrasMover(4, 0, 2));
+		expect(a.primero).toBe(2);
+		expect(a.archienemigo).toBe(1);
+	});
+
+	it("sin primero elegido sigue sorteándose", () => {
+		expect(ajustesTrasOrden({ ...base, primero: null }, [1, 0, 2, 3]).primero).toBeNull();
+	});
+
+	it("quitar un asiento recoloca o borra lo que apuntaba a él", () => {
+		expect(ajustesTrasQuitar(base, 1)).toMatchObject({ primero: 0, archienemigo: 1 });
+		expect(ajustesTrasQuitar(base, 0)).toMatchObject({ primero: null, archienemigo: 1 });
+		expect(ajustesTrasQuitar(base, 2)).toMatchObject({ primero: 0, archienemigo: 0 });
+	});
+
+	it("el primero va en la configuración, y solo si existe", () => {
+		const dos = [asiento(1), asiento(2)];
+		expect(construirConfig(dos, { ...AJUSTES_LOCALES, primero: 1 }, nombre).primero).toBe(1);
+		expect(
+			construirConfig(dos, { ...AJUSTES_LOCALES, primero: null }, nombre).primero,
+		).toBeUndefined();
+		expect(
+			construirConfig(dos, { ...AJUSTES_LOCALES, primero: 5 }, nombre).primero,
+		).toBeUndefined();
 	});
 });

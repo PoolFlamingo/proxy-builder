@@ -830,5 +830,11 @@
 	"El encuentro acaba en tablas": "Meciul se termină la egalitate",
 	"Gana el encuentro {quien}": "{quien} câștigă meciul",
 	"Siguiente partida": "Următoarea partidă",
-	"Empieza {quien}, que perdió la partida anterior": "Începe {quien}, care a pierdut partida anterioară"
+	"Empieza {quien}, que perdió la partida anterior": "Începe {quien}, care a pierdut partida anterioară",
+	"Mover a {jugador}": "Mută {jugador}",
+	"Empieza": "Începe",
+	"Al azar": "Aleatoriu",
+	"Se juega por asientos, de arriba abajo: arrastra a los jugadores para cambiar el orden.": "Se joacă pe locuri, de sus în jos: trage jucătorii pentru a schimba ordinea.",
+	"Mezclar los asientos": "Amestecă locurile",
+	"Empieza {quien}": "Începe {quien}"
 }

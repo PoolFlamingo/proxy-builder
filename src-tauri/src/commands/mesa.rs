@@ -427,9 +427,9 @@ pub fn mesa_accion(
     Ok(())
 }
 
-/// Cómo va el encuentro (al mejor de varias); `None`, una partida suelta.
+/// Cómo va el encuentro (al mejor de varias) y quién empieza la partida.
 #[tauri::command]
-pub fn mesa_encuentro(state: State<'_, AppState>) -> AppResult<Option<VistaEncuentro>> {
+pub fn mesa_encuentro(state: State<'_, AppState>) -> AppResult<VistaEncuentro> {
     con_sesion(&state, |s| Ok(s.estado_encuentro()))
 }
 

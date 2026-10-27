@@ -500,14 +500,19 @@ fn vida(q: &mut Partida, j: IdJugador, delta: i32) -> Result<(), Rechazo> {
     Ok(())
 }
 
+/// El siguiente asiento vivo después de `desde` y si con eso empieza una
+/// ronda nueva: la ronda cambia al pasar por el asiento del primer jugador
+/// (esté vivo o no), no por el asiento 0, que es solo el primero de la lista.
 fn siguiente_asiento(q: &Partida, desde: IdJugador) -> Option<(IdJugador, bool)> {
     let n = q.jugadores.len();
     let i = q.jugadores.iter().position(|j| j.id == desde)?;
+    let primero = q.jugadores.iter().position(|j| j.id == q.turno.primero);
+    let mut vuelta = false;
     for k in 1..=n {
-        let jj = q.jugadores.get((i + k) % n)?;
+        let pos = (i + k) % n;
+        let jj = q.jugadores.get(pos)?;
+        vuelta |= Some(pos) == primero;
         if jj.eliminado.is_none() {
-            // Da la vuelta a la mesa si pasa por el asiento 0 o vuelve a sí.
-            let vuelta = i + k >= n;
             return Some((jj.id, vuelta));
         }
     }

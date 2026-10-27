@@ -65,9 +65,11 @@ export function Mulligan() {
 				<p className="text-xs text-white/70">{t(REGLAS[modo])}</p>
 				{variosJugadores && primero && (
 					<p className="mt-1 text-sm font-semibold text-primary">
-						{encuentro?.empieza != null
+						{encuentro?.empieza?.porque === "perdio"
 							? t("Empieza {quien}, que perdió la partida anterior", { quien: primero })
-							: t("Sorteado al azar: empieza {quien}", { quien: primero })}
+							: encuentro?.empieza?.porque === "elegido"
+								? t("Empieza {quien}", { quien: primero })
+								: t("Sorteado al azar: empieza {quien}", { quien: primero })}
 					</p>
 				)}
 				{mulligans > 0 && (

@@ -830,5 +830,11 @@
 	"El encuentro acaba en tablas": "L'incontro finisce in pareggio",
 	"Gana el encuentro {quien}": "{quien} vince l'incontro",
 	"Siguiente partida": "Prossima partita",
-	"Empieza {quien}, que perdió la partida anterior": "Inizia {quien}, che ha perso la partita precedente"
+	"Empieza {quien}, que perdió la partida anterior": "Inizia {quien}, che ha perso la partita precedente",
+	"Mover a {jugador}": "Sposta {jugador}",
+	"Empieza": "Inizia",
+	"Al azar": "A caso",
+	"Se juega por asientos, de arriba abajo: arrastra a los jugadores para cambiar el orden.": "Si gioca per posto, dall'alto in basso: trascina i giocatori per cambiare l'ordine.",
+	"Mezclar los asientos": "Mescola i posti",
+	"Empieza {quien}": "Inizia {quien}"
 }

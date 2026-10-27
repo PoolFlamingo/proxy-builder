@@ -59,6 +59,10 @@ pub struct ConfigMesa {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub al_mejor_de: Option<u8>,
+    /// Quién empieza la primera partida (por asiento); `None`, se sortea.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub primero: Option<IdJugador>,
 }
 
 /// Lo que llega a la pantalla por el canal de la mesa.
@@ -191,7 +195,7 @@ pub(super) fn partida(
 impl Sesion {
     pub fn nueva(config: ConfigMesa, mazos: Vec<DeckDeMesa>) -> AppResult<Sesion> {
         let s = semilla();
-        let p = partida(&config, &mazos, s, None)?;
+        let p = partida(&config, &mazos, s, config.primero)?;
         Ok(Sesion::con_registro(
             config,
             mazos,
@@ -223,7 +227,7 @@ impl Sesion {
         mazos: Vec<DeckDeMesa>,
         anfitrion: std::sync::Arc<crate::red::anfitrion::Anfitrion>,
     ) -> AppResult<Sesion> {
-        let p = partida(&config, &mazos, semilla(), None)?;
+        let p = partida(&config, &mazos, semilla(), config.primero)?;
         let mut s = Sesion::con_registro(
             config,
             mazos,
@@ -257,6 +261,7 @@ impl Sesion {
             intensidad: Intensidad::Apagado,
             equipos: partida.equipos.clone(),
             al_mejor_de: None,
+            primero: None,
         };
         let mut s = Sesion::con_registro(
             config,
@@ -508,6 +513,7 @@ pub(crate) mod tests {
             intensidad: Intensidad::Apagado,
             equipos: Vec::new(),
             al_mejor_de: None,
+            primero: None,
         }
     }
 
@@ -705,5 +711,20 @@ pub(crate) mod tests {
         s.accion(Accion::Reiniciar, None).unwrap();
         assert!(s.partida().mulligan.is_some());
         assert_eq!(s.partida().cartas.len(), 60);
+    }
+
+    #[test]
+    fn empieza_quien_se_eligio_y_reiniciar_lo_respeta() {
+        let mut s = local_de_dos();
+        s.config.primero = Some(IdJugador(1));
+        s.accion(Accion::Reiniciar, None).unwrap();
+        assert_eq!(s.partida().turno.primero, IdJugador(1));
+        assert_eq!(s.partida().turno.activo, IdJugador(1));
+        // Una sesión nueva con la elección hecha empieza igual.
+        let mut c = config();
+        c.jugadores.push(s.config.jugadores[1].clone());
+        c.primero = Some(IdJugador(1));
+        let n = Sesion::nueva(c, vec![mazo(), mazo()]).unwrap();
+        assert_eq!(n.partida().turno.primero, IdJugador(1));
     }
 }

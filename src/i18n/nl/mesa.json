@@ -811,5 +811,11 @@
 	"El encuentro acaba en tablas": "De match eindigt in een gelijkspel",
 	"Gana el encuentro {quien}": "{quien} wint de match",
 	"Siguiente partida": "Volgend spel",
-	"Empieza {quien}, que perdió la partida anterior": "{quien} begint, want die verloor het vorige spel"
+	"Empieza {quien}, que perdió la partida anterior": "{quien} begint, want die verloor het vorige spel",
+	"Mover a {jugador}": "{jugador} verplaatsen",
+	"Empieza": "Begint",
+	"Al azar": "Willekeurig",
+	"Se juega por asientos, de arriba abajo: arrastra a los jugadores para cambiar el orden.": "Er wordt per zitplaats gespeeld, van boven naar beneden: sleep de spelers om de volgorde te wijzigen.",
+	"Mezclar los asientos": "Zitplaatsen husselen",
+	"Empieza {quien}": "{quien} begint"
 }

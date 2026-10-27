@@ -754,5 +754,11 @@
 	"El encuentro acaba en tablas": "El encuentro acaba en tablas",
 	"Gana el encuentro {quien}": "Gana el encuentro {quien}",
 	"Siguiente partida": "Siguiente partida",
-	"Empieza {quien}, que perdió la partida anterior": "Empieza {quien}, que perdió la partida anterior"
+	"Empieza {quien}, que perdió la partida anterior": "Empieza {quien}, que perdió la partida anterior",
+	"Mover a {jugador}": "Mover a {jugador}",
+	"Empieza": "Empieza",
+	"Al azar": "Al azar",
+	"Se juega por asientos, de arriba abajo: arrastra a los jugadores para cambiar el orden.": "Se juega por asientos, de arriba abajo: arrastra a los jugadores para cambiar el orden.",
+	"Mezclar los asientos": "Mezclar los asientos",
+	"Empieza {quien}": "Empieza {quien}"
 }

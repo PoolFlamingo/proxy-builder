@@ -826,5 +826,11 @@
 	"El encuentro acaba en tablas": "A série termina empatada",
 	"Gana el encuentro {quien}": "{quien} vence a série",
 	"Siguiente partida": "Próxima partida",
-	"Empieza {quien}, que perdió la partida anterior": "{quien} começa, pois perdeu a partida anterior"
+	"Empieza {quien}, que perdió la partida anterior": "{quien} começa, pois perdeu a partida anterior",
+	"Mover a {jugador}": "Mover {jugador}",
+	"Empieza": "Começa",
+	"Al azar": "Aleatório",
+	"Se juega por asientos, de arriba abajo: arrastra a los jugadores para cambiar el orden.": "O jogo segue os assentos, de cima para baixo: arraste os jogadores para mudar a ordem.",
+	"Mezclar los asientos": "Embaralhar os assentos",
+	"Empieza {quien}": "{quien} começa"
 }

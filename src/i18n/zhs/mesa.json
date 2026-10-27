@@ -754,5 +754,11 @@
 	"El encuentro acaba en tablas": "整场比赛打成平局",
 	"Gana el encuentro {quien}": "{quien} 赢得了比赛",
 	"Siguiente partida": "下一局",
-	"Empieza {quien}, que perdió la partida anterior": "上一局输了的 {quien} 先手"
+	"Empieza {quien}, que perdió la partida anterior": "上一局输了的 {quien} 先手",
+	"Mover a {jugador}": "移动 {jugador}",
+	"Empieza": "先手",
+	"Al azar": "随机",
+	"Se juega por asientos, de arriba abajo: arrastra a los jugadores para cambiar el orden.": "按座位从上到下依次进行：拖动玩家即可调整顺序。",
+	"Mezclar los asientos": "随机打乱座位",
+	"Empieza {quien}": "{quien} 先手"
 }

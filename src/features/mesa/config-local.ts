@@ -35,6 +35,8 @@ export type AjustesLocal = {
 	planechase: boolean;
 	/** Partidas del encuentro: 1 (una suelta), 3 o 5. */
 	alMejorDe: AlMejorDe;
+	/** El asiento que empieza, o `null` para sortearlo. */
+	primero: number | null;
 };
 
 /** Las duraciones de un encuentro (`mesa::encuentro::DURACIONES`). */
@@ -53,6 +55,7 @@ export const AJUSTES_LOCALES: AjustesLocal = {
 	archienemigo: 0,
 	planechase: false,
 	alMejorDe: 1,
+	primero: null,
 };
 
 /** Los jugadores que caben en una mesa. */
@@ -160,8 +163,61 @@ export function construirConfig(
 		opciones,
 		intensidad: "apagado",
 		equipos: equiposDe(asientos, a, opciones.vidaInicial, nombre, heroes),
+		primero: a.primero !== null && a.primero < asientos.length ? a.primero : undefined,
 		// Un encuentro necesita rival y un formato con banquillo.
 		alMejorDe:
 			a.alMejorDe > 1 && asientos.length >= 2 && conBanquillo(a.formato) ? a.alMejorDe : undefined,
+	};
+}
+
+/**
+ * **El orden de los asientos.** Se juega por asientos, de uno al siguiente,
+ * así que quién se sienta junto a quién importa (y en Dos Cabezas las parejas
+ * son los asientos contiguos). Un orden es una lista `orden[nuevo] = viejo`.
+ */
+
+/** El orden que resulta de llevar el asiento `de` a la posición `a`. */
+export function ordenTrasMover(n: number, de: number, a: number): number[] {
+	const orden = Array.from({ length: n }, (_, i) => i);
+	if (de < 0 || de >= n) return orden;
+	const [x] = orden.splice(de, 1);
+	orden.splice(Math.max(0, Math.min(a, n - 1)), 0, x);
+	return orden;
+}
+
+/** Un orden cualquiera (Fisher–Yates; `azar` da un número de 0 a 1). */
+export function ordenAlAzar(n: number, azar: () => number = Math.random): number[] {
+	const orden = Array.from({ length: n }, (_, i) => i);
+	for (let i = n - 1; i > 0; i--) {
+		const j = Math.min(i, Math.floor(azar() * (i + 1)));
+		[orden[i], orden[j]] = [orden[j], orden[i]];
+	}
+	return orden;
+}
+
+export function aplicarOrden<T>(lista: T[], orden: number[]): T[] {
+	return orden.map((viejo) => lista[viejo]);
+}
+
+/**
+ * Los ajustes tras reordenar: el asiento que empieza y el del archienemigo
+ * siguen siendo los mismos jugadores, ahora en otro sitio.
+ */
+export function ajustesTrasOrden(a: AjustesLocal, orden: number[]): AjustesLocal {
+	const nuevo = (viejo: number) => Math.max(0, orden.indexOf(viejo));
+	return {
+		...a,
+		primero: a.primero === null ? null : nuevo(a.primero),
+		archienemigo: nuevo(a.archienemigo),
+	};
+}
+
+/** Los ajustes tras quitar el asiento `i`. */
+export function ajustesTrasQuitar(a: AjustesLocal, i: number): AjustesLocal {
+	const baja = (v: number) => (v > i ? v - 1 : v);
+	return {
+		...a,
+		primero: a.primero === null || a.primero === i ? null : baja(a.primero),
+		archienemigo: a.archienemigo === i ? 0 : baja(a.archienemigo),
 	};
 }

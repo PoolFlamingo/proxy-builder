@@ -332,6 +332,7 @@ async fn empezar_cuando_esten(app: AppHandle, salon: Arc<Salon>, anf: Arc<Anfitr
         intensidad: Intensidad::Apagado,
         equipos: Vec::new(),
         al_mejor_de: None,
+        primero: None,
     };
     let mesa = MesaDeApp(app.clone());
     match empezar_partida(&anf, &mesa, salon.yo, config, listo.mazo.clone()) {

@@ -32,18 +32,39 @@ pub struct VistaBanquillo {
     pub banquillo: Vec<CartaBanquillo>,
 }
 
+/// Por qué empieza quien empieza la partida de ahora.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum PorQueEmpieza {
+    /// Se eligió al preparar la partida.
+    Elegido,
+    /// Perdió la partida anterior del encuentro.
+    Perdio,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct Empieza {
+    pub jugador: IdJugador,
+    pub porque: PorQueEmpieza,
+}
+
+/// Lo que la pantalla necesita saber de cómo empieza y va la partida.
 #[derive(Debug, Clone, PartialEq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct VistaEncuentro {
-    pub estado: EstadoEncuentro,
+    /// El marcador; `None` si se juega una partida suelta.
+    #[ts(optional)]
+    pub estado: Option<EstadoEncuentro>,
     /// Quién empieza la siguiente (el que perdió), si se sabe.
     #[ts(optional)]
     pub primero: Option<IdJugador>,
-    /// Quién empieza la partida de ahora por haber perdido la anterior
-    /// (`None`: la primera, o tras unas tablas, que se sortea).
+    /// Quién empieza la partida de ahora y por qué (`None`: se sorteó).
     #[ts(optional)]
-    pub empieza: Option<IdJugador>,
+    pub empieza: Option<Empieza>,
 }
 
 fn rechazo(motivo: &str) -> AppError {
@@ -56,25 +77,44 @@ impl Sesion {
         self.partida().fin.as_ref().map(|f| f.ganadores.clone())
     }
 
-    /// Cómo va el encuentro; `None` si se juega una partida suelta.
-    pub fn estado_encuentro(&self) -> Option<VistaEncuentro> {
-        let e = self.encuentro.as_ref()?;
+    /// Cómo va la partida: el marcador del encuentro (si lo hay) y quién empieza.
+    pub fn estado_encuentro(&self) -> VistaEncuentro {
         let n = self.partida().jugadores.len();
         let actual = self.ganadores_de_ahora();
-        Some(VistaEncuentro {
-            estado: e.estado(n, actual.as_deref()),
-            primero: actual
-                .as_deref()
-                .and_then(|g| Encuentro::primero_siguiente(n, g)),
-            empieza: self.primero(),
-        })
+        VistaEncuentro {
+            estado: self
+                .encuentro
+                .as_ref()
+                .map(|e| e.estado(n, actual.as_deref())),
+            primero: self.encuentro.as_ref().and_then(|_| {
+                actual
+                    .as_deref()
+                    .and_then(|g| Encuentro::primero_siguiente(n, g))
+            }),
+            empieza: self.empieza(),
+        }
     }
 
-    /// Quién empieza la partida que se abre ahora: el que perdió la última
-    /// cerrada. `None` en la primera (o con tablas): lo decide el motor.
+    /// Quién empieza la partida que se abre ahora y por qué: en la primera,
+    /// el que se eligió al empezar (si se eligió); en las siguientes de un
+    /// encuentro, el que perdió la anterior. `None`: lo sortea el motor.
+    fn empieza(&self) -> Option<Empieza> {
+        let n = self.partida().jugadores.len();
+        match self.encuentro.as_ref().and_then(|e| e.cerradas.last()) {
+            Some(ultima) => Encuentro::primero_siguiente(n, ultima).map(|jugador| Empieza {
+                jugador,
+                porque: PorQueEmpieza::Perdio,
+            }),
+            None => self.config.primero.map(|jugador| Empieza {
+                jugador,
+                porque: PorQueEmpieza::Elegido,
+            }),
+        }
+    }
+
+    /// El jugador que se fuerza a empezar la partida que se abre ahora.
     pub(super) fn primero(&self) -> Option<IdJugador> {
-        let ultima = self.encuentro.as_ref()?.cerradas.last()?;
-        Encuentro::primero_siguiente(self.partida().jugadores.len(), ultima)
+        self.empieza().map(|e| e.jugador)
     }
 
     /// Lo que hay que cumplir para tocar el banquillo o seguir: ser quien
@@ -237,7 +277,7 @@ mod tests {
     #[test]
     fn una_partida_suelta_no_tiene_encuentro() {
         let mut s = Sesion::nueva(config(), vec![mazo()]).unwrap();
-        assert!(s.estado_encuentro().is_none());
+        assert!(s.estado_encuentro().estado.is_none());
         assert_eq!(
             s.siguiente_partida().unwrap_err().params["motivo"],
             "sin_encuentro"
@@ -247,13 +287,14 @@ mod tests {
     #[test]
     fn al_mejor_de_tres_acaba_2_a_1_con_los_cambios_en_la_segunda() {
         let mut s = encuentro_de_dos();
-        assert_eq!(s.estado_encuentro().unwrap().estado.marcador, vec![0, 0]);
+        assert_eq!(s.estado_encuentro().estado.unwrap().marcador, vec![0, 0]);
 
         // Partida 1: gana el 0. Ya cuenta aunque no se haya cerrado.
         gana(&mut s, 0);
-        let v = s.estado_encuentro().unwrap();
-        assert_eq!(v.estado.marcador, vec![1, 0]);
-        assert!(!v.estado.terminado);
+        let v = s.estado_encuentro();
+        let e = v.estado.clone().unwrap();
+        assert_eq!(e.marcador, vec![1, 0]);
+        assert!(!e.terminado);
         // Empieza el que perdió.
         assert_eq!(v.primero, Some(IdJugador(1)));
 
@@ -267,10 +308,16 @@ mod tests {
 
         s.siguiente_partida().unwrap();
         // La partida 2 empieza con el marcador, mano nueva y el que perdió primero.
-        assert_eq!(s.estado_encuentro().unwrap().estado.marcador, vec![1, 0]);
+        assert_eq!(s.estado_encuentro().estado.unwrap().marcador, vec![1, 0]);
         assert!(s.partida().fin.is_none());
         assert_eq!(s.partida().turno.activo, IdJugador(1));
-        assert_eq!(s.estado_encuentro().unwrap().empieza, Some(IdJugador(1)));
+        assert_eq!(
+            s.estado_encuentro().empieza,
+            Some(Empieza {
+                jugador: IdJugador(1),
+                porque: PorQueEmpieza::Perdio
+            })
+        );
         let en = en_juego(&s, 0);
         assert_eq!(en.len(), 60);
         for id in &entra {
@@ -288,14 +335,14 @@ mod tests {
                 .unwrap();
         }
         gana(&mut s, 1);
-        assert_eq!(s.estado_encuentro().unwrap().estado.marcador, vec![1, 1]);
+        assert_eq!(s.estado_encuentro().estado.unwrap().marcador, vec![1, 1]);
         s.siguiente_partida().unwrap();
         for j in 0..2 {
             s.accion(Accion::QuedarseCon { al_fondo: vec![] }, Some(IdJugador(j)))
                 .unwrap();
         }
         gana(&mut s, 0);
-        let fin = s.estado_encuentro().unwrap().estado;
+        let fin = s.estado_encuentro().estado.unwrap();
         assert_eq!(fin.marcador, vec![2, 1]);
         assert!(fin.terminado);
         assert_eq!(fin.ganadores, vec![IdJugador(0)]);
@@ -310,10 +357,10 @@ mod tests {
     fn deshacer_el_terminar_no_deja_puntos() {
         let mut s = encuentro_de_dos();
         gana(&mut s, 0);
-        assert_eq!(s.estado_encuentro().unwrap().estado.marcador, vec![1, 0]);
+        assert_eq!(s.estado_encuentro().estado.unwrap().marcador, vec![1, 0]);
         s.accion(Accion::Deshacer { hasta: None }, None).unwrap();
         assert!(s.partida().fin.is_none());
-        assert_eq!(s.estado_encuentro().unwrap().estado.marcador, vec![0, 0]);
+        assert_eq!(s.estado_encuentro().estado.unwrap().marcador, vec![0, 0]);
     }
 
     #[test]
@@ -342,6 +389,6 @@ mod tests {
         let g = crate::mesa::guardada::leer(dir.path()).unwrap().unwrap();
         let otra = crate::mesa::guardada::sesion(g).unwrap();
         assert_eq!(otra.encuentro, s.encuentro);
-        assert_eq!(otra.estado_encuentro().unwrap().estado.marcador, vec![1, 0]);
+        assert_eq!(otra.estado_encuentro().estado.unwrap().marcador, vec![1, 0]);
     }
 }

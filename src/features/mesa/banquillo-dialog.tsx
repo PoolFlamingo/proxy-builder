@@ -73,7 +73,7 @@ export function BanquilloDialog({ onCerrar }: { onCerrar: () => void }) {
 	const de = datos.find((d) => d.id === actual);
 	const cambio = cambios[actual] ?? SIN_CAMBIOS;
 	const todoValido = useMemo(() => Object.values(cambios).every(cambioValido), [cambios]);
-	const jugadas = encuentro?.estado.jugadas ?? 0;
+	const jugadas = encuentro?.estado?.jugadas ?? 0;
 	const siguiente = jugadas + 1;
 
 	const tocar = (lado: "sale" | "entra", nombre: string, delta: number, max: number) =>

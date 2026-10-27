@@ -1,4 +1,13 @@
-import { Loader2, Play, Plus, X } from "lucide-react";
+import {
+	DndContext,
+	type DragEndEvent,
+	PointerSensor,
+	useDraggable,
+	useDroppable,
+	useSensor,
+	useSensors,
+} from "@dnd-kit/core";
+import { GripVertical, Loader2, Play, Plus, Shuffle, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { DeckSummary } from "@/bindings/DeckSummary";
@@ -17,6 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { call } from "@/lib/ipc";
+import { cn } from "@/lib/utils";
 import { COLORES_EQUIPO, COLORES_JUGADOR } from "./colores";
 import { empezar } from "./conexion";
 import {
@@ -24,12 +34,17 @@ import {
 	type AjustesLocal,
 	type AlMejorDe,
 	type AsientoLocal,
+	ajustesTrasOrden,
+	ajustesTrasQuitar,
+	aplicarOrden,
 	asientoArchienemigo,
 	conBanquillo,
 	construirConfig,
 	MAX_EQUIPOS,
 	MAX_JUGADORES,
 	type ModoEquiposLocal,
+	ordenAlAzar,
+	ordenTrasMover,
 	problemaDeEquipos,
 } from "./config-local";
 
@@ -67,6 +82,21 @@ export function PartidaLocalDialog({
 	const cambiar = (i: number, c: Partial<AsientoLocal>) =>
 		setAsientos((a) => a.map((x, k) => (k === i ? { ...x, ...c } : x)));
 	const cambiarAjustes = (c: Partial<AjustesLocal>) => setAjustes((a) => ({ ...a, ...c }));
+	/** Cambia el orden de los asientos; quien empieza y el archienemigo se quedan con su jugador. */
+	const reordenar = (orden: number[]) => {
+		setAsientos((a) => aplicarOrden(a, orden));
+		setAjustes((a) => ajustesTrasOrden(a, orden));
+	};
+	const quitar = (i: number) => {
+		setAsientos((a) => a.filter((_, k) => k !== i));
+		setAjustes((a) => ajustesTrasQuitar(a, i));
+	};
+	const sensores = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+	const alSoltar = (e: DragEndEvent) => {
+		if (e.over && e.over.id !== e.active.id) {
+			reordenar(ordenTrasMover(asientos.length, Number(e.active.id), Number(e.over.id)));
+		}
+	};
 	const problema = problemaDeEquipos(asientos, ajustes.modo);
 	const completo =
 		asientos.length >= 2 && asientos.every((a) => a.deckId && a.nombre.trim()) && !problema;
@@ -199,79 +229,114 @@ export function PartidaLocalDialog({
 					</p>
 				)}
 				<ScrollArea className="max-h-80">
-					<div className="flex flex-col gap-1.5 p-1">
-						{asientos.map((a, i) => (
-							<div key={i} className="flex items-center gap-1.5">
-								<span
-									className="size-3 shrink-0 rounded-full"
-									style={{ background: COLORES_JUGADOR[i % COLORES_JUGADOR.length] }}
-								/>
-								<Input
-									value={a.nombre}
-									onChange={(e) => cambiar(i, { nombre: e.target.value })}
-									className="h-7 w-36 text-xs"
-									aria-label={t("Nombre")}
-								/>
-								<Selector<string>
-									valor={a.deckId}
-									onChange={(v) => cambiar(i, { deckId: v })}
-									ancho="min-w-0 flex-1"
-									opciones={decks.map((d) => ({ valor: d.id, etiqueta: d.name }))}
-								/>
-								{porEquipos && (
-									<Selector<string>
-										valor={a.equipo === null ? "-" : String(a.equipo)}
-										onChange={(v) => cambiar(i, { equipo: v === "-" ? null : Number(v) })}
-										ancho="w-32"
-										ariaLabel={t("Equipo")}
-										opciones={[
-											{ valor: "-", etiqueta: t("Sin equipo") },
-											...COLORES_EQUIPO.slice(0, MAX_EQUIPOS).map((_, e) => ({
-												valor: String(e),
-												etiqueta: nombreDeEquipo(e + 1),
-											})),
-										]}
-									/>
-								)}
-								{porEquipos && a.equipo !== null && (
+					<DndContext sensors={sensores} onDragEnd={alSoltar}>
+						<div className="flex flex-col gap-1.5 p-1">
+							{asientos.map((a, i) => (
+								<FilaOrdenable
+									key={i}
+									i={i}
+									etiqueta={t("Mover a {jugador}", {
+										jugador: a.nombre.trim() || `${t("Jugador")} ${i + 1}`,
+									})}
+								>
 									<span
 										className="size-3 shrink-0 rounded-full"
-										style={{ background: COLORES_EQUIPO[a.equipo] }}
+										style={{ background: COLORES_JUGADOR[i % COLORES_JUGADOR.length] }}
 									/>
-								)}
-								<Button
-									size="icon"
-									variant="ghost"
-									className="size-7"
-									disabled={asientos.length <= 2}
-									onClick={() => setAsientos((x) => x.filter((_, k) => k !== i))}
-									aria-label={t("Quitar")}
-								>
-									<X className="size-3.5" />
-								</Button>
-							</div>
-						))}
-					</div>
+									<Input
+										value={a.nombre}
+										onChange={(e) => cambiar(i, { nombre: e.target.value })}
+										className="h-7 w-36 text-xs"
+										aria-label={t("Nombre")}
+									/>
+									<Selector<string>
+										valor={a.deckId}
+										onChange={(v) => cambiar(i, { deckId: v })}
+										ancho="min-w-0 flex-1"
+										opciones={decks.map((d) => ({ valor: d.id, etiqueta: d.name }))}
+									/>
+									{porEquipos && (
+										<Selector<string>
+											valor={a.equipo === null ? "-" : String(a.equipo)}
+											onChange={(v) => cambiar(i, { equipo: v === "-" ? null : Number(v) })}
+											ancho="w-32"
+											ariaLabel={t("Equipo")}
+											opciones={[
+												{ valor: "-", etiqueta: t("Sin equipo") },
+												...COLORES_EQUIPO.slice(0, MAX_EQUIPOS).map((_, e) => ({
+													valor: String(e),
+													etiqueta: nombreDeEquipo(e + 1),
+												})),
+											]}
+										/>
+									)}
+									{porEquipos && a.equipo !== null && (
+										<span
+											className="size-3 shrink-0 rounded-full"
+											style={{ background: COLORES_EQUIPO[a.equipo] }}
+										/>
+									)}
+									<Button
+										size="icon"
+										variant="ghost"
+										className="size-7"
+										disabled={asientos.length <= 2}
+										onClick={() => quitar(i)}
+										aria-label={t("Quitar")}
+									>
+										<X className="size-3.5" />
+									</Button>
+								</FilaOrdenable>
+							))}
+						</div>
+					</DndContext>
 				</ScrollArea>
-				<Button
-					size="sm"
-					variant="outline"
-					className="self-start"
-					disabled={asientos.length >= MAX_JUGADORES}
-					onClick={() =>
-						setAsientos((x) => [
-							...x,
-							{
-								nombre: `${t("Jugador")} ${x.length + 1}`,
-								deckId: x[x.length - 1]?.deckId ?? decks[0]?.id ?? "",
-								equipo: null,
-							},
-						])
-					}
-				>
-					<Plus className="size-3.5" />
-					{t("Añadir jugador")}
-				</Button>
+				<Fila etiqueta={t("Empieza")}>
+					<Selector<string>
+						valor={ajustes.primero === null ? "azar" : String(ajustes.primero)}
+						onChange={(v) => cambiarAjustes({ primero: v === "azar" ? null : Number(v) })}
+						opciones={[
+							{ valor: "azar", etiqueta: t("Al azar") },
+							...asientos.map((a, i) => ({
+								valor: String(i),
+								etiqueta: a.nombre.trim() || `${t("Jugador")} ${i + 1}`,
+							})),
+						]}
+					/>
+				</Fila>
+				<p className="text-xs text-muted-foreground">
+					{t(
+						"Se juega por asientos, de arriba abajo: arrastra a los jugadores para cambiar el orden.",
+					)}
+				</p>
+				<div className="flex gap-2">
+					<Button
+						size="sm"
+						variant="outline"
+						disabled={asientos.length >= MAX_JUGADORES}
+						onClick={() =>
+							setAsientos((x) => [
+								...x,
+								{
+									nombre: `${t("Jugador")} ${x.length + 1}`,
+									deckId: x[x.length - 1]?.deckId ?? decks[0]?.id ?? "",
+									equipo: null,
+								},
+							])
+						}
+					>
+						<Plus className="size-3.5" />
+						{t("Añadir jugador")}
+					</Button>
+					<Button
+						size="sm"
+						variant="outline"
+						onClick={() => reordenar(ordenAlAzar(asientos.length))}
+					>
+						<Shuffle className="size-3.5" />
+						{t("Mezclar los asientos")}
+					</Button>
+				</div>
 				{problema && (
 					<p className="text-xs text-amber-500">
 						{problema === "dosCabezasPares"
@@ -290,5 +355,46 @@ export function PartidaLocalDialog({
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>
+	);
+}
+
+/**
+ * Una fila de asiento que se arrastra por su asa y acepta que otra caiga
+ * encima: la que se suelta ocupa su sitio y las demás se corren.
+ */
+function FilaOrdenable({
+	i,
+	etiqueta,
+	children,
+}: {
+	i: number;
+	etiqueta: string;
+	children: React.ReactNode;
+}) {
+	const origen = useDraggable({ id: i });
+	const destino = useDroppable({ id: i });
+	const m = origen.transform;
+	return (
+		<div
+			ref={destino.setNodeRef}
+			className={cn(
+				"flex items-center gap-1.5 rounded-lg",
+				destino.isOver && "bg-primary/10",
+				origen.isDragging && "relative z-10 bg-card shadow-lg",
+			)}
+			style={m ? { transform: `translate3d(${m.x}px, ${m.y}px, 0)` } : undefined}
+		>
+			<button
+				type="button"
+				ref={origen.setNodeRef}
+				{...origen.listeners}
+				{...origen.attributes}
+				aria-label={etiqueta}
+				className="flex size-6 shrink-0 cursor-grab touch-none items-center justify-center rounded text-muted-foreground hover:bg-accent active:cursor-grabbing"
+			>
+				<GripVertical className="size-3.5" />
+			</button>
+			{children}
+		</div>
 	);
 }

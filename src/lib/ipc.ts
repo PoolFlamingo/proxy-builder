@@ -263,7 +263,7 @@ export interface Commands {
 	mesa_suscribir: { args: { canal: Channel<MensajeMesa> }; result: null };
 	mesa_vista: { args: Record<string, never>; result: VistaMesa };
 	mesa_mirar_como: { args: { jugador: IdJugador }; result: null };
-	mesa_encuentro: { args: Record<string, never>; result: VistaEncuentro | null };
+	mesa_encuentro: { args: Record<string, never>; result: VistaEncuentro };
 	mesa_banquillo: { args: { jugador: IdJugador }; result: VistaBanquillo };
 	mesa_banquillo_cambiar: {
 		args: { jugador: IdJugador; sale: string[]; entra: string[] };

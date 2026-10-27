@@ -811,5 +811,11 @@
 	"El encuentro acaba en tablas": "The match ends in a draw",
 	"Gana el encuentro {quien}": "{quien} wins the match",
 	"Siguiente partida": "Next game",
-	"Empieza {quien}, que perdió la partida anterior": "{quien} goes first, having lost the previous game"
+	"Empieza {quien}, que perdió la partida anterior": "{quien} goes first, having lost the previous game",
+	"Mover a {jugador}": "Move {jugador}",
+	"Empieza": "Goes first",
+	"Al azar": "At random",
+	"Se juega por asientos, de arriba abajo: arrastra a los jugadores para cambiar el orden.": "Play goes by seat, from top to bottom: drag the players to change the order.",
+	"Mezclar los asientos": "Shuffle the seats",
+	"Empieza {quien}": "{quien} goes first"
 }

@@ -754,5 +754,11 @@
 	"El encuentro acaba en tablas": "マッチは引き分けです",
 	"Gana el encuentro {quien}": "{quien}がマッチに勝ちました",
 	"Siguiente partida": "次のゲーム",
-	"Empieza {quien}, que perdió la partida anterior": "前のゲームに負けた{quien}が先攻です"
+	"Empieza {quien}, que perdió la partida anterior": "前のゲームに負けた{quien}が先攻です",
+	"Mover a {jugador}": "{jugador}を移動",
+	"Empieza": "先攻",
+	"Al azar": "ランダム",
+	"Se juega por asientos, de arriba abajo: arrastra a los jugadores para cambiar el orden.": "席順に上から下へ進みます。プレイヤーをドラッグして順番を変えられます。",
+	"Mezclar los asientos": "席をシャッフル",
+	"Empieza {quien}": "{quien}が先攻です"
 }

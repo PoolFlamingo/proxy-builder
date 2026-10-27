@@ -58,7 +58,7 @@ export function hayCambio(c: CambioDeJugador): boolean {
 	return total(c.sale) > 0 || total(c.entra) > 0;
 }
 
-/** Cómo va el encuentro, al día: cambia al terminar y al empezar la siguiente partida. */
+/** Cómo va la partida y el encuentro, al día: cambia al terminar y al empezar la siguiente partida. */
 export function useEncuentro(): VistaEncuentro | null {
 	const fin = useMesa((s) => s.general?.fin ?? null);
 	const [v, setV] = useState<VistaEncuentro | null>(null);

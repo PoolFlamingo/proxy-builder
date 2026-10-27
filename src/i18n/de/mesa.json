@@ -811,5 +811,11 @@
 	"El encuentro acaba en tablas": "Das Match endet unentschieden",
 	"Gana el encuentro {quien}": "{quien} gewinnt das Match",
 	"Siguiente partida": "Nächste Partie",
-	"Empieza {quien}, que perdió la partida anterior": "{quien} beginnt, weil die vorige Partie verloren wurde"
+	"Empieza {quien}, que perdió la partida anterior": "{quien} beginnt, weil die vorige Partie verloren wurde",
+	"Mover a {jugador}": "{jugador} verschieben",
+	"Empieza": "Beginnt",
+	"Al azar": "Zufällig",
+	"Se juega por asientos, de arriba abajo: arrastra a los jugadores para cambiar el orden.": "Es wird nach Sitzplatz gespielt, von oben nach unten: Ziehe die Spieler, um die Reihenfolge zu ändern.",
+	"Mezclar los asientos": "Plätze mischen",
+	"Empieza {quien}": "{quien} beginnt"
 }

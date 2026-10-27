@@ -849,5 +849,11 @@
 	"El encuentro acaba en tablas": "Матч заканчивается вничью",
 	"Gana el encuentro {quien}": "{quien} выигрывает матч",
 	"Siguiente partida": "Следующая партия",
-	"Empieza {quien}, que perdió la partida anterior": "Начинает {quien}, проигравший прошлую партию"
+	"Empieza {quien}, que perdió la partida anterior": "Начинает {quien}, проигравший прошлую партию",
+	"Mover a {jugador}": "Переместить: {jugador}",
+	"Empieza": "Начинает",
+	"Al azar": "Случайно",
+	"Se juega por asientos, de arriba abajo: arrastra a los jugadores para cambiar el orden.": "Играют по местам, сверху вниз: перетащите игроков, чтобы изменить порядок.",
+	"Mezclar los asientos": "Перемешать места",
+	"Empieza {quien}": "Начинает {quien}"
 }
