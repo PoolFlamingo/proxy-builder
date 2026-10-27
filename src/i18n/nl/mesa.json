@@ -918,5 +918,7 @@
 	"En red cada uno cambia solo su propio mazo.": "Online past iedereen alleen zijn eigen deck aan.",
 	"Tras el traspaso del anfitrión no se puede abrir otra partida del encuentro: ya no están los mazos de todos.": "Na een wissel van host kan het volgende spel van de match niet worden geopend: de decks van iedereen zijn er niet meer.",
 	"Ese cambio de banquillo no encaja: revisa las cartas.": "Die wissel met het sideboard klopt niet: controleer de kaarten.",
-	"Al barajar, las cartas que has puesto arriba vuelven a quedar arriba.": "Bij het schudden komen de kaarten die je bovenop hebt gelegd weer bovenaan."
+	"Al barajar, las cartas que has puesto arriba vuelven a quedar arriba.": "Bij het schudden komen de kaarten die je bovenop hebt gelegd weer bovenaan.",
+	"Habituales": "Veelgebruikt",
+	"Otros contadores": "Andere counters"
 }

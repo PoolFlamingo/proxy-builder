@@ -5,10 +5,10 @@ import { cn } from "@/lib/utils";
 import { COLORES_ETIQUETA } from "./colores";
 import { ptDe } from "./pt";
 
-/** Abreviatura de un contador para la insignia. */
+/** Abreviatura de un contador para la insignia (los de fuerza y resistencia, enteros). */
 function corto(tipo: string): string {
-	if (tipo === "+1/+1" || tipo === "-1/-1") return tipo;
-	return tipo.slice(0, 3).toUpperCase();
+	if (tipo.includes("/")) return tipo;
+	return tipo.slice(0, 5).toUpperCase();
 }
 
 /**

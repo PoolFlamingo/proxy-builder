@@ -864,5 +864,7 @@
 	"En red cada uno cambia solo su propio mazo.": "連線時每個人只能更換自己的牌組。",
 	"Tras el traspaso del anfitrión no se puede abrir otra partida del encuentro: ya no están los mazos de todos.": "主機更換後無法開始比賽的下一局：已經沒有所有人的牌組了。",
 	"Ese cambio de banquillo no encaja: revisa las cartas.": "這次備牌更換不成立：請檢查卡牌。",
-	"Al barajar, las cartas que has puesto arriba vuelven a quedar arriba.": "洗牌時，你放在最上面的牌會重新回到最上面。"
+	"Al barajar, las cartas que has puesto arriba vuelven a quedar arriba.": "洗牌時，你放在最上面的牌會重新回到最上面。",
+	"Habituales": "常用",
+	"Otros contadores": "其他指示物"
 }

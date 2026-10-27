@@ -864,5 +864,7 @@
 	"En red cada uno cambia solo su propio mazo.": "オンラインでは、各自が自分のデッキだけを変更できます。",
 	"Tras el traspaso del anfitrión no se puede abrir otra partida del encuentro: ya no están los mazos de todos.": "ホストが替わったあとは、マッチの次の対戦を開くことはできません。全員のデッキがもう手元にないためです。",
 	"Ese cambio de banquillo no encaja: revisa las cartas.": "そのサイドボードの入れ替えは成立しません。カードを確認してください。",
-	"Al barajar, las cartas que has puesto arriba vuelven a quedar arriba.": "シャッフルしても、一番上に置いたカードは一番上に戻ります。"
+	"Al barajar, las cartas que has puesto arriba vuelven a quedar arriba.": "シャッフルしても、一番上に置いたカードは一番上に戻ります。",
+	"Habituales": "よく使う",
+	"Otros contadores": "その他のカウンター"
 }

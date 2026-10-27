@@ -22,7 +22,7 @@ import { useMesa } from "@/stores/mesa-store";
 import { useUi } from "@/stores/ui-store";
 import { hacer } from "../acciones";
 import { ATAJOS, bonita } from "../atajos";
-import { COLORES_ETIQUETA, CONTADORES_CARTA } from "../colores";
+import { COLORES_ETIQUETA, CONTADORES_CARTA, CONTADORES_OTROS, CONTADORES_PT } from "../colores";
 import { caraVisible, ImagenCarta } from "../imagen-carta";
 import { type DialogoMesa, usePantalla } from "../pantalla";
 
@@ -112,24 +112,39 @@ export function ContadorDialog({ cartas }: { cartas: IdCarta[] }) {
 		cerrar();
 		void hacer({ que: "contador", cartas, tipo: tipo.trim(), delta: n });
 	};
+	// El campo de texto es el tipo y, a la vez, el filtro del catálogo.
+	const filtro = tipo.trim().toLowerCase();
+	const secciones = [
+		{
+			titulo: t("Habituales"),
+			items: CONTADORES_CARTA.map((c) => ({ tipo: c.tipo, nombre: t(c.nombre) })),
+		},
+		{
+			titulo: t("Fuerza y resistencia"),
+			items: CONTADORES_PT.map((c) => ({ tipo: c, nombre: c })),
+		},
+		{
+			titulo: t("Otros contadores"),
+			items: CONTADORES_OTROS.map((c) => ({ tipo: c, nombre: c })),
+		},
+	]
+		.map((sec) => ({
+			...sec,
+			items: sec.items.filter(
+				(c) =>
+					filtro === "" ||
+					filtro === c.tipo.toLowerCase() ||
+					c.tipo.toLowerCase().includes(filtro) ||
+					c.nombre.toLowerCase().includes(filtro),
+			),
+		}))
+		.filter((sec) => sec.items.length > 0);
 	return (
 		<Dialog open onOpenChange={(o) => !o && cerrar()}>
-			<DialogContent className="sm:max-w-sm" cambiosSinGuardar={false}>
+			<DialogContent className="sm:max-w-md" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle>{t("Añadir contador")}</DialogTitle>
 				</DialogHeader>
-				<div className="flex flex-wrap gap-1.5">
-					{CONTADORES_CARTA.map((c) => (
-						<Button
-							key={c.tipo}
-							size="sm"
-							variant={tipo === c.tipo ? "default" : "outline"}
-							onClick={() => setTipo(c.tipo)}
-						>
-							{t(c.nombre)}
-						</Button>
-					))}
-				</div>
 				<div className="flex gap-2.5">
 					<Input
 						value={tipo}
@@ -145,6 +160,30 @@ export function ContadorDialog({ cartas }: { cartas: IdCarta[] }) {
 						ariaLabel={t("Cantidad")}
 					/>
 				</div>
+				<ScrollArea viewportClassName="max-h-[45vh]">
+					<div className="flex flex-col gap-2.5 p-1">
+						{secciones.map((sec) => (
+							<div key={sec.titulo} className="flex flex-col gap-1.5">
+								<span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+									{sec.titulo}
+								</span>
+								<div className="flex flex-wrap gap-1.5">
+									{sec.items.map((c) => (
+										<Button
+											key={c.tipo}
+											size="sm"
+											variant={tipo.trim() === c.tipo ? "default" : "outline"}
+											className={cn("capitalize", c.tipo.includes("/") && "normal-case")}
+											onClick={() => setTipo(c.tipo)}
+										>
+											{c.nombre}
+										</Button>
+									))}
+								</div>
+							</div>
+						))}
+					</div>
+				</ScrollArea>
 				<DialogFooter>
 					<Button variant="outline" onClick={cerrar}>
 						{t("Cancelar")}

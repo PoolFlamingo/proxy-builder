@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useRef } from "react";
 import { useLang } from "@/components/language-provider";
 import { useMesa } from "@/stores/mesa-store";
 import { useUi } from "@/stores/ui-store";
@@ -9,7 +10,9 @@ import { ptDe } from "./pt";
  * **La vista grande** al pasar el ratón por una carta (`capturas/pablo/13`),
  * a un lado de la mesa, con el **panel de estado**: contadores, fuerza y
  * resistencia con de dónde sale cada bono, palabras clave, etiquetas y
- * quién la controla. Las de dos caras enseñan las dos.
+ * quién la controla. Las de dos caras enseñan las dos. Si la carta señalada
+ * está en la mitad derecha de la pantalla, la vista grande sale a la
+ * izquierda para no taparla; el lado se decide al empezar a señalarla.
  */
 export function VistaGrande() {
 	const { t } = useLang();
@@ -20,6 +23,17 @@ export function VistaGrande() {
 	const ancho = useUi((s) => s.mesa.vistaGrande);
 	const panel = useUi((s) => s.mesa.panelEstado);
 	const panelLateral = usePantalla((s) => s.panel !== null);
+	// Dónde está el puntero: el lado se decide con la última posición conocida
+	// al señalar una carta nueva (no en cada movimiento, para que no salte).
+	const ultimaX = useRef(0);
+	useEffect(() => {
+		const mover = (e: PointerEvent) => {
+			ultimaX.current = e.clientX;
+		};
+		window.addEventListener("pointermove", mover, { passive: true });
+		return () => window.removeEventListener("pointermove", mover);
+	}, []);
+	const aLaIzquierda = useMemo(() => id !== null && ultimaX.current > window.innerWidth / 2, [id]);
 	if (id === null || !c || arrastrando) return null;
 	// Boca abajo y mía: la veo (es mía).
 	const caras = c.origen ? c.origen.caras : [];
@@ -29,11 +43,11 @@ export function VistaGrande() {
 	const alto = (ancho * 88) / 63;
 	return (
 		<div
-			className="pointer-events-none absolute top-14 right-3 z-[8000] flex flex-col gap-2"
+			className={`pointer-events-none absolute top-14 z-[8000] flex flex-col gap-2 ${aLaIzquierda ? "left-3" : "right-3"}`}
 			style={{
 				width: dosCaras ? ancho * 2 + 8 : ancho,
 				// Con el panel lateral abierto, la carta se pone a su izquierda.
-				...(panelLateral ? { right: ANCHO_PANEL + 20 } : {}),
+				...(panelLateral && !aLaIzquierda ? { right: ANCHO_PANEL + 20 } : {}),
 			}}
 		>
 			<div className="flex gap-2">

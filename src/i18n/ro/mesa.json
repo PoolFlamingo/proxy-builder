@@ -932,5 +932,7 @@
 	"En red cada uno cambia solo su propio mazo.": "Online, fiecare schimbă doar propriul deck.",
 	"Tras el traspaso del anfitrión no se puede abrir otra partida del encuentro: ya no están los mazos de todos.": "După schimbarea gazdei nu se poate deschide următoarea partidă a meciului: deck-urile tuturor nu mai sunt aici.",
 	"Ese cambio de banquillo no encaja: revisa las cartas.": "Schimbul acela cu sideboard-ul nu se potrivește: verifică cărțile.",
-	"Al barajar, las cartas que has puesto arriba vuelven a quedar arriba.": "La amestecare, cărțile pe care le-ai pus deasupra revin deasupra."
+	"Al barajar, las cartas que has puesto arriba vuelven a quedar arriba.": "La amestecare, cărțile pe care le-ai pus deasupra revin deasupra.",
+	"Habituales": "Frecvente",
+	"Otros contadores": "Alte contoare"
 }

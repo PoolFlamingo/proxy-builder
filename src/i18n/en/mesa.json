@@ -918,5 +918,7 @@
 	"En red cada uno cambia solo su propio mazo.": "Online, everyone changes only their own deck.",
 	"Tras el traspaso del anfitrión no se puede abrir otra partida del encuentro: ya no están los mazos de todos.": "After a host handover the next game of the match can't be opened: everyone's decks are no longer there.",
 	"Ese cambio de banquillo no encaja: revisa las cartas.": "That sideboard swap doesn't fit: check the cards.",
-	"Al barajar, las cartas que has puesto arriba vuelven a quedar arriba.": "When shuffling, the cards you put on top go back on top."
+	"Al barajar, las cartas que has puesto arriba vuelven a quedar arriba.": "When shuffling, the cards you put on top go back on top.",
+	"Habituales": "Common",
+	"Otros contadores": "Other counters"
 }

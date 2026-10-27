@@ -932,5 +932,7 @@
 	"En red cada uno cambia solo su propio mazo.": "In rete ognuno cambia solo il proprio mazzo.",
 	"Tras el traspaso del anfitrión no se puede abrir otra partida del encuentro: ya no están los mazos de todos.": "Dopo il cambio di host non si può aprire la partita successiva dell'incontro: i mazzi di tutti non ci sono più.",
 	"Ese cambio de banquillo no encaja: revisa las cartas.": "Quello scambio con il sideboard non va: controlla le carte.",
-	"Al barajar, las cartas que has puesto arriba vuelven a quedar arriba.": "Quando mescoli, le carte che hai messo in cima tornano in cima."
+	"Al barajar, las cartas que has puesto arriba vuelven a quedar arriba.": "Quando mescoli, le carte che hai messo in cima tornano in cima.",
+	"Habituales": "Comuni",
+	"Otros contadores": "Altri segnalini"
 }

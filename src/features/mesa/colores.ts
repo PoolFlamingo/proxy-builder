@@ -65,6 +65,35 @@ export const CONTADORES_CARTA: { tipo: string; nombre: string }[] = [
 	{ tipo: "defense", nombre: paraTraducir("Defensa") },
 ];
 
+/**
+ * Los contadores de fuerza y resistencia que existen en cartas reales (además
+ * de +1/+1 y −1/−1, que van en los habituales). `ptDe` suma cualquier `+X/+Y`,
+ * esté o no aquí: este es solo el catálogo del diálogo.
+ */
+export const CONTADORES_PT = [
+	"+1/+0",
+	"+0/+1",
+	"+1/+2",
+	"+0/+2",
+	"+2/+2",
+	"-1/-0",
+	"-0/-1",
+	"-2/-1",
+	"-0/-2",
+	"-2/-2",
+] as const;
+
+/**
+ * El resto de tipos de contador de cartas reales (sacados del texto de reglas
+ * de Scryfall, sin los de jugador ni los de habilidad), por su nombre en las
+ * reglas en inglés, como las palabras clave. Es un catálogo para elegir: el
+ * diálogo deja escribir cualquier otro.
+ */
+export const CONTADORES_OTROS: string[] =
+	"acorn aegis age aim arrow arrowhead awakening bait blaze blessing blight blood bloodline bloodstain book bore bounty brain bribery brick burden cage carrion cell chorus coin collection component conqueror contested corpse corruption credit croak crystal cube currency death delay depletion descent despair devotion discovery divinity doom dread dream duty echo egg elixir ember enlightened eon eyeball fade fate feather feeding fellowship fetch filibuster film finality fire flame flood foreshadow fungus fury fuse gem ghostform glyph gold growth harmony hatching hatchling healing hit hone hoofprint hope hour hourglass hunger ice impostor incarnation incubation infection influence ingenuity ingredient intel intervention invasion invitation isolation javelin judgment ki kick knowledge landmark level loot luck magnet manifestation mannequin matrix memory midway mine mining mire music muster necrodermis nest net night omen ore page pain palliation paralyzation petal petrification phylactery phyresis pin plague plan plot point polyp possession pressure prey pupa quest rally refine rejection reprieve rev revival ribbon ritual rope rust saurian scream shell shred silver skewer sleep sleight slime slumber soot soul spite spore stash storage story strife study supply suspect takeover task theft tide tower training trap treasure unity unlock valor velocity verse vitality void vortex vow voyage wage winch wind wish wreck".split(
+		" ",
+	);
+
 /** Las palabras clave que se pueden poner como contador. */
 export const PALABRAS_CLAVE = [
 	"Flying",
@@ -81,6 +110,9 @@ export const PALABRAS_CLAVE = [
 	"Vigilance",
 	"Ward",
 	"Shroud",
+	"Decayed",
+	"Exalted",
+	"Shadow",
 ] as const;
 
 /** Los contadores de jugador («trackers»), con su nombre. */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { VistaCarta } from "@/bindings/VistaCarta";
-import { ptDe } from "../pt";
+import { bonoDeContadores, ptDe } from "../pt";
 
 function carta(fuerza: string | null, cambios: Partial<VistaCarta> = {}): VistaCarta {
 	return {
@@ -56,6 +56,21 @@ function carta(fuerza: string | null, cambios: Partial<VistaCarta> = {}): VistaC
 		...cambios,
 	};
 }
+
+describe("contadores de fuerza y resistencia", () => {
+	it("suma cualquier +X/+Y por su cantidad y se salta los demás", () => {
+		expect(bonoDeContadores({ "+2/+2": 2, "-0/-1": 3, "+1/+0": 1, oil: 4 })).toEqual([5, 1]);
+		expect(bonoDeContadores({ "-1/-1": 1 })).toEqual([-1, -1]);
+		expect(bonoDeContadores({ "-0/-0": 2, stun: 1 })).toEqual([0, 0]);
+	});
+	it("ptDe los usa", () => {
+		expect(ptDe(carta("1", { contadores: { "+2/+2": 1, "+0/+1": 2 } }))).toEqual({
+			f: 3,
+			r: 5,
+			cambiada: true,
+		});
+	});
+});
 
 describe("fuerza y resistencia", () => {
 	it("la impresa, sin cambios", () => {

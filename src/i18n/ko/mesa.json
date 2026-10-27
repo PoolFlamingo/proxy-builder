@@ -864,5 +864,7 @@
 	"En red cada uno cambia solo su propio mazo.": "온라인에서는 각자 자기 덱만 바꿀 수 있어요.",
 	"Tras el traspaso del anfitrión no se puede abrir otra partida del encuentro: ya no están los mazos de todos.": "호스트가 바뀐 뒤에는 매치의 다음 게임을 열 수 없어요. 모두의 덱이 더는 없기 때문이에요.",
 	"Ese cambio de banquillo no encaja: revisa las cartas.": "그 사이드보드 교체는 맞지 않아요. 카드를 확인하세요.",
-	"Al barajar, las cartas que has puesto arriba vuelven a quedar arriba.": "섞어도 맨 위에 올려 둔 카드는 다시 맨 위에 놓입니다."
+	"Al barajar, las cartas que has puesto arriba vuelven a quedar arriba.": "섞어도 맨 위에 올려 둔 카드는 다시 맨 위에 놓입니다.",
+	"Habituales": "자주 쓰는 카운터",
+	"Otros contadores": "기타 카운터"
 }
