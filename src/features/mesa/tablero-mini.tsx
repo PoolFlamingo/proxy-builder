@@ -34,9 +34,15 @@ type DatosMini = {
 	/** Las cartas de la mano que este mirador ve (la de un compañero); el resto, reversos. */
 	manoVista: VistaCarta[];
 	biblioteca: number;
+	/** La de arriba de cada zona a la vista (la última de la lista) y cuántas hay. */
+	cementerio: ArribaMini;
+	exilio: ArribaMini;
+	mando: ArribaMini;
 	activo: boolean;
 	equipo: Equipo | undefined;
 };
+
+type ArribaMini = { carta: VistaCarta | null; n: number };
 
 /** Lo que enseña la miniatura de `jugador`, sacado de la mesa. */
 export function datosMini(
@@ -54,15 +60,30 @@ export function datosMini(
 		const c = m.cartas[id];
 		if (c) manoVista.push(c);
 	}
+	const arriba = (zona: "cementerio" | "exilio" | "mando"): ArribaMini => {
+		const ids = cartasDe(m, zonaDe(jugador, zona));
+		const id = ids[ids.length - 1];
+		return {
+			carta: id !== undefined ? (m.cartas[id] ?? null) : null,
+			n: cuantasEn(m, zonaDe(jugador, zona)),
+		};
+	};
 	return {
 		j,
 		campo,
+		cementerio: arriba("cementerio"),
+		exilio: arriba("exilio"),
+		mando: arriba("mando"),
 		mano: cuantasEn(m, zonaDe(jugador, "mano")),
 		manoVista,
 		biblioteca: cuantasEn(m, zonaDe(jugador, "biblioteca")),
 		activo: m.general?.turno.activo === jugador,
 		equipo: j?.equipo != null ? m.general?.equipos.find((e) => e.id === j.equipo) : undefined,
 	};
+}
+
+function igualArriba(a: ArribaMini, b: ArribaMini): boolean {
+	return a.carta === b.carta && a.n === b.n;
 }
 
 /** Dos lecturas de la misma miniatura que se pintarían igual. */
@@ -72,6 +93,9 @@ export function igualMini(a: DatosMini, b: DatosMini): boolean {
 		a.mano === b.mano &&
 		igualesLista(a.manoVista, b.manoVista) &&
 		a.biblioteca === b.biblioteca &&
+		igualArriba(a.cementerio, b.cementerio) &&
+		igualArriba(a.exilio, b.exilio) &&
+		igualArriba(a.mando, b.mando) &&
 		a.activo === b.activo &&
 		a.equipo === b.equipo &&
 		igualesLista(a.campo, b.campo)
@@ -161,6 +185,7 @@ export const TableroMini = memo(function TableroMini({
 						)}
 					</span>
 					{conCampo && d.mano > 0 && <ManoMini d={d} w={w} ancho={ancho} />}
+					{conCampo && <ZonasMini d={d} w={w} h={h} ancho={ancho} />}
 					{conCampo &&
 						d.campo.map((c) => {
 							if (!c.pos || c.adjuntaA !== null || c.agrupadaBajo !== null) return null;
@@ -258,3 +283,94 @@ function ManoMini({ d, w, ancho }: { d: DatosMini; w: number; ancho: number }) {
 		</span>
 	);
 }
+
+/**
+ * Las zonas de un jugador en pequeño, como en el tablero grande: el mando, la
+ * biblioteca (con su reverso) y el cementerio y el exilio con la carta de
+ * arriba boca arriba (si se ve), cada una con cuántas tiene. En una
+ * miniatura ancha van en fila abajo a la derecha, con su nombre, como en tu
+ * tablero; en una estrecha, en columna a la derecha.
+ */
+function ZonasMini({ d, w, h, ancho }: { d: DatosMini; w: number; h: number; ancho: number }) {
+	const { t } = useLang();
+	const zonas: {
+		clave: string;
+		nombre: string;
+		carta: VistaCarta | null;
+		n: number;
+		dorso?: boolean;
+	}[] = [];
+	if (d.mando.n > 0) zonas.push({ clave: "mando", nombre: t("Mando"), ...d.mando });
+	zonas.push({
+		clave: "biblioteca",
+		nombre: t("Biblioteca"),
+		carta: null,
+		n: d.biblioteca,
+		dorso: true,
+	});
+	zonas.push({ clave: "cementerio", nombre: t("Cementerio"), ...d.cementerio });
+	zonas.push({ clave: "exilio", nombre: t("Exilio"), ...d.exilio });
+	const enFila = w >= FILA_ZONAS;
+	const altoMax = (Math.max(14, Math.min(ancho * 1.1, 40)) * 88) / 63;
+	let th: number;
+	if (enFila) {
+		th = Math.min(altoMax, (h - CABECERA) * 0.3);
+	} else {
+		// Lo que queda entre la cabecera y la franja de la mano.
+		const cwMano = Math.max(12, Math.min(ancho, 30));
+		const franja = d.mano > 0 ? ((cwMano * 88) / 63) * 0.62 + 4 : 0;
+		const hueco = h - CABECERA - franja - 6;
+		th = Math.min(altoMax, (hueco - (zonas.length - 1) * 3) / zonas.length);
+	}
+	if (th < 14) return null;
+	const tw = (th * 63) / 88;
+	const conNombre = enFila && th >= 34;
+	return (
+		<span
+			className={cn(
+				"pointer-events-none absolute z-[9100] flex gap-[3px]",
+				enFila ? "right-1.5 bottom-1.5 items-end" : "right-1 flex-col",
+			)}
+			style={enFila ? undefined : { top: CABECERA + 3 }}
+		>
+			{zonas.map((z) => (
+				<span key={z.clave} className="flex flex-col items-center gap-0.5">
+					{conNombre && (
+						<span className="text-[8px] leading-none whitespace-nowrap text-white/70">
+							{z.nombre}
+						</span>
+					)}
+					<span
+						className="pointer-events-auto relative block overflow-hidden rounded-[2px] border border-dashed border-white/25 bg-black/50"
+						style={{ width: tw, height: th }}
+						aria-label={`${z.nombre}: ${z.n}`}
+						data-zona={z.clave}
+						onPointerEnter={() => z.carta && useMesa.getState().setSobre(z.carta.id)}
+						onPointerLeave={() => {
+							if (z.carta && useMesa.getState().sobre === z.carta.id)
+								useMesa.getState().setSobre(null);
+						}}
+					>
+						{z.dorso && z.n > 0 ? (
+							d.j?.dorso ? (
+								<ImagenCarta imagen={d.j.dorso} ancho={146} />
+							) : (
+								<DorsoGenerico />
+							)
+						) : z.carta ? (
+							<ImagenCarta imagen={caraVisible(z.carta)} ancho={146} />
+						) : null}
+						{z.n > 0 && (
+							<span className="absolute right-0 bottom-0 rounded-tl-[2px] bg-black/75 px-0.5 text-[9px] leading-none tabular-nums">
+								{z.n}
+							</span>
+						)}
+					</span>
+				</span>
+			))}
+		</span>
+	);
+}
+
+/** Desde este ancho, las zonas de una miniatura van en fila (como en tu tablero). */
+const FILA_ZONAS = 400;

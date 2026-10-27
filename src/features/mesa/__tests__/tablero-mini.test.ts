@@ -65,6 +65,26 @@ describe("datosMini", () => {
 		expect(d.equipo).toBeUndefined();
 	});
 
+	it("de cementerio, exilio y mando, la de arriba (la última) y cuántas hay", () => {
+		const m = mesa();
+		m.cartas[20] = carta(20);
+		m.cartas[21] = carta(21);
+		m.cartas[30] = carta(30);
+		Object.assign(m.zonas, {
+			"1:cementerio": {
+				zona: { tipo: "de", jugador: 1, zona: "cementerio" },
+				cartas: [20, 21],
+				cuantas: 2,
+			},
+			"1:mando": { zona: { tipo: "de", jugador: 1, zona: "mando" }, cartas: [30], cuantas: 1 },
+		});
+		const d = datosMini(m, 1);
+		expect(d.cementerio.carta?.id).toBe(21);
+		expect(d.cementerio.n).toBe(2);
+		expect(d.mando.carta?.id).toBe(30);
+		expect(d.exilio).toEqual({ carta: null, n: 0 });
+	});
+
 	it("ignora las cartas del campo que no están en la mesa", () => {
 		const m = mesa();
 		delete m.cartas[11];

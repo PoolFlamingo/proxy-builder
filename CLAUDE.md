@@ -253,7 +253,10 @@ le falta una cadena le sale la inglesa.
   con equipos los compañeros se ven la mano (`ve_la_mano_de_un_companero`,
   `Variantes.mano_privada_en_equipo` la apaga; el oráculo de
   `tests/comun::sin_fugas` lleva la misma regla). Las manos de las
-  miniaturas van en abanico sutil (`abanico` de `disposicion.ts`, a escala).
+  miniaturas van en abanico sutil (`abanico` de `disposicion.ts`, a escala),
+  y con sus zonas como en tu tablero (`ZonasMini`: mando, biblioteca con el
+  reverso, cementerio y exilio con la de arriba). Sin reverso propio, la mesa
+  usa el de la app (`Blobs::generic_back`), no uno dibujado.
   **Historial general** (Fase J; Pablo, 27/10/2026): `partidas_todas(limite,
   desde)` → `HistorialGeneral` (todas las partidas de todos los decks, por
   páginas); cada `JugadorHistorial` lleva la lista para jugar usada
