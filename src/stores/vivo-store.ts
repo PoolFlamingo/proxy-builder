@@ -38,8 +38,24 @@ function mismoOrigen(a: Origen, b: Origen): boolean {
 /** Cuánto se sigue ocultando una carta recién soltada si aún no se ha movido (llega el evento). */
 export const MS_SOLTADA = 800;
 
-/** Una carta que acaba de dejar de arrastrarse y aún se ve en su sitio de antes. */
-export type Soltada = { hasta: number; origen: Origen };
+/**
+ * Una carta que acaba de dejar de arrastrarse y aún se ve en su sitio de antes.
+ * Si la soltó otro, también dónde: se sigue pintando ahí hasta que llega el
+ * movimiento (`tablero` y `x`, `y` como un fantasma).
+ */
+export type Soltada = {
+	hasta: number;
+	origen: Origen;
+	donde?: { tablero: IdJugador; x: number; y: number };
+};
+
+/** Si una carta soltada sigue en el sitio de antes (aún no ha llegado su movimiento). */
+export function soltadaSigue(
+	s: Soltada,
+	c: { zona: unknown; pos: { x: number; y: number } | null },
+) {
+	return mismoOrigen(s.origen, origenDe(c));
+}
 
 export type SenalViva = {
 	id: number;
@@ -126,7 +142,13 @@ export const useVivo = create<VivoStore>((set, get) => ({
 		const soltadas = { ...get().soltadas };
 		for (const id of previo ? cartasDeFantasma(previo) : []) {
 			const o = previo?.origenes[id];
-			if (o && !cartas.includes(id)) soltadas[id] = { hasta: ahora + MS_SOLTADA, origen: o };
+			if (o && previo && !cartas.includes(id)) {
+				soltadas[id] = {
+					hasta: ahora + MS_SOLTADA,
+					origen: o,
+					donde: { tablero: previo.tablero, x: previo.x, y: previo.y },
+				};
+			}
 		}
 		for (const id of cartas) delete soltadas[id];
 		set({

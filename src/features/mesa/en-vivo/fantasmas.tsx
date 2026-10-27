@@ -4,7 +4,7 @@ import { useLang } from "@/components/language-provider";
 import type { AnchoMesa } from "@/lib/image-url";
 import { tableroDe, useMesa } from "@/stores/mesa-store";
 import { useUi } from "@/stores/ui-store";
-import { cartasDeFantasma, useVivo } from "@/stores/vivo-store";
+import { cartasDeFantasma, type Soltada, soltadaSigue, useVivo } from "@/stores/vivo-store";
 import { type Disposicion, posAPx, type Rect } from "../disposicion";
 import { caraVisible, DorsoGenerico, ImagenCarta } from "../imagen-carta";
 
@@ -32,6 +32,9 @@ export function FantasmasVivos({ disp }: { disp: Disposicion }) {
 	const activo = useUi((s) => s.mesa.movimientoEnVivo);
 	const viendo = useMesa(tableroDe);
 	const fantasmas = useVivo(useShallow((s) => Object.entries(s.fantasmas)));
+	const soltadas = useVivo(
+		useShallow((s) => Object.entries(s.soltadas).filter(([, x]) => x.donde?.tablero === viendo)),
+	);
 	const senales = useVivo((s) => s.senales);
 	const jugadores = useMesa((s) => s.jugadores);
 	const cartas = useMesa((s) => s.cartas);
@@ -67,6 +70,16 @@ export function FantasmasVivos({ disp }: { disp: Disposicion }) {
 					/>
 				);
 			})}
+			{soltadas.map(([id, x]) => (
+				<CartaSoltada
+					key={id}
+					id={Number(id)}
+					s={x}
+					campo={disp.campo}
+					w={disp.carta.w}
+					h={disp.carta.h}
+				/>
+			))}
 			{fantasmas.map(([clave, f]) => {
 				const jugador = Number(clave);
 				if (f.tablero !== viendo) return null;
@@ -160,12 +173,18 @@ export function FantasmasMini({
 	const fantasmas = useVivo(
 		useShallow((s) => Object.entries(s.fantasmas).filter(([, f]) => f.tablero === jugador)),
 	);
+	const soltadas = useVivo(
+		useShallow((s) => Object.entries(s.soltadas).filter(([, x]) => x.donde?.tablero === jugador)),
+	);
 	const jugadores = useMesa((s) => s.jugadores);
 	const reducir = useUi((s) => s.mesa.reducirAnimaciones);
-	if (!activo || fantasmas.length === 0) return null;
+	if (!activo || (fantasmas.length === 0 && soltadas.length === 0)) return null;
 	const transicion = reducir ? undefined : "transform 100ms linear";
 	return (
 		<div className="pointer-events-none absolute inset-0" style={{ zIndex: 8500 }}>
+			{soltadas.map(([id, x]) => (
+				<CartaSoltada key={id} id={Number(id)} s={x} campo={campo} w={ancho} h={alto} ancho={146} />
+			))}
 			{fantasmas.map(([clave, f]) => {
 				const p = posAPx(campo, f);
 				const color = jugadores[Number(clave)]?.color ?? "#e11d48";
@@ -185,6 +204,36 @@ export function FantasmasMini({
 					</div>
 				);
 			})}
+		</div>
+	);
+}
+
+/**
+ * Una carta que otro acaba de soltar: se sigue pintando donde la soltó hasta que
+ * llega su movimiento (su sitio de antes no se ve), para que no desaparezca un
+ * momento ni se deslice desde allí.
+ */
+function CartaSoltada({
+	id,
+	s,
+	campo,
+	w,
+	h,
+	ancho,
+}: {
+	id: number;
+	s: Soltada;
+	campo: Rect;
+	w: number;
+	h: number;
+	ancho?: AnchoMesa;
+}) {
+	const carta = useMesa((m) => m.cartas[id]);
+	if (!carta || !s.donde || !soltadaSigue(s, carta)) return null;
+	const p = posAPx(campo, s.donde);
+	return (
+		<div className="absolute top-0 left-0" style={{ transform: `translate(${p.x}px, ${p.y}px)` }}>
+			<CartaEnVuelo id={id} w={w} h={h} dx={0} dy={0} ancho={ancho} />
 		</div>
 	);
 }

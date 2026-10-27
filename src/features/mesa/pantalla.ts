@@ -48,6 +48,14 @@ export type Arrastre = {
 	/** El puntero al empezar. */
 	x0: number;
 	y0: number;
+	/**
+	 * Ya se soltó: se sigue pintando donde se soltó hasta que llega la carta a su
+	 * sitio (el movimiento va y vuelve por Rust), para que no desaparezca un
+	 * momento ni aparezca en el de antes.
+	 */
+	soltado?: boolean;
+	/** Se soltó en el campo (se pinta con el tamaño de una carta de campo). */
+	alCampo?: boolean;
 };
 
 type Pantalla = {

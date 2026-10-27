@@ -7,6 +7,8 @@ import {
 	MS_SENAL,
 	MS_SOLTADA,
 	type Origen,
+	origenDe,
+	soltadaSigue,
 	useVivo,
 } from "../vivo-store";
 
@@ -96,6 +98,17 @@ describe("vivo-store", () => {
 			v.fantasma(1, { ...base, carta: 5 }, 0, { 5: sitio(1) });
 			v.fantasma(1, { ...base, carta: 5, x: 50 }, 20, { 5: sitio(50) });
 			expect(useVivo.getState().fantasmas[1].origenes[5]).toEqual(sitio(1));
+		});
+
+		it("lo que suelta otro recuerda dónde lo soltó para pintarlo ahí hasta que llegue", () => {
+			const v = useVivo.getState();
+			const c = { zona: "campo", pos: { x: 1, y: 0 } };
+			v.fantasma(1, { tablero: 2, carta: 5, x: 700, y: 300 }, 0, { 5: origenDe(c) });
+			v.fantasma(1, { tablero: 2, carta: null, x: 710, y: 310 }, 40);
+			const soltada = useVivo.getState().soltadas[5];
+			expect(soltada.donde).toEqual({ tablero: 2, x: 700, y: 300 });
+			expect(soltadaSigue(soltada, c)).toBe(true);
+			expect(soltadaSigue(soltada, { zona: "campo", pos: { x: 9, y: 9 } })).toBe(false);
 		});
 	});
 });

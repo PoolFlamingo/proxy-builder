@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { cartasDe, cuantasEn, NINGUNA, tableroDe, useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
 import { useUi } from "@/stores/ui-store";
-import { type Origen, origenDe, useVivo } from "@/stores/vivo-store";
+import { MS_SOLTADA, type Origen, origenDe, soltadaSigue, useVivo } from "@/stores/vivo-store";
 import { destino, hacer, mover, sitio, zonaComun, zonaDe } from "./acciones";
 import { destinoDeSoltar, pasaUmbral } from "./arrastre";
 import { atajoDe, teclaDe } from "./atajos";
@@ -166,6 +166,7 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 				window.clearTimeout(sostenido);
 				window.removeEventListener("pointermove", mueve);
 				window.removeEventListener("pointerup", suelta);
+				const llevaba = usePantalla.getState().arrastre;
 				usePantalla.getState().setArrastre(null);
 				if (!empezado) return;
 				// La carta deja de verse en vuelo; queda el cursor.
@@ -179,9 +180,21 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 					const carta = antes[id];
 					if (carta) origenes[id] = origenDe(carta);
 				}
-				if (soltar(ids, f, p0, enCampo, dispRef.current, ev.shiftKey)) {
+				const destino = soltar(ids, f, p0, enCampo, dispRef.current, ev.shiftKey);
+				if (destino) {
 					marcarArrastradas(ids);
 					useVivo.getState().soltar(origenes, performance.now());
+					// Sigue pintada donde se soltó hasta que llega a su sitio: ni
+					// desaparece un momento ni aparece en el de antes.
+					if (llevaba) {
+						usePantalla.getState().setArrastre({
+							...llevaba,
+							x: f.x,
+							y: f.y,
+							soltado: true,
+							alCampo: destino.alCampo,
+						});
+					}
 				}
 			};
 			window.addEventListener("pointermove", mueve);
@@ -342,11 +355,12 @@ function soltar(
 	desdeCampo: boolean,
 	disp: Disposicion,
 	alFondo: boolean,
-): boolean {
+): { alCampo: boolean } | null {
 	const d = destinoDeSoltar(disp, p.x, p.y, alFondo);
-	if (!d) return false;
+	if (!d) return null;
 	const m = useMesa.getState();
 	const yo = tableroDe(m);
+	const alCampo = d.zona.tipo === "de" && d.zona.zona === "campo";
 	if (d.zona.tipo === "de" && d.zona.zona === "campo" && d.sitio.tipo === "enCampo") {
 		if (desdeCampo) {
 			// Cada una a su sitio, manteniendo las distancias.
@@ -359,10 +373,10 @@ function soltar(
 				const nueva = pxAPos(disp.campo, c.x + dx, c.y + dy);
 				void mover([id], destino("campo", sitio.campo(nueva), yo));
 			}
-			return true;
+			return { alCampo };
 		}
 		void mover(ids, { ...d, jugador: yo });
-		return true;
+		return { alCampo };
 	}
 	// A la mano desde la mano: no se mueve (el orden de la mano es de pantalla).
 	const desde = m.cartas[ids[0] ?? -1]?.zona;
@@ -372,10 +386,10 @@ function soltar(
 		desde.zona === d.zona.zona &&
 		d.zona.zona !== "biblioteca"
 	) {
-		return false;
+		return null;
 	}
 	void mover(ids, d);
-	return true;
+	return { alCampo };
 }
 
 /**
@@ -894,19 +908,42 @@ function Fantasma({ disp }: { disp: Disposicion }) {
 	);
 }
 
-/** Lo que se arrastra, siguiendo al puntero (sin esperar a Rust). */
+/**
+ * Lo que se arrastra, siguiendo al puntero (sin esperar a Rust). Al soltar se
+ * queda donde se soltó hasta que la carta llega a su sitio (`soltado`): así no
+ * desaparece un momento ni se ve en el de antes.
+ */
 function Arrastrado({ disp }: { disp: Disposicion }) {
 	const a = usePantalla((s) => s.arrastre);
 	const cartas = useMesa((s) => s.cartas);
+	// Ya soltada, cuando todas han llegado se quita (o si el movimiento no llega).
+	useEffect(() => {
+		if (!a?.soltado) return;
+		const llegaron = a.ids.every((id) => {
+			const c = cartas[id];
+			const s = useVivo.getState().soltadas[id];
+			return !c || !s || !soltadaSigue(s, c);
+		});
+		const t = window.setTimeout(
+			() => usePantalla.getState().setArrastre(null),
+			llegaron ? 0 : MS_SOLTADA,
+		);
+		return () => window.clearTimeout(t);
+	}, [a, cartas]);
 	if (!a) return null;
 	const dx = a.x - a.x0;
 	const dy = a.y - a.y0;
-	const { w, h } = a.desde === "campo" ? disp.carta : disp.cartaPequena;
+	const { w, h } = a.desde === "campo" || a.alCampo ? disp.carta : disp.cartaPequena;
 	return (
 		<div className="pointer-events-none absolute inset-0" style={{ zIndex: 9000 }}>
 			{a.ids.map((id, i) => {
 				const c = cartas[id];
 				if (!c) return null;
+				// Soltada y ya en su sitio: la real ocupa el lugar de esta, en el mismo fotograma.
+				if (a.soltado) {
+					const s = useVivo.getState().soltadas[id];
+					if (!s || !soltadaSigue(s, c)) return null;
+				}
 				const centro =
 					a.desde === "campo" && c.pos
 						? posAPx(disp.campo, c.pos)
@@ -914,7 +951,10 @@ function Arrastrado({ disp }: { disp: Disposicion }) {
 				return (
 					<div
 						key={id}
-						className="absolute top-0 left-0 opacity-90 shadow-2xl will-change-transform"
+						className={cn(
+							"absolute top-0 left-0 will-change-transform",
+							!a.soltado && "opacity-90 shadow-2xl",
+						)}
 						style={{
 							width: w,
 							height: h,
