@@ -1098,5 +1098,21 @@
 	"Dar el control a…": "조종권 주기…",
 	"Tomar el control": "조종권 얻기",
 	"Tomar el control hasta el final del turno": "턴이 끝날 때까지 조종권 얻기",
-	"Vuelve a {quien} al final del turno": "턴이 끝나면 {quien}에게 돌아감"
+	"Vuelve a {quien} al final del turno": "턴이 끝나면 {quien}에게 돌아감",
+	"{texto} (lo hace {quien})": "{texto} ({quien}이(가) 함)",
+	"{quien} mira la mano de {a}": "{quien}이(가) {a}의 손을 봄",
+	"{quien} deja de mirar la mano de {a}": "{quien}이(가) {a}의 손을 그만 봄",
+	"Biblioteca de {quien}": "{quien}의 서고",
+	"Mano de {quien}": "{quien}의 손",
+	"Mirar su mano": "손 보기",
+	"Dejar de mirar su mano": "손 그만 보기",
+	"Que enseñe su mano a todos": "손을 모두에게 공개하게 하기",
+	"Que deje de enseñar su mano": "손 공개를 멈추게 하기",
+	"Descartar cuántas al azar": "무작위로 버릴 장수",
+	"Que descarte al azar…": "무작위로 버리게 하기…",
+	"Que descarte toda la mano": "손 전체를 버리게 하기",
+	"Que robe…": "뽑게 하기…",
+	"Para": "대상",
+	"tú": "나",
+	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "{quien}의 전장에 나와요. 만들 것을 누르세요."
 }

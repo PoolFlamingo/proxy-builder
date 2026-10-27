@@ -1152,5 +1152,21 @@
 	"Dar el control a…": "Controle geven aan…",
 	"Tomar el control": "Controle overnemen",
 	"Tomar el control hasta el final del turno": "Controle overnemen tot het einde van de beurt",
-	"Vuelve a {quien} al final del turno": "Gaat aan het einde van de beurt terug naar {quien}"
+	"Vuelve a {quien} al final del turno": "Gaat aan het einde van de beurt terug naar {quien}",
+	"{texto} (lo hace {quien})": "{texto} (gedaan door {quien})",
+	"{quien} mira la mano de {a}": "{quien} kijkt naar de hand van {a}",
+	"{quien} deja de mirar la mano de {a}": "{quien} kijkt niet meer naar de hand van {a}",
+	"Biblioteca de {quien}": "Bibliotheek van {quien}",
+	"Mano de {quien}": "Hand van {quien}",
+	"Mirar su mano": "Bekijk de hand",
+	"Dejar de mirar su mano": "Stop met de hand bekijken",
+	"Que enseñe su mano a todos": "Laat de hand aan iedereen zien",
+	"Que deje de enseñar su mano": "Laat de hand weer verbergen",
+	"Descartar cuántas al azar": "Hoeveel willekeurig afleggen",
+	"Que descarte al azar…": "Willekeurig laten afleggen…",
+	"Que descarte toda la mano": "De hele hand laten afleggen",
+	"Que robe…": "Laten trekken…",
+	"Para": "Voor",
+	"tú": "jij",
+	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "Verschijnt op het slagveld van {quien}. Klik op degene die je wilt maken."
 }

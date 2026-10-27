@@ -1098,5 +1098,21 @@
 	"Dar el control a…": "Dar el control a…",
 	"Tomar el control": "Tomar el control",
 	"Tomar el control hasta el final del turno": "Tomar el control hasta el final del turno",
-	"Vuelve a {quien} al final del turno": "Vuelve a {quien} al final del turno"
+	"Vuelve a {quien} al final del turno": "Vuelve a {quien} al final del turno",
+	"{texto} (lo hace {quien})": "{texto} (lo hace {quien})",
+	"{quien} mira la mano de {a}": "{quien} mira la mano de {a}",
+	"{quien} deja de mirar la mano de {a}": "{quien} deja de mirar la mano de {a}",
+	"Biblioteca de {quien}": "Biblioteca de {quien}",
+	"Mano de {quien}": "Mano de {quien}",
+	"Mirar su mano": "Mirar su mano",
+	"Dejar de mirar su mano": "Dejar de mirar su mano",
+	"Que enseñe su mano a todos": "Que enseñe su mano a todos",
+	"Que deje de enseñar su mano": "Que deje de enseñar su mano",
+	"Descartar cuántas al azar": "Descartar cuántas al azar",
+	"Que descarte al azar…": "Que descarte al azar…",
+	"Que descarte toda la mano": "Que descarte toda la mano",
+	"Que robe…": "Que robe…",
+	"Para": "Para",
+	"tú": "tú",
+	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "Sale en el campo de {quien}. Pulsa la que quieras crear."
 }

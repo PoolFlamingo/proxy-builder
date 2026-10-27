@@ -19,12 +19,14 @@ import {
 	Unlink,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import type { IdJugador } from "@/bindings/IdJugador";
 import type { Zona } from "@/bindings/Zona";
 import { ContenidoContextual } from "@/components/contenido-contextual";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import {
 	ContextMenu,
 	ContextMenuItem,
+	ContextMenuLabel,
 	ContextMenuSeparator,
 	ContextMenuShortcut,
 	ContextMenuSub,
@@ -46,31 +48,43 @@ function Tecla({ contexto, nombre }: { contexto: "biblioteca" | "mesa"; nombre: 
 }
 
 /** El menú de la biblioteca (`capturas/pablo/10–11`, `14`). */
-export function MenuBiblioteca({ children }: { children: ReactNode }) {
+export function MenuBiblioteca({ jugador, children }: { jugador: IdJugador; children: ReactNode }) {
 	const { t } = useLang();
 	const yo = useMesa((s) => s.yo ?? 0);
-	const revelada = useMesa((s) => s.jugadores[yo]?.deArribaRevelada ?? false);
+	const nombre = useMesa((s) => s.jugadores[jugador]?.nombre ?? "");
+	const revelada = useMesa((s) => s.jugadores[jugador]?.deArribaRevelada ?? false);
+	// En la biblioteca de otro, lo que se hace es por él (o lo mira quien juega).
+	const ajena = jugador !== yo;
 	const soloMira = useRed((s) => s.papel === "espectador");
 	if (soloMira) return <>{children}</>;
 	return (
 		<ContextMenu>
 			<ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
 			<ContenidoContextual className="w-64 text-xs">
-				<ContextMenuItem onSelect={() => op.robar()}>
+				{ajena && (
+					<ContextMenuLabel className="text-xs">
+						{t("Biblioteca de {quien}", { quien: nombre })}
+					</ContextMenuLabel>
+				)}
+				<ContextMenuItem onSelect={() => op.robar(1, jugador)}>
 					<Hand />
 					{t("Robar")}
 					<Tecla contexto="biblioteca" nombre="Robar" />
 				</ContextMenuItem>
-				<ContextMenuItem onSelect={() => pedirNumero(t("Robar cuántas"), 2, (n) => op.robar(n))}>
+				<ContextMenuItem
+					onSelect={() => pedirNumero(t("Robar cuántas"), 2, (n) => op.robar(n, jugador))}
+				>
 					<Hand />
 					{t("Robar varias…")}
 				</ContextMenuItem>
-				<ContextMenuItem onSelect={() => pedirNumero(t("Moler cuántas"), 1, (n) => op.moler(n))}>
+				<ContextMenuItem
+					onSelect={() => pedirNumero(t("Moler cuántas"), 1, (n) => op.moler(n, jugador))}
+				>
 					<Skull />
 					{t("Moler…")}
 					<Tecla contexto="biblioteca" nombre="Moler" />
 				</ContextMenuItem>
-				<ContextMenuItem onSelect={() => hacer({ que: "manifestar", n: 1 })}>
+				<ContextMenuItem onSelect={() => op.hacerPor(jugador, { que: "manifestar", n: 1 })}>
 					<EyeOff />
 					{t("Manifestar")}
 				</ContextMenuItem>
@@ -80,20 +94,22 @@ export function MenuBiblioteca({ children }: { children: ReactNode }) {
 						{t("Exiliar la de arriba")}
 					</ContextMenuSubTrigger>
 					<ContextMenuSubContent className="text-xs">
-						<ContextMenuItem onSelect={() => op.exiliarDeArriba("normal")}>
+						<ContextMenuItem onSelect={() => op.exiliarDeArriba("normal", 1, jugador)}>
 							{t("Boca arriba")}
 							<Tecla contexto="biblioteca" nombre="Exiliar la de arriba" />
 						</ContextMenuItem>
-						<ContextMenuItem onSelect={() => op.exiliarDeArriba("bocaAbajo")}>
+						<ContextMenuItem onSelect={() => op.exiliarDeArriba("bocaAbajo", 1, jugador)}>
 							{t("Boca abajo (la puedes mirar)")}
 							<Tecla contexto="biblioteca" nombre="Exiliar la de arriba boca abajo" />
 						</ContextMenuItem>
-						<ContextMenuItem onSelect={() => op.exiliarDeArriba("oculta")}>
+						<ContextMenuItem onSelect={() => op.exiliarDeArriba("oculta", 1, jugador)}>
 							{t("Oculta (nadie la ve)")}
 						</ContextMenuItem>
 						<ContextMenuItem
 							onSelect={() =>
-								pedirNumero(t("Exiliar cuántas"), 2, (n) => op.exiliarDeArriba("normal", n))
+								pedirNumero(t("Exiliar cuántas"), 2, (n) =>
+									op.exiliarDeArriba("normal", n, jugador),
+								)
 							}
 						>
 							{t("Varias boca arriba…")}
@@ -101,21 +117,21 @@ export function MenuBiblioteca({ children }: { children: ReactNode }) {
 					</ContextMenuSubContent>
 				</ContextMenuSub>
 				<ContextMenuSeparator />
-				<ContextMenuItem onSelect={() => op.mirar("mirar", "arriba")}>
+				<ContextMenuItem onSelect={() => op.mirar("mirar", "arriba", jugador)}>
 					<Eye />
 					{t("Mirar las de arriba…")}
 					<Tecla contexto="biblioteca" nombre="Mirar la de arriba" />
 				</ContextMenuItem>
-				<ContextMenuItem onSelect={() => op.mirar("mirar", "abajo")}>
+				<ContextMenuItem onSelect={() => op.mirar("mirar", "abajo", jugador)}>
 					<ArrowDownToLine />
 					{t("Mirar las de abajo…")}
 				</ContextMenuItem>
-				<ContextMenuItem onSelect={() => op.mirar("escrutar")}>
+				<ContextMenuItem onSelect={() => op.mirar("escrutar", "arriba", jugador)}>
 					<Eye />
 					{t("Escrutar…")}
 					<Tecla contexto="biblioteca" nombre="Escrutar" />
 				</ContextMenuItem>
-				<ContextMenuItem onSelect={() => op.mirar("vigilar")}>
+				<ContextMenuItem onSelect={() => op.mirar("vigilar", "arriba", jugador)}>
 					<Eye />
 					{t("Vigilar…")}
 					<Tecla contexto="biblioteca" nombre="Vigilar" />
@@ -125,33 +141,35 @@ export function MenuBiblioteca({ children }: { children: ReactNode }) {
 					{t("Revelar y lanzar…")}
 				</ContextMenuItem>
 				<ContextMenuSeparator />
-				<ContextMenuItem onSelect={() => op.buscar()}>
+				<ContextMenuItem onSelect={() => op.buscar("todo", jugador)}>
 					<Search />
 					{t("Buscar una carta")}
 					<Tecla contexto="biblioteca" nombre="Buscar una carta" />
 				</ContextMenuItem>
-				<ContextMenuItem onSelect={() => op.buscar("tierra")}>
+				<ContextMenuItem onSelect={() => op.buscar("tierra", jugador)}>
 					<Trees />
 					{t("Buscar una tierra")}
 					<Tecla contexto="biblioteca" nombre="Buscar una tierra" />
 				</ContextMenuItem>
-				<ContextMenuItem onSelect={() => hacer({ que: "revelarArriba", n: 1 })}>
+				<ContextMenuItem onSelect={() => op.hacerPor(jugador, { que: "revelarArriba", n: 1 })}>
 					<Eye />
 					{t("Revelar la de arriba")}
 				</ContextMenuItem>
-				<ContextMenuItem onSelect={() => hacer({ que: "deArribaRevelada", si: !revelada })}>
+				<ContextMenuItem
+					onSelect={() => op.hacerPor(jugador, { que: "deArribaRevelada", si: !revelada })}
+				>
 					{revelada ? <EyeOff /> : <Eye />}
 					{revelada
 						? t("Dejar de jugar con la de arriba revelada")
 						: t("Jugar con la de arriba revelada")}
 				</ContextMenuItem>
 				<ContextMenuSeparator />
-				<ContextMenuItem onSelect={() => op.barajar()}>
+				<ContextMenuItem onSelect={() => op.barajar(jugador)}>
 					<Shuffle />
 					{t("Barajar")}
 					<Tecla contexto="biblioteca" nombre="Barajar" />
 				</ContextMenuItem>
-				<ContextMenuItem onSelect={() => hacer({ que: "rueda", robar: null })}>
+				<ContextMenuItem onSelect={() => op.hacerPor(jugador, { que: "rueda", robar: null })}>
 					<RefreshCw />
 					{t("Rueda (la mano al fondo, barajar y robar las mismas)")}
 				</ContextMenuItem>
@@ -161,10 +179,17 @@ export function MenuBiblioteca({ children }: { children: ReactNode }) {
 }
 
 /** El menú de cementerio, exilio, mando o banquillo: verlo y lo de todas a la vez. */
-export function MenuZona({ zona, children }: { zona: Zona; children: ReactNode }) {
+export function MenuZona({
+	zona,
+	jugador,
+	children,
+}: {
+	zona: Zona;
+	jugador: IdJugador;
+	children: ReactNode;
+}) {
 	const { t } = useLang();
-	const yo = useMesa((s) => s.yo ?? 0);
-	const ver = () => usePantalla.getState().abrir({ tipo: "zona", jugador: yo, zona });
+	const ver = () => usePantalla.getState().abrir({ tipo: "zona", jugador, zona });
 	const masiva = zona === "cementerio" || zona === "exilio";
 	const soloMira = useRed((s) => s.papel === "espectador");
 	if (soloMira) return <>{children}</>;
@@ -196,7 +221,7 @@ export function MenuZona({ zona, children }: { zona: Zona; children: ReactNode }
 										<ContextMenuItem
 											key={a}
 											onSelect={() =>
-												hacer({
+												op.hacerPor(jugador, {
 													que: "alAzarDe",
 													zona,
 													a,
@@ -216,16 +241,20 @@ export function MenuZona({ zona, children }: { zona: Zona; children: ReactNode }
 									))}
 							</ContextMenuSubContent>
 						</ContextMenuSub>
-						<ContextMenuItem onSelect={() => hacer({ que: "barajarTodoDentro", zona })}>
+						<ContextMenuItem
+							onSelect={() => op.hacerPor(jugador, { que: "barajarTodoDentro", zona })}
+						>
 							<Shuffle />
 							{t("Barajar todas en la biblioteca")}
 						</ContextMenuItem>
-						<ContextMenuItem onSelect={() => hacer({ que: "todoAlFondoAlAzar", zona })}>
+						<ContextMenuItem
+							onSelect={() => op.hacerPor(jugador, { que: "todoAlFondoAlAzar", zona })}
+						>
 							<ArrowDownToLine />
 							{t("Todas al fondo, en orden al azar")}
 						</ContextMenuItem>
 						{zona !== "exilio" && (
-							<ContextMenuItem onSelect={() => hacer({ que: "exiliarTodo", zona })}>
+							<ContextMenuItem onSelect={() => op.hacerPor(jugador, { que: "exiliarTodo", zona })}>
 								<Trash2 />
 								{t("Exiliarlas todas")}
 							</ContextMenuItem>
@@ -239,22 +268,24 @@ export function MenuZona({ zona, children }: { zona: Zona; children: ReactNode }
 
 /** El menú del campo vacío (`capturas/pablo/18`). */
 export function MenuCampo({
+	jugador,
 	children,
 	posicion,
 }: {
+	/** De quién es el campo (el que se mira). */
+	jugador: IdJugador;
 	children: ReactNode;
 	/** Dónde se abrió el menú, en posición del motor (para la bolita). */
 	posicion: () => { x: number; y: number };
 }) {
 	const { t } = useLang();
-	const yo = useMesa((s) => s.yo ?? 0);
 	const soloMira = useRed((s) => s.papel === "espectador");
 	if (soloMira) return <>{children}</>;
 	return (
 		<ContextMenu>
 			<ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
 			<ContenidoContextual className="w-60 text-xs">
-				<ContextMenuItem onSelect={() => op.enderezarTodo()}>
+				<ContextMenuItem onSelect={() => op.enderezarTodo(jugador)}>
 					<RotateCcw />
 					{t("Enderezar todo")}
 					<Tecla contexto="mesa" nombre="Enderezar todo" />
@@ -262,18 +293,20 @@ export function MenuCampo({
 				<ContextMenuItem
 					onSelect={() => {
 						const m = useMesa.getState();
-						m.seleccionar(m.zonas[`${yo}:campo`]?.cartas ?? []);
+						m.seleccionar(m.zonas[`${jugador}:campo`]?.cartas ?? []);
 					}}
 				>
 					<MousePointerClick />
 					{t("Elegir todo")}
 					<Tecla contexto="mesa" nombre="Elegir todo el campo" />
 				</ContextMenuItem>
-				<ContextMenuItem onSelect={() => hacer({ que: "organizar" })}>
+				<ContextMenuItem onSelect={() => op.hacerPor(jugador, { que: "organizar" })}>
 					<LayoutGrid />
 					{t("Organizar el campo")}
 				</ContextMenuItem>
-				<ContextMenuItem onSelect={() => usePantalla.getState().abrir({ tipo: "fichas" })}>
+				<ContextMenuItem
+					onSelect={() => usePantalla.getState().abrir({ tipo: "fichas", para: jugador })}
+				>
 					<SquareStack />
 					{t("Crear ficha…")}
 				</ContextMenuItem>
@@ -293,7 +326,7 @@ export function MenuCampo({
 									onClick={() =>
 										void hacer({
 											que: "ponerBolita",
-											campoDe: yo,
+											campoDe: jugador,
 											pos: posicion(),
 											color: i,
 											tamano: "M",
@@ -306,6 +339,64 @@ export function MenuCampo({
 						</div>
 					</ContextMenuSubContent>
 				</ContextMenuSub>
+			</ContenidoContextual>
+		</ContextMenu>
+	);
+}
+
+/**
+ * **El menú de la mano de otro jugador**: mirarla (Peek, Thoughtseize: sus
+ * cartas se ven boca arriba en su sitio y, como se ven, se pueden mover, p. ej.
+ * al cementerio), hacer que descarte al azar o entera, que la enseñe a todos
+ * (Telepathy) o que robe. Queda todo en el registro.
+ */
+export function MenuManoAjena({ jugador, children }: { jugador: IdJugador; children: ReactNode }) {
+	const { t } = useLang();
+	const nombre = useMesa((s) => s.jugadores[jugador]?.nombre ?? "");
+	const mirando = useMesa((s) => (s.zonas[`${jugador}:mano`]?.visibles.length ?? 0) > 0);
+	const revelada = useMesa((s) => s.jugadores[jugador]?.manoRevelada ?? false);
+	const soloMira = useRed((s) => s.papel === "espectador");
+	if (soloMira) return <>{children}</>;
+	return (
+		<ContextMenu>
+			<ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
+			<ContenidoContextual className="w-64 text-xs">
+				<ContextMenuLabel className="text-xs">
+					{t("Mano de {quien}", { quien: nombre })}
+				</ContextMenuLabel>
+				<ContextMenuItem onSelect={() => op.mirarMano(jugador, !mirando)}>
+					{mirando ? <EyeOff /> : <Eye />}
+					{mirando ? t("Dejar de mirar su mano") : t("Mirar su mano")}
+				</ContextMenuItem>
+				<ContextMenuItem
+					onSelect={() => op.hacerPor(jugador, { que: "revelarMano", si: !revelada })}
+				>
+					<Eye />
+					{revelada ? t("Que deje de enseñar su mano") : t("Que enseñe su mano a todos")}
+				</ContextMenuItem>
+				<ContextMenuSeparator />
+				<ContextMenuItem
+					onSelect={() =>
+						pedirNumero(t("Descartar cuántas al azar"), 1, (n) =>
+							op.hacerPor(jugador, { que: "descartar", modo: { tipo: "alAzar", valor: n } }),
+						)
+					}
+				>
+					<Dices />
+					{t("Que descarte al azar…")}
+				</ContextMenuItem>
+				<ContextMenuItem
+					onSelect={() => op.hacerPor(jugador, { que: "descartar", modo: { tipo: "todas" } })}
+				>
+					<Trash2 />
+					{t("Que descarte toda la mano")}
+				</ContextMenuItem>
+				<ContextMenuItem
+					onSelect={() => pedirNumero(t("Robar cuántas"), 1, (n) => op.robar(n, jugador))}
+				>
+					<Hand />
+					{t("Que robe…")}
+				</ContextMenuItem>
 			</ContenidoContextual>
 		</ContextMenu>
 	);

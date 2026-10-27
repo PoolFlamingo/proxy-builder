@@ -39,6 +39,8 @@ export const FRASES: Record<Accion["que"], string> = {
 	copiaFicha: paraTraducir("{quien} crea una copia de {cartas}"),
 	darControl: paraTraducir("{quien} da el control de {cartas} a {a}"),
 	tomarControl: paraTraducir("{quien} toma el control de {cartas}"),
+	porJugador: paraTraducir("{texto} (lo hace {quien})"),
+	mirarMano: paraTraducir("{quien} mira la mano de {a}"),
 	habilidadEnPila: paraTraducir("{quien} pone una habilidad de {carta} en la pila"),
 	flecha: paraTraducir("{quien} señala un objetivo"),
 	quitarFlechas: paraTraducir("{quien} quita sus flechas"),
@@ -225,6 +227,21 @@ export function textoDeEvento(
 			break;
 	}
 	const a = c.accion;
+	if (a.que === "porJugador") {
+		// «Bob roba 2 cartas (lo hace Ana)».
+		const interior: Evento = {
+			...ev,
+			actor: { tipo: "jugador", id: a.jugador },
+			cambio: { ...c, accion: a.accion },
+		};
+		return t(FRASES.porJugador, { texto: textoDeEvento(interior, m, t, marcar), quien });
+	}
+	if (a.que === "mirarMano") {
+		const de = m.jugadores[a.de]?.nombre ?? "?";
+		return a.si
+			? t(FRASES.mirarMano, { quien, a: de })
+			: t("{quien} deja de mirar la mano de {a}", { quien, a: de });
+	}
 	if (a.que === "decidirSparring") {
 		return a.decision === "aceptar"
 			? t("{quien} resuelve la reacción del fantasma", { quien })

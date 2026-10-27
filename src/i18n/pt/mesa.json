@@ -1166,5 +1166,21 @@
 	"Dar el control a…": "Dar o controle a…",
 	"Tomar el control": "Tomar o controle",
 	"Tomar el control hasta el final del turno": "Tomar o controle até o fim do turno",
-	"Vuelve a {quien} al final del turno": "Volta para {quien} no fim do turno"
+	"Vuelve a {quien} al final del turno": "Volta para {quien} no fim do turno",
+	"{texto} (lo hace {quien})": "{texto} ({quien} faz isso)",
+	"{quien} mira la mano de {a}": "{quien} olha a mão de {a}",
+	"{quien} deja de mirar la mano de {a}": "{quien} deixa de olhar a mão de {a}",
+	"Biblioteca de {quien}": "Grimório de {quien}",
+	"Mano de {quien}": "Mão de {quien}",
+	"Mirar su mano": "Olhar a mão",
+	"Dejar de mirar su mano": "Deixar de olhar a mão",
+	"Que enseñe su mano a todos": "Fazer mostrar a mão a todos",
+	"Que deje de enseñar su mano": "Fazer esconder a mão",
+	"Descartar cuántas al azar": "Quantas descartar ao acaso",
+	"Que descarte al azar…": "Fazer descartar ao acaso…",
+	"Que descarte toda la mano": "Fazer descartar a mão toda",
+	"Que robe…": "Fazer comprar…",
+	"Para": "Para",
+	"tú": "você",
+	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "Aparece no campo de batalha de {quien}. Clique na que quiser criar."
 }

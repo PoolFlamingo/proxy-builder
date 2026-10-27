@@ -1152,5 +1152,21 @@
 	"Dar el control a…": "Kontrolle geben an…",
 	"Tomar el control": "Kontrolle übernehmen",
 	"Tomar el control hasta el final del turno": "Kontrolle bis zum Ende des Zuges übernehmen",
-	"Vuelve a {quien} al final del turno": "Geht am Zugende an {quien} zurück"
+	"Vuelve a {quien} al final del turno": "Geht am Zugende an {quien} zurück",
+	"{texto} (lo hace {quien})": "{texto} (von {quien} ausgeführt)",
+	"{quien} mira la mano de {a}": "{quien} sieht sich die Hand von {a} an",
+	"{quien} deja de mirar la mano de {a}": "{quien} sieht sich die Hand von {a} nicht mehr an",
+	"Biblioteca de {quien}": "Bibliothek von {quien}",
+	"Mano de {quien}": "Hand von {quien}",
+	"Mirar su mano": "Seine Hand ansehen",
+	"Dejar de mirar su mano": "Seine Hand nicht mehr ansehen",
+	"Que enseñe su mano a todos": "Hand für alle aufdecken lassen",
+	"Que deje de enseñar su mano": "Hand wieder verdecken lassen",
+	"Descartar cuántas al azar": "Wie viele zufällig abwerfen",
+	"Que descarte al azar…": "Zufällig abwerfen lassen…",
+	"Que descarte toda la mano": "Ganze Hand abwerfen lassen",
+	"Que robe…": "Ziehen lassen…",
+	"Para": "Für",
+	"tú": "du",
+	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "Sie erscheint auf dem Spielfeld von {quien}. Klicke auf die, die du erstellen willst."
 }

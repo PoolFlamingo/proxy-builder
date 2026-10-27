@@ -981,7 +981,8 @@ fn accion_(q: &mut Partida, a: &Accion, ctx: &mut Ctx, seq: u64) -> Result<(), R
             for (k, id) in cartas.iter().enumerate() {
                 let c = carta(q, *id)?.clone();
                 let pos = desplazada(c.pos, k as u32 + 1);
-                let nueva = crear_ficha(q, c.controlador, c.origen, 1, pos, Some(*id))?;
+                // La copia es de quien la hace (Clone de la criatura de otro).
+                let nueva = crear_ficha(q, yo, c.origen, 1, pos, Some(*id))?;
                 carta_mut(q, nueva)?.cara = c.cara;
             }
             Ok(())
@@ -1017,6 +1018,33 @@ fn accion_(q: &mut Partida, a: &Accion, ctx: &mut Ctx, seq: u64) -> Result<(), R
             } else {
                 Err(Rechazo::NoSePuede)
             }
+        }
+        Accion::PorJugador { jugador, accion } => {
+            existe_jugador(q, *jugador)?;
+            if !accion.se_hace_por_otro() {
+                return Err(Rechazo::NoSePuede);
+            }
+            let quien = ctx.actor;
+            ctx.actor = Some(*jugador);
+            let r = accion_(q, accion, ctx, seq);
+            ctx.actor = quien;
+            r
+        }
+        Accion::MirarMano { de, si } => {
+            existe_jugador(q, *de)?;
+            if *de == yo {
+                return Err(Rechazo::NoSePuede);
+            }
+            let mano = q.zona(&RefZona::de(*de, Zona::Mano)).to_vec();
+            for id in mano {
+                let c = carta_mut(q, id)?;
+                c.vista_por = if *si {
+                    c.vista_por.con(yo, c.dueno)
+                } else {
+                    c.vista_por.sin(yo, c.dueno)
+                };
+            }
+            Ok(())
         }
         Accion::HabilidadEnPila { carta: id, texto } => {
             if texto.chars().count() > MAX_TEXTO {

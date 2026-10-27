@@ -45,6 +45,8 @@ export const CATEGORIAS_DE_ACCION: Record<Accion["que"], CategoriaEvento> = {
 	copiaFicha: "mover",
 	darControl: "mover",
 	tomarControl: "mover",
+	porJugador: "otro",
+	mirarMano: "biblioteca",
 	habilidadEnPila: "mover",
 	flecha: "otro",
 	quitarFlechas: "otro",
@@ -131,7 +133,11 @@ export const CATEGORIAS_DE_CAMBIO: Record<Cambio["tipo"], CategoriaEvento | null
 
 export function categoriaDeEvento(ev: Evento): CategoriaEvento {
 	const c = ev.cambio;
-	if (c.tipo === "accion") return CATEGORIAS_DE_ACCION[c.accion.que];
+	if (c.tipo === "accion") {
+		// Lo hecho por otro jugador cuenta como lo que se hizo.
+		const a = c.accion.que === "porJugador" ? c.accion.accion : c.accion;
+		return CATEGORIAS_DE_ACCION[a.que];
+	}
 	if (c.tipo === "restaurar" && c.deshecho === null) return "fin";
 	return CATEGORIAS_DE_CAMBIO[c.tipo] ?? "otro";
 }

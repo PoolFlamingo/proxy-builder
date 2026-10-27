@@ -49,7 +49,8 @@ export function sonidoDeEvento(
 	if (c.tipo === "sparring") return "sparring";
 	if (c.tipo === "restaurar") return c.deshecho === null ? "barajar" : null;
 	if (c.tipo !== "accion") return null;
-	const a = c.accion;
+	// Lo hecho por otro jugador suena como lo que se hizo.
+	const a = c.accion.que === "porJugador" ? c.accion.accion : c.accion;
 	switch (a.que) {
 		case "robar":
 			return "robar";

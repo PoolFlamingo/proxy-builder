@@ -1170,5 +1170,21 @@
 	"Dar el control a…": "Donner le contrôle à…",
 	"Tomar el control": "Prendre le contrôle",
 	"Tomar el control hasta el final del turno": "Prendre le contrôle jusqu'à la fin du tour",
-	"Vuelve a {quien} al final del turno": "Revient à {quien} à la fin du tour"
+	"Vuelve a {quien} al final del turno": "Revient à {quien} à la fin du tour",
+	"{texto} (lo hace {quien})": "{texto} (fait par {quien})",
+	"{quien} mira la mano de {a}": "{quien} regarde la main de {a}",
+	"{quien} deja de mirar la mano de {a}": "{quien} arrête de regarder la main de {a}",
+	"Biblioteca de {quien}": "Bibliothèque de {quien}",
+	"Mano de {quien}": "Main de {quien}",
+	"Mirar su mano": "Regarder sa main",
+	"Dejar de mirar su mano": "Arrêter de regarder sa main",
+	"Que enseñe su mano a todos": "Qu'il montre sa main à tous",
+	"Que deje de enseñar su mano": "Qu'il cache sa main",
+	"Descartar cuántas al azar": "Défausser combien au hasard",
+	"Que descarte al azar…": "Qu'il défausse au hasard…",
+	"Que descarte toda la mano": "Qu'il défausse toute sa main",
+	"Que robe…": "Qu'il pioche…",
+	"Para": "Pour",
+	"tú": "toi",
+	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "Elle arrive sur le champ de bataille de {quien}. Clique sur celle à créer."
 }

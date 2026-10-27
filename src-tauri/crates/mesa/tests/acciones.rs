@@ -38,6 +38,8 @@ fn nombre(a: &Accion) -> &'static str {
         Accion::CopiaFicha { .. } => "CopiaFicha",
         Accion::DarControl { .. } => "DarControl",
         Accion::TomarControl { .. } => "TomarControl",
+        Accion::PorJugador { .. } => "PorJugador",
+        Accion::MirarMano { .. } => "MirarMano",
         Accion::HabilidadEnPila { .. } => "HabilidadEnPila",
         Accion::Flecha { .. } => "Flecha",
         Accion::QuitarFlechas { .. } => "QuitarFlechas",
@@ -341,6 +343,18 @@ fn cada_accion_del_catalogo() {
     });
     assert!(m.zona(YO, Zona::Campo).contains(&copia));
     assert_eq!(m.c(copia).controlador, YO);
+    // Por otro jugador: que robe una; y mirar su mano.
+    let suya = m.zona(OTRO, Zona::Mano).len();
+    m.haz(Accion::PorJugador {
+        jugador: OTRO,
+        accion: Box::new(Accion::Robar { n: 1 }),
+    });
+    assert_eq!(m.zona(OTRO, Zona::Mano).len(), suya + 1);
+    m.haz(Accion::MirarMano { de: OTRO, si: true });
+    m.haz(Accion::MirarMano {
+        de: OTRO,
+        si: false,
+    });
 
     // ── Biblioteca ──
     let mano = m.zona(YO, Zona::Mano).len();
@@ -732,6 +746,8 @@ const TODAS: &[&str] = &[
     "CopiaFicha",
     "DarControl",
     "TomarControl",
+    "PorJugador",
+    "MirarMano",
     "HabilidadEnPila",
     "Flecha",
     "QuitarFlechas",
@@ -870,6 +886,7 @@ fn robar_lo_controlado_por_otro_vuelve_al_dueno() {
 
 #[test]
 fn sin_permiso_no_se_toca_lo_ajeno() {
+    // Lo oculto de otro (su mano) no se toca mientras no se ve.
     let mut m = Mesa::nueva(2);
     let suya = m.zona(OTRO, Zona::Mano)[0];
     assert_eq!(
@@ -883,22 +900,104 @@ fn sin_permiso_no_se_toca_lo_ajeno() {
         ),
         Err(Rechazo::SinPermiso)
     );
-    assert_eq!(
-        m.como(
-            YO,
-            Accion::Mirar {
-                de: OTRO,
-                n: 1,
-                desde: Lado::Arriba
-            }
-        ),
-        Err(Rechazo::SinPermiso)
-    );
-    // Pero la vida del otro, sí.
+    // Mirada (Thoughtseize), sí: la descarto y va a su cementerio.
+    m.haz(Accion::MirarMano { de: OTRO, si: true });
+    m.haz(Accion::Mover {
+        cartas: vec![suya],
+        a: a(Zona::Cementerio, Sitio::Arriba),
+        como: None,
+    });
+    assert!(m.zona(OTRO, Zona::Cementerio).contains(&suya));
+    // Mirar su biblioteca también se puede (Gonti, Bribery…).
+    m.haz(Accion::Mirar {
+        de: OTRO,
+        n: 1,
+        desde: Lado::Arriba,
+    });
+    // Y su vida, siempre.
     m.haz(Accion::Vida {
         jugador: OTRO,
         delta: -2,
     });
+}
+
+#[test]
+fn lo_que_esta_a_la_vista_es_de_todos() {
+    let mut m = Mesa::nueva(2);
+    let oso = m.al_campo("Bear");
+    // El otro gira mi criatura, le pone contadores y la manda a mi mano.
+    for accion in [
+        Accion::Girar {
+            cartas: vec![oso],
+            girada: true,
+        },
+        Accion::Contador {
+            cartas: vec![oso],
+            tipo: "-1/-1".into(),
+            delta: 1,
+        },
+    ] {
+        m.como(OTRO, accion).unwrap();
+    }
+    assert!(m.c(oso).girada);
+    // Y la copia que hace de ella es suya (Clone).
+    m.como(OTRO, Accion::CopiaFicha { cartas: vec![oso] })
+        .unwrap();
+    let copia = *m.zona(OTRO, Zona::Campo).last().unwrap();
+    assert_eq!(m.c(copia).controlador, OTRO);
+    m.como(
+        OTRO,
+        Accion::Mover {
+            cartas: vec![oso],
+            a: a(Zona::Mano, Sitio::Arriba),
+            como: None,
+        },
+    )
+    .unwrap();
+    assert!(
+        m.zona(YO, Zona::Mano).contains(&oso),
+        "a la mano de su dueño"
+    );
+}
+
+#[test]
+fn por_otro_jugador_como_si_lo_hiciera_el() {
+    let mut m = Mesa::nueva(2);
+    let por = |accion: Accion| Accion::PorJugador {
+        jugador: OTRO,
+        accion: Box::new(accion),
+    };
+    let lib = m.zona(OTRO, Zona::Biblioteca).len();
+    m.haz(por(Accion::Moler { n: 2 }));
+    assert_eq!(m.zona(OTRO, Zona::Biblioteca).len(), lib - 2);
+    assert_eq!(m.zona(OTRO, Zona::Cementerio).len(), 2);
+    // Bojuka Bog: exiliar su cementerio.
+    m.haz(por(Accion::ExiliarTodo {
+        zona: Zona::Cementerio,
+    }));
+    assert!(m.zona(OTRO, Zona::Cementerio).is_empty());
+    // Una ficha para él (Beast Within, Forbidden Orchard…).
+    m.haz(por(Accion::CrearFicha {
+        de: OrigenFicha::Libre {
+            nombre: "Beast".into(),
+            fuerza: Some("3".into()),
+            resistencia: Some("3".into()),
+            colores: vec!['G'],
+        },
+        cantidad: 1,
+        monton: false,
+        pos: None,
+    }));
+    let ficha = *m.zona(OTRO, Zona::Campo).last().unwrap();
+    assert_eq!(m.c(ficha).controlador, OTRO);
+    // Descarte al azar (Hymn to Tourach).
+    let mano = m.zona(OTRO, Zona::Mano).len();
+    m.haz(por(Accion::Descartar {
+        modo: ModoDescarte::AlAzar(1),
+    }));
+    assert_eq!(m.zona(OTRO, Zona::Mano).len(), mano - 1);
+    // Lo del turno no se hace por nadie.
+    assert_eq!(m.como(YO, por(Accion::PasarTurno)), Err(Rechazo::NoSePuede));
 }
 
 #[test]
@@ -1162,17 +1261,6 @@ fn el_control_robado_hasta_el_final_del_turno_vuelve_al_pasar_el_turno() {
         cartas: vec![oso],
         a: OTRO,
     });
-    // Es del otro: yo no la puedo tocar, pero sí tomarla.
-    assert_eq!(
-        m.como(
-            YO,
-            Accion::Girar {
-                cartas: vec![oso],
-                girada: true
-            }
-        ),
-        Err(Rechazo::SinPermiso)
-    );
     m.haz(Accion::TomarControl {
         cartas: vec![oso],
         hasta_fin_de_turno: true,
@@ -1214,7 +1302,7 @@ fn tomar_el_control_para_siempre_no_se_devuelve() {
 }
 
 #[test]
-fn se_roba_del_cementerio_y_el_exilio_ajenos_al_campo_pero_no_a_la_mano() {
+fn se_roba_del_cementerio_ajeno_al_campo_y_lo_que_va_a_una_mano_va_a_la_de_su_dueno() {
     let mut m = Mesa::nueva(2);
     let id = *m.zona(OTRO, Zona::Biblioteca).first().unwrap();
     m.como(
@@ -1226,18 +1314,6 @@ fn se_roba_del_cementerio_y_el_exilio_ajenos_al_campo_pero_no_a_la_mano() {
         },
     )
     .unwrap();
-    // A mi mano: no es mía, no puedo.
-    assert_eq!(
-        m.como(
-            YO,
-            Accion::Mover {
-                cartas: vec![id],
-                a: a(Zona::Mano, Sitio::Arriba),
-                como: None
-            }
-        ),
-        Err(Rechazo::SinPermiso)
-    );
     // A mi campo: sí (reanimar lo del otro).
     m.haz(Accion::Mover {
         cartas: vec![id],

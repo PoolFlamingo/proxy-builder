@@ -1098,5 +1098,21 @@
 	"Dar el control a…": "交出操控权…",
 	"Tomar el control": "获得操控权",
 	"Tomar el control hasta el final del turno": "获得操控权直到回合结束",
-	"Vuelve a {quien} al final del turno": "回合结束时回到 {quien} 手中"
+	"Vuelve a {quien} al final del turno": "回合结束时回到 {quien} 手中",
+	"{texto} (lo hace {quien})": "{texto}（由 {quien} 执行）",
+	"{quien} mira la mano de {a}": "{quien} 查看 {a} 的手牌",
+	"{quien} deja de mirar la mano de {a}": "{quien} 不再查看 {a} 的手牌",
+	"Biblioteca de {quien}": "{quien} 的牌库",
+	"Mano de {quien}": "{quien} 的手牌",
+	"Mirar su mano": "查看手牌",
+	"Dejar de mirar su mano": "不再查看手牌",
+	"Que enseñe su mano a todos": "让其向所有人展示手牌",
+	"Que deje de enseñar su mano": "让其不再展示手牌",
+	"Descartar cuántas al azar": "随机弃几张",
+	"Que descarte al azar…": "让其随机弃牌…",
+	"Que descarte toda la mano": "让其弃掉全部手牌",
+	"Que robe…": "让其抓牌…",
+	"Para": "给",
+	"tú": "你",
+	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "出现在 {quien} 的战场上。点击想创建的那个。"
 }

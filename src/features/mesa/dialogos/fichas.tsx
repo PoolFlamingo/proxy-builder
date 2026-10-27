@@ -2,8 +2,9 @@ import { Loader2, Search } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { CardSummary } from "@/bindings/CardSummary";
+import type { IdJugador } from "@/bindings/IdJugador";
 import type { OrigenFicha } from "@/bindings/OrigenFicha";
-import { CampoNumero } from "@/components/campos";
+import { CampoNumero, Selector } from "@/components/campos";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,8 +20,8 @@ import { Switch } from "@/components/ui/switch";
 import { urlBusqueda } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
 import { NINGUNA, useMesa } from "@/stores/mesa-store";
-import { hacer } from "../acciones";
 import { ImagenCarta } from "../imagen-carta";
+import { hacerPor } from "../operaciones";
 import { usePantalla } from "../pantalla";
 
 /** Las fichas rápidas (`capturas/playgroup/75`): se buscan en Scryfall por su nombre. */
@@ -43,9 +44,12 @@ const AYUDA = [
  * ayuda, cualquiera de Scryfall (o una carta de verdad para copiarla) y una
  * libre. Cantidad y «como un montón».
  */
-export function FichasDialog() {
+export function FichasDialog({ para: paraInicial }: { para?: IdJugador }) {
 	const { t, mensaje } = useLang();
 	const yo = useMesa((s) => s.yo ?? 0);
+	const jugadores = useMesa((s) => s.jugadores);
+	// Para quién (Beast Within, Forbidden Orchard…): de fábrica, el del campo donde se abrió.
+	const [para, setPara] = useState<IdJugador>(paraInicial ?? yo);
 	const delDeck = useMesa((s) => s.jugadores[yo]?.fichas ?? NINGUNA);
 	const [cantidad, setCantidad] = useState(1);
 	const [monton, setMonton] = useState(false);
@@ -57,7 +61,12 @@ export function FichasDialog() {
 	const cerrar = () => usePantalla.getState().abrir(null);
 
 	const crear = async (de: OrigenFicha) => {
-		const ok = await hacer({ que: "crearFicha", de, cantidad, monton, pos: null });
+		// Las del deck son las de quien juega: para otro, van como carta.
+		const origen =
+			de.tipo === "delDeck" && para !== yo && delDeck[de.indice]
+				? ({ tipo: "carta", origen: delDeck[de.indice] } as OrigenFicha)
+				: de;
+		const ok = await hacerPor(para, { que: "crearFicha", de: origen, cantidad, monton, pos: null });
 		if (ok) cerrar();
 	};
 	/** Busca en Scryfall; `siFalla` se llama en vez de avisar si no hay conexión. */
@@ -92,7 +101,11 @@ export function FichasDialog() {
 				<DialogHeader>
 					<DialogTitle>{t("Crear ficha")}</DialogTitle>
 					<DialogDescription>
-						{t("Sale en tu campo. Pulsa la que quieras crear.")}
+						{para === yo
+							? t("Sale en tu campo. Pulsa la que quieras crear.")
+							: t("Sale en el campo de {quien}. Pulsa la que quieras crear.", {
+									quien: jugadores[para]?.nombre ?? "",
+								})}
 					</DialogDescription>
 				</DialogHeader>
 				<div className="flex items-center gap-2.5 text-xs">
@@ -109,6 +122,20 @@ export function FichasDialog() {
 						<Switch checked={monton} onCheckedChange={setMonton} />
 						{t("Como un montón")}
 					</label>
+					{Object.keys(jugadores).length > 1 && (
+						<div className="ml-auto flex items-center gap-1.5">
+							<span>{t("Para")}</span>
+							<Selector
+								valor={String(para)}
+								opciones={Object.values(jugadores).map((j) => ({
+									valor: String(j.id),
+									etiqueta: j.id === yo ? `${j.nombre} (${t("tú")})` : j.nombre,
+								}))}
+								onChange={(v) => setPara(Number(v))}
+								ariaLabel={t("Para")}
+							/>
+						</div>
+					)}
 				</div>
 				<ScrollArea viewportClassName="max-h-[60vh]">
 					<div className="flex flex-col gap-2.5 p-1">

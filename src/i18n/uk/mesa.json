@@ -1193,5 +1193,21 @@
 	"Dar el control a…": "Передати контроль…",
 	"Tomar el control": "Отримати контроль",
 	"Tomar el control hasta el final del turno": "Отримати контроль до кінця ходу",
-	"Vuelve a {quien} al final del turno": "Повернеться до {quien} наприкінці ходу"
+	"Vuelve a {quien} al final del turno": "Повернеться до {quien} наприкінці ходу",
+	"{texto} (lo hace {quien})": "{texto} (робить {quien})",
+	"{quien} mira la mano de {a}": "{quien} дивиться руку {a}",
+	"{quien} deja de mirar la mano de {a}": "{quien} перестає дивитися руку {a}",
+	"Biblioteca de {quien}": "Бібліотека {quien}",
+	"Mano de {quien}": "Рука {quien}",
+	"Mirar su mano": "Подивитися руку",
+	"Dejar de mirar su mano": "Перестати дивитися руку",
+	"Que enseñe su mano a todos": "Нехай покаже руку всім",
+	"Que deje de enseñar su mano": "Нехай сховає руку",
+	"Descartar cuántas al azar": "Скільки скинути випадково",
+	"Que descarte al azar…": "Нехай скине випадково…",
+	"Que descarte toda la mano": "Нехай скине всю руку",
+	"Que robe…": "Нехай візьме…",
+	"Para": "Для",
+	"tú": "ти",
+	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "З'являється на полі бою {quien}. Натисни на ту, яку хочеш створити."
 }

@@ -1098,5 +1098,21 @@
 	"Dar el control a…": "コントロールを与える…",
 	"Tomar el control": "コントロールを得る",
 	"Tomar el control hasta el final del turno": "ターン終了時までコントロールを得る",
-	"Vuelve a {quien} al final del turno": "ターン終了時に {quien} に戻る"
+	"Vuelve a {quien} al final del turno": "ターン終了時に {quien} に戻る",
+	"{texto} (lo hace {quien})": "{texto}（{quien} が実行）",
+	"{quien} mira la mano de {a}": "{quien} が {a} の手札を見る",
+	"{quien} deja de mirar la mano de {a}": "{quien} が {a} の手札を見るのをやめる",
+	"Biblioteca de {quien}": "{quien} のライブラリー",
+	"Mano de {quien}": "{quien} の手札",
+	"Mirar su mano": "手札を見る",
+	"Dejar de mirar su mano": "手札を見るのをやめる",
+	"Que enseñe su mano a todos": "手札を全員に公開させる",
+	"Que deje de enseñar su mano": "手札の公開をやめさせる",
+	"Descartar cuántas al azar": "ランダムに捨てる枚数",
+	"Que descarte al azar…": "ランダムに捨てさせる…",
+	"Que descarte toda la mano": "手札をすべて捨てさせる",
+	"Que robe…": "引かせる…",
+	"Para": "対象",
+	"tú": "あなた",
+	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "{quien} の戦場に出ます。作りたいものを押してください。"
 }

@@ -21,7 +21,7 @@ export type DialogoMesa =
 	| { tipo: "buscar"; de: IdJugador; filtro: "todo" | "tierra" }
 	| { tipo: "revelar" }
 	| { tipo: "zona"; jugador: IdJugador; zona: Zona }
-	| { tipo: "fichas" }
+	| { tipo: "fichas"; para?: IdJugador }
 	| { tipo: "azar" }
 	| { tipo: "terminar" }
 	| { tipo: "danoComandante" }

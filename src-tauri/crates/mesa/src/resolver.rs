@@ -15,7 +15,7 @@ use crate::aplicar::cara_planar;
 use crate::azar::Azar;
 use crate::error::Rechazo;
 use crate::ids::{IdCarta, IdJugador};
-use crate::modelo::{Extremo, Partida, RefZona, Zona, ZonaComun};
+use crate::modelo::{Extremo, Partida};
 
 /// Caras de dado que se pueden tirar.
 pub const CARAS: [u8; 7] = [4, 6, 8, 10, 12, 20, 100];
@@ -113,6 +113,7 @@ pub fn resolver(
 pub fn necesita_azar(a: &Accion) -> bool {
     use crate::accion::{ModoDescarte, RestoExcavar, Sitio};
     match a {
+        Accion::PorJugador { accion, .. } => necesita_azar(accion),
         Accion::Mover { a, .. } => matches!(a.sitio, Sitio::AlAzar | Sitio::BarajarDentro),
         Accion::ResolverExcavacion { a, .. } => *a == RestoExcavar::AbajoAlAzar,
         Accion::Descartar { modo } => matches!(modo, ModoDescarte::AlAzar(_)),
@@ -127,59 +128,34 @@ pub fn necesita_azar(a: &Accion) -> bool {
     }
 }
 
-/// Si el actor puede tocar esta carta.
+/// Si el actor puede tocar esta carta. **Como en una mesa de verdad, cada uno
+/// puede hacer lo que quiera** (girar, poner contadores, destruir, exiliar o
+/// devolver lo de otro, contrarrestar su hechizo, reanimar de su cementerio…):
+/// lo que está a la vista (campo, cementerio, exilio, mando, pila) es de
+/// todos. Lo oculto (mano, biblioteca, banquillo) solo lo de uno, o lo de otro
+/// que ya se ve (mirado, revelado): la información oculta es lo único que se
+/// guarda. Lo que se mande a una mano, biblioteca o cementerio va siempre a la
+/// de su dueño.
 pub fn puede_tocar(p: &Partida, yo: IdJugador, id: IdCarta) -> Result<(), Rechazo> {
     let c = p.cartas.get(&id).ok_or(Rechazo::NoExiste)?;
     if p.opciones.todos_tocan_todo {
         return Ok(());
     }
-    let (zona, _) = p.donde(id).ok_or(Rechazo::NoExiste)?;
-    let mia = match zona {
-        // En la mesa (campo, pila…), lo que controla.
-        z if z.es_campo() || z.jugador().is_none() => c.controlador == yo,
-        // En sus zonas, lo suyo.
-        z => z.jugador() == Some(yo),
-    };
-    if mia {
+    let (zona, indice) = p.donde(id).ok_or(Rechazo::NoExiste)?;
+    if zona.es_publica() || zona.jugador() == Some(yo) {
+        return Ok(());
+    }
+    if crate::visibilidad::ve(
+        p,
+        c,
+        &zona,
+        indice,
+        crate::visibilidad::Mirador::Jugador(yo),
+    ) {
         Ok(())
     } else {
         Err(Rechazo::SinPermiso)
     }
-}
-
-/// Robar de una zona pública ajena: lo que hay en el cementerio o el exilio de
-/// otro (y se ve) se puede llevar al campo propio o a la pila (reanimar,
-/// lanzar lo exiliado…). Lo que se mande a una mano, biblioteca o cementerio
-/// vuelve igualmente a su dueño.
-fn puede_robar(p: &Partida, yo: IdJugador, id: IdCarta, a: &crate::accion::Destino) -> bool {
-    use crate::accion::ZonaDestino;
-    let Some((zona, indice)) = p.donde(id) else {
-        return false;
-    };
-    let Some(c) = p.cartas.get(&id) else {
-        return false;
-    };
-    let ajena = matches!(
-        zona,
-        RefZona::De {
-            jugador,
-            zona: Zona::Cementerio | Zona::Exilio,
-        } if jugador != yo
-    );
-    let a_lo_mio = match a.zona {
-        ZonaDestino::De(Zona::Campo) => a.jugador.is_none() || a.jugador == Some(yo),
-        ZonaDestino::Comun(ZonaComun::Pila) => true,
-        _ => false,
-    };
-    ajena
-        && a_lo_mio
-        && crate::visibilidad::ve(
-            p,
-            c,
-            &zona,
-            indice,
-            crate::visibilidad::Mirador::Jugador(yo),
-        )
 }
 
 fn todas(p: &Partida, yo: IdJugador, ids: &[IdCarta]) -> Result<(), Rechazo> {
@@ -189,24 +165,14 @@ fn todas(p: &Partida, yo: IdJugador, ids: &[IdCarta]) -> Result<(), Rechazo> {
     Ok(())
 }
 
-fn suya(p: &Partida, yo: IdJugador, de: IdJugador) -> Result<(), Rechazo> {
-    if de == yo || p.opciones.todos_tocan_todo {
-        Ok(())
-    } else {
-        Err(Rechazo::SinPermiso)
-    }
+/// Las zonas de cualquier jugador se pueden mirar o tocar (lo que se ve
+/// después lo decide `visibilidad`): basta con que exista.
+fn suya(p: &Partida, _yo: IdJugador, de: IdJugador) -> Result<(), Rechazo> {
+    p.jugador(de).map(|_| ()).ok_or(Rechazo::NoExiste)
 }
 
 fn permisos(p: &Partida, yo: IdJugador, a: &Accion) -> Result<(), Rechazo> {
     match a {
-        Accion::Mover { cartas, a, .. } => {
-            for id in cartas {
-                if puede_tocar(p, yo, *id).is_err() && !puede_robar(p, yo, *id, a) {
-                    return Err(Rechazo::SinPermiso);
-                }
-            }
-            Ok(())
-        }
         // Lo que está en el campo es público: quien quiera lo toma (se ve en el
         // registro y, si hace falta, el dueño lo recupera igual).
         Accion::TomarControl { cartas, .. } => {
@@ -215,7 +181,17 @@ fn permisos(p: &Partida, yo: IdJugador, a: &Accion) -> Result<(), Rechazo> {
             }
             Ok(())
         }
-        Accion::Girar { cartas, .. }
+        Accion::PorJugador { jugador, accion } => {
+            if p.jugador(*jugador).is_none() {
+                return Err(Rechazo::NoExiste);
+            }
+            if !accion.se_hace_por_otro() {
+                return Err(Rechazo::NoSePuede);
+            }
+            permisos(p, *jugador, accion)
+        }
+        Accion::Mover { cartas, .. }
+        | Accion::Girar { cartas, .. }
         | Accion::BocaAbajo { cartas, .. }
         | Accion::Contador { cartas, .. }
         | Accion::ContadorClave { cartas, .. }
@@ -253,7 +229,9 @@ fn permisos(p: &Partida, yo: IdJugador, a: &Accion) -> Result<(), Rechazo> {
             let _ = (arriba, abajo, cementerio, exilio);
             Ok(())
         }
-        Accion::Mirar { de, .. } | Accion::Buscar { de } => suya(p, yo, *de),
+        Accion::Mirar { de, .. } | Accion::Buscar { de } | Accion::MirarMano { de, .. } => {
+            suya(p, yo, *de)
+        }
         Accion::ResolverExcavacion {
             elegidas, resto, ..
         } => {

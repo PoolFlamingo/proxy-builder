@@ -23,13 +23,15 @@ import { FantasmasVivos } from "./en-vivo/fantasmas";
 import { ataqueAUnCompanero } from "./equipos";
 import { marcarArrastradas } from "./flip";
 import { caraVisible, DorsoGenerico, ImagenCarta } from "./imagen-carta";
-import { MenuBiblioteca, MenuCampo, MenuZona } from "./menus/menu-zonas";
+import { MenuBiblioteca, MenuCampo, MenuManoAjena, MenuZona } from "./menus/menu-zonas";
 import * as op from "./operaciones";
 import { usePantalla } from "./pantalla";
 import { acompanantes, conLasAjenas, puestosDelCampo } from "./puestos-campo";
 
 /** Cuánto se mantiene pulsada una carta para abrir su menú (si está activado), en ms. */
 const MS_SOSTENIDO = 500;
+/** Sin cartas conocidas en una zona oculta (una referencia estable para el store). */
+const SIN_VISIBLES: [number, IdCarta][] = [];
 
 /**
  * **El tablero del jugador** (`capturas/pablo/00.jpg`): el tapete de fondo,
@@ -312,7 +314,7 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 			data-tutorial="mesa-tablero"
 		>
 			<Tapete tapete={tapete} deckId={deckId} />
-			<MenuCampo posicion={() => posMenu.current}>
+			<MenuCampo jugador={yo} posicion={() => posMenu.current}>
 				<div
 					className="absolute"
 					style={{
@@ -547,6 +549,10 @@ function Mano({
 		s.zonas[`${yo}:mano`]?.cartas == null ? cuantasEn(s, zonaDe(yo, "mano")) : 0,
 	);
 	const dorso = useMesa((s) => s.jugadores[yo]?.dorso ?? null);
+	// De la mano de otro, las que conozco (mirada, enseñadas) van boca arriba en su sitio.
+	const visibles = useMesa((s) => s.zonas[`${yo}:mano`]?.visibles ?? SIN_VISIBLES);
+	const ajena = useMesa((s) => s.yo !== null && s.yo !== yo);
+	const conocidas = new Map(ocultas > 0 ? visibles : []);
 	const { w, h } = disp.cartaPequena;
 	const n = ids.length + ocultas;
 	const pos = abanico(disp.mano, n, { w, h });
@@ -559,9 +565,37 @@ function Mano({
 			>
 				{n === 1 ? t("Una carta en la mano") : t("{n} cartas en la mano", { n })}
 			</div>
-			{Array.from({ length: ocultas }, (_, i) => {
+			{ajena && (
+				<MenuManoAjena jugador={yo}>
+					<div
+						className="absolute"
+						style={{ left: disp.mano.x, top: disp.mano.y, width: disp.mano.w, height: disp.mano.h }}
+					/>
+				</MenuManoAjena>
+			)}
+			{[...conocidas].map(([i, id]) => {
 				const p = pos[i];
 				if (!p) return null;
+				return (
+					<CartaMesa
+						key={id}
+						id={id}
+						x={p.x}
+						y={p.y}
+						w={w}
+						h={h}
+						giro={p.giro}
+						z={1000 + i}
+						alPulsar={alPulsar}
+						alDobleClic={alDobleClic}
+						insignias={false}
+						levantar
+					/>
+				);
+			})}
+			{Array.from({ length: ocultas }, (_, i) => {
+				const p = pos[i];
+				if (!p || conocidas.has(i)) return null;
 				return (
 					<div
 						key={i}
@@ -631,11 +665,12 @@ function Zonas({ disp, alPulsar }: { disp: Disposicion; alPulsar: AlPulsar }) {
 	);
 	return (
 		<>
-			<MenuBiblioteca>
+			<MenuBiblioteca jugador={yo}>
 				<div
 					onPointerEnter={() => usePantalla.getState().setZonaSobre("biblioteca")}
 					onPointerLeave={() => usePantalla.getState().setZonaSobre(null)}
-					onClick={() => void op.robar()}
+					// Pulsar la propia roba; la de otro no hace nada sin querer (va por el menú).
+					onClick={() => yo === useMesa.getState().yo && void op.robar()}
 					className="cursor-pointer"
 					data-tutorial="mesa-biblioteca"
 				>
@@ -720,7 +755,7 @@ function ZonaArriba({
 	const arriba = ids[ids.length - 1];
 	const ver = () => usePantalla.getState().abrir({ tipo: "zona", jugador: yo, zona });
 	return (
-		<MenuZona zona={zona}>
+		<MenuZona zona={zona} jugador={yo}>
 			<div onDoubleClick={ver} data-tutorial={`mesa-${zona}`}>
 				{hacerZona(
 					r,

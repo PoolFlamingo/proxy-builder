@@ -21,6 +21,7 @@
 //! | `PonerBolita`, `MoverBolita`, `QuitarBolita` | «Place marker» (§2.2) |
 //! | `Adjuntar` | «Attach to» |
 //! | `FaseFuera`, `NoEndereza`, `Resaltar` | «Phase out», «Doesn't untap», «Highlight» |
+//! | `PorJugador`, `MirarMano` | hacer algo por otro jugador (que robe, muela, descarte…) y mirar su mano (v2) |
 //! | `CopiaFicha`, `DarControl`, `TomarControl` | «Create token copy», «Give to player», quitar el control (Control Magic, Threaten…; v2) |
 //! | `HabilidadEnPila` | «Put ability on stack» |
 //! | `Flecha`, `QuitarFlechas` | «Attack / Target» (`capturas/pablo/12`, `18`) |
@@ -62,6 +63,34 @@ use crate::sparring::{Decision, Intensidad, ReaccionSparring};
 
 /// Sube con cada variante nueva o cambiada de `Accion` o `Cambio`.
 pub const VERSION_CATALOGO: u32 = 2;
+
+impl Accion {
+    /// Lo que se puede hacer por otro jugador (`PorJugador`): lo que afecta a
+    /// sus zonas como si lo hiciera él. Lo de cartas concretas no hace falta
+    /// (se tocan directamente) y lo del turno no se hace por nadie.
+    pub fn se_hace_por_otro(&self) -> bool {
+        matches!(
+            self,
+            Accion::Robar { .. }
+                | Accion::Moler { .. }
+                | Accion::Manifestar { .. }
+                | Accion::ExiliarDeArriba { .. }
+                | Accion::RevelarArriba { .. }
+                | Accion::DeArribaRevelada { .. }
+                | Accion::Barajar
+                | Accion::Rueda { .. }
+                | Accion::Descartar { .. }
+                | Accion::RevelarMano { .. }
+                | Accion::CrearFicha { .. }
+                | Accion::EnderezarTodo
+                | Accion::TodoAlFondoAlAzar { .. }
+                | Accion::BarajarTodoDentro { .. }
+                | Accion::ExiliarTodo { .. }
+                | Accion::AlAzarDe { .. }
+                | Accion::Organizar
+        )
+    }
+}
 
 /// Lo que pide un jugador.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
@@ -515,6 +544,21 @@ pub enum Accion {
     TomarControl {
         cartas: Vec<IdCarta>,
         hasta_fin_de_turno: bool,
+    },
+    /// Hace algo **por otro jugador**, como si lo hiciera él: que robe, muela,
+    /// descarte (al azar o las que se le han visto), baraje, exilie su
+    /// cementerio, enseñe su mano, crear una ficha para él… Solo las acciones
+    /// de `se_hace_por_otro`. Catálogo v2.
+    PorJugador {
+        jugador: IdJugador,
+        accion: Box<Accion>,
+    },
+    /// Mira (o deja de mirar) la mano de otro jugador (Peek, Thoughtseize,
+    /// Telepathy): sus cartas las conoce quien mira, y como las ve, las puede
+    /// mover (descartar la elegida). Catálogo v2.
+    MirarMano {
+        de: IdJugador,
+        si: bool,
     },
     HabilidadEnPila {
         carta: IdCarta,

@@ -1166,5 +1166,21 @@
 	"Dar el control a…": "Dă controlul lui…",
 	"Tomar el control": "Preia controlul",
 	"Tomar el control hasta el final del turno": "Preia controlul până la sfârșitul turei",
-	"Vuelve a {quien} al final del turno": "Se întoarce la {quien} la sfârșitul turei"
+	"Vuelve a {quien} al final del turno": "Se întoarce la {quien} la sfârșitul turei",
+	"{texto} (lo hace {quien})": "{texto} (o face {quien})",
+	"{quien} mira la mano de {a}": "{quien} se uită la mâna lui {a}",
+	"{quien} deja de mirar la mano de {a}": "{quien} nu se mai uită la mâna lui {a}",
+	"Biblioteca de {quien}": "Biblioteca lui {quien}",
+	"Mano de {quien}": "Mâna lui {quien}",
+	"Mirar su mano": "Uită-te la mâna lui",
+	"Dejar de mirar su mano": "Nu te mai uita la mâna lui",
+	"Que enseñe su mano a todos": "Să-și arate mâna tuturor",
+	"Que deje de enseñar su mano": "Să-și ascundă mâna",
+	"Descartar cuántas al azar": "Câte să arunce la întâmplare",
+	"Que descarte al azar…": "Să arunce la întâmplare…",
+	"Que descarte toda la mano": "Să arunce toată mâna",
+	"Que robe…": "Să tragă…",
+	"Para": "Pentru",
+	"tú": "tu",
+	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "Apare pe câmpul de luptă al lui {quien}. Apasă pe cea pe care vrei să o creezi."
 }

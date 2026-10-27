@@ -1,3 +1,4 @@
+import type { Accion } from "@/bindings/Accion";
 import type { IdCarta } from "@/bindings/IdCarta";
 import type { IdJugador } from "@/bindings/IdJugador";
 import type { ModoExilio } from "@/bindings/ModoExilio";
@@ -160,21 +161,34 @@ export function amontonar(id: IdCarta) {
 
 // ── Biblioteca ──
 
-export function robar(n = 1) {
-	return hacer({ que: "robar", n });
+/**
+ * Lo hace quien juega en sus zonas o, si son de otro jugador, **por él**
+ * (`porJugador`: que robe, muela, baraje, exilie su cementerio…), como si lo
+ * hiciera él. En una mesa cada uno puede hacer lo que quiera.
+ */
+export function hacerPor(jugador: IdJugador | null | undefined, accion: Accion) {
+	return jugador == null || jugador === yo()
+		? hacer(accion)
+		: hacer({ que: "porJugador", jugador, accion });
 }
 
-export function moler(n = 1) {
-	return hacer({ que: "moler", n });
+export function robar(n = 1, de?: IdJugador) {
+	return hacerPor(de, { que: "robar", n });
 }
 
-export function exiliarDeArriba(modo: ModoExilio, n = 1) {
-	return hacer({ que: "exiliarDeArriba", n, modo });
+export function moler(n = 1, de?: IdJugador) {
+	return hacerPor(de, { que: "moler", n });
 }
 
+export function exiliarDeArriba(modo: ModoExilio, n = 1, de?: IdJugador) {
+	return hacerPor(de, { que: "exiliarDeArriba", n, modo });
+}
+
+/** Mira la biblioteca de `de` (de fábrica, la propia; la de otro, Gonti, Lantern…). */
 export function mirar(
 	modo: "mirar" | "escrutar" | "vigilar",
 	desde: "arriba" | "abajo" = "arriba",
+	de: IdJugador = yo(),
 ) {
 	const titulo =
 		modo === "escrutar"
@@ -185,24 +199,30 @@ export function mirar(
 					? t("Mirar cuántas de arriba")
 					: t("Mirar cuántas de abajo");
 	pedirNumero(titulo, 1, (n) => {
-		void hacer({ que: "mirar", de: yo(), n, desde }).then((ok) => {
-			if (ok) usePantalla.getState().abrir({ tipo: "mirar", de: yo(), n, desde, modo });
+		void hacer({ que: "mirar", de, n, desde }).then((ok) => {
+			if (ok) usePantalla.getState().abrir({ tipo: "mirar", de, n, desde, modo });
 		});
 	});
 }
 
-export function buscar(filtro: "todo" | "tierra" = "todo") {
-	void hacer({ que: "buscar", de: yo() }).then((ok) => {
-		if (ok) usePantalla.getState().abrir({ tipo: "buscar", de: yo(), filtro });
+/** Busca en la biblioteca de `de` (la de otro: Bribery, Praetor's Grasp…). */
+export function buscar(filtro: "todo" | "tierra" = "todo", de: IdJugador = yo()) {
+	void hacer({ que: "buscar", de }).then((ok) => {
+		if (ok) usePantalla.getState().abrir({ tipo: "buscar", de, filtro });
 	});
 }
 
-export function barajar() {
-	return hacer({ que: "barajar" });
+export function barajar(de?: IdJugador) {
+	return hacerPor(de, { que: "barajar" });
 }
 
-export function enderezarTodo() {
-	return hacer({ que: "enderezarTodo" });
+export function enderezarTodo(de?: IdJugador) {
+	return hacerPor(de, { que: "enderezarTodo" });
+}
+
+/** Mira (o deja de mirar) la mano de otro jugador. */
+export function mirarMano(de: IdJugador, si = true) {
+	return hacer({ que: "mirarMano", de, si });
 }
 
 export function pasarTurno() {

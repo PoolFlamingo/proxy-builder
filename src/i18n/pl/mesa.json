@@ -1188,5 +1188,21 @@
 	"Dar el control a…": "Oddaj kontrolę…",
 	"Tomar el control": "Przejmij kontrolę",
 	"Tomar el control hasta el final del turno": "Przejmij kontrolę do końca tury",
-	"Vuelve a {quien} al final del turno": "Wraca do {quien} na koniec tury"
+	"Vuelve a {quien} al final del turno": "Wraca do {quien} na koniec tury",
+	"{texto} (lo hace {quien})": "{texto} (robi to {quien})",
+	"{quien} mira la mano de {a}": "{quien} ogląda rękę gracza {a}",
+	"{quien} deja de mirar la mano de {a}": "{quien} przestaje oglądać rękę gracza {a}",
+	"Biblioteca de {quien}": "Biblioteka gracza {quien}",
+	"Mano de {quien}": "Ręka gracza {quien}",
+	"Mirar su mano": "Obejrzyj rękę",
+	"Dejar de mirar su mano": "Przestań oglądać rękę",
+	"Que enseñe su mano a todos": "Niech pokaże rękę wszystkim",
+	"Que deje de enseñar su mano": "Niech ukryje rękę",
+	"Descartar cuántas al azar": "Ile odrzucić losowo",
+	"Que descarte al azar…": "Niech odrzuci losowo…",
+	"Que descarte toda la mano": "Niech odrzuci całą rękę",
+	"Que robe…": "Niech dobierze…",
+	"Para": "Dla",
+	"tú": "ty",
+	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "Pojawia się na polu bitwy gracza {quien}. Kliknij tę, którą chcesz stworzyć."
 }

@@ -1152,5 +1152,21 @@
 	"Dar el control a…": "Give control to…",
 	"Tomar el control": "Take control",
 	"Tomar el control hasta el final del turno": "Take control until end of turn",
-	"Vuelve a {quien} al final del turno": "Returns to {quien} at end of turn"
+	"Vuelve a {quien} al final del turno": "Returns to {quien} at end of turn",
+	"{texto} (lo hace {quien})": "{texto} ({quien} lo hace)",
+	"{quien} mira la mano de {a}": "{quien} looks at {a}'s hand",
+	"{quien} deja de mirar la mano de {a}": "{quien} stops looking at {a}'s hand",
+	"Biblioteca de {quien}": "{quien}'s library",
+	"Mano de {quien}": "{quien}'s hand",
+	"Mirar su mano": "Look at their hand",
+	"Dejar de mirar su mano": "Stop looking at their hand",
+	"Que enseñe su mano a todos": "Make them reveal their hand",
+	"Que deje de enseñar su mano": "Make them hide their hand",
+	"Descartar cuántas al azar": "Discard how many at random",
+	"Que descarte al azar…": "Make them discard at random…",
+	"Que descarte toda la mano": "Make them discard their hand",
+	"Que robe…": "Make them draw…",
+	"Para": "For",
+	"tú": "you",
+	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "It appears on {quien}'s battlefield. Click the one you want to create."
 }
