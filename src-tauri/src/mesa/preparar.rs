@@ -473,9 +473,17 @@ pub async fn deck_de_mesa<A: CardApi>(
         datos: &datos,
         colecciones: colecciones_por_id(state)?,
     };
+    // Sin reverso propio, el de la app (el mismo que sale en las hojas), no
+    // uno dibujado por la pantalla.
     let dorso = match &deck.default_back {
         Some(img) => ctx.de_blob(img, CardEdits::default(), true)?,
-        None => RefImagen::Generica,
+        None => match state.blobs.generic_back(&state.db) {
+            Ok(img) => ctx.de_blob(&img, CardEdits::default(), true)?,
+            Err(e) => {
+                tracing::warn!(codigo = ?e.code, "sin el reverso de la app para la mesa");
+                RefImagen::Generica
+            }
+        },
     };
     let total = secciones.len() as u32;
     let hechas = AtomicU32::new(0);
@@ -632,7 +640,9 @@ pub(crate) mod tests {
         let m = deck_de_mesa(&s, &SinRed, &deck, None, &|_, _| {})
             .await
             .unwrap();
-        assert_eq!(PINTADAS.load(Ordering::SeqCst) - antes, 3);
+        // Las tres caras y el reverso de la app (el deck no tiene uno propio).
+        assert_eq!(PINTADAS.load(Ordering::SeqCst) - antes, 4);
+        assert!(matches!(m.dorso, RefImagen::Propia { .. }), "{:?}", m.dorso);
         let caras: Vec<&RefImagen> = m.cartas.iter().map(|c| &c.origen.caras[0]).collect();
         assert!(
             matches!(caras[0], RefImagen::Scryfall { id, cara: 0, url } if id == ID && url.starts_with("https://cards.scryfall.io/"))
