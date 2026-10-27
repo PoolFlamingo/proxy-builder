@@ -26,9 +26,8 @@ import { caraVisible, DorsoGenerico, ImagenCarta } from "./imagen-carta";
 import { MenuBiblioteca, MenuCampo, MenuZona } from "./menus/menu-zonas";
 import * as op from "./operaciones";
 import { usePantalla } from "./pantalla";
+import { acompanantes, puestosDelCampo } from "./puestos-campo";
 
-/** Las cartas adjuntas asoman por arriba a la izquierda de su carta. */
-const ASOMA = 0.22;
 /** Cuánto se mantiene pulsada una carta para abrir su menú (si está activado), en ms. */
 const MS_SOSTENIDO = 500;
 
@@ -121,6 +120,8 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 			const enCampo = c.zona.tipo === "de" && c.zona.zona === "campo";
 			const p0 = punto(e);
 			let empezado = false;
+			// Lo adjunto a lo que se lleva (equipos, auras, montones) se lleva con ello.
+			let con: IdCarta[] = [];
 			// Mantener pulsado (Ajustes > Mesa) abre el menú de la carta.
 			let sostenido: number | undefined;
 			if (useUi.getState().mesa.clicSostenido) {
@@ -145,6 +146,11 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 				if (useRed.getState().papel === "espectador") return; // no se arrastra
 				const p = punto(ev);
 				if (!empezado && !pasaUmbral(p.x - p0.x, p.y - p0.y)) return;
+				if (!empezado && enCampo) {
+					const mesa = useMesa.getState();
+					const delCampo = cartasDe(mesa, zonaDe(tableroDe(mesa), "campo"));
+					con = acompanantes(ids, puestosDelCampo(delCampo, mesa.cartas, dispRef.current).hijas);
+				}
 				empezado = true;
 				window.clearTimeout(sostenido);
 				// En red, los demás ven la carta moverse (20 por segundo).
@@ -160,6 +166,7 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 					y: p.y,
 					x0: p0.x,
 					y0: p0.y,
+					con,
 				});
 			};
 			const suelta = (ev: PointerEvent) => {
@@ -182,7 +189,7 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 				}
 				const destino = soltar(ids, f, p0, enCampo, dispRef.current, ev.shiftKey);
 				if (destino) {
-					marcarArrastradas(ids);
+					marcarArrastradas([...ids, ...con]);
 					useVivo.getState().soltar(origenes, performance.now());
 					// Sigue pintada donde se soltó hasta que llega a su sitio: ni
 					// desaparece un momento ni aparece en el de antes.
@@ -459,30 +466,7 @@ function Campo({
 	const cartas = useMesa((s) => s.cartas);
 	const { w, h } = disp.carta;
 	// Las adjuntas y las amontonadas, junto a su carta.
-	const puestos = new Map<IdCarta, { x: number; y: number; z?: number }>();
-	const hijas = new Map<IdCarta, IdCarta[]>();
-	for (const id of ids) {
-		const c = cartas[id];
-		const madre = c?.adjuntaA ?? c?.agrupadaBajo ?? null;
-		if (madre !== null && cartas[madre]?.pos) hijas.set(madre, [...(hijas.get(madre) ?? []), id]);
-	}
-	for (const id of ids) {
-		const c = cartas[id];
-		if (!c?.pos) continue;
-		const madre = c.adjuntaA ?? c.agrupadaBajo;
-		if (madre !== null && cartas[madre]?.pos) continue;
-		const p = posAPx(disp.campo, c.pos);
-		puestos.set(id, p);
-		(hijas.get(id) ?? []).forEach((hija, i) => {
-			const amontonada = cartas[hija]?.agrupadaBajo === id;
-			const paso = amontonada ? 4 : ASOMA * w;
-			puestos.set(hija, {
-				x: p.x - paso * (i + 1),
-				y: p.y - (amontonada ? 4 : ASOMA * h) * (i + 1),
-				z: Math.max(0, c.z - 1 - i),
-			});
-		});
-	}
+	const { puestos } = puestosDelCampo(ids, cartas, disp);
 	return (
 		<>
 			{ids.map((id) => {
@@ -916,6 +900,8 @@ function Fantasma({ disp }: { disp: Disposicion }) {
 function Arrastrado({ disp }: { disp: Disposicion }) {
 	const a = usePantalla((s) => s.arrastre);
 	const cartas = useMesa((s) => s.cartas);
+	const yo = useMesa(tableroDe);
+	const delCampo = useMesa((s) => cartasDe(s, zonaDe(yo, "campo")));
 	// Ya soltada, cuando todas han llegado se quita (o si el movimiento no llega).
 	useEffect(() => {
 		if (!a?.soltado) return;
@@ -934,8 +920,38 @@ function Arrastrado({ disp }: { disp: Disposicion }) {
 	const dx = a.x - a.x0;
 	const dy = a.y - a.y0;
 	const { w, h } = a.desde === "campo" || a.alCampo ? disp.carta : disp.cartaPequena;
+	// Lo adjunto a lo que se lleva va con ello, detrás, con su misma geometría del campo.
+	const { puestos } = puestosDelCampo(a.con.length > 0 ? delCampo : [], cartas, disp);
 	return (
 		<div className="pointer-events-none absolute inset-0" style={{ zIndex: 9000 }}>
+			{a.con.map((id) => {
+				const c = cartas[id];
+				const p = puestos.get(id);
+				if (!c || !p) return null;
+				// Soltada su carta y ya en su sitio: las reales ocupan el lugar de estas.
+				if (a.soltado) {
+					const madre = c.adjuntaA ?? c.agrupadaBajo;
+					const mc = madre === null ? undefined : cartas[madre];
+					const s = madre === null ? undefined : useVivo.getState().soltadas[madre];
+					if (!mc || !s || !soltadaSigue(s, mc)) return null;
+				}
+				return (
+					<div
+						key={id}
+						className={cn(
+							"absolute top-0 left-0 will-change-transform",
+							!a.soltado && "opacity-90 shadow-2xl",
+						)}
+						style={{
+							width: w,
+							height: h,
+							transform: `translate(${p.x + dx - w / 2}px, ${p.y + dy - h / 2}px) rotate(${c.girada ? 90 : 0}deg)`,
+						}}
+					>
+						<ImagenCarta imagen={caraVisible(c)} ancho={244} />
+					</div>
+				);
+			})}
 			{a.ids.map((id, i) => {
 				const c = cartas[id];
 				if (!c) return null;

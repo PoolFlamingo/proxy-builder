@@ -59,8 +59,11 @@ export const CartaMesa = memo(function CartaMesa({
 	const arrastrando = usePantalla(
 		(s) => !s.arrastre?.soltado && (s.arrastre?.ids.includes(id) ?? false),
 	);
+	// Va con una arrastrada (adjunta o amontonada): se ve en el arrastre hasta que
+	// su carta llega, y entonces se coloca junto a ella sin deslizarse.
+	const acompana = usePantalla((s) => s.arrastre?.con.includes(id) ?? false);
 	// Acaba de soltarse (aquí o por otro): aterriza sin deslizarse desde donde estaba.
-	const aterriza = useVivo((s) => s.soltadas[id] !== undefined);
+	const aterriza = useVivo((s) => s.soltadas[id] !== undefined) || acompana;
 	// Otro la arrastra (o se acaba de soltar y aún no llega su movimiento):
 	// no se pinta en su sitio de antes, se ve el arrastre y nada más.
 	const enVueloAjeno = useVivo((s) =>
@@ -89,7 +92,7 @@ export const CartaMesa = memo(function CartaMesa({
 					"group absolute top-0 left-0 cursor-grab touch-none",
 					!reducir && !aterriza && "transition-[transform] duration-150 ease-out",
 					// Arrastrada (por mí o por otro): no queda su sitio de antes.
-					(arrastrando || enVueloAjeno) && "pointer-events-none opacity-0",
+					(arrastrando || acompana || enVueloAjeno) && "pointer-events-none opacity-0",
 				)}
 				style={{
 					width: w,

@@ -41,6 +41,8 @@ export type ModoObjetivo =
 
 export type Arrastre = {
 	ids: IdCarta[];
+	/** Lo que va con ellas sin llevarlo el puntero: sus adjuntas y amontonadas. */
+	con: IdCarta[];
 	/** De dónde salen (para devolverlas a su sitio si no se sueltan en ninguno). */
 	desde: "campo" | "mano" | "zona";
 	/** El puntero ahora, relativo al tablero. */
