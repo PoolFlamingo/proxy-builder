@@ -1,7 +1,9 @@
+import { Clock } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 import { useLang } from "@/components/language-provider";
 import { useMesa } from "@/stores/mesa-store";
 import { useUi } from "@/stores/ui-store";
+import { esTemporal, nombreContador } from "./contadores";
 import { caraVisible, ImagenCarta } from "./imagen-carta";
 import { ANCHO_PANEL, usePantalla } from "./pantalla";
 import { ptDe } from "./pt";
@@ -72,7 +74,10 @@ export function VistaGrande() {
 						{c.habilidad && <p className="italic">{c.habilidad}</p>}
 						{contadores.map(([tipo, n]) => (
 							<div key={tipo} className="flex justify-between">
-								<span>{tipo}</span>
+								<span className="flex items-center gap-1">
+									{esTemporal(tipo) && <Clock className="size-3 text-amber-300" />}
+									{nombreContador(tipo, t)}
+								</span>
 								<b className="tabular-nums">{n}</b>
 							</div>
 						))}
@@ -104,7 +109,16 @@ export function VistaGrande() {
 								)}
 							</div>
 						)}
-						{c.palabrasClave.length > 0 && <span>{c.palabrasClave.join(" · ")}</span>}
+						{c.palabrasClave.length > 0 && (
+							<span className="flex flex-wrap items-center gap-x-1.5">
+								{c.palabrasClave.map((p) => (
+									<span key={p} className="flex items-center gap-0.5">
+										{esTemporal(p) && <Clock className="size-3 text-amber-300" />}
+										{nombreContador(p, t)}
+									</span>
+								))}
+							</span>
+						)}
 						{c.etiquetas.length > 0 && <span>{c.etiquetas.map((e) => e.texto).join(" · ")}</span>}
 						{c.controlador !== c.dueno && (
 							<span className="text-rose-300">

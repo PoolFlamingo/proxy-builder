@@ -13,7 +13,8 @@ import type { Zona } from "@/bindings/Zona";
 export type DialogoMesa =
 	| { tipo: "numero"; titulo: string; inicial: number; hacer: (n: number) => void }
 	| { tipo: "texto"; titulo: string; max: number; hacer: (texto: string) => void }
-	| { tipo: "contador"; cartas: IdCarta[] }
+	| { tipo: "contador"; cartas: IdCarta[]; temporal?: boolean }
+	| { tipo: "editarContadores"; carta: IdCarta }
 	| { tipo: "pt"; carta: IdCarta }
 	| { tipo: "etiqueta"; carta: IdCarta }
 	| { tipo: "mirar"; de: IdJugador; n: number; desde: Lado; modo: "mirar" | "escrutar" | "vigilar" }

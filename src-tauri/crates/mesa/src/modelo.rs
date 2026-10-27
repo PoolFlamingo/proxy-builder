@@ -159,6 +159,11 @@ pub enum ZonaComun {
     PlanoActivo,
 }
 
+/// Un contador cuyo tipo empieza por esto es **temporal**: se pierde al
+/// terminar el turno (`aplicar::pasar_turno`). Es una convención del tipo (que
+/// es texto libre), así que no hay acción nueva ni cambia `VERSION_CATALOGO`.
+pub const PREFIJO_TEMPORAL: char = '~';
+
 /// Una carta sobre la mesa (o una habilidad en la pila).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

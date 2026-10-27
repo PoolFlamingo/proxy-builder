@@ -20,7 +20,7 @@ use crate::error::Rechazo;
 use crate::ids::{IdCarta, IdJugador};
 use crate::modelo::{
     Bolita, Carta, Eliminacion, Extremo, Flecha, InfoCarta, OrigenCarta, Partida, Pos, RefImagen,
-    RefZona, Senal, Vista, Zona, ZonaComun, POS_MAX,
+    RefZona, Senal, Vista, Zona, ZonaComun, POS_MAX, PREFIJO_TEMPORAL,
 };
 use crate::sparring::{Decision, ReaccionApuntada, TipoReaccion};
 
@@ -543,6 +543,10 @@ fn pasar_turno(q: &mut Partida, t_ms: u64) -> Result<(), Rechazo> {
     }
     for c in q.cartas.values_mut() {
         c.pt.hasta_fin_de_turno = (0, 0);
+        c.contadores
+            .retain(|tipo, _| !tipo.starts_with(PREFIJO_TEMPORAL));
+        c.palabras_clave
+            .retain(|palabra| !palabra.starts_with(PREFIJO_TEMPORAL));
     }
     q.flechas.clear();
     let (siguiente, vuelta) = if q.turno.extra.is_empty() {

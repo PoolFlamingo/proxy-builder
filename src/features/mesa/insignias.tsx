@@ -1,8 +1,9 @@
-import { Hand } from "lucide-react";
+import { Clock, Hand } from "lucide-react";
 import type { VistaCarta } from "@/bindings/VistaCarta";
 import { useLang } from "@/components/language-provider";
 import { cn } from "@/lib/utils";
 import { COLORES_ETIQUETA } from "./colores";
+import { COLOR_DE_MANA, esTemporal, manaDe, nombreContador, sinTemporal } from "./contadores";
 import { ptDe } from "./pt";
 
 /** Abreviatura de un contador para la insignia (los de fuerza y resistencia, enteros). */
@@ -38,22 +39,48 @@ export function Insignias({ c, yo }: { c: VistaCarta; yo: number | null }) {
 			)}
 			{contadores.length > 0 && (
 				<div className="pointer-events-none absolute top-1/2 left-0.5 flex -translate-y-1/2 flex-col gap-0.5">
-					{contadores.map(([tipo, n]) => (
-						<span
-							key={tipo}
-							className="rounded-full bg-black/80 px-1.5 text-[10px] leading-4 font-bold text-white ring-1 ring-white/30"
-						>
-							{corto(tipo)}
-							{n > 1 || tipo.includes("/") ? ` ×${n}` : ""}
-						</span>
-					))}
+					{contadores.map(([tipo, n]) => {
+						const mana = manaDe(tipo);
+						return (
+							<span
+								key={tipo}
+								className={cn(
+									"flex items-center gap-0.5 rounded-full bg-black/80 px-1.5 text-[10px] leading-4 font-bold text-white ring-1",
+									esTemporal(tipo) ? "ring-amber-300/80" : "ring-white/30",
+								)}
+							>
+								{esTemporal(tipo) && <Clock className="size-2.5 text-amber-300" />}
+								{mana ? (
+									<>
+										<span
+											className="size-2.5 rounded-full ring-1 ring-white/50"
+											style={{ background: COLOR_DE_MANA[mana] }}
+										/>
+										{n}
+									</>
+								) : (
+									<>
+										{corto(sinTemporal(tipo))}
+										{n > 1 || tipo.includes("/") ? ` ×${n}` : ""}
+									</>
+								)}
+							</span>
+						);
+					})}
 				</div>
 			)}
 			{c.palabrasClave.length > 0 && (
 				<div className="pointer-events-none absolute right-0.5 bottom-[22%] flex max-w-[70%] flex-wrap justify-end gap-0.5">
 					{c.palabrasClave.map((p) => (
-						<span key={p} className="rounded bg-sky-700/90 px-1 text-[8px] leading-3 text-white">
-							{p}
+						<span
+							key={p}
+							className={cn(
+								"flex items-center gap-0.5 rounded bg-sky-700/90 px-1 text-[8px] leading-3 text-white",
+								esTemporal(p) && "ring-1 ring-amber-300/80",
+							)}
+						>
+							{esTemporal(p) && <Clock className="size-2 text-amber-300" />}
+							{nombreContador(p, t)}
 						</span>
 					))}
 				</div>

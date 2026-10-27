@@ -1028,3 +1028,44 @@ fn ayudas_al_pasar_el_turno_y_contadores_al_entrar() {
     assert!(!m.c(oso).girada, "se endereza en el mío");
     assert_eq!(m.p().turno.ronda, 2);
 }
+
+#[test]
+fn los_contadores_temporales_se_pierden_al_pasar_el_turno() {
+    let mut m = Mesa::nueva(2);
+    let oso = m.al_campo("Bear");
+    for tipo in ["~mana-R", "+1/+1", "~lealtad"] {
+        m.haz(Accion::Contador {
+            cartas: vec![oso],
+            tipo: tipo.into(),
+            delta: 3,
+        });
+    }
+    // Se editan como cualquier otro: fijar el valor y dejarlo en 0 lo quita.
+    m.haz(Accion::FijarContador {
+        carta: oso,
+        tipo: "~mana-R".into(),
+        valor: 1,
+    });
+    assert_eq!(m.c(oso).contadores["~mana-R"], 1);
+    m.haz(Accion::FijarContador {
+        carta: oso,
+        tipo: "~lealtad".into(),
+        valor: 0,
+    });
+    assert!(!m.c(oso).contadores.contains_key("~lealtad"));
+    for palabra in ["~Flying", "Haste"] {
+        m.haz(Accion::ContadorClave {
+            cartas: vec![oso],
+            palabra: palabra.into(),
+            si: true,
+        });
+    }
+    m.haz(Accion::PasarTurno);
+    assert!(
+        !m.c(oso).contadores.contains_key("~mana-R"),
+        "el temporal no sobrevive al fin del turno"
+    );
+    assert_eq!(m.c(oso).contadores["+1/+1"], 3, "el permanente sí");
+    assert!(!m.c(oso).palabras_clave.contains("~Flying"));
+    assert!(m.c(oso).palabras_clave.contains("Haste"));
+}

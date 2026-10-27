@@ -4,6 +4,7 @@ import type { Evento } from "@/bindings/Evento";
 import type { IdCarta } from "@/bindings/IdCarta";
 import { paraTraducir } from "@/components/language-provider";
 import type { Mesa } from "@/stores/mesa-store";
+import { nombreEnRegistro } from "./contadores";
 import { lineaRegistro } from "./sparring/textos";
 
 type T = (es: string, vars?: Record<string, string | number>) => string;
@@ -238,10 +239,10 @@ export function textoDeEvento(
 		vars.delta = a.delta > 0 ? `+${a.delta}` : a.delta;
 	if ("jugador" in a && typeof a.jugador === "number")
 		vars.a = m.jugadores[a.jugador]?.nombre ?? "?";
-	if ("tipo" in a && typeof a.tipo === "string") vars.tipo = a.tipo;
+	if ("tipo" in a && typeof a.tipo === "string") vars.tipo = nombreEnRegistro(a.tipo, t);
 	if (a.que === "mover") vars.destino = destino(a.a, t);
 	if (a.que === "fijarContador") vars.valor = a.valor;
-	if (a.que === "contadorClave") vars.palabra = a.palabra;
+	if (a.que === "contadorClave") vars.palabra = nombreEnRegistro(a.palabra, t);
 	if (a.que === "masXMasY") {
 		vars.x = a.x;
 		vars.y = a.y;

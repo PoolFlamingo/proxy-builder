@@ -9,6 +9,7 @@ import { MirarDialog } from "./mirar";
 import {
 	AtajosDialog,
 	ContadorDialog,
+	EditarContadoresDialog,
 	EtiquetaDialog,
 	InspeccionDialog,
 	NumeroDialog,
@@ -27,7 +28,8 @@ export function DialogosMesa({ deckId }: { deckId: string | null }) {
 			<InspeccionDialog />
 			{d?.tipo === "numero" && <NumeroDialog d={d} />}
 			{d?.tipo === "texto" && <TextoDialog d={d} />}
-			{d?.tipo === "contador" && <ContadorDialog cartas={d.cartas} />}
+			{d?.tipo === "contador" && <ContadorDialog cartas={d.cartas} temporal={d.temporal} />}
+			{d?.tipo === "editarContadores" && <EditarContadoresDialog carta={d.carta} />}
 			{d?.tipo === "pt" && <PtDialog carta={d.carta} />}
 			{d?.tipo === "etiqueta" && <EtiquetaDialog carta={d.carta} />}
 			{d?.tipo === "mirar" && <MirarDialog d={d} />}

@@ -1,9 +1,10 @@
+import { Clock, Minus, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { FilaPt } from "@/bindings/FilaPt";
 import type { IdCarta } from "@/bindings/IdCarta";
 import type { ReglasCarta } from "@/bindings/ReglasCarta";
-import { CampoNumero } from "@/components/campos";
+import { CampoNumero, FilaInterruptor } from "@/components/campos";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +17,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { WithTooltip } from "@/components/ui/with-tooltip";
+import { localeDe } from "@/lib/idiomas";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { useMesa } from "@/stores/mesa-store";
@@ -23,6 +26,7 @@ import { useUi } from "@/stores/ui-store";
 import { hacer } from "../acciones";
 import { ATAJOS, bonita } from "../atajos";
 import { COLORES_ETIQUETA, CONTADORES_CARTA, CONTADORES_OTROS, CONTADORES_PT } from "../colores";
+import { CONTADORES_MANA, conTemporal, esTemporal, nombreContador } from "../contadores";
 import { caraVisible, ImagenCarta } from "../imagen-carta";
 import { type DialogoMesa, usePantalla } from "../pantalla";
 
@@ -104,39 +108,49 @@ export function TextoDialog({ d }: { d: Extract<DialogoMesa, { tipo: "texto" }> 
 }
 
 /** Añadir un contador: el tipo (de la lista o escrito) y cuántos. */
-export function ContadorDialog({ cartas }: { cartas: IdCarta[] }) {
-	const { t } = useLang();
+export function ContadorDialog({
+	cartas,
+	temporal: temporalInicial = false,
+}: {
+	cartas: IdCarta[];
+	temporal?: boolean;
+}) {
+	const { t, lang } = useLang();
 	const [tipo, setTipo] = useState("+1/+1");
 	const [n, setN] = useState(1);
+	const [temporal, setTemporal] = useState(temporalInicial);
 	const ok = () => {
 		cerrar();
-		void hacer({ que: "contador", cartas, tipo: tipo.trim(), delta: n });
+		void hacer({
+			que: "contador",
+			cartas,
+			tipo: conTemporal(tipo.trim(), temporal),
+			delta: n,
+		});
 	};
 	// El campo de texto es el tipo y, a la vez, el filtro del catálogo.
 	const filtro = tipo.trim().toLowerCase();
 	const secciones = [
-		{
-			titulo: t("Habituales"),
-			items: CONTADORES_CARTA.map((c) => ({ tipo: c.tipo, nombre: t(c.nombre) })),
-		},
+		{ titulo: t("Habituales"), items: CONTADORES_CARTA, ordenar: false },
+		{ titulo: t("Maná"), items: CONTADORES_MANA, ordenar: false },
 		{
 			titulo: t("Fuerza y resistencia"),
 			items: CONTADORES_PT.map((c) => ({ tipo: c, nombre: c })),
+			ordenar: false,
 		},
-		{
-			titulo: t("Otros contadores"),
-			items: CONTADORES_OTROS.map((c) => ({ tipo: c, nombre: c })),
-		},
+		{ titulo: t("Otros contadores"), items: CONTADORES_OTROS, ordenar: true },
 	]
 		.map((sec) => ({
 			...sec,
-			items: sec.items.filter(
-				(c) =>
-					filtro === "" ||
-					filtro === c.tipo.toLowerCase() ||
-					c.tipo.toLowerCase().includes(filtro) ||
-					c.nombre.toLowerCase().includes(filtro),
-			),
+			items: sec.items
+				.map((c) => ({ tipo: c.tipo, nombre: t(c.nombre) }))
+				.sort((a, b) => (sec.ordenar ? a.nombre.localeCompare(b.nombre, localeDe(lang)) : 0))
+				.filter(
+					(c) =>
+						filtro === "" ||
+						c.tipo.toLowerCase().includes(filtro) ||
+						c.nombre.toLowerCase().includes(filtro),
+				),
 		}))
 		.filter((sec) => sec.items.length > 0);
 	return (
@@ -149,7 +163,7 @@ export function ContadorDialog({ cartas }: { cartas: IdCarta[] }) {
 					<Input
 						value={tipo}
 						onChange={(e) => setTipo(e.target.value)}
-						maxLength={30}
+						maxLength={29}
 						placeholder={t("Otro tipo…")}
 						className="h-8 flex-1 text-xs"
 					/>
@@ -160,7 +174,13 @@ export function ContadorDialog({ cartas }: { cartas: IdCarta[] }) {
 						ariaLabel={t("Cantidad")}
 					/>
 				</div>
-				<ScrollArea viewportClassName="max-h-[45vh]">
+				<FilaInterruptor
+					etiqueta={t("Temporal")}
+					ayuda={t("Se pierde al terminar el turno.")}
+					valor={temporal}
+					onChange={setTemporal}
+				/>
+				<ScrollArea viewportClassName="max-h-[40vh]">
 					<div className="flex flex-col gap-2.5 p-1">
 						{secciones.map((sec) => (
 							<div key={sec.titulo} className="flex flex-col gap-1.5">
@@ -173,7 +193,6 @@ export function ContadorDialog({ cartas }: { cartas: IdCarta[] }) {
 											key={c.tipo}
 											size="sm"
 											variant={tipo.trim() === c.tipo ? "default" : "outline"}
-											className={cn("capitalize", c.tipo.includes("/") && "normal-case")}
 											onClick={() => setTipo(c.tipo)}
 										>
 											{c.nombre}
@@ -191,6 +210,138 @@ export function ContadorDialog({ cartas }: { cartas: IdCarta[] }) {
 					<Button onClick={ok} disabled={!tipo.trim() || n === 0}>
 						{t("Añadir")}
 					</Button>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
+	);
+}
+
+type FilaDeContador = { tipo: string; n: number; clave: boolean };
+
+/**
+ * **Editar los contadores de una carta** sin quitarlos y volverlos a poner:
+ * cambiar la cantidad (con los botones o escribiéndola), quitarlos, y pasarlos
+ * de permanentes a temporales (se pierden al terminar el turno) y al revés.
+ * Salen en dos grupos; los de palabra clave van sin cantidad.
+ */
+export function EditarContadoresDialog({ carta }: { carta: IdCarta }) {
+	const { t } = useLang();
+	const c = useMesa((s) => s.cartas[carta]);
+	useEffect(() => {
+		if (!c) cerrar();
+	}, [c]);
+	if (!c) return null;
+	const filas: FilaDeContador[] = [
+		...Object.entries(c.contadores).map(([tipo, n]) => ({ tipo, n, clave: false })),
+		...c.palabrasClave.map((tipo) => ({ tipo, n: 1, clave: true })),
+	];
+	const grupos = [
+		{ titulo: t("Contadores permanentes"), temporal: false },
+		{ titulo: t("Contadores temporales"), temporal: true },
+	]
+		.map((g) => ({ ...g, filas: filas.filter((f) => esTemporal(f.tipo) === g.temporal) }))
+		.filter((g) => g.filas.length > 0);
+	const sumar = (tipo: string, delta: number) =>
+		hacer({ que: "contador", cartas: [carta], tipo, delta });
+	const fijar = (tipo: string, valor: number) =>
+		hacer({ que: "fijarContador", carta, tipo, valor });
+	const clave = (palabra: string, si: boolean) =>
+		hacer({ que: "contadorClave", cartas: [carta], palabra, si });
+	// Se pone el nuevo antes de quitar el viejo: si algo falla, no se pierde nada.
+	const alternar = async (f: FilaDeContador) => {
+		const nuevo = conTemporal(f.tipo, !esTemporal(f.tipo));
+		if (f.clave) {
+			if (await clave(nuevo, true)) await clave(f.tipo, false);
+		} else if (await sumar(nuevo, f.n)) {
+			await fijar(f.tipo, 0);
+		}
+	};
+	return (
+		<Dialog open onOpenChange={(o) => !o && cerrar()}>
+			<DialogContent className="sm:max-w-md" cambiosSinGuardar={false}>
+				<DialogHeader>
+					<DialogTitle>{t("Editar contadores")}</DialogTitle>
+					<DialogDescription>{c.origen?.nombre}</DialogDescription>
+				</DialogHeader>
+				<ScrollArea viewportClassName="max-h-[55vh]">
+					<div className="flex flex-col gap-3 p-1">
+						{grupos.length === 0 && (
+							<p className="text-xs text-muted-foreground">
+								{t("Esta carta no tiene contadores.")}
+							</p>
+						)}
+						{grupos.map((g) => (
+							<div key={g.titulo} className="flex flex-col gap-1.5">
+								<span className="flex items-center gap-1 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+									{g.temporal && <Clock className="size-3" />}
+									{g.titulo}
+								</span>
+								{g.filas.map((f) => (
+									<div key={`${f.clave}${f.tipo}`} className="flex items-center gap-1.5">
+										<span className="min-w-0 flex-1 truncate text-xs">
+											{nombreContador(f.tipo, t)}
+										</span>
+										{!f.clave && (
+											<>
+												<Button
+													size="icon-sm"
+													variant="outline"
+													aria-label={t("Quitar uno")}
+													onClick={() => void sumar(f.tipo, -1)}
+												>
+													<Minus />
+												</Button>
+												<CampoNumero
+													valor={f.n}
+													onChange={(v) => void fijar(f.tipo, v ?? 0)}
+													min={-1_000_000}
+													max={1_000_000}
+													paso={1}
+													ancho="w-16"
+													ariaLabel={t("Cantidad")}
+												/>
+												<Button
+													size="icon-sm"
+													variant="outline"
+													aria-label={t("Añadir uno")}
+													onClick={() => void sumar(f.tipo, 1)}
+												>
+													<Plus />
+												</Button>
+											</>
+										)}
+										<WithTooltip
+											content={
+												g.temporal
+													? t("Hacerlo permanente")
+													: t("Hacerlo temporal (se pierde al terminar el turno)")
+											}
+										>
+											<Button
+												size="icon-sm"
+												variant={g.temporal ? "default" : "outline"}
+												aria-label={g.temporal ? t("Hacerlo permanente") : t("Hacerlo temporal")}
+												onClick={() => void alternar(f)}
+											>
+												<Clock />
+											</Button>
+										</WithTooltip>
+										<Button
+											size="icon-sm"
+											variant="outline"
+											aria-label={t("Quitar")}
+											onClick={() => void (f.clave ? clave(f.tipo, false) : fijar(f.tipo, 0))}
+										>
+											<Trash2 />
+										</Button>
+									</div>
+								))}
+							</div>
+						))}
+					</div>
+				</ScrollArea>
+				<DialogFooter>
+					<Button onClick={cerrar}>{t("Cerrar")}</Button>
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>

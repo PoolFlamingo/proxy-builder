@@ -7,11 +7,11 @@ function numero(s: string | null | undefined): number | null {
 	return Number.isNaN(n) ? null : n;
 }
 
-const CONTADOR_PT = /^([+-])(\d+)\/([+-])(\d+)$/;
+const CONTADOR_PT = /^~?([+-])(\d+)\/([+-])(\d+)$/;
 
 /**
  * Lo que suman los contadores de fuerza y resistencia de una carta: cada
- * `+X/+Y` o `-X/-Y` (+1/+1, +2/+2, -0/-1…) por su cantidad. Los demás tipos
+ * `+X/+Y` o `-X/-Y` (+1/+1, +2/+2, -0/-1…), también temporal (`~`), por su cantidad. Los demás tipos
  * no cuentan.
  */
 export function bonoDeContadores(contadores: Record<string, number>): [number, number] {

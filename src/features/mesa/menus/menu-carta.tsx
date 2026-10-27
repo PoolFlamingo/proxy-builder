@@ -2,6 +2,7 @@ import {
 	ArrowDownToLine,
 	ArrowUpToLine,
 	Ban,
+	Clock,
 	Copy,
 	Crosshair,
 	Crown,
@@ -18,6 +19,7 @@ import {
 	Minus,
 	MoveRight,
 	Paperclip,
+	Pencil,
 	Plus,
 	RotateCw,
 	Shuffle,
@@ -50,6 +52,7 @@ import { useRed } from "@/stores/red-store";
 import { destino, destinoComun, hacer, mover, objetivo, sitio } from "../acciones";
 import { bonita, teclaPara } from "../atajos";
 import { COLORES, PALABRAS_CLAVE } from "../colores";
+import { conTemporal, nombreContador } from "../contadores";
 import * as op from "../operaciones";
 import { pedirNumero, usePantalla } from "../pantalla";
 
@@ -201,6 +204,23 @@ function Contadores({ c }: { c: VistaCarta }) {
 					<Tecla nombre="Añadir contador" />
 				</ContextMenuItem>
 				<ContextMenuItem
+					onSelect={() =>
+						usePantalla
+							.getState()
+							.abrir({ tipo: "contador", cartas: objetivo(c.id), temporal: true })
+					}
+				>
+					<Clock />
+					{t("Añadir contador temporal…")}
+				</ContextMenuItem>
+				<ContextMenuItem
+					onSelect={() => usePantalla.getState().abrir({ tipo: "editarContadores", carta: c.id })}
+					disabled={Object.keys(c.contadores).length + c.palabrasClave.length === 0}
+				>
+					<Pencil />
+					{t("Editar contadores…")}
+				</ContextMenuItem>
+				<ContextMenuItem
 					onSelect={() => hacer({ que: "multiplicarContadores", carta: c.id, por: 2 })}
 					disabled={Object.keys(c.contadores).length === 0}
 				>
@@ -209,23 +229,51 @@ function Contadores({ c }: { c: VistaCarta }) {
 				</ContextMenuItem>
 				<ContextMenuSub>
 					<ContextMenuSubTrigger>{t("Contadores de palabra clave")}</ContextMenuSubTrigger>
-					<ContextMenuSubContent className="text-xs">
+					<ContextMenuSubContent className="max-h-80 overflow-y-auto text-xs">
 						{PALABRAS_CLAVE.map((p) => (
 							<ContextMenuItem
-								key={p}
+								key={p.tipo}
 								onSelect={() =>
 									hacer({
 										que: "contadorClave",
 										cartas: objetivo(c.id),
-										palabra: p,
-										si: !c.palabrasClave.includes(p),
+										palabra: p.tipo,
+										si: !c.palabrasClave.includes(p.tipo),
 									})
 								}
 							>
-								{c.palabrasClave.includes(p) ? "✓ " : ""}
-								{p}
+								{c.palabrasClave.includes(p.tipo) ? "✓ " : ""}
+								{t(p.nombre)}
 							</ContextMenuItem>
 						))}
+						<ContextMenuSeparator />
+						<ContextMenuSub>
+							<ContextMenuSubTrigger>
+								<Clock />
+								{t("Hasta el final del turno")}
+							</ContextMenuSubTrigger>
+							<ContextMenuSubContent className="max-h-80 overflow-y-auto text-xs">
+								{PALABRAS_CLAVE.map((p) => {
+									const temporal = conTemporal(p.tipo, true);
+									return (
+										<ContextMenuItem
+											key={temporal}
+											onSelect={() =>
+												hacer({
+													que: "contadorClave",
+													cartas: objetivo(c.id),
+													palabra: temporal,
+													si: !c.palabrasClave.includes(temporal),
+												})
+											}
+										>
+											{c.palabrasClave.includes(temporal) ? "✓ " : ""}
+											{t(p.nombre)}
+										</ContextMenuItem>
+									);
+								})}
+							</ContextMenuSubContent>
+						</ContextMenuSub>
 					</ContextMenuSubContent>
 				</ContextMenuSub>
 				{Object.keys(c.contadores).length > 0 && (
@@ -237,7 +285,7 @@ function Contadores({ c }: { c: VistaCarta }) {
 								onSelect={() => hacer({ que: "fijarContador", carta: c.id, tipo, valor: 0 })}
 							>
 								<Trash2 />
-								{t("Quitar los de {tipo}", { tipo })}
+								{t("Quitar los de {tipo}", { tipo: nombreContador(tipo, t) })}
 							</ContextMenuItem>
 						))}
 					</>
