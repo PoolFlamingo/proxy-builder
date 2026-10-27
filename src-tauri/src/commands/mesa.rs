@@ -236,12 +236,37 @@ async fn abrir(
     Ok(())
 }
 
+/// Lanza un trabajo largo de la mesa (preparar decks, unirse, empezar).
+///
+/// 🛑 Si la tarea entra en pánico, el aviso de que terminó (`mesa://done`) no
+/// llegaría nunca y la pantalla se quedaría en «Preparando la mesa…» para
+/// siempre. Una segunda tarea la espera y, si acabó mal, avisa ella.
+pub(crate) fn lanzar_trabajo<F>(app: AppHandle, job_id: u32, trabajo: F)
+where
+    F: std::future::Future<Output = ()> + Send + 'static,
+{
+    let interior = tauri::async_runtime::spawn(trabajo);
+    tauri::async_runtime::spawn(async move {
+        if let Err(e) = interior.await {
+            tracing::error!(job_id, error = %e, "el trabajo de la mesa terminó sin avisar");
+            app.state::<AppState>().jobs.baja(job_id);
+            let _ = app.emit(
+                "mesa://done",
+                MesaDoneEvent {
+                    job_id,
+                    error: Some(AppError::new(ErrorCode::Internal)),
+                },
+            );
+        }
+    });
+}
+
 /// Empieza una partida. Devuelve el id del trabajo (`mesa://progress`,
 /// `mesa://done`).
 #[tauri::command]
 pub fn mesa_empezar(app: AppHandle, state: State<'_, AppState>, config: ConfigMesa) -> u32 {
     let (job_id, _) = state.jobs.alta();
-    tauri::async_runtime::spawn(async move {
+    lanzar_trabajo(app.clone(), job_id, async move {
         let estado = app.state::<AppState>();
         let r = {
             let _marca = estado.trabajo();
@@ -325,7 +350,7 @@ async fn retomar(app: &AppHandle, state: &AppState, job_id: u32) -> AppResult<()
 #[tauri::command]
 pub fn mesa_retomar(app: AppHandle, state: State<'_, AppState>) -> u32 {
     let (job_id, _) = state.jobs.alta();
-    tauri::async_runtime::spawn(async move {
+    lanzar_trabajo(app.clone(), job_id, async move {
         let estado = app.state::<AppState>();
         let r = {
             let _marca = estado.trabajo();

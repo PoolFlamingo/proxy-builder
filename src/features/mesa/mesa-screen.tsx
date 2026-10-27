@@ -69,10 +69,10 @@ export function MesaScreen() {
 
 	if (!comprobado) return null;
 	if (!activa) return <EntradaMesa />;
-	return <Mesa deckId={deckIds[0] ?? null} />;
+	return <Mesa deckIds={deckIds} />;
 }
 
-function Mesa({ deckId }: { deckId: string | null }) {
+function Mesa({ deckIds }: { deckIds: string[] }) {
 	const { t } = useLang();
 	const papel = useRed((s) => s.papel);
 	const repitiendo = useRepeticion((s) => s.activa !== null);
@@ -85,11 +85,19 @@ function Mesa({ deckId }: { deckId: string | null }) {
 	const [preguntaEditar, setPreguntaEditar] = useState(false);
 	// Siendo anfitrión: si al salir la partida sigue con otro jugador.
 	const [puedeCeder, setPuedeCeder] = useState(false);
-	const [deckId2, setDeckId2] = useState(deckId);
+	// Los decks de la partida, por asiento (el estado se leyó antes de empezar y puede venir vacío).
+	const [ids, setIds] = useState(deckIds);
 	useEffect(() => {
-		if (deckId) return setDeckId2(deckId);
-		void call("mesa_estado").then((e) => setDeckId2(e.deckIds[0] ?? null));
-	}, [deckId]);
+		if (deckIds.length > 0) return setIds(deckIds);
+		void call("mesa_estado").then((e) => setIds(e.deckIds));
+	}, [deckIds]);
+	// El deck de quien juega ahora (para editarlo y para su tapete).
+	const asientos = useMesa((s) => s.asientos);
+	const yoReal = useMesa((s) => s.yo);
+	const deckId2 =
+		papel === null
+			? (ids[Math.max(0, asientos.indexOf(yoReal ?? -1))] ?? ids[0] ?? null)
+			: (ids[0] ?? null);
 
 	const editarDeck = async () => {
 		if (!deckId2) return;
@@ -100,7 +108,7 @@ function Mesa({ deckId }: { deckId: string | null }) {
 
 	return (
 		<div className="relative isolate size-full overflow-hidden bg-black">
-			<Mesas deckId={deckId2} />
+			<Mesas deckIds={ids} />
 			{repitiendo ? (
 				<BarraRepeticion />
 			) : (

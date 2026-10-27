@@ -7,6 +7,7 @@ import type { VistaJugador } from "@/bindings/VistaJugador";
 import { ContenidoContextual } from "@/components/contenido-contextual";
 import { useLang } from "@/components/language-provider";
 import { ContextMenu, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
+import { urlMesa } from "@/lib/image-url";
 import { cn } from "@/lib/utils";
 import { cartasDe, cuantasEn, useMesa } from "@/stores/mesa-store";
 import { useOriginales } from "@/stores/originales-store";
@@ -157,6 +158,14 @@ export const TableroMini = memo(function TableroMini({
 					)}
 					style={{ borderColor: color }}
 				>
+					{conCampo && j.tapete && urlMesa(j.tapete, 745) && (
+						<img
+							src={urlMesa(j.tapete, 745) ?? undefined}
+							alt=""
+							draggable={false}
+							className="pointer-events-none absolute inset-0 -z-10 size-full object-cover opacity-70"
+						/>
+					)}
 					<Bocadillo jugador={jugador} className="absolute bottom-1 left-1" />
 					<span
 						className="absolute inset-x-0 top-0 flex items-center gap-1.5 px-1.5 text-[11px] leading-none"

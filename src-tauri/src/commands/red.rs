@@ -11,6 +11,7 @@ use tauri::{AppHandle, Emitter, Manager, State};
 use ts_rs::TS;
 
 use super::mesa::{preparar_mazo, MesaDoneEvent, Progreso};
+use crate::commands::mesa::lanzar_trabajo;
 use crate::error::{AppError, AppResult, ErrorCode};
 use crate::mesa::sesion::ConfigMesa;
 use crate::red::anfitrion::{atender, empezar_partida, Anfitrion};
@@ -225,7 +226,7 @@ pub fn red_unirse(
         Rol::Espectador => None,
     };
     let (job_id, _) = state.jobs.alta();
-    tauri::async_runtime::spawn(async move {
+    lanzar_trabajo(app.clone(), job_id, async move {
         let estado = app.state::<AppState>();
         let r = async {
             let _marca = estado.trabajo();
@@ -291,7 +292,7 @@ pub fn red_empezar(
     }
     config.intensidad = Intensidad::Apagado;
     let (job_id, _) = state.jobs.alta();
-    tauri::async_runtime::spawn(async move {
+    lanzar_trabajo(app.clone(), job_id, async move {
         let estado = app.state::<AppState>();
         let r = async {
             let _marca = estado.trabajo();

@@ -28,6 +28,7 @@ import { caraVisible, DorsoGenerico, ImagenCarta } from "./imagen-carta";
 import { MenuBiblioteca, MenuCampo, MenuManoAjena, MenuZona } from "./menus/menu-zonas";
 import * as op from "./operaciones";
 import { usePantalla } from "./pantalla";
+import { manoOcultaPorTurno } from "./privacidad";
 import { acompanantes, conLasAjenas, puestosDelCampo } from "./puestos-campo";
 
 /** Cuánto se mantiene pulsada una carta para abrir su menú (si está activado), en ms. */
@@ -422,9 +423,12 @@ function Tapete({
 		let vivo = true;
 		void (async () => {
 			try {
-				const t =
-					(deckId ? await call("mesa_tapete_get", { deck: deckId }) : null) ??
-					(await call("mesa_tapete_get", { deck: null }));
+				// Sin deck (el tablero de otro jugador) no se leen mis ajustes: vale el
+				// tapete que la partida preparó para él.
+				const t = deckId
+					? ((await call("mesa_tapete_get", { deck: deckId })) ??
+						(await call("mesa_tapete_get", { deck: null })))
+					: null;
 				if (vivo) setPropio(t);
 			} catch {
 				if (vivo) setPropio(null);
@@ -545,18 +549,23 @@ function Mano({
 }) {
 	const { t } = useLang();
 	const yo = useMesa(tableroDe);
-	const ids = useMesa((s) => cartasDe(s, zonaDe(yo, "mano")));
+	const todas = useMesa((s) => cartasDe(s, zonaDe(yo, "mano")));
+	// En una partida local, la mano de quien no tiene el turno no se enseña.
+	const enRed = useRed((s) => s.papel !== null);
+	const privada = useMesa((s) => manoOcultaPorTurno(s, yo, enRed));
+	const ids = privada ? NINGUNA : todas;
 	// La mano de otro (en red): solo cuántas, boca abajo.
 	const ocultas = useMesa((s) =>
 		s.zonas[`${yo}:mano`]?.cartas == null ? cuantasEn(s, zonaDe(yo, "mano")) : 0,
 	);
+	const ocultasTotal = ocultas + (privada ? todas.length : 0);
 	const dorso = useMesa((s) => s.jugadores[yo]?.dorso ?? null);
 	// De la mano de otro, las que conozco (mirada, enseñadas) van boca arriba en su sitio.
 	const visibles = useMesa((s) => s.zonas[`${yo}:mano`]?.visibles ?? SIN_VISIBLES);
 	const ajena = useMesa((s) => s.yo !== null && s.yo !== yo);
-	const conocidas = new Map(ocultas > 0 ? visibles : []);
+	const conocidas = new Map(ocultas > 0 && !privada ? visibles : []);
 	const { w, h } = disp.cartaPequena;
-	const n = ids.length + ocultas;
+	const n = ids.length + ocultasTotal;
 	const pos = abanico(disp.mano, n, { w, h });
 	return (
 		<>
@@ -595,7 +604,7 @@ function Mano({
 					/>
 				);
 			})}
-			{Array.from({ length: ocultas }, (_, i) => {
+			{Array.from({ length: ocultasTotal }, (_, i) => {
 				const p = pos[i];
 				if (!p || conocidas.has(i)) return null;
 				return (
@@ -616,7 +625,7 @@ function Mano({
 				);
 			})}
 			{ids.map((id, j) => {
-				const i = ocultas + j;
+				const i = ocultasTotal + j;
 				const p = pos[i];
 				if (!p) return null;
 				return (

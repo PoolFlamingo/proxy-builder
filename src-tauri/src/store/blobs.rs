@@ -215,32 +215,76 @@ fn hex(bytes: &[u8]) -> String {
     s
 }
 
+/// El número de cada escritura de este proceso: nombra su temporal.
+static ESCRITURAS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 /// Escribe a un temporal en la misma carpeta y lo renombra: un corte a mitad
 /// nunca deja un fichero a medias con el nombre bueno.
+///
+/// 🛑 El temporal es **propio de cada escritura** (proceso y número): la
+/// preparación de la mesa escribe en paralelo, y dos copias de la misma carta
+/// (las tierras básicas, las fichas repetidas) o dos decks que la comparten
+/// escriben el mismo destino a la vez. Con un temporal fijo, uno lo renombraba
+/// y al otro le faltaba el fichero («no se puede escribir en disco»).
 pub fn escribir_atomico(destino: &Path, bytes: &[u8]) -> AppResult<()> {
     let dir = destino
         .parent()
         .ok_or_else(|| AppError::new(ErrorCode::Io).with("detalle", "ruta sin carpeta"))?;
     std::fs::create_dir_all(dir)?;
+    let n = ESCRITURAS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let tmp = destino.with_extension(format!(
-        "{}.part",
+        "{}.{}-{n}.part",
         destino
             .extension()
             .and_then(|e| e.to_str())
-            .unwrap_or("bin")
+            .unwrap_or("bin"),
+        std::process::id()
     ));
-    {
+    let escrito = (|| -> std::io::Result<()> {
         let mut f = std::fs::File::create(&tmp)?;
         f.write_all(bytes)?;
         f.sync_all()?;
+        std::fs::rename(&tmp, destino)
+    })();
+    if let Err(e) = escrito {
+        let _ = std::fs::remove_file(&tmp);
+        return Err(e.into());
     }
-    std::fs::rename(&tmp, destino)?;
     Ok(())
 }
 
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
+
+    #[test]
+    fn escribir_a_la_vez_el_mismo_destino_no_falla() {
+        let dir = std::env::temp_dir().join(format!("pb-escritura-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let destino = dir.join("carta.jpg");
+        let hilos: Vec<_> = (0..8)
+            .map(|_| {
+                let d = destino.clone();
+                std::thread::spawn(move || {
+                    for _ in 0..60 {
+                        escribir_atomico(&d, b"contenido de la carta").unwrap();
+                    }
+                })
+            })
+            .collect();
+        for h in hilos {
+            h.join().unwrap();
+        }
+        assert_eq!(std::fs::read(&destino).unwrap(), b"contenido de la carta");
+        // No quedan temporales.
+        let sobran = std::fs::read_dir(&dir)
+            .unwrap()
+            .filter_map(Result::ok)
+            .filter(|e| e.path().extension().is_some_and(|x| x == "part"))
+            .count();
+        assert_eq!(sobran, 0);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 
     /// Un PNG de verdad (decodificable) de w×h, para los tests.
     pub fn png(w: u32, h: u32, semilla: u8) -> Vec<u8> {

@@ -17,6 +17,7 @@ import {
 } from "./disposicion";
 import { PanelPlanes } from "./planes";
 import { PanelPlanar } from "./plano-activo";
+import { deckDelTablero } from "./privacidad";
 import { useDisposicion } from "./selector-disposicion";
 import { Tablero } from "./tablero";
 import { TableroMini } from "./tablero-mini";
@@ -28,8 +29,14 @@ import { VidaJugador } from "./vida-jugador";
  * quien se mira es el interactivo y los demás son miniaturas que, al pulsarlas,
  * pasan a ser el grande. En «dos tableros» el separador se arrastra.
  */
-export function Mesas({ deckId }: { deckId: string | null }) {
+export function Mesas({ deckIds }: { deckIds: string[] }) {
 	const { n, config } = useDisposicion();
+	// Cada tablero con el tapete de su jugador (no el del primero).
+	const asientos = useMesa(useShallow((s) => s.asientos));
+	const viendo = useMesa(tableroDe);
+	const enRed = useRed((s) => s.papel !== null);
+	const esAnfitrion = useRed((s) => s.papel === "anfitrion");
+	const deckId = deckDelTablero(deckIds, asientos, viendo, enRed, esAnfitrion);
 	if (n < 2 || config.modo === "unico") {
 		return (
 			<div className="relative size-full">

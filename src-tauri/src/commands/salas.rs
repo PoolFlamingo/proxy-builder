@@ -10,6 +10,7 @@ use tauri::{AppHandle, Emitter, Manager, State};
 use ts_rs::TS;
 
 use super::mesa::{preparar_mazo, MesaDoneEvent, Progreso};
+use crate::commands::mesa::lanzar_trabajo;
 use crate::error::{AppError, AppResult, ErrorCode};
 use crate::red::servidor::cliente::Cliente;
 use crate::red::servidor::mensajes::{
@@ -417,7 +418,7 @@ pub fn salas_deck(
         .con_salon(|s| s.clone())
         .ok_or_else(|| AppError::new(ErrorCode::NotFound).with("motivo", "sin_sala"))?;
     let (job_id, _) = state.jobs.alta();
-    tauri::async_runtime::spawn(async move {
+    lanzar_trabajo(app.clone(), job_id, async move {
         let estado = app.state::<AppState>();
         let r = async {
             let _marca = estado.trabajo();
