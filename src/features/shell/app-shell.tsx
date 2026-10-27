@@ -98,10 +98,10 @@ export function AppShell({
 						<BookOpen className="size-3.5" />
 						{t("Biblioteca")}
 					</ToggleGroupItem>
-					<ToggleGroupItem value="mesa" className="gap-1.5 px-3 text-xs">
+					<ToggleGroupItem value="mesa" className="group gap-1.5 px-3 text-xs">
 						<Swords className="size-3.5" />
 						{t("Jugar")}
-						<span className="rounded-full bg-primary/15 px-1.5 text-[9px] font-semibold uppercase leading-4 text-primary">
+						<span className="rounded-full bg-primary/15 px-1.5 text-[9px] font-semibold uppercase leading-4 text-primary group-data-[state=on]:bg-accent-foreground/20 group-data-[state=on]:text-accent-foreground">
 							{t("Beta")}
 						</span>
 					</ToggleGroupItem>
