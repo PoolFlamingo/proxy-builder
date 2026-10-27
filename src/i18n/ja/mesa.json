@@ -253,7 +253,6 @@
 	"Mirar las de abajo…": "下から見る…",
 	"Escrutar…": "占術…",
 	"Vigilar…": "諜報…",
-	"Revelar y lanzar…": "公開して唱える…",
 	"Revelar la de arriba": "一番上を公開",
 	"Dejar de jugar con la de arriba revelada": "一番上を公開したままプレイするのをやめる",
 	"Jugar con la de arriba revelada": "一番上を公開したままプレイ",
@@ -1119,5 +1118,11 @@
 	"Cementerios y exilios": "墓地と追放領域",
 	"Ver todas las cartas ({zona})": "すべてのカードを見る（{zona}）",
 	"Dejar de revelar la de arriba": "一番上のカードの公開をやめる",
-	"{quien} deja de revelar la carta de arriba": "{quien} が一番上のカードの公開をやめる"
+	"{quien} deja de revelar la carta de arriba": "{quien} が一番上のカードの公開をやめる",
+	"Veces": "回数",
+	"Coste de maná de la carta (N)": "カードのマナ総量 (N)",
+	"Siguiente revelación": "次の公開",
+	"Revelación {vez} de {veces}. Elige qué haces con cada carta; el resto va abajo.": "{veces} 回中 {vez} 回目の公開。各カードをどうするか選んでください。残りは一番下へ。",
+	"Cascada, varias veces…": "続唱（複数回）…",
+	"Revelar y lanzar… (cascada, descubrir)": "公開して唱える…（続唱、発見）"
 }

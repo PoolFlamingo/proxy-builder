@@ -253,7 +253,6 @@
 	"Mirar las de abajo…": "Unterste Karten ansehen…",
 	"Escrutar…": "Hellsicht…",
 	"Vigilar…": "Überwachen…",
-	"Revelar y lanzar…": "Aufdecken und wirken…",
 	"Revelar la de arriba": "Oberste Karte aufdecken",
 	"Dejar de jugar con la de arriba revelada": "Nicht mehr mit aufgedeckter oberster Karte spielen",
 	"Jugar con la de arriba revelada": "Mit aufgedeckter oberster Karte spielen",
@@ -1173,5 +1172,11 @@
 	"Cementerios y exilios": "Friedhöfe und Exil",
 	"Ver todas las cartas ({zona})": "Alle Karten ansehen ({zona})",
 	"Dejar de revelar la de arriba": "Oberste Karte nicht mehr aufdecken",
-	"{quien} deja de revelar la carta de arriba": "{quien} deckt die oberste Karte nicht mehr auf"
+	"{quien} deja de revelar la carta de arriba": "{quien} deckt die oberste Karte nicht mehr auf",
+	"Veces": "Anzahl",
+	"Coste de maná de la carta (N)": "Manawert der Karte (N)",
+	"Siguiente revelación": "Nächstes Aufdecken",
+	"Revelación {vez} de {veces}. Elige qué haces con cada carta; el resto va abajo.": "Aufdecken {vez} von {veces}. Wähle, was mit jeder Karte geschieht; der Rest kommt nach unten.",
+	"Cascada, varias veces…": "Kaskade, mehrmals…",
+	"Revelar y lanzar… (cascada, descubrir)": "Aufdecken und wirken… (Kaskade, Entdecken)"
 }

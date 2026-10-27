@@ -253,7 +253,6 @@
 	"Mirar las de abajo…": "Посмотреть нижние…",
 	"Escrutar…": "Предсказание…",
 	"Vigilar…": "Слежка…",
-	"Revelar y lanzar…": "Открыть и разыграть…",
 	"Revelar la de arriba": "Открыть верхнюю",
 	"Dejar de jugar con la de arriba revelada": "Больше не играть с открытой верхней картой",
 	"Jugar con la de arriba revelada": "Играть с открытой верхней картой",
@@ -1209,5 +1208,11 @@
 	"Cementerios y exilios": "Кладбища и изгнание",
 	"Ver todas las cartas ({zona})": "Показать все карты ({zona})",
 	"Dejar de revelar la de arriba": "Перестать показывать верхнюю карту",
-	"{quien} deja de revelar la carta de arriba": "{quien} перестаёт показывать верхнюю карту"
+	"{quien} deja de revelar la carta de arriba": "{quien} перестаёт показывать верхнюю карту",
+	"Veces": "Раз",
+	"Coste de maná de la carta (N)": "Значение маны карты (N)",
+	"Siguiente revelación": "Следующее открытие",
+	"Revelación {vez} de {veces}. Elige qué haces con cada carta; el resto va abajo.": "Открытие {vez} из {veces}. Выбери, что делать с каждой картой; остальные уходят вниз.",
+	"Cascada, varias veces…": "Каскад, несколько раз…",
+	"Revelar y lanzar… (cascada, descubrir)": "Открыть и разыграть… (Каскад, Раскопка)"
 }

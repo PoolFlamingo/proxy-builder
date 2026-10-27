@@ -253,7 +253,6 @@
 	"Mirar las de abajo…": "Look at the bottom cards…",
 	"Escrutar…": "Scry…",
 	"Vigilar…": "Surveil…",
-	"Revelar y lanzar…": "Reveal and cast…",
 	"Revelar la de arriba": "Reveal the top card",
 	"Dejar de jugar con la de arriba revelada": "Stop playing with the top card revealed",
 	"Jugar con la de arriba revelada": "Play with the top card revealed",
@@ -1173,5 +1172,11 @@
 	"Cementerios y exilios": "Graveyards and exile",
 	"Ver todas las cartas ({zona})": "See all cards ({zona})",
 	"Dejar de revelar la de arriba": "Stop revealing the top card",
-	"{quien} deja de revelar la carta de arriba": "{quien} stops revealing the top card"
+	"{quien} deja de revelar la carta de arriba": "{quien} stops revealing the top card",
+	"Veces": "Times",
+	"Coste de maná de la carta (N)": "Mana value of the card (N)",
+	"Siguiente revelación": "Next reveal",
+	"Revelación {vez} de {veces}. Elige qué haces con cada carta; el resto va abajo.": "Reveal {vez} of {veces}. Choose what to do with each card; the rest goes to the bottom.",
+	"Cascada, varias veces…": "Cascade, several times…",
+	"Revelar y lanzar… (cascada, descubrir)": "Reveal and cast… (Cascade, Discover)"
 }

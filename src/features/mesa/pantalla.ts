@@ -19,7 +19,7 @@ export type DialogoMesa =
 	| { tipo: "etiqueta"; carta: IdCarta }
 	| { tipo: "mirar"; de: IdJugador; n: number; desde: Lado; modo: "mirar" | "escrutar" | "vigilar" }
 	| { tipo: "buscar"; de: IdJugador; filtro: "todo" | "tierra" }
-	| { tipo: "revelar" }
+	| { tipo: "revelar"; preset?: "descubrir" | "cascada" }
 	| { tipo: "zona"; jugador: IdJugador; zona: Zona }
 	| { tipo: "fichas"; para?: IdJugador }
 	| { tipo: "azar" }

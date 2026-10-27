@@ -253,7 +253,6 @@
 	"Mirar las de abajo…": "检视底部的牌…",
 	"Escrutar…": "占卜…",
 	"Vigilar…": "刺探…",
-	"Revelar y lanzar…": "展示并施放…",
 	"Revelar la de arriba": "展示牌库顶的牌",
 	"Dejar de jugar con la de arriba revelada": "停止展示牌库顶的牌",
 	"Jugar con la de arriba revelada": "展示牌库顶的牌进行游戏",
@@ -1119,5 +1118,11 @@
 	"Cementerios y exilios": "坟墓场与放逐区",
 	"Ver todas las cartas ({zona})": "查看所有牌（{zona}）",
 	"Dejar de revelar la de arriba": "不再展示最上方的牌",
-	"{quien} deja de revelar la carta de arriba": "{quien} 不再展示最上方的牌"
+	"{quien} deja de revelar la carta de arriba": "{quien} 不再展示最上方的牌",
+	"Veces": "次数",
+	"Coste de maná de la carta (N)": "这张牌的法术力值 (N)",
+	"Siguiente revelación": "下一次展示",
+	"Revelación {vez} de {veces}. Elige qué haces con cada carta; el resto va abajo.": "第 {vez}/{veces} 次展示。选择每张牌如何处理；其余放到最下方。",
+	"Cascada, varias veces…": "涟漪（多次）…",
+	"Revelar y lanzar… (cascada, descubrir)": "展示并施放…（涟漪、发现）"
 }

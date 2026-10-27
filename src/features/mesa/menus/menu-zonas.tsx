@@ -139,9 +139,15 @@ export function MenuBiblioteca({ jugador, children }: { jugador: IdJugador; chil
 					{t("Vigilar…")}
 					<Tecla contexto="biblioteca" nombre="Vigilar" />
 				</ContextMenuItem>
+				<ContextMenuItem
+					onSelect={() => usePantalla.getState().abrir({ tipo: "revelar", preset: "cascada" })}
+				>
+					<Sparkles />
+					{t("Cascada, varias veces…")}
+				</ContextMenuItem>
 				<ContextMenuItem onSelect={() => usePantalla.getState().abrir({ tipo: "revelar" })}>
 					<Sparkles />
-					{t("Revelar y lanzar…")}
+					{t("Revelar y lanzar… (cascada, descubrir)")}
 				</ContextMenuItem>
 				<ContextMenuSeparator />
 				<ContextMenuItem onSelect={() => op.buscar("todo", jugador)}>

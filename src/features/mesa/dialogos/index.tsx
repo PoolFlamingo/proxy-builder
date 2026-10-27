@@ -34,7 +34,7 @@ export function DialogosMesa({ deckId }: { deckId: string | null }) {
 			{d?.tipo === "etiqueta" && <EtiquetaDialog carta={d.carta} />}
 			{d?.tipo === "mirar" && <MirarDialog d={d} />}
 			{d?.tipo === "buscar" && <BuscarDialog de={d.de} filtro={d.filtro} />}
-			{d?.tipo === "revelar" && <RevelarDialog />}
+			{d?.tipo === "revelar" && <RevelarDialog presetInicial={d.preset} />}
 			{d?.tipo === "zona" && <VerZonaDialog jugador={d.jugador} zona={d.zona} />}
 			{d?.tipo === "fichas" && <FichasDialog para={d.para} />}
 			{d?.tipo === "azar" && <AzarDialog />}

@@ -108,20 +108,25 @@ type DestinoRevelada = "resto" | "lanzar" | "mano" | "campo";
  * Primero se revela (todos lo ven); después se elige qué hace cada carta y
  * a dónde va el resto.
  */
-export function RevelarDialog() {
+export function RevelarDialog({ presetInicial }: { presetInicial?: Preset }) {
 	const { t } = useLang();
 	const yo = useMesa((s) => s.yo ?? 0);
 	const lib = useMesa((s) => s.zonas[`${yo}:biblioteca`]);
 	const cartas = useMesa((s) => s.cartas);
-	const [preset, setPreset] = useState<Preset>("descubrir");
+	const [preset, setPreset] = useState<Preset>(presetInicial ?? "descubrir");
 	const [n, setN] = useState(3);
 	const [tipo, setTipo] = useState("Creature");
 	const [pararTras, setPararTras] = useState(1);
 	const [resto, setResto] = useState<RestoExcavar>("abajoAlAzar");
 	const [medida, setMedida] = useState({ noTierra: true, legendaria: false });
+	// Las veces que se repite (Apex Devastator: cascada cuatro veces) y por cuál va.
+	const [veces, setVeces] = useState(1);
+	const [vez, setVez] = useState(1);
 	const [reveladas, setReveladas] = useState<IdCarta[] | null>(null);
 	const [destinos, setDestinos] = useState<Record<IdCarta, DestinoRevelada>>({});
 	const plan = excavacion(preset, n, tipo, pararTras, resto, medida);
+	const repetible = preset === "descubrir" || preset === "cascada" || preset === "jodah";
+	const total = repetible ? veces : 1;
 
 	// Lo revelado: lo de arriba de la biblioteca que todos ven.
 	const ahora = useMemo(
@@ -134,14 +139,16 @@ export function RevelarDialog() {
 	);
 	const cerrar = () => usePantalla.getState().abrir(null);
 
-	const revelar = async () => {
-		const ok = await hacer({
+	const excavar = () =>
+		hacer({
 			que: "excavar",
 			forma: plan.forma,
 			filtro: plan.filtro,
 			pararTras: plan.pararTras,
 		});
-		if (ok) setReveladas([]);
+	const revelar = async () => {
+		setVez(1);
+		if (await excavar()) setReveladas([]);
 	};
 	const lista = reveladas !== null ? ahora : [];
 	// La que coincide (la última revelada en «hasta que»), elegida para lanzar.
@@ -149,7 +156,7 @@ export function RevelarDialog() {
 		plan.forma.tipo === "hastaQueCoincida" ? lista[lista.length - 1] : undefined;
 	const dest = (id: IdCarta): DestinoRevelada =>
 		destinos[id] ?? (id === elegidaPorDefecto ? "lanzar" : "resto");
-	const terminar = () => {
+	const terminar = async () => {
 		const elegidas: [IdCarta, Destino][] = [];
 		const quedan: IdCarta[] = [];
 		for (const id of lista) {
@@ -165,8 +172,16 @@ export function RevelarDialog() {
 							: destino("campo", { tipo: "arriba" }, yo),
 				]);
 		}
+		const ok = await hacer({ que: "resolverExcavacion", elegidas, resto: quedan, a: plan.resto });
+		if (!ok) return;
+		// Otra vez, con el mismo valor: lo de antes ya está abajo o en la pila.
+		if (vez < total) {
+			setVez(vez + 1);
+			setDestinos({});
+			if (!(await excavar())) cerrar();
+			return;
+		}
 		cerrar();
-		void hacer({ que: "resolverExcavacion", elegidas, resto: quedan, a: plan.resto });
 	};
 
 	const PRESETS: { valor: Preset; etiqueta: string }[] = [
@@ -187,7 +202,15 @@ export function RevelarDialog() {
 					<DialogDescription>
 						{reveladas === null
 							? t("Elige cómo se revela. Todos verán lo revelado.")
-							: t("Elige qué haces con cada carta revelada; el resto va a su sitio.")}
+							: total > 1
+								? t(
+										"Revelación {vez} de {veces}. Elige qué haces con cada carta; el resto va abajo.",
+										{
+											vez,
+											veces: total,
+										},
+									)
+								: t("Elige qué haces con cada carta revelada; el resto va a su sitio.")}
 					</DialogDescription>
 				</DialogHeader>
 				{reveladas === null ? (
@@ -201,8 +224,25 @@ export function RevelarDialog() {
 							/>
 						</Fila>
 						{preset !== "hasta" && (
-							<Fila etiqueta="N">
+							<Fila
+								etiqueta={
+									preset === "cascada" || preset === "jodah"
+										? t("Coste de maná de la carta (N)")
+										: "N"
+								}
+							>
 								<CampoNumero valor={n} onChange={(v) => setN(v ?? 1)} min={0} max={30} paso={1} />
+							</Fila>
+						)}
+						{repetible && (
+							<Fila etiqueta={t("Veces")}>
+								<CampoNumero
+									valor={veces}
+									onChange={(v) => setVeces(v ?? 1)}
+									min={1}
+									max={20}
+									paso={1}
+								/>
 							</Fila>
 						)}
 						{(preset === "hasta" || preset === "medida") && (
@@ -306,7 +346,9 @@ export function RevelarDialog() {
 							<Button onClick={() => void revelar()}>{t("Revelar")}</Button>
 						</>
 					) : (
-						<Button onClick={terminar}>{t("Hecho")}</Button>
+						<Button onClick={() => void terminar()}>
+							{vez < total ? t("Siguiente revelación") : t("Hecho")}
+						</Button>
 					)}
 				</DialogFooter>
 			</DialogContent>

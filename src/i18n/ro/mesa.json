@@ -253,7 +253,6 @@
 	"Mirar las de abajo…": "Uită-te la cele de la fund…",
 	"Escrutar…": "Scry…",
 	"Vigilar…": "Surveil…",
-	"Revelar y lanzar…": "Dezvăluie și lansează…",
 	"Revelar la de arriba": "Dezvăluie cartea de deasupra",
 	"Dejar de jugar con la de arriba revelada": "Nu mai juca cu cartea de deasupra dezvăluită",
 	"Jugar con la de arriba revelada": "Joacă cu cartea de deasupra dezvăluită",
@@ -1187,5 +1186,11 @@
 	"Cementerios y exilios": "Cimitire și exil",
 	"Ver todas las cartas ({zona})": "Vezi toate cărțile ({zona})",
 	"Dejar de revelar la de arriba": "Nu mai dezvălui cartea de deasupra",
-	"{quien} deja de revelar la carta de arriba": "{quien} nu mai dezvăluie cartea de deasupra"
+	"{quien} deja de revelar la carta de arriba": "{quien} nu mai dezvăluie cartea de deasupra",
+	"Veces": "Ori",
+	"Coste de maná de la carta (N)": "Valoarea de mană a cărții (N)",
+	"Siguiente revelación": "Următoarea dezvăluire",
+	"Revelación {vez} de {veces}. Elige qué haces con cada carta; el resto va abajo.": "Dezvăluirea {vez} din {veces}. Alege ce faci cu fiecare carte; restul merge jos.",
+	"Cascada, varias veces…": "Cascade, de mai multe ori…",
+	"Revelar y lanzar… (cascada, descubrir)": "Dezvăluie și lansează… (Cascade, Discover)"
 }

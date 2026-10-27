@@ -253,7 +253,6 @@
 	"Mirar las de abajo…": "Mirar las de abajo…",
 	"Escrutar…": "Escrutar…",
 	"Vigilar…": "Vigilar…",
-	"Revelar y lanzar…": "Revelar y lanzar…",
 	"Revelar la de arriba": "Revelar la de arriba",
 	"Dejar de jugar con la de arriba revelada": "Dejar de jugar con la de arriba revelada",
 	"Jugar con la de arriba revelada": "Jugar con la de arriba revelada",
@@ -1119,5 +1118,11 @@
 	"Cementerios y exilios": "Cementerios y exilios",
 	"Ver todas las cartas ({zona})": "Ver todas las cartas ({zona})",
 	"Dejar de revelar la de arriba": "Dejar de revelar la de arriba",
-	"{quien} deja de revelar la carta de arriba": "{quien} deja de revelar la carta de arriba"
+	"{quien} deja de revelar la carta de arriba": "{quien} deja de revelar la carta de arriba",
+	"Veces": "Veces",
+	"Coste de maná de la carta (N)": "Coste de maná de la carta (N)",
+	"Siguiente revelación": "Siguiente revelación",
+	"Revelación {vez} de {veces}. Elige qué haces con cada carta; el resto va abajo.": "Revelación {vez} de {veces}. Elige qué haces con cada carta; el resto va abajo.",
+	"Cascada, varias veces…": "Cascada, varias veces…",
+	"Revelar y lanzar… (cascada, descubrir)": "Revelar y lanzar… (cascada, descubrir)"
 }
