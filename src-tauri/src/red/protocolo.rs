@@ -22,6 +22,7 @@
 //! la conexión.
 
 use mesa::accion::{Accion, Evento};
+use mesa::encuentro::Encuentro;
 use mesa::modelo::{Partida, RefImagen};
 use mesa::preparar::DeckDeMesa;
 use mesa::vista::{ParcheVista, VistaMesa};
@@ -31,8 +32,10 @@ use serde::{Deserialize, Serialize};
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use ts_rs::TS;
 
+use crate::mesa::encuentro::VistaBanquillo;
+
 /// La versión del protocolo (sube con cualquier cambio incompatible).
-pub const PROTOCOLO: u32 = 1;
+pub const PROTOCOLO: u32 = 2;
 pub const TOPE_GENERAL: usize = 64 * 1024;
 pub const TOPE_PREPARACION: usize = 2 * 1024 * 1024;
 pub const TOPE_PARTIDA: usize = 4 * 1024 * 1024;
@@ -99,6 +102,14 @@ pub enum AlHost {
     Pide {
         desde_seq: u64,
     },
+    /// Entre dos partidas de un encuentro: su mazo y su banquillo.
+    PideBanquillo,
+    /// Entre dos partidas de un encuentro: cambia cartas de su mazo por
+    /// cartas de su banquillo (salen tantas como entran). Solo toca el suyo.
+    CambiaBanquillo {
+        sale: Vec<String>,
+        entra: Vec<String>,
+    },
     Adios,
 }
 
@@ -107,6 +118,11 @@ pub enum AlHost {
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct EnSala {
+    /// Para señalarlo al elegir asientos y equipos: el de su conexión (el
+    /// anfitrión, 0). Solo vale mientras dure la sala.
+    #[serde(default)]
+    #[ts(type = "number")]
+    pub id: u64,
     pub apodo: String,
     pub rol: Rol,
     /// El deck que trae (su nombre), si ya lo mandó.
@@ -171,6 +187,24 @@ pub enum DelHost {
     },
     /// El host cierra la partida.
     Cerrada,
+    /// A un jugador: su mazo y su banquillo (lo pidió, o lo acaba de cambiar).
+    Banquillo { vista: VistaBanquillo },
+    /// A un jugador: no se pudo hacer lo del banquillo (`motivo`, el del motor).
+    BanquilloNo { motivo: String },
+    /// A un jugador: cómo va el encuentro (al mejor de varias). Cada uno lleva
+    /// el marcador por su cuenta con esto y el resultado de su partida.
+    Encuentro {
+        encuentro: Option<Encuentro>,
+        /// Quién se eligió para empezar la primera partida, si se eligió.
+        primero: Option<IdJugador>,
+    },
+    /// El host se va a propósito y la partida sigue: `jugador` es su asiento
+    /// y `sucesor` quien sigue de anfitrión (el primero de los conectados,
+    /// por asiento). No hace falta esperar a que se note que falta.
+    Traspaso {
+        jugador: IdJugador,
+        sucesor: IdJugador,
+    },
 }
 
 impl DelHost {
@@ -435,6 +469,7 @@ pub fn validar_deck(d: &DeckDeMesa) -> Result<(), &'static str> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::mesa::encuentro::CartaBanquillo;
     use mesa::accion::{Actor, Cambio};
     use mesa::modelo::{InfoCarta, OrigenCarta};
     use mesa::preparar::{CartaDeMesa, Seccion};
@@ -491,6 +526,11 @@ mod tests {
                 accion: Accion::Robar { n: 1 },
             },
             AlHost::Pide { desde_seq: 40 },
+            AlHost::PideBanquillo,
+            AlHost::CambiaBanquillo {
+                sale: vec!["c1".into()],
+                entra: vec!["b1".into()],
+            },
             AlHost::Adios,
         ];
         let evento = Evento {
@@ -505,6 +545,7 @@ mod tests {
         let del_host = vec![
             DelHost::Sala {
                 jugadores: vec![EnSala {
+                    id: 0,
                     apodo: "Pablo".into(),
                     rol: Rol::Jugador,
                     deck: Some("Prueba".into()),
@@ -555,6 +596,26 @@ mod tests {
                 nodos: vec![],
             },
             DelHost::Cerrada,
+            DelHost::Traspaso {
+                jugador: IdJugador(0),
+                sucesor: IdJugador(1),
+            },
+            DelHost::Banquillo {
+                vista: VistaBanquillo {
+                    mazo: vec![CartaBanquillo {
+                        id: "c1".into(),
+                        nombre: "Isla".into(),
+                    }],
+                    banquillo: vec![],
+                },
+            },
+            DelHost::BanquilloNo {
+                motivo: "sin_terminar".into(),
+            },
+            DelHost::Encuentro {
+                encuentro: Some(Encuentro::nuevo(3).unwrap()),
+                primero: Some(IdJugador(1)),
+            },
         ];
         let (mut a, mut b) = tokio::io::duplex(8 * 1024 * 1024);
         for m in &al_host {
@@ -615,11 +676,17 @@ mod tests {
                 accion: Accion::Robar { n: 1 },
             },
             AlHost::Pide { desde_seq: 40 },
+            AlHost::PideBanquillo,
+            AlHost::CambiaBanquillo {
+                sale: vec!["c1".into()],
+                entra: vec!["b1".into()],
+            },
             AlHost::Adios,
         ];
         let del = vec![
             DelHost::Sala {
                 jugadores: vec![EnSala {
+                    id: 0,
                     apodo: "Pablo".into(),
                     rol: Rol::Jugador,
                     deck: Some("Prueba".into()),
@@ -644,6 +711,26 @@ mod tests {
                 motivo: "ritmo".into(),
             },
             DelHost::Cerrada,
+            DelHost::Traspaso {
+                jugador: IdJugador(0),
+                sucesor: IdJugador(1),
+            },
+            DelHost::Banquillo {
+                vista: VistaBanquillo {
+                    mazo: vec![CartaBanquillo {
+                        id: "c1".into(),
+                        nombre: "Isla".into(),
+                    }],
+                    banquillo: vec![],
+                },
+            },
+            DelHost::BanquilloNo {
+                motivo: "sin_terminar".into(),
+            },
+            DelHost::Encuentro {
+                encuentro: Some(Encuentro::nuevo(3).unwrap()),
+                primero: Some(IdJugador(1)),
+            },
         ];
         let dg = vec![
             Datagrama::Latido { t: 1 },

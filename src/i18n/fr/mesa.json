@@ -931,5 +931,12 @@
 	"Ahora eres el anfitrión: la partida sigue con tu copia.": "Tu es maintenant l'hôte : la partie continue avec ta copie.",
 	"{nombre} es el nuevo anfitrión.": "{nombre} est le nouvel hôte.",
 	"Sin la mayoría de los jugadores conectados no se juega: espera a que vuelvan.": "Sans la majorité des joueurs connectés, on ne joue pas : attends qu'ils reviennent.",
-	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "Cet hôte n'a pas encore la majorité des joueurs."
+	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "Cet hôte n'a pas encore la majorité des joueurs.",
+	"Eres el anfitrión: la partida sigue con otro jugador.": "Vous êtes l'hôte : la partie continue avec un autre joueur.",
+	"Tú, el anfitrión, te quedas en el primer asiento.": "Vous, l'hôte, gardez la première place.",
+	"El anfitrión empieza la siguiente partida.": "C'est l'hôte qui lance la partie suivante.",
+	"La sala ha cambiado mientras elegías: revisa los jugadores y vuelve a empezar.": "La salle a changé pendant votre choix : vérifiez les joueurs et relancez.",
+	"En red cada uno cambia solo su propio mazo.": "En ligne, chacun ne modifie que son propre deck.",
+	"Tras el traspaso del anfitrión no se puede abrir otra partida del encuentro: ya no están los mazos de todos.": "Après un changement d'hôte, on ne peut pas ouvrir la partie suivante du match : les decks de tout le monde ne sont plus là.",
+	"Ese cambio de banquillo no encaja: revisa las cartas.": "Cet échange avec la réserve ne convient pas : vérifiez les cartes."
 }

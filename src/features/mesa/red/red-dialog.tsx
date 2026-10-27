@@ -1,5 +1,6 @@
-import { Check, Copy, Crown, Eye, Loader2, LogOut, Play, Plug, Users } from "lucide-react";
-import { useEffect, useState } from "react";
+import { DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { Check, Copy, Crown, Eye, Loader2, LogOut, Play, Plug, Shuffle, Users } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import type { Formato } from "@/bindings/Formato";
 import type { Opciones } from "@/bindings/Opciones";
 import type { RolEnSala } from "@/bindings/RolEnSala";
@@ -17,7 +18,27 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useRed } from "@/stores/red-store";
 import { useTrabajo } from "@/stores/trabajo-store";
+import {
+	AjustesDePartida,
+	AvisoDeEquipos,
+	FilaEmpieza,
+	FilaOrdenable,
+	SelectorDeEquipo,
+} from "../ajustes-partida";
 import { COLORES_JUGADOR } from "../colores";
+import {
+	AJUSTES_LOCALES,
+	type AjustesLocal,
+	type AsientoLocal,
+	ajustesTrasOrden,
+	ajustesTrasQuitar,
+	aplicarOrden,
+	construirConfig,
+	ordenAlAzar,
+	ordenTrasMover,
+	problemaDeEquipos,
+} from "../config-local";
+import { ID_ANFITRION, mismoOrden, sentados, sincronizarAsientos } from "../config-sala";
 import { crearPartida, empezarRed, refrescarRed, salirDeRed, unirsePartida } from "./conexion-red";
 
 /** Lo que trae la entrada de la mesa: el deck elegido y sus opciones. */
@@ -167,6 +188,41 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 	const [copiado, setCopiado] = useState(false);
 	const anfitrion = papel === "anfitrion";
 
+	// Lo que decide el anfitrión: asientos (él, el primero), equipos y ajustes.
+	const [ajustes, setAjustes] = useState<AjustesLocal>({
+		...AJUSTES_LOCALES,
+		formato: preparar.formato,
+	});
+	const [ids, setIds] = useState<number[]>([ID_ANFITRION]);
+	const idsActuales = useRef(ids);
+	const [equipos, setEquipos] = useState<Record<number, number | null>>({});
+	const sensores = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+
+	// Quien llega se sienta al final; quien se va, se levanta.
+	useEffect(() => {
+		const r = sincronizarAsientos(idsActuales.current, sentados(sala));
+		if (mismoOrden(idsActuales.current, r.ids)) return;
+		idsActuales.current = r.ids;
+		setIds(r.ids);
+		if (r.quitados.length) {
+			setAjustes((a) => r.quitados.reduce((x, i) => ajustesTrasQuitar(x, i), a));
+		}
+	}, [sala]);
+
+	const reordenar = (orden: number[]) => {
+		const nuevo = aplicarOrden(idsActuales.current, orden);
+		idsActuales.current = nuevo;
+		setIds(nuevo);
+		setAjustes((a) => ajustesTrasOrden(a, orden));
+	};
+	const alSoltar = (e: DragEndEvent) => {
+		const de = Number(e.active.id);
+		const a = e.over ? Number(e.over.id) : de;
+		// El anfitrión se queda en el primer asiento.
+		if (de === 0 || a === 0 || de === a) return;
+		reordenar(ordenTrasMover(ids.length, de, a));
+	};
+
 	const copiar = async () => {
 		if (!codigo) return;
 		await navigator.clipboard.writeText(codigo);
@@ -174,29 +230,35 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 		window.setTimeout(() => setCopiado(false), 1500);
 	};
 
-	const empezar = () =>
-		void empezarRed({
-			jugadores: [
-				{
-					deckId: preparar.deckId ?? "",
-					nombre: preparar.nombre.trim() || t("Anfitrión"),
-					color: COLORES_JUGADOR[0],
-					lista: preparar.lista ?? undefined,
-				},
-			],
-			formato: preparar.formato,
-			variantes: {
-				equipos: { tipo: "ninguno" },
-				archenemy: null,
-				planechase: false,
-				manoPrivadaEnEquipo: false,
-			},
-			opciones: preparar.opciones,
-			intensidad: "apagado",
-			equipos: [],
-		});
+	const nombreDe = (id: number) =>
+		id === ID_ANFITRION
+			? preparar.nombre.trim() || t("Anfitrión")
+			: sala.find((j) => j.id === id)?.apodo || t("Jugador");
+	const asientos: AsientoLocal[] = ids.map((id) => ({
+		nombre: nombreDe(id),
+		deckId: id === ID_ANFITRION ? (preparar.deckId ?? "") : "",
+		equipo: equipos[id] ?? null,
+		lista: id === ID_ANFITRION ? (preparar.lista ?? undefined) : undefined,
+	}));
+	const nombreDeAsiento = (i: number) => asientos[i]?.nombre || `${t("Jugador")} ${i + 1}`;
+	const problema = problemaDeEquipos(asientos, ajustes.modo);
+	const porEquipos = ajustes.modo === "equipos";
+
+	const empezar = () => {
+		const config = construirConfig(
+			asientos,
+			ajustes,
+			(n) => t("Equipo {n}", { n }),
+			t("Contra el archienemigo"),
+		);
+		// Sin equipos valen las opciones que se eligieron al preparar la mesa.
+		if (ajustes.modo === "ninguno") config.opciones = preparar.opciones;
+		void empezarRed(config, ids.slice(1));
+	};
 
 	const conDeck = sala.filter((j) => j.rol === "jugador" && j.deck).length;
+	const sentadosAhora = new Set(ids);
+	const aparte = sala.filter((j) => !sentadosAhora.has(j.id));
 	return (
 		<div className="flex flex-col gap-2.5">
 			{anfitrion && codigo && (
@@ -213,36 +275,136 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 					</div>
 				</div>
 			)}
-			<div className="flex flex-col gap-1.5">
-				<span className="text-xs font-medium">{t("En la sala")}</span>
-				<ScrollArea className="max-h-56">
-					<ul className="flex flex-col gap-1 p-1">
-						{sala.map((j, i) => (
-							<FilaSala
-								key={`${i}-${j.apodo}`}
-								nombre={j.apodo || t("Jugador")}
-								detalle={
-									j.rol === "espectador" ? t("Mirando") : (j.deck ?? t("Preparando su deck…"))
-								}
-								color={j.rol === "jugador" ? COLORES_JUGADOR[i % COLORES_JUGADOR.length] : null}
-								// El anfitrión va el primero.
-								icono={
-									i === 0 ? (
-										<Crown className="size-3.5 text-amber-500" />
-									) : j.rol === "espectador" ? (
-										<Eye className="size-3.5" />
-									) : null
-								}
-							/>
-						))}
-						{sala.length <= 1 && (
-							<li className="p-2.5 text-center text-xs text-muted-foreground">
-								{t("Todavía no ha llegado nadie.")}
-							</li>
+			<ScrollArea className="max-h-[55vh]">
+				<div className="flex flex-col gap-2.5 p-1">
+					<div className="flex flex-col gap-1.5">
+						<span className="text-xs font-medium">{t("En la sala")}</span>
+						{anfitrion ? (
+							<DndContext sensors={sensores} onDragEnd={alSoltar}>
+								<ul className="flex flex-col gap-1">
+									{ids.map((id, i) => {
+										const fila = sala.find((j) => j.id === id);
+										const detalle =
+											id === ID_ANFITRION ? (preparar.deckNombre ?? "") : (fila?.deck ?? "");
+										const contenido = (
+											<>
+												<span
+													className="size-2.5 shrink-0 rounded-full"
+													style={{ background: COLORES_JUGADOR[i % COLORES_JUGADOR.length] }}
+												/>
+												<span className="truncate text-xs font-medium">{nombreDe(id)}</span>
+												{id === ID_ANFITRION && <Crown className="size-3.5 text-amber-500" />}
+												<span className="ml-auto truncate text-[11px] text-muted-foreground">
+													{detalle}
+												</span>
+												{porEquipos && (
+													<SelectorDeEquipo
+														equipo={equipos[id] ?? null}
+														onChange={(e) => setEquipos((x) => ({ ...x, [id]: e }))}
+													/>
+												)}
+											</>
+										);
+										return id === ID_ANFITRION ? (
+											<li
+												key={id}
+												className="flex items-center gap-2.5 rounded-md border bg-card px-2.5 py-1.5 pl-9"
+											>
+												{contenido}
+											</li>
+										) : (
+											<li key={id}>
+												<FilaOrdenable
+													i={i}
+													etiqueta={t("Mover a {jugador}", { jugador: nombreDe(id) })}
+												>
+													<div className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md border bg-card px-2.5 py-1.5">
+														{contenido}
+													</div>
+												</FilaOrdenable>
+											</li>
+										);
+									})}
+								</ul>
+							</DndContext>
+						) : (
+							<ul className="flex flex-col gap-1">
+								{sala.map((j, i) => (
+									<FilaSala
+										key={`${i}-${j.apodo}`}
+										nombre={j.apodo || t("Jugador")}
+										detalle={
+											j.rol === "espectador" ? t("Mirando") : (j.deck ?? t("Preparando su deck…"))
+										}
+										color={j.rol === "jugador" ? COLORES_JUGADOR[i % COLORES_JUGADOR.length] : null}
+										// El anfitrión va el primero.
+										icono={
+											i === 0 ? (
+												<Crown className="size-3.5 text-amber-500" />
+											) : j.rol === "espectador" ? (
+												<Eye className="size-3.5" />
+											) : null
+										}
+									/>
+								))}
+							</ul>
 						)}
-					</ul>
-				</ScrollArea>
-			</div>
+						{anfitrion && aparte.length > 0 && (
+							<ul className="flex flex-col gap-1">
+								{aparte.map((j) => (
+									<FilaSala
+										key={j.id}
+										nombre={j.apodo || t("Jugador")}
+										detalle={
+											j.rol === "espectador" ? t("Mirando") : (j.deck ?? t("Preparando su deck…"))
+										}
+										color={null}
+										icono={j.rol === "espectador" ? <Eye className="size-3.5" /> : null}
+									/>
+								))}
+							</ul>
+						)}
+						{sala.length <= 1 && (
+							<p className="p-2.5 text-center text-xs text-muted-foreground">
+								{t("Todavía no ha llegado nadie.")}
+							</p>
+						)}
+					</div>
+					{anfitrion && (
+						<>
+							{ids.length > 2 && (
+								<div className="flex items-center gap-2">
+									<Button
+										size="sm"
+										variant="outline"
+										onClick={() => reordenar([0, ...ordenAlAzar(ids.length - 1).map((i) => i + 1)])}
+									>
+										<Shuffle className="size-3.5" />
+										{t("Mezclar los asientos")}
+									</Button>
+									<span className="text-[11px] text-muted-foreground">
+										{t("Tú, el anfitrión, te quedas en el primer asiento.")}
+									</span>
+								</div>
+							)}
+							<AjustesDePartida
+								ajustes={ajustes}
+								onChange={(c) => setAjustes((a) => ({ ...a, ...c }))}
+								formato={preparar.formato}
+								asientos={ids.length}
+								nombreDeAsiento={nombreDeAsiento}
+							/>
+							<FilaEmpieza
+								ajustes={ajustes}
+								onChange={(c) => setAjustes((a) => ({ ...a, ...c }))}
+								asientos={ids.length}
+								nombreDeAsiento={nombreDeAsiento}
+							/>
+							<AvisoDeEquipos asientos={asientos} modo={ajustes.modo} />
+						</>
+					)}
+				</div>
+			</ScrollArea>
 			{anfitrion ? (
 				<p className="text-[11px] text-muted-foreground">
 					{t(
@@ -261,7 +423,10 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 					{anfitrion ? t("Cerrar la partida") : t("Salir")}
 				</Button>
 				{anfitrion && (
-					<Button disabled={!preparar.deckId || preparar.sinLista || !!trabajo} onClick={empezar}>
+					<Button
+						disabled={!preparar.deckId || preparar.sinLista || !!trabajo || problema !== null}
+						onClick={empezar}
+					>
 						{trabajo ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
 						{conDeck <= 1 ? t("Empezar (solo tú)") : t("Empezar ({n} jugadores)", { n: conDeck })}
 					</Button>

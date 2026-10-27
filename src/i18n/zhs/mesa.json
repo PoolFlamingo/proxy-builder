@@ -859,5 +859,12 @@
 	"Ahora eres el anfitrión: la partida sigue con tu copia.": "现在你是主机：对局将用你的副本继续。",
 	"{nombre} es el nuevo anfitrión.": "{nombre} 是新的主机。",
 	"Sin la mayoría de los jugadores conectados no se juega: espera a que vuelvan.": "没有过半数玩家在线就无法进行游戏：请等他们回来。",
-	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "该主机还没有过半数的玩家。"
+	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "该主机还没有过半数的玩家。",
+	"Eres el anfitrión: la partida sigue con otro jugador.": "你是主机：对局会由另一位玩家继续。",
+	"Tú, el anfitrión, te quedas en el primer asiento.": "你是主机，固定坐在第一个座位。",
+	"El anfitrión empieza la siguiente partida.": "下一局由主机开始。",
+	"La sala ha cambiado mientras elegías: revisa los jugadores y vuelve a empezar.": "你选择期间房间发生了变化：请检查玩家后重新开始。",
+	"En red cada uno cambia solo su propio mazo.": "联机时每个人只能更换自己的牌组。",
+	"Tras el traspaso del anfitrión no se puede abrir otra partida del encuentro: ya no están los mazos de todos.": "主机更换后无法开始比赛的下一局：已经没有所有人的牌组了。",
+	"Ese cambio de banquillo no encaja: revisa las cartas.": "这次备牌更换不成立：请检查卡牌。"
 }

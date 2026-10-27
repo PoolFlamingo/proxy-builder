@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { cn } from "@/lib/utils";
 import { useActualizacion } from "@/stores/actualizacion-store";
+import { useMesa } from "@/stores/mesa-store";
 import { useUi } from "@/stores/ui-store";
 
 /** La primera búsqueda espera a que la app haya arrancado del todo. */
@@ -74,8 +75,22 @@ export function useAvisosActualizacion() {
 					description: s.error ? mensaje(s.error) : undefined,
 				});
 			}
+			if (s.alSalirDeLaMesa && !antes.alSalirDeLaMesa) {
+				toast.info(t("Se instalará al salir de la mesa."), { id: ID_AVISO });
+			}
 		});
 	}, []);
+	// Pedida la instalación con la mesa abierta: al salir de ella, se hace.
+	useEffect(
+		() =>
+			useMesa.subscribe((s, antes) => {
+				const a = useActualizacion.getState();
+				if (antes.activa && !s.activa && a.alSalirDeLaMesa) {
+					a.instalar().catch((e) => toast.error(textos.current.mensaje(e)));
+				}
+			}),
+		[],
+	);
 }
 
 const ID_AVISO = "actualizacion";
@@ -104,6 +119,7 @@ export function BotonActualizar() {
 	const { t, mensaje } = useLang();
 	const paso = useActualizacion((s) => s.paso);
 	const info = useActualizacion((s) => s.info);
+	const esperando = useActualizacion((s) => s.alSalirDeLaMesa);
 	if ((paso !== "lista" && paso !== "instalando") || !info) return null;
 	const instalar = () => {
 		toast.dismiss(ID_AVISO);
@@ -115,12 +131,19 @@ export function BotonActualizar() {
 	return (
 		<WithTooltip
 			content={
-				info.pidePermiso
-					? t("Reinicia la app con la versión nueva. El sistema pedirá tu contraseña.")
-					: t("Reinicia la app con la versión nueva.")
+				esperando
+					? t("Se instalará al salir de la mesa.")
+					: info.pidePermiso
+						? t("Reinicia la app con la versión nueva. El sistema pedirá tu contraseña.")
+						: t("Reinicia la app con la versión nueva.")
 			}
 		>
-			<Button size="sm" variant="outline" onClick={instalar} disabled={paso === "instalando"}>
+			<Button
+				size="sm"
+				variant="outline"
+				onClick={instalar}
+				disabled={paso === "instalando" || esperando}
+			>
 				{paso === "instalando" ? (
 					<Loader2 className="size-4 animate-spin" />
 				) : (

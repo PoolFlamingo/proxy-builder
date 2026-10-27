@@ -954,5 +954,12 @@
 	"Ahora eres el anfitrión: la partida sigue con tu copia.": "Тепер хост — ти: партія триває з твоєю копією.",
 	"{nombre} es el nuevo anfitrión.": "{nombre} — новий хост.",
 	"Sin la mayoría de los jugadores conectados no se juega: espera a que vuelvan.": "Без більшості підключених гравців гра стоїть: зачекай, поки вони повернуться.",
-	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "У цього хоста ще немає більшості гравців."
+	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "У цього хоста ще немає більшості гравців.",
+	"Eres el anfitrión: la partida sigue con otro jugador.": "Ви хост: партія триватиме з іншим гравцем.",
+	"Tú, el anfitrión, te quedas en el primer asiento.": "Ви, хост, залишаєтеся на першому місці.",
+	"El anfitrión empieza la siguiente partida.": "Наступну партію починає хост.",
+	"La sala ha cambiado mientras elegías: revisa los jugadores y vuelve a empezar.": "Кімната змінилася, поки ви обирали: перевірте гравців і почніть знову.",
+	"En red cada uno cambia solo su propio mazo.": "У мережі кожен змінює лише свою колоду.",
+	"Tras el traspaso del anfitrión no se puede abrir otra partida del encuentro: ya no están los mazos de todos.": "Після зміни хоста не можна відкрити наступну партію матчу: колод усіх гравців більше немає.",
+	"Ese cambio de banquillo no encaja: revisa las cartas.": "Ця заміна із сайдбордом не підходить: перевірте карти."
 }

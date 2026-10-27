@@ -28,5 +28,6 @@
 	"No se ha podido guardar el deck: se perderán sus últimos cambios.": "无法保存套牌：它最近的更改将会丢失。",
 	"Cerrar igualmente": "仍然关闭",
 	"Guardar y cerrar": "保存并关闭",
-	"No se ha podido cerrar la ventana.": "无法关闭窗口。"
+	"No se ha podido cerrar la ventana.": "无法关闭窗口。",
+	"Se instalará al salir de la mesa.": "离开牌桌后会自动安装。"
 }

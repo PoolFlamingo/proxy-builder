@@ -4,11 +4,14 @@ import type { ActualizacionInfo } from "@/bindings/ActualizacionInfo";
 const llamadas: { cmd: string; args: Record<string, unknown> }[] = [];
 let nueva: ActualizacionInfo | null = null;
 let falla: string | null = null;
+let ocupadaPorPartida = false;
 let alProgreso: ((p: { hecho: number; total: number }) => void) | null = null;
 vi.mock("@/lib/ipc", () => ({
 	call: vi.fn(async (cmd: string, args: Record<string, unknown>) => {
 		llamadas.push({ cmd, args });
 		if (cmd === falla) throw { code: "Network", params: {} };
+		if (cmd === "update_install" && ocupadaPorPartida)
+			throw { code: "Busy", params: { motivo: "partida" } };
 		switch (cmd) {
 			case "update_status":
 				return { soportada: true, actual: "2.3.0" };
@@ -36,6 +39,7 @@ vi.mock("@/stores/deck-store", () => ({
 }));
 
 import { useActualizacion } from "@/stores/actualizacion-store";
+import { useMesa } from "@/stores/mesa-store";
 
 const info = (version: string): ActualizacionInfo => ({
 	version,
@@ -51,7 +55,10 @@ describe("actualización de la app", () => {
 		llamadas.length = 0;
 		nueva = null;
 		falla = null;
+		ocupadaPorPartida = false;
+		useMesa.setState({ activa: false });
 		useActualizacion.setState({
+			alSalirDeLaMesa: false,
 			soportada: null,
 			actual: null,
 			paso: "inactiva",
@@ -122,5 +129,25 @@ describe("actualización de la app", () => {
 		falla = "update_check";
 		expect(await useActualizacion.getState().buscar()).toBeNull();
 		expect(useActualizacion.getState().paso).toBe("inactiva");
+	});
+
+	it("con la mesa abierta no instala: espera a salir de ella", async () => {
+		useActualizacion.setState({ paso: "lista", info: info("2.4.0") });
+		useMesa.setState({ activa: true });
+		await useActualizacion.getState().instalar();
+		const s = useActualizacion.getState();
+		expect(s.alSalirDeLaMesa).toBe(true);
+		expect(s.paso).toBe("lista");
+		expect(ordenes()).toEqual([]);
+	});
+
+	it("si Rust dice que hay una partida abierta, también espera y no falla", async () => {
+		useActualizacion.setState({ paso: "lista", info: info("2.4.0") });
+		ocupadaPorPartida = true;
+		await useActualizacion.getState().instalar();
+		const s = useActualizacion.getState();
+		expect(s.alSalirDeLaMesa).toBe(true);
+		expect(s.paso).toBe("lista");
+		expect(s.error).toBeNull();
 	});
 });

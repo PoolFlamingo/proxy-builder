@@ -913,5 +913,12 @@
 	"Ahora eres el anfitrión: la partida sigue con tu copia.": "Je bent nu de host: de partij gaat verder met jouw kopie.",
 	"{nombre} es el nuevo anfitrión.": "{nombre} is de nieuwe host.",
 	"Sin la mayoría de los jugadores conectados no se juega: espera a que vuelvan.": "Zonder de meerderheid van de spelers verbonden wordt er niet gespeeld: wacht tot ze terug zijn.",
-	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "Die host heeft nog niet de meerderheid van de spelers."
+	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "Die host heeft nog niet de meerderheid van de spelers.",
+	"Eres el anfitrión: la partida sigue con otro jugador.": "Jij bent de host: het spel gaat verder met een andere speler.",
+	"Tú, el anfitrión, te quedas en el primer asiento.": "Jij, de host, blijft op de eerste zitplaats.",
+	"El anfitrión empieza la siguiente partida.": "De host start het volgende spel.",
+	"La sala ha cambiado mientras elegías: revisa los jugadores y vuelve a empezar.": "De kamer veranderde terwijl je koos: controleer de spelers en begin opnieuw.",
+	"En red cada uno cambia solo su propio mazo.": "Online past iedereen alleen zijn eigen deck aan.",
+	"Tras el traspaso del anfitrión no se puede abrir otra partida del encuentro: ya no están los mazos de todos.": "Na een wissel van host kan het volgende spel van de match niet worden geopend: de decks van iedereen zijn er niet meer.",
+	"Ese cambio de banquillo no encaja: revisa las cartas.": "Die wissel met het sideboard klopt niet: controleer de kaarten."
 }

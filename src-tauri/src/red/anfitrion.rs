@@ -27,6 +27,7 @@ use std::time::{Duration, Instant};
 use iroh::endpoint::Connection;
 use iroh::{Endpoint, EndpointAddr, EndpointId};
 use mesa::accion::{Cambio, Evento};
+use mesa::encuentro::Encuentro;
 use mesa::preparar::DeckDeMesa;
 use mesa::registro::Hecho;
 use mesa::vista::{parche, vista};
@@ -70,6 +71,9 @@ struct Par {
     ausente_desde: Option<Instant>,
     /// Su `EndpointAddr` en JSON, comprobado con su nodo (Fase K).
     direccion: Option<String>,
+    /// Se fue a propósito (era el anfitrión y cedió la partida): no cuenta
+    /// para la mayoría, porque no va a volver a votar.
+    ido: bool,
 }
 
 struct Sala {
@@ -104,6 +108,10 @@ pub struct Anfitrion {
     activo: AtomicBool,
     /// Cerrado o cedido a otro anfitrión: el vigía se para.
     acabado: AtomicBool,
+    /// Cómo va el encuentro (al mejor de varias) y quién se eligió para
+    /// empezar: se les manda a los jugadores al empezar, al volver y con
+    /// cada partida nueva del encuentro.
+    encuentro: Mutex<(Option<Encuentro>, Option<IdJugador>)>,
 }
 
 /// Cómo queda quien entra.
@@ -140,6 +148,7 @@ impl Anfitrion {
             endpoint: Mutex::new(None),
             activo: AtomicBool::new(true),
             acabado: AtomicBool::new(false),
+            encuentro: Mutex::new((None, None)),
         })
     }
 
@@ -177,6 +186,7 @@ impl Anfitrion {
                     // Al migrar nadie está conectado todavía: cuentan desde ahora.
                     ausente_desde: Some(Instant::now()),
                     direccion: n.direccion.clone(),
+                    ido: false,
                 })
             })
             .collect();
@@ -198,6 +208,7 @@ impl Anfitrion {
             endpoint: Mutex::new(None),
             activo: AtomicBool::new(activo),
             acabado: AtomicBool::new(false),
+            encuentro: Mutex::new((None, None)),
         })
     }
 
@@ -237,6 +248,7 @@ impl Anfitrion {
                 p.rol == Rol::Jugador
                     && p.jugador.is_some()
                     && Some(p.nodo) != self.mi_nodo
+                    && !p.ido
                     && !expulsados.contains(&p.nodo)
             })
             .collect();
@@ -257,6 +269,90 @@ impl Anfitrion {
     pub fn minoria(&self) -> bool {
         let (total, conectados) = self.recuento();
         2 * conectados < total
+    }
+
+    /// Apunta cómo va el encuentro, sin mandarlo (se manda con la bienvenida).
+    pub fn poner_encuentro(&self, encuentro: Option<Encuentro>, primero: Option<IdJugador>) {
+        *cerrojo(&self.encuentro) = (encuentro, primero);
+    }
+
+    /// Apunta cómo va el encuentro y se lo manda a los jugadores conectados.
+    pub fn repartir_encuentro(&self, encuentro: Option<Encuentro>, primero: Option<IdJugador>) {
+        self.poner_encuentro(encuentro, primero);
+        let s = cerrojo(&self.sala);
+        for p in s.pares.iter().filter(|p| p.rol == Rol::Jugador) {
+            self.mandar_encuentro(p);
+        }
+    }
+
+    fn mandar_encuentro(&self, p: &Par) {
+        let (encuentro, primero) = cerrojo(&self.encuentro).clone();
+        if encuentro.is_none() {
+            return;
+        }
+        if let Some(tx) = &p.tx {
+            let _ = tx.send(DelHost::Encuentro { encuentro, primero });
+        }
+    }
+
+    /// Apunta que este jugador se fue a propósito (el anfitrión de antes, que
+    /// cedió la partida): deja de contar para la mayoría.
+    pub fn marcar_ido(&self, jugador: IdJugador) {
+        let mut s = cerrojo(&self.sala);
+        for p in s.pares.iter_mut().filter(|p| p.jugador == Some(jugador)) {
+            p.ido = true;
+        }
+    }
+
+    /// A quien dejar la partida si este anfitrión se va: el conectado de
+    /// asiento más bajo (como el que buscarían los demás si se cayera).
+    fn sucesor(&self) -> Option<IdJugador> {
+        let expulsados = cerrojo(&self.expulsados).clone();
+        cerrojo(&self.sala)
+            .pares
+            .iter()
+            .filter(|p| p.rol == Rol::Jugador && p.tx.is_some() && !expulsados.contains(&p.nodo))
+            .filter_map(|p| p.jugador)
+            .min()
+    }
+
+    /// Quién seguiría si el anfitrión se fuera ahora: solo con la partida
+    /// empezada, de código directo y algún jugador conectado.
+    fn sucesor_si_cede(&self) -> Option<IdJugador> {
+        (self.empezada() && self.con_codigo() && !self.acabado())
+            .then(|| self.sucesor())
+            .flatten()
+    }
+
+    /// Si al irse el anfitrión la partida seguiría con otro jugador.
+    pub fn puede_ceder(&self) -> bool {
+        self.sucesor_si_cede().is_some()
+    }
+
+    /// El anfitrión se va a propósito. Con la partida empezada, de código
+    /// directo y algún jugador conectado, la cede: les dice a todos quién
+    /// sigue (así no esperan a notar que falta) y corta sin cerrarla. Si no,
+    /// la cierra para todos. Devuelve si la cedió.
+    pub async fn irse(&self) -> bool {
+        let Some(sucesor) = self.sucesor_si_cede() else {
+            self.cerrar();
+            return false;
+        };
+        {
+            let s = cerrojo(&self.sala);
+            for p in s.pares.iter() {
+                if let Some(tx) = &p.tx {
+                    let _ = tx.send(DelHost::Traspaso {
+                        jugador: self.mi_jugador,
+                        sucesor,
+                    });
+                }
+            }
+        }
+        // Un momento para que el aviso salga antes de cortar.
+        tokio::time::sleep(PAUSA_TRASPASO).await;
+        self.soltar();
+        true
     }
 
     /// Deja de ser el anfitrión (cede a otro): corta a todos sin cerrar la
@@ -301,11 +397,13 @@ impl Anfitrion {
     pub fn vista_sala(&self) -> Vec<EnSala> {
         let s = cerrojo(&self.sala);
         let mut v = vec![EnSala {
+            id: 0,
             apodo: self.apodo.clone(),
             rol: Rol::Jugador,
             deck: cerrojo(&self.deck).clone(),
         }];
         v.extend(s.pares.iter().filter(|p| p.tx.is_some()).map(|p| EnSala {
+            id: p.conexion,
             apodo: p.apodo.clone(),
             rol: p.rol,
             deck: p.deck.as_ref().map(|d| d.nombre.clone()),
@@ -353,6 +451,7 @@ impl Anfitrion {
             p.conexion = conexion;
             p.tx = Some(tx);
             p.ausente_desde = None;
+            p.ido = false;
             if direccion.is_some() {
                 p.direccion = direccion;
             }
@@ -393,6 +492,7 @@ impl Anfitrion {
             enlace: None,
             ausente_desde: None,
             direccion,
+            ido: false,
         });
         Ok(Admision {
             conexion,
@@ -636,7 +736,8 @@ impl Anfitrion {
         v.extend(
             s.pares
                 .iter()
-                .filter(|p| p.nodo != yo && !expulsados.contains(&p.nodo))
+                // Quien se fue a propósito no es candidato a seguir de anfitrión.
+                .filter(|p| p.nodo != yo && !p.ido && !expulsados.contains(&p.nodo))
                 .filter_map(|p| {
                     Some(NodoJugador {
                         jugador: p.jugador.filter(|_| p.rol == Rol::Jugador)?,
@@ -670,6 +771,9 @@ impl Anfitrion {
             },
         };
         let _ = tx.send(m);
+        if p.rol == Rol::Jugador {
+            self.mandar_encuentro(p);
+        }
     }
 
     /// Las bienvenidas de todos (al empezar).
@@ -763,20 +867,44 @@ impl Anfitrion {
 }
 
 /// Empieza la partida en red: el anfitrión es el jugador 0 (con `config`, que
-/// trae solo a él, y su deck) y los de la sala con deck, los siguientes, por
-/// orden de llegada. Abre la sesión en `mesa` y manda las bienvenidas.
+/// trae al anfitrión y, tras él, lo que el anfitrión eligió de cada invitado:
+/// color y equipo, por el mismo orden que `orden`) y los de la sala con deck,
+/// los siguientes. `orden` son las conexiones de los invitados por asiento;
+/// vacío, por orden de llegada. Si no son exactamente los que hay en la sala
+/// (alguien entró o se fue entre medias), se rechaza con `sala_cambio` y no
+/// empieza nada. Abre la sesión en `mesa` y manda las bienvenidas.
 pub fn empezar_partida<M: Mesa>(
     anf: &Arc<Anfitrion>,
     mesa: &M,
     yo: EndpointId,
     mut config: crate::mesa::sesion::ConfigMesa,
     deck: DeckDeMesa,
+    orden: &[u64],
 ) -> crate::error::AppResult<()> {
-    let invitados = anf.para_empezar();
+    let mut invitados = anf.para_empezar();
+    if !orden.is_empty() {
+        let mut en_sala: Vec<u64> = invitados.iter().map(|(c, ..)| *c).collect();
+        let mut pedidos = orden.to_vec();
+        en_sala.sort_unstable();
+        pedidos.sort_unstable();
+        if en_sala != pedidos {
+            return Err(
+                crate::error::AppError::new(crate::error::ErrorCode::Rejected)
+                    .with("motivo", "sala_cambio"),
+            );
+        }
+        invitados = orden
+            .iter()
+            .filter_map(|c| invitados.iter().find(|(x, ..)| x == c).cloned())
+            .collect();
+    }
+    // Lo que el anfitrión eligió de cada invitado, por posición.
+    let elegidos = config.jugadores.split_off(1.min(config.jugadores.len()));
     let mut mazos = vec![deck];
     let mut asignados = Vec::new();
     for (i, (conexion, apodo, d)) in invitados.into_iter().enumerate() {
         let j = IdJugador(u8::try_from(i + 1).unwrap_or(u8::MAX));
+        let elegido = elegidos.get(i);
         config.jugadores.push(crate::mesa::sesion::JugadorMesa {
             deck_id: String::new(),
             nombre: if apodo.trim().is_empty() {
@@ -784,21 +912,73 @@ pub fn empezar_partida<M: Mesa>(
             } else {
                 apodo
             },
-            color: super::colores::de_asiento(i + 1),
+            color: elegido
+                .map(|e| e.color.clone())
+                .filter(|c| !c.is_empty())
+                .unwrap_or_else(|| super::colores::de_asiento(i + 1)),
             lista: None,
-            equipo: None,
+            equipo: elegido.and_then(|e| e.equipo),
         });
         mazos.push(d);
         asignados.push((conexion, j));
     }
+    let primero = config.primero;
     let sesion = crate::mesa::sesion::Sesion::en_red(config, mazos, anf.clone())?;
     let partida = sesion.partida().clone();
+    anf.poner_encuentro(sesion.encuentro.clone(), primero);
     anf.empezar(&asignados);
     mesa.con(|m| *m = Some(sesion));
     anf.bienvenidas(&partida, yo);
     vigilar_ausentes(anf, mesa.clone(), ESPERA_MULLIGAN);
     Ok(())
 }
+
+/// Lo del banquillo de un jugador entre dos partidas de un encuentro: el
+/// cambio, si trae uno, y siempre su mazo y su banquillo como quedan. Solo
+/// toca el de quien lo pide.
+fn banquillo_de<M: Mesa>(
+    anf: &Arc<Anfitrion>,
+    mesa: &M,
+    conexion: u64,
+    cambio: Option<(Vec<String>, Vec<String>)>,
+) {
+    let Some(j) = anf.jugador_de(conexion) else {
+        anf.enviar(
+            conexion,
+            DelHost::BanquilloNo {
+                motivo: "sin_partida".into(),
+            },
+        );
+        return;
+    };
+    let r = mesa.con(|m| match m.as_mut() {
+        Some(s) => {
+            if let Some((sale, entra)) = cambio {
+                s.cambiar_banquillo_de(j, sale, entra)?;
+            }
+            s.banquillo_de(j)
+        }
+        None => Err(crate::error::AppError::new(
+            crate::error::ErrorCode::NotFound,
+        )),
+    });
+    anf.enviar(
+        conexion,
+        match r {
+            Ok(vista) => DelHost::Banquillo { vista },
+            Err(e) => DelHost::BanquilloNo {
+                motivo: e
+                    .params
+                    .get("motivo")
+                    .cloned()
+                    .unwrap_or_else(|| format!("{:?}", e.code)),
+            },
+        },
+    );
+}
+
+/// Lo que se espera a que salga el aviso de traspaso antes de cortar.
+const PAUSA_TRASPASO: Duration = Duration::from_millis(250);
 
 /// Lo que se espera a un jugador que se fue en el mulligan antes de quedarse
 /// por él con la mano que tiene.
@@ -1092,7 +1272,7 @@ pub(crate) async fn atender_conexion<M: Mesa>(
             if escribir_del_host(&mut tx, &m).await.is_err() {
                 break;
             }
-            if matches!(m, DelHost::Cerrada) {
+            if matches!(m, DelHost::Cerrada | DelHost::Traspaso { .. }) {
                 let _ = tx.finish();
                 break;
             }
@@ -1154,6 +1334,10 @@ pub(crate) async fn atender_conexion<M: Mesa>(
                 ),
                 Err(None) => {}
             },
+            AlHost::PideBanquillo => banquillo_de(&anf, &mesa, adm.conexion, None),
+            AlHost::CambiaBanquillo { sale, entra } => {
+                banquillo_de(&anf, &mesa, adm.conexion, Some((sale, entra)));
+            }
             AlHost::Pide { desde_seq } => {
                 // Los eventos que le faltan; si no los hay, la partida entera.
                 let r = mesa.con(|m| {

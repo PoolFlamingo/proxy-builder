@@ -859,5 +859,12 @@
 	"Ahora eres el anfitrión: la partida sigue con tu copia.": "이제 당신이 호스트입니다: 당신의 사본으로 게임이 계속됩니다.",
 	"{nombre} es el nuevo anfitrión.": "{nombre}이(가) 새 호스트입니다.",
 	"Sin la mayoría de los jugadores conectados no se juega: espera a que vuelvan.": "플레이어 과반수가 연결되어 있지 않으면 플레이할 수 없습니다: 돌아올 때까지 기다리세요.",
-	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "그 호스트는 아직 플레이어 과반수를 확보하지 못했습니다."
+	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "그 호스트는 아직 플레이어 과반수를 확보하지 못했습니다.",
+	"Eres el anfitrión: la partida sigue con otro jugador.": "호스트입니다: 다른 플레이어가 이어서 게임을 계속합니다.",
+	"Tú, el anfitrión, te quedas en el primer asiento.": "호스트인 당신은 첫 번째 자리에 앉습니다.",
+	"El anfitrión empieza la siguiente partida.": "다음 게임은 호스트가 시작합니다.",
+	"La sala ha cambiado mientras elegías: revisa los jugadores y vuelve a empezar.": "고르는 사이에 방이 바뀌었어요. 플레이어를 확인하고 다시 시작하세요.",
+	"En red cada uno cambia solo su propio mazo.": "온라인에서는 각자 자기 덱만 바꿀 수 있어요.",
+	"Tras el traspaso del anfitrión no se puede abrir otra partida del encuentro: ya no están los mazos de todos.": "호스트가 바뀐 뒤에는 매치의 다음 게임을 열 수 없어요. 모두의 덱이 더는 없기 때문이에요.",
+	"Ese cambio de banquillo no encaja: revisa las cartas.": "그 사이드보드 교체는 맞지 않아요. 카드를 확인하세요."
 }

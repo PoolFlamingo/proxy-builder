@@ -6,6 +6,7 @@ import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { call } from "@/lib/ipc";
 import { useMesa } from "@/stores/mesa-store";
+import { useRed } from "@/stores/red-store";
 import { hacer } from "./acciones";
 import { BanquilloDialog } from "./banquillo-dialog";
 import { salir } from "./conexion";
@@ -42,6 +43,9 @@ export function FinDePartida() {
 	const asientos = useMesa(useShallow((s) => s.asientos));
 	const encuentro = useEncuentro();
 	const resumen = useResumen();
+	// En red, la siguiente partida del encuentro la abre el anfitrión; el
+	// invitado solo cambia su banquillo.
+	const invitado = useRed((s) => s.papel) === "jugador";
 	const [oculto, setOculto] = useState(false);
 	const [banquillo, setBanquillo] = useState(false);
 	useEffect(() => {
@@ -144,12 +148,18 @@ export function FinDePartida() {
 						{t("Salir")}
 					</Button>
 					{estado ? (
-						!decide && (
+						!decide &&
+						(invitado ? (
+							<Button variant="outline" onClick={() => setBanquillo(true)}>
+								<RotateCcw className="size-4" />
+								{t("Banquillo")}
+							</Button>
+						) : (
 							<Button onClick={() => setBanquillo(true)}>
 								<RotateCcw className="size-4" />
 								{t("Siguiente partida")}
 							</Button>
-						)
+						))
 					) : (
 						<Button onClick={() => void hacer({ que: "reiniciar" })}>
 							<RotateCcw className="size-4" />

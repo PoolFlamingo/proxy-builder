@@ -22,9 +22,10 @@ use crate::mesa::guardada::{self, ResumenGuardada};
 use crate::mesa::imagenes;
 use crate::mesa::preparar::{cartas_de_lista, deck_de_mesa};
 use crate::mesa::repeticion::VistaRepeticion;
-use crate::mesa::sesion::{ConfigMesa, MensajeMesa, Sesion};
+use crate::mesa::sesion::{ConfigMesa, MensajeMesa, RedSesion, Sesion};
 use crate::mesa::tapete::{self, OrigenTapete, Tapete};
 use crate::red::mirada::Mirada;
+use crate::red::protocolo::AlHost;
 use crate::scryfall::client::CardApi;
 use crate::state::AppState;
 use crate::store::listas;
@@ -466,21 +467,66 @@ pub fn partida_borrar(state: State<'_, AppState>, id: String) -> AppResult<()> {
     partidas::borrar(&state.db, &id)
 }
 
-/// El mazo y el banquillo de un jugador, entre una partida y la siguiente.
-#[tauri::command]
-pub fn mesa_banquillo(state: State<'_, AppState>, jugador: IdJugador) -> AppResult<VistaBanquillo> {
-    con_sesion(&state, |s| s.banquillo(jugador))
+/// Si esta app es un invitado, le pide al anfitrión lo del banquillo (el
+/// anfitrión es quien tiene los mazos) y devuelve por dónde llega la
+/// respuesta; si no, `None`.
+fn pedir_al_anfitrion(
+    state: &AppState,
+    pregunta: AlHost,
+) -> AppResult<Option<tokio::sync::oneshot::Receiver<Result<VistaBanquillo, String>>>> {
+    let mut m = state
+        .mesa
+        .lock()
+        .map_err(|_| AppError::new(ErrorCode::Internal))?;
+    match m.as_mut().map(|s| &mut s.red) {
+        Some(Some(RedSesion::Invitado(i))) => i.pedir_banquillo(pregunta).map(Some),
+        _ => Ok(None),
+    }
 }
 
-/// Cambia cartas entre el mazo y el banquillo de un jugador.
+/// Lo que contesta el anfitrión, con un tope de espera.
+async fn respuesta_del_anfitrion(
+    rx: tokio::sync::oneshot::Receiver<Result<VistaBanquillo, String>>,
+) -> AppResult<VistaBanquillo> {
+    match tokio::time::timeout(std::time::Duration::from_secs(10), rx).await {
+        Ok(Ok(Ok(v))) => Ok(v),
+        Ok(Ok(Err(motivo))) => Err(AppError::new(ErrorCode::Rejected).with("motivo", motivo)),
+        _ => Err(AppError::new(ErrorCode::Network).with("motivo", "sin_respuesta")),
+    }
+}
+
+/// El mazo y el banquillo de un jugador, entre una partida y la siguiente.
+/// Un invitado en red pide el suyo al anfitrión.
 #[tauri::command]
-pub fn mesa_banquillo_cambiar(
+pub async fn mesa_banquillo(
+    state: State<'_, AppState>,
+    jugador: IdJugador,
+) -> AppResult<VistaBanquillo> {
+    match pedir_al_anfitrion(&state, AlHost::PideBanquillo)? {
+        Some(rx) => respuesta_del_anfitrion(rx).await,
+        None => con_sesion(&state, |s| s.banquillo(jugador)),
+    }
+}
+
+/// Cambia cartas entre el mazo y el banquillo de un jugador. En red cada uno
+/// cambia el suyo: el invitado se lo manda al anfitrión.
+#[tauri::command]
+pub async fn mesa_banquillo_cambiar(
     state: State<'_, AppState>,
     jugador: IdJugador,
     sale: Vec<String>,
     entra: Vec<String>,
 ) -> AppResult<()> {
-    con_sesion(&state, |s| s.cambiar_banquillo(jugador, sale, entra))
+    match pedir_al_anfitrion(
+        &state,
+        AlHost::CambiaBanquillo {
+            sale: sale.clone(),
+            entra: entra.clone(),
+        },
+    )? {
+        Some(rx) => respuesta_del_anfitrion(rx).await.map(|_| ()),
+        None => con_sesion(&state, |s| s.cambiar_banquillo(jugador, sale, entra)),
+    }
 }
 
 /// Cierra la partida terminada y abre la siguiente del encuentro.

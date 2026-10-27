@@ -913,5 +913,12 @@
 	"Ahora eres el anfitrión: la partida sigue con tu copia.": "You are now the host: the game goes on with your copy.",
 	"{nombre} es el nuevo anfitrión.": "{nombre} is the new host.",
 	"Sin la mayoría de los jugadores conectados no se juega: espera a que vuelvan.": "Without most of the players connected nobody can play: wait for them to come back.",
-	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "That host doesn't have most of the players yet."
+	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "That host doesn't have most of the players yet.",
+	"Eres el anfitrión: la partida sigue con otro jugador.": "You're the host: the game carries on with another player.",
+	"Tú, el anfitrión, te quedas en el primer asiento.": "You, the host, keep the first seat.",
+	"El anfitrión empieza la siguiente partida.": "The host starts the next game.",
+	"La sala ha cambiado mientras elegías: revisa los jugadores y vuelve a empezar.": "The room changed while you were choosing: check the players and start again.",
+	"En red cada uno cambia solo su propio mazo.": "Online, everyone changes only their own deck.",
+	"Tras el traspaso del anfitrión no se puede abrir otra partida del encuentro: ya no están los mazos de todos.": "After a host handover the next game of the match can't be opened: everyone's decks are no longer there.",
+	"Ese cambio de banquillo no encaja: revisa las cartas.": "That sideboard swap doesn't fit: check the cards."
 }

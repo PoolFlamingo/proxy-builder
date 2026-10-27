@@ -28,5 +28,6 @@
 	"No se ha podido guardar el deck: se perderán sus últimos cambios.": "Nie udało się zapisać talii: jej ostatnie zmiany zostaną utracone.",
 	"Cerrar igualmente": "Zamknij mimo to",
 	"Guardar y cerrar": "Zapisz i zamknij",
-	"No se ha podido cerrar la ventana.": "Nie udało się zamknąć okna."
+	"No se ha podido cerrar la ventana.": "Nie udało się zamknąć okna.",
+	"Se instalará al salir de la mesa.": "Zostanie zainstalowane po opuszczeniu stołu."
 }

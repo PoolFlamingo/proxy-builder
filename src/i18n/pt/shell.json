@@ -28,5 +28,6 @@
 	"No se ha podido guardar el deck: se perderán sus últimos cambios.": "Não foi possível salvar o deck: as últimas alterações serão perdidas.",
 	"Cerrar igualmente": "Fechar mesmo assim",
 	"Guardar y cerrar": "Salvar e fechar",
-	"No se ha podido cerrar la ventana.": "Não foi possível fechar a janela."
+	"No se ha podido cerrar la ventana.": "Não foi possível fechar a janela.",
+	"Se instalará al salir de la mesa.": "Será instalado quando sair da mesa."
 }

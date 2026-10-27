@@ -28,5 +28,6 @@
 	"No se ha podido guardar el deck: se perderán sus últimos cambios.": "Le deck n'a pas pu être enregistré : ses dernières modifications seront perdues.",
 	"Cerrar igualmente": "Fermer quand même",
 	"Guardar y cerrar": "Enregistrer et fermer",
-	"No se ha podido cerrar la ventana.": "La fenêtre n'a pas pu être fermée."
+	"No se ha podido cerrar la ventana.": "La fenêtre n'a pas pu être fermée.",
+	"Se instalará al salir de la mesa.": "L'installation se fera à la sortie de la table."
 }

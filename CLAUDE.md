@@ -150,7 +150,9 @@ le falta una cadena le sale la inglesa.
   decide reglas: manda `Accion` por `mesa_accion` y pinta lo que vuelve; el
   registro lo escribe `features/mesa/textos-eventos.ts` con `t()`. Un
   rechazo llega como `Rejected` con `motivo` (`lib/errores.ts`). Con la mesa
-  abierta no se instala una actualización (`Busy`, `motivo: partida`).
+  abierta no se reinicia a instalar una actualización: la pantalla la deja en
+  cola (`useActualizacion.alSalirDeLaMesa`) y la instala al salir de la mesa;
+  Rust sigue rechazando `update_install` con `Busy`, `motivo: partida`.
   **Listas para jugar** (Pablo, 26/10/2026): un deck con más cartas de las
   que se juegan (variantes de diseño, alternativas) elige una lista: el
   comandante (una copia concreta) y 99 más. `mesa::lista` (dato y
@@ -208,6 +210,22 @@ le falta una cadena le sale la inglesa.
   1.4.1 en `server/docs/despliegue.md`). Mientras no haya dominio,
   `PRODUCCION` (`red/servidor/mod.rs`) y `RELE_PROPIO` (`red/nodo.rs`) son
   `None`; en debug, `PB_SERVIDOR` y `PB_RELAY` los cambian.
+  **Ajustes de sala, banquillo y salida del anfitrión** (Pablo, 27/10/2026):
+  en la sala de espera el anfitrión elige asientos (él, siempre el primero;
+  `config-sala.ts`, `ajustes-partida.tsx` compartido con la partida local),
+  equipos, «al mejor de» y quién empieza; `red_empezar(config, invitados)`
+  recibe los ids de la sala (`EnSala.id`) por asiento y rechaza con
+  `sala_cambio` si ya no son los de la sala. Los invitados llevan el marcador
+  del encuentro (`DelHost::Encuentro`) y cambian **su** banquillo pidiéndoselo
+  al anfitrión (`PideBanquillo`/`CambiaBanquillo`; `mesa_banquillo*` son
+  `async`); la siguiente partida la abre el anfitrión, y tras un traspaso no
+  se puede (`sin_mazos`: cada uno guarda solo su mazo). Si el anfitrión se va
+  a propósito (`Anfitrion::irse`, también al cerrar la ventana) con código
+  directo y algún jugador conectado, **cede la partida** (`DelHost::Traspaso`,
+  sucesor = asiento más bajo conectado; el que se fue no cuenta para la
+  mayoría, `ido`) en vez de cerrarla. `PROTOCOLO` = 2. Prueba con procesos
+  reales: `red/pruebas_procesos.rs` (`#[ignore]`, `--ignored`); un host
+  matado con `SIGKILL` se nota a los ~30 s (tiempo de inactividad de QUIC).
   **Tiempo real y enlaces** (Fase E cerrada): `red/latencia.rs` manda por
   datagramas latido/eco (RTT y desfase de reloj con el host, que cuenta el
   temporizador del turno), la tabla de enlaces (`AvisoRed::Enlaces`) y los

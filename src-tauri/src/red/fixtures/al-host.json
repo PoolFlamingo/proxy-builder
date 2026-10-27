@@ -1,7 +1,7 @@
 [
 	{
 		"tipo": "hola",
-		"protocolo": 1,
+		"protocolo": 2,
 		"versionApp": "2.7.8",
 		"versionCatalogo": 1,
 		"rol": "jugador",
@@ -69,6 +69,14 @@
 	{
 		"tipo": "pide",
 		"desdeSeq": 40
+	},
+	{
+		"tipo": "pideBanquillo"
+	},
+	{
+		"tipo": "cambiaBanquillo",
+		"sale": ["c1"],
+		"entra": ["b1"]
 	},
 	{
 		"tipo": "adios"

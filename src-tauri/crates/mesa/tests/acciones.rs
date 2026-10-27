@@ -919,6 +919,52 @@ fn al_salir_del_campo_pierde_todo_y_las_fichas_desaparecen() {
 }
 
 #[test]
+fn quitar_mas_dano_de_comandante_del_apuntado_solo_devuelve_lo_apuntado() {
+    let mut m = Mesa::nueva(2);
+    let de_otro = m.zona(OTRO, Zona::Mando)[0];
+    let vida = m.p().jugador(YO).unwrap().vida;
+    m.haz(Accion::DanoComandante {
+        jugador: YO,
+        comandante: de_otro,
+        delta: 3,
+    });
+    assert_eq!(m.p().jugador(YO).unwrap().vida, vida - 3);
+    m.haz(Accion::DanoComandante {
+        jugador: YO,
+        comandante: de_otro,
+        delta: -5,
+    });
+    let yo = m.p().jugador(YO).unwrap();
+    assert!(yo.dano_comandante.is_empty());
+    assert_eq!(yo.vida, vida, "recupera los 3 que había, no 5");
+    // Sin nada apuntado, quitar no cambia la vida.
+    m.haz(Accion::DanoComandante {
+        jugador: YO,
+        comandante: de_otro,
+        delta: -4,
+    });
+    assert_eq!(m.p().jugador(YO).unwrap().vida, vida);
+}
+
+#[test]
+fn lo_mismo_con_el_dano_de_comandante_del_fantasma() {
+    let mut m = Mesa::nueva(1);
+    let yusri = m.zona(YO, Zona::Mando)[0];
+    let vida = m.p().fantasma.as_ref().unwrap().vida;
+    m.haz(Accion::DanoComandanteFantasma {
+        comandante: yusri,
+        delta: 3,
+    });
+    m.haz(Accion::DanoComandanteFantasma {
+        comandante: yusri,
+        delta: -5,
+    });
+    let f = m.p().fantasma.as_ref().unwrap();
+    assert!(f.dano_comandante.is_empty());
+    assert_eq!(f.vida, vida);
+}
+
+#[test]
 fn ayudas_al_pasar_el_turno_y_contadores_al_entrar() {
     let mut m = Mesa::nueva(2);
     let pw = m.al_campo("Garruk");

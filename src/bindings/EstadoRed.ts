@@ -14,4 +14,9 @@ codigo: string | null,
  * Quién hay en la sala (solo el anfitrión; el invitado lo recibe por
  * `red://aviso`).
  */
-sala: Array<EnSala>, empezada: boolean, };
+sala: Array<EnSala>, empezada: boolean, 
+/**
+ * Solo el anfitrión: si al salir la partida sigue con otro jugador (si
+ * no, se cierra para todos).
+ */
+puedeCeder: boolean, };

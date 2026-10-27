@@ -7,8 +7,8 @@ use std::time::Duration;
 
 use iroh::{Endpoint, SecretKey};
 use mesa::accion::{Accion, Destino, Sitio, ZonaDestino};
-use mesa::modelo::{Pos, RefZona, Zona};
-use mesa::{Azar, IdJugador};
+use mesa::modelo::{ComoGano, Equipo, Pos, RefZona, Resultado, Zona};
+use mesa::{Azar, IdEquipo, IdJugador};
 
 use super::anfitrion::{atender, empezar_partida, vigilar_ausentes, Anfitrion};
 use super::codigo::{secreto_nuevo, Codigo};
@@ -17,13 +17,14 @@ use super::invitado::{unirse, Conexion, Union};
 use super::latencia;
 use super::mesa::{AvisoRed, Mesa, MesaEnMemoria};
 use super::nodo::{crear, Relay, ALPN_MESA};
-use super::protocolo::{datagrama_de_bytes, Datagrama, Enlace, Rol};
+use super::protocolo::{datagrama_de_bytes, AlHost, Datagrama, Enlace, Rol};
+use crate::mesa::encuentro::VistaBanquillo;
 use crate::mesa::imagenes::propia_en;
 use crate::mesa::sesion::tests::mazo;
 use crate::mesa::sesion::{ConfigMesa, JugadorMesa, RedSesion};
-use mesa::formato::{Formato, Variantes};
+use mesa::formato::{Formato, ModoEquipos, Variantes};
 use mesa::modelo::RefImagen;
-use mesa::preparar::DeckDeMesa;
+use mesa::preparar::{DeckDeMesa, Seccion};
 use mesa::sparring::Intensidad;
 
 struct Jugador {
@@ -41,7 +42,7 @@ struct Partida3 {
     aceptador: tokio::task::JoinHandle<()>,
 }
 
-async fn esperar(que: &str, cond: impl Fn() -> bool) {
+pub(super) async fn esperar(que: &str, cond: impl Fn() -> bool) {
     for _ in 0..500 {
         if cond() {
             return;
@@ -51,15 +52,15 @@ async fn esperar(que: &str, cond: impl Fn() -> bool) {
     panic!("no llegó: {que}");
 }
 
-fn seq(m: &MesaEnMemoria) -> Option<u64> {
+pub(super) fn seq(m: &MesaEnMemoria) -> Option<u64> {
     m.con(|s| s.as_ref().map(|s| s.partida().seq))
 }
 
-fn huella(m: &MesaEnMemoria) -> Option<String> {
+pub(super) fn huella(m: &MesaEnMemoria) -> Option<String> {
     m.con(|s| s.as_ref().map(|s| mesa::huella(s.partida())))
 }
 
-fn pendientes(m: &MesaEnMemoria) -> usize {
+pub(super) fn pendientes(m: &MesaEnMemoria) -> usize {
     m.con(|s| match s.as_ref().and_then(|s| s.red.as_ref()) {
         Some(RedSesion::Invitado(i)) => i.pendientes.len(),
         _ => 0,
@@ -73,6 +74,20 @@ async fn partida(n: usize) -> Partida3 {
 
 /// Lo mismo, con el deck de cada invitado.
 async fn partida_con(decks: Vec<DeckDeMesa>) -> Partida3 {
+    partida_ajustada(decks, mazo(), &[], |_| {}).await
+}
+
+/// Lo mismo, con el deck del anfitrión, el orden de los asientos de los
+/// invitados (índices por orden de llegada; vacío, el de llegada) y lo que
+/// el anfitrión cambie de la configuración (equipos, al mejor de…). Los
+/// invitados de `config.jugadores` tras el anfitrión son lo que eligió de
+/// cada uno, por asiento.
+async fn partida_ajustada(
+    decks: Vec<DeckDeMesa>,
+    deck_host: DeckDeMesa,
+    orden: &[usize],
+    ajustar: impl FnOnce(&mut ConfigMesa),
+) -> Partida3 {
     let n = decks.len();
     let _ = tracing_subscriber::fmt()
         .with_test_writer()
@@ -115,7 +130,7 @@ async fn partida_con(decks: Vec<DeckDeMesa>) -> Partida3 {
         esperar("el deck en la sala", || anf.para_empezar().len() == i + 1).await;
     }
     esperar("los decks de la sala", || anf.para_empezar().len() == n).await;
-    let config = ConfigMesa {
+    let mut config = ConfigMesa {
         jugadores: vec![JugadorMesa {
             deck_id: "d".into(),
             nombre: "Host".into(),
@@ -131,7 +146,19 @@ async fn partida_con(decks: Vec<DeckDeMesa>) -> Partida3 {
         al_mejor_de: None,
         primero: None,
     };
-    empezar_partida(&anf, &host.mesa, host.ep.id(), config, mazo()).unwrap();
+    ajustar(&mut config);
+    // Las conexiones de la sala son 1, 2, 3… por orden de llegada.
+    let llegada: Vec<u64> = anf.para_empezar().into_iter().map(|(c, ..)| c).collect();
+    let por_asiento: Vec<u64> = orden.iter().map(|i| llegada[*i]).collect();
+    empezar_partida(
+        &anf,
+        &host.mesa,
+        host.ep.id(),
+        config,
+        deck_host,
+        &por_asiento,
+    )
+    .unwrap();
     for j in &invitados {
         esperar("la bienvenida", || seq(&j.mesa).is_some()).await;
     }
@@ -145,7 +172,7 @@ async fn partida_con(decks: Vec<DeckDeMesa>) -> Partida3 {
 }
 
 /// Una jugada al azar del jugador `j` sobre su copia.
-fn jugada(m: &MesaEnMemoria, j: IdJugador, azar: &mut Azar) {
+pub(super) fn jugada(m: &MesaEnMemoria, j: IdJugador, azar: &mut Azar) {
     m.con(|s| {
         let Some(s) = s.as_mut() else { return };
         let mano = s.partida().zona(&RefZona::de(j, Zona::Mano)).to_vec();
@@ -306,7 +333,7 @@ async fn sin_el_secreto_o_con_otra_version_no_se_entra() {
     assert_eq!(e.params["motivo"], "empezada");
 }
 
-fn es_anfitrion(m: &MesaEnMemoria) -> bool {
+pub(super) fn es_anfitrion(m: &MesaEnMemoria) -> bool {
     m.con(|s| {
         matches!(
             s.as_ref().and_then(|s| s.red.as_ref()),
@@ -315,14 +342,14 @@ fn es_anfitrion(m: &MesaEnMemoria) -> bool {
     })
 }
 
-fn epoch_invitado(m: &MesaEnMemoria) -> Option<u32> {
+pub(super) fn epoch_invitado(m: &MesaEnMemoria) -> Option<u32> {
     m.con(|s| match s.as_ref().and_then(|s| s.red.as_ref()) {
         Some(RedSesion::Invitado(i)) => Some(i.epoch),
         _ => None,
     })
 }
 
-fn activo(m: &MesaEnMemoria) -> bool {
+pub(super) fn activo(m: &MesaEnMemoria) -> bool {
     m.con(|s| match s.as_ref().and_then(|s| s.red.as_ref()) {
         Some(RedSesion::Anfitrion(a)) => a.activo(),
         _ => false,
@@ -491,6 +518,121 @@ async fn el_anfitrion_que_se_queda_solo_se_para_y_luego_se_une_al_nuevo() {
 }
 
 #[tokio::test]
+async fn si_el_anfitrion_se_va_a_proposito_la_partida_sigue_con_el_primero_que_queda() {
+    let p = partida(2).await;
+    quedarse_todos(&p).await;
+    let (b, c) = (&p.invitados[0], &p.invitados[1]);
+    // Se va por su pie (salir de la mesa): cede, no cierra.
+    assert!(p.anf.irse().await);
+    esperar("que B sea el anfitrión", || es_anfitrion(&b.mesa)).await;
+    esperar("que C se una a B", || epoch_invitado(&c.mesa) == Some(2)).await;
+    // Con 2 de 2 (el que se fue no cuenta), B deja jugar.
+    esperar("que B juegue", || activo(&b.mesa)).await;
+    assert!(avisos(&c.mesa).contains(&AvisoRed::NuevoAnfitrion {
+        jugador: IdJugador(1),
+        soy_yo: false
+    }));
+    // Nadie ha visto la partida cerrada.
+    assert!(!avisos(&b.mesa).contains(&AvisoRed::Cerrada));
+    assert!(!avisos(&c.mesa).contains(&AvisoRed::Cerrada));
+    let mut azar = Azar::new(11);
+    for _ in 0..60 {
+        let quien = 1 + azar.menor_que(2) as usize;
+        jugada(
+            &p.invitados[quien - 1].mesa,
+            IdJugador(quien as u8),
+            &mut azar,
+        );
+    }
+    esperar("la misma partida en B y C", || {
+        pendientes(&c.mesa) == 0 && seq(&c.mesa) == seq(&b.mesa)
+    })
+    .await;
+    assert_eq!(huella(&c.mesa), huella(&b.mesa));
+}
+
+#[tokio::test]
+async fn con_dos_jugadores_el_que_queda_sigue_sin_esperar_a_nadie_si_el_anfitrion_se_va_a_proposito(
+) {
+    let p = partida(1).await;
+    quedarse_todos(&p).await;
+    let b = &p.invitados[0];
+    assert!(p.anf.irse().await);
+    esperar("que B herede la partida", || es_anfitrion(&b.mesa)).await;
+    // El que se fue a propósito no cuenta: 1 de 1 es mayoría (si se hubiera
+    // caído, B esperaría a que volviera).
+    esperar("que B juegue", || activo(&b.mesa)).await;
+    hace(&b.mesa, Accion::Robar { n: 1 }).unwrap();
+}
+
+#[tokio::test]
+async fn el_anfitrion_cede_a_quien_dice_aunque_haya_otro_de_asiento_mas_bajo_caido() {
+    let p = partida(2).await;
+    quedarse_todos(&p).await;
+    let (b, c) = (&p.invitados[0], &p.invitados[1]);
+    // B (asiento 1) se cae; el anfitrión se va y deja la partida a C, el único
+    // conectado, sin que C pierda tiempo probando con B.
+    b.ep.close().await;
+    esperar("que se note que falta B", || {
+        p.anf.ausentes().iter().any(|a| a.jugador == IdJugador(1))
+    })
+    .await;
+    assert!(p.anf.irse().await);
+    esperar("que C sea el anfitrión", || es_anfitrion(&c.mesa)).await;
+}
+
+#[tokio::test]
+async fn si_no_queda_nadie_que_siga_el_anfitrion_cierra_la_partida() {
+    let p = partida(1).await;
+    quedarse_todos(&p).await;
+    let b = &p.invitados[0];
+    p.anf.cortar(IdJugador(1));
+    esperar("que se note que falta", || {
+        p.anf.ausentes().iter().any(|a| a.jugador == IdJugador(1))
+    })
+    .await;
+    assert!(!p.anf.irse().await);
+    assert!(p.anf.acabado());
+    // B no llega a enterarse (ya no estaba): sigue como estaba.
+    assert!(!es_anfitrion(&b.mesa));
+}
+
+#[tokio::test]
+async fn el_espectador_sigue_mirando_cuando_el_anfitrion_se_va_a_proposito() {
+    let p = partida(2).await;
+    quedarse_todos(&p).await;
+    let esp = Jugador {
+        mesa: MesaEnMemoria::default(),
+        ep: crear(SecretKey::generate(), Relay::Ninguno).await.unwrap(),
+        conexion: None,
+    };
+    let _c = unirse(
+        esp.ep.clone(),
+        Union {
+            codigo: p.codigo.clone(),
+            apodo: "Mira".into(),
+            rol: Rol::Espectador,
+            deck: None,
+        },
+        esp.mesa.clone(),
+    )
+    .await
+    .unwrap();
+    let epoch = |m: &MesaEnMemoria| m.mirada(|v| v.as_ref().map(|v| (v.epoch, v.nodos.len())));
+    esperar("la vista con los nodos", || {
+        epoch(&esp.mesa) == Some((1, 3))
+    })
+    .await;
+    assert!(p.anf.irse().await);
+    let b = &p.invitados[0];
+    esperar("que B juegue", || activo(&b.mesa)).await;
+    esperar("que el espectador mire a B", || {
+        epoch(&esp.mesa).map(|e| e.0) == Some(2)
+    })
+    .await;
+}
+
+#[tokio::test]
 async fn el_espectador_no_ve_lo_oculto_hasta_que_se_revela() {
     let p = partida(1).await;
     quedarse_todos(&p).await;
@@ -628,7 +770,7 @@ async fn las_imagenes_propias_llegan_por_el_anfitrion_y_con_su_huella() {
     }
 }
 
-fn avisos(m: &MesaEnMemoria) -> Vec<AvisoRed> {
+pub(super) fn avisos(m: &MesaEnMemoria) -> Vec<AvisoRed> {
     m.avisos.lock().map(|v| v.clone()).unwrap_or_default()
 }
 
@@ -981,4 +1123,252 @@ async fn el_expulsado_queda_eliminado_se_le_corta_y_no_vuelve_a_entrar() {
         )
     });
     assert!(e.is_err());
+}
+
+/// Un mazo de 60 con tres cartas de banquillo (`banq0`…).
+fn mazo_con_banquillo() -> DeckDeMesa {
+    let mut m = mazo();
+    for i in 0..3 {
+        let mut extra = m.cartas[i].clone();
+        extra.carta_deck = format!("banq{i}");
+        extra.origen.carta_deck = format!("banq{i}");
+        extra.origen.nombre = format!("Del banquillo {i}");
+        extra.seccion = Seccion::Banquillo;
+        m.cartas.push(extra);
+    }
+    m
+}
+
+/// Lo que un invitado le pide al anfitrión del banquillo y lo que contesta.
+async fn banquillo_del_invitado(
+    m: &MesaEnMemoria,
+    pregunta: AlHost,
+) -> Result<VistaBanquillo, String> {
+    let rx = m
+        .con(|s| match s.as_mut().map(|s| &mut s.red) {
+            Some(Some(RedSesion::Invitado(i))) => i.pedir_banquillo(pregunta).ok(),
+            _ => None,
+        })
+        .expect("es un invitado");
+    tokio::time::timeout(Duration::from_secs(5), rx)
+        .await
+        .expect("el anfitrión contesta")
+        .expect("el canal sigue abierto")
+}
+
+fn gana_el_anfitrion() -> Accion {
+    Accion::Terminar {
+        resultado: Resultado {
+            ganadores: vec![IdJugador(0)],
+            como: ComoGano::Combate,
+            nota: String::new(),
+        },
+    }
+}
+
+fn nombres(m: &MesaEnMemoria) -> Vec<String> {
+    m.con(|s| {
+        s.as_ref()
+            .unwrap()
+            .partida()
+            .jugadores
+            .iter()
+            .map(|j| j.nombre.clone())
+            .collect()
+    })
+}
+
+#[tokio::test]
+async fn el_anfitrion_elige_el_orden_de_los_asientos_los_equipos_y_quien_empieza() {
+    let nuevo_jugador = |color: &str, equipo| JugadorMesa {
+        deck_id: String::new(),
+        nombre: String::new(),
+        color: color.into(),
+        lista: None,
+        equipo,
+    };
+    // Llegan Invitado 0, 1 y 2; se sientan 2, 0 y 1, en dos equipos.
+    let p = partida_ajustada(vec![mazo(), mazo(), mazo()], mazo(), &[2, 0, 1], |c| {
+        c.variantes.equipos = ModoEquipos::Equipos { fuego_amigo: false };
+        c.equipos = vec![
+            Equipo {
+                id: IdEquipo(0),
+                nombre: "A".into(),
+                color: "#111111".into(),
+                vida_compartida: None,
+            },
+            Equipo {
+                id: IdEquipo(1),
+                nombre: "B".into(),
+                color: "#222222".into(),
+                vida_compartida: None,
+            },
+        ];
+        c.jugadores[0].equipo = Some(IdEquipo(0));
+        c.jugadores.extend([
+            nuevo_jugador("#aa0000", Some(IdEquipo(0))),
+            nuevo_jugador("#00bb00", Some(IdEquipo(1))),
+            nuevo_jugador("#0000cc", Some(IdEquipo(1))),
+        ]);
+        c.primero = Some(IdJugador(2));
+    })
+    .await;
+    let esperado = ["Host", "Invitado 2", "Invitado 0", "Invitado 1"];
+    for m in std::iter::once(&p.host.mesa).chain(p.invitados.iter().map(|j| &j.mesa)) {
+        assert_eq!(nombres(m), esperado);
+    }
+    // Cada uno sabe en qué asiento está.
+    let asiento = |m: &MesaEnMemoria| m.con(|s| s.as_ref().unwrap().yo.0);
+    assert_eq!(asiento(&p.invitados[0].mesa), 2);
+    assert_eq!(asiento(&p.invitados[1].mesa), 3);
+    assert_eq!(asiento(&p.invitados[2].mesa), 1);
+    p.host.mesa.con(|s| {
+        let partida = s.as_ref().unwrap().partida();
+        let equipos: Vec<_> = partida.jugadores.iter().map(|j| j.equipo).collect();
+        assert_eq!(
+            equipos,
+            vec![
+                Some(IdEquipo(0)),
+                Some(IdEquipo(0)),
+                Some(IdEquipo(1)),
+                Some(IdEquipo(1))
+            ]
+        );
+        let colores: Vec<_> = partida.jugadores.iter().map(|j| j.color.as_str()).collect();
+        assert_eq!(&colores[1..], ["#aa0000", "#00bb00", "#0000cc"]);
+        assert_eq!(partida.turno.activo, IdJugador(2));
+    });
+    // Los invitados reciben lo mismo.
+    todos_iguales(&p).await;
+}
+
+#[tokio::test]
+async fn si_la_sala_cambia_entre_medias_no_empieza_nada() {
+    let host = Jugador {
+        mesa: MesaEnMemoria::default(),
+        ep: crear(SecretKey::generate(), Relay::Ninguno).await.unwrap(),
+        conexion: None,
+    };
+    let anf = Anfitrion::nuevo("Host".into(), secreto_nuevo());
+    let config = ConfigMesa {
+        jugadores: vec![JugadorMesa {
+            deck_id: "d".into(),
+            nombre: "Host".into(),
+            color: "#e11d48".into(),
+            lista: None,
+            equipo: None,
+        }],
+        formato: Formato::Constructed,
+        variantes: Variantes::default(),
+        opciones: None,
+        intensidad: Intensidad::Apagado,
+        equipos: Vec::new(),
+        al_mejor_de: None,
+        primero: None,
+    };
+    // Se eligió un asiento para alguien que ya no está.
+    let e = empezar_partida(&anf, &host.mesa, host.ep.id(), config, mazo(), &[7]).unwrap_err();
+    assert_eq!(e.params["motivo"], "sala_cambio");
+    assert!(!anf.empezada());
+    assert!(host.mesa.con(|s| s.is_none()));
+}
+
+#[tokio::test]
+async fn el_invitado_cambia_su_banquillo_y_el_anfitrion_abre_la_siguiente_partida() {
+    let p = partida_ajustada(vec![mazo_con_banquillo()], mazo_con_banquillo(), &[], |c| {
+        c.al_mejor_de = Some(3)
+    })
+    .await;
+    quedarse_todos(&p).await;
+    let b = &p.invitados[0];
+    // El invitado también lleva el marcador del encuentro.
+    esperar("el encuentro en el invitado", || {
+        b.mesa
+            .con(|s| s.as_ref().is_some_and(|s| s.encuentro.is_some()))
+    })
+    .await;
+    // Sin terminar la partida no se toca.
+    assert_eq!(
+        banquillo_del_invitado(&b.mesa, AlHost::PideBanquillo).await,
+        Err("sin_terminar".into())
+    );
+    hace(&p.host.mesa, gana_el_anfitrion()).unwrap();
+    esperar("el fin en el invitado", || {
+        b.mesa.con(|s| s.as_ref().unwrap().partida().fin.is_some())
+    })
+    .await;
+    let v = banquillo_del_invitado(&b.mesa, AlHost::PideBanquillo)
+        .await
+        .unwrap();
+    assert_eq!((v.mazo.len(), v.banquillo.len()), (60, 3));
+    // Un cambio que no encaja no toca nada.
+    let mal = banquillo_del_invitado(
+        &b.mesa,
+        AlHost::CambiaBanquillo {
+            sale: vec![v.mazo[0].id.clone()],
+            entra: vec![v.mazo[1].id.clone()],
+        },
+    )
+    .await;
+    assert_eq!(mal, Err("cambio".into()));
+    // Uno bueno: lo que devuelve es su mazo ya cambiado.
+    let (sale, entra) = (v.mazo[0].id.clone(), v.banquillo[0].id.clone());
+    let nuevo = banquillo_del_invitado(
+        &b.mesa,
+        AlHost::CambiaBanquillo {
+            sale: vec![sale.clone()],
+            entra: vec![entra.clone()],
+        },
+    )
+    .await
+    .unwrap();
+    assert!(nuevo.mazo.iter().any(|c| c.id == entra));
+    assert!(!nuevo.mazo.iter().any(|c| c.id == sale));
+    // Cada uno toca solo el suyo: el anfitrión no el del invitado, ni este el
+    // suyo por la sesión (lo hace por el anfitrión).
+    let ajeno = p
+        .host
+        .mesa
+        .con(|s| s.as_ref().unwrap().banquillo(IdJugador(1)))
+        .unwrap_err();
+    assert_eq!(ajeno.params["motivo"], "ajeno");
+    let directo = b
+        .mesa
+        .con(|s| s.as_ref().unwrap().banquillo(IdJugador(1)))
+        .unwrap_err();
+    assert_eq!(directo.params["motivo"], "invitado");
+    // El anfitrión abre la siguiente partida con el mazo cambiado.
+    p.host
+        .mesa
+        .con(|s| s.as_mut().unwrap().siguiente_partida())
+        .unwrap();
+    esperar("la partida nueva en el invitado", || {
+        b.mesa.con(|s| s.as_ref().unwrap().partida().fin.is_none())
+    })
+    .await;
+    esperar("el marcador al día", || {
+        b.mesa.con(|s| {
+            s.as_ref()
+                .unwrap()
+                .estado_encuentro()
+                .estado
+                .is_some_and(|e| e.marcador == vec![1, 0])
+        })
+    })
+    .await;
+    // En juego: biblioteca y mano (el banquillo también es una zona de la mesa).
+    let en_juego = b.mesa.con(|s| {
+        let p = s.as_ref().unwrap().partida();
+        [Zona::Biblioteca, Zona::Mano]
+            .into_iter()
+            .flat_map(|z| p.zona(&RefZona::de(IdJugador(1), z)).to_vec())
+            .map(|c| p.cartas[&c].origen.carta_deck.clone())
+            .collect::<Vec<_>>()
+    });
+    assert_eq!(en_juego.len(), 60);
+    assert!(
+        en_juego.contains(&entra),
+        "{entra} debería estar en el mazo"
+    );
+    assert!(!en_juego.contains(&sale), "{sale} debería haber salido");
 }

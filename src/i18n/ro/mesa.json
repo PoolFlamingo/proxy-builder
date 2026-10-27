@@ -927,5 +927,12 @@
 	"Ahora eres el anfitrión: la partida sigue con tu copia.": "Acum ești gazda: partida continuă cu copia ta.",
 	"{nombre} es el nuevo anfitrión.": "{nombre} este noua gazdă.",
 	"Sin la mayoría de los jugadores conectados no se juega: espera a que vuelvan.": "Fără majoritatea jucătorilor conectați nu se joacă: așteaptă să revină.",
-	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "Acea gazdă nu are încă majoritatea jucătorilor."
+	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "Acea gazdă nu are încă majoritatea jucătorilor.",
+	"Eres el anfitrión: la partida sigue con otro jugador.": "Ești gazda: partida continuă cu un alt jucător.",
+	"Tú, el anfitrión, te quedas en el primer asiento.": "Tu, gazda, rămâi pe primul loc.",
+	"El anfitrión empieza la siguiente partida.": "Gazda pornește următoarea partidă.",
+	"La sala ha cambiado mientras elegías: revisa los jugadores y vuelve a empezar.": "Sala s-a schimbat cât ai ales: verifică jucătorii și pornește din nou.",
+	"En red cada uno cambia solo su propio mazo.": "Online, fiecare schimbă doar propriul deck.",
+	"Tras el traspaso del anfitrión no se puede abrir otra partida del encuentro: ya no están los mazos de todos.": "După schimbarea gazdei nu se poate deschide următoarea partidă a meciului: deck-urile tuturor nu mai sunt aici.",
+	"Ese cambio de banquillo no encaja: revisa las cartas.": "Schimbul acela cu sideboard-ul nu se potrivește: verifică cărțile."
 }

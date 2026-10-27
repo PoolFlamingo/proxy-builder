@@ -78,6 +78,14 @@ const MOTIVOS: Partial<Record<ErrorCode, Record<string, string>>> = {
 		),
 		sin_registro: paraTraducir("Esta partida no se guardó entera: no se puede repetir."),
 		sin_terminar: paraTraducir("La partida aún no ha terminado."),
+		sala_cambio: paraTraducir(
+			"La sala ha cambiado mientras elegías: revisa los jugadores y vuelve a empezar.",
+		),
+		ajeno: paraTraducir("En red cada uno cambia solo su propio mazo."),
+		sin_mazos: paraTraducir(
+			"Tras el traspaso del anfitrión no se puede abrir otra partida del encuentro: ya no están los mazos de todos.",
+		),
+		cambio: paraTraducir("Ese cambio de banquillo no encaja: revisa las cartas."),
 		repeticion: paraTraducir("Estás viendo una repetición: no se puede jugar."),
 	},
 	Unsupported: {

@@ -1394,11 +1394,15 @@ fn accion_(q: &mut Partida, a: &Accion, ctx: &mut Ctx, seq: u64) -> Result<(), R
             carta(q, *comandante)?;
             let j = q.jugador_mut(*jugador).ok_or(Rechazo::NoExiste)?;
             let v = j.dano_comandante.entry(*comandante).or_insert(0);
+            let antes = *v;
             *v = v.saturating_add(d).max(0);
+            // Quitar más de lo apuntado deja el contador en 0, y la vida solo
+            // recupera lo que de verdad se quitó.
+            let aplicado = *v - antes;
             if *v == 0 {
                 j.dano_comandante.remove(comandante);
             }
-            vida(q, *jugador, -d)
+            vida(q, *jugador, -aplicado)
         }
         Accion::ContadorJugador {
             jugador,
@@ -1527,11 +1531,13 @@ fn accion_(q: &mut Partida, a: &Accion, ctx: &mut Ctx, seq: u64) -> Result<(), R
             carta(q, *comandante)?;
             let f = q.fantasma.as_mut().ok_or(Rechazo::NoExiste)?;
             let v = f.dano_comandante.entry(*comandante).or_insert(0);
+            let antes = *v;
             *v = v.saturating_add(d).max(0);
+            let aplicado = *v - antes;
             if *v == 0 {
                 f.dano_comandante.remove(comandante);
             }
-            f.vida = f.vida.saturating_sub(d);
+            f.vida = f.vida.saturating_sub(aplicado);
             Ok(())
         }
         Accion::VerFantasma { si } => {

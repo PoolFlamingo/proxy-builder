@@ -927,5 +927,12 @@
 	"Ahora eres el anfitrión: la partida sigue con tu copia.": "Agora és o anfitrião: a partida continua com a tua cópia.",
 	"{nombre} es el nuevo anfitrión.": "{nombre} é o novo anfitrião.",
 	"Sin la mayoría de los jugadores conectados no se juega: espera a que vuelvan.": "Sem a maioria dos jogadores ligados não se joga: espera que voltem.",
-	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "Esse anfitrião ainda não tem a maioria dos jogadores."
+	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "Esse anfitrião ainda não tem a maioria dos jogadores.",
+	"Eres el anfitrión: la partida sigue con otro jugador.": "Você é o anfitrião: a partida continua com outro jogador.",
+	"Tú, el anfitrión, te quedas en el primer asiento.": "Você, o anfitrião, fica no primeiro assento.",
+	"El anfitrión empieza la siguiente partida.": "O anfitrião começa a próxima partida.",
+	"La sala ha cambiado mientras elegías: revisa los jugadores y vuelve a empezar.": "A sala mudou enquanto você escolhia: confira os jogadores e comece de novo.",
+	"En red cada uno cambia solo su propio mazo.": "Online, cada um troca só o seu próprio deck.",
+	"Tras el traspaso del anfitrión no se puede abrir otra partida del encuentro: ya no están los mazos de todos.": "Após a troca de anfitrião não é possível abrir a próxima partida da série: os decks de todos já não estão aqui.",
+	"Ese cambio de banquillo no encaja: revisa las cartas.": "Essa troca de sideboard não encaixa: confira as cartas."
 }

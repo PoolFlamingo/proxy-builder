@@ -308,7 +308,7 @@ export interface Commands {
 	red_estado: { args: Record<string, never>; result: EstadoRed };
 	red_crear: { args: { apodo: string; deck: string | null }; result: string };
 	red_unirse: { args: { peticion: PeticionUnion }; result: number };
-	red_empezar: { args: { config: ConfigMesa }; result: number };
+	red_empezar: { args: { config: ConfigMesa; invitados: number[] }; result: number };
 	red_salir: { args: Record<string, never>; result: null };
 	mesa_fantasma: {
 		args: { tablero: IdJugador; carta: IdCarta | null; x: number; y: number };

@@ -28,5 +28,6 @@
 	"No se ha podido guardar el deck: se perderán sus últimos cambios.": "덱을 저장하지 못했어요. 마지막 변경 사항이 사라져요.",
 	"Cerrar igualmente": "그래도 닫기",
 	"Guardar y cerrar": "저장하고 닫기",
-	"No se ha podido cerrar la ventana.": "창을 닫지 못했어요."
+	"No se ha podido cerrar la ventana.": "창을 닫지 못했어요.",
+	"Se instalará al salir de la mesa.": "테이블에서 나가면 설치돼요."
 }

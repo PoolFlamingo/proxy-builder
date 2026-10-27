@@ -31,6 +31,7 @@ use super::protocolo::{
     escribir_al_host, leer_del_host, version_app, AlHost, DelHost, NodoJugador, Rol, PROTOCOLO,
 };
 use crate::error::{AppError, AppResult, ErrorCode};
+use crate::mesa::encuentro::VistaBanquillo;
 use crate::mesa::sesion::{Recibido, Sesion};
 
 const INTENTOS: u32 = 5;
@@ -47,6 +48,8 @@ pub struct Invitado {
     pub pendientes: BTreeMap<u64, Accion>,
     /// Quién es quién (para seguir de anfitrión si el de ahora se va).
     pub nodos: Vec<NodoJugador>,
+    /// Quien espera la respuesta del anfitrión sobre el banquillo.
+    pub banquillo: Option<tokio::sync::oneshot::Sender<Result<VistaBanquillo, String>>>,
 }
 
 impl Invitado {
@@ -58,7 +61,22 @@ impl Invitado {
             siguiente: 0,
             pendientes: BTreeMap::new(),
             nodos: Vec::new(),
+            banquillo: None,
         }
+    }
+
+    /// Le pide algo del banquillo al anfitrión (`PideBanquillo` o
+    /// `CambiaBanquillo`); la respuesta llega por el canal que devuelve.
+    pub fn pedir_banquillo(
+        &mut self,
+        pregunta: AlHost,
+    ) -> AppResult<tokio::sync::oneshot::Receiver<Result<VistaBanquillo, String>>> {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        self.tx
+            .send(pregunta)
+            .map_err(|_| AppError::new(ErrorCode::Network).with("motivo", "desconectado"))?;
+        self.banquillo = Some(tx);
+        Ok(rx)
     }
 
     /// Manda una intención al anfitrión.
@@ -116,6 +134,8 @@ enum Fin {
     Cortada,
     Cerrada,
     Rechazada(String),
+    /// El anfitrión se fue a propósito y dice quién sigue (Fase K).
+    Traspaso(super::sucesion::Traspaso),
 }
 
 /// Conecta, manda el `Hola` y espera la primera respuesta (si es un
@@ -260,6 +280,7 @@ async fn bucle<M: Mesa>(
         let Some((conn, tx, rx, m)) = actual.take() else {
             return;
         };
+        let mut traspaso = None;
         if let Ok(mut c) = conexion.lock() {
             *c = Some(conn.clone());
         }
@@ -283,11 +304,15 @@ async fn bucle<M: Mesa>(
                 mesa.avisar(AvisoRed::Rechazada { motivo });
                 return;
             }
+            Fin::Traspaso(t) => traspaso = Some(t),
             Fin::Cortada => {}
         }
         // Volver a conectar, con el último evento que se tiene. Con código
-        // directo se prueba menos: luego se busca al anfitrión que sigue.
-        let intentos = if super::sucesion::se_puede_traspasar(&u) {
+        // directo se prueba menos: luego se busca al anfitrión que sigue. Si
+        // se fue a propósito, no se espera a nadie: se busca al que sigue.
+        let intentos = if traspaso.is_some() {
+            0
+        } else if super::sucesion::se_puede_traspasar(&u) {
             super::sucesion::INTENTOS_ANTES
         } else {
             INTENTOS
@@ -331,7 +356,7 @@ async fn bucle<M: Mesa>(
             }
         }
         if actual.is_none() && es_mia(&mesa, union) {
-            match super::sucesion::buscar(&ep, &mut u, &mesa).await {
+            match super::sucesion::buscar(&ep, &mut u, &mesa, traspaso).await {
                 Some(super::sucesion::Busqueda::Conectado(c)) => actual = Some(c),
                 // Esta app sigue de anfitrión: este bucle ya no hace falta.
                 Some(super::sucesion::Busqueda::Anfitrion) => return,
@@ -345,6 +370,19 @@ async fn bucle<M: Mesa>(
             return;
         }
     }
+}
+
+/// Le llega a quien esperaba lo del banquillo.
+fn responder_banquillo<M: Mesa>(mesa: &M, r: Result<VistaBanquillo, String>) {
+    mesa.con(|m| {
+        if let Some(Some(crate::mesa::sesion::RedSesion::Invitado(i))) =
+            m.as_mut().map(|s| &mut s.red)
+        {
+            if let Some(tx) = i.banquillo.take() {
+                let _ = tx.send(r);
+            }
+        }
+    });
 }
 
 /// El anfitrión cerró la partida: la pantalla se entera y se olvida.
@@ -551,7 +589,21 @@ fn recibir<M: Mesa>(
                 let _ = salida.send(AlHost::Pide { desde_seq: 0 });
             }
         }
+        DelHost::Banquillo { vista } => responder_banquillo(mesa, Ok(vista)),
+        DelHost::BanquilloNo { motivo } => responder_banquillo(mesa, Err(motivo)),
+        DelHost::Encuentro { encuentro, primero } => mesa.con(|m| {
+            if let Some(s) = m.as_mut() {
+                s.encuentro = encuentro;
+                s.config.primero = primero;
+            }
+        }),
         DelHost::Cerrada => return Some(Fin::Cerrada),
+        DelHost::Traspaso { jugador, sucesor } => {
+            return Some(Fin::Traspaso(super::sucesion::Traspaso {
+                ido: jugador,
+                sucesor,
+            }))
+        }
     }
     None
 }

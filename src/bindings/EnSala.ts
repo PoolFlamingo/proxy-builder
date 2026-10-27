@@ -4,7 +4,12 @@ import type { RolEnSala } from "./RolEnSala";
 /**
  * Quien está en la sala de espera.
  */
-export type EnSala = { apodo: string, rol: RolEnSala, 
+export type EnSala = { 
+/**
+ * Para señalarlo al elegir asientos y equipos: el de su conexión (el
+ * anfitrión, 0). Solo vale mientras dure la sala.
+ */
+id: number, apodo: string, rol: RolEnSala, 
 /**
  * El deck que trae (su nombre), si ya lo mandó.
  */

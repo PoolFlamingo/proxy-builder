@@ -28,6 +28,8 @@ pub mod perfil;
 pub mod protocolo;
 #[cfg(test)]
 mod pruebas;
+#[cfg(test)]
+mod pruebas_procesos;
 pub mod servidor;
 pub mod sucesion;
 
@@ -53,11 +55,12 @@ pub enum Sala {
 }
 
 impl Sala {
-    /// Sale: el anfitrión la cierra para todos; el invitado se despide.
+    /// Sale: el anfitrión cede la partida a otro jugador si puede y, si no,
+    /// la cierra para todos (`Anfitrion::irse`); el invitado se despide.
     pub async fn cerrar(self) {
         match self {
             Sala::Anfitrion { anf, tarea, .. } => {
-                anf.cerrar();
+                anf.irse().await;
                 tarea.abort();
             }
             Sala::Invitado { conexion, .. } => conexion.salir().await,

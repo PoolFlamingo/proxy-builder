@@ -3,6 +3,7 @@
 		"tipo": "sala",
 		"jugadores": [
 			{
+				"id": 0,
 				"apodo": "Pablo",
 				"rol": "jugador",
 				"deck": "Prueba"
@@ -37,5 +38,34 @@
 	},
 	{
 		"tipo": "cerrada"
+	},
+	{
+		"tipo": "traspaso",
+		"jugador": 0,
+		"sucesor": 1
+	},
+	{
+		"tipo": "banquillo",
+		"vista": {
+			"mazo": [
+				{
+					"id": "c1",
+					"nombre": "Isla"
+				}
+			],
+			"banquillo": []
+		}
+	},
+	{
+		"tipo": "banquilloNo",
+		"motivo": "sin_terminar"
+	},
+	{
+		"tipo": "encuentro",
+		"encuentro": {
+			"alMejorDe": 3,
+			"cerradas": []
+		},
+		"primero": 1
 	}
 ]

@@ -28,5 +28,6 @@
 	"No se ha podido guardar el deck: se perderán sus últimos cambios.": "Das Deck konnte nicht gespeichert werden: Die letzten Änderungen gehen verloren.",
 	"Cerrar igualmente": "Trotzdem schließen",
 	"Guardar y cerrar": "Speichern und schließen",
-	"No se ha podido cerrar la ventana.": "Das Fenster konnte nicht geschlossen werden."
+	"No se ha podido cerrar la ventana.": "Das Fenster konnte nicht geschlossen werden.",
+	"Se instalará al salir de la mesa.": "Wird installiert, sobald du den Tisch verlässt."
 }

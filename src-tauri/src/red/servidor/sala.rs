@@ -392,7 +392,7 @@ async fn empezar_cuando_esten(app: AppHandle, salon: Arc<Salon>, anf: Arc<Anfitr
         primero: None,
     };
     let mesa = MesaDeApp(app.clone());
-    match empezar_partida(&anf, &mesa, salon.yo, config, listo.mazo.clone()) {
+    match empezar_partida(&anf, &mesa, salon.yo, config, listo.mazo.clone(), &[]) {
         Ok(()) => mesa.avisar(AvisoRed::Empezada),
         Err(e) => {
             tracing::warn!(codigo = ?e.code, "no se pudo empezar la partida de la sala");

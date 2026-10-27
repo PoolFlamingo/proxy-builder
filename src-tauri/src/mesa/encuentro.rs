@@ -8,14 +8,14 @@
 use mesa::encuentro::{cambiar, Encuentro, EstadoEncuentro};
 use mesa::preparar::Seccion;
 use mesa::IdJugador;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use super::sesion::{ahora_ms, partida, semilla, RedSesion, Sesion};
 use crate::error::{AppError, AppResult, ErrorCode};
 
 /// Una carta del mazo o del banquillo, para el diálogo de cambios.
-#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct CartaBanquillo {
@@ -24,7 +24,7 @@ pub struct CartaBanquillo {
     pub nombre: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct VistaBanquillo {
@@ -121,19 +121,40 @@ impl Sesion {
     /// lleva la partida, que haya encuentro y que la partida ya haya
     /// terminado. Devuelve quién ganó.
     fn entre_partidas(&self) -> AppResult<Vec<IdJugador>> {
-        // En red, quien lleva los mazos de todos es el anfitrión.
+        // En red, quien lleva los mazos de todos es el anfitrión; el
+        // invitado cambia el suyo por el anfitrión (`banquillo_de`).
         if matches!(self.red, Some(RedSesion::Invitado(_))) {
             return Err(rechazo("invitado"));
         }
         if self.encuentro.is_none() {
             return Err(rechazo("sin_encuentro"));
         }
+        // Un anfitrión que heredó la partida no tiene los mazos de los demás
+        // (cada uno guarda el suyo): no puede abrir la siguiente.
+        if self.mazos.len() != self.partida().jugadores.len() {
+            return Err(rechazo("sin_mazos"));
+        }
         self.ganadores_de_ahora()
             .ok_or_else(|| rechazo("sin_terminar"))
     }
 
+    /// En red, quien juega desde esta pantalla solo toca su propio mazo.
+    fn es_el_mio(&self, jugador: IdJugador) -> AppResult<()> {
+        if self.red.is_some() && jugador != self.yo {
+            return Err(rechazo("ajeno"));
+        }
+        Ok(())
+    }
+
     /// El mazo y el banquillo de un jugador, para elegir qué cambiar.
     pub fn banquillo(&self, jugador: IdJugador) -> AppResult<VistaBanquillo> {
+        self.es_el_mio(jugador)?;
+        self.banquillo_de(jugador)
+    }
+
+    /// Lo mismo, sin mirar de quién es esta pantalla: el anfitrión lo usa
+    /// para el invitado que se lo pide.
+    pub fn banquillo_de(&self, jugador: IdJugador) -> AppResult<VistaBanquillo> {
         self.entre_partidas()?;
         let deck = self
             .mazos
@@ -166,6 +187,17 @@ impl Sesion {
         sale: Vec<String>,
         entra: Vec<String>,
     ) -> AppResult<()> {
+        self.es_el_mio(jugador)?;
+        self.cambiar_banquillo_de(jugador, sale, entra)
+    }
+
+    /// Lo mismo, sin mirar de quién es esta pantalla (ver `banquillo_de`).
+    pub fn cambiar_banquillo_de(
+        &mut self,
+        jugador: IdJugador,
+        sale: Vec<String>,
+        entra: Vec<String>,
+    ) -> AppResult<()> {
         self.entre_partidas()?;
         let deck = self
             .mazos
@@ -192,6 +224,11 @@ impl Sesion {
         // Hasta aquí nada ha cambiado si algo falló: ahora sí, el marcador.
         if let Some(e) = &mut self.encuentro {
             e.cerrar(ganadores);
+        }
+        // Los invitados llevan el marcador por su cuenta: se les manda antes
+        // de la partida nueva, para que al llegar esta ya lo tengan al día.
+        if let Some(RedSesion::Anfitrion(a)) = &self.red {
+            a.repartir_encuentro(self.encuentro.clone(), self.config.primero);
         }
         self.publicar(hecho, None);
         Ok(())

@@ -5,9 +5,11 @@ import { Confirmar } from "@/components/confirmar";
 import { useLang } from "@/components/language-provider";
 import { cancelarTrabajo } from "@/features/decklist/acciones";
 import { guardar as guardarPartida } from "@/features/mesa/conexion";
+import { salirDeRed } from "@/features/mesa/red/conexion-red";
 import { hayPendientes, type Pendientes, pendientes } from "@/lib/cierre";
 import { guardarAhora } from "@/stores/deck-store";
 import { useEdicion } from "@/stores/edicion-store";
+import { useRed } from "@/stores/red-store";
 
 /** Guarda lo que quede del deck (el autoguardado espera 800 ms); `false` si no pudo. */
 async function guardarElDeck(): Promise<boolean> {
@@ -78,6 +80,9 @@ export function ConfirmarCierre() {
 		if (pend?.trabajo != null) cancelarTrabajo();
 		await guardarElDeck();
 		await guardarPartida();
+		// En red, salir con el aviso: el anfitrión cede la partida a otro jugador
+		// en vez de desaparecer (y que los demás esperen a notarlo).
+		if (useRed.getState().papel) await salirDeRed();
 		try {
 			await getCurrentWindow().destroy();
 		} catch {

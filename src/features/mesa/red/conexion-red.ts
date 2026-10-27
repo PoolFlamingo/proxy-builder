@@ -140,9 +140,9 @@ export async function unirsePartida(peticion: PeticionUnion): Promise<boolean> {
 	return ok;
 }
 
-/** El anfitrión empieza con los de la sala. */
-export async function empezarRed(config: ConfigMesa): Promise<boolean> {
-	const ok = await conProgreso(() => call("red_empezar", { config }));
+/** El anfitrión empieza con los de la sala; `invitados` son sus ids (`EnSala.id`) por asiento. */
+export async function empezarRed(config: ConfigMesa, invitados: number[]): Promise<boolean> {
+	const ok = await conProgreso(() => call("red_empezar", { config, invitados }));
 	if (ok) useRed.getState().poner({ empezada: true });
 	return ok;
 }

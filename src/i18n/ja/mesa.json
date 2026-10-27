@@ -859,5 +859,12 @@
 	"Ahora eres el anfitrión: la partida sigue con tu copia.": "あなたがホストになりました：あなたのコピーで対戦が続きます。",
 	"{nombre} es el nuevo anfitrión.": "{nombre} が新しいホストです。",
 	"Sin la mayoría de los jugadores conectados no se juega: espera a que vuelvan.": "過半数のプレイヤーが接続していないとプレイできません：戻るのを待ってください。",
-	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "そのホストにはまだ過半数のプレイヤーがいません。"
+	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "そのホストにはまだ過半数のプレイヤーがいません。",
+	"Eres el anfitrión: la partida sigue con otro jugador.": "あなたはホストです：ゲームは別のプレイヤーが引き継いで続きます。",
+	"Tú, el anfitrión, te quedas en el primer asiento.": "ホストのあなたは最初の席のままです。",
+	"El anfitrión empieza la siguiente partida.": "次の対戦はホストが開始します。",
+	"La sala ha cambiado mientras elegías: revisa los jugadores y vuelve a empezar.": "選んでいる間にルームが変わりました。プレイヤーを確認してもう一度開始してください。",
+	"En red cada uno cambia solo su propio mazo.": "オンラインでは、各自が自分のデッキだけを変更できます。",
+	"Tras el traspaso del anfitrión no se puede abrir otra partida del encuentro: ya no están los mazos de todos.": "ホストが替わったあとは、マッチの次の対戦を開くことはできません。全員のデッキがもう手元にないためです。",
+	"Ese cambio de banquillo no encaja: revisa las cartas.": "そのサイドボードの入れ替えは成立しません。カードを確認してください。"
 }

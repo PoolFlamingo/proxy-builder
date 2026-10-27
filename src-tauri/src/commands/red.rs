@@ -84,6 +84,9 @@ pub struct EstadoRed {
     /// `red://aviso`).
     pub sala: Vec<EnSala>,
     pub empezada: bool,
+    /// Solo el anfitrión: si al salir la partida sigue con otro jugador (si
+    /// no, se cierra para todos).
+    pub puede_ceder: bool,
 }
 
 fn ocupada() -> AppError {
@@ -103,12 +106,14 @@ pub fn red_estado(state: State<'_, AppState>) -> EstadoRed {
             codigo: None,
             sala: Vec::new(),
             empezada: false,
+            puede_ceder: false,
         },
         Some(Sala::Anfitrion { anf, codigo, .. }) => EstadoRed {
             papel: Some(PapelRed::Anfitrion),
             codigo: Some(codigo.clone()),
             sala: anf.vista_sala(),
             empezada: anf.empezada(),
+            puede_ceder: anf.puede_ceder(),
         },
         Some(Sala::Invitado { rol, .. }) => EstadoRed {
             papel: Some(match rol {
@@ -118,6 +123,7 @@ pub fn red_estado(state: State<'_, AppState>) -> EstadoRed {
             codigo: None,
             sala: Vec::new(),
             empezada: state.hay_partida() || state.hay_mirada(),
+            puede_ceder: false,
         },
     })
 }
@@ -261,13 +267,15 @@ pub fn red_unirse(
 }
 
 /// El anfitrión empieza la partida con los de la sala que trajeron deck.
-/// `config` trae solo al anfitrión (el jugador 0) y su deck; en red no hay
-/// sparring. Es un trabajo, como `mesa_empezar`.
+/// `config` trae al anfitrión (el jugador 0, con su deck) y lo que eligió de
+/// los invitados; `invitados` son sus conexiones por asiento (vacío, por orden
+/// de llegada). En red no hay sparring. Es un trabajo, como `mesa_empezar`.
 #[tauri::command]
 pub fn red_empezar(
     app: AppHandle,
     state: State<'_, AppState>,
     mut config: ConfigMesa,
+    invitados: Vec<u64>,
 ) -> AppResult<u32> {
     let anf = state
         .red
@@ -276,7 +284,9 @@ pub fn red_empezar(
             _ => None,
         })
         .ok_or_else(|| AppError::new(ErrorCode::NotFound).with("motivo", "sin_sala"))?;
-    if config.jugadores.len() != 1 {
+    // El anfitrión y, tras él, lo que eligió de cada invitado (color y
+    // equipo), por el mismo orden que `invitados`.
+    if config.jugadores.is_empty() || config.jugadores.len() > 1 + invitados.len() {
         return Err(AppError::new(ErrorCode::InvalidInput));
     }
     config.intensidad = Intensidad::Apagado;
@@ -301,7 +311,14 @@ pub fn red_empezar(
             )
             .await?;
             let ep = estado.red.nodo().await?;
-            empezar_partida(&anf, &MesaDeApp(app.clone()), ep.id(), config, deck)
+            empezar_partida(
+                &anf,
+                &MesaDeApp(app.clone()),
+                ep.id(),
+                config,
+                deck,
+                &invitados,
+            )
         }
         .await;
         terminar(&app, job_id, r);

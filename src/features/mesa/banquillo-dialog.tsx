@@ -1,4 +1,4 @@
-import { Minus, Play, Plus } from "lucide-react";
+import { Check, Minus, Play, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { IdJugador } from "@/bindings/IdJugador";
@@ -17,6 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { useMesa } from "@/stores/mesa-store";
+import { useRed } from "@/stores/red-store";
 import {
 	agrupar,
 	ajustar,
@@ -43,14 +44,23 @@ const agrupado = (b: VistaBanquillo, id: IdJugador): Datos => ({
  * **El banquillo entre dos partidas** de un encuentro: cada jugador cambia
  * cartas del mazo por cartas de su banquillo (siempre las mismas que salen
  * que entran) y, al empezar la siguiente partida, Rust monta los mazos
- * nuevos. En una partida local se cambia el de cada uno; en red lo hace el
- * anfitrión, que es quien tiene los mazos de todos.
+ * nuevos. En una partida local se cambia el de cada uno; en red cada uno
+ * cambia solo el suyo (el invitado se lo manda al anfitrión, que tiene los
+ * mazos de todos) y la siguiente partida la empieza el anfitrión.
  */
 export function BanquilloDialog({ onCerrar }: { onCerrar: () => void }) {
 	const { t, mensaje } = useLang();
 	const encuentro = useEncuentro();
-	const asientos = useMesa((s) => s.asientos);
+	const todos = useMesa((s) => s.asientos);
+	const yo = useMesa((s) => s.yo);
 	const jugadores = useMesa((s) => s.jugadores);
+	const papel = useRed((s) => s.papel);
+	// En red, cada uno solo toca su mazo.
+	const asientos = useMemo(
+		() => (papel !== null && yo !== null ? [yo] : todos),
+		[papel, yo, todos],
+	);
+	const invitado = papel === "jugador";
 	const [datos, setDatos] = useState<Datos[]>([]);
 	const [cambios, setCambios] = useState<Record<number, CambioDeJugador>>({});
 	const [actual, setActual] = useState<IdJugador>(asientos[0] ?? 0);
@@ -97,7 +107,8 @@ export function BanquilloDialog({ onCerrar }: { onCerrar: () => void }) {
 					entra: idsDe(d.banquillo, c.entra),
 				});
 			}
-			await call("mesa_siguiente_partida");
+			// El invitado solo deja su cambio: la partida la empieza el anfitrión.
+			if (!invitado) await call("mesa_siguiente_partida");
 			onCerrar();
 		} catch (e) {
 			toast.error(mensaje(e));
@@ -178,13 +189,18 @@ export function BanquilloDialog({ onCerrar }: { onCerrar: () => void }) {
 								entra: total(cambio.entra),
 							})}
 				</p>
+				{invitado && (
+					<p className="text-xs text-muted-foreground">
+						{t("El anfitrión empieza la siguiente partida.")}
+					</p>
+				)}
 				<DialogFooter>
 					<Button variant="outline" onClick={onCerrar}>
 						{t("Cancelar")}
 					</Button>
 					<Button disabled={!todoValido || empezando} onClick={() => void empezar()}>
-						<Play className="size-4" />
-						{t("Empezar la partida {siguiente}", { siguiente })}
+						{invitado ? <Check className="size-4" /> : <Play className="size-4" />}
+						{invitado ? t("Guardar") : t("Empezar la partida {siguiente}", { siguiente })}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

@@ -75,11 +75,24 @@ pub fn direccion_de(n: &NodoJugador) -> Option<EndpointAddr> {
     Some(dada.unwrap_or_else(|| EndpointAddr::from(nodo)))
 }
 
+/// Lo que dice un anfitrión que se va a propósito (`DelHost::Traspaso`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Traspaso {
+    /// El asiento del que se va: ya no cuenta para la mayoría.
+    pub ido: IdJugador,
+    /// Quien sigue de anfitrión.
+    pub sucesor: IdJugador,
+}
+
 /// Los candidatos a seguir de anfitrión, por orden de asiento, sin el que
-/// se fue.
-pub fn candidatos(nodos: &[NodoJugador], sin: &str) -> Vec<NodoJugador> {
+/// se fue. Si el anfitrión dijo quién sigue, ese va el primero.
+pub fn candidatos(
+    nodos: &[NodoJugador],
+    sin: &str,
+    sucesor: Option<IdJugador>,
+) -> Vec<NodoJugador> {
     let mut v: Vec<NodoJugador> = nodos.iter().filter(|n| n.nodo != sin).cloned().collect();
-    v.sort_by_key(|n| n.jugador);
+    v.sort_by_key(|n| (Some(n.jugador) != sucesor, n.jugador));
     v
 }
 
@@ -113,21 +126,27 @@ fn datos<M: Mesa>(mesa: &M) -> Option<(Vec<NodoJugador>, u32, Option<IdJugador>,
 
 /// El invitado no recupera al anfitrión: prueba con los demás jugadores por
 /// orden de asiento; si le toca a él, sigue de anfitrión.
-pub async fn buscar<M: Mesa>(ep: &Endpoint, u: &mut Union, mesa: &M) -> Option<Busqueda> {
+pub async fn buscar<M: Mesa>(
+    ep: &Endpoint,
+    u: &mut Union,
+    mesa: &M,
+    traspaso: Option<Traspaso>,
+) -> Option<Busqueda> {
     if !se_puede_traspasar(u) {
         return None;
     }
     let (nodos, epoch, yo, _) = datos(mesa)?;
     let perdido = u.codigo.addr.id.to_string();
     let mio = ep.id().to_string();
-    for (k, c) in candidatos(&nodos, &perdido).iter().enumerate() {
+    let sucesor = traspaso.map(|t| t.sucesor);
+    for (k, c) in candidatos(&nodos, &perdido, sucesor).iter().enumerate() {
         let epoch_c = epoch.saturating_add(1 + k as u32);
         if c.nodo == mio {
             // Los espectadores no siguen de anfitrión: no tienen la partida.
             let Some(yo) = yo.filter(|_| u.rol == Rol::Jugador) else {
                 continue;
             };
-            hacerse_anfitrion(ep, u, mesa, epoch_c, yo, &nodos);
+            hacerse_anfitrion(ep, u, mesa, epoch_c, yo, &nodos, traspaso.map(|t| t.ido));
             return Some(Busqueda::Anfitrion);
         }
         let Some(addr) = direccion_de(c) else {
@@ -170,6 +189,7 @@ fn hacerse_anfitrion<M: Mesa>(
     epoch: u32,
     yo: IdJugador,
     nodos: &[NodoJugador],
+    ido: Option<IdJugador>,
 ) {
     let anf = Anfitrion::desde(
         epoch,
@@ -179,6 +199,11 @@ fn hacerse_anfitrion<M: Mesa>(
         yo,
         nodos,
     );
+    // Quien se fue a propósito no vuelve a votar: con él fuera, dos jugadores
+    // (o uno solo) siguen la partida sin esperar a nadie.
+    if let Some(ido) = ido {
+        anf.marcar_ido(ido);
+    }
     mesa.con(|m| {
         if let Some(s) = m.as_mut() {
             s.red = Some(RedSesion::Anfitrion(anf.clone()));
@@ -315,10 +340,22 @@ mod tests {
     #[test]
     fn los_candidatos_van_por_asiento_y_sin_el_que_se_fue() {
         let v = vec![nodo(2, "c"), nodo(0, "a"), nodo(1, "b")];
-        let c: Vec<String> = candidatos(&v, "a").into_iter().map(|n| n.nodo).collect();
+        let c: Vec<String> = candidatos(&v, "a", None)
+            .into_iter()
+            .map(|n| n.nodo)
+            .collect();
         assert_eq!(c, vec!["b", "c"]);
-        let c: Vec<String> = candidatos(&v, "b").into_iter().map(|n| n.nodo).collect();
+        let c: Vec<String> = candidatos(&v, "b", None)
+            .into_iter()
+            .map(|n| n.nodo)
+            .collect();
         assert_eq!(c, vec!["a", "c"]);
+        // Si el anfitrión que se va dice quién sigue, ese va el primero.
+        let c: Vec<String> = candidatos(&v, "a", Some(IdJugador(2)))
+            .into_iter()
+            .map(|n| n.nodo)
+            .collect();
+        assert_eq!(c, vec!["c", "b"]);
     }
 
     #[test]

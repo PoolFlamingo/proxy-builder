@@ -71,6 +71,8 @@ function Mesa({ deckId }: { deckId: string | null }) {
 	const [preguntaSalir, setPreguntaSalir] = useState(false);
 	const [preguntaReiniciar, setPreguntaReiniciar] = useState(false);
 	const [preguntaEditar, setPreguntaEditar] = useState(false);
+	// Siendo anfitrión: si al salir la partida sigue con otro jugador.
+	const [puedeCeder, setPuedeCeder] = useState(false);
 	const [deckId2, setDeckId2] = useState(deckId);
 	useEffect(() => {
 		if (deckId) return setDeckId2(deckId);
@@ -91,7 +93,14 @@ function Mesa({ deckId }: { deckId: string | null }) {
 				<BarraRepeticion />
 			) : (
 				<BarraMesa
-					onSalir={() => setPreguntaSalir(true)}
+					onSalir={() => {
+						if (papel === "anfitrion") {
+							call("red_estado")
+								.then((e) => setPuedeCeder(e.puedeCeder))
+								.catch(() => setPuedeCeder(false));
+						}
+						setPreguntaSalir(true);
+					}}
 					onEditarDeck={() => setPreguntaEditar(true)}
 					onReiniciar={() => setPreguntaReiniciar(true)}
 				/>
@@ -122,7 +131,9 @@ function Mesa({ deckId }: { deckId: string | null }) {
 					titulo={t("¿Salir de la partida?")}
 					descripcion={
 						papel === "anfitrion"
-							? t("Eres el anfitrión: la partida se cierra para todos.")
+							? puedeCeder
+								? t("Eres el anfitrión: la partida sigue con otro jugador.")
+								: t("Eres el anfitrión: la partida se cierra para todos.")
 							: t("Los demás siguen jugando sin ti.")
 					}
 					accion={t("Salir")}
