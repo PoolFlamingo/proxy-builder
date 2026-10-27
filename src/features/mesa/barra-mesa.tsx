@@ -14,6 +14,7 @@ import {
 	Play,
 	Redo2,
 	RotateCcw,
+	Skull,
 	SquareStack,
 	Undo2,
 } from "lucide-react";
@@ -23,7 +24,7 @@ import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { useChat } from "@/stores/chat-store";
-import { useMesa } from "@/stores/mesa-store";
+import { tableroDe, useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
 import { hacer } from "./acciones";
 import * as op from "./operaciones";
@@ -106,6 +107,7 @@ export function BarraMesa({
 		return () => window.clearInterval(i);
 	}, [pausada, desfase]);
 	const abrir = usePantalla((s) => s.abrir);
+	const viendo = useMesa(tableroDe);
 	const panel = usePantalla((s) => s.panel);
 	const setPanel = usePantalla((s) => s.setPanel);
 	const sinLeer = useChat((s) => s.sinLeer);
@@ -186,6 +188,12 @@ export function BarraMesa({
 					</span>
 				</WithTooltip>
 			)}
+			<Boton
+				ayuda={t("Cementerios y exilios")}
+				onClick={() => abrir({ tipo: "zona", jugador: viendo, zona: "cementerio" })}
+			>
+				<Skull className="size-4" />
+			</Boton>
 			<Boton
 				ayuda={t("Registro de la partida")}
 				activo={panel === "registro"}

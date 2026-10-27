@@ -296,10 +296,20 @@ const NOMBRES_ZONA: Partial<Record<Zona, string>> = {
 };
 
 /** Ver el cementerio, el exilio, el mando o el banquillo, con el separador «Antes». */
+/**
+ * **Ver una zona entera** sin sacar las cartas una a una. De cementerio y
+ * exilio hay pestañas para pasar de una a otra y, con varios jugadores, un
+ * selector con las de cada uno (y cuántas lleva cada cual): se abre desde la
+ * barra, el menú de la zona o con doble clic en ella.
+ */
 export function VerZonaDialog({ jugador, zona }: { jugador: IdJugador; zona: Zona }) {
 	const { t } = useLang();
-	const v = useMesa((s) => s.zonas[`${jugador}:${zona}`]);
+	const [de, setDe] = useState(jugador);
+	const [cual, setCual] = useState(zona);
+	const v = useMesa((s) => s.zonas[`${de}:${cual}`]);
 	const todas = useMesa((s) => s.cartas);
+	const jugadores = useMesa((s) => s.jugadores);
+	const zonas = useMesa((s) => s.zonas);
 	const ronda = useMesa((s) => s.general?.turno.ronda ?? 0);
 	const cartas = useMemo(
 		() =>
@@ -309,19 +319,53 @@ export function VerZonaDialog({ jugador, zona }: { jugador: IdJugador; zona: Zon
 				.filter((c): c is VistaCarta => !!c),
 		[v, todas],
 	);
-	const a = (id: IdCarta, z: Zona, s = sitio.arriba) =>
-		void mover([id], destino(z, s, z === "campo" ? jugador : null));
+	const pestanas = zona === "cementerio" || zona === "exilio";
+	const cuantas = (j: IdJugador, z: Zona) => zonas[`${j}:${z}`]?.cuantas ?? 0;
+	const lista = Object.values(jugadores);
+	// El campo es de quien mueve: robar del cementerio de otro lo lleva al propio.
+	const a = (id: IdCarta, z: Zona, s = sitio.arriba) => void mover([id], destino(z, s, null));
 	return (
 		<Dialog open onOpenChange={(o) => !o && usePantalla.getState().abrir(null)}>
 			<DialogContent className="sm:max-w-5xl" cambiosSinGuardar={false}>
 				<DialogHeader>
-					<DialogTitle>{NOMBRES_ZONA[zona] ? t(NOMBRES_ZONA[zona]) : t("Zona")}</DialogTitle>
+					<DialogTitle>
+						{NOMBRES_ZONA[cual] ? t(NOMBRES_ZONA[cual]) : t("Zona")}
+						{lista.length > 1 && ` · ${jugadores[de]?.nombre ?? ""}`}
+					</DialogTitle>
 					<DialogDescription>{t("{n} cartas", { n: cartas.length })}</DialogDescription>
 				</DialogHeader>
+				{pestanas && (
+					<div className="flex flex-wrap items-center gap-1.5">
+						{(["cementerio", "exilio"] as const).map((z) => (
+							<Button
+								key={z}
+								size="sm"
+								variant={cual === z ? "default" : "outline"}
+								onClick={() => setCual(z)}
+							>
+								{z === "cementerio" ? <Skull /> : <Trash2 />}
+								{t(NOMBRES_ZONA[z] ?? "")} · {cuantas(de, z)}
+							</Button>
+						))}
+						{lista.length > 1 && <span className="mx-1 h-5 w-px bg-border" />}
+						{lista.length > 1 &&
+							lista.map((j) => (
+								<Button
+									key={j.id}
+									size="sm"
+									variant={de === j.id ? "default" : "outline"}
+									onClick={() => setDe(j.id)}
+								>
+									<span className="size-2.5 rounded-full" style={{ background: j.color }} />
+									{j.nombre} · {cuantas(j.id, cual)}
+								</Button>
+							))}
+					</div>
+				)}
 				<Rejilla
 					cartas={cartas}
 					filtroInicial="todo"
-					separadorAntes={zona === "cementerio" || zona === "exilio" ? ronda : undefined}
+					separadorAntes={cual === "cementerio" || cual === "exilio" ? ronda : undefined}
 					acciones={(c) => (
 						<>
 							<BotonCarta ayuda={t("Mano")} onClick={() => a(c.id, "mano")}>
@@ -330,12 +374,12 @@ export function VerZonaDialog({ jugador, zona }: { jugador: IdJugador; zona: Zon
 							<BotonCarta ayuda={t("Campo")} onClick={() => a(c.id, "campo")}>
 								<LayoutGrid className="size-3" />
 							</BotonCarta>
-							{zona !== "cementerio" && (
+							{cual !== "cementerio" && (
 								<BotonCarta ayuda={t("Cementerio")} onClick={() => a(c.id, "cementerio")}>
 									<Skull className="size-3" />
 								</BotonCarta>
 							)}
-							{zona !== "exilio" && (
+							{cual !== "exilio" && (
 								<BotonCarta ayuda={t("Exilio")} onClick={() => a(c.id, "exilio")}>
 									<Trash2 className="size-3" />
 								</BotonCarta>

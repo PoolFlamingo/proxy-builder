@@ -1115,5 +1115,6 @@
 	"Para": "대상",
 	"tú": "나",
 	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "{quien}의 전장에 나와요. 만들 것을 누르세요.",
-	"Scryfall no ha encontrado nada. Prueba con el nombre de la ficha, como «Beast».": "Scryfall에서 찾지 못했어요. 토큰 이름(예: 「Beast」)으로 검색해 보세요."
+	"Scryfall no ha encontrado nada. Prueba con el nombre de la ficha, como «Beast».": "Scryfall에서 찾지 못했어요. 토큰 이름(예: 「Beast」)으로 검색해 보세요.",
+	"Cementerios y exilios": "무덤과 추방"
 }
