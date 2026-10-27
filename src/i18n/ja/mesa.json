@@ -1114,5 +1114,6 @@
 	"Que robe…": "引かせる…",
 	"Para": "対象",
 	"tú": "あなた",
-	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "{quien} の戦場に出ます。作りたいものを押してください。"
+	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "{quien} の戦場に出ます。作りたいものを押してください。",
+	"Scryfall no ha encontrado nada. Prueba con el nombre de la ficha, como «Beast».": "Scryfall では見つかりませんでした。トークンの名前（例：「Beast」）で試してください。"
 }

@@ -23,6 +23,7 @@ import { NINGUNA, useMesa } from "@/stores/mesa-store";
 import { ImagenCarta } from "../imagen-carta";
 import { hacerPor } from "../operaciones";
 import { usePantalla } from "../pantalla";
+import { consultaDeFicha } from "./consulta-ficha";
 
 /** Las fichas rápidas (`capturas/playgroup/75`): se buscan en Scryfall por su nombre. */
 const RAPIDAS = ["Treasure", "Food", "Clue", "Blood", "Map", "Powerstone"];
@@ -56,6 +57,7 @@ export function FichasDialog({ para: paraInicial }: { para?: IdJugador }) {
 	const [q, setQ] = useState("");
 	const [soloFichas, setSoloFichas] = useState(true);
 	const [resultados, setResultados] = useState<CardSummary[]>([]);
+	const [sinResultados, setSinResultados] = useState(false);
 	const [ocupado, setOcupado] = useState(false);
 	const [libre, setLibre] = useState({ nombre: "", fuerza: "1", resistencia: "1" });
 	const cerrar = () => usePantalla.getState().abrir(null);
@@ -74,8 +76,11 @@ export function FichasDialog({ para: paraInicial }: { para?: IdJugador }) {
 		if (!texto.trim()) return;
 		setOcupado(true);
 		try {
-			const consulta = fichas ? `${texto.trim()} (t:token OR t:emblem OR t:dungeon)` : texto.trim();
-			setResultados(await call("card_search", { q: consulta, lang: null, highresOnly: false }));
+			const base = consultaDeFicha(texto);
+			const consulta = fichas ? `${base} (t:token OR t:emblem OR t:dungeon)` : base;
+			const r = await call("card_search", { q: consulta, lang: null, highresOnly: false });
+			setResultados(r);
+			setSinResultados(r.length === 0);
 		} catch (e) {
 			if (siFalla) siFalla();
 			else toast.error(mensaje(e));
@@ -208,6 +213,13 @@ export function FichasDialog({ para: paraInicial }: { para?: IdJugador }) {
 									)}
 								</Button>
 							</div>
+							{sinResultados && (
+								<p className="text-xs text-muted-foreground">
+									{t(
+										"Scryfall no ha encontrado nada. Prueba con el nombre de la ficha, como «Beast».",
+									)}
+								</p>
+							)}
 							{resultados.length > 0 && (
 								<div className="flex flex-wrap gap-2.5">
 									{resultados.slice(0, 60).map((r) => (
