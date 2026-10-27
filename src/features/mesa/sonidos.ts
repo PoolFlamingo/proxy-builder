@@ -1,11 +1,13 @@
 import type { Evento } from "@/bindings/Evento";
 import type { IdJugador } from "@/bindings/IdJugador";
 import { type Audio, audio as audioMesa, azar, envolvente, hayHueco } from "./audio";
+import { MUESTRAS, tocar } from "./muestras";
 
 /**
- * **Los sonidos de la mesa** (H6), sintetizados con Web Audio (sin ficheros,
- * como los de los dados): barajar, robar, girar, jugar al campo, pasar el
- * turno, «es tu turno», mensajes y el fantasma del sparring. Qué suena con
+ * **Los sonidos de la mesa** (H6): barajar, robar, girar, jugar al campo,
+ * mover (muestras de `muestras/`, con el sonido sintetizado de respaldo) y
+ * pasar el turno, «es tu turno», mensajes y el fantasma del sparring
+ * (sintetizados con Web Audio, sin ficheros). Qué suena con
  * cada evento lo decide `sonidoDeEvento` (puro, con test); cada tipo tiene su
  * interruptor en Ajustes > Mesa. Los sonidos de los dados, en `dados/`.
  */
@@ -132,6 +134,12 @@ function sonarSinRed(s: SonidoMesa) {
 	const a = audio(GRUPO_DE_SONIDO[s]);
 	if (!a || !hayHueco(a.ctx)) return;
 	const t = a.ctx.currentTime;
+	// Las de cartas, con muestras reales; si aún no están listas, suena la sintetizada.
+	if (s === "barajar" && tocar(a, MUESTRAS.barajar, { t, volumen: 0.8 })) return;
+	if (s === "robar" && tocar(a, MUESTRAS.robar, { t, volumen: 0.7 })) return;
+	if (s === "girar" && tocar(a, MUESTRAS.girar, { t, volumen: 0.6 })) return;
+	if (s === "jugar" && tocar(a, MUESTRAS.jugar, { t, volumen: 0.9 })) return;
+	if (s === "mover" && tocar(a, MUESTRAS.mover, { t, volumen: 0.45 })) return;
 	switch (s) {
 		case "barajar":
 			// Un abanico de chasquidos que se aceleran, como las cartas al juntarse.

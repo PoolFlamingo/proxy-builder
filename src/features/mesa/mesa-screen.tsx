@@ -21,6 +21,7 @@ import { ContadorFps, VigiaFps } from "./fps";
 import { Mesas } from "./mesas";
 import { useSeguirTurno } from "./mirar";
 import { Muertes } from "./muerte";
+import { precargarMuestras } from "./muestras";
 import { Mulligan } from "./mulligan";
 import { useOriginalesAlDia } from "./originales";
 import { Ausentes } from "./red/ausentes";
@@ -40,6 +41,15 @@ export function MesaScreen() {
 	const activa = useMesa((s) => s.activa);
 	const [comprobado, setComprobado] = useState(false);
 	const [deckIds, setDeckIds] = useState<string[]>([]);
+
+	// Las muestras de sonido se cargan al abrir la pestaña, no al primer golpe.
+	useEffect(() => {
+		try {
+			precargarMuestras();
+		} catch {
+			// Sin dispositivo de audio no hay muestras y suena la sintetizada.
+		}
+	}, []);
 
 	useEffect(() => {
 		let vivo = true;

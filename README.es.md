@@ -533,6 +533,7 @@ más de [tweakcn](https://tweakcn.com), los emoji y las banderas de
 [Noto Color Emoji](https://github.com/googlefonts/noto-emoji) (OFL 1.1 y
 Apache 2.0; las banderas, de dominio público) y las letras del japonés, el
 coreano y el chino de Noto Sans CJK en [Google Fonts](https://fonts.google.com)
-(OFL 1.1).
+(OFL 1.1), y los sonidos de cartas y dados de la mesa de [Casino Audio](https://kenney.nl/assets/casino-audio)
+de [Kenney](https://kenney.nl) (CC0).
 Magic: The Gathering es una marca de Wizards of the Coast. Esta aplicación no está
 afiliada ni respaldada por ninguna de las dos.

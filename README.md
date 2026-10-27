@@ -519,6 +519,8 @@ languages from [MTGJSON](https://mtgjson.com) and
 themes from [tweakcn](https://tweakcn.com), the emoji and flags from
 [Noto Color Emoji](https://github.com/googlefonts/noto-emoji) (OFL 1.1 and
 Apache 2.0; flags in the public domain) and the Japanese, Korean and Chinese
-fonts from Noto Sans CJK on [Google Fonts](https://fonts.google.com) (OFL 1.1).
+fonts from Noto Sans CJK on [Google Fonts](https://fonts.google.com) (OFL 1.1), and the card and
+dice sounds of the game table from [Casino Audio](https://kenney.nl/assets/casino-audio) by
+[Kenney](https://kenney.nl) (CC0).
 Magic: The Gathering is a trademark of Wizards of the Coast. This application is
 not affiliated with or endorsed by either.

@@ -1,11 +1,13 @@
 import type { Audio } from "../audio";
 import { audio as audioMesa, azar, envolvente, hayHueco } from "../audio";
+import { MUESTRAS, tocar } from "../muestras";
 
 /**
- * **Los sonidos de los dados y la moneda**, sintetizados con la Web Audio
- * API (sin ficheros): el golpe de un dado es un chasquido de ruido filtrado
- * con un «toc» del cuerpo, y la moneda, unos parciales metálicos que se
- * apagan. Cada golpe es un poco distinto, y en el 3D suenan cuando y con la
+ * **Los sonidos de los dados y la moneda**: el golpe de un dado y el agitarlos
+ * son muestras reales (`muestras.ts`); si aún no están cargadas, suena un
+ * chasquido de ruido filtrado con un «toc» del cuerpo. La moneda sigue
+ * sintetizada con la Web Audio API (sin ficheros): unos parciales metálicos
+ * que se apagan. Cada golpe es un poco distinto, y en el 3D suenan cuando y con la
  * fuerza con la que chocan los dados en la física. El azar del sonido no es
  * el de la partida (`Math.random`): no decide nada.
  *
@@ -23,6 +25,9 @@ export function golpeDado(fuerza: number, retraso = 0) {
 	const t = ctx.currentTime + Math.max(0, retraso);
 	const f = Math.min(1, Math.max(0, fuerza));
 	const pico = 0.12 + 0.75 * f;
+	if (tocar(a, MUESTRAS.golpeDado, { t, volumen: 0.1 + 0.9 * f ** 0.7, tono: azar(0.92, 1.1) })) {
+		return;
+	}
 	// El chasquido de la resina.
 	const fuente = ctx.createBufferSource();
 	fuente.buffer = ruido;
@@ -96,6 +101,13 @@ export function lanzarMoneda(retraso = 0) {
 
 /** Los dados en la mano antes de soltarlos (para los niveles sin física). */
 export function agitarDados(cuantos: number, dura = 0.45) {
+	const a = audio();
+	if (!a) return;
+	const largo = Math.max(0.4, dura);
+	const t = a.ctx.currentTime;
+	// Un trozo de la muestra de dados agitándose en la mano.
+	if (tocar(a, MUESTRAS.agitarDados, { t, volumen: 0.55, desde: azar(0, 0.2), dura: largo }))
+		return;
 	const n = Math.min(10, 3 + cuantos * 2);
 	for (let i = 0; i < n; i++) golpeDado(azar(0.08, 0.25), (i / n) * dura + azar(0, 0.03));
 }
