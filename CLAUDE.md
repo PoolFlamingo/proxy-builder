@@ -193,6 +193,21 @@ le falta una cadena le sale la inglesa.
   `enlace.rs` (`tauri-plugin-deep-link` + single-instance, este solo sin
   `PB_PERFIL`; `rust-ini` fijado a 0.21.1 en `Cargo.lock`); el enlace solo
   rellena «Unirse con un código», unirse lo pulsa la persona.
+  **Varios jugadores** (Fase G; Pablo, 27/10/2026): de 1 a 10 en una partida
+  local («Partida local…», `partida-local.tsx` + `config-local.ts`: quien se
+  mira es quien juega, `mesa_mirar_como`) o en red. Disposiciones solo de
+  pantalla (`disposicion.ts::repartir`: único, dividido, foco, rejilla,
+  equipos; miniaturas `tablero-mini.tsx` muestreadas a 10/s por `lento.ts`;
+  se recuerdan por número de jugadores). Lo que decide reglas es del motor:
+  equipos y fuego amigo (`Partida::oponentes`, vida compartida, 2HG),
+  orden de turnos (la ronda sube al pasar por el asiento del primero), quién
+  está fuera (`mesa::fuera_de_juego`, `muerte.rs`: solo **avisa**; la persona
+  confirma con `Eliminar`), `ausencia.rs` y el encuentro al mejor de 1/3/5 con
+  banquillo (`mesa::encuentro`; vive en la sesión, `mesa/encuentro.rs`, no en
+  la `Partida`: `Accion`/`Cambio` no cambian). Desconectados y expulsión:
+  `Enlaces.ausentes`, `red/anfitrion.rs::{vigilar_ausentes, expulsar}`,
+  `Sesion::suplir`, `sala_expulsar` en el servidor; pantalla en
+  `features/mesa/{muerte,dano-de-quien}.tsx` y `red/ausentes.tsx`.
 - Rust: `commands/{cards,decklist,export,identify,layout,library,stats}.rs`,
   `package.rs` (.pbdeck), `render.rs` + `protocol.rs` (miniaturas),
   `ocr.rs` (OCR opcional de la carta entera con `ocrs`, a la resolución
