@@ -430,8 +430,11 @@ function Monton({ c, varias }: { c: VistaCarta; varias: boolean }) {
 function Mostrar({ c }: { c: VistaCarta }) {
 	const { t } = useLang();
 	const yo = useMesa((s) => s.yo);
-	const otros = useMesa((s) => Object.values(s.jugadores).filter((j) => j.id !== s.yo));
+	// El selector devuelve el objeto del store (estable); el filtro va fuera: un array
+	// nuevo en cada lectura haría saltar «Maximum update depth exceeded».
+	const jugadores = useMesa((s) => s.jugadores);
 	if (yo === null) return null;
+	const otros = Object.values(jugadores).filter((j) => j.id !== yo);
 	return (
 		<ContextMenuSub>
 			<ContextMenuSubTrigger>
