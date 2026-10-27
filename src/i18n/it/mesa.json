@@ -1192,5 +1192,11 @@
 	"Siguiente revelación": "Prossima rivelazione",
 	"Revelación {vez} de {veces}. Elige qué haces con cada carta; el resto va abajo.": "Rivelazione {vez} di {veces}. Scegli cosa fare di ogni carta; il resto va in fondo.",
 	"Cascada, varias veces…": "Cascata, più volte…",
-	"Revelar y lanzar… (cascada, descubrir)": "Rivela e lancia… (Cascata, Scoprire)"
+	"Revelar y lanzar… (cascada, descubrir)": "Rivela e lancia… (Cascata, Scoprire)",
+	"Mostrar…": "Mostra…",
+	"A todos": "A tutti",
+	"Dejar de mostrar": "Smetti di mostrare",
+	"Mostrar a todos / dejar de mostrar": "Mostra a tutti / smetti di mostrare",
+	"{quien} muestra {cartas} a todos": "{quien} mostra {cartas} a tutti",
+	"{quien} deja de mostrar {cartas}": "{quien} smette di mostrare {cartas}"
 }

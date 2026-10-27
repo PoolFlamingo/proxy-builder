@@ -127,6 +127,7 @@ function DelCampo({ c }: { c: VistaCarta }) {
 				</ContextMenuItem>
 			)}
 			<Control c={c} />
+			{c.bocaAbajo && c.controlador === useMesa.getState().yo && <Mostrar c={c} />}
 			<Contadores c={c} />
 			<ContextMenuItem onSelect={() => usePantalla.getState().abrir({ tipo: "pt", carta: c.id })}>
 				<Swords />
@@ -422,10 +423,45 @@ function Monton({ c, varias }: { c: VistaCarta; varias: boolean }) {
 	);
 }
 
+/**
+ * Enseñar una carta que solo ves tú (de la mano o boca abajo en el campo) a
+ * todos —también a quien solo mira— o a un jugador, y volver a taparla.
+ */
+function Mostrar({ c }: { c: VistaCarta }) {
+	const { t } = useLang();
+	const yo = useMesa((s) => s.yo);
+	const otros = useMesa((s) => Object.values(s.jugadores).filter((j) => j.id !== s.yo));
+	if (yo === null) return null;
+	return (
+		<ContextMenuSub>
+			<ContextMenuSubTrigger>
+				<Eye />
+				{t("Mostrar…")}
+				<Tecla nombre="Mostrar a todos / dejar de mostrar" />
+			</ContextMenuSubTrigger>
+			<ContextMenuSubContent className="text-xs">
+				<ContextMenuItem onSelect={() => op.mostrar(c.id)}>{t("A todos")}</ContextMenuItem>
+				{otros.map((j) => (
+					<ContextMenuItem key={j.id} onSelect={() => op.mostrar(c.id, j.id)}>
+						<span className="size-2.5 rounded-full" style={{ background: j.color }} />
+						{j.nombre}
+					</ContextMenuItem>
+				))}
+				<ContextMenuSeparator />
+				<ContextMenuItem onSelect={() => op.dejarDeMostrar(c.id)}>
+					<EyeOff />
+					{t("Dejar de mostrar")}
+				</ContextMenuItem>
+			</ContextMenuSubContent>
+		</ContextMenuSub>
+	);
+}
+
 function DeLaMano({ c }: { c: VistaCarta }) {
 	const { t } = useLang();
 	return (
 		<>
+			<Mostrar c={c} />
 			<ContextMenuItem onSelect={() => op.aLaPila(c.id)}>
 				<Sparkles />
 				{t("Lanzar (a la pila)")}

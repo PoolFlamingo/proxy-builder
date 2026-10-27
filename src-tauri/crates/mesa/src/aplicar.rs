@@ -1590,6 +1590,20 @@ fn accion_(q: &mut Partida, a: &Accion, ctx: &mut Ctx, seq: u64) -> Result<(), R
             q.jugador_mut(yo).ok_or(Rechazo::NoExiste)?.mano_revelada = *si;
             Ok(())
         }
+        Accion::MostrarATodos { cartas } => {
+            sin_repetir(cartas)?;
+            cada(q, cartas, |c| {
+                c.vista_por = Vista::Todos;
+                Ok(())
+            })
+        }
+        Accion::DejarDeMostrar { cartas } => {
+            sin_repetir(cartas)?;
+            cada(q, cartas, |c| {
+                c.vista_por = Vista::Nadie;
+                Ok(())
+            })
+        }
         Accion::RevelarA { cartas, a } => {
             for j in a {
                 existe_jugador(q, *j)?;

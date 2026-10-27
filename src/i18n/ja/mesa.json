@@ -1124,5 +1124,11 @@
 	"Siguiente revelación": "次の公開",
 	"Revelación {vez} de {veces}. Elige qué haces con cada carta; el resto va abajo.": "{veces} 回中 {vez} 回目の公開。各カードをどうするか選んでください。残りは一番下へ。",
 	"Cascada, varias veces…": "続唱（複数回）…",
-	"Revelar y lanzar… (cascada, descubrir)": "公開して唱える…（続唱、発見）"
+	"Revelar y lanzar… (cascada, descubrir)": "公開して唱える…（続唱、発見）",
+	"Mostrar…": "見せる…",
+	"A todos": "全員に",
+	"Dejar de mostrar": "見せるのをやめる",
+	"Mostrar a todos / dejar de mostrar": "全員に見せる／やめる",
+	"{quien} muestra {cartas} a todos": "{quien} が {cartas} を全員に見せる",
+	"{quien} deja de mostrar {cartas}": "{quien} が {cartas} を見せるのをやめる"
 }

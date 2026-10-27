@@ -1178,5 +1178,11 @@
 	"Siguiente revelación": "Volgende onthulling",
 	"Revelación {vez} de {veces}. Elige qué haces con cada carta; el resto va abajo.": "Onthulling {vez} van {veces}. Kies wat je met elke kaart doet; de rest gaat onderop.",
 	"Cascada, varias veces…": "Cascade, meerdere keren…",
-	"Revelar y lanzar… (cascada, descubrir)": "Onthullen en casten… (Cascade, Discover)"
+	"Revelar y lanzar… (cascada, descubrir)": "Onthullen en casten… (Cascade, Discover)",
+	"Mostrar…": "Tonen…",
+	"A todos": "Aan iedereen",
+	"Dejar de mostrar": "Niet meer tonen",
+	"Mostrar a todos / dejar de mostrar": "Aan iedereen tonen / niet meer tonen",
+	"{quien} muestra {cartas} a todos": "{quien} toont {cartas} aan iedereen",
+	"{quien} deja de mostrar {cartas}": "{quien} toont {cartas} niet meer"
 }

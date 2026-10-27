@@ -202,6 +202,8 @@ fn permisos(p: &Partida, yo: IdJugador, a: &Accion) -> Result<(), Rechazo> {
         | Accion::CopiaFicha { cartas }
         | Accion::DarControl { cartas, .. }
         | Accion::RevelarA { cartas, .. }
+        | Accion::MostrarATodos { cartas }
+        | Accion::DejarDeMostrar { cartas }
         | Accion::Amontonar { cartas }
         | Accion::Agrupar { cartas, .. } => todas(p, yo, cartas),
         Accion::CambiarCara { carta }

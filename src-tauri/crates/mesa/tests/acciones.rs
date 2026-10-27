@@ -76,6 +76,8 @@ fn nombre(a: &Accion) -> &'static str {
         Accion::SinCosteExtra { .. } => "SinCosteExtra",
         Accion::RevelarMano { .. } => "RevelarMano",
         Accion::RevelarA { .. } => "RevelarA",
+        Accion::MostrarATodos { .. } => "MostrarATodos",
+        Accion::DejarDeMostrar { .. } => "DejarDeMostrar",
         Accion::JugarBocaAbajo { .. } => "JugarBocaAbajo",
         Accion::Descartar { .. } => "Descartar",
         Accion::Eliminar { .. } => "Eliminar",
@@ -355,6 +357,14 @@ fn cada_accion_del_catalogo() {
     m.haz(Accion::MirarMano {
         de: OTRO,
         si: false,
+    });
+    // Enseñar una carta de la mano a todos y taparla.
+    let ensenada = m.zona(YO, Zona::Mano)[0];
+    m.haz(Accion::MostrarATodos {
+        cartas: vec![ensenada],
+    });
+    m.haz(Accion::DejarDeMostrar {
+        cartas: vec![ensenada],
     });
 
     // ── Biblioteca ──
@@ -794,6 +804,8 @@ const TODAS: &[&str] = &[
     "SinCosteExtra",
     "RevelarMano",
     "RevelarA",
+    "MostrarATodos",
+    "DejarDeMostrar",
     "JugarBocaAbajo",
     "Descartar",
     "Eliminar",
@@ -1341,4 +1353,29 @@ fn se_roba_del_cementerio_ajeno_al_campo_y_lo_que_va_a_una_mano_va_a_la_de_su_du
         como: None,
     });
     assert!(m.zona(OTRO, Zona::Mano).contains(&id));
+}
+
+#[test]
+fn una_carta_de_la_mano_se_muestra_a_todos_y_se_vuelve_a_tapar() {
+    use mesa::visibilidad::{ve, Mirador};
+    let mut m = Mesa::nueva(2);
+    let id = m.zona(YO, Zona::Mano)[0];
+    let veria = |m: &Mesa, mirador| {
+        let p = m.p();
+        let (zona, i) = p.donde(id).unwrap();
+        ve(p, &p.cartas[&id], &zona, i, mirador)
+    };
+    assert!(!veria(&m, Mirador::Jugador(OTRO)), "oculta");
+    m.haz(Accion::MostrarATodos { cartas: vec![id] });
+    assert!(veria(&m, Mirador::Jugador(OTRO)), "la ve el otro");
+    assert!(veria(&m, Mirador::Espectador), "y quien solo mira");
+    m.haz(Accion::DejarDeMostrar { cartas: vec![id] });
+    assert!(!veria(&m, Mirador::Jugador(OTRO)), "tapada otra vez");
+    assert!(veria(&m, Mirador::Jugador(YO)), "yo la sigo viendo");
+    // No se muestra lo ajeno que no se ve.
+    let suya = m.zona(OTRO, Zona::Mano)[0];
+    assert_eq!(
+        m.como(YO, Accion::MostrarATodos { cartas: vec![suya] }),
+        Err(Rechazo::SinPermiso)
+    );
 }

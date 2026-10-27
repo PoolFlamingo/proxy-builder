@@ -1124,5 +1124,11 @@
 	"Siguiente revelación": "다음 공개",
 	"Revelación {vez} de {veces}. Elige qué haces con cada carta; el resto va abajo.": "공개 {vez}/{veces}. 각 카드를 어떻게 할지 고르세요. 나머지는 맨 아래로 가요.",
 	"Cascada, varias veces…": "연쇄, 여러 번…",
-	"Revelar y lanzar… (cascada, descubrir)": "공개하고 발동… (연쇄, 발견)"
+	"Revelar y lanzar… (cascada, descubrir)": "공개하고 발동… (연쇄, 발견)",
+	"Mostrar…": "보여주기…",
+	"A todos": "모두에게",
+	"Dejar de mostrar": "보여주기 그만두기",
+	"Mostrar a todos / dejar de mostrar": "모두에게 보여주기 / 그만두기",
+	"{quien} muestra {cartas} a todos": "{quien}이(가) {cartas}을(를) 모두에게 보여줌",
+	"{quien} deja de mostrar {cartas}": "{quien}이(가) {cartas} 보여주기를 그만둠"
 }

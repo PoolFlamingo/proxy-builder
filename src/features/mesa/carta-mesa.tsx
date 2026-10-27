@@ -139,6 +139,11 @@ export const CartaMesa = memo(function CartaMesa({
 						) : (
 							<Insignias c={c} yo={yo} />
 						))}
+					{c.revelada && c.zona.tipo === "de" && c.zona.zona === "mano" && (
+						<span className="pointer-events-none absolute top-1 right-1 rounded-full bg-amber-400 p-0.5 text-black shadow">
+							<Eye className="size-3" />
+						</span>
+					)}
 					{c.bocaAbajo && c.origen && (
 						<span className="pointer-events-none absolute right-1 bottom-1 rounded bg-black/70 p-0.5 text-white">
 							<Eye className="size-2.5" />

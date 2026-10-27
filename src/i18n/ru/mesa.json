@@ -1214,5 +1214,11 @@
 	"Siguiente revelación": "Следующее открытие",
 	"Revelación {vez} de {veces}. Elige qué haces con cada carta; el resto va abajo.": "Открытие {vez} из {veces}. Выбери, что делать с каждой картой; остальные уходят вниз.",
 	"Cascada, varias veces…": "Каскад, несколько раз…",
-	"Revelar y lanzar… (cascada, descubrir)": "Открыть и разыграть… (Каскад, Раскопка)"
+	"Revelar y lanzar… (cascada, descubrir)": "Открыть и разыграть… (Каскад, Раскопка)",
+	"Mostrar…": "Показать…",
+	"A todos": "Всем",
+	"Dejar de mostrar": "Перестать показывать",
+	"Mostrar a todos / dejar de mostrar": "Показать всем / перестать показывать",
+	"{quien} muestra {cartas} a todos": "{quien} показывает {cartas} всем",
+	"{quien} deja de mostrar {cartas}": "{quien} перестаёт показывать {cartas}"
 }

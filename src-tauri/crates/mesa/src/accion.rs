@@ -700,6 +700,16 @@ pub enum Accion {
     RevelarMano {
         si: bool,
     },
+    /// Enseña estas cartas a todos, también a quien solo mira (una carta de la
+    /// mano: Duress, Reveal; o que se pide ver). Catálogo v2.
+    MostrarATodos {
+        cartas: Vec<IdCarta>,
+    },
+    /// Vuelve a taparlas: ya no las ve nadie más que quien las ve por su zona.
+    /// Catálogo v2.
+    DejarDeMostrar {
+        cartas: Vec<IdCarta>,
+    },
     RevelarA {
         cartas: Vec<IdCarta>,
         a: Vec<IdJugador>,

@@ -1178,5 +1178,11 @@
 	"Siguiente revelación": "Next reveal",
 	"Revelación {vez} de {veces}. Elige qué haces con cada carta; el resto va abajo.": "Reveal {vez} of {veces}. Choose what to do with each card; the rest goes to the bottom.",
 	"Cascada, varias veces…": "Cascade, several times…",
-	"Revelar y lanzar… (cascada, descubrir)": "Reveal and cast… (Cascade, Discover)"
+	"Revelar y lanzar… (cascada, descubrir)": "Reveal and cast… (Cascade, Discover)",
+	"Mostrar…": "Show…",
+	"A todos": "To everyone",
+	"Dejar de mostrar": "Stop showing",
+	"Mostrar a todos / dejar de mostrar": "Show to everyone / stop showing",
+	"{quien} muestra {cartas} a todos": "{quien} shows {cartas} to everyone",
+	"{quien} deja de mostrar {cartas}": "{quien} stops showing {cartas}"
 }

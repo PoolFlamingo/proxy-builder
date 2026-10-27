@@ -1192,5 +1192,11 @@
 	"Siguiente revelación": "Următoarea dezvăluire",
 	"Revelación {vez} de {veces}. Elige qué haces con cada carta; el resto va abajo.": "Dezvăluirea {vez} din {veces}. Alege ce faci cu fiecare carte; restul merge jos.",
 	"Cascada, varias veces…": "Cascade, de mai multe ori…",
-	"Revelar y lanzar… (cascada, descubrir)": "Dezvăluie și lansează… (Cascade, Discover)"
+	"Revelar y lanzar… (cascada, descubrir)": "Dezvăluie și lansează… (Cascade, Discover)",
+	"Mostrar…": "Arată…",
+	"A todos": "Tuturor",
+	"Dejar de mostrar": "Nu mai arăta",
+	"Mostrar a todos / dejar de mostrar": "Arată tuturor / nu mai arăta",
+	"{quien} muestra {cartas} a todos": "{quien} arată {cartas} tuturor",
+	"{quien} deja de mostrar {cartas}": "{quien} nu mai arată {cartas}"
 }

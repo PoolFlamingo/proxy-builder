@@ -77,6 +77,12 @@ export const ATAJOS: Atajo[] = [
 	},
 	{
 		contexto: "carta",
+		tecla: "m",
+		nombre: paraTraducir("Mostrar a todos / dejar de mostrar"),
+		hacer: conCarta(op.alternarMostrada),
+	},
+	{
+		contexto: "carta",
 		tecla: "x",
 		nombre: paraTraducir("Fuerza y resistencia"),
 		hacer: conCarta((id) => usePantalla.getState().abrir({ tipo: "pt", carta: id })),

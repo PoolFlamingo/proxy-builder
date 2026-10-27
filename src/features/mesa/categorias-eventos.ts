@@ -83,6 +83,8 @@ export const CATEGORIAS_DE_ACCION: Record<Accion["que"], CategoriaEvento> = {
 	sinCosteExtra: "contadores",
 	revelarMano: "biblioteca",
 	revelarA: "biblioteca",
+	mostrarATodos: "biblioteca",
+	dejarDeMostrar: "biblioteca",
 	jugarBocaAbajo: "mover",
 	descartar: "mover",
 	eliminar: "fin",

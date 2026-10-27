@@ -1124,5 +1124,11 @@
 	"Siguiente revelación": "下一次展示",
 	"Revelación {vez} de {veces}. Elige qué haces con cada carta; el resto va abajo.": "第 {vez}/{veces} 次展示。选择每张牌如何处理；其余放到最下方。",
 	"Cascada, varias veces…": "涟漪（多次）…",
-	"Revelar y lanzar… (cascada, descubrir)": "展示并施放…（涟漪、发现）"
+	"Revelar y lanzar… (cascada, descubrir)": "展示并施放…（涟漪、发现）",
+	"Mostrar…": "展示…",
+	"A todos": "给所有人",
+	"Dejar de mostrar": "不再展示",
+	"Mostrar a todos / dejar de mostrar": "展示给所有人 / 不再展示",
+	"{quien} muestra {cartas} a todos": "{quien} 向所有人展示 {cartas}",
+	"{quien} deja de mostrar {cartas}": "{quien} 不再展示 {cartas}"
 }

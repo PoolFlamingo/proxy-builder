@@ -121,6 +121,24 @@ export function ofrecerBono(adjunta: IdCarta, a: IdCarta) {
 	});
 }
 
+/** Enseña estas cartas (la pulsada y su selección) a todos, o solo a un jugador. */
+export function mostrar(id: IdCarta, a?: IdJugador) {
+	const ids = objetivo(id);
+	return a === undefined
+		? hacer({ que: "mostrarATodos", cartas: ids })
+		: hacer({ que: "revelarA", cartas: ids, a: [a] });
+}
+
+/** Vuelve a taparlas. */
+export function dejarDeMostrar(id: IdCarta) {
+	return hacer({ que: "dejarDeMostrar", cartas: objetivo(id) });
+}
+
+/** El atajo: la enseña a todos, o la tapa si ya está enseñada. */
+export function alternarMostrada(id: IdCarta) {
+	return carta(id)?.revelada ? dejarDeMostrar(id) : mostrar(id);
+}
+
 /** Da el control de estas cartas (con lo que llevan encima) a otro jugador. */
 export function darControl(ids: IdCarta[], a: IdJugador) {
 	return hacer({ que: "darControl", cartas: ids, a });

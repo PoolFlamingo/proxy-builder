@@ -1124,5 +1124,11 @@
 	"Siguiente revelación": "Siguiente revelación",
 	"Revelación {vez} de {veces}. Elige qué haces con cada carta; el resto va abajo.": "Revelación {vez} de {veces}. Elige qué haces con cada carta; el resto va abajo.",
 	"Cascada, varias veces…": "Cascada, varias veces…",
-	"Revelar y lanzar… (cascada, descubrir)": "Revelar y lanzar… (cascada, descubrir)"
+	"Revelar y lanzar… (cascada, descubrir)": "Revelar y lanzar… (cascada, descubrir)",
+	"Mostrar…": "Mostrar…",
+	"A todos": "A todos",
+	"Dejar de mostrar": "Dejar de mostrar",
+	"Mostrar a todos / dejar de mostrar": "Mostrar a todos / dejar de mostrar",
+	"{quien} muestra {cartas} a todos": "{quien} muestra {cartas} a todos",
+	"{quien} deja de mostrar {cartas}": "{quien} deja de mostrar {cartas}"
 }

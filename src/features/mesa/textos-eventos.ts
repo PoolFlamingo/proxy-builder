@@ -77,6 +77,8 @@ export const FRASES: Record<Accion["que"], string> = {
 	sinCosteExtra: paraTraducir("{quien} cambia el impuesto de {carta}"),
 	revelarMano: paraTraducir("{quien} cambia si su mano está revelada"),
 	revelarA: paraTraducir("{quien} enseña {cartas}"),
+	mostrarATodos: paraTraducir("{quien} muestra {cartas} a todos"),
+	dejarDeMostrar: paraTraducir("{quien} deja de mostrar {cartas}"),
 	jugarBocaAbajo: paraTraducir("{quien} juega una carta boca abajo"),
 	descartar: paraTraducir("{quien} descarta"),
 	eliminar: paraTraducir("{a} queda fuera de la partida"),
