@@ -1186,5 +1186,8 @@
 	"Arrollar": "Trample",
 	"Vigilancia": "Vigilance",
 	"Rebatir": "Ward",
-	"Velo (contador)": "Shroud"
+	"Velo (contador)": "Shroud",
+	"Bono al adjuntar": "Бонус при приєднанні",
+	"Sumar {bono}": "Додати {bono}",
+	"Ahora no": "Не зараз"
 }

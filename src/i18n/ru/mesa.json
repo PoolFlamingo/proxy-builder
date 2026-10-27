@@ -1181,5 +1181,8 @@
 	"Arrollar": "Пробивной удар",
 	"Vigilancia": "Бдительность",
 	"Rebatir": "Оберег",
-	"Velo (contador)": "Пелена"
+	"Velo (contador)": "Пелена",
+	"Bono al adjuntar": "Бонус при присоединении",
+	"Sumar {bono}": "Добавить {bono}",
+	"Ahora no": "Не сейчас"
 }

@@ -1145,5 +1145,8 @@
 	"Arrollar": "Trampelschaden",
 	"Vigilancia": "Wachsamkeit",
 	"Rebatir": "Abwehr",
-	"Velo (contador)": "Verhüllt"
+	"Velo (contador)": "Verhüllt",
+	"Bono al adjuntar": "Bonus beim Anlegen",
+	"Sumar {bono}": "{bono} addieren",
+	"Ahora no": "Jetzt nicht"
 }

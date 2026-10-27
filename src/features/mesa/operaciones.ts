@@ -1,4 +1,3 @@
-import { toast } from "sonner";
 import type { IdCarta } from "@/bindings/IdCarta";
 import type { ModoExilio } from "@/bindings/ModoExilio";
 import type { Zona } from "@/bindings/Zona";
@@ -6,6 +5,7 @@ import { traduccionSuelta as t } from "@/components/language-provider";
 import { useMesa } from "@/stores/mesa-store";
 import { useUi } from "@/stores/ui-store";
 import { destino, destinoComun, hacer, mover, objetivo, sitio } from "./acciones";
+import { avisarBono } from "./aviso-bono";
 import { pedirNumero, usePantalla } from "./pantalla";
 
 /**
@@ -111,18 +111,12 @@ export function ofrecerBono(adjunta: IdCarta, a: IdCarta) {
 	const criatura = carta(a)?.origen;
 	if (!bono || !criatura?.info.esCriatura) return;
 	const [x, y] = bono;
-	toast(
-		t("¿Sumar {bono} a {carta}?", {
-			bono: `${conSigno(x)}/${conSigno(y)}`,
-			carta: criatura.nombre,
-		}),
-		{
-			action: {
-				label: t("Sumar"),
-				onClick: () => void hacer({ que: "masXMasY", cartas: [a], x, y, fila: "otros" }),
-			},
-		},
-	);
+	avisarBono({
+		equipo: carta(adjunta)?.origen?.nombre ?? "",
+		criatura: criatura.nombre,
+		bono: `${conSigno(x)}/${conSigno(y)}`,
+		alSumar: () => void hacer({ que: "masXMasY", cartas: [a], x, y, fila: "otros" }),
+	});
 }
 
 export function flecha(id: IdCarta, tipo: "ataque" | "objetivo" = "ataque") {

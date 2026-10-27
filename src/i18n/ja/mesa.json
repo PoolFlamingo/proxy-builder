@@ -1091,5 +1091,8 @@
 	"Arrollar": "トランプル",
 	"Vigilancia": "警戒",
 	"Rebatir": "護法",
-	"Velo (contador)": "被覆"
+	"Velo (contador)": "被覆",
+	"Bono al adjuntar": "つけたときのボーナス",
+	"Sumar {bono}": "{bono} を加える",
+	"Ahora no": "今はしない"
 }
