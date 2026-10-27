@@ -340,7 +340,6 @@
 	"{quien} cambia si {cartas} se endereza": "{quien} muda se {cartas} desvira",
 	"{quien} resalta {cartas}": "{quien} destaca {cartas}",
 	"{quien} crea una copia de {cartas}": "{quien} cria uma cópia de {cartas}",
-	"{quien} da el control de {cartas}": "{quien} dá o controle de {cartas}",
 	"{quien} pone una habilidad de {carta} en la pila": "{quien} coloca uma habilidade de {carta} na pilha",
 	"{quien} señala un objetivo": "{quien} aponta um alvo",
 	"{quien} quita sus flechas": "{quien} remove suas setas",
@@ -1160,5 +1159,12 @@
 	"Velo (contador)": "Manto",
 	"Bono al adjuntar": "Bônus ao anexar",
 	"Sumar {bono}": "Somar {bono}",
-	"Ahora no": "Agora não"
+	"Ahora no": "Agora não",
+	"{quien} da el control de {cartas} a {a}": "{quien} dá o controle de {cartas} a {a}",
+	"{quien} toma el control de {cartas}": "{quien} toma o controle de {cartas}",
+	"{quien} toma el control de {cartas} hasta el final del turno": "{quien} toma o controle de {cartas} até o fim do turno",
+	"Dar el control a…": "Dar o controle a…",
+	"Tomar el control": "Tomar o controle",
+	"Tomar el control hasta el final del turno": "Tomar o controle até o fim do turno",
+	"Vuelve a {quien} al final del turno": "Volta para {quien} no fim do turno"
 }

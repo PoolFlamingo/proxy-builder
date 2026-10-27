@@ -346,7 +346,6 @@
 	"{quien} cambia si {cartas} se endereza": "{quien} змінює, чи розвертається {cartas}",
 	"{quien} resalta {cartas}": "{quien} підсвічує {cartas}",
 	"{quien} crea una copia de {cartas}": "{quien} створює копію {cartas}",
-	"{quien} da el control de {cartas}": "{quien} передає контроль над {cartas}",
 	"{quien} pone una habilidad de {carta} en la pila": "{quien} кладе здібність {carta} у стек",
 	"{quien} señala un objetivo": "{quien} вказує ціль",
 	"{quien} quita sus flechas": "{quien} прибирає свої стрілки",
@@ -1187,5 +1186,12 @@
 	"Velo (contador)": "Shroud",
 	"Bono al adjuntar": "Бонус при приєднанні",
 	"Sumar {bono}": "Додати {bono}",
-	"Ahora no": "Не зараз"
+	"Ahora no": "Не зараз",
+	"{quien} da el control de {cartas} a {a}": "{quien} передає контроль над {cartas} гравцеві {a}",
+	"{quien} toma el control de {cartas}": "{quien} отримує контроль над {cartas}",
+	"{quien} toma el control de {cartas} hasta el final del turno": "{quien} отримує контроль над {cartas} до кінця ходу",
+	"Dar el control a…": "Передати контроль…",
+	"Tomar el control": "Отримати контроль",
+	"Tomar el control hasta el final del turno": "Отримати контроль до кінця ходу",
+	"Vuelve a {quien} al final del turno": "Повернеться до {quien} наприкінці ходу"
 }

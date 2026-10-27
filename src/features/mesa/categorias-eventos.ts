@@ -44,6 +44,7 @@ export const CATEGORIAS_DE_ACCION: Record<Accion["que"], CategoriaEvento> = {
 	resaltar: "otro",
 	copiaFicha: "mover",
 	darControl: "mover",
+	tomarControl: "mover",
 	habilidadEnPila: "mover",
 	flecha: "otro",
 	quitarFlechas: "otro",

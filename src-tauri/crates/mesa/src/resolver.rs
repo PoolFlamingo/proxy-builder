@@ -15,7 +15,7 @@ use crate::aplicar::cara_planar;
 use crate::azar::Azar;
 use crate::error::Rechazo;
 use crate::ids::{IdCarta, IdJugador};
-use crate::modelo::{Extremo, Partida};
+use crate::modelo::{Extremo, Partida, RefZona, Zona, ZonaComun};
 
 /// Caras de dado que se pueden tirar.
 pub const CARAS: [u8; 7] = [4, 6, 8, 10, 12, 20, 100];
@@ -147,6 +147,41 @@ pub fn puede_tocar(p: &Partida, yo: IdJugador, id: IdCarta) -> Result<(), Rechaz
     }
 }
 
+/// Robar de una zona pública ajena: lo que hay en el cementerio o el exilio de
+/// otro (y se ve) se puede llevar al campo propio o a la pila (reanimar,
+/// lanzar lo exiliado…). Lo que se mande a una mano, biblioteca o cementerio
+/// vuelve igualmente a su dueño.
+fn puede_robar(p: &Partida, yo: IdJugador, id: IdCarta, a: &crate::accion::Destino) -> bool {
+    use crate::accion::ZonaDestino;
+    let Some((zona, indice)) = p.donde(id) else {
+        return false;
+    };
+    let Some(c) = p.cartas.get(&id) else {
+        return false;
+    };
+    let ajena = matches!(
+        zona,
+        RefZona::De {
+            jugador,
+            zona: Zona::Cementerio | Zona::Exilio,
+        } if jugador != yo
+    );
+    let a_lo_mio = match a.zona {
+        ZonaDestino::De(Zona::Campo) => a.jugador.is_none() || a.jugador == Some(yo),
+        ZonaDestino::Comun(ZonaComun::Pila) => true,
+        _ => false,
+    };
+    ajena
+        && a_lo_mio
+        && crate::visibilidad::ve(
+            p,
+            c,
+            &zona,
+            indice,
+            crate::visibilidad::Mirador::Jugador(yo),
+        )
+}
+
 fn todas(p: &Partida, yo: IdJugador, ids: &[IdCarta]) -> Result<(), Rechazo> {
     for id in ids {
         puede_tocar(p, yo, *id)?;
@@ -164,8 +199,23 @@ fn suya(p: &Partida, yo: IdJugador, de: IdJugador) -> Result<(), Rechazo> {
 
 fn permisos(p: &Partida, yo: IdJugador, a: &Accion) -> Result<(), Rechazo> {
     match a {
-        Accion::Mover { cartas, .. }
-        | Accion::Girar { cartas, .. }
+        Accion::Mover { cartas, a, .. } => {
+            for id in cartas {
+                if puede_tocar(p, yo, *id).is_err() && !puede_robar(p, yo, *id, a) {
+                    return Err(Rechazo::SinPermiso);
+                }
+            }
+            Ok(())
+        }
+        // Lo que está en el campo es público: quien quiera lo toma (se ve en el
+        // registro y, si hace falta, el dueño lo recupera igual).
+        Accion::TomarControl { cartas, .. } => {
+            for id in cartas {
+                p.cartas.get(id).ok_or(Rechazo::NoExiste)?;
+            }
+            Ok(())
+        }
+        Accion::Girar { cartas, .. }
         | Accion::BocaAbajo { cartas, .. }
         | Accion::Contador { cartas, .. }
         | Accion::ContadorClave { cartas, .. }

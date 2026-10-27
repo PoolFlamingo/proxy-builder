@@ -340,7 +340,6 @@
 	"{quien} cambia si {cartas} se endereza": "{quien} schimbă dacă {cartas} se îndreaptă",
 	"{quien} resalta {cartas}": "{quien} evidențiază {cartas}",
 	"{quien} crea una copia de {cartas}": "{quien} creează o copie după {cartas}",
-	"{quien} da el control de {cartas}": "{quien} cedează controlul pentru {cartas}",
 	"{quien} pone una habilidad de {carta} en la pila": "{quien} pune pe stivă o abilitate de la {carta}",
 	"{quien} señala un objetivo": "{quien} indică o țintă",
 	"{quien} quita sus flechas": "{quien} își elimină săgețile",
@@ -1160,5 +1159,12 @@
 	"Velo (contador)": "Shroud",
 	"Bono al adjuntar": "Bonus la atașare",
 	"Sumar {bono}": "Adaugă {bono}",
-	"Ahora no": "Nu acum"
+	"Ahora no": "Nu acum",
+	"{quien} da el control de {cartas} a {a}": "{quien} dă controlul asupra {cartas} lui {a}",
+	"{quien} toma el control de {cartas}": "{quien} preia controlul asupra {cartas}",
+	"{quien} toma el control de {cartas} hasta el final del turno": "{quien} preia controlul asupra {cartas} până la sfârșitul turei",
+	"Dar el control a…": "Dă controlul lui…",
+	"Tomar el control": "Preia controlul",
+	"Tomar el control hasta el final del turno": "Preia controlul până la sfârșitul turei",
+	"Vuelve a {quien} al final del turno": "Se întoarce la {quien} la sfârșitul turei"
 }

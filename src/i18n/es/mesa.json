@@ -336,7 +336,6 @@
 	"{quien} cambia si {cartas} se endereza": "{quien} cambia si {cartas} se endereza",
 	"{quien} resalta {cartas}": "{quien} resalta {cartas}",
 	"{quien} crea una copia de {cartas}": "{quien} crea una copia de {cartas}",
-	"{quien} da el control de {cartas}": "{quien} da el control de {cartas}",
 	"{quien} pone una habilidad de {carta} en la pila": "{quien} pone una habilidad de {carta} en la pila",
 	"{quien} señala un objetivo": "{quien} señala un objetivo",
 	"{quien} quita sus flechas": "{quien} quita sus flechas",
@@ -1092,5 +1091,12 @@
 	"Velo (contador)": "Velo (contador)",
 	"Bono al adjuntar": "Bono al adjuntar",
 	"Sumar {bono}": "Sumar {bono}",
-	"Ahora no": "Ahora no"
+	"Ahora no": "Ahora no",
+	"{quien} da el control de {cartas} a {a}": "{quien} da el control de {cartas} a {a}",
+	"{quien} toma el control de {cartas}": "{quien} toma el control de {cartas}",
+	"{quien} toma el control de {cartas} hasta el final del turno": "{quien} toma el control de {cartas} hasta el final del turno",
+	"Dar el control a…": "Dar el control a…",
+	"Tomar el control": "Tomar el control",
+	"Tomar el control hasta el final del turno": "Tomar el control hasta el final del turno",
+	"Vuelve a {quien} al final del turno": "Vuelve a {quien} al final del turno"
 }

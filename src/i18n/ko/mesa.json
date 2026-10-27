@@ -336,7 +336,6 @@
 	"{quien} cambia si {cartas} se endereza": "{quien}: {cartas}의 언탭 여부 변경",
 	"{quien} resalta {cartas}": "{quien}: {cartas} 강조",
 	"{quien} crea una copia de {cartas}": "{quien}: {cartas}의 복사본 생성",
-	"{quien} da el control de {cartas}": "{quien}: {cartas}의 조종권 넘김",
 	"{quien} pone una habilidad de {carta} en la pila": "{quien}: {carta}의 능력을 스택에 놓음",
 	"{quien} señala un objetivo": "{quien}: 대상을 가리켰어요",
 	"{quien} quita sus flechas": "{quien}: 자기 화살표를 지웠어요",
@@ -1092,5 +1091,12 @@
 	"Velo (contador)": "은신",
 	"Bono al adjuntar": "부착 보너스",
 	"Sumar {bono}": "{bono} 더하기",
-	"Ahora no": "나중에"
+	"Ahora no": "나중에",
+	"{quien} da el control de {cartas} a {a}": "{quien}이(가) {cartas}의 조종권을 {a}에게 줌",
+	"{quien} toma el control de {cartas}": "{quien}이(가) {cartas}의 조종권을 얻음",
+	"{quien} toma el control de {cartas} hasta el final del turno": "{quien}이(가) {cartas}의 조종권을 턴이 끝날 때까지 얻음",
+	"Dar el control a…": "조종권 주기…",
+	"Tomar el control": "조종권 얻기",
+	"Tomar el control hasta el final del turno": "턴이 끝날 때까지 조종권 얻기",
+	"Vuelve a {quien} al final del turno": "턴이 끝나면 {quien}에게 돌아감"
 }

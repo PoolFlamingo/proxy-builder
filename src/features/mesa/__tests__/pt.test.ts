@@ -42,6 +42,7 @@ function carta(fuerza: string | null, cambios: Partial<VistaCarta> = {}): VistaC
 		etiquetas: [],
 		pt: { otros: [0, 0], hastaFinDeTurno: [0, 0], fijo: null },
 		adjuntaA: null,
+		devolverA: null,
 		pos: null,
 		z: 0,
 		resaltada: null,

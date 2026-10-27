@@ -342,7 +342,6 @@
 	"{quien} cambia si {cartas} se endereza": "{quien} changes whether {cartas} untaps",
 	"{quien} resalta {cartas}": "{quien} highlights {cartas}",
 	"{quien} crea una copia de {cartas}": "{quien} creates a copy of {cartas}",
-	"{quien} da el control de {cartas}": "{quien} gives control of {cartas}",
 	"{quien} pone una habilidad de {carta} en la pila": "{quien} puts an ability of {carta} on the stack",
 	"{quien} señala un objetivo": "{quien} points to a target",
 	"{quien} quita sus flechas": "{quien} removes their arrows",
@@ -1146,5 +1145,12 @@
 	"Velo (contador)": "Shroud",
 	"Bono al adjuntar": "Bonus on attach",
 	"Sumar {bono}": "Add {bono}",
-	"Ahora no": "Not now"
+	"Ahora no": "Not now",
+	"{quien} da el control de {cartas} a {a}": "{quien} gives control of {cartas} to {a}",
+	"{quien} toma el control de {cartas}": "{quien} takes control of {cartas}",
+	"{quien} toma el control de {cartas} hasta el final del turno": "{quien} takes control of {cartas} until end of turn",
+	"Dar el control a…": "Give control to…",
+	"Tomar el control": "Take control",
+	"Tomar el control hasta el final del turno": "Take control until end of turn",
+	"Vuelve a {quien} al final del turno": "Returns to {quien} at end of turn"
 }

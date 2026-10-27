@@ -346,7 +346,6 @@
 	"{quien} cambia si {cartas} se endereza": "{quien} zmienia, czy {cartas} się odtapowuje",
 	"{quien} resalta {cartas}": "{quien} podświetla {cartas}",
 	"{quien} crea una copia de {cartas}": "{quien} tworzy kopię {cartas}",
-	"{quien} da el control de {cartas}": "{quien} oddaje kontrolę nad {cartas}",
 	"{quien} pone una habilidad de {carta} en la pila": "{quien} kładzie zdolność {carta} na stack",
 	"{quien} señala un objetivo": "{quien} wskazuje cel",
 	"{quien} quita sus flechas": "{quien} usuwa swoje strzałki",
@@ -1182,5 +1181,12 @@
 	"Velo (contador)": "Shroud",
 	"Bono al adjuntar": "Premia za dołączenie",
 	"Sumar {bono}": "Dodaj {bono}",
-	"Ahora no": "Nie teraz"
+	"Ahora no": "Nie teraz",
+	"{quien} da el control de {cartas} a {a}": "{quien} oddaje kontrolę nad {cartas} graczowi {a}",
+	"{quien} toma el control de {cartas}": "{quien} przejmuje kontrolę nad {cartas}",
+	"{quien} toma el control de {cartas} hasta el final del turno": "{quien} przejmuje kontrolę nad {cartas} do końca tury",
+	"Dar el control a…": "Oddaj kontrolę…",
+	"Tomar el control": "Przejmij kontrolę",
+	"Tomar el control hasta el final del turno": "Przejmij kontrolę do końca tury",
+	"Vuelve a {quien} al final del turno": "Wraca do {quien} na koniec tury"
 }

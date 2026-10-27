@@ -336,7 +336,6 @@
 	"{quien} cambia si {cartas} se endereza": "{quien} 切换了 {cartas} 是否重置",
 	"{quien} resalta {cartas}": "{quien} 高亮显示了 {cartas}",
 	"{quien} crea una copia de {cartas}": "{quien} 派出了 {cartas} 的衍生物复制品",
-	"{quien} da el control de {cartas}": "{quien} 交出了 {cartas} 的操控权",
 	"{quien} pone una habilidad de {carta} en la pila": "{quien} 将 {carta} 的一个异能置于堆叠",
 	"{quien} señala un objetivo": "{quien} 指定了一个目标",
 	"{quien} quita sus flechas": "{quien} 移除了自己的箭头",
@@ -1092,5 +1091,12 @@
 	"Velo (contador)": "帷幕",
 	"Bono al adjuntar": "贴附加成",
 	"Sumar {bono}": "加上 {bono}",
-	"Ahora no": "暂不"
+	"Ahora no": "暂不",
+	"{quien} da el control de {cartas} a {a}": "{quien} 把 {cartas} 的操控权交给 {a}",
+	"{quien} toma el control de {cartas}": "{quien} 获得 {cartas} 的操控权",
+	"{quien} toma el control de {cartas} hasta el final del turno": "{quien} 获得 {cartas} 的操控权，直到回合结束",
+	"Dar el control a…": "交出操控权…",
+	"Tomar el control": "获得操控权",
+	"Tomar el control hasta el final del turno": "获得操控权直到回合结束",
+	"Vuelve a {quien} al final del turno": "回合结束时回到 {quien} 手中"
 }

@@ -26,7 +26,7 @@ import { caraVisible, DorsoGenerico, ImagenCarta } from "./imagen-carta";
 import { MenuBiblioteca, MenuCampo, MenuZona } from "./menus/menu-zonas";
 import * as op from "./operaciones";
 import { usePantalla } from "./pantalla";
-import { acompanantes, puestosDelCampo } from "./puestos-campo";
+import { acompanantes, conLasAjenas, puestosDelCampo } from "./puestos-campo";
 
 /** Cuánto se mantiene pulsada una carta para abrir su menú (si está activado), en ms. */
 const MS_SOSTENIDO = 500;
@@ -149,7 +149,8 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 				if (!empezado && enCampo) {
 					const mesa = useMesa.getState();
 					const delCampo = cartasDe(mesa, zonaDe(tableroDe(mesa), "campo"));
-					con = acompanantes(ids, puestosDelCampo(delCampo, mesa.cartas, dispRef.current).hijas);
+					const todas = conLasAjenas(delCampo, mesa.cartas);
+					con = acompanantes(ids, puestosDelCampo(todas, mesa.cartas, dispRef.current).hijas);
 				}
 				empezado = true;
 				window.clearTimeout(sostenido);
@@ -465,11 +466,13 @@ function Campo({
 	const ids = useMesa((s) => cartasDe(s, zonaDe(yo, "campo")));
 	const cartas = useMesa((s) => s.cartas);
 	const { w, h } = disp.carta;
-	// Las adjuntas y las amontonadas, junto a su carta.
-	const { puestos } = puestosDelCampo(ids, cartas, disp);
+	// Las adjuntas y las amontonadas, junto a su carta (también las que cuelgan
+	// de ella desde el campo de otro).
+	const todas = conLasAjenas(ids, cartas);
+	const { puestos } = puestosDelCampo(todas, cartas, disp);
 	return (
 		<>
-			{ids.map((id) => {
+			{todas.map((id) => {
 				const p = puestos.get(id);
 				if (!p) return null;
 				return (
@@ -921,7 +924,11 @@ function Arrastrado({ disp }: { disp: Disposicion }) {
 	const dy = a.y - a.y0;
 	const { w, h } = a.desde === "campo" || a.alCampo ? disp.carta : disp.cartaPequena;
 	// Lo adjunto a lo que se lleva va con ello, detrás, con su misma geometría del campo.
-	const { puestos } = puestosDelCampo(a.con.length > 0 ? delCampo : [], cartas, disp);
+	const { puestos } = puestosDelCampo(
+		a.con.length > 0 ? conLasAjenas(delCampo, cartas) : [],
+		cartas,
+		disp,
+	);
 	return (
 		<div className="pointer-events-none absolute inset-0" style={{ zIndex: 9000 }}>
 			{a.con.map((id) => {

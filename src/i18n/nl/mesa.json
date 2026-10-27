@@ -342,7 +342,6 @@
 	"{quien} cambia si {cartas} se endereza": "{quien} wijzigt of {cartas} untapt",
 	"{quien} resalta {cartas}": "{quien} markeert {cartas}",
 	"{quien} crea una copia de {cartas}": "{quien} maakt een kopie van {cartas}",
-	"{quien} da el control de {cartas}": "{quien} geeft de controle over {cartas}",
 	"{quien} pone una habilidad de {carta} en la pila": "{quien} zet een vaardigheid van {carta} op de stack",
 	"{quien} señala un objetivo": "{quien} wijst een doelwit aan",
 	"{quien} quita sus flechas": "{quien} verwijdert zijn pijlen",
@@ -1146,5 +1145,12 @@
 	"Velo (contador)": "Shroud",
 	"Bono al adjuntar": "Bonus bij koppelen",
 	"Sumar {bono}": "{bono} optellen",
-	"Ahora no": "Nu niet"
+	"Ahora no": "Nu niet",
+	"{quien} da el control de {cartas} a {a}": "{quien} geeft de controle over {cartas} aan {a}",
+	"{quien} toma el control de {cartas}": "{quien} neemt de controle over {cartas} over",
+	"{quien} toma el control de {cartas} hasta el final del turno": "{quien} neemt de controle over {cartas} over tot het einde van de beurt",
+	"Dar el control a…": "Controle geven aan…",
+	"Tomar el control": "Controle overnemen",
+	"Tomar el control hasta el final del turno": "Controle overnemen tot het einde van de beurt",
+	"Vuelve a {quien} al final del turno": "Gaat aan het einde van de beurt terug naar {quien}"
 }

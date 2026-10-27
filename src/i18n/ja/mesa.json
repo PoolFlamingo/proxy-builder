@@ -336,7 +336,6 @@
 	"{quien} cambia si {cartas} se endereza": "{quien} が {cartas} をアンタップするかどうかを変更しました",
 	"{quien} resalta {cartas}": "{quien} が {cartas} を強調しました",
 	"{quien} crea una copia de {cartas}": "{quien} が {cartas} のコピーを生成しました",
-	"{quien} da el control de {cartas}": "{quien} が {cartas} のコントロールを渡しました",
 	"{quien} pone una habilidad de {carta} en la pila": "{quien} が {carta} の能力をスタックに置きました",
 	"{quien} señala un objetivo": "{quien} が対象を指しました",
 	"{quien} quita sus flechas": "{quien} が自分の矢印を消しました",
@@ -1092,5 +1091,12 @@
 	"Velo (contador)": "被覆",
 	"Bono al adjuntar": "つけたときのボーナス",
 	"Sumar {bono}": "{bono} を加える",
-	"Ahora no": "今はしない"
+	"Ahora no": "今はしない",
+	"{quien} da el control de {cartas} a {a}": "{quien} が {cartas} のコントロールを {a} に与える",
+	"{quien} toma el control de {cartas}": "{quien} が {cartas} のコントロールを得る",
+	"{quien} toma el control de {cartas} hasta el final del turno": "{quien} が {cartas} のコントロールをターン終了時まで得る",
+	"Dar el control a…": "コントロールを与える…",
+	"Tomar el control": "コントロールを得る",
+	"Tomar el control hasta el final del turno": "ターン終了時までコントロールを得る",
+	"Vuelve a {quien} al final del turno": "ターン終了時に {quien} に戻る"
 }

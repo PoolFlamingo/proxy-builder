@@ -346,7 +346,6 @@
 	"{quien} cambia si {cartas} se endereza": "{quien} меняет, разворачивается ли {cartas}",
 	"{quien} resalta {cartas}": "{quien} выделяет {cartas}",
 	"{quien} crea una copia de {cartas}": "{quien} создаёт копию: {cartas}",
-	"{quien} da el control de {cartas}": "{quien} передаёт контроль над {cartas}",
 	"{quien} pone una habilidad de {carta} en la pila": "{quien} кладёт в стек способность: {carta}",
 	"{quien} señala un objetivo": "{quien} указывает цель",
 	"{quien} quita sus flechas": "{quien} убирает свои стрелки",
@@ -1182,5 +1181,12 @@
 	"Velo (contador)": "Пелена",
 	"Bono al adjuntar": "Бонус при присоединении",
 	"Sumar {bono}": "Добавить {bono}",
-	"Ahora no": "Не сейчас"
+	"Ahora no": "Не сейчас",
+	"{quien} da el control de {cartas} a {a}": "{quien} передаёт контроль над {cartas} игроку {a}",
+	"{quien} toma el control de {cartas}": "{quien} получает контроль над {cartas}",
+	"{quien} toma el control de {cartas} hasta el final del turno": "{quien} получает контроль над {cartas} до конца хода",
+	"Dar el control a…": "Передать контроль…",
+	"Tomar el control": "Получить контроль",
+	"Tomar el control hasta el final del turno": "Получить контроль до конца хода",
+	"Vuelve a {quien} al final del turno": "Вернётся к {quien} в конце хода"
 }

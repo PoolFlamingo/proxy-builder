@@ -204,6 +204,11 @@ pub struct Carta {
     /// la generó. Desaparece al salir de la pila.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub habilidad: Option<String>,
+    /// Con el control robado «hasta el final del turno»: a quién vuelve al
+    /// pasar el turno. `skip_serializing_if` para que las partidas y los
+    /// registros anteriores no cambien de huella.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub devolver_a: Option<IdJugador>,
 }
 
 impl Carta {
@@ -233,6 +238,7 @@ impl Carta {
             agrupada_bajo: None,
             llego_en_ronda: 0,
             habilidad: None,
+            devolver_a: None,
         }
     }
 
@@ -241,6 +247,7 @@ impl Carta {
         self.girada = false;
         self.fase_fuera = false;
         self.no_endereza = false;
+        self.devolver_a = None;
         self.contadores.clear();
         self.palabras_clave.clear();
         self.etiquetas.clear();

@@ -37,7 +37,8 @@ export const FRASES: Record<Accion["que"], string> = {
 	noEndereza: paraTraducir("{quien} cambia si {cartas} se endereza"),
 	resaltar: paraTraducir("{quien} resalta {cartas}"),
 	copiaFicha: paraTraducir("{quien} crea una copia de {cartas}"),
-	darControl: paraTraducir("{quien} da el control de {cartas}"),
+	darControl: paraTraducir("{quien} da el control de {cartas} a {a}"),
+	tomarControl: paraTraducir("{quien} toma el control de {cartas}"),
 	habilidadEnPila: paraTraducir("{quien} pone una habilidad de {carta} en la pila"),
 	flecha: paraTraducir("{quien} señala un objetivo"),
 	quitarFlechas: paraTraducir("{quien} quita sus flechas"),
@@ -249,6 +250,10 @@ export function textoDeEvento(
 	}
 	if (a.que === "crearFicha") vars.n = a.cantidad;
 	if (a.que === "chat") vars.texto = a.texto;
+	if (a.que === "darControl") vars.a = m.jugadores[a.a]?.nombre ?? "?";
+	if (a.que === "tomarControl" && a.hastaFinDeTurno) {
+		return t("{quien} toma el control de {cartas} hasta el final del turno", vars);
+	}
 	if (a.que === "eliminar") vars.a = m.jugadores[a.jugador]?.nombre ?? "?";
 	if (a.que === "pasarTurno" && tiempo) {
 		return t("{quien} pasa el turno tras {tiempo}", { quien, tiempo });

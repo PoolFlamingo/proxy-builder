@@ -108,6 +108,8 @@ pub struct VistaCarta {
     pub etiquetas: Vec<Etiqueta>,
     pub pt: Pt,
     pub adjunta_a: Option<IdCarta>,
+    /// Con el control robado hasta el final del turno: a quién vuelve.
+    pub devolver_a: Option<IdJugador>,
     pub pos: Option<Pos>,
     pub z: u32,
     pub resaltada: Option<u8>,
@@ -212,6 +214,7 @@ fn vista_carta(c: &Carta, zona: RefZona, conocida: bool, m: Mirador) -> VistaCar
         etiquetas: c.etiquetas.clone(),
         pt: c.pt.clone(),
         adjunta_a: c.adjunta_a,
+        devolver_a: c.devolver_a,
         pos: c.pos,
         z: c.z,
         resaltada: c.resaltada,

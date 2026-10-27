@@ -29,10 +29,25 @@ fn eventos_de_ejemplo() -> Vec<Evento> {
     )
     .unwrap();
     // Sin las restauraciones (llevan la partida entera).
-    r.eventos
+    let mut eventos: Vec<Evento> = r
+        .eventos
         .into_iter()
         .filter(|e| !matches!(e.cambio, mesa::Cambio::Restaurar { .. }))
-        .collect()
+        .collect();
+    // Lo que añadió cada versión, a mano, por si el azar no lo generó (v2: `TomarControl`).
+    let ultimo = eventos.last().cloned().unwrap();
+    eventos.push(Evento {
+        seq: ultimo.seq + 1,
+        cambio: mesa::Cambio::Accion {
+            accion: Accion::TomarControl {
+                cartas: vec![mesa::IdCarta(1)],
+                hasta_fin_de_turno: true,
+            },
+            azar: None,
+        },
+        ..ultimo
+    });
+    eventos
 }
 
 #[test]

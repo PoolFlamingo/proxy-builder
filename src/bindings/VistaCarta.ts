@@ -12,7 +12,11 @@ export type VistaCarta = { id: IdCarta, zona: RefZona, dueno: IdJugador, control
 /**
  * `None`: boca abajo y no la conoce.
  */
-origen: OrigenCarta | null, dorso: RefImagen, cara: number, girada: boolean, bocaAbajo: boolean, faseFuera: boolean, noEndereza: boolean, contadores: { [key in string]: number }, palabrasClave: Array<string>, etiquetas: Array<Etiqueta>, pt: Pt, adjuntaA: IdCarta | null, pos: Pos | null, z: number, resaltada: number | null, esFicha: boolean, copiaDe: IdCarta | null, cantidad: number, agrupadaBajo: IdCarta | null, llegoEnRonda: number, habilidad: string | null, 
+origen: OrigenCarta | null, dorso: RefImagen, cara: number, girada: boolean, bocaAbajo: boolean, faseFuera: boolean, noEndereza: boolean, contadores: { [key in string]: number }, palabrasClave: Array<string>, etiquetas: Array<Etiqueta>, pt: Pt, adjuntaA: IdCarta | null, 
+/**
+ * Con el control robado hasta el final del turno: a quién vuelve.
+ */
+devolverA: IdJugador | null, pos: Pos | null, z: number, resaltada: number | null, esFicha: boolean, copiaDe: IdCarta | null, cantidad: number, agrupadaBajo: IdCarta | null, llegoEnRonda: number, habilidad: string | null, 
 /**
  * La está mirando el que mira (escrutar, buscar): para que la
  * pantalla sepa qué enseñar en el diálogo.

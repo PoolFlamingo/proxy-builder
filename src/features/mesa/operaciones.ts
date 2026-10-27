@@ -1,4 +1,5 @@
 import type { IdCarta } from "@/bindings/IdCarta";
+import type { IdJugador } from "@/bindings/IdJugador";
 import type { ModoExilio } from "@/bindings/ModoExilio";
 import type { Zona } from "@/bindings/Zona";
 import { traduccionSuelta as t } from "@/components/language-provider";
@@ -117,6 +118,16 @@ export function ofrecerBono(adjunta: IdCarta, a: IdCarta) {
 		bono: `${conSigno(x)}/${conSigno(y)}`,
 		alSumar: () => void hacer({ que: "masXMasY", cartas: [a], x, y, fila: "otros" }),
 	});
+}
+
+/** Da el control de estas cartas (con lo que llevan encima) a otro jugador. */
+export function darControl(ids: IdCarta[], a: IdJugador) {
+	return hacer({ que: "darControl", cartas: ids, a });
+}
+
+/** Toma el control de lo que controla otro, para siempre o hasta el final del turno. */
+export function tomarControl(ids: IdCarta[], hastaFinDeTurno = false) {
+	return hacer({ que: "tomarControl", cartas: ids, hastaFinDeTurno });
 }
 
 export function flecha(id: IdCarta, tipo: "ataque" | "objetivo" = "ataque") {

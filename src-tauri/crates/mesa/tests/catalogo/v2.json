@@ -1,0 +1,2178 @@
+[
+  {
+    "seq": 1,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 2000,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "quedarseCon",
+        "alFondo": []
+      }
+    }
+  },
+  {
+    "seq": 2,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 2000,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "quedarseCon",
+        "alFondo": []
+      }
+    }
+  },
+  {
+    "seq": 3,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 1,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "moler",
+        "n": 3
+      }
+    }
+  },
+  {
+    "seq": 4,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 2,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "manifestar",
+        "n": 1
+      }
+    }
+  },
+  {
+    "seq": 5,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 3,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "copiaFicha",
+        "cartas": [
+          27
+        ]
+      }
+    }
+  },
+  {
+    "seq": 6,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 4,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "robar",
+        "n": 2
+      }
+    }
+  },
+  {
+    "seq": 7,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 5,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "darControl",
+        "cartas": [
+          85
+        ],
+        "a": 1
+      }
+    }
+  },
+  {
+    "seq": 8,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 7,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "habilidadEnPila",
+        "carta": 27,
+        "texto": "Draw a card"
+      }
+    }
+  },
+  {
+    "seq": 9,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 8,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "girar",
+        "cartas": [
+          27
+        ],
+        "girada": true
+      }
+    }
+  },
+  {
+    "seq": 10,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 9,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "habilidadEnPila",
+        "carta": 27,
+        "texto": "Draw a card"
+      }
+    }
+  },
+  {
+    "seq": 11,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 10,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "pasarTurno"
+      }
+    }
+  },
+  {
+    "seq": 12,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 11,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "mover",
+        "cartas": [
+          4
+        ],
+        "a": {
+          "zona": {
+            "tipo": "de",
+            "zona": "exilio"
+          },
+          "jugador": null,
+          "sitio": {
+            "tipo": "enCampo",
+            "valor": {
+              "x": 3191,
+              "y": 2000
+            }
+          }
+        },
+        "como": null
+      }
+    }
+  },
+  {
+    "seq": 13,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 13,
+    "cambio": {
+      "tipo": "dados",
+      "tiradas": [
+        {
+          "caras": 20,
+          "valor": 9
+        },
+        {
+          "caras": 20,
+          "valor": 7
+        },
+        {
+          "caras": 6,
+          "valor": 4
+        }
+      ],
+      "semillaAnimacion": 2002875868
+    }
+  },
+  {
+    "seq": 14,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 14,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "darControl",
+        "cartas": [
+          85
+        ],
+        "a": 1
+      }
+    }
+  },
+  {
+    "seq": 15,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 15,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "mirar",
+        "de": 1,
+        "n": 3,
+        "desde": "arriba"
+      }
+    }
+  },
+  {
+    "seq": 16,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 16,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "barajar"
+      },
+      "azar": 14498254400102219540
+    }
+  },
+  {
+    "seq": 17,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 18,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "excavar",
+        "forma": {
+          "tipo": "hastaQueCoincida"
+        },
+        "filtro": {
+          "noTierra": true,
+          "supertipo": null,
+          "tipo": null,
+          "cmc": null,
+          "colores": [],
+          "nombre": null
+        },
+        "pararTras": 1
+      }
+    }
+  },
+  {
+    "seq": 18,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 21,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "barajar"
+      },
+      "azar": 5125790964700677404
+    }
+  },
+  {
+    "seq": 19,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 22,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "excavar",
+        "forma": {
+          "tipo": "hastaQueCoincida"
+        },
+        "filtro": {
+          "noTierra": true,
+          "supertipo": null,
+          "tipo": null,
+          "cmc": null,
+          "colores": [],
+          "nombre": null
+        },
+        "pararTras": 1
+      }
+    }
+  },
+  {
+    "seq": 20,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 23,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "bocaAbajo",
+        "cartas": [
+          85
+        ],
+        "si": false
+      }
+    }
+  },
+  {
+    "seq": 21,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 24,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "resolverExcavacion",
+        "elegidas": [
+          [
+            62,
+            {
+              "zona": {
+                "tipo": "de",
+                "zona": "mano"
+              },
+              "jugador": null,
+              "sitio": {
+                "tipo": "arriba"
+              }
+            }
+          ]
+        ],
+        "resto": [],
+        "a": "abajoAlAzar"
+      },
+      "azar": 1081960695757752881
+    }
+  },
+  {
+    "seq": 22,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 25,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "organizar"
+      }
+    }
+  },
+  {
+    "seq": 23,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 26,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "pasarTurno"
+      }
+    }
+  },
+  {
+    "seq": 24,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 27,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "mover",
+        "cartas": [
+          37
+        ],
+        "a": {
+          "zona": {
+            "tipo": "de",
+            "zona": "cementerio"
+          },
+          "jugador": null,
+          "sitio": {
+            "tipo": "xDesdeArriba",
+            "valor": 2
+          }
+        },
+        "como": null
+      }
+    }
+  },
+  {
+    "seq": 25,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 28,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "separar",
+        "monton": 85
+      }
+    }
+  },
+  {
+    "seq": 26,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 29,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "excavar",
+        "forma": {
+          "tipo": "revelarN",
+          "n": 3
+        },
+        "filtro": {
+          "noTierra": true,
+          "supertipo": null,
+          "tipo": null,
+          "cmc": null,
+          "colores": [],
+          "nombre": null
+        },
+        "pararTras": 1
+      }
+    }
+  },
+  {
+    "seq": 27,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 30,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "revelarArriba",
+        "n": 2
+      }
+    }
+  },
+  {
+    "seq": 28,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 31,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "separar",
+        "monton": 27
+      }
+    }
+  },
+  {
+    "seq": 29,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 32,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "dejarDeMirar",
+        "de": 0
+      }
+    }
+  },
+  {
+    "seq": 30,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 33,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "revelarMano",
+        "si": true
+      }
+    }
+  },
+  {
+    "seq": 31,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 34,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "moler",
+        "n": 3
+      }
+    }
+  },
+  {
+    "seq": 32,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 36,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "dejarDeMirar",
+        "de": 0
+      }
+    }
+  },
+  {
+    "seq": 33,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 37,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "separar",
+        "monton": 27
+      }
+    }
+  },
+  {
+    "seq": 34,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 38,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "mover",
+        "cartas": [
+          19
+        ],
+        "a": {
+          "zona": {
+            "tipo": "de",
+            "zona": "biblioteca"
+          },
+          "jugador": null,
+          "sitio": {
+            "tipo": "indice",
+            "valor": 4
+          }
+        },
+        "como": null
+      }
+    }
+  },
+  {
+    "seq": 35,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 39,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "barajar"
+      },
+      "azar": 15607213390532739455
+    }
+  },
+  {
+    "seq": 36,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 40,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "excavar",
+        "forma": {
+          "tipo": "revelarN",
+          "n": 3
+        },
+        "filtro": {
+          "noTierra": true,
+          "supertipo": null,
+          "tipo": null,
+          "cmc": null,
+          "colores": [],
+          "nombre": null
+        },
+        "pararTras": 1
+      }
+    }
+  },
+  {
+    "seq": 37,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 41,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "buscar",
+        "de": 0
+      }
+    }
+  },
+  {
+    "seq": 38,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 42,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "revelarMano",
+        "si": false
+      }
+    }
+  },
+  {
+    "seq": 39,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 43,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "resolverExcavacion",
+        "elegidas": [
+          [
+            11,
+            {
+              "zona": {
+                "tipo": "de",
+                "zona": "mano"
+              },
+              "jugador": null,
+              "sitio": {
+                "tipo": "arriba"
+              }
+            }
+          ]
+        ],
+        "resto": [
+          15,
+          18
+        ],
+        "a": "cementerio"
+      }
+    }
+  },
+  {
+    "seq": 40,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 44,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "drenar",
+        "n": 1
+      }
+    }
+  },
+  {
+    "seq": 41,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 45,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "contador",
+        "cartas": [
+          27
+        ],
+        "tipo": "+1/+1",
+        "delta": 1
+      }
+    }
+  },
+  {
+    "seq": 42,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 46,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "buscar",
+        "de": 1
+      }
+    }
+  },
+  {
+    "seq": 43,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 47,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "revelarMano",
+        "si": true
+      }
+    }
+  },
+  {
+    "seq": 44,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 48,
+    "cambio": {
+      "tipo": "monedas",
+      "lanzamientos": [
+        [
+          true,
+          true
+        ],
+        [
+          false,
+          false
+        ]
+      ],
+      "hastaPerder": true,
+      "semillaAnimacion": 2972222373
+    }
+  },
+  {
+    "seq": 45,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 49,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "revelarMano",
+        "si": false
+      }
+    }
+  },
+  {
+    "seq": 46,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 50,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "deArribaRevelada",
+        "si": false
+      }
+    }
+  },
+  {
+    "seq": 47,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 51,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "robar",
+        "n": 1
+      }
+    }
+  },
+  {
+    "seq": 48,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 52,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "revelarArriba",
+        "n": 2
+      }
+    }
+  },
+  {
+    "seq": 49,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 53,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "exiliarDeArriba",
+        "n": 1,
+        "modo": "bocaAbajo"
+      }
+    }
+  },
+  {
+    "seq": 50,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 55,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "descartar",
+        "modo": {
+          "tipo": "alAzar",
+          "valor": 1
+        }
+      },
+      "azar": 7299083606384449625
+    }
+  },
+  {
+    "seq": 51,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 56,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "moler",
+        "n": 2
+      }
+    }
+  },
+  {
+    "seq": 52,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 57,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "barajarTodoDentro",
+        "zona": "cementerio"
+      },
+      "azar": 9490307923787578696
+    }
+  },
+  {
+    "seq": 53,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 59,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "organizar"
+      }
+    }
+  },
+  {
+    "seq": 54,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 60,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "resolver",
+        "carta": 87,
+        "como": "auto"
+      },
+      "azar": 3619524421395719892
+    }
+  },
+  {
+    "seq": 55,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 61,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "vida",
+        "jugador": 0,
+        "delta": 5
+      }
+    }
+  },
+  {
+    "seq": 56,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 62,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "buscar",
+        "de": 1
+      }
+    }
+  },
+  {
+    "seq": 57,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 63,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "resolver",
+        "carta": 86,
+        "como": "auto"
+      },
+      "azar": 16735017441408351968
+    }
+  },
+  {
+    "seq": 58,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 64,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "barajar"
+      },
+      "azar": 2778667265172847612
+    }
+  },
+  {
+    "seq": 59,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 65,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "habilidadEnPila",
+        "carta": 27,
+        "texto": "Draw a card"
+      }
+    }
+  },
+  {
+    "seq": 60,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 66,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "organizar"
+      }
+    }
+  },
+  {
+    "seq": 61,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 67,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "flecha",
+        "de": {
+          "tipo": "carta",
+          "id": 85
+        },
+        "a": {
+          "tipo": "jugador",
+          "id": 1
+        },
+        "tipo": "ataque"
+      }
+    }
+  },
+  {
+    "seq": 62,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 68,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "separar",
+        "monton": 27
+      }
+    }
+  },
+  {
+    "seq": 63,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 69,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "organizar"
+      }
+    }
+  },
+  {
+    "seq": 64,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 70,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "manifestar",
+        "n": 1
+      }
+    }
+  },
+  {
+    "seq": 65,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 72,
+    "cambio": {
+      "tipo": "monedas",
+      "lanzamientos": [
+        [
+          true,
+          false
+        ],
+        [
+          false,
+          true
+        ]
+      ],
+      "hastaPerder": false,
+      "semillaAnimacion": 3867117165
+    }
+  },
+  {
+    "seq": 66,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 74,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "buscar",
+        "de": 0
+      }
+    }
+  },
+  {
+    "seq": 67,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 75,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "excavar",
+        "forma": {
+          "tipo": "hastaQueCoincida"
+        },
+        "filtro": {
+          "noTierra": true,
+          "supertipo": null,
+          "tipo": null,
+          "cmc": null,
+          "colores": [],
+          "nombre": null
+        },
+        "pararTras": 1
+      }
+    }
+  },
+  {
+    "seq": 68,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 76,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "barajar"
+      },
+      "azar": 1946739224308148915
+    }
+  },
+  {
+    "seq": 69,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 77,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "excavar",
+        "forma": {
+          "tipo": "revelarN",
+          "n": 3
+        },
+        "filtro": {
+          "noTierra": true,
+          "supertipo": null,
+          "tipo": null,
+          "cmc": null,
+          "colores": [],
+          "nombre": null
+        },
+        "pararTras": 1
+      }
+    }
+  },
+  {
+    "seq": 70,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 78,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "resolver",
+        "carta": 88,
+        "como": "auto"
+      },
+      "azar": 6034085894521591865
+    }
+  },
+  {
+    "seq": 71,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 79,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "mirar",
+        "de": 1,
+        "n": 3,
+        "desde": "abajo"
+      }
+    }
+  },
+  {
+    "seq": 72,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 80,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "jugarBocaAbajo",
+        "carta": 13,
+        "pos": null
+      }
+    }
+  },
+  {
+    "seq": 73,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 81,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "barajarTodoDentro",
+        "zona": "cementerio"
+      },
+      "azar": 5286948216366153257
+    }
+  },
+  {
+    "seq": 74,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 82,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "copiaFicha",
+        "cartas": [
+          32
+        ]
+      }
+    }
+  },
+  {
+    "seq": 75,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 83,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "darControl",
+        "cartas": [
+          32
+        ],
+        "a": 1
+      }
+    }
+  },
+  {
+    "seq": 76,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 84,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "barajarTodoDentro",
+        "zona": "cementerio"
+      },
+      "azar": 11384975263539058793
+    }
+  },
+  {
+    "seq": 77,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 86,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "pasarTurno"
+      }
+    }
+  },
+  {
+    "seq": 78,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 87,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "crearFicha",
+        "de": {
+          "tipo": "delDeck",
+          "indice": 0
+        },
+        "cantidad": 3,
+        "monton": false,
+        "pos": null
+      }
+    }
+  },
+  {
+    "seq": 79,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 88,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "revelarArriba",
+        "n": 2
+      }
+    }
+  },
+  {
+    "seq": 80,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 89,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "separar",
+        "monton": 32
+      }
+    }
+  },
+  {
+    "seq": 81,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 90,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "moler",
+        "n": 1
+      }
+    }
+  },
+  {
+    "seq": 82,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 91,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "crearFicha",
+        "de": {
+          "tipo": "delDeck",
+          "indice": 0
+        },
+        "cantidad": 3,
+        "monton": false,
+        "pos": null
+      }
+    }
+  },
+  {
+    "seq": 83,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 92,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "cambiarCara",
+        "carta": 32
+      }
+    }
+  },
+  {
+    "seq": 84,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 93,
+    "cambio": {
+      "tipo": "dados",
+      "tiradas": [
+        {
+          "caras": 20,
+          "valor": 1
+        },
+        {
+          "caras": 20,
+          "valor": 9
+        },
+        {
+          "caras": 6,
+          "valor": 1
+        }
+      ],
+      "semillaAnimacion": 3538696597
+    }
+  },
+  {
+    "seq": 85,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 94,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "enderezarTodo"
+      }
+    }
+  },
+  {
+    "seq": 86,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 95,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "enderezarTodo"
+      }
+    }
+  },
+  {
+    "seq": 87,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 96,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "buscar",
+        "de": 1
+      }
+    }
+  },
+  {
+    "seq": 88,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 97,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "dejarDeMirar",
+        "de": 1
+      }
+    }
+  },
+  {
+    "seq": 89,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 98,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "excavar",
+        "forma": {
+          "tipo": "hastaQueCoincida"
+        },
+        "filtro": {
+          "noTierra": true,
+          "supertipo": null,
+          "tipo": null,
+          "cmc": null,
+          "colores": [],
+          "nombre": null
+        },
+        "pararTras": 1
+      }
+    }
+  },
+  {
+    "seq": 90,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 99,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "crearFicha",
+        "de": {
+          "tipo": "delDeck",
+          "indice": 0
+        },
+        "cantidad": 3,
+        "monton": true,
+        "pos": null
+      }
+    }
+  },
+  {
+    "seq": 91,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 100,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "enderezarTodo"
+      }
+    }
+  },
+  {
+    "seq": 92,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 101,
+    "cambio": {
+      "tipo": "monedas",
+      "lanzamientos": [
+        [
+          true
+        ],
+        [
+          true
+        ]
+      ],
+      "hastaPerder": false,
+      "semillaAnimacion": 696437916
+    }
+  },
+  {
+    "seq": 93,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 102,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "revelarArriba",
+        "n": 2
+      }
+    }
+  },
+  {
+    "seq": 94,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 103,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "copiaFicha",
+        "cartas": [
+          92
+        ]
+      }
+    }
+  },
+  {
+    "seq": 95,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 104,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "manifestar",
+        "n": 1
+      }
+    }
+  },
+  {
+    "seq": 96,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 105,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "organizar"
+      }
+    }
+  },
+  {
+    "seq": 97,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 106,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "amontonar",
+        "cartas": [
+          13,
+          89
+        ]
+      }
+    }
+  },
+  {
+    "seq": 98,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 107,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "enderezarTodo"
+      }
+    }
+  },
+  {
+    "seq": 99,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 108,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "amontonar",
+        "cartas": [
+          48,
+          92
+        ]
+      }
+    }
+  },
+  {
+    "seq": 100,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 109,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "habilidadEnPila",
+        "carta": 92,
+        "texto": "Draw a card"
+      }
+    }
+  },
+  {
+    "seq": 101,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 110,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "exiliarDeArriba",
+        "n": 1,
+        "modo": "oculta"
+      }
+    }
+  },
+  {
+    "seq": 102,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 111,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "descartar",
+        "modo": {
+          "tipo": "alAzar",
+          "valor": 1
+        }
+      },
+      "azar": 16710252900168186018
+    }
+  },
+  {
+    "seq": 103,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 112,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "moler",
+        "n": 2
+      }
+    }
+  },
+  {
+    "seq": 104,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 114,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "rueda",
+        "robar": 3
+      },
+      "azar": 18421817213116708394
+    }
+  },
+  {
+    "seq": 105,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 115,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "crearFicha",
+        "de": {
+          "tipo": "libre",
+          "nombre": "Soldier",
+          "fuerza": "1",
+          "resistencia": "1",
+          "colores": [
+            "W"
+          ]
+        },
+        "cantidad": 1,
+        "monton": false,
+        "pos": null
+      }
+    }
+  },
+  {
+    "seq": 106,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 116,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "manifestar",
+        "n": 1
+      }
+    }
+  },
+  {
+    "seq": 107,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 117,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "mover",
+        "cartas": [
+          70
+        ],
+        "a": {
+          "zona": {
+            "tipo": "de",
+            "zona": "mano"
+          },
+          "jugador": null,
+          "sitio": {
+            "tipo": "indice",
+            "valor": 0
+          }
+        },
+        "como": null
+      }
+    }
+  },
+  {
+    "seq": 108,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 118,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "flecha",
+        "de": {
+          "tipo": "carta",
+          "id": 48
+        },
+        "a": {
+          "tipo": "jugador",
+          "id": 1
+        },
+        "tipo": "ataque"
+      }
+    }
+  },
+  {
+    "seq": 109,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 119,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "darControl",
+        "cartas": [
+          32
+        ],
+        "a": 0
+      }
+    }
+  },
+  {
+    "seq": 110,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 120,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "exiliarDeArriba",
+        "n": 1,
+        "modo": "bocaAbajo"
+      }
+    }
+  },
+  {
+    "seq": 111,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 121,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "cambiarCara",
+        "carta": 99
+      }
+    }
+  },
+  {
+    "seq": 112,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 122,
+    "cambio": {
+      "tipo": "monedas",
+      "lanzamientos": [
+        [
+          false
+        ]
+      ],
+      "hastaPerder": true,
+      "semillaAnimacion": 941916482
+    }
+  },
+  {
+    "seq": 113,
+    "actor": {
+      "tipo": "jugador",
+      "id": 1
+    },
+    "tMs": 123,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "pasarTurno"
+      }
+    }
+  },
+  {
+    "seq": 114,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 125,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "robar",
+        "n": 1
+      }
+    }
+  },
+  {
+    "seq": 115,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 126,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "jugarBocaAbajo",
+        "carta": 39,
+        "pos": null
+      }
+    }
+  },
+  {
+    "seq": 116,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 127,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "alAzarDe",
+        "zona": "cementerio",
+        "filtro": {
+          "noTierra": false,
+          "supertipo": null,
+          "tipo": null,
+          "cmc": null,
+          "colores": [],
+          "nombre": null
+        },
+        "a": "mano"
+      },
+      "azar": 16123295257297550357
+    }
+  },
+  {
+    "seq": 117,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 129,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "buscar",
+        "de": 0
+      }
+    }
+  },
+  {
+    "seq": 118,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 130,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "alAzarDe",
+        "zona": "cementerio",
+        "filtro": {
+          "noTierra": false,
+          "supertipo": null,
+          "tipo": null,
+          "cmc": null,
+          "colores": [],
+          "nombre": null
+        },
+        "a": "mano"
+      },
+      "azar": 17175396152997544796
+    }
+  },
+  {
+    "seq": 119,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 131,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "descartar",
+        "modo": {
+          "tipo": "alAzar",
+          "valor": 1
+        }
+      },
+      "azar": 10325847070750810949
+    }
+  },
+  {
+    "seq": 120,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 132,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "organizar"
+      }
+    }
+  },
+  {
+    "seq": 121,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 132,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "chat",
+        "texto": "gg"
+      }
+    }
+  },
+  {
+    "seq": 122,
+    "actor": {
+      "tipo": "jugador",
+      "id": 0
+    },
+    "tMs": 132,
+    "cambio": {
+      "tipo": "accion",
+      "accion": {
+        "que": "tomarControl",
+        "cartas": [
+          1
+        ],
+        "hastaFinDeTurno": true
+      }
+    }
+  }
+]

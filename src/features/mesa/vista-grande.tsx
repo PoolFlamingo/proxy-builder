@@ -69,6 +69,7 @@ export function VistaGrande() {
 					c.palabrasClave.length > 0 ||
 					c.etiquetas.length > 0 ||
 					c.controlador !== c.dueno ||
+					c.devolverA !== null ||
 					c.habilidad) && (
 					<div className="flex flex-col gap-1 rounded-lg border border-white/10 bg-black/75 p-2 text-[11px] text-white backdrop-blur">
 						{c.habilidad && <p className="italic">{c.habilidad}</p>}
@@ -120,6 +121,14 @@ export function VistaGrande() {
 							</span>
 						)}
 						{c.etiquetas.length > 0 && <span>{c.etiquetas.map((e) => e.texto).join(" · ")}</span>}
+						{c.devolverA !== null && (
+							<span className="flex items-center gap-1 text-amber-300">
+								<Clock className="size-3" />
+								{t("Vuelve a {quien} al final del turno", {
+									quien: jugadores[c.devolverA]?.nombre ?? "",
+								})}
+							</span>
+						)}
 						{c.controlador !== c.dueno && (
 							<span className="text-rose-300">
 								{t("La controla {quien}; es de {dueno}", {

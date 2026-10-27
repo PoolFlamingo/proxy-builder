@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { VistaCarta } from "@/bindings/VistaCarta";
 import type { Disposicion } from "../disposicion";
-import { ASOMA, acompanantes, puestosDelCampo } from "../puestos-campo";
+import { ASOMA, acompanantes, conLasAjenas, puestosDelCampo } from "../puestos-campo";
 
 const disp = {
 	campo: { x: 0, y: 0, w: 1000, h: 500 },
@@ -43,5 +43,21 @@ describe("puestos del campo", () => {
 		expect(acompanantes([1], hijas)).toEqual([2, 3]);
 		expect(acompanantes([1, 3], hijas)).toEqual([2]);
 		expect(acompanantes([4], hijas)).toEqual([]);
+	});
+	it("lo que cuelga de mi carta desde el campo de otro se pinta junto a ella", () => {
+		const campo = { tipo: "de", jugador: 1, zona: "campo" };
+		const mia = { tipo: "de", jugador: 0, zona: "campo" };
+		const cartas = {
+			1: carta(1, { zona: mia } as Partial<VistaCarta>),
+			// El aura del otro, sobre mi criatura.
+			2: carta(2, { zona: campo, adjuntaA: 1 } as Partial<VistaCarta>),
+			// Otra carta suya, sin relación.
+			3: carta(3, { zona: campo } as Partial<VistaCarta>),
+		};
+		const todas = conLasAjenas([1], cartas);
+		expect(todas).toEqual([1, 2]);
+		const { puestos } = puestosDelCampo(todas, cartas, disp);
+		expect(puestos.get(2)).toBeDefined();
+		expect(conLasAjenas([3], cartas)).toEqual([3]);
 	});
 });

@@ -37,6 +37,7 @@ fn nombre(a: &Accion) -> &'static str {
         Accion::Resaltar { .. } => "Resaltar",
         Accion::CopiaFicha { .. } => "CopiaFicha",
         Accion::DarControl { .. } => "DarControl",
+        Accion::TomarControl { .. } => "TomarControl",
         Accion::HabilidadEnPila { .. } => "HabilidadEnPila",
         Accion::Flecha { .. } => "Flecha",
         Accion::QuitarFlechas { .. } => "QuitarFlechas",
@@ -333,6 +334,13 @@ fn cada_accion_del_catalogo() {
     });
     assert!(m.zona(OTRO, Zona::Campo).contains(&copia));
     assert_eq!(m.c(copia).controlador, OTRO);
+    // Tomar el control: vuelve al campo de quien la toma.
+    m.haz(Accion::TomarControl {
+        cartas: vec![copia],
+        hasta_fin_de_turno: false,
+    });
+    assert!(m.zona(YO, Zona::Campo).contains(&copia));
+    assert_eq!(m.c(copia).controlador, YO);
 
     // ── Biblioteca ──
     let mano = m.zona(YO, Zona::Mano).len();
@@ -723,6 +731,7 @@ const TODAS: &[&str] = &[
     "Resaltar",
     "CopiaFicha",
     "DarControl",
+    "TomarControl",
     "HabilidadEnPila",
     "Flecha",
     "QuitarFlechas",
@@ -1068,4 +1077,181 @@ fn los_contadores_temporales_se_pierden_al_pasar_el_turno() {
     assert_eq!(m.c(oso).contadores["+1/+1"], 3, "el permanente sí");
     assert!(!m.c(oso).palabras_clave.contains("~Flying"));
     assert!(m.c(oso).palabras_clave.contains("Haste"));
+}
+
+fn con_contador(m: &mut Mesa, id: IdCarta, tipo: &str, delta: i32) {
+    m.haz(Accion::Contador {
+        cartas: vec![id],
+        tipo: tipo.into(),
+        delta,
+    });
+}
+
+#[test]
+fn al_dar_el_control_van_con_ella_sus_contadores_y_lo_que_lleva_adjunto() {
+    let mut m = Mesa::nueva(2);
+    let oso = m.al_campo("Bear");
+    let espada = m.al_campo("Forest");
+    let bicho = m.al_campo("Bear");
+    con_contador(&mut m, oso, "+1/+1", 3);
+    con_contador(&mut m, espada, "oil", 2);
+    m.haz(Accion::Adjuntar {
+        carta: espada,
+        a: Some(oso),
+    });
+    m.haz(Accion::Amontonar {
+        cartas: vec![oso, bicho],
+    });
+    m.haz(Accion::DarControl {
+        cartas: vec![oso],
+        a: OTRO,
+    });
+    for id in [oso, espada, bicho] {
+        assert!(
+            m.zona(OTRO, Zona::Campo).contains(&id),
+            "{id:?} en su campo"
+        );
+        assert!(!m.zona(YO, Zona::Campo).contains(&id));
+        assert_eq!(m.c(id).controlador, OTRO);
+    }
+    assert_eq!(
+        m.c(oso).contadores["+1/+1"],
+        3,
+        "sus contadores van con ella"
+    );
+    assert_eq!(m.c(espada).contadores["oil"], 2, "y los del equipo");
+    assert_eq!(m.c(espada).adjunta_a, Some(oso), "sigue adjunto");
+    assert_eq!(m.c(bicho).agrupada_bajo, Some(oso), "y amontonado");
+    // El dueño sigue siendo el mismo.
+    assert_eq!(m.c(oso).dueno, YO);
+}
+
+#[test]
+fn lo_adjunto_de_otro_se_queda_en_su_campo_al_cambiar_de_control() {
+    let mut m = Mesa::nueva(2);
+    let oso = m.al_campo("Bear");
+    let aura = m.al_campo("Forest");
+    m.haz(Accion::DarControl {
+        cartas: vec![oso],
+        a: OTRO,
+    });
+    // Mi aura, en mi campo, sobre la criatura que ahora controla el otro.
+    m.haz(Accion::Adjuntar {
+        carta: aura,
+        a: Some(oso),
+    });
+    // Cuando el otro me la devuelve, lo mío ya estaba aquí: no se mueve ni se suelta.
+    m.como(
+        OTRO,
+        Accion::DarControl {
+            cartas: vec![oso],
+            a: YO,
+        },
+    )
+    .unwrap();
+    assert_eq!(m.c(aura).adjunta_a, Some(oso), "sigue adjunta");
+    assert_eq!(m.c(aura).controlador, YO);
+    assert!(m.zona(YO, Zona::Campo).contains(&aura));
+}
+
+#[test]
+fn el_control_robado_hasta_el_final_del_turno_vuelve_al_pasar_el_turno() {
+    let mut m = Mesa::nueva(2);
+    let oso = m.al_campo("Bear");
+    m.haz(Accion::DarControl {
+        cartas: vec![oso],
+        a: OTRO,
+    });
+    // Es del otro: yo no la puedo tocar, pero sí tomarla.
+    assert_eq!(
+        m.como(
+            YO,
+            Accion::Girar {
+                cartas: vec![oso],
+                girada: true
+            }
+        ),
+        Err(Rechazo::SinPermiso)
+    );
+    m.haz(Accion::TomarControl {
+        cartas: vec![oso],
+        hasta_fin_de_turno: true,
+    });
+    assert_eq!(m.c(oso).controlador, YO);
+    assert_eq!(m.c(oso).devolver_a, Some(OTRO));
+    // Tomar lo que ya es mío no hace nada.
+    assert_eq!(
+        m.como(
+            YO,
+            Accion::TomarControl {
+                cartas: vec![oso],
+                hasta_fin_de_turno: false
+            }
+        ),
+        Err(Rechazo::NoSePuede)
+    );
+    m.haz(Accion::PasarTurno);
+    assert_eq!(m.c(oso).controlador, OTRO, "vuelve al pasar el turno");
+    assert!(m.zona(OTRO, Zona::Campo).contains(&oso));
+    assert_eq!(m.c(oso).devolver_a, None);
+}
+
+#[test]
+fn tomar_el_control_para_siempre_no_se_devuelve() {
+    let mut m = Mesa::nueva(2);
+    let oso = m.al_campo("Bear");
+    m.haz(Accion::DarControl {
+        cartas: vec![oso],
+        a: OTRO,
+    });
+    m.haz(Accion::TomarControl {
+        cartas: vec![oso],
+        hasta_fin_de_turno: false,
+    });
+    m.haz(Accion::PasarTurno);
+    assert_eq!(m.c(oso).controlador, YO);
+    assert_eq!(m.c(oso).devolver_a, None);
+}
+
+#[test]
+fn se_roba_del_cementerio_y_el_exilio_ajenos_al_campo_pero_no_a_la_mano() {
+    let mut m = Mesa::nueva(2);
+    let id = *m.zona(OTRO, Zona::Biblioteca).first().unwrap();
+    m.como(
+        OTRO,
+        Accion::Mover {
+            cartas: vec![id],
+            a: a(Zona::Cementerio, Sitio::Arriba),
+            como: None,
+        },
+    )
+    .unwrap();
+    // A mi mano: no es mía, no puedo.
+    assert_eq!(
+        m.como(
+            YO,
+            Accion::Mover {
+                cartas: vec![id],
+                a: a(Zona::Mano, Sitio::Arriba),
+                como: None
+            }
+        ),
+        Err(Rechazo::SinPermiso)
+    );
+    // A mi campo: sí (reanimar lo del otro).
+    m.haz(Accion::Mover {
+        cartas: vec![id],
+        a: campo(None),
+        como: None,
+    });
+    assert!(m.zona(YO, Zona::Campo).contains(&id));
+    assert_eq!(m.c(id).controlador, YO);
+    assert_eq!(m.c(id).dueno, OTRO, "sigue siendo del otro");
+    // Y si va a la mano, vuelve a la del dueño.
+    m.haz(Accion::Mover {
+        cartas: vec![id],
+        a: a(Zona::Mano, Sitio::Arriba),
+        como: None,
+    });
+    assert!(m.zona(OTRO, Zona::Mano).contains(&id));
 }

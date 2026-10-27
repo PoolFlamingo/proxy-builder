@@ -396,6 +396,46 @@ fn mover(q: &mut Partida, id: IdCarta, a: RefZona, hueco: Hueco) -> Result<(), R
     Ok(())
 }
 
+/// Una carta del campo pasa al campo de `nuevo` (cambia de controlador) con lo
+/// suyo que lleva encima: sus contadores, y lo que tiene adjunto o amontonado
+/// y controlaba quien la controlaba (equipos, auras, un montón), que sigue
+/// adjunto o amontonado. Lo de otros se queda donde está, adjunto desde su
+/// campo. Boca abajo sigue boca abajo, y solo la ve su nuevo controlador.
+fn pasar_a_campo_de(q: &mut Partida, id: IdCarta, nuevo: IdJugador) -> Result<(), Rechazo> {
+    let antes = en_campo(q, id)?;
+    if antes == nuevo {
+        return Ok(());
+    }
+    let c = carta(q, id)?;
+    let (pos, boca_abajo) = (c.pos, c.boca_abajo);
+    let suyo = q.zona(&RefZona::de(antes, Zona::Campo)).to_vec();
+    let con: Vec<(IdCarta, Option<IdCarta>, Option<IdCarta>)> = suyo
+        .into_iter()
+        .filter_map(|h| {
+            let o = q.cartas.get(&h)?;
+            ((o.adjunta_a == Some(id) || o.agrupada_bajo == Some(id)) && h != id).then_some((
+                h,
+                o.adjunta_a,
+                o.agrupada_bajo,
+            ))
+        })
+        .collect();
+    mover(q, id, RefZona::de(nuevo, Zona::Campo), Hueco::Campo(pos))?;
+    if boca_abajo {
+        let c = carta_mut(q, id)?;
+        c.boca_abajo = true;
+        c.vista_por = Vista::Jugadores(vec![nuevo]);
+    }
+    for (h, adjunta_a, agrupada_bajo) in con {
+        let p = carta(q, h)?.pos;
+        mover(q, h, RefZona::de(nuevo, Zona::Campo), Hueco::Campo(p))?;
+        let o = carta_mut(q, h)?;
+        o.adjunta_a = adjunta_a;
+        o.agrupada_bajo = agrupada_bajo;
+    }
+    Ok(())
+}
+
 /// Lo que pasa al resto de la mesa cuando una carta deja el campo.
 fn soltar_de_campo(q: &mut Partida, id: IdCarta) {
     for o in q.cartas.values_mut() {
@@ -540,6 +580,18 @@ fn empezar_turno(q: &mut Partida, j: IdJugador) -> Result<(), Rechazo> {
 fn pasar_turno(q: &mut Partida, t_ms: u64) -> Result<(), Rechazo> {
     if q.mulligan.is_some() {
         return Err(Rechazo::NoSePuede);
+    }
+    // Lo que se robó «hasta el final del turno» vuelve (si quien lo tenía sigue en la mesa).
+    let prestadas: Vec<(IdCarta, IdJugador)> = q
+        .cartas
+        .values()
+        .filter_map(|c| c.devolver_a.map(|j| (c.id, j)))
+        .collect();
+    for (id, j) in prestadas {
+        if q.jugador(j).is_some() && en_campo(q, id).is_ok() {
+            pasar_a_campo_de(q, id, j)?;
+        }
+        carta_mut(q, id)?.devolver_a = None;
     }
     for c in q.cartas.values_mut() {
         c.pt.hasta_fin_de_turno = (0, 0);
@@ -939,10 +991,32 @@ fn accion_(q: &mut Partida, a: &Accion, ctx: &mut Ctx, seq: u64) -> Result<(), R
             sin_repetir(cartas)?;
             for id in cartas {
                 en_campo(q, *id)?;
-                let pos = carta(q, *id)?.pos;
-                mover(q, *id, RefZona::de(*a, Zona::Campo), Hueco::Campo(pos))?;
+                pasar_a_campo_de(q, *id, *a)?;
+                // Dárselo a otro no es un préstamo.
+                carta_mut(q, *id)?.devolver_a = None;
             }
             Ok(())
+        }
+        Accion::TomarControl {
+            cartas,
+            hasta_fin_de_turno,
+        } => {
+            sin_repetir(cartas)?;
+            let mut alguna = false;
+            for id in cartas {
+                let anterior = en_campo(q, *id)?;
+                if anterior == yo {
+                    continue;
+                }
+                pasar_a_campo_de(q, *id, yo)?;
+                carta_mut(q, *id)?.devolver_a = hasta_fin_de_turno.then_some(anterior);
+                alguna = true;
+            }
+            if alguna {
+                Ok(())
+            } else {
+                Err(Rechazo::NoSePuede)
+            }
         }
         Accion::HabilidadEnPila { carta: id, texto } => {
             if texto.chars().count() > MAX_TEXTO {

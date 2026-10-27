@@ -205,7 +205,7 @@ pub fn intencion_al_azar(p: &Partida, azar: &mut Azar, n: usize) -> Intencion {
     let campo = RefZona::de(actor, Zona::Campo);
     let mano = RefZona::de(actor, Zona::Mano);
     let lib = RefZona::de(actor, Zona::Biblioteca);
-    let accion = match azar.menor_que(46) {
+    let accion = match azar.menor_que(47) {
         0..=3 => Accion::Mover {
             cartas: vec![if azar.moneda() {
                 de_zona(p, azar, mano)
@@ -394,6 +394,10 @@ pub fn intencion_al_azar(p: &Partida, azar: &mut Azar, n: usize) -> Intencion {
         44 => Accion::HabilidadEnPila {
             carta: de_zona(p, azar, campo),
             texto: "Draw a card".into(),
+        },
+        46 => Accion::TomarControl {
+            cartas: vec![carta_al_azar(p, azar)],
+            hasta_fin_de_turno: azar.moneda(),
         },
         _ => Accion::CopiaFicha {
             cartas: vec![de_zona(p, azar, campo)],

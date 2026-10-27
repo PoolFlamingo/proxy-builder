@@ -2,6 +2,7 @@ import { Clock, Hand } from "lucide-react";
 import type { VistaCarta } from "@/bindings/VistaCarta";
 import { useLang } from "@/components/language-provider";
 import { cn } from "@/lib/utils";
+import { useMesa } from "@/stores/mesa-store";
 import { COLORES_ETIQUETA } from "./colores";
 import { COLOR_DE_MANA, esTemporal, manaDe, nombreContador, sinTemporal } from "./contadores";
 import { ptDe } from "./pt";
@@ -20,6 +21,7 @@ function corto(tipo: string): string {
 export function Insignias({ c, yo }: { c: VistaCarta; yo: number | null }) {
 	const { t } = useLang();
 	const pt = ptDe(c);
+	const jugadores = useMesa((s) => s.jugadores);
 	const contadores = Object.entries(c.contadores);
 	const robada = c.controlador !== c.dueno;
 	return (
@@ -67,6 +69,12 @@ export function Insignias({ c, yo }: { c: VistaCarta; yo: number | null }) {
 							</span>
 						);
 					})}
+				</div>
+			)}
+			{c.devolverA !== null && (
+				<div className="pointer-events-none absolute top-0.5 right-0.5 flex items-center gap-0.5 rounded-full bg-black/80 px-1.5 text-[9px] leading-4 font-bold text-amber-300 ring-1 ring-amber-300/80">
+					<Clock className="size-2.5" />
+					{jugadores[c.devolverA]?.nombre ?? ""}
 				</div>
 			)}
 			{c.palabrasClave.length > 0 && (

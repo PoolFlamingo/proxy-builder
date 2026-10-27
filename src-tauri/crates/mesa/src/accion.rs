@@ -21,7 +21,7 @@
 //! | `PonerBolita`, `MoverBolita`, `QuitarBolita` | «Place marker» (§2.2) |
 //! | `Adjuntar` | «Attach to» |
 //! | `FaseFuera`, `NoEndereza`, `Resaltar` | «Phase out», «Doesn't untap», «Highlight» |
-//! | `CopiaFicha`, `DarControl` | «Create token copy», «Give to player» |
+//! | `CopiaFicha`, `DarControl`, `TomarControl` | «Create token copy», «Give to player», quitar el control (Control Magic, Threaten…; v2) |
 //! | `HabilidadEnPila` | «Put ability on stack» |
 //! | `Flecha`, `QuitarFlechas` | «Attack / Target» (`capturas/pablo/12`, `18`) |
 //! | `Robar`, `Moler`, `Manifestar`, `ExiliarDeArriba` | menú de la biblioteca (`capturas/pablo/10–11`) |
@@ -61,7 +61,7 @@ use crate::modelo::{
 use crate::sparring::{Decision, Intensidad, ReaccionSparring};
 
 /// Sube con cada variante nueva o cambiada de `Accion` o `Cambio`.
-pub const VERSION_CATALOGO: u32 = 1;
+pub const VERSION_CATALOGO: u32 = 2;
 
 /// Lo que pide un jugador.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
@@ -507,6 +507,14 @@ pub enum Accion {
     DarControl {
         cartas: Vec<IdCarta>,
         a: IdJugador,
+    },
+    /// Toma el control de permanentes que controla otro (Control Magic,
+    /// Threaten, Treachery…), con lo suyo que lleven encima. Con
+    /// `hasta_fin_de_turno` vuelven a quien las controlaba al pasar el turno.
+    /// Catálogo v2.
+    TomarControl {
+        cartas: Vec<IdCarta>,
+        hasta_fin_de_turno: bool,
     },
     HabilidadEnPila {
         carta: IdCarta,

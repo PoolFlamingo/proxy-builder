@@ -342,7 +342,6 @@
 	"{quien} cambia si {cartas} se endereza": "{quien} ändert, ob {cartas} enttappt wird",
 	"{quien} resalta {cartas}": "{quien} hebt {cartas} hervor",
 	"{quien} crea una copia de {cartas}": "{quien} erstellt eine Kopie von {cartas}",
-	"{quien} da el control de {cartas}": "{quien} gibt die Kontrolle über {cartas} ab",
 	"{quien} pone una habilidad de {carta} en la pila": "{quien} legt eine Fähigkeit von {carta} auf den Stapel",
 	"{quien} señala un objetivo": "{quien} zeigt auf ein Ziel",
 	"{quien} quita sus flechas": "{quien} entfernt seine Pfeile",
@@ -1146,5 +1145,12 @@
 	"Velo (contador)": "Verhüllt",
 	"Bono al adjuntar": "Bonus beim Anlegen",
 	"Sumar {bono}": "{bono} addieren",
-	"Ahora no": "Jetzt nicht"
+	"Ahora no": "Jetzt nicht",
+	"{quien} da el control de {cartas} a {a}": "{quien} gibt die Kontrolle über {cartas} an {a}",
+	"{quien} toma el control de {cartas}": "{quien} übernimmt die Kontrolle über {cartas}",
+	"{quien} toma el control de {cartas} hasta el final del turno": "{quien} übernimmt die Kontrolle über {cartas} bis zum Ende des Zuges",
+	"Dar el control a…": "Kontrolle geben an…",
+	"Tomar el control": "Kontrolle übernehmen",
+	"Tomar el control hasta el final del turno": "Kontrolle bis zum Ende des Zuges übernehmen",
+	"Vuelve a {quien} al final del turno": "Geht am Zugende an {quien} zurück"
 }

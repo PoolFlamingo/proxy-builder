@@ -1,5 +1,6 @@
 import {
 	ArrowDownToLine,
+	ArrowLeftRight,
 	ArrowUpToLine,
 	Ban,
 	Clock,
@@ -10,6 +11,7 @@ import {
 	EyeOff,
 	FlipHorizontal2,
 	Ghost,
+	Gift,
 	Hand,
 	Hash,
 	Highlighter,
@@ -123,6 +125,7 @@ function DelCampo({ c }: { c: VistaCarta }) {
 					<Tecla nombre="Transformar" />
 				</ContextMenuItem>
 			)}
+			<Control c={c} />
 			<Contadores c={c} />
 			<ContextMenuItem onSelect={() => usePantalla.getState().abrir({ tipo: "pt", carta: c.id })}>
 				<Swords />
@@ -172,6 +175,49 @@ function DelCampo({ c }: { c: VistaCarta }) {
 			<Resaltar c={c} />
 			{(c.cantidad > 1 || varias) && <Monton c={c} varias={varias} />}
 		</>
+	);
+}
+
+/**
+ * Dar el control de lo mío a otro jugador (regalar) o tomar el de lo que
+ * controla otro (robar, para siempre o hasta el final del turno). Va con la
+ * carta lo que lleva encima: contadores, equipos, auras y montones.
+ */
+function Control({ c }: { c: VistaCarta }) {
+	const { t } = useLang();
+	const yo = useMesa((s) => s.yo);
+	const jugadores = useMesa((s) => s.jugadores);
+	if (yo === null) return null;
+	if (c.controlador !== yo) {
+		return (
+			<>
+				<ContextMenuItem onSelect={() => op.tomarControl(objetivo(c.id))}>
+					<ArrowLeftRight />
+					{t("Tomar el control")}
+				</ContextMenuItem>
+				<ContextMenuItem onSelect={() => op.tomarControl(objetivo(c.id), true)}>
+					<Clock />
+					{t("Tomar el control hasta el final del turno")}
+				</ContextMenuItem>
+			</>
+		);
+	}
+	const otros = Object.values(jugadores).filter((j) => j.id !== yo && j.eliminado === null);
+	return (
+		<ContextMenuSub>
+			<ContextMenuSubTrigger disabled={otros.length === 0}>
+				<Gift />
+				{t("Dar el control a…")}
+			</ContextMenuSubTrigger>
+			<ContextMenuSubContent className="text-xs">
+				{otros.map((j) => (
+					<ContextMenuItem key={j.id} onSelect={() => op.darControl(objetivo(c.id), j.id)}>
+						<span className="size-2.5 rounded-full" style={{ background: j.color }} />
+						{j.nombre}
+					</ContextMenuItem>
+				))}
+			</ContextMenuSubContent>
+		</ContextMenuSub>
 	);
 }
 

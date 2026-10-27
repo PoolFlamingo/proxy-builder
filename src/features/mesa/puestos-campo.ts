@@ -57,3 +57,22 @@ export function acompanantes(
 ): IdCarta[] {
 	return llevadas.flatMap((id) => hijas.get(id) ?? []).filter((h) => !llevadas.includes(h));
 }
+
+/**
+ * `ids` más lo que cuelga de ellas desde el campo de otro (el aura de otro
+ * jugador sobre mi criatura, mi equipo sobre una criatura que ahora controla
+ * otro): se pinta junto a su carta, que es donde está, y no en su campo.
+ */
+export function conLasAjenas(
+	ids: readonly IdCarta[],
+	cartas: Record<number, VistaCarta | undefined>,
+): IdCarta[] {
+	const propias = new Set(ids);
+	const ajenas: IdCarta[] = [];
+	for (const c of Object.values(cartas)) {
+		if (!c || propias.has(c.id) || c.zona.tipo !== "de" || c.zona.zona !== "campo") continue;
+		const madre = c.adjuntaA ?? c.agrupadaBajo;
+		if (madre !== null && propias.has(madre)) ajenas.push(c.id);
+	}
+	return ajenas.length === 0 ? [...ids] : [...ids, ...ajenas];
+}
