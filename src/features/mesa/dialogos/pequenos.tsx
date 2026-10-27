@@ -116,7 +116,12 @@ export function ContadorDialog({
 	temporal?: boolean;
 }) {
 	const { t, lang } = useLang();
+	// Lo que se añade (`tipo`) y lo que se escribe para buscar (`texto`) son cosas
+	// distintas: el buscador empieza vacío y enseña todo el catálogo; escribir
+	// ahí también deja un tipo propio (vacío: hay que elegir uno), y pulsar un
+	// botón elige ese tipo sin tocar el buscador.
 	const [tipo, setTipo] = useState("+1/+1");
+	const [texto, setTexto] = useState("");
 	const [n, setN] = useState(1);
 	const [temporal, setTemporal] = useState(temporalInicial);
 	const ok = () => {
@@ -128,8 +133,7 @@ export function ContadorDialog({
 			delta: n,
 		});
 	};
-	// El campo de texto es el tipo y, a la vez, el filtro del catálogo.
-	const filtro = tipo.trim().toLowerCase();
+	const filtro = texto.trim().toLowerCase();
 	const secciones = [
 		{ titulo: t("Habituales"), items: CONTADORES_CARTA, ordenar: false },
 		{ titulo: t("Maná"), items: CONTADORES_MANA, ordenar: false },
@@ -161,8 +165,11 @@ export function ContadorDialog({
 				</DialogHeader>
 				<div className="flex gap-2.5">
 					<Input
-						value={tipo}
-						onChange={(e) => setTipo(e.target.value)}
+						value={texto}
+						onChange={(e) => {
+							setTexto(e.target.value);
+							setTipo(e.target.value.trim());
+						}}
 						maxLength={29}
 						placeholder={t("Otro tipo…")}
 						className="h-8 flex-1 text-xs"
