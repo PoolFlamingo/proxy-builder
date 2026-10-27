@@ -29,5 +29,6 @@
 	"Cerrar igualmente": "Close anyway",
 	"Guardar y cerrar": "Save and close",
 	"No se ha podido cerrar la ventana.": "The window could not be closed.",
-	"Se instalará al salir de la mesa.": "It will be installed when you leave the table."
+	"Se instalará al salir de la mesa.": "It will be installed when you leave the table.",
+	"Beta": "Beta"
 }

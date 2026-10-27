@@ -101,6 +101,9 @@ export function AppShell({
 					<ToggleGroupItem value="mesa" className="gap-1.5 px-3 text-xs">
 						<Swords className="size-3.5" />
 						{t("Jugar")}
+						<span className="rounded-full bg-primary/15 px-1.5 text-[9px] font-semibold uppercase leading-4 text-primary">
+							{t("Beta")}
+						</span>
 					</ToggleGroupItem>
 				</ToggleGroup>
 				{vista !== "biblioteca" && vista !== "mesa" && <NombreDeck />}

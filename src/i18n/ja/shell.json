@@ -29,5 +29,6 @@
 	"Cerrar igualmente": "このまま閉じる",
 	"Guardar y cerrar": "保存して閉じる",
 	"No se ha podido cerrar la ventana.": "ウィンドウを閉じられませんでした。",
-	"Se instalará al salir de la mesa.": "テーブルを離れたらインストールされます。"
+	"Se instalará al salir de la mesa.": "テーブルを離れたらインストールされます。",
+	"Beta": "ベータ"
 }
