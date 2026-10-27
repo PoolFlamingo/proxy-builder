@@ -16,6 +16,7 @@ use ts_rs::TS;
 
 use crate::error::{AppError, AppResult, ErrorCode};
 use crate::mesa::dados::{self, AspectoDados, VistaAspectoDados};
+use crate::mesa::encuentro::{VistaBanquillo, VistaEncuentro};
 use crate::mesa::guardada::{self, ResumenGuardada};
 use crate::mesa::imagenes;
 use crate::mesa::preparar::{cartas_de_lista, deck_de_mesa};
@@ -423,6 +424,37 @@ pub fn mesa_accion(
     }
     con_sesion(&state, |s| s.accion(accion, como))?;
     guardar_si_toca(&state, false);
+    Ok(())
+}
+
+/// Cómo va el encuentro (al mejor de varias); `None`, una partida suelta.
+#[tauri::command]
+pub fn mesa_encuentro(state: State<'_, AppState>) -> AppResult<Option<VistaEncuentro>> {
+    con_sesion(&state, |s| Ok(s.estado_encuentro()))
+}
+
+/// El mazo y el banquillo de un jugador, entre una partida y la siguiente.
+#[tauri::command]
+pub fn mesa_banquillo(state: State<'_, AppState>, jugador: IdJugador) -> AppResult<VistaBanquillo> {
+    con_sesion(&state, |s| s.banquillo(jugador))
+}
+
+/// Cambia cartas entre el mazo y el banquillo de un jugador.
+#[tauri::command]
+pub fn mesa_banquillo_cambiar(
+    state: State<'_, AppState>,
+    jugador: IdJugador,
+    sale: Vec<String>,
+    entra: Vec<String>,
+) -> AppResult<()> {
+    con_sesion(&state, |s| s.cambiar_banquillo(jugador, sale, entra))
+}
+
+/// Cierra la partida terminada y abre la siguiente del encuentro.
+#[tauri::command]
+pub fn mesa_siguiente_partida(state: State<'_, AppState>) -> AppResult<()> {
+    con_sesion(&state, |s| s.siguiente_partida())?;
+    guardar_si_toca(&state, true);
     Ok(())
 }
 

@@ -126,6 +126,7 @@ async fn partida_con(decks: Vec<DeckDeMesa>) -> Partida3 {
         opciones: None,
         intensidad: Intensidad::Apagado,
         equipos: Vec::new(),
+        al_mejor_de: None,
     };
     empezar_partida(&anf, &host.mesa, host.ep.id(), config, mazo()).unwrap();
     for j in &invitados {

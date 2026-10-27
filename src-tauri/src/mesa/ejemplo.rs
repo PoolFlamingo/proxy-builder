@@ -210,6 +210,28 @@ mod tests {
             }
             poner(c, &mut cards);
         }
+        // El banquillo (para los encuentros al mejor de varias partidas).
+        for (n, coste, tipo, reglas) in [
+            (
+                "Hongo de reserva",
+                "{G}",
+                (("Criatura — Hongo", "Creature — Fungus"), Some(("1", "1"))),
+                "",
+            ),
+            (
+                "Cancelación",
+                "{1}{U}",
+                (("Instantáneo", "Instant"), None),
+                "Counter target spell.",
+            ),
+        ] {
+            for _ in 0..2 {
+                i += 1;
+                let mut c = carta(i, n, coste, tipo.0, reglas, tipo.1);
+                c.marca = Some(proxy_core::model::MarcaCarta::Banquillo);
+                poner(c, &mut cards);
+            }
+        }
         let mut deck = crate::store::decks::create(&s.db, "Mesa de prueba", None).unwrap();
         deck.decklist_text = "Commander\n1 Kruphix, dios del horizonte\n".into();
         deck.cards = cards;

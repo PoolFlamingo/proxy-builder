@@ -2,6 +2,7 @@
 //! crate `mesa`), el deck de mesa con sus imágenes y la partida guardada.
 
 pub mod dados;
+pub mod encuentro;
 pub mod guardada;
 pub mod imagenes;
 pub mod originales;

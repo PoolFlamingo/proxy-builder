@@ -8,6 +8,7 @@
 //! esto.
 
 use mesa::accion::{Accion, Evento, Intencion};
+use mesa::encuentro::Encuentro;
 use mesa::formato::{Formato, Opciones, Variantes};
 use mesa::modelo::{Equipo, Partida};
 use mesa::preparar::{iniciar, Config, DeckDeMesa, JugadorNuevo};
@@ -53,6 +54,11 @@ pub struct ConfigMesa {
     /// Los equipos de la partida (Fase G); los de 2HG los monta el motor solo.
     #[serde(default)]
     pub equipos: Vec<Equipo>,
+    /// «Al mejor de» 1, 3 o 5 partidas, con banquillo entre ellas (Fase G);
+    /// `None`, una partida suelta.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub al_mejor_de: Option<u8>,
 }
 
 /// Lo que llega a la pantalla por el canal de la mesa.
@@ -141,10 +147,17 @@ pub struct Sesion {
     pub guardada_ms: u64,
     /// En red, el papel de esta app; `None`, solitario.
     pub red: Option<RedSesion>,
+    /// El marcador si se juega al mejor de varias (`mesa/encuentro.rs`).
+    pub encuentro: Option<Encuentro>,
 }
 
 /// La partida del motor para esta configuración.
-fn partida(config: &ConfigMesa, mazos: &[DeckDeMesa], semilla: u64) -> AppResult<Partida> {
+pub(super) fn partida(
+    config: &ConfigMesa,
+    mazos: &[DeckDeMesa],
+    semilla: u64,
+    primero: Option<IdJugador>,
+) -> AppResult<Partida> {
     if config.jugadores.len() != mazos.len() {
         return Err(AppError::new(ErrorCode::InvalidInput));
     }
@@ -167,7 +180,7 @@ fn partida(config: &ConfigMesa, mazos: &[DeckDeMesa], semilla: u64) -> AppResult
             })
             .collect(),
         equipos: config.equipos.clone(),
-        primero: None,
+        primero,
     };
     let id = format!("{semilla:016x}");
     let mut p = iniciar(id, cfg, semilla, ahora_ms())?;
@@ -178,7 +191,7 @@ fn partida(config: &ConfigMesa, mazos: &[DeckDeMesa], semilla: u64) -> AppResult
 impl Sesion {
     pub fn nueva(config: ConfigMesa, mazos: Vec<DeckDeMesa>) -> AppResult<Sesion> {
         let s = semilla();
-        let p = partida(&config, &mazos, s)?;
+        let p = partida(&config, &mazos, s, None)?;
         Ok(Sesion::con_registro(
             config,
             mazos,
@@ -188,7 +201,9 @@ impl Sesion {
 
     /// Una sesión con un registro ya hecho (la partida guardada).
     pub fn con_registro(config: ConfigMesa, mazos: Vec<DeckDeMesa>, registro: Registro) -> Sesion {
+        let encuentro = config.al_mejor_de.and_then(|n| Encuentro::nuevo(n).ok());
         Sesion {
+            encuentro,
             config,
             mazos,
             registro,
@@ -208,7 +223,7 @@ impl Sesion {
         mazos: Vec<DeckDeMesa>,
         anfitrion: std::sync::Arc<crate::red::anfitrion::Anfitrion>,
     ) -> AppResult<Sesion> {
-        let p = partida(&config, &mazos, semilla())?;
+        let p = partida(&config, &mazos, semilla(), None)?;
         let mut s = Sesion::con_registro(
             config,
             mazos,
@@ -241,6 +256,7 @@ impl Sesion {
             opciones: Some(partida.opciones.clone()),
             intensidad: Intensidad::Apagado,
             equipos: partida.equipos.clone(),
+            al_mejor_de: None,
         };
         let mut s = Sesion::con_registro(
             config,
@@ -276,7 +292,7 @@ impl Sesion {
         vista(self.partida(), self.mirador())
     }
 
-    fn mandar(&self, m: MensajeMesa) {
+    pub(super) fn mandar(&self, m: MensajeMesa) {
         if let Some(c) = &self.canal {
             if let Err(e) = c.send(m) {
                 tracing::warn!(error = %e, "no se pudo mandar a la mesa");
@@ -287,7 +303,7 @@ impl Sesion {
     /// La pantalla se suscribe: recibe la vista entera y, desde ahí, los
     /// parches.
     /// La vista entera con el registro vigente.
-    fn mensaje_vista(&self) -> MensajeMesa {
+    pub(super) fn mensaje_vista(&self) -> MensajeMesa {
         let vigentes = self.registro.vigentes();
         let desde = vigentes.len().saturating_sub(REGISTRO_EN_VISTA);
         MensajeMesa::Vista {
@@ -358,7 +374,8 @@ impl Sesion {
         let antes = (self.partida().sparring.intensidad != Intensidad::Apagado)
             .then(|| self.partida().clone());
         let hecho = if accion == Accion::Reiniciar {
-            let p = partida(&self.config, &self.mazos, semilla())?;
+            let primero = self.primero();
+            let p = partida(&self.config, &self.mazos, semilla(), primero)?;
             self.registro.reemplazar(actor, p, ahora)?
         } else {
             self.registro
@@ -422,7 +439,11 @@ impl Sesion {
 
     /// Apunta un evento hecho, se lo manda a la pantalla y, en el anfitrión,
     /// a los demás (`origen`: de qué intención remota viene).
-    fn publicar(&mut self, hecho: mesa::registro::Hecho, origen: Option<(IdJugador, u64)>) {
+    pub(super) fn publicar(
+        &mut self,
+        hecho: mesa::registro::Hecho,
+        origen: Option<(IdJugador, u64)>,
+    ) {
         if let Some(RedSesion::Anfitrion(a)) = &self.red {
             a.difundir(self.registro.partida(), &hecho, origen);
         }
@@ -486,6 +507,7 @@ pub(crate) mod tests {
             opciones: None,
             intensidad: Intensidad::Apagado,
             equipos: Vec::new(),
+            al_mejor_de: None,
         }
     }
 

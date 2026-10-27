@@ -77,6 +77,8 @@ import type { TemaInstalado } from "@/bindings/TemaInstalado";
 import type { TipoCarpeta } from "@/bindings/TipoCarpeta";
 import type { Usada } from "@/bindings/Usada";
 import type { VistaAspectoDados } from "@/bindings/VistaAspectoDados";
+import type { VistaBanquillo } from "@/bindings/VistaBanquillo";
+import type { VistaEncuentro } from "@/bindings/VistaEncuentro";
 import type { VistaMesa } from "@/bindings/VistaMesa";
 
 /**
@@ -261,6 +263,13 @@ export interface Commands {
 	mesa_suscribir: { args: { canal: Channel<MensajeMesa> }; result: null };
 	mesa_vista: { args: Record<string, never>; result: VistaMesa };
 	mesa_mirar_como: { args: { jugador: IdJugador }; result: null };
+	mesa_encuentro: { args: Record<string, never>; result: VistaEncuentro | null };
+	mesa_banquillo: { args: { jugador: IdJugador }; result: VistaBanquillo };
+	mesa_banquillo_cambiar: {
+		args: { jugador: IdJugador; sale: string[]; entra: string[] };
+		result: null;
+	};
+	mesa_siguiente_partida: { args: Record<string, never>; result: null };
 	mesa_accion: { args: { accion: Accion; como: IdJugador | null }; result: null };
 	mesa_guardar: { args: Record<string, never>; result: null };
 	mesa_salir: { args: { guardar: boolean }; result: null };

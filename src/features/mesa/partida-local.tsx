@@ -22,8 +22,10 @@ import { empezar } from "./conexion";
 import {
 	AJUSTES_LOCALES,
 	type AjustesLocal,
+	type AlMejorDe,
 	type AsientoLocal,
 	asientoArchienemigo,
+	conBanquillo,
 	construirConfig,
 	MAX_EQUIPOS,
 	MAX_JUGADORES,
@@ -122,6 +124,19 @@ export function PartidaLocalDialog({
 						]}
 					/>
 				</Fila>
+				{conBanquillo(formato) && (
+					<Fila etiqueta={t("Partidas")}>
+						<Selector<string>
+							valor={String(ajustes.alMejorDe)}
+							onChange={(v) => cambiarAjustes({ alMejorDe: Number(v) as AlMejorDe })}
+							opciones={[
+								{ valor: "1", etiqueta: t("Una sola") },
+								{ valor: "3", etiqueta: t("Al mejor de 3") },
+								{ valor: "5", etiqueta: t("Al mejor de 5") },
+							]}
+						/>
+					</Fila>
+				)}
 				<Fila etiqueta={t("Equipos")}>
 					<Selector<ModoEquiposLocal>
 						ancho="w-56"

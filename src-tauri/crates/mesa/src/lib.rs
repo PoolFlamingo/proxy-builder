@@ -24,6 +24,7 @@
 pub mod accion;
 pub mod aplicar;
 pub mod azar;
+pub mod encuentro;
 pub mod error;
 pub mod formato;
 pub mod huella;

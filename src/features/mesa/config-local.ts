@@ -33,7 +33,17 @@ export type AjustesLocal = {
 	archienemigo: number;
 	/** Planechase: un mazo común de planos con el dado planar. */
 	planechase: boolean;
+	/** Partidas del encuentro: 1 (una suelta), 3 o 5. */
+	alMejorDe: AlMejorDe;
 };
+
+/** Las duraciones de un encuentro (`mesa::encuentro::DURACIONES`). */
+export type AlMejorDe = 1 | 3 | 5;
+
+/** Los formatos con banquillo entre partidas. */
+export function conBanquillo(f: Formato): boolean {
+	return f === "constructed" || f === "limited";
+}
 
 export const AJUSTES_LOCALES: AjustesLocal = {
 	formato: "commander",
@@ -42,6 +52,7 @@ export const AJUSTES_LOCALES: AjustesLocal = {
 	vidaCompartida: false,
 	archienemigo: 0,
 	planechase: false,
+	alMejorDe: 1,
 };
 
 /** Los jugadores que caben en una mesa. */
@@ -149,5 +160,8 @@ export function construirConfig(
 		opciones,
 		intensidad: "apagado",
 		equipos: equiposDe(asientos, a, opciones.vidaInicial, nombre, heroes),
+		// Un encuentro necesita rival y un formato con banquillo.
+		alMejorDe:
+			a.alMejorDe > 1 && asientos.length >= 2 && conBanquillo(a.formato) ? a.alMejorDe : undefined,
 	};
 }

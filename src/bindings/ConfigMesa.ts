@@ -17,4 +17,9 @@ opciones: Opciones | null, intensidad: Intensidad,
 /**
  * Los equipos de la partida (Fase G); los de 2HG los monta el motor solo.
  */
-equipos: Array<Equipo>, };
+equipos: Array<Equipo>, 
+/**
+ * «Al mejor de» 1, 3 o 5 partidas, con banquillo entre ellas (Fase G);
+ * `None`, una partida suelta.
+ */
+alMejorDe?: number, };

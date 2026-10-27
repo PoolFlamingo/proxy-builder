@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 use flate2::read::GzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
+use mesa::encuentro::Encuentro;
 use mesa::preparar::DeckDeMesa;
 use mesa::{Evento, ModoDeshacer, Partida, Registro, VERSION_CATALOGO};
 use serde::{Deserialize, Serialize};
@@ -33,6 +34,9 @@ pub struct PartidaGuardada {
     pub inicial: Partida,
     pub eventos: Vec<Evento>,
     pub guardada_ms: u64,
+    /// El marcador, si se juega al mejor de varias.
+    #[serde(default)]
+    pub encuentro: Option<Encuentro>,
 }
 
 /// Lo que la pantalla enseña de la partida guardada antes de seguirla.
@@ -60,6 +64,7 @@ pub fn guardar(data: &Path, s: &Sesion) -> AppResult<()> {
         inicial: s.registro.inicial.clone(),
         eventos: s.registro.eventos.clone(),
         guardada_ms: super::sesion::ahora_ms(),
+        encuentro: s.encuentro.clone(),
     };
     let json = serde_json::to_vec(&g)
         .map_err(|e| AppError::new(ErrorCode::Internal).with("detalle", e))?;
@@ -111,7 +116,9 @@ pub fn resumen(g: &PartidaGuardada) -> AppResult<ResumenGuardada> {
 /// La sesión de una partida guardada.
 pub fn sesion(g: PartidaGuardada) -> AppResult<Sesion> {
     let r = Registro::reconstruir(g.inicial, g.eventos, ModoDeshacer::SinLimite)?;
-    Ok(Sesion::con_registro(g.config, g.mazos, r))
+    let mut s = Sesion::con_registro(g.config, g.mazos, r);
+    s.encuentro = g.encuentro;
+    Ok(s)
 }
 
 #[cfg(test)]

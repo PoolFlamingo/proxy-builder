@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { cartasDe, useMesa } from "@/stores/mesa-store";
 import { hacer, zonaDe } from "./acciones";
+import { useEncuentro } from "./encuentro";
 import { caraVisible, ImagenCarta } from "./imagen-carta";
 
 /** Cuántas van al fondo al quedarse (lo mismo que el motor, `QuedarseCon`). */
@@ -50,6 +51,7 @@ export function Mulligan() {
 	const primero = useMesa((s) =>
 		s.general ? (s.jugadores[s.general.turno.primero]?.nombre ?? null) : null,
 	);
+	const encuentro = useEncuentro();
 	const [fondo, setFondo] = useState<IdCarta[]>([]);
 	if (!hay || decidido) return null;
 	const toca = alFondo(modo, mulligans, mano.length);
@@ -63,7 +65,9 @@ export function Mulligan() {
 				<p className="text-xs text-white/70">{t(REGLAS[modo])}</p>
 				{variosJugadores && primero && (
 					<p className="mt-1 text-sm font-semibold text-primary">
-						{t("Sorteado al azar: empieza {quien}", { quien: primero })}
+						{encuentro?.empieza != null
+							? t("Empieza {quien}, que perdió la partida anterior", { quien: primero })
+							: t("Sorteado al azar: empieza {quien}", { quien: primero })}
 					</p>
 				)}
 				{mulligans > 0 && (
