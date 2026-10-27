@@ -890,5 +890,22 @@
 	"Mirando: {nombres}": "Watching: {nombres}",
 	"Estás mirando la partida: no puedes jugar.": "You're watching the game: you can't play.",
 	"Los compañeros ven su mano": "Teammates see each other's hand",
-	"Quienes van en un mismo equipo ven la mano del otro sin pedirla. Los demás solo ven sus reversos.": "Players on the same team see each other's hand without asking. Everyone else only sees the card backs."
+	"Quienes van en un mismo equipo ven la mano del otro sin pedirla. Los demás solo ven sus reversos.": "Players on the same team see each other's hand without asking. Everyone else only sees the card backs.",
+	"Historial": "History",
+	"Historial de partidas": "Game history",
+	"Todas tus partidas terminadas, con el deck y la lista para jugar de cada asiento.": "All your finished games, with the deck and the play list of each seat.",
+	"Buscar por deck, lista, jugador o nota…": "Search by deck, list, player or note…",
+	"Resultado": "Result",
+	"Todos los resultados": "All results",
+	"Victorias": "Wins",
+	"Derrotas": "Losses",
+	"Todos los formatos": "All formats",
+	"Todavía no has terminado ninguna partida.": "You haven't finished any game yet.",
+	"Con el filtro: {n}": "With the filter: {n}",
+	"Ninguna partida cumple el filtro.": "No game matches the filter.",
+	"Cargar más ({n})": "Load more ({n})",
+	"y {n} más": "and {n} more",
+	"Deck de otro jugador": "Another player's deck",
+	"Lista: {lista} · {n} cartas": "List: {lista} · {n} cards",
+	"Lista borrada": "List deleted"
 }

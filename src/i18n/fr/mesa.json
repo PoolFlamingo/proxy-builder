@@ -908,5 +908,22 @@
 	"Mirando: {nombres}": "Spectateurs : {nombres}",
 	"Estás mirando la partida: no puedes jugar.": "Vous regardez la partie : vous ne pouvez pas jouer.",
 	"Los compañeros ven su mano": "Les coéquipiers voient la main l'un de l'autre",
-	"Quienes van en un mismo equipo ven la mano del otro sin pedirla. Los demás solo ven sus reversos.": "Les joueurs d'une même équipe voient la main de l'autre sans la demander. Les autres ne voient que les dos des cartes."
+	"Quienes van en un mismo equipo ven la mano del otro sin pedirla. Los demás solo ven sus reversos.": "Les joueurs d'une même équipe voient la main de l'autre sans la demander. Les autres ne voient que les dos des cartes.",
+	"Historial": "Historique",
+	"Historial de partidas": "Historique des parties",
+	"Todas tus partidas terminadas, con el deck y la lista para jugar de cada asiento.": "Toutes tes parties terminées, avec le deck et la liste de jeu de chaque siège.",
+	"Buscar por deck, lista, jugador o nota…": "Rechercher par deck, liste, joueur ou note…",
+	"Resultado": "Résultat",
+	"Todos los resultados": "Tous les résultats",
+	"Victorias": "Victoires",
+	"Derrotas": "Défaites",
+	"Todos los formatos": "Tous les formats",
+	"Todavía no has terminado ninguna partida.": "Tu n'as terminé aucune partie pour l'instant.",
+	"Con el filtro: {n}": "Avec le filtre : {n}",
+	"Ninguna partida cumple el filtro.": "Aucune partie ne correspond au filtre.",
+	"Cargar más ({n})": "Charger plus ({n})",
+	"y {n} más": "et {n} de plus",
+	"Deck de otro jugador": "Deck d'un autre joueur",
+	"Lista: {lista} · {n} cartas": "Liste : {lista} · {n} cartes",
+	"Lista borrada": "Liste supprimée"
 }

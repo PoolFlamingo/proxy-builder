@@ -836,5 +836,22 @@
 	"Mirando: {nombres}": "観戦中: {nombres}",
 	"Estás mirando la partida: no puedes jugar.": "観戦中のため、プレイできません。",
 	"Los compañeros ven su mano": "チームメイトは互いの手札が見える",
-	"Quienes van en un mismo equipo ven la mano del otro sin pedirla. Los demás solo ven sus reversos.": "同じチームのプレイヤーは、頼まなくても互いの手札が見えます。それ以外の人にはカードの裏面だけが見えます。"
+	"Quienes van en un mismo equipo ven la mano del otro sin pedirla. Los demás solo ven sus reversos.": "同じチームのプレイヤーは、頼まなくても互いの手札が見えます。それ以外の人にはカードの裏面だけが見えます。",
+	"Historial": "履歴",
+	"Historial de partidas": "対戦履歴",
+	"Todas tus partidas terminadas, con el deck y la lista para jugar de cada asiento.": "終了したすべての対戦を、各席のデッキとプレイ用リストとともに表示します。",
+	"Buscar por deck, lista, jugador o nota…": "デッキ・リスト・プレイヤー・メモで検索…",
+	"Resultado": "結果",
+	"Todos los resultados": "すべての結果",
+	"Victorias": "勝利",
+	"Derrotas": "敗北",
+	"Todos los formatos": "すべてのフォーマット",
+	"Todavía no has terminado ninguna partida.": "まだ終了した対戦がありません。",
+	"Con el filtro: {n}": "フィルター適用後: {n}",
+	"Ninguna partida cumple el filtro.": "フィルターに一致する対戦はありません。",
+	"Cargar más ({n})": "さらに読み込む ({n})",
+	"y {n} más": "ほか {n} 人",
+	"Deck de otro jugador": "他のプレイヤーのデッキ",
+	"Lista: {lista} · {n} cartas": "リスト: {lista}・{n}枚",
+	"Lista borrada": "リスト削除済み"
 }

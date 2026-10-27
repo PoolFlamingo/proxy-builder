@@ -267,6 +267,7 @@ pub fn run() {
             commands::mesa::mesa_encuentro,
             commands::mesa::mesa_resumen,
             commands::mesa::partidas_de_deck,
+            commands::mesa::partidas_todas,
             commands::mesa::partida_borrar,
             commands::mesa::repeticion_abrir,
             commands::mesa::repeticion_actual,

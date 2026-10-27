@@ -931,5 +931,22 @@
 	"Mirando: {nombres}": "Дивляться: {nombres}",
 	"Estás mirando la partida: no puedes jugar.": "Ви дивитеся партію: грати не можна.",
 	"Los compañeros ven su mano": "Товариші по команді бачать руку одне одного",
-	"Quienes van en un mismo equipo ven la mano del otro sin pedirla. Los demás solo ven sus reversos.": "Гравці однієї команди бачать руку одне одного без запиту. Решта бачить лише сорочки карт."
+	"Quienes van en un mismo equipo ven la mano del otro sin pedirla. Los demás solo ven sus reversos.": "Гравці однієї команди бачать руку одне одного без запиту. Решта бачить лише сорочки карт.",
+	"Historial": "Історія",
+	"Historial de partidas": "Історія партій",
+	"Todas tus partidas terminadas, con el deck y la lista para jugar de cada asiento.": "Усі твої завершені партії з колодою та списком для гри кожного місця.",
+	"Buscar por deck, lista, jugador o nota…": "Пошук за колодою, списком, гравцем або нотаткою…",
+	"Resultado": "Результат",
+	"Todos los resultados": "Усі результати",
+	"Victorias": "Перемоги",
+	"Derrotas": "Поразки",
+	"Todos los formatos": "Усі формати",
+	"Todavía no has terminado ninguna partida.": "Ти ще не завершив жодної партії.",
+	"Con el filtro: {n}": "З фільтром: {n}",
+	"Ninguna partida cumple el filtro.": "Жодна партія не відповідає фільтру.",
+	"Cargar más ({n})": "Завантажити ще ({n})",
+	"y {n} más": "і ще {n}",
+	"Deck de otro jugador": "Колода іншого гравця",
+	"Lista: {lista} · {n} cartas": "Список: {lista} · карт: {n}",
+	"Lista borrada": "Список видалено"
 }

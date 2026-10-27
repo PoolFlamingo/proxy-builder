@@ -926,5 +926,22 @@
 	"Mirando: {nombres}": "Смотрят: {nombres}",
 	"Estás mirando la partida: no puedes jugar.": "Вы смотрите партию: играть нельзя.",
 	"Los compañeros ven su mano": "Товарищи по команде видят руку друг друга",
-	"Quienes van en un mismo equipo ven la mano del otro sin pedirla. Los demás solo ven sus reversos.": "Игроки одной команды видят руку друг друга без запроса. Остальные видят только рубашки карт."
+	"Quienes van en un mismo equipo ven la mano del otro sin pedirla. Los demás solo ven sus reversos.": "Игроки одной команды видят руку друг друга без запроса. Остальные видят только рубашки карт.",
+	"Historial": "История",
+	"Historial de partidas": "История партий",
+	"Todas tus partidas terminadas, con el deck y la lista para jugar de cada asiento.": "Все твои завершённые партии с колодой и списком для игры каждого места.",
+	"Buscar por deck, lista, jugador o nota…": "Поиск по колоде, списку, игроку или заметке…",
+	"Resultado": "Результат",
+	"Todos los resultados": "Все результаты",
+	"Victorias": "Победы",
+	"Derrotas": "Поражения",
+	"Todos los formatos": "Все форматы",
+	"Todavía no has terminado ninguna partida.": "Ты ещё не завершил ни одной партии.",
+	"Con el filtro: {n}": "С фильтром: {n}",
+	"Ninguna partida cumple el filtro.": "Ни одна партия не подходит под фильтр.",
+	"Cargar más ({n})": "Загрузить ещё ({n})",
+	"y {n} más": "и ещё {n}",
+	"Deck de otro jugador": "Колода другого игрока",
+	"Lista: {lista} · {n} cartas": "Список: {lista} · карт: {n}",
+	"Lista borrada": "Список удалён"
 }

@@ -890,5 +890,22 @@
 	"Mirando: {nombres}": "Kijken mee: {nombres}",
 	"Estás mirando la partida: no puedes jugar.": "Je kijkt naar het spel: spelen kan niet.",
 	"Los compañeros ven su mano": "Teamgenoten zien elkaars hand",
-	"Quienes van en un mismo equipo ven la mano del otro sin pedirla. Los demás solo ven sus reversos.": "Spelers in hetzelfde team zien elkaars hand zonder het te vragen. Alle anderen zien alleen de achterkanten van de kaarten."
+	"Quienes van en un mismo equipo ven la mano del otro sin pedirla. Los demás solo ven sus reversos.": "Spelers in hetzelfde team zien elkaars hand zonder het te vragen. Alle anderen zien alleen de achterkanten van de kaarten.",
+	"Historial": "Geschiedenis",
+	"Historial de partidas": "Spelgeschiedenis",
+	"Todas tus partidas terminadas, con el deck y la lista para jugar de cada asiento.": "Al je beëindigde partijen, met het deck en de speellijst van elke plek.",
+	"Buscar por deck, lista, jugador o nota…": "Zoeken op deck, lijst, speler of notitie…",
+	"Resultado": "Resultaat",
+	"Todos los resultados": "Alle resultaten",
+	"Victorias": "Overwinningen",
+	"Derrotas": "Nederlagen",
+	"Todos los formatos": "Alle formaten",
+	"Todavía no has terminado ninguna partida.": "Je hebt nog geen partij beëindigd.",
+	"Con el filtro: {n}": "Met het filter: {n}",
+	"Ninguna partida cumple el filtro.": "Geen partij voldoet aan het filter.",
+	"Cargar más ({n})": "Meer laden ({n})",
+	"y {n} más": "en nog {n}",
+	"Deck de otro jugador": "Deck van een andere speler",
+	"Lista: {lista} · {n} cartas": "Lijst: {lista} · {n} kaarten",
+	"Lista borrada": "Lijst verwijderd"
 }

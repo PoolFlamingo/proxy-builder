@@ -836,5 +836,22 @@
 	"Mirando: {nombres}": "觀戰中：{nombres}",
 	"Estás mirando la partida: no puedes jugar.": "你正在觀戰，無法操作。",
 	"Los compañeros ven su mano": "隊友可以看到彼此的手牌",
-	"Quienes van en un mismo equipo ven la mano del otro sin pedirla. Los demás solo ven sus reversos.": "同隊玩家無需請求即可看到彼此的手牌，其他人只能看到牌背。"
+	"Quienes van en un mismo equipo ven la mano del otro sin pedirla. Los demás solo ven sus reversos.": "同隊玩家無需請求即可看到彼此的手牌，其他人只能看到牌背。",
+	"Historial": "歷史",
+	"Historial de partidas": "對局歷史",
+	"Todas tus partidas terminadas, con el deck y la lista para jugar de cada asiento.": "你所有已結束的對局，以及每個座位使用的牌組和上場名單。",
+	"Buscar por deck, lista, jugador o nota…": "按牌組、名單、玩家或備註搜尋…",
+	"Resultado": "結果",
+	"Todos los resultados": "所有結果",
+	"Victorias": "勝利",
+	"Derrotas": "失敗",
+	"Todos los formatos": "所有賽制",
+	"Todavía no has terminado ninguna partida.": "你還沒有結束過任何對局。",
+	"Con el filtro: {n}": "篩選後：{n}",
+	"Ninguna partida cumple el filtro.": "沒有符合篩選條件的對局。",
+	"Cargar más ({n})": "載入更多（{n}）",
+	"y {n} más": "另有 {n} 人",
+	"Deck de otro jugador": "其他玩家的牌組",
+	"Lista: {lista} · {n} cartas": "名單：{lista} · {n} 張",
+	"Lista borrada": "名單已刪除"
 }

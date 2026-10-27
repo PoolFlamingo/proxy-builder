@@ -79,6 +79,15 @@ pub fn de_sesion(s: &Sesion) -> Option<NuevaPartida> {
                     .map(|c| c.deck_id.clone())
                     .unwrap_or_default(),
                 deck: s.mazos.get(i).map(|m| m.nombre.clone()).unwrap_or_default(),
+                // Su nombre y su tamaño los apunta el historial al guardar.
+                lista_id: s
+                    .config
+                    .jugadores
+                    .get(i)
+                    .and_then(|c| c.lista.clone())
+                    .unwrap_or_default(),
+                lista: String::new(),
+                cartas_lista: 0,
                 puesto: r
                     .puestos
                     .iter()

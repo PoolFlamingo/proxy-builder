@@ -225,7 +225,15 @@ le falta una cadena le sale la inglesa.
   ese jugador (también en las miniaturas, `ManoMini`, y en doble cara);
   con equipos los compañeros se ven la mano (`ve_la_mano_de_un_companero`,
   `Variantes.mano_privada_en_equipo` la apaga; el oráculo de
-  `tests/comun::sin_fugas` lleva la misma regla).
+  `tests/comun::sin_fugas` lleva la misma regla). Las manos de las
+  miniaturas van en abanico sutil (`abanico` de `disposicion.ts`, a escala).
+  **Historial general** (Fase J; Pablo, 27/10/2026): `partidas_todas(limite,
+  desde)` → `HistorialGeneral` (todas las partidas de todos los decks, por
+  páginas); cada `JugadorHistorial` lleva la lista para jugar usada
+  (`lista_id`, `lista`, `cartas_lista`, con `#[serde(default)]`: sin migración;
+  el nombre y el tamaño los apunta `store::partidas::guardar` desde
+  `deck_listas`). Pantalla `features/mesa/historial-general.tsx` (botón
+  «Historial» de Jugar) con filtros puros en `cuentas-historial.ts`.
 - Rust: `commands/{cards,decklist,export,identify,layout,library,stats}.rs`,
   `package.rs` (.pbdeck), `render.rs` + `protocol.rs` (miniaturas),
   `ocr.rs` (OCR opcional de la carta entera con `ocrs`, a la resolución

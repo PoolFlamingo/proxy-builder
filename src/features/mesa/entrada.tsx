@@ -1,4 +1,5 @@
 import {
+	History,
 	Image,
 	ListChecks,
 	Loader2,
@@ -40,6 +41,7 @@ import { useUi } from "@/stores/ui-store";
 import { SalasDialog } from "../salas/salas-dialog";
 import { COLORES_JUGADOR } from "./colores";
 import { empezar, retomar, salir } from "./conexion";
+import { HistorialGeneralDialog } from "./historial-general";
 import { ListaDialog } from "./listas/lista-dialog";
 import { opcionesDeFabrica } from "./opciones-fabrica";
 import { PartidaLocalDialog } from "./partida-local";
@@ -85,6 +87,7 @@ export function EntradaMesa() {
 	const [red, setRed] = useState(false);
 	const [amigos, setAmigos] = useState(false);
 	const [local, setLocal] = useState(false);
+	const [historial, setHistorial] = useState(false);
 	const enSalaServidor = useSalas((s) => s.sala !== null);
 	const enlaceEntrante = useSalas((s) => s.enlaceEntrante);
 	// Un enlace de invitación abre «Con amigos…» con el código puesto.
@@ -195,7 +198,16 @@ export function EntradaMesa() {
 				<div className="flex items-center gap-2.5">
 					<Swords className="size-4 text-primary" />
 					<h2 className="text-sm font-semibold">{t("Elige un deck")}</h2>
-					<div className="relative ml-auto w-64">
+					<Button
+						size="xs"
+						variant="outline"
+						className="ml-auto gap-1"
+						onClick={() => setHistorial(true)}
+					>
+						<History className="size-3.5" />
+						{t("Historial")}
+					</Button>
+					<div className="relative w-64">
 						<Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
 						<Input
 							value={filtro}
@@ -496,6 +508,7 @@ export function EntradaMesa() {
 				decks={decks}
 				deckInicial={elegido}
 			/>
+			<HistorialGeneralDialog abierto={historial} onCerrar={() => setHistorial(false)} />
 			<RedDialog abierto={red} onCerrar={() => setRed(false)} preparar={preparar} />
 			<TapeteDialog abierto={tapete} onCerrar={() => setTapete(false)} deckId={elegido} />
 			<Confirmar

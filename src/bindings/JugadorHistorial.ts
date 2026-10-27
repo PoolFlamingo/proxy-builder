@@ -12,4 +12,17 @@ deckId: string,
 /**
  * Cómo se llamaba el deck entonces.
  */
-deck: string, puesto: number, };
+deck: string, 
+/**
+ * La lista para jugar que se llevó (su id; vacío si fue el deck entero).
+ */
+listaId: string, 
+/**
+ * Cómo se llamaba la lista entonces (vacío si fue el deck entero).
+ */
+lista: string, 
+/**
+ * Cuántas cartas tenía la lista, comandantes incluidos (0 si fue el deck
+ * entero).
+ */
+cartasLista: number, puesto: number, };

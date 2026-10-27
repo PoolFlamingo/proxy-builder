@@ -904,5 +904,22 @@
 	"Mirando: {nombres}": "Privesc: {nombres}",
 	"Estás mirando la partida: no puedes jugar.": "Privești partida: nu poți juca.",
 	"Los compañeros ven su mano": "Colegii de echipă își văd mâna unul altuia",
-	"Quienes van en un mismo equipo ven la mano del otro sin pedirla. Los demás solo ven sus reversos.": "Jucătorii din aceeași echipă își văd mâna unul altuia fără să ceară. Ceilalți văd doar spatele cărților."
+	"Quienes van en un mismo equipo ven la mano del otro sin pedirla. Los demás solo ven sus reversos.": "Jucătorii din aceeași echipă își văd mâna unul altuia fără să ceară. Ceilalți văd doar spatele cărților.",
+	"Historial": "Istoric",
+	"Historial de partidas": "Istoricul partidelor",
+	"Todas tus partidas terminadas, con el deck y la lista para jugar de cada asiento.": "Toate partidele tale terminate, cu deckul și lista de joc a fiecărui loc.",
+	"Buscar por deck, lista, jugador o nota…": "Caută după deck, listă, jucător sau notă…",
+	"Resultado": "Rezultat",
+	"Todos los resultados": "Toate rezultatele",
+	"Victorias": "Victorii",
+	"Derrotas": "Înfrângeri",
+	"Todos los formatos": "Toate formatele",
+	"Todavía no has terminado ninguna partida.": "Nu ai terminat încă nicio partidă.",
+	"Con el filtro: {n}": "Cu filtrul: {n}",
+	"Ninguna partida cumple el filtro.": "Nicio partidă nu respectă filtrul.",
+	"Cargar más ({n})": "Încarcă mai multe ({n})",
+	"y {n} más": "și încă {n}",
+	"Deck de otro jugador": "Deck al altui jucător",
+	"Lista: {lista} · {n} cartas": "Listă: {lista} · {n} cărți",
+	"Lista borrada": "Listă ștearsă"
 }

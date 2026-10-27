@@ -40,6 +40,7 @@ import type { FormatoLista } from "@/bindings/FormatoLista";
 import type { FuenteCarta } from "@/bindings/FuenteCarta";
 import type { GcReport } from "@/bindings/GcReport";
 import type { HistorialDeck } from "@/bindings/HistorialDeck";
+import type { HistorialGeneral } from "@/bindings/HistorialGeneral";
 import type { IdCarta } from "@/bindings/IdCarta";
 import type { Identidad } from "@/bindings/Identidad";
 import type { IdentifyRequest } from "@/bindings/IdentifyRequest";
@@ -269,6 +270,7 @@ export interface Commands {
 	mesa_encuentro: { args: Record<string, never>; result: VistaEncuentro };
 	mesa_resumen: { args: Record<string, never>; result: ResumenPartida };
 	partidas_de_deck: { args: { deck: string }; result: HistorialDeck };
+	partidas_todas: { args: { limite: number; desde: number }; result: HistorialGeneral };
 	partida_borrar: { args: { id: string }; result: null };
 	repeticion_abrir: { args: { id: string }; result: VistaRepeticion };
 	repeticion_actual: { args: Record<string, never>; result: VistaRepeticion };

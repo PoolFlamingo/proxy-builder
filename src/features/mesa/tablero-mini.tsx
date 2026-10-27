@@ -14,7 +14,7 @@ import { useRed } from "@/stores/red-store";
 import { useVivo } from "@/stores/vivo-store";
 import { zonaDe } from "./acciones";
 import { Bocadillo, InsigniaSenal } from "./chat";
-import { posAPx } from "./disposicion";
+import { abanico, posAPx } from "./disposicion";
 import { senalar } from "./en-vivo/emitir";
 import { caraVisible, DorsoGenerico, ImagenCarta } from "./imagen-carta";
 import { igualesLista, useMesaLenta } from "./lento";
@@ -214,9 +214,14 @@ function ManoMini({ d, w, ancho }: { d: DatosMini; w: number; ancho: number }) {
 	const cw = Math.max(12, Math.min(ancho, 30));
 	const ch = (cw * 88) / 63;
 	const franja = ch * 0.62;
-	const paso = n > 1 ? Math.min(cw * 0.8, (w - cw - 8) / (n - 1)) : 0;
-	const total = cw + paso * (n - 1);
-	const x0 = (w - total) / 2;
+	// El mismo abanico que la mano grande, a escala: el arco y el giro se
+	// reducen con el tamaño de la carta para que se note sin torcerla mucho.
+	const escala = ch / 90;
+	const pos = abanico({ x: 0, y: 0, w: w - 8, h: ch }, n, { w: cw, h: ch }).map((p) => ({
+		x: p.x + 4,
+		y: ch / 2 + (p.y - ch / 2) * escala,
+		giro: p.giro,
+	}));
 	const dorso = d.j?.dorso ?? null;
 	const abiertas = d.manoVista.length > 0;
 	return (
@@ -232,7 +237,13 @@ function ManoMini({ d, w, ancho }: { d: DatosMini; w: number; ancho: number }) {
 					<span
 						key={c?.id ?? `r${i}`}
 						className="absolute block overflow-hidden rounded-[2px]"
-						style={{ left: x0 + paso * i, top: 2, width: cw, height: ch }}
+						style={{
+							left: (pos[i]?.x ?? 0) - cw / 2,
+							top: (pos[i]?.y ?? ch / 2) - ch / 2 + 2,
+							width: cw,
+							height: ch,
+							transform: `rotate(${pos[i]?.giro ?? 0}deg)`,
+						}}
 					>
 						{c ? (
 							<ImagenCarta imagen={caraVisible(c)} ancho={146} />

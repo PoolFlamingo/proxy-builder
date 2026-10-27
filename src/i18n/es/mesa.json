@@ -836,5 +836,22 @@
 	"Mirando: {nombres}": "Mirando: {nombres}",
 	"Estás mirando la partida: no puedes jugar.": "Estás mirando la partida: no puedes jugar.",
 	"Los compañeros ven su mano": "Los compañeros ven su mano",
-	"Quienes van en un mismo equipo ven la mano del otro sin pedirla. Los demás solo ven sus reversos.": "Quienes van en un mismo equipo ven la mano del otro sin pedirla. Los demás solo ven sus reversos."
+	"Quienes van en un mismo equipo ven la mano del otro sin pedirla. Los demás solo ven sus reversos.": "Quienes van en un mismo equipo ven la mano del otro sin pedirla. Los demás solo ven sus reversos.",
+	"Historial": "Historial",
+	"Historial de partidas": "Historial de partidas",
+	"Todas tus partidas terminadas, con el deck y la lista para jugar de cada asiento.": "Todas tus partidas terminadas, con el deck y la lista para jugar de cada asiento.",
+	"Buscar por deck, lista, jugador o nota…": "Buscar por deck, lista, jugador o nota…",
+	"Resultado": "Resultado",
+	"Todos los resultados": "Todos los resultados",
+	"Victorias": "Victorias",
+	"Derrotas": "Derrotas",
+	"Todos los formatos": "Todos los formatos",
+	"Todavía no has terminado ninguna partida.": "Todavía no has terminado ninguna partida.",
+	"Con el filtro: {n}": "Con el filtro: {n}",
+	"Ninguna partida cumple el filtro.": "Ninguna partida cumple el filtro.",
+	"Cargar más ({n})": "Cargar más ({n})",
+	"y {n} más": "y {n} más",
+	"Deck de otro jugador": "Deck de otro jugador",
+	"Lista: {lista} · {n} cartas": "Lista: {lista} · {n} cartas",
+	"Lista borrada": "Lista borrada"
 }

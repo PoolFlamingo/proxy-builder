@@ -28,7 +28,7 @@ use crate::red::mirada::Mirada;
 use crate::scryfall::client::CardApi;
 use crate::state::AppState;
 use crate::store::listas;
-use crate::store::partidas::{self, HistorialDeck};
+use crate::store::partidas::{self, HistorialDeck, HistorialGeneral};
 
 #[derive(Debug, Clone, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -447,6 +447,17 @@ pub fn mesa_resumen(state: State<'_, AppState>) -> AppResult<ResumenPartida> {
 #[tauri::command]
 pub fn partidas_de_deck(state: State<'_, AppState>, deck: String) -> AppResult<HistorialDeck> {
     partidas::de_deck(&state.db, &deck)
+}
+
+/// Todas las partidas terminadas, de todos los decks: una página, de la más
+/// reciente a la más antigua (J1).
+#[tauri::command]
+pub fn partidas_todas(
+    state: State<'_, AppState>,
+    limite: u32,
+    desde: u32,
+) -> AppResult<HistorialGeneral> {
+    partidas::todas(&state.db, limite, desde)
 }
 
 /// Borra una partida del historial.
