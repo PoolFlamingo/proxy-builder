@@ -208,6 +208,24 @@ le falta una cadena le sale la inglesa.
   `Enlaces.ausentes`, `red/anfitrion.rs::{vigilar_ausentes, expulsar}`,
   `Sesion::suplir`, `sala_expulsar` en el servidor; pantalla en
   `features/mesa/{muerte,dano-de-quien}.tsx` y `red/ausentes.tsx`.
+  **Final, historial, registro, chat y sonidos** (Fase H; Pablo, 27/10/2026):
+  `mesa::resumir` (`crates/mesa/src/resumen.rs`) cuenta puestos, rondas y
+  duración del registro (la pantalla nunca recuenta). Al `Terminar`, la
+  sesión da una `NuevaPartida` al gancho de `mesa/historial.rs` y
+  `store/partidas.rs` la guarda (migración 0006: `partidas`, `partida_decks`,
+  `registro` BLOB; no cuelga de los decks, no toca `updated_at`); un invitado
+  en red guarda solo el resumen. Repetición (`mesa/repeticion.rs`,
+  `repeticion_*`, `features/mesa/repeticion.tsx`): la misma sesión en «solo
+  mirar» con la partida de `Registro::en`, desde el final o desde la pestaña
+  «Partidas» del deck (`library/partidas-deck.tsx`). Panel lateral con
+  Registro y Chat (`registro-panel.tsx`, `chat.tsx`); `Accion::Chat/Aviso/Senal`
+  ya se usan (sin variantes nuevas: el catálogo no cambió). Sonidos
+  sintetizados (`sonidos.ts`, `audio.ts`, por grupos en Ajustes). **Manos**
+  (Pablo, 27/10/2026): la mano ajena se ve siempre como reversos del deck de
+  ese jugador (también en las miniaturas, `ManoMini`, y en doble cara);
+  con equipos los compañeros se ven la mano (`ve_la_mano_de_un_companero`,
+  `Variantes.mano_privada_en_equipo` la apaga; el oráculo de
+  `tests/comun::sin_fugas` lleva la misma regla).
 - Rust: `commands/{cards,decklist,export,identify,layout,library,stats}.rs`,
   `package.rs` (.pbdeck), `render.rs` + `protocol.rs` (miniaturas),
   `ocr.rs` (OCR opcional de la carta entera con `ocrs`, a la resolución

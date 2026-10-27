@@ -2,7 +2,7 @@ import { useLang } from "@/components/language-provider";
 import { useMesa } from "@/stores/mesa-store";
 import { useUi } from "@/stores/ui-store";
 import { caraVisible, ImagenCarta } from "./imagen-carta";
-import { usePantalla } from "./pantalla";
+import { ANCHO_PANEL, usePantalla } from "./pantalla";
 import { ptDe } from "./pt";
 
 /**
@@ -19,6 +19,7 @@ export function VistaGrande() {
 	const arrastrando = usePantalla((s) => s.arrastre !== null);
 	const ancho = useUi((s) => s.mesa.vistaGrande);
 	const panel = useUi((s) => s.mesa.panelEstado);
+	const panelLateral = usePantalla((s) => s.panel !== null);
 	if (id === null || !c || arrastrando) return null;
 	// Boca abajo y mía: la veo (es mía).
 	const caras = c.origen ? c.origen.caras : [];
@@ -29,7 +30,11 @@ export function VistaGrande() {
 	return (
 		<div
 			className="pointer-events-none absolute top-14 right-3 z-[8000] flex flex-col gap-2"
-			style={{ width: dosCaras ? ancho * 2 + 8 : ancho }}
+			style={{
+				width: dosCaras ? ancho * 2 + 8 : ancho,
+				// Con el panel lateral abierto, la carta se pone a su izquierda.
+				...(panelLateral ? { right: ANCHO_PANEL + 20 } : {}),
+			}}
 		>
 			<div className="flex gap-2">
 				{(dosCaras ? caras : [caraVisible(c, true)]).map((imagen, i) => (

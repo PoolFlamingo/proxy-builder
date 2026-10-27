@@ -7,6 +7,7 @@ const v = (equipos: Variantes["equipos"]): Variantes => ({
 	equipos,
 	archenemy: null,
 	planechase: false,
+	manoPrivadaEnEquipo: false,
 });
 
 describe("equipos en pantalla", () => {

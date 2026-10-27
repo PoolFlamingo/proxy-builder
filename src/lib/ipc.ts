@@ -39,6 +39,7 @@ import type { Formato } from "@/bindings/Formato";
 import type { FormatoLista } from "@/bindings/FormatoLista";
 import type { FuenteCarta } from "@/bindings/FuenteCarta";
 import type { GcReport } from "@/bindings/GcReport";
+import type { HistorialDeck } from "@/bindings/HistorialDeck";
 import type { IdCarta } from "@/bindings/IdCarta";
 import type { Identidad } from "@/bindings/Identidad";
 import type { IdentifyRequest } from "@/bindings/IdentifyRequest";
@@ -64,6 +65,7 @@ import type { PrintSettings } from "@/bindings/PrintSettings";
 import type { ReglasCarta } from "@/bindings/ReglasCarta";
 import type { ResolveOptions } from "@/bindings/ResolveOptions";
 import type { Resumen } from "@/bindings/Resumen";
+import type { ResumenPartida } from "@/bindings/ResumenPartida";
 import type { RolPlaygroup } from "@/bindings/RolPlaygroup";
 import type { SalaNueva } from "@/bindings/SalaNueva";
 import type { SaveResult } from "@/bindings/SaveResult";
@@ -80,6 +82,7 @@ import type { VistaAspectoDados } from "@/bindings/VistaAspectoDados";
 import type { VistaBanquillo } from "@/bindings/VistaBanquillo";
 import type { VistaEncuentro } from "@/bindings/VistaEncuentro";
 import type { VistaMesa } from "@/bindings/VistaMesa";
+import type { VistaRepeticion } from "@/bindings/VistaRepeticion";
 
 /**
  * **La única puerta a Rust.** Cada comando de `src-tauri/src/commands/` tiene
@@ -264,6 +267,13 @@ export interface Commands {
 	mesa_vista: { args: Record<string, never>; result: VistaMesa };
 	mesa_mirar_como: { args: { jugador: IdJugador }; result: null };
 	mesa_encuentro: { args: Record<string, never>; result: VistaEncuentro };
+	mesa_resumen: { args: Record<string, never>; result: ResumenPartida };
+	partidas_de_deck: { args: { deck: string }; result: HistorialDeck };
+	partida_borrar: { args: { id: string }; result: null };
+	repeticion_abrir: { args: { id: string }; result: VistaRepeticion };
+	repeticion_actual: { args: Record<string, never>; result: VistaRepeticion };
+	repeticion_ir: { args: { pos: number; como: IdJugador | null }; result: VistaRepeticion };
+	repeticion_salir: { args: Record<string, never>; result: null };
 	mesa_banquillo: { args: { jugador: IdJugador }; result: VistaBanquillo };
 	mesa_banquillo_cambiar: {
 		args: { jugador: IdJugador; sale: string[]; entra: string[] };

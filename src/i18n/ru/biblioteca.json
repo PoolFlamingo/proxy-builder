@@ -181,5 +181,14 @@
 	"Idioma: {i}": "Язык: {i}",
 	"Idioma de los {n}": "Язык выбранных ({n})",
 	"Automático (según las cartas)": "Автоматически (по картам)",
-	"Elegido a mano": "Выбран вручную"
+	"Elegido a mano": "Выбран вручную",
+	"Propiedades": "Свойства",
+	"Partidas: {partidas} · Victorias: {victorias} ({porcentaje} %)": "Партии: {partidas} · Победы: {victorias} ({porcentaje} %)",
+	"Todavía no has terminado ninguna partida con este deck.": "С этой колодой вы ещё не завершили ни одной партии.",
+	"¿Borrar esta partida del historial?": "Удалить эту партию из истории?",
+	"Se borra también su repetición.": "Повтор тоже будет удалён.",
+	"Victoria": "Победа",
+	"En solitario": "В одиночку",
+	"Con {rivales}": "С: {rivales}",
+	"Ver repetición": "Смотреть повтор"
 }

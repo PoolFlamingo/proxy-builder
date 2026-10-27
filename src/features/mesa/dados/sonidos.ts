@@ -1,4 +1,5 @@
-import { useUi } from "@/stores/ui-store";
+import type { Audio } from "../audio";
+import { audio as audioMesa, azar, envolvente, hayHueco } from "../audio";
 
 /**
  * **Los sonidos de los dados y la moneda**, sintetizados con la Web Audio
@@ -12,60 +13,7 @@ import { useUi } from "@/stores/ui-store";
  * Ajustes > Mesa, y no con la ventana oculta.
  */
 
-let contexto: AudioContext | null = null;
-let salida: GainNode | null = null;
-let ruido: AudioBuffer | null = null;
-/** Para no saturar: como mucho tantos golpes por cada 100 ms. */
-const MAX_GOLPES = 14;
-let ventana = { desde: 0, golpes: 0 };
-
-function audio(): { ctx: AudioContext; salida: GainNode; ruido: AudioBuffer } | null {
-	const m = useUi.getState().mesa;
-	if (!m.sonidoDados || m.volumen <= 0 || document.hidden) return null;
-	if (!contexto) {
-		const Ctx =
-			window.AudioContext ??
-			(window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-		if (!Ctx) return null;
-		contexto = new Ctx();
-		const compresor = contexto.createDynamicsCompressor();
-		compresor.threshold.value = -14;
-		compresor.ratio.value = 6;
-		salida = contexto.createGain();
-		salida.connect(compresor);
-		compresor.connect(contexto.destination);
-		ruido = contexto.createBuffer(1, Math.floor(contexto.sampleRate * 0.25), contexto.sampleRate);
-		const d = ruido.getChannelData(0);
-		for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-		// El navegador no deja sonar hasta el primer gesto: se reanuda con él.
-		const reanudar = () => void contexto?.resume();
-		window.addEventListener("pointerdown", reanudar);
-		window.addEventListener("keydown", reanudar);
-	}
-	if (contexto.state === "suspended") void contexto.resume();
-	if (!salida || !ruido) return null;
-	salida.gain.value = (m.volumen / 100) ** 1.6;
-	return { ctx: contexto, salida, ruido };
-}
-
-function hayHueco(ctx: AudioContext): boolean {
-	const ahora = ctx.currentTime;
-	if (ahora - ventana.desde > 0.1) ventana = { desde: ahora, golpes: 0 };
-	if (ventana.golpes >= MAX_GOLPES) return false;
-	ventana.golpes++;
-	return true;
-}
-
-const azar = (a: number, b: number) => a + Math.random() * (b - a);
-
-/** Una envolvente de golpe: sube en 2 ms y se apaga en `dura` s. */
-function envolvente(ctx: AudioContext, t: number, pico: number, dura: number): GainNode {
-	const g = ctx.createGain();
-	g.gain.setValueAtTime(0.0001, t);
-	g.gain.linearRampToValueAtTime(pico, t + 0.002);
-	g.gain.exponentialRampToValueAtTime(0.0001, t + dura);
-	return g;
-}
+const audio = (): Audio | null => audioMesa((m) => m.sonidoDados);
 
 /** El golpe de un dado contra la mesa u otro dado; `fuerza` de 0 a 1. */
 export function golpeDado(fuerza: number, retraso = 0) {

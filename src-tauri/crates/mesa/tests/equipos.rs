@@ -14,8 +14,17 @@ const B: IdEquipo = IdEquipo(1);
 
 /// Cuatro jugadores en dos equipos (0 y 1 contra 2 y 3), todos ya con su mano.
 fn mesa_de_equipos(modo: ModoEquipos, compartida: bool) -> (Registro, Azar) {
+    mesa_de_equipos_con(modo, compartida, false)
+}
+
+fn mesa_de_equipos_con(
+    modo: ModoEquipos,
+    compartida: bool,
+    mano_privada_en_equipo: bool,
+) -> (Registro, Azar) {
     let variantes = Variantes {
         equipos: modo,
+        mano_privada_en_equipo,
         ..Variantes::default()
     };
     let mut c = config(4);
@@ -242,4 +251,82 @@ fn un_equipo_que_no_existe_es_un_error_al_empezar() {
     let mut c = config(2);
     c.jugadores[0].equipo = Some(IdEquipo(5));
     assert!(iniciar("p".into(), c, 1, 0).is_err());
+}
+
+/// Cuántas cartas de la mano de `de` ve `mira` (con sus ids), según su vista.
+fn ve_la_mano(r: &Registro, mira: Mirador, de: u8) -> Option<usize> {
+    let v = mesa::vista::vista(r.partida(), mira);
+    let z = v
+        .zonas
+        .iter()
+        .find(|z| {
+            z.zona
+                == mesa::modelo::RefZona::De {
+                    jugador: IdJugador(de),
+                    zona: mesa::modelo::Zona::Mano,
+                }
+        })
+        .unwrap();
+    // `cuantas` siempre llega; los ids y las caras, solo si se ve.
+    assert!(z.cuantas > 0);
+    z.cartas.as_ref().map(|c| c.len())
+}
+
+#[test]
+fn con_equipos_los_companeros_se_ven_la_mano_y_los_rivales_no() {
+    let (r, _) = mesa_de_equipos(ModoEquipos::Equipos { fuego_amigo: false }, false);
+    let j = |i: u8| Mirador::Jugador(IdJugador(i));
+    // El 0 y el 1 son compañeros; el 2 y el 3, rivales de ambos.
+    assert!(ve_la_mano(&r, j(0), 1).is_some());
+    assert!(ve_la_mano(&r, j(1), 0).is_some());
+    assert!(ve_la_mano(&r, j(2), 3).is_some());
+    assert!(ve_la_mano(&r, j(0), 2).is_none());
+    assert!(ve_la_mano(&r, j(2), 0).is_none());
+    // Un espectador no ve ninguna.
+    assert!(ve_la_mano(&r, Mirador::Espectador, 0).is_none());
+    assert!(ve_la_mano(&r, Mirador::Espectador, 1).is_none());
+}
+
+#[test]
+fn con_dos_cabezas_tambien_y_sin_equipos_nadie_ve_la_ajena() {
+    let (r, _) = mesa_de_equipos(ModoEquipos::DosCabezas, true);
+    assert!(ve_la_mano(&r, Mirador::Jugador(IdJugador(0)), 1).is_some());
+    assert!(ve_la_mano(&r, Mirador::Jugador(IdJugador(0)), 2).is_none());
+    // Sin equipos (cada uno por su cuenta) la mano de otro sigue siendo suya.
+    let p = iniciar("p".into(), config(4), 7, 1_000).unwrap();
+    let r = Registro::nuevo(p, ModoDeshacer::SinLimite);
+    assert!(ve_la_mano(&r, Mirador::Jugador(IdJugador(0)), 1).is_none());
+}
+
+#[test]
+fn si_la_mano_es_privada_en_equipo_ni_los_compañeros_la_ven() {
+    let (r, _) = mesa_de_equipos_con(ModoEquipos::Equipos { fuego_amigo: false }, false, true);
+    assert!(ve_la_mano(&r, Mirador::Jugador(IdJugador(0)), 1).is_none());
+    assert!(ve_la_mano(&r, Mirador::Jugador(IdJugador(1)), 0).is_none());
+    // La propia sí.
+    assert!(ve_la_mano(&r, Mirador::Jugador(IdJugador(0)), 0).is_some());
+}
+
+#[test]
+fn robar_se_ve_en_el_parche_del_companero_y_no_en_el_del_rival() {
+    let (mut r, mut azar) = mesa_de_equipos(ModoEquipos::Equipos { fuego_amigo: false }, false);
+    haz(&mut r, &mut azar, 1, Accion::Robar { n: 1 });
+    let ok = |m: Mirador| {
+        // La vista tras el evento enseña la mano al compañero y no al rival.
+        let v = mesa::vista::vista(r.partida(), m);
+        v.zonas
+            .iter()
+            .find(|z| {
+                z.zona
+                    == mesa::modelo::RefZona::De {
+                        jugador: IdJugador(1),
+                        zona: mesa::modelo::Zona::Mano,
+                    }
+            })
+            .unwrap()
+            .cartas
+            .is_some()
+    };
+    assert!(ok(Mirador::Jugador(IdJugador(0))));
+    assert!(!ok(Mirador::Jugador(IdJugador(2))));
 }

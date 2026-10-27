@@ -185,7 +185,12 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 				},
 			],
 			formato: preparar.formato,
-			variantes: { equipos: { tipo: "ninguno" }, archenemy: null, planechase: false },
+			variantes: {
+				equipos: { tipo: "ninguno" },
+				archenemy: null,
+				planechase: false,
+				manoPrivadaEnEquipo: false,
+			},
 			opciones: preparar.opciones,
 			intensidad: "apagado",
 			equipos: [],

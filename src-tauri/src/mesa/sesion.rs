@@ -153,6 +153,8 @@ pub struct Sesion {
     pub red: Option<RedSesion>,
     /// El marcador si se juega al mejor de varias (`mesa/encuentro.rs`).
     pub encuentro: Option<Encuentro>,
+    /// Si se está viendo la repetición de una partida (`mesa/repeticion.rs`).
+    pub repeticion: Option<super::repeticion::Repeticion>,
 }
 
 /// La partida del motor para esta configuración.
@@ -217,6 +219,7 @@ impl Sesion {
             sin_guardar: 0,
             guardada_ms: ahora_ms(),
             red: None,
+            repeticion: None,
         }
     }
 
@@ -275,7 +278,7 @@ impl Sesion {
 
     /// Si la partida se guarda en disco (la del invitado la tiene el anfitrión).
     pub fn guardable(&self) -> bool {
-        !matches!(self.red, Some(RedSesion::Invitado(_)))
+        self.repeticion.is_none() && !matches!(self.red, Some(RedSesion::Invitado(_)))
     }
 
     pub fn anfitrion(&self) -> Option<&std::sync::Arc<crate::red::anfitrion::Anfitrion>> {
@@ -285,12 +288,20 @@ impl Sesion {
         }
     }
 
+    /// La partida que se ve: la de ahora o, en una repetición, la del punto
+    /// que se está mirando.
     pub fn partida(&self) -> &Partida {
-        self.registro.partida()
+        match &self.repeticion {
+            Some(r) => &r.punto,
+            None => self.registro.partida(),
+        }
     }
 
     pub fn mirador(&self) -> Mirador {
-        Mirador::Jugador(self.yo)
+        match &self.repeticion {
+            Some(r) => r.como.map_or(Mirador::Todo, Mirador::Jugador),
+            None => Mirador::Jugador(self.yo),
+        }
     }
 
     pub fn vista(&self) -> VistaMesa {
@@ -309,7 +320,10 @@ impl Sesion {
     /// parches.
     /// La vista entera con el registro vigente.
     pub(super) fn mensaje_vista(&self) -> MensajeMesa {
-        let vigentes = self.registro.vigentes();
+        let mut vigentes = self.registro.vigentes();
+        if let Some(r) = &self.repeticion {
+            vigentes.truncate(r.pos as usize);
+        }
         let desde = vigentes.len().saturating_sub(REGISTRO_EN_VISTA);
         MensajeMesa::Vista {
             vista: Box::new(self.vista()),
@@ -330,6 +344,9 @@ impl Sesion {
     /// Una acción de la pantalla. `como`: a nombre de otro jugador de esta
     /// sesión local (partida local de varios, Fase G).
     pub fn accion(&mut self, accion: Accion, como: Option<IdJugador>) -> AppResult<()> {
+        if self.repeticion.is_some() {
+            return Err(AppError::new(ErrorCode::Rejected).with("motivo", "repeticion"));
+        }
         // El invitado no aplica nada: se lo pide al anfitrión (sin predecir,
         // decisión D-E2 del plan) y espera el evento.
         if let Some(RedSesion::Invitado(inv)) = &mut self.red {
@@ -383,6 +400,9 @@ impl Sesion {
         accion: Accion,
         origen: Option<(IdJugador, u64)>,
     ) -> AppResult<()> {
+        if self.repeticion.is_some() && !accion.es_comunicacion() {
+            return Err(AppError::new(ErrorCode::Rejected).with("motivo", "repeticion"));
+        }
         let ahora = ahora_ms();
         // El fantasma mira la partida de antes y la de después (solo si está
         // encendido: la copia no sale gratis).
@@ -463,6 +483,22 @@ impl Sesion {
             a.difundir(self.registro.partida(), &hecho, origen);
         }
         self.sin_guardar += 1;
+        // Al terminar la partida, al historial (H2).
+        if matches!(
+            &hecho.evento.cambio,
+            Cambio::Accion {
+                accion: Accion::Terminar { .. },
+                ..
+            }
+        ) {
+            if let Some(n) = super::historial::de_sesion(self) {
+                super::historial::avisar(n);
+            }
+        }
+        // Mientras se repite, la pantalla ve otro momento: lo nuevo espera.
+        if self.repeticion.is_some() {
+            return;
+        }
         if matches!(hecho.evento.cambio, Cambio::Restaurar { .. }) {
             self.mandar(self.mensaje_vista());
         } else {

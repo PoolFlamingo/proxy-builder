@@ -23,6 +23,12 @@ pub struct Variantes {
     pub equipos: ModoEquipos,
     pub archenemy: Option<IdJugador>,
     pub planechase: bool,
+    /// Con equipos, cada uno ve la mano de sus compañeros salvo que esto esté
+    /// encendido (la mano de un compañero es tan privada como la de un
+    /// rival). Apagado de fábrica: al ser un campo nuevo, las partidas
+    /// guardadas antes siguen como eran para los equipos (que se ven).
+    #[serde(default)]
+    pub mano_privada_en_equipo: bool,
 }
 
 impl Variantes {

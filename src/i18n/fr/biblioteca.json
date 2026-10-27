@@ -168,5 +168,14 @@
 	"Idioma: {i}": "Langue : {i}",
 	"Idioma de los {n}": "Langue des {n}",
 	"Automático (según las cartas)": "Automatique (selon les cartes)",
-	"Elegido a mano": "Choisie à la main"
+	"Elegido a mano": "Choisie à la main",
+	"Propiedades": "Propriétés",
+	"Partidas: {partidas} · Victorias: {victorias} ({porcentaje} %)": "Parties : {partidas} · Victoires : {victorias} ({porcentaje} %)",
+	"Todavía no has terminado ninguna partida con este deck.": "Vous n'avez encore terminé aucune partie avec ce deck.",
+	"¿Borrar esta partida del historial?": "Supprimer cette partie de l'historique ?",
+	"Se borra también su repetición.": "Son replay est aussi supprimé.",
+	"Victoria": "Victoire",
+	"En solitario": "En solo",
+	"Con {rivales}": "Avec {rivales}",
+	"Ver repetición": "Voir le replay"
 }

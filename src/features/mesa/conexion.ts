@@ -6,10 +6,13 @@ import { paraTraducir, traduccionSuelta } from "@/components/language-provider";
 import { mensajeDeError } from "@/lib/errores";
 import { call } from "@/lib/ipc";
 import { lanzarTrabajo } from "@/lib/trabajos";
+import { useChat } from "@/stores/chat-store";
 import { useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
+import { useRepeticion } from "@/stores/repeticion-store";
 import { useTrabajo } from "@/stores/trabajo-store";
 import { useDados } from "./dados/cola";
+import { reaccionarAEvento } from "./reaccion-eventos";
 
 /**
  * **La pantalla y la partida de Rust.** Se suscribe por un canal
@@ -36,10 +39,13 @@ function alMensaje(m: MensajeMesa) {
 			if (!s.recibirParche(m.parche, m.evento)) void pedirVista();
 			// Las tiradas, a la capa de los dados.
 			useDados.getState().encolar(m.evento);
+			reaccionarAEvento(m.evento);
 			break;
 		case "cerrada":
 			canal = null;
 			s.cerrar();
+			useRepeticion.getState().poner(null);
+			useChat.getState().limpiar();
 			break;
 		// En red: el anfitrión no hizo algo que se pidió desde aquí.
 		case "rechazo":
@@ -117,6 +123,8 @@ export async function salir(guardar = false) {
 	await call("mesa_salir", { guardar });
 	canal = null;
 	useMesa.getState().cerrar();
+	useRepeticion.getState().poner(null);
+	useChat.getState().limpiar();
 	// En red, salir de la mesa es salir de la partida (Rust ya la dejó).
 	useRed.getState().olvidar();
 }

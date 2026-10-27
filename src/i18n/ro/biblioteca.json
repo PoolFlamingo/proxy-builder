@@ -172,5 +172,14 @@
 	"Idioma: {i}": "Limbă: {i}",
 	"Idioma de los {n}": "Limba celor {n}",
 	"Automático (según las cartas)": "Automat (după cărți)",
-	"Elegido a mano": "Ales manual"
+	"Elegido a mano": "Ales manual",
+	"Propiedades": "Proprietăți",
+	"Partidas: {partidas} · Victorias: {victorias} ({porcentaje} %)": "Partide: {partidas} · Victorii: {victorias} ({porcentaje}%)",
+	"Todavía no has terminado ninguna partida con este deck.": "Nu ai terminat încă nicio partidă cu acest deck.",
+	"¿Borrar esta partida del historial?": "Ștergi această partidă din istoric?",
+	"Se borra también su repetición.": "Se șterge și reluarea ei.",
+	"Victoria": "Victorie",
+	"En solitario": "Singur",
+	"Con {rivales}": "Cu {rivales}",
+	"Ver repetición": "Vezi reluarea"
 }

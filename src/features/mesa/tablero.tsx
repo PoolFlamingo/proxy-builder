@@ -9,6 +9,7 @@ import { urlArte, urlMesa } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { cartasDe, cuantasEn, NINGUNA, tableroDe, useMesa } from "@/stores/mesa-store";
+import { useRed } from "@/stores/red-store";
 import { useUi } from "@/stores/ui-store";
 import { destino, hacer, mover, sitio, zonaComun, zonaDe } from "./acciones";
 import { destinoDeSoltar, pasaUmbral } from "./arrastre";
@@ -136,6 +137,7 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 				}, MS_SOSTENIDO);
 			}
 			const mueve = (ev: PointerEvent) => {
+				if (useRed.getState().papel === "espectador") return; // no se arrastra
 				const p = punto(ev);
 				if (!empezado && !pasaUmbral(p.x - p0.x, p.y - p0.y)) return;
 				empezado = true;
@@ -247,6 +249,8 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 			if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable)) {
 				return;
 			}
+			if (e.altKey) return; // Alt+dígito son los avisos (`chat.tsx`)
+			if (useRed.getState().papel === "espectador") return; // quien mira no juega
 			if (usePantalla.getState().dialogo || document.querySelector('[role="dialog"]')) return;
 			if (document.querySelector('[role="menu"]')) return;
 			const m = useMesa.getState();

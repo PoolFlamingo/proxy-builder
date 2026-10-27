@@ -13,11 +13,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { verRepeticionDelHistorial } from "@/features/mesa/repeticion";
 import { RaizScroll, useVisible } from "@/features/preview/visibilidad";
 import { urlMiniatura } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
+import { PartidasDeDeck } from "./partidas-deck";
 import {
 	ChipEtiqueta,
 	CLASES,
@@ -108,148 +111,176 @@ export function PropiedadesDialog({
 				<DialogHeader>
 					<DialogTitle>{t("Propiedades del deck")}</DialogTitle>
 				</DialogHeader>
-				<div className="grid gap-4 sm:grid-cols-[1fr_220px]">
-					<div className="flex min-w-0 flex-col gap-3">
-						<label className="flex flex-col gap-1 text-xs">
-							<span className="text-muted-foreground">{t("Nombre")}</span>
-							<Input
-								value={nombre}
-								onChange={(e) => setNombre(e.target.value)}
-								className="text-sm"
-							/>
-						</label>
-						<div className="flex flex-col gap-1 text-xs">
-							<span className="text-muted-foreground">{t("Etiquetas")}</span>
-							<div className="flex flex-wrap gap-1.5">
-								{etiquetas.map((tag) => {
-									const tiene = deck.tags.includes(tag.id);
-									return (
-										<button
-											type="button"
-											key={tag.id}
-											onClick={() =>
-												void useBiblioteca
-													.getState()
-													.etiquetar([deck.id], tiene ? [] : [tag.id], tiene ? [tag.id] : [])
-											}
-											className={cn(
-												"rounded-full transition-opacity",
-												!tiene && "opacity-40 hover:opacity-80",
-											)}
+				<Tabs defaultValue="propiedades" className="flex min-h-0 flex-col gap-3">
+					<TabsList>
+						<TabsTrigger value="propiedades" className="text-xs">
+							{t("Propiedades")}
+						</TabsTrigger>
+						<TabsTrigger value="partidas" className="text-xs">
+							{t("Partidas")}
+						</TabsTrigger>
+					</TabsList>
+					<TabsContent value="propiedades" className="flex flex-col gap-3">
+						<div className="grid gap-4 sm:grid-cols-[1fr_220px]">
+							<div className="flex min-w-0 flex-col gap-3">
+								<label className="flex flex-col gap-1 text-xs">
+									<span className="text-muted-foreground">{t("Nombre")}</span>
+									<Input
+										value={nombre}
+										onChange={(e) => setNombre(e.target.value)}
+										className="text-sm"
+									/>
+								</label>
+								<div className="flex flex-col gap-1 text-xs">
+									<span className="text-muted-foreground">{t("Etiquetas")}</span>
+									<div className="flex flex-wrap gap-1.5">
+										{etiquetas.map((tag) => {
+											const tiene = deck.tags.includes(tag.id);
+											return (
+												<button
+													type="button"
+													key={tag.id}
+													onClick={() =>
+														void useBiblioteca
+															.getState()
+															.etiquetar([deck.id], tiene ? [] : [tag.id], tiene ? [tag.id] : [])
+													}
+													className={cn(
+														"rounded-full transition-opacity",
+														!tiene && "opacity-40 hover:opacity-80",
+													)}
+												>
+													<ChipEtiqueta tag={tag} className="text-[11px]" />
+												</button>
+											);
+										})}
+										<Button
+											size="xs"
+											variant="outline"
+											className="h-5 rounded-full px-2 text-[10px]"
+											onClick={() => onNuevaEtiqueta([deck.id])}
 										>
-											<ChipEtiqueta tag={tag} className="text-[11px]" />
-										</button>
-									);
-								})}
-								<Button
-									size="xs"
-									variant="outline"
-									className="h-5 rounded-full px-2 text-[10px]"
-									onClick={() => onNuevaEtiqueta([deck.id])}
-								>
-									<Plus />
-									{t("Nueva")}
-								</Button>
-							</div>
-						</div>
-						<label className="flex flex-col gap-1 text-xs">
-							<span className="text-muted-foreground">{t("Notas")}</span>
-							<textarea
-								value={notas}
-								maxLength={4000}
-								onChange={(e) => setNotas(e.target.value)}
-								rows={4}
-								placeholder={t("Para qué es, qué falta por imprimir, con quién se juega…")}
-								className="min-h-20 resize-y rounded-md border border-input bg-transparent px-2.5 py-2 text-xs shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30"
-							/>
-						</label>
-						<div className="flex flex-col gap-1 text-xs">
-							<span className="text-muted-foreground">{t("Portada")}</span>
-							<ScrollArea
-								className="rounded-lg border"
-								viewportClassName="max-h-48"
-								onViewportChange={setViewport}
-							>
-								<RaizScroll.Provider value={viewport}>
-									{cartas === null ? (
-										<div className="flex h-24 items-center justify-center text-muted-foreground">
-											<Layers className="size-5 animate-pulse" />
-										</div>
-									) : (
-										<div className="grid grid-cols-[repeat(auto-fill,minmax(56px,1fr))] gap-1.5 p-1.5">
-											{opciones.map((c) => (
-												<OpcionPortada
-													key={c.id}
-													carta={c}
-													elegida={c.id === elegida}
-													onElegir={() => setPortada(c.id)}
-												/>
-											))}
-										</div>
-									)}
-								</RaizScroll.Provider>
-							</ScrollArea>
-						</div>
-					</div>
-					<Resumen
-						filas={[
-							[
-								t("Cartas"),
-								det
-									? `${det.deckSize}${det.tokens ? ` + ${det.tokens}` : ""}`
-									: String(deck.cardCount),
-							],
-							[t("Clase"), det ? t(CLASES[det.kind]) : "…"],
-							[
-								t("Colores"),
-								det ? (
-									<span
-										key="colores"
-										className="flex flex-wrap items-center justify-end gap-x-1.5 gap-y-0.5"
+											<Plus />
+											{t("Nueva")}
+										</Button>
+									</div>
+								</div>
+								<label className="flex flex-col gap-1 text-xs">
+									<span className="text-muted-foreground">{t("Notas")}</span>
+									<textarea
+										value={notas}
+										maxLength={4000}
+										onChange={(e) => setNotas(e.target.value)}
+										rows={4}
+										placeholder={t("Para qué es, qué falta por imprimir, con quién se juega…")}
+										className="min-h-20 resize-y rounded-md border border-input bg-transparent px-2.5 py-2 text-xs shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30"
+									/>
+								</label>
+								<div className="flex flex-col gap-1 text-xs">
+									<span className="text-muted-foreground">{t("Portada")}</span>
+									<ScrollArea
+										className="rounded-lg border"
+										viewportClassName="max-h-48"
+										onViewportChange={setViewport}
 									>
-										<Identidad colores={det.colorIdentity} />
-										{t(nombreColores(det.colorIdentity))}
-									</span>
-								) : (
-									"…"
-								),
-							],
-							[t("Tierras"), det ? String(det.lands) : "…"],
-							[t("Coste medio"), det ? det.averageCmc.toFixed(2) : "…"],
-							[
-								t("Precio estimado"),
-								det
-									? dinero(det.priceEur ?? det.priceUsd, det.priceEur !== null ? "EUR" : "USD")
-									: "…",
-							],
-							[
-								t("Idioma"),
-								det || deck.langOverride ? (
-									<NombresIdiomas key="idioma" deck={deck} det={det} />
-								) : (
-									"…"
-								),
-							],
-							[
-								t("Imágenes propias"),
-								det ? `${det.custom} (${det.customLinked} ${t("vinculadas")})` : "…",
-							],
-							[t("Diseñadas"), det ? `${det.designed} (${det.designedReady} ${t("listas")})` : "…"],
-							[t("Doble cara"), det ? String(det.dfc) : "…"],
-							[t("Creado"), fecha(deck.createdAt)],
-							[t("Modificado"), fecha(deck.updatedAt)],
-							[t("Abierto"), fecha(deck.openedAt)],
-						]}
-					/>
-				</div>
-				<DialogFooter>
-					<Button size="sm" variant="outline" onClick={onCerrar}>
-						{t("Cancelar")}
-					</Button>
-					<Button size="sm" onClick={() => void guardar()} disabled={!nombre.trim()}>
-						{t("Guardar")}
-					</Button>
-				</DialogFooter>
+										<RaizScroll.Provider value={viewport}>
+											{cartas === null ? (
+												<div className="flex h-24 items-center justify-center text-muted-foreground">
+													<Layers className="size-5 animate-pulse" />
+												</div>
+											) : (
+												<div className="grid grid-cols-[repeat(auto-fill,minmax(56px,1fr))] gap-1.5 p-1.5">
+													{opciones.map((c) => (
+														<OpcionPortada
+															key={c.id}
+															carta={c}
+															elegida={c.id === elegida}
+															onElegir={() => setPortada(c.id)}
+														/>
+													))}
+												</div>
+											)}
+										</RaizScroll.Provider>
+									</ScrollArea>
+								</div>
+							</div>
+							<Resumen
+								filas={[
+									[
+										t("Cartas"),
+										det
+											? `${det.deckSize}${det.tokens ? ` + ${det.tokens}` : ""}`
+											: String(deck.cardCount),
+									],
+									[t("Clase"), det ? t(CLASES[det.kind]) : "…"],
+									[
+										t("Colores"),
+										det ? (
+											<span
+												key="colores"
+												className="flex flex-wrap items-center justify-end gap-x-1.5 gap-y-0.5"
+											>
+												<Identidad colores={det.colorIdentity} />
+												{t(nombreColores(det.colorIdentity))}
+											</span>
+										) : (
+											"…"
+										),
+									],
+									[t("Tierras"), det ? String(det.lands) : "…"],
+									[t("Coste medio"), det ? det.averageCmc.toFixed(2) : "…"],
+									[
+										t("Precio estimado"),
+										det
+											? dinero(det.priceEur ?? det.priceUsd, det.priceEur !== null ? "EUR" : "USD")
+											: "…",
+									],
+									[
+										t("Idioma"),
+										det || deck.langOverride ? (
+											<NombresIdiomas key="idioma" deck={deck} det={det} />
+										) : (
+											"…"
+										),
+									],
+									[
+										t("Imágenes propias"),
+										det ? `${det.custom} (${det.customLinked} ${t("vinculadas")})` : "…",
+									],
+									[
+										t("Diseñadas"),
+										det ? `${det.designed} (${det.designedReady} ${t("listas")})` : "…",
+									],
+									[t("Doble cara"), det ? String(det.dfc) : "…"],
+									[t("Creado"), fecha(deck.createdAt)],
+									[t("Modificado"), fecha(deck.updatedAt)],
+									[t("Abierto"), fecha(deck.openedAt)],
+								]}
+							/>
+						</div>
+						<DialogFooter>
+							<Button size="sm" variant="outline" onClick={onCerrar}>
+								{t("Cancelar")}
+							</Button>
+							<Button size="sm" onClick={() => void guardar()} disabled={!nombre.trim()}>
+								{t("Guardar")}
+							</Button>
+						</DialogFooter>
+					</TabsContent>
+					<TabsContent value="partidas" className="flex flex-col gap-3">
+						<PartidasDeDeck
+							deckId={deck.id}
+							onVerRepeticion={(partida) =>
+								void verRepeticionDelHistorial(partida).then((ok) => ok && onCerrar())
+							}
+						/>
+						<DialogFooter>
+							<Button size="sm" variant="outline" onClick={onCerrar}>
+								{t("Cerrar")}
+							</Button>
+						</DialogFooter>
+					</TabsContent>
+				</Tabs>
 			</DialogContent>
 		</Dialog>
 	);

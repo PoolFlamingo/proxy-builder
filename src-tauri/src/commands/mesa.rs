@@ -6,6 +6,7 @@ use mesa::formato::Formato;
 use mesa::lista::{comprobar, AvisoLista, CartaDeLista, Construccion, ListaDeJuego};
 use mesa::modelo::{OrigenCarta, RefImagen};
 use mesa::preparar::{secciones_de_mesa, Seccion};
+use mesa::resumen::ResumenPartida;
 use mesa::vista::VistaMesa;
 use mesa::{IdCarta, IdJugador};
 use proxy_core::model::Deck;
@@ -20,12 +21,14 @@ use crate::mesa::encuentro::{VistaBanquillo, VistaEncuentro};
 use crate::mesa::guardada::{self, ResumenGuardada};
 use crate::mesa::imagenes;
 use crate::mesa::preparar::{cartas_de_lista, deck_de_mesa};
+use crate::mesa::repeticion::VistaRepeticion;
 use crate::mesa::sesion::{ConfigMesa, MensajeMesa, Sesion};
 use crate::mesa::tapete::{self, OrigenTapete, Tapete};
 use crate::red::mirada::Mirada;
 use crate::scryfall::client::CardApi;
 use crate::state::AppState;
 use crate::store::listas;
+use crate::store::partidas::{self, HistorialDeck};
 
 #[derive(Debug, Clone, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -433,6 +436,25 @@ pub fn mesa_encuentro(state: State<'_, AppState>) -> AppResult<VistaEncuentro> {
     con_sesion(&state, |s| Ok(s.estado_encuentro()))
 }
 
+/// En qué puesto acabó cada uno, cuándo y por quién cayó (H1).
+#[tauri::command]
+pub fn mesa_resumen(state: State<'_, AppState>) -> AppResult<ResumenPartida> {
+    con_sesion(&state, |s| Ok(mesa::resumir(&s.registro)))
+}
+
+/// Las partidas terminadas de un deck y cómo le ha ido (H2). Aparte de los
+/// detalles de la biblioteca: jugar no cambia la fecha del deck.
+#[tauri::command]
+pub fn partidas_de_deck(state: State<'_, AppState>, deck: String) -> AppResult<HistorialDeck> {
+    partidas::de_deck(&state.db, &deck)
+}
+
+/// Borra una partida del historial.
+#[tauri::command]
+pub fn partida_borrar(state: State<'_, AppState>, id: String) -> AppResult<()> {
+    partidas::borrar(&state.db, &id)
+}
+
 /// El mazo y el banquillo de un jugador, entre una partida y la siguiente.
 #[tauri::command]
 pub fn mesa_banquillo(state: State<'_, AppState>, jugador: IdJugador) -> AppResult<VistaBanquillo> {
@@ -476,6 +498,12 @@ pub fn mesa_salir(app: AppHandle, state: State<'_, AppState>, guardar: bool) -> 
         .mesa
         .lock()
         .map_err(|_| AppError::new(ErrorCode::Internal))?;
+    // Una repetición del historial no es la partida guardada: salir de ella
+    // no toca el fichero de la partida a medias.
+    let era_repeticion = m
+        .as_ref()
+        .and_then(|s| s.repeticion.as_ref())
+        .is_some_and(|r| r.desde_historial);
     if let Some(s) = m.as_mut() {
         s.cerrar();
     }
@@ -497,10 +525,71 @@ pub fn mesa_salir(app: AppHandle, state: State<'_, AppState>, guardar: bool) -> 
         }
         crate::red::servidor::sala::salir(&app);
     }
-    if !guardar {
+    if !guardar && !era_repeticion {
         guardada::borrar(&state.paths.data);
     }
     Ok(())
+}
+
+/// Abre una partida del historial para verla (H3). Hace falta que no haya
+/// otra partida abierta; la pantalla se suscribe después, como a cualquier
+/// mesa.
+#[tauri::command]
+pub fn repeticion_abrir(state: State<'_, AppState>, id: String) -> AppResult<VistaRepeticion> {
+    let rechazo = |m: &str| AppError::new(ErrorCode::Rejected).with("motivo", m);
+    if state.hay_partida() {
+        return Err(rechazo("partida_abierta"));
+    }
+    let bytes = partidas::registro(&state.db, &id)?.ok_or_else(|| rechazo("sin_registro"))?;
+    let s = Sesion::desde_guardada(guardada::decodificar(&bytes)?)?;
+    let v = s.vista_repeticion()?;
+    let mut m = state
+        .mesa
+        .lock()
+        .map_err(|_| AppError::new(ErrorCode::Internal))?;
+    if m.is_some() {
+        return Err(rechazo("partida_abierta"));
+    }
+    *m = Some(s);
+    Ok(v)
+}
+
+/// Repite la partida que acaba de terminar, en su sitio.
+#[tauri::command]
+pub fn repeticion_actual(state: State<'_, AppState>) -> AppResult<VistaRepeticion> {
+    con_sesion(&state, |s| {
+        if s.partida().fin.is_none() {
+            return Err(AppError::new(ErrorCode::Rejected).with("motivo", "sin_terminar"));
+        }
+        s.entrar_repeticion(false)
+    })
+}
+
+/// Va a un punto de la repetición (eventos aplicados) viendo la partida como
+/// `como` (`None`: todo a la vista).
+#[tauri::command]
+pub fn repeticion_ir(
+    state: State<'_, AppState>,
+    pos: u32,
+    como: Option<IdJugador>,
+) -> AppResult<VistaRepeticion> {
+    con_sesion(&state, |s| s.repeticion_ir(pos, como))
+}
+
+/// Deja la repetición: vuelve a la partida terminada o, si se abrió del
+/// historial, cierra la mesa.
+#[tauri::command]
+pub fn repeticion_salir(app: AppHandle, state: State<'_, AppState>) -> AppResult<()> {
+    let del_historial = con_sesion(&state, |s| {
+        Ok(s.repeticion.as_ref().is_some_and(|r| r.desde_historial))
+    })?;
+    if del_historial {
+        return mesa_salir(app, state, false);
+    }
+    con_sesion(&state, |s| {
+        s.salir_de_repeticion();
+        Ok(())
+    })
 }
 
 #[tauri::command]

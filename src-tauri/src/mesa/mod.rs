@@ -4,9 +4,11 @@
 pub mod dados;
 pub mod encuentro;
 pub mod guardada;
+pub mod historial;
 pub mod imagenes;
 pub mod originales;
 pub mod preparar;
+pub mod repeticion;
 pub mod sesion;
 pub mod tapete;
 

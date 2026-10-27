@@ -136,5 +136,14 @@
 	"Idioma: {i}": "Language: {i}",
 	"Idioma de los {n}": "Language of the {n}",
 	"Automático (según las cartas)": "Automatic (from the cards)",
-	"Elegido a mano": "Set by hand"
+	"Elegido a mano": "Set by hand",
+	"Propiedades": "Properties",
+	"Partidas: {partidas} · Victorias: {victorias} ({porcentaje} %)": "Games: {partidas} · Wins: {victorias} ({porcentaje}%)",
+	"Todavía no has terminado ninguna partida con este deck.": "You haven't finished any game with this deck yet.",
+	"¿Borrar esta partida del historial?": "Delete this game from the history?",
+	"Se borra también su repetición.": "Its replay is deleted too.",
+	"Victoria": "Win",
+	"En solitario": "Solo",
+	"Con {rivales}": "With {rivales}",
+	"Ver repetición": "Watch replay"
 }

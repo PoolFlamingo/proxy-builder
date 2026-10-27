@@ -2,7 +2,7 @@ import { Dices, ImagePlus, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { AspectoDados } from "@/bindings/AspectoDados";
-import { Fila, FilaDeslizador, FilaInterruptor, Selector } from "@/components/campos";
+import { Fila, FilaInterruptor, Selector } from "@/components/campos";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +15,6 @@ import type { Tirada } from "@/features/mesa/dados/cola";
 import { DadosCss } from "@/features/mesa/dados/css3d";
 import { lienzoFondo, urlFondo } from "@/features/mesa/dados/texturas";
 import { abrirParaImportar } from "@/lib/dialogos";
-import { useUi } from "@/stores/ui-store";
 
 /** El color de muestra cuando el dado lleva el del jugador. */
 const COLOR_DE_MUESTRA = "#7c3aed";
@@ -42,8 +41,6 @@ function muestra(semilla: number): Tirada {
  */
 export function AjustesDados() {
 	const { t, mensaje } = useLang();
-	const m = useUi((s) => s.mesa);
-	const set = useUi((s) => s.setMesa);
 	const vista = useAspectoDados((s) => s.vista);
 	const [local, setLocal] = useState<AspectoDados>(vista?.aspecto ?? ASPECTO_DE_FABRICA);
 	const [semilla, setSemilla] = useState(1);
@@ -216,22 +213,6 @@ export function AjustesDados() {
 					]}
 				/>
 			</Fila>
-			<FilaInterruptor
-				etiqueta={t("Sonido de los dados y las monedas")}
-				valor={m.sonidoDados}
-				onChange={(v) => set({ sonidoDados: v })}
-			/>
-			{m.sonidoDados && (
-				<FilaDeslizador
-					etiqueta={t("Volumen")}
-					valor={m.volumen}
-					onChange={(v) => set({ volumen: v })}
-					min={0}
-					max={100}
-					paso={5}
-					sufijo=" %"
-				/>
-			)}
 		</>
 	);
 }

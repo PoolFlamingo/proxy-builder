@@ -2,4 +2,11 @@
 import type { IdJugador } from "./IdJugador";
 import type { ModoEquipos } from "./ModoEquipos";
 
-export type Variantes = { equipos: ModoEquipos, archenemy: IdJugador | null, planechase: boolean, };
+export type Variantes = { equipos: ModoEquipos, archenemy: IdJugador | null, planechase: boolean, 
+/**
+ * Con equipos, cada uno ve la mano de sus compañeros salvo que esto esté
+ * encendido (la mano de un compañero es tan privada como la de un
+ * rival). Apagado de fábrica: al ser un campo nuevo, las partidas
+ * guardadas antes siguen como eran para los equipos (que se ven).
+ */
+manoPrivadaEnEquipo: boolean, };

@@ -299,18 +299,27 @@ export function repartir(
 export const VACIO: Rect = { x: 0, y: 0, w: 0, h: 0 };
 
 /** La disposición con que empieza una partida de `n` jugadores. */
-export function disposicionPorDefecto(n: number): ConfigDisposicion {
+export function disposicionPorDefecto(n: number, espectador = false): ConfigDisposicion {
+	// Quien solo mira no tiene tablero propio: de entrada, todos iguales.
+	if (espectador && n >= 2) return { ...DISPOSICION_DE_FABRICA, modo: "rejilla" };
 	return { ...DISPOSICION_DE_FABRICA, modo: n <= 1 ? "unico" : n === 2 ? "dividido" : "foco" };
 }
+
+/**
+ * Dónde se recuerda la disposición de `n` jugadores: la de quien mira va
+ * aparte (negativa) de la de quien juega.
+ */
+export const claveDisposicion = (n: number, espectador: boolean) => (espectador ? -n : n);
 
 /** La que vale para `n` jugadores: la guardada si sirve, y si no, la de fábrica. */
 export function disposicionDe(
 	guardadas: Record<number, ConfigDisposicion> | undefined,
 	n: number,
 	conEquipos = false,
+	espectador = false,
 ): ConfigDisposicion {
-	const g = guardadas?.[n];
-	if (!g || !modosPara(n, conEquipos).includes(g.modo)) return disposicionPorDefecto(n);
+	const g = guardadas?.[claveDisposicion(n, espectador)];
+	if (!g || !modosPara(n, conEquipos).includes(g.modo)) return disposicionPorDefecto(n, espectador);
 	return { ...DISPOSICION_DE_FABRICA, ...g, proporcion: limitarProporcion(g.proporcion) };
 }
 

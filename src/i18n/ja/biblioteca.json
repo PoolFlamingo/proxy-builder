@@ -136,5 +136,14 @@
 	"Idioma: {i}": "言語：{i}",
 	"Idioma de los {n}": "{n} 個のデッキの言語",
 	"Automático (según las cartas)": "自動（カードから判定）",
-	"Elegido a mano": "手動で設定"
+	"Elegido a mano": "手動で設定",
+	"Propiedades": "プロパティ",
+	"Partidas: {partidas} · Victorias: {victorias} ({porcentaje} %)": "対戦: {partidas} · 勝利: {victorias}（{porcentaje}%）",
+	"Todavía no has terminado ninguna partida con este deck.": "このデッキではまだ対戦を終えていません。",
+	"¿Borrar esta partida del historial?": "この対戦を履歴から削除しますか？",
+	"Se borra también su repetición.": "リプレイも削除されます。",
+	"Victoria": "勝利",
+	"En solitario": "ひとりで",
+	"Con {rivales}": "{rivales}と",
+	"Ver repetición": "リプレイを見る"
 }

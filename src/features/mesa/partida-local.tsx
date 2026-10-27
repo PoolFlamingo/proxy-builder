@@ -208,6 +208,16 @@ export function PartidaLocalDialog({
 						/>
 					</>
 				)}
+				{ajustes.modo !== "ninguno" && (
+					<FilaInterruptor
+						etiqueta={t("Los compañeros ven su mano")}
+						ayuda={t(
+							"Quienes van en un mismo equipo ven la mano del otro sin pedirla. Los demás solo ven sus reversos.",
+						)}
+						valor={ajustes.manoDelCompanero}
+						onChange={(manoDelCompanero) => cambiarAjustes({ manoDelCompanero })}
+					/>
+				)}
 				<FilaInterruptor
 					etiqueta={t("Planechase")}
 					ayuda={t(

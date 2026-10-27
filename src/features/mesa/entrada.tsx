@@ -159,7 +159,12 @@ export function EntradaMesa() {
 				},
 			],
 			formato,
-			variantes: { equipos: { tipo: "ninguno" }, archenemy: null, planechase: false },
+			variantes: {
+				equipos: { tipo: "ninguno" },
+				archenemy: null,
+				planechase: false,
+				manoPrivadaEnEquipo: false,
+			},
 			opciones,
 			intensidad: sparring,
 			equipos: [],

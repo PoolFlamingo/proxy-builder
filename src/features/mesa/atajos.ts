@@ -1,7 +1,8 @@
 import type { IdCarta } from "@/bindings/IdCarta";
 import { paraTraducir } from "@/components/language-provider";
 import { useMesa } from "@/stores/mesa-store";
-import { objetivo, sitio } from "./acciones";
+import { hacer, objetivo, sitio } from "./acciones";
+import { AVISOS, SENALES, senalTrasElegir } from "./cuentas-chat";
 import * as op from "./operaciones";
 import { usePantalla } from "./pantalla";
 
@@ -233,6 +234,35 @@ export const ATAJOS: Atajo[] = [
 			m.seleccionar(m.zonas[`${yo}:campo`]?.cartas ?? []);
 		},
 	},
+	// ── Chat, avisos y señales (los maneja `chat.tsx`: tecla por código físico) ──
+	{
+		contexto: "mesa",
+		tecla: "Enter",
+		nombre: paraTraducir("Escribir en el chat"),
+		hacer: () => usePantalla.getState().setPanel("chat"),
+	},
+	...AVISOS.map(
+		(a): Atajo => ({
+			contexto: "mesa",
+			tecla: a.tecla,
+			nombre: a.texto,
+			hacer: () => void hacer({ que: "aviso", tipo: a.tipo }),
+		}),
+	),
+	...SENALES.map(
+		(s): Atajo => ({
+			contexto: "mesa",
+			tecla: s.tecla,
+			nombre: s.atajo,
+			hacer: () => {
+				const m = useMesa.getState();
+				const yo = m.yo;
+				if (yo === null) return;
+				const nueva = senalTrasElegir(m.jugadores[yo]?.senal ?? null, s.senal);
+				void hacer({ que: "senal", senal: nueva });
+			},
+		}),
+	),
 	{
 		contexto: "mesa",
 		tecla: "Escape",

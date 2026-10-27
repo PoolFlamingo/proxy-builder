@@ -181,5 +181,14 @@
 	"Idioma: {i}": "Język: {i}",
 	"Idioma de los {n}": "Język zaznaczonych ({n})",
 	"Automático (según las cartas)": "Automatycznie (według kart)",
-	"Elegido a mano": "Wybrany ręcznie"
+	"Elegido a mano": "Wybrany ręcznie",
+	"Propiedades": "Właściwości",
+	"Partidas: {partidas} · Victorias: {victorias} ({porcentaje} %)": "Partie: {partidas} · Zwycięstwa: {victorias} ({porcentaje}%)",
+	"Todavía no has terminado ninguna partida con este deck.": "Nie zakończyłeś jeszcze żadnej partii tą talią.",
+	"¿Borrar esta partida del historial?": "Usunąć tę partię z historii?",
+	"Se borra también su repetición.": "Jej powtórka też zostanie usunięta.",
+	"Victoria": "Zwycięstwo",
+	"En solitario": "Solo",
+	"Con {rivales}": "Z: {rivales}",
+	"Ver repetición": "Obejrzyj powtórkę"
 }

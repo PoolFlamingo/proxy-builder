@@ -84,6 +84,7 @@ fn el_archienemigo_empieza_con_40_y_los_demas_con_la_de_fabrica() {
         equipos: ModoEquipos::Equipos { fuego_amigo: false },
         archenemy: Some(IdJugador(0)),
         planechase: false,
+        ..Variantes::default()
     };
     let mut c = config(4);
     c.formato = Formato::Constructed;
@@ -100,6 +101,7 @@ fn contra_el_archienemigo_los_demas_son_un_equipo_sin_fuego_amigo() {
         equipos: ModoEquipos::Equipos { fuego_amigo: false },
         archenemy: Some(IdJugador(0)),
         planechase: false,
+        ..Variantes::default()
     };
     let mut c = config(4);
     c.opciones = Opciones::de_fabrica(Formato::Commander, &variantes, 4);

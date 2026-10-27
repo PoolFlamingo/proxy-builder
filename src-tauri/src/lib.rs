@@ -120,6 +120,14 @@ pub fn run() {
             crear_ventana(app, p, &paths.cache)?;
             let estado = state::AppState::open(paths).map_err(|e| e.to_string())?;
             app.manage(estado);
+            // Las partidas que terminan se guardan en el historial (Fase H).
+            let h = app.handle().clone();
+            mesa::historial::instalar(move |p| {
+                let estado = h.state::<state::AppState>();
+                if let Err(e) = store::partidas::guardar(&estado.db, &p) {
+                    tracing::warn!(codigo = ?e.code, "no se pudo guardar la partida en el historial");
+                }
+            });
             // Los marcos «Original» que pida esta versión y aún no estén.
             let app1 = app.handle().clone();
             tauri::async_runtime::spawn(async move {
@@ -257,6 +265,13 @@ pub fn run() {
             commands::mesa::mesa_accion,
             commands::mesa::mesa_mirar_como,
             commands::mesa::mesa_encuentro,
+            commands::mesa::mesa_resumen,
+            commands::mesa::partidas_de_deck,
+            commands::mesa::partida_borrar,
+            commands::mesa::repeticion_abrir,
+            commands::mesa::repeticion_actual,
+            commands::mesa::repeticion_ir,
+            commands::mesa::repeticion_salir,
             commands::mesa::mesa_banquillo,
             commands::mesa::mesa_banquillo_cambiar,
             commands::mesa::mesa_siguiente_partida,

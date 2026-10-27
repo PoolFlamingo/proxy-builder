@@ -4,7 +4,8 @@
 //! (`Carta::vista_por`):
 //! - biblioteca, planes y planos: nadie (salvo «de arriba revelada»: la de
 //!   arriba, todos);
-//! - mano y banquillo: el dueño (la mano, todos si la revela);
+//! - mano y banquillo: el dueño (la mano, todos si la revela y, con equipos,
+//!   sus compañeros salvo que `Variantes::mano_privada_en_equipo` lo impida);
 //! - campo, cementerio, exilio, mando, pila, plano activo y planes en
 //!   marcha: todos, salvo lo que esté boca abajo (eso, solo quien diga
 //!   `vista_por`: el controlador al jugarla boca abajo, nadie si se exilió
@@ -47,13 +48,27 @@ pub fn zona_abierta(p: &Partida, zona: &RefZona, m: Mirador) -> bool {
         RefZona::De {
             jugador,
             zona: Zona::Mano,
-        } => yo == Some(*jugador) || p.jugador(*jugador).is_some_and(|j| j.mano_revelada),
+        } => {
+            yo == Some(*jugador)
+                || p.jugador(*jugador).is_some_and(|j| j.mano_revelada)
+                || ve_la_mano_de_un_companero(p, yo, *jugador)
+        }
         RefZona::De {
             jugador,
             zona: Zona::Banquillo,
         } => yo == Some(*jugador),
         _ => false,
     }
+}
+
+/// Con equipos (y si no se ha hecho privada), un jugador ve la mano de sus
+/// compañeros sin que nadie se la enseñe. Un espectador nunca.
+pub fn ve_la_mano_de_un_companero(p: &Partida, yo: Option<IdJugador>, dueno: IdJugador) -> bool {
+    let Some(yo) = yo else { return false };
+    if p.variantes.mano_privada_en_equipo || yo == dueno {
+        return false;
+    }
+    matches!(p.equipo_de(yo), Some(e) if p.equipo_de(dueno) == Some(e))
 }
 
 /// Si el mirador conoce la cara de esta carta, que está en `zona`, sitio

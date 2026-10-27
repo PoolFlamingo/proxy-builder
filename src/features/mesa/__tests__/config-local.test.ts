@@ -10,6 +10,7 @@ import {
 	ordenAlAzar,
 	ordenTrasMover,
 	problemaDeEquipos,
+	variantesDe,
 } from "../config-local";
 
 const asiento = (i: number, equipo: number | null = null): AsientoLocal => ({
@@ -191,5 +192,14 @@ describe("orden de los asientos", () => {
 		expect(
 			construirConfig(dos, { ...AJUSTES_LOCALES, primero: 5 }, nombre).primero,
 		).toBeUndefined();
+	});
+});
+
+describe("la mano de los compañeros", () => {
+	it("de fábrica se ven; apagado, la mano de equipo es privada", () => {
+		expect(variantesDe(AJUSTES_LOCALES).manoPrivadaEnEquipo).toBe(false);
+		expect(variantesDe({ ...AJUSTES_LOCALES, manoDelCompanero: false }).manoPrivadaEnEquipo).toBe(
+			true,
+		);
 	});
 });

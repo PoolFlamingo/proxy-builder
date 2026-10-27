@@ -8,17 +8,35 @@ import type { RefZona } from "@/bindings/RefZona";
 import type { Sitio } from "@/bindings/Sitio";
 import type { Zona } from "@/bindings/Zona";
 import type { ZonaComun } from "@/bindings/ZonaComun";
-import { traduccionSuelta } from "@/components/language-provider";
+import { paraTraducir, traduccionSuelta } from "@/components/language-provider";
 import { mensajeDeError } from "@/lib/errores";
 import { call } from "@/lib/ipc";
 import { useMesa } from "@/stores/mesa-store";
+import { useRed } from "@/stores/red-store";
+import { useRepeticion } from "@/stores/repeticion-store";
 
 /**
  * **Mandar una acción a la mesa.** Rust la resuelve y la aplica; lo que
  * cambia llega después por el canal (`mesa-store`). Un rechazo sale como
  * aviso con su motivo.
  */
+const SOLO_MIRA = paraTraducir("Estás mirando la partida: no puedes jugar.");
+let ultimoAviso = 0;
+function avisarQueSoloMira() {
+	const ahora = Date.now();
+	if (ahora - ultimoAviso < 4_000) return;
+	ultimoAviso = ahora;
+	toast.info(traduccionSuelta(SOLO_MIRA));
+}
+
 export async function hacer(accion: Accion): Promise<boolean> {
+	// Una repetición solo se mira: nada de lo que se toque llega a la partida.
+	if (useRepeticion.getState().activa) return false;
+	// Quien solo mira no juega (el anfitrión también lo rechazaría).
+	if (useRed.getState().papel === "espectador") {
+		avisarQueSoloMira();
+		return false;
+	}
 	try {
 		await call("mesa_accion", { accion, como: null });
 		return true;

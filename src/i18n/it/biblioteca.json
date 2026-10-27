@@ -168,5 +168,14 @@
 	"Idioma: {i}": "Lingua: {i}",
 	"Idioma de los {n}": "Lingua dei {n}",
 	"Automático (según las cartas)": "Automatica (in base alle carte)",
-	"Elegido a mano": "Scelta a mano"
+	"Elegido a mano": "Scelta a mano",
+	"Propiedades": "Proprietà",
+	"Partidas: {partidas} · Victorias: {victorias} ({porcentaje} %)": "Partite: {partidas} · Vittorie: {victorias} ({porcentaje}%)",
+	"Todavía no has terminado ninguna partida con este deck.": "Non hai ancora concluso nessuna partita con questo mazzo.",
+	"¿Borrar esta partida del historial?": "Eliminare questa partita dalla cronologia?",
+	"Se borra también su repetición.": "Viene eliminato anche il replay.",
+	"Victoria": "Vittoria",
+	"En solitario": "In solitario",
+	"Con {rivales}": "Con {rivales}",
+	"Ver repetición": "Guarda il replay"
 }

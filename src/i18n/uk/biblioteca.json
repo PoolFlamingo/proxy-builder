@@ -191,5 +191,14 @@
 		"other": "Мова {n} колоди"
 	},
 	"Automático (según las cartas)": "Автоматично (за картами)",
-	"Elegido a mano": "Вибрано вручну"
+	"Elegido a mano": "Вибрано вручну",
+	"Propiedades": "Властивості",
+	"Partidas: {partidas} · Victorias: {victorias} ({porcentaje} %)": "Партії: {partidas} · Перемоги: {victorias} ({porcentaje} %)",
+	"Todavía no has terminado ninguna partida con este deck.": "З цією колодою ви ще не завершили жодної партії.",
+	"¿Borrar esta partida del historial?": "Видалити цю партію з історії?",
+	"Se borra también su repetición.": "Повтор теж буде видалено.",
+	"Victoria": "Перемога",
+	"En solitario": "На самоті",
+	"Con {rivales}": "З: {rivales}",
+	"Ver repetición": "Дивитися повтор"
 }

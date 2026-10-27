@@ -33,6 +33,7 @@ import {
 	ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { useMesa } from "@/stores/mesa-store";
+import { useRed } from "@/stores/red-store";
 import { hacer } from "../acciones";
 import { teclaPara } from "../atajos";
 import { COLORES } from "../colores";
@@ -49,6 +50,8 @@ export function MenuBiblioteca({ children }: { children: ReactNode }) {
 	const { t } = useLang();
 	const yo = useMesa((s) => s.yo ?? 0);
 	const revelada = useMesa((s) => s.jugadores[yo]?.deArribaRevelada ?? false);
+	const soloMira = useRed((s) => s.papel === "espectador");
+	if (soloMira) return <>{children}</>;
 	return (
 		<ContextMenu>
 			<ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
@@ -163,6 +166,8 @@ export function MenuZona({ zona, children }: { zona: Zona; children: ReactNode }
 	const yo = useMesa((s) => s.yo ?? 0);
 	const ver = () => usePantalla.getState().abrir({ tipo: "zona", jugador: yo, zona });
 	const masiva = zona === "cementerio" || zona === "exilio";
+	const soloMira = useRed((s) => s.papel === "espectador");
+	if (soloMira) return <>{children}</>;
 	return (
 		<ContextMenu>
 			<ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
@@ -243,6 +248,8 @@ export function MenuCampo({
 }) {
 	const { t } = useLang();
 	const yo = useMesa((s) => s.yo ?? 0);
+	const soloMira = useRed((s) => s.papel === "espectador");
+	if (soloMira) return <>{children}</>;
 	return (
 		<ContextMenu>
 			<ContextMenuTrigger asChild>{children}</ContextMenuTrigger>

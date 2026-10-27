@@ -29,6 +29,8 @@ export type AjustesLocal = {
 	modo: ModoEquiposLocal;
 	fuegoAmigo: boolean;
 	vidaCompartida: boolean;
+	/** Con equipos, los compañeros se ven la mano sin pedirla (de fábrica sí). */
+	manoDelCompanero: boolean;
 	/** El asiento del archienemigo (con `modo: "archienemigo"`). */
 	archienemigo: number;
 	/** Planechase: un mazo común de planos con el dado planar. */
@@ -52,6 +54,7 @@ export const AJUSTES_LOCALES: AjustesLocal = {
 	modo: "ninguno",
 	fuegoAmigo: false,
 	vidaCompartida: false,
+	manoDelCompanero: true,
 	archienemigo: 0,
 	planechase: false,
 	alMejorDe: 1,
@@ -99,6 +102,7 @@ export function variantesDe(a: AjustesLocal, jugadores = MAX_JUGADORES): Variant
 					: { tipo: "ninguno" },
 		archenemy: a.modo === "archienemigo" ? asientoArchienemigo(a, jugadores) : null,
 		planechase: a.planechase,
+		manoPrivadaEnEquipo: !a.manoDelCompanero,
 	};
 }
 

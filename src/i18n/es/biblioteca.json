@@ -136,5 +136,14 @@
 	"Idioma: {i}": "Idioma: {i}",
 	"Idioma de los {n}": "Idioma de los {n}",
 	"Automático (según las cartas)": "Automático (según las cartas)",
-	"Elegido a mano": "Elegido a mano"
+	"Elegido a mano": "Elegido a mano",
+	"Propiedades": "Propiedades",
+	"Partidas: {partidas} · Victorias: {victorias} ({porcentaje} %)": "Partidas: {partidas} · Victorias: {victorias} ({porcentaje} %)",
+	"Todavía no has terminado ninguna partida con este deck.": "Todavía no has terminado ninguna partida con este deck.",
+	"¿Borrar esta partida del historial?": "¿Borrar esta partida del historial?",
+	"Se borra también su repetición.": "Se borra también su repetición.",
+	"Victoria": "Victoria",
+	"En solitario": "En solitario",
+	"Con {rivales}": "Con {rivales}",
+	"Ver repetición": "Ver repetición"
 }

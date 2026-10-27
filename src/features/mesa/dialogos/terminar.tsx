@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useMesa } from "@/stores/mesa-store";
 import { hacer } from "../acciones";
+import { ganadoresEnPie } from "../cuentas-fin";
 import { usePantalla } from "../pantalla";
 
 export const COMO: { valor: ComoGano; nombre: string }[] = [
@@ -41,7 +42,15 @@ export function TerminarDialog() {
 	const asientos = useMesa((s) => s.asientos);
 	const jugadores = useMesa((s) => s.jugadores);
 	const solitario = asientos.length === 1;
-	const [ganadores, setGanadores] = useState<IdJugador[]>(solitario ? [asientos[0] ?? 0] : []);
+	// Si solo queda uno en pie (o un equipo), se propone como ganador.
+	const [ganadores, setGanadores] = useState<IdJugador[]>(() =>
+		solitario
+			? [asientos[0] ?? 0]
+			: ganadoresEnPie(asientos, (id) => {
+					const j = useMesa.getState().jugadores[id];
+					return j ? { eliminado: j.eliminado != null, equipo: j.equipo } : undefined;
+				}),
+	);
 	const [como, setComo] = useState<ComoGano>("combate");
 	const [nota, setNota] = useState("");
 	const cerrar = () => usePantalla.getState().abrir(null);
@@ -75,9 +84,14 @@ export function TerminarDialog() {
 									{j.nombre}
 								</span>
 								<span className="text-muted-foreground">
-									{j.eliminado
-										? t("Fuera en la ronda {r}", { r: j.eliminado.ronda })
-										: t("Sigue en pie")}
+									{!j.eliminado
+										? t("Sigue en pie")
+										: j.eliminado.por === null || jugadores[j.eliminado.por] === undefined
+											? t("Fuera en la ronda {r}", { r: j.eliminado.ronda })
+											: t("Fuera en la ronda {r}, por {quien}", {
+													r: j.eliminado.ronda,
+													quien: jugadores[j.eliminado.por]?.nombre ?? "?",
+												})}
 								</span>
 							</button>
 						);

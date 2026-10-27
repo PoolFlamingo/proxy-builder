@@ -46,6 +46,7 @@ import {
 	ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { useMesa } from "@/stores/mesa-store";
+import { useRed } from "@/stores/red-store";
 import { destino, destinoComun, hacer, mover, objetivo, sitio } from "../acciones";
 import { bonita, teclaPara } from "../atajos";
 import { COLORES, PALABRAS_CLAVE } from "../colores";
@@ -70,6 +71,8 @@ export function MenuCarta({ c, children }: { c: VistaCarta; children: ReactNode 
 		const m = useMesa.getState();
 		if (!m.seleccion.includes(c.id)) m.seleccionar([c.id]);
 	};
+	const soloMira = useRed((s) => s.papel === "espectador");
+	if (soloMira) return <>{children}</>;
 	return (
 		<ContextMenu onOpenChange={abrir}>
 			<ContextMenuTrigger asChild>{children}</ContextMenuTrigger>

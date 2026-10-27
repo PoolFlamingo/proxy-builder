@@ -136,5 +136,14 @@
 	"Idioma: {i}": "語言：{i}",
 	"Idioma de los {n}": "{n} 副套牌的語言",
 	"Automático (según las cartas)": "自動（依牌而定）",
-	"Elegido a mano": "手動指定"
+	"Elegido a mano": "手動指定",
+	"Propiedades": "屬性",
+	"Partidas: {partidas} · Victorias: {victorias} ({porcentaje} %)": "對局：{partidas} · 勝利：{victorias}（{porcentaje}%）",
+	"Todavía no has terminado ninguna partida con este deck.": "你還沒有用這副牌組打完任何一局。",
+	"¿Borrar esta partida del historial?": "要從歷史記錄中刪除這局嗎？",
+	"Se borra también su repetición.": "其重播也會一併刪除。",
+	"Victoria": "勝利",
+	"En solitario": "單人",
+	"Con {rivales}": "與 {rivales}",
+	"Ver repetición": "觀看重播"
 }

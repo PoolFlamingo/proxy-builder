@@ -405,6 +405,20 @@ pub fn intencion_al_azar(p: &Partida, azar: &mut Azar, n: usize) -> Intencion {
 use mesa::visibilidad::Mirador;
 use mesa::vista::VistaMesa;
 
+/// La regla de los equipos escrita otra vez a mano: compañeros (mismo equipo
+/// y distinto jugador) y la mano no se ha hecho privada.
+fn son_companeros_con_mano_abierta(p: &Partida, yo: Option<IdJugador>, dueno: IdJugador) -> bool {
+    let Some(yo) = yo else { return false };
+    if yo == dueno || p.variantes.mano_privada_en_equipo {
+        return false;
+    }
+    let (a, b) = (
+        p.jugador(yo).unwrap().equipo,
+        p.jugador(dueno).unwrap().equipo,
+    );
+    a.is_some() && a == b
+}
+
 /// Comprueba, con las reglas escritas otra vez a mano, que la vista no
 /// enseña nada que el mirador no deba ver.
 pub fn sin_fugas(p: &Partida, v: &VistaMesa, m: Mirador) {
@@ -415,7 +429,9 @@ pub fn sin_fugas(p: &Partida, v: &VistaMesa, m: Mirador) {
             RefZona::De { jugador, zona } => {
                 (zona == Zona::Mano || zona == Zona::Banquillo)
                     && (Some(jugador) == yo
-                        || (zona == Zona::Mano && p.jugador(jugador).unwrap().mano_revelada))
+                        || (zona == Zona::Mano
+                            && (p.jugador(jugador).unwrap().mano_revelada
+                                || son_companeros_con_mano_abierta(p, yo, jugador))))
             }
             _ => false,
         };
@@ -436,7 +452,12 @@ pub fn sin_fugas(p: &Partida, v: &VistaMesa, m: Mirador) {
             RefZona::De {
                 jugador,
                 zona: Zona::Mano,
-            } => ensenada || Some(jugador) == yo || p.jugador(jugador).unwrap().mano_revelada,
+            } => {
+                ensenada
+                    || Some(jugador) == yo
+                    || p.jugador(jugador).unwrap().mano_revelada
+                    || son_companeros_con_mano_abierta(p, yo, jugador)
+            }
             RefZona::De {
                 jugador,
                 zona: Zona::Banquillo,

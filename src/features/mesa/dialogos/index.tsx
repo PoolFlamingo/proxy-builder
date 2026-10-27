@@ -15,7 +15,6 @@ import {
 	PtDialog,
 	TextoDialog,
 } from "./pequenos";
-import { RegistroDialog } from "./registro";
 import { RevelarDialog } from "./revelar";
 import { TerminarDialog } from "./terminar";
 
@@ -40,7 +39,6 @@ export function DialogosMesa({ deckId }: { deckId: string | null }) {
 			{d?.tipo === "terminar" && !hayFin && <TerminarDialog />}
 			{d?.tipo === "danoComandante" && <DanoComandanteDialog />}
 			{d?.tipo === "atajos" && <AtajosDialog />}
-			{d?.tipo === "registro" && <RegistroDialog />}
 			<TapeteDialog
 				abierto={d?.tipo === "tapete"}
 				onCerrar={() => usePantalla.getState().abrir(null)}

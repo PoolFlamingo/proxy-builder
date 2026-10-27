@@ -1,0 +1,38 @@
+import { describe, expect, it } from "vitest";
+import type { Hito } from "@/bindings/Hito";
+import {
+	ESPERA_MAXIMA_MS,
+	ESPERA_MINIMA_MS,
+	hitoAnterior,
+	hitoSiguiente,
+	pausaEntre,
+} from "../cuentas-repeticion";
+
+const hito = (pos: number): Hito => ({ pos, turno: pos, ronda: 1, activo: 0, tMs: 0 });
+const hitos = [hito(4), hito(10), hito(17)];
+
+describe("hitoAnterior y hitoSiguiente", () => {
+	it("el anterior es el principio del turno de antes, o el inicio", () => {
+		expect(hitoAnterior(hitos, 12)).toBe(10);
+		expect(hitoAnterior(hitos, 10)).toBe(4);
+		expect(hitoAnterior(hitos, 4)).toBe(0);
+		expect(hitoAnterior([], 7)).toBe(0);
+	});
+	it("el siguiente es el del turno que viene, o el final", () => {
+		expect(hitoSiguiente(hitos, 0, 30)).toBe(4);
+		expect(hitoSiguiente(hitos, 10, 30)).toBe(17);
+		expect(hitoSiguiente(hitos, 17, 30)).toBe(30);
+	});
+});
+
+describe("pausaEntre", () => {
+	it("acota el hueco real y lo divide por la velocidad", () => {
+		expect(pausaEntre(1_000, 1_020, 1)).toBe(ESPERA_MINIMA_MS);
+		expect(pausaEntre(1_000, 61_000, 1)).toBe(ESPERA_MAXIMA_MS);
+		expect(pausaEntre(1_000, 61_000, 4)).toBe(ESPERA_MAXIMA_MS / 4);
+		expect(pausaEntre(0, 600, 2)).toBe(300);
+	});
+	it("sin horas (el primer evento) espera lo mínimo", () => {
+		expect(pausaEntre(undefined, 500, 1)).toBe(ESPERA_MINIMA_MS);
+	});
+});

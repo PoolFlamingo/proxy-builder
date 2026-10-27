@@ -2,11 +2,13 @@ import {
 	Crown,
 	Dices,
 	Expand,
+	Eye,
 	Flag,
 	History,
 	Image,
 	Keyboard,
 	LogOut,
+	MessageSquare,
 	Pause,
 	Pencil,
 	Play,
@@ -16,9 +18,11 @@ import {
 	Undo2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { WithTooltip } from "@/components/ui/with-tooltip";
+import { useChat } from "@/stores/chat-store";
 import { useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
 import { hacer } from "./acciones";
@@ -40,12 +44,15 @@ function Boton({
 	children,
 	activo,
 	deshabilitado,
+	insignia,
 }: {
 	ayuda: string;
 	onClick: () => void;
 	children: React.ReactNode;
 	activo?: boolean;
 	deshabilitado?: boolean;
+	/** Un número en una esquina (los mensajes sin leer). */
+	insignia?: number;
 }) {
 	return (
 		<WithTooltip content={ayuda}>
@@ -58,6 +65,11 @@ function Boton({
 				className="text-white hover:bg-white/10 hover:text-white"
 			>
 				{children}
+				{insignia ? (
+					<span className="absolute -top-1 -right-1 min-w-4 rounded-full bg-primary px-1 text-[10px] leading-4 text-primary-foreground tabular-nums">
+						{insignia}
+					</span>
+				) : null}
 			</Button>
 		</WithTooltip>
 	);
@@ -94,18 +106,31 @@ export function BarraMesa({
 		return () => window.clearInterval(i);
 	}, [pausada, desfase]);
 	const abrir = usePantalla((s) => s.abrir);
+	const panel = usePantalla((s) => s.panel);
+	const setPanel = usePantalla((s) => s.setPanel);
+	const sinLeer = useChat((s) => s.sinLeer);
+	const varios = useMesa((s) => s.asientos.length > 1);
 	// En red: el sparring no va, reiniciar y terminar son del anfitrión, y
 	// quien mira no toca nada de la partida.
 	const papel = useRed((s) => s.papel);
 	const enRed = papel !== null;
 	const manda = papel === null || papel === "anfitrion";
 	const juega = papel !== "espectador";
+	const espectadores = useRed(
+		useShallow((s) => s.sala.filter((x) => x.rol === "espectador").map((x) => x.apodo)),
+	);
 
 	return (
 		<div
 			className="absolute top-2 left-1/2 z-[7000] flex -translate-x-1/2 items-center gap-1 rounded-xl border border-white/10 bg-black/60 px-2 py-1 text-white shadow-lg backdrop-blur-md"
 			data-tutorial="mesa-barra"
 		>
+			{!juega && (
+				<span className="flex items-center gap-1 rounded-md bg-primary/20 px-1.5 py-0.5 text-[11px] font-medium text-primary">
+					<Eye className="size-3.5" />
+					{t("Mirando")}
+				</span>
+			)}
 			<span className="px-1.5 text-xs font-medium whitespace-nowrap tabular-nums">
 				{mulligan || !turno || turno.numero === 0
 					? t("Mulligan")
@@ -149,9 +174,35 @@ export function BarraMesa({
 					</Boton>
 				</>
 			)}
-			<Boton ayuda={t("Registro de la partida")} onClick={() => abrir({ tipo: "registro" })}>
+			{espectadores.length > 0 && (
+				<WithTooltip content={t("Mirando: {nombres}", { nombres: espectadores.join(", ") })}>
+					<span
+						className="flex items-center gap-1 px-1 text-[11px] text-white/70 tabular-nums"
+						role="img"
+						aria-label={t("Mirando: {nombres}", { nombres: espectadores.join(", ") })}
+					>
+						<Eye className="size-3.5" />
+						{espectadores.length}
+					</span>
+				</WithTooltip>
+			)}
+			<Boton
+				ayuda={t("Registro de la partida")}
+				activo={panel === "registro"}
+				onClick={() => setPanel(panel === "registro" ? null : "registro")}
+			>
 				<History className="size-4" />
 			</Boton>
+			{(enRed || varios) && (
+				<Boton
+					ayuda={t("Chat")}
+					activo={panel === "chat"}
+					insignia={panel === "chat" ? 0 : sinLeer}
+					onClick={() => setPanel(panel === "chat" ? null : "chat")}
+				>
+					<MessageSquare className="size-4" />
+				</Boton>
+			)}
 			{juega && (
 				<Boton ayuda={t("Tapete")} onClick={() => abrir({ tipo: "tapete" })}>
 					<Image className="size-4" />

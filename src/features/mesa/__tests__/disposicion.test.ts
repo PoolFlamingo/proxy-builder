@@ -215,6 +215,16 @@ describe("disposicionDe", () => {
 		expect(disposicionPorDefecto(1).modo).toBe("unico");
 		expect(disposicionPorDefecto(2).modo).toBe("dividido");
 		expect(disposicionPorDefecto(6).modo).toBe("foco");
+		// Quien solo mira ve todos los tableros iguales (y uno solo no cambia).
+		expect(disposicionPorDefecto(2, true).modo).toBe("rejilla");
+		expect(disposicionPorDefecto(4, true).modo).toBe("rejilla");
+		expect(disposicionPorDefecto(1, true).modo).toBe("unico");
+	});
+	it("la de quien mira se guarda aparte de la de quien juega", () => {
+		const g = { 4: config({ modo: "equipos" }), [-4]: config({ modo: "foco" }) };
+		expect(disposicionDe(g, 4, true, true).modo).toBe("foco");
+		expect(disposicionDe(g, 4, true, false).modo).toBe("equipos");
+		expect(disposicionDe({ 4: config({ modo: "foco" }) }, 4, false, true).modo).toBe("rejilla");
 	});
 	it("usa la guardada y recorta su proporción", () => {
 		const g = { 2: config({ modo: "foco", proporcion: 5 }) };

@@ -53,6 +53,12 @@ export type PreferenciasMesa = {
 	volumen: number;
 	/** Sonido al tirar dados y lanzar monedas. */
 	sonidoDados: boolean;
+	/** Sonido de las cartas: barajar, robar, girar y jugar. */
+	sonidoCartas: boolean;
+	/** Sonido al pasar el turno y cuando es el tuyo. */
+	sonidoTurno: boolean;
+	/** Sonido de los mensajes y avisos del chat y del fantasma del sparring. */
+	sonidoChat: boolean;
 	/** La intensidad del sparring con la que empieza el solitario. */
 	sparring: Intensidad;
 	/** Si ya se enseñó la tarjeta de «Cómo funciona» del sparring. */
@@ -84,6 +90,9 @@ export const MESA_DE_FABRICA: PreferenciasMesa = {
 	dados: "auto",
 	volumen: 60,
 	sonidoDados: true,
+	sonidoCartas: true,
+	sonidoTurno: true,
+	sonidoChat: true,
 	sparring: "apagado",
 	sparringVisto: false,
 	clicSostenido: false,

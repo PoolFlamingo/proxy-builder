@@ -69,6 +69,17 @@ const MOTIVOS: Partial<Record<ErrorCode, Record<string, string>>> = {
 		sin_partida: paraTraducir("La partida aún no ha empezado."),
 		expulsado: paraTraducir("Quien creó la sala te ha expulsado de ella."),
 		no_anfitrion: paraTraducir("Solo el anfitrión puede hacer eso."),
+		partida_abierta: paraTraducir(
+			"Hay una partida abierta: sal de la mesa para ver una repetición.",
+		),
+		sin_registro: paraTraducir("Esta partida no se guardó entera: no se puede repetir."),
+		sin_terminar: paraTraducir("La partida aún no ha terminado."),
+		repeticion: paraTraducir("Estás viendo una repetición: no se puede jugar."),
+	},
+	Unsupported: {
+		version: paraTraducir(
+			"Esta partida es de una versión más nueva de la app: actualiza para verla.",
+		),
 	},
 	// Los códigos del servidor de salas (`params.code`; `server/docs/protocolo.md`).
 	Server: {

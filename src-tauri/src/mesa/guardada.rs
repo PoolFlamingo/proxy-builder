@@ -56,8 +56,9 @@ pub fn ruta(data: &Path) -> PathBuf {
     data.join("partidas").join("actual.json.gz")
 }
 
-pub fn guardar(data: &Path, s: &Sesion) -> AppResult<()> {
-    let g = PartidaGuardada {
+/// Lo que hace falta de la sesión para volver a abrirla (o repetirla).
+pub fn de_sesion(s: &Sesion) -> PartidaGuardada {
+    PartidaGuardada {
         version_catalogo: VERSION_CATALOGO,
         config: s.config.clone(),
         mazos: s.mazos.clone(),
@@ -65,27 +66,40 @@ pub fn guardar(data: &Path, s: &Sesion) -> AppResult<()> {
         eventos: s.registro.eventos.clone(),
         guardada_ms: super::sesion::ahora_ms(),
         encuentro: s.encuentro.clone(),
-    };
-    let json = serde_json::to_vec(&g)
-        .map_err(|e| AppError::new(ErrorCode::Internal).with("detalle", e))?;
+    }
+}
+
+/// La partida en JSON comprimido (el formato del fichero y del historial).
+pub fn codificar(g: &PartidaGuardada) -> AppResult<Vec<u8>> {
+    let json =
+        serde_json::to_vec(g).map_err(|e| AppError::new(ErrorCode::Internal).with("detalle", e))?;
     let mut gz = GzEncoder::new(Vec::new(), Compression::default());
     gz.write_all(&json)?;
-    escribir_atomico(&ruta(data), &gz.finish()?)
+    Ok(gz.finish()?)
+}
+
+/// Lo contrario de `codificar`. Una partida de una versión más nueva del
+/// catálogo no se puede leer (`Unsupported`, `motivo: version`).
+pub fn decodificar(bytes: &[u8]) -> AppResult<PartidaGuardada> {
+    let mut json = Vec::new();
+    GzDecoder::new(bytes).read_to_end(&mut json)?;
+    let g: PartidaGuardada = serde_json::from_slice(&json)
+        .map_err(|e| AppError::new(ErrorCode::InvalidInput).with("detalle", e))?;
+    if g.version_catalogo > VERSION_CATALOGO {
+        return Err(AppError::new(ErrorCode::Unsupported).with("motivo", "version"));
+    }
+    Ok(g)
+}
+
+pub fn guardar(data: &Path, s: &Sesion) -> AppResult<()> {
+    escribir_atomico(&ruta(data), &codificar(&de_sesion(s))?)
 }
 
 pub fn leer(data: &Path) -> AppResult<Option<PartidaGuardada>> {
     let Ok(bytes) = std::fs::read(ruta(data)) else {
         return Ok(None);
     };
-    let mut json = Vec::new();
-    GzDecoder::new(bytes.as_slice()).read_to_end(&mut json)?;
-    let g: PartidaGuardada = serde_json::from_slice(&json)
-        .map_err(|e| AppError::new(ErrorCode::InvalidInput).with("detalle", e))?;
-    // Una partida de una versión más nueva del catálogo no se puede leer.
-    if g.version_catalogo > VERSION_CATALOGO {
-        return Err(AppError::new(ErrorCode::Unsupported).with("motivo", "version"));
-    }
-    Ok(Some(g))
+    decodificar(&bytes).map(Some)
 }
 
 pub fn borrar(data: &Path) {

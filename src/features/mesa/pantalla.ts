@@ -25,8 +25,13 @@ export type DialogoMesa =
 	| { tipo: "terminar" }
 	| { tipo: "danoComandante" }
 	| { tipo: "atajos" }
-	| { tipo: "tapete" }
-	| { tipo: "registro" };
+	| { tipo: "tapete" };
+
+/** El ancho del panel lateral, en px (la vista grande se aparta de él). */
+export const ANCHO_PANEL = 320;
+
+/** El panel de al lado de la mesa: el registro o el chat (`null`: cerrado). */
+export type PanelMesa = "registro" | "chat";
 
 /** Elegir con el siguiente clic la carta (o jugador) a la que se adjunta o apunta. */
 export type ModoObjetivo =
@@ -53,8 +58,11 @@ type Pantalla = {
 	zonaSobre: Zona | null;
 	/** Sube cada vez que se cambia el tapete, para que el tablero lo relea. */
 	tapeteCambiado: number;
+	/** El panel lateral abierto (registro o chat). */
+	panel: PanelMesa | null;
 	avisarTapete: () => void;
 	abrir: (d: DialogoMesa | null) => void;
+	setPanel: (p: PanelMesa | null) => void;
 	setModo: (m: ModoObjetivo | null) => void;
 	setArrastre: (a: Arrastre | null) => void;
 	setZonaSobre: (z: Zona | null) => void;
@@ -66,8 +74,10 @@ export const usePantalla = create<Pantalla>((set) => ({
 	arrastre: null,
 	zonaSobre: null,
 	tapeteCambiado: 0,
+	panel: null,
 	avisarTapete: () => set((s) => ({ tapeteCambiado: s.tapeteCambiado + 1 })),
 	abrir: (dialogo) => set({ dialogo }),
+	setPanel: (panel) => set({ panel }),
 	setModo: (modo) => set({ modo }),
 	setArrastre: (arrastre) => set({ arrastre }),
 	setZonaSobre: (zonaSobre) => set({ zonaSobre }),

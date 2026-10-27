@@ -163,5 +163,14 @@
 	"Idioma: {i}": "Taal: {i}",
 	"Idioma de los {n}": "Taal van de {n}",
 	"Automático (según las cartas)": "Automatisch (op basis van de kaarten)",
-	"Elegido a mano": "Handmatig gekozen"
+	"Elegido a mano": "Handmatig gekozen",
+	"Propiedades": "Eigenschappen",
+	"Partidas: {partidas} · Victorias: {victorias} ({porcentaje} %)": "Spellen: {partidas} · Winsten: {victorias} ({porcentaje}%)",
+	"Todavía no has terminado ninguna partida con este deck.": "Je hebt met dit deck nog geen spel afgemaakt.",
+	"¿Borrar esta partida del historial?": "Dit spel uit de geschiedenis verwijderen?",
+	"Se borra también su repetición.": "De herhaling wordt ook verwijderd.",
+	"Victoria": "Winst",
+	"En solitario": "Alleen",
+	"Con {rivales}": "Met {rivales}",
+	"Ver repetición": "Herhaling bekijken"
 }

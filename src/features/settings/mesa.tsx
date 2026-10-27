@@ -10,8 +10,8 @@ import { IdentidadRed } from "./identidad-red";
 
 /**
  * **Ajustes > Mesa** (`capturas/pablo/19.jpg`): jugar, tablero, dados y
- * monedas (aspecto y sonido, `aspecto-dados.tsx`) y rendimiento. El resto de
- * sonidos de la mesa llega con la Fase H.
+ * monedas (aspecto, `aspecto-dados.tsx`), sonidos (cada tipo con su interruptor
+ * y un volumen) y rendimiento.
  */
 export function AjustesMesa() {
 	const { t } = useLang();
@@ -83,6 +83,36 @@ export function AjustesMesa() {
 				onChange={(v) => set({ panelEstado: v })}
 			/>
 			<AjustesDados />
+			<h4 className="text-[11px] font-semibold text-muted-foreground uppercase">{t("Sonidos")}</h4>
+			<FilaInterruptor
+				etiqueta={t("Sonido de los dados y las monedas")}
+				valor={m.sonidoDados}
+				onChange={(v) => set({ sonidoDados: v })}
+			/>
+			<FilaInterruptor
+				etiqueta={t("Sonido de las cartas (barajar, robar, girar, jugar)")}
+				valor={m.sonidoCartas}
+				onChange={(v) => set({ sonidoCartas: v })}
+			/>
+			<FilaInterruptor
+				etiqueta={t("Sonido al pasar el turno y cuando es el tuyo")}
+				valor={m.sonidoTurno}
+				onChange={(v) => set({ sonidoTurno: v })}
+			/>
+			<FilaInterruptor
+				etiqueta={t("Sonido de los mensajes y del fantasma del sparring")}
+				valor={m.sonidoChat}
+				onChange={(v) => set({ sonidoChat: v })}
+			/>
+			<FilaDeslizador
+				etiqueta={t("Volumen")}
+				valor={m.volumen}
+				onChange={(v) => set({ volumen: v })}
+				min={0}
+				max={100}
+				paso={5}
+				sufijo=" %"
+			/>
 			<IdentidadRed />
 			<h4 className="text-[11px] font-semibold text-muted-foreground uppercase">
 				{t("Rendimiento")}

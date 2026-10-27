@@ -108,3 +108,34 @@ describe("igualesLista", () => {
 		expect(igualesLista([a], [a, a])).toBe(false);
 	});
 });
+
+describe("la mano en la miniatura", () => {
+	it("cuenta las cartas que se ven (la mano de un compañero) aparte del total", () => {
+		const m = mesa();
+		m.zonas["1:mano"] = {
+			zona: { tipo: "de", jugador: 1, zona: "mano" },
+			cartas: [10],
+			cuantas: 5,
+		} as (typeof m.zonas)[string];
+		const d = datosMini(m, 1);
+		expect(d.mano).toBe(5);
+		expect(d.manoVista.map((c) => c.id)).toEqual([10]);
+	});
+
+	it("de la mano de un rival solo sabe cuántas: todo reversos", () => {
+		const d = datosMini(mesa(), 1);
+		expect(d.mano).toBe(5);
+		expect(d.manoVista).toEqual([]);
+	});
+
+	it("dos lecturas con otras cartas visibles no son iguales", () => {
+		const a = datosMini(mesa(), 1);
+		const m = mesa();
+		m.zonas["1:mano"] = {
+			zona: { tipo: "de", jugador: 1, zona: "mano" },
+			cartas: [10],
+			cuantas: 5,
+		} as (typeof m.zonas)[string];
+		expect(igualMini(a, datosMini(m, 1))).toBe(false);
+	});
+});

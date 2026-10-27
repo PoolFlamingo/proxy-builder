@@ -4,6 +4,7 @@ import { useLang } from "@/components/language-provider";
 import { tableroDe, useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
 import { AyudasTurno } from "./ayudas-turno";
+import { Bocadillo, InsigniaSenal } from "./chat";
 import {
 	HUECO,
 	limitarProporcion,
@@ -48,9 +49,11 @@ function Controles() {
 			className="absolute right-3 z-[7000] flex flex-col items-end gap-1.5"
 			style={{ bottom: "calc(min(220px, max(90px, 22%)) + 24px)" }}
 		>
+			<Bocadillo jugador={yo} />
 			<PanelPlanar />
 			<PanelPlanes />
 			<AyudasTurno />
+			<InsigniaSenal jugador={yo} />
 			<VidaJugador jugador={yo} />
 		</div>
 	);

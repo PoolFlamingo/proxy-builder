@@ -12,9 +12,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { useMesa } from "@/stores/mesa-store";
+import { useRed } from "@/stores/red-store";
 import { useUi } from "@/stores/ui-store";
 import {
 	type ConfigDisposicion,
+	claveDisposicion,
 	disposicionDe,
 	type LadoTira,
 	type ModoDisposicion,
@@ -39,10 +41,14 @@ export function useDisposicion(): {
 	const n = useMesa((s) => s.asientos.length);
 	const guardadas = useUi((s) => s.mesa.disposicion);
 	const conEquipos = useMesa((s) => (s.general?.equipos.length ?? 0) > 0);
-	const config = disposicionDe(guardadas, n, conEquipos);
+	const espectador = useRed((s) => s.papel === "espectador");
+	const config = disposicionDe(guardadas, n, conEquipos, espectador);
 	const cambiar = (c: Partial<ConfigDisposicion>) =>
 		useUi.getState().setMesa({
-			disposicion: { ...useUi.getState().mesa.disposicion, [n]: { ...config, ...c } },
+			disposicion: {
+				...useUi.getState().mesa.disposicion,
+				[claveDisposicion(n, espectador)]: { ...config, ...c },
+			},
 		});
 	return { n, conEquipos, config, cambiar };
 }

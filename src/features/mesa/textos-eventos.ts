@@ -137,13 +137,41 @@ const DESTINOS: Record<string, string> = {
 	planoActivo: paraTraducir("al plano activo"),
 };
 
-function nombreCarta(m: Pick<Mesa, "cartas">, id: IdCarta, t: T): string {
-	return m.cartas[id]?.origen?.nombre ?? t("una carta");
+/** Marcas que envuelven el nombre de una carta cuando se pide el texto en piezas. */
+const ABRE = "\u0001";
+const MEDIO = "\u0002";
+const CIERRA = "\u0003";
+
+function nombreCarta(m: Pick<Mesa, "cartas">, id: IdCarta, t: T, marcar: boolean): string {
+	const nombre = m.cartas[id]?.origen?.nombre;
+	if (!nombre) return t("una carta");
+	return marcar ? `${ABRE}${id}${MEDIO}${nombre}${CIERRA}` : nombre;
 }
 
-function nombresCartas(m: Pick<Mesa, "cartas">, ids: IdCarta[], t: T): string {
+function nombresCartas(m: Pick<Mesa, "cartas">, ids: IdCarta[], t: T, marcar: boolean): string {
 	if (ids.length > 3) return t("{n} cartas", { n: ids.length });
-	return ids.map((id) => nombreCarta(m, id, t)).join(", ");
+	return ids.map((id) => nombreCarta(m, id, t, marcar)).join(", ");
+}
+
+/** Una pieza de una frase del registro: texto suelto o el nombre de una carta que se puede ver. */
+export type PiezaTexto = string | { carta: IdCarta; nombre: string };
+
+/** Parte un texto escrito con `marcar` en sus piezas (los nombres de carta, aparte). */
+export function piezasDeTexto(texto: string): PiezaTexto[] {
+	const piezas: PiezaTexto[] = [];
+	let resto = texto;
+	for (;;) {
+		const a = resto.indexOf(ABRE);
+		const z = a < 0 ? -1 : resto.indexOf(CIERRA, a);
+		if (a < 0 || z < 0) break;
+		const medio = resto.indexOf(MEDIO, a);
+		if (medio < 0 || medio > z) break;
+		if (a > 0) piezas.push(resto.slice(0, a));
+		piezas.push({ carta: Number(resto.slice(a + 1, medio)), nombre: resto.slice(medio + 1, z) });
+		resto = resto.slice(z + 1);
+	}
+	if (resto) piezas.push(resto);
+	return piezas;
 }
 
 function destino(d: Destino, t: T): string {
@@ -151,7 +179,13 @@ function destino(d: Destino, t: T): string {
 }
 
 /** La frase de un evento (vista de quien mira ahora). */
-export function textoDeEvento(ev: Evento, m: Pick<Mesa, "cartas" | "jugadores">, t: T): string {
+export function textoDeEvento(
+	ev: Evento,
+	m: Pick<Mesa, "cartas" | "jugadores">,
+	t: T,
+	marcar = false,
+	tiempo?: string,
+): string {
 	const quien =
 		ev.actor.tipo === "jugador" ? (m.jugadores[ev.actor.id]?.nombre ?? "?") : t("La mesa");
 	const c = ev.cambio;
@@ -179,7 +213,11 @@ export function textoDeEvento(ev: Evento, m: Pick<Mesa, "cartas" | "jugadores">,
 				: t("{quien} deshace", { quien });
 		case "sparring": {
 			const r = c.reaccion;
-			return lineaRegistro(r, r.objetivo.length > 0 ? nombresCartas(m, r.objetivo, t) : "", t);
+			return lineaRegistro(
+				r,
+				r.objetivo.length > 0 ? nombresCartas(m, r.objetivo, t, marcar) : "",
+				t,
+			);
 		}
 		case "accion":
 			break;
@@ -193,8 +231,8 @@ export function textoDeEvento(ev: Evento, m: Pick<Mesa, "cartas" | "jugadores">,
 				: t("{quien} dice que la reacción del fantasma no aplica", { quien });
 	}
 	const vars: Record<string, string | number> = { quien };
-	if ("cartas" in a && Array.isArray(a.cartas)) vars.cartas = nombresCartas(m, a.cartas, t);
-	if ("carta" in a && typeof a.carta === "number") vars.carta = nombreCarta(m, a.carta, t);
+	if ("cartas" in a && Array.isArray(a.cartas)) vars.cartas = nombresCartas(m, a.cartas, t, marcar);
+	if ("carta" in a && typeof a.carta === "number") vars.carta = nombreCarta(m, a.carta, t, marcar);
 	if ("n" in a && typeof a.n === "number") vars.n = a.n;
 	if ("delta" in a && typeof a.delta === "number")
 		vars.delta = a.delta > 0 ? `+${a.delta}` : a.delta;
@@ -211,6 +249,9 @@ export function textoDeEvento(ev: Evento, m: Pick<Mesa, "cartas" | "jugadores">,
 	if (a.que === "crearFicha") vars.n = a.cantidad;
 	if (a.que === "chat") vars.texto = a.texto;
 	if (a.que === "eliminar") vars.a = m.jugadores[a.jugador]?.nombre ?? "?";
+	if (a.que === "pasarTurno" && tiempo) {
+		return t("{quien} pasa el turno tras {tiempo}", { quien, tiempo });
+	}
 	const una = vars.n === 1 ? CON_UNA[a.que] : undefined;
 	return t(una ?? FRASES[a.que], vars);
 }

@@ -7,6 +7,7 @@ import { call } from "@/lib/ipc";
 import { useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
 import { useUi } from "@/stores/ui-store";
+import { useDisposicion } from "./selector-disposicion";
 
 /**
  * Una partida local de varios: más de un asiento y sin red. Aquí quien mira
@@ -39,6 +40,13 @@ export async function mirarJugador(id: IdJugador): Promise<void> {
 export function useSeguirTurno() {
 	const seguir = useUi((s) => s.mesa.seguirTurno);
 	const activo = useMesa((s) => s.general?.turno.activo ?? null);
+	const espectador = useRed((s) => s.papel === "espectador");
+	const { config } = useDisposicion();
+	// Quien solo mira, con un tablero grande y los demás en miniatura, ve el del turno.
+	const enFoco = espectador && config.modo === "foco";
+	useEffect(() => {
+		if (enFoco && activo !== null) useMesa.getState().mirar(activo);
+	}, [enFoco, activo]);
 	useEffect(() => {
 		if (!seguir || activo === null || !esLocalDeVarios()) return;
 		if (useMesa.getState().yo !== activo) void mirarJugador(activo);

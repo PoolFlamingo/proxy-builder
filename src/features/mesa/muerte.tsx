@@ -18,8 +18,10 @@ import {
 import { useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
 import { hacer } from "./acciones";
+import { ganadoresEnPie } from "./cuentas-fin";
 import { claveCausa, ESPERA_APUNTAR_MS, eliminadoPorDefecto } from "./cuentas-muerte";
 import { useDanoDe } from "./dano-de-quien";
+import { usePantalla } from "./pantalla";
 
 const NADIE = "nadie";
 
@@ -60,6 +62,7 @@ export function Muertes() {
 		<>
 			<ConfirmarMuerte />
 			<AvisosAjenos />
+			<SoloQuedaUno />
 		</>
 	);
 }
@@ -253,5 +256,46 @@ function AvisosAjenos() {
 		},
 		[],
 	);
+	return null;
+}
+
+/**
+ * Cuando solo queda uno en pie (o un equipo), propone terminar la partida con
+ * él ya marcado como ganador. Una vez por cada vez que ocurre; si se deshace
+ * la muerte, el aviso se va.
+ */
+function SoloQuedaUno() {
+	const { t } = useLang();
+	const asientos = useMesa(useShallow((s) => s.asientos));
+	const jugadores = useMesa((s) => s.jugadores);
+	const avisado = useRef<string>("");
+	useEffect(() => {
+		const gana = ganadoresEnPie(asientos, (id) => {
+			const j = jugadores[id];
+			return j ? { eliminado: j.eliminado != null, equipo: j.equipo } : undefined;
+		});
+		const clave = gana.join(",");
+		if (clave === avisado.current) return;
+		avisado.current = clave;
+		if (gana.length === 0) {
+			toast.dismiss("solo-queda");
+			return;
+		}
+		toast(
+			t("Solo queda {quien} en pie. ¿Terminas la partida?", {
+				quien: gana.map((id) => jugadores[id]?.nombre ?? "?").join(", "),
+			}),
+			{
+				id: "solo-queda",
+				duration: Number.POSITIVE_INFINITY,
+				action: {
+					label: t("Terminar la partida"),
+					onClick: () => usePantalla.getState().abrir({ tipo: "terminar" }),
+				},
+				cancel: { label: t("Seguir jugando"), onClick: () => {} },
+			},
+		);
+	}, [asientos, jugadores, t]);
+	useEffect(() => () => void toast.dismiss("solo-queda"), []);
 	return null;
 }
