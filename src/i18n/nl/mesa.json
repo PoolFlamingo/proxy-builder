@@ -1184,5 +1184,7 @@
 	"Mostrar a todos / dejar de mostrar": "Aan iedereen tonen / niet meer tonen",
 	"{quien} muestra {cartas} a todos": "{quien} toont {cartas} aan iedereen",
 	"{quien} deja de mostrar {cartas}": "{quien} toont {cartas} niet meer",
-	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} komt {veces} keer voor. Als het kopieën zijn die als token fungeren, markeer ze dan in het deck (rechtsklik › Markering › Kopie)."
+	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} komt {veces} keer voor. Als het kopieën zijn die als token fungeren, markeer ze dan in het deck (rechtsklik › Markering › Kopie).",
+	"Editar la lista…": "Lijst bewerken…",
+	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: het deck heeft meer dan 100 kaarten en Commander speel je met 100. Maak een lijst met de commander en 99 andere."
 }

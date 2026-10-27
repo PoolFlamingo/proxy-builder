@@ -1220,5 +1220,7 @@
 	"Mostrar a todos / dejar de mostrar": "Показать всем / перестать показывать",
 	"{quien} muestra {cartas} a todos": "{quien} показывает {cartas} всем",
 	"{quien} deja de mostrar {cartas}": "{quien} перестаёт показывать {cartas}",
-	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} встречается {veces} раз. Если это копии, заменяющие жетоны, пометь их в колоде (правый клик › Отметка › Копия)."
+	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} встречается {veces} раз. Если это копии, заменяющие жетоны, пометь их в колоде (правый клик › Отметка › Копия).",
+	"Editar la lista…": "Изменить список…",
+	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: в колоде больше 100 карт, а в Commander играют со 100. Составь список из командира и ещё 99."
 }

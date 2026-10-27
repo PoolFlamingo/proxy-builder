@@ -1130,5 +1130,7 @@
 	"Mostrar a todos / dejar de mostrar": "모두에게 보여주기 / 그만두기",
 	"{quien} muestra {cartas} a todos": "{quien}이(가) {cartas}을(를) 모두에게 보여줌",
 	"{quien} deja de mostrar {cartas}": "{quien}이(가) {cartas} 보여주기를 그만둠",
-	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta}이(가) {veces}번 들어 있어요. 토큰 대신 쓰는 복사본이라면 덱에서 표시하세요(오른쪽 클릭 › 표시 › 복사본)."
+	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta}이(가) {veces}번 들어 있어요. 토큰 대신 쓰는 복사본이라면 덱에서 표시하세요(오른쪽 클릭 › 표시 › 복사본).",
+	"Editar la lista…": "목록 편집…",
+	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: 덱이 100장보다 많은데 커맨더는 100장으로 해요. 커맨더와 99장으로 목록을 만드세요."
 }

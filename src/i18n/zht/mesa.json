@@ -1130,5 +1130,7 @@
 	"Mostrar a todos / dejar de mostrar": "展示給所有人 / 不再展示",
 	"{quien} muestra {cartas} a todos": "{quien} 向所有人展示 {cartas}",
 	"{quien} deja de mostrar {cartas}": "{quien} 不再展示 {cartas}",
-	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} 出現了 {veces} 次。如果是充當衍生物的複製品，請在牌組中標記（右鍵 › 標記 › 複製品）。"
+	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} 出現了 {veces} 次。如果是充當衍生物的複製品，請在牌組中標記（右鍵 › 標記 › 複製品）。",
+	"Editar la lista…": "編輯列表…",
+	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}：牌組超過 100 張，而指揮官賽用 100 張。請建立包含指揮官和另外 99 張的列表。"
 }

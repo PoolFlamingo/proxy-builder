@@ -1184,5 +1184,7 @@
 	"Mostrar a todos / dejar de mostrar": "Show to everyone / stop showing",
 	"{quien} muestra {cartas} a todos": "{quien} shows {cartas} to everyone",
 	"{quien} deja de mostrar {cartas}": "{quien} stops showing {cartas}",
-	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} appears {veces} times. If they are copies that act as tokens, mark them in the deck (right click › Mark › Copy)."
+	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} appears {veces} times. If they are copies that act as tokens, mark them in the deck (right click › Mark › Copy).",
+	"Editar la lista…": "Edit the list…",
+	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: their deck has more than 100 cards and Commander is played with 100. Make a list with the commander and 99 more."
 }

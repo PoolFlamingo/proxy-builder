@@ -1198,5 +1198,7 @@
 	"Mostrar a todos / dejar de mostrar": "Arată tuturor / nu mai arăta",
 	"{quien} muestra {cartas} a todos": "{quien} arată {cartas} tuturor",
 	"{quien} deja de mostrar {cartas}": "{quien} nu mai arată {cartas}",
-	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} apare de {veces} ori. Dacă sunt copii care țin loc de jeton, marchează-le în deck (clic dreapta › Marcaj › Copie)."
+	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} apare de {veces} ori. Dacă sunt copii care țin loc de jeton, marchează-le în deck (clic dreapta › Marcaj › Copie).",
+	"Editar la lista…": "Editează lista…",
+	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: deck-ul are peste 100 de cărți, iar în Commander se joacă cu 100. Fă o listă cu comandantul și încă 99."
 }

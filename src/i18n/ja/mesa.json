@@ -1130,5 +1130,7 @@
 	"Mostrar a todos / dejar de mostrar": "全員に見せる／やめる",
 	"{quien} muestra {cartas} a todos": "{quien} が {cartas} を全員に見せる",
 	"{quien} deja de mostrar {cartas}": "{quien} が {cartas} を見せるのをやめる",
-	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} が {veces} 枚あります。トークンの代わりのコピーなら、デッキで印をつけてください（右クリック › 印 › コピー）。"
+	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} が {veces} 枚あります。トークンの代わりのコピーなら、デッキで印をつけてください（右クリック › 印 › コピー）。",
+	"Editar la lista…": "リストを編集…",
+	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}：デッキが100枚を超えていますが、統率者戦は100枚で遊びます。統率者と99枚のリストを作ってください。"
 }

@@ -1198,5 +1198,7 @@
 	"Mostrar a todos / dejar de mostrar": "Mostra a tutti / smetti di mostrare",
 	"{quien} muestra {cartas} a todos": "{quien} mostra {cartas} a tutti",
 	"{quien} deja de mostrar {cartas}": "{quien} smette di mostrare {cartas}",
-	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} compare {veces} volte. Se sono copie che fanno da pedina, segnale nel mazzo (clic destro › Segno › Copia)."
+	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} compare {veces} volte. Se sono copie che fanno da pedina, segnale nel mazzo (clic destro › Segno › Copia).",
+	"Editar la lista…": "Modifica la lista…",
+	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: il mazzo ha più di 100 carte e a Commander si gioca con 100. Crea una lista con il comandante e altre 99."
 }
