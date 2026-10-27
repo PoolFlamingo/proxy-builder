@@ -9,12 +9,23 @@ import { type Audio, audio as audioMesa, azar } from "./audio";
  * (la primera vez, o si falla), `tocar` devuelve `false` y suena el sonido
  * sintetizado de siempre.
  */
+const SLIDES = [
+	"card-slide-1",
+	"card-slide-2",
+	"card-slide-3",
+	"card-slide-4",
+	"card-slide-5",
+	"card-slide-6",
+	"card-slide-7",
+	"card-slide-8",
+] as const;
+
 export const MUESTRAS = {
-	barajar: ["card-shuffle"],
-	robar: ["card-slide-1", "card-slide-2", "card-slide-3", "card-slide-4"],
-	girar: ["card-shove-2", "card-shove-3", "card-shove-4"],
-	jugar: ["card-place-1", "card-place-2", "card-place-3", "card-place-4"],
-	mover: ["card-slide-5", "card-slide-6", "card-slide-7", "card-slide-8"],
+	barajar: ["card-shuffle", "card-fan-1", "card-fan-2"],
+	robar: SLIDES,
+	girar: ["card-shove-1", "card-shove-4"],
+	jugar: ["card-place-1", "card-place-2", "card-place-4"],
+	mover: SLIDES,
 	golpeDado: ["die-throw-1", "die-throw-3", "die-throw-4", "dice-throw-2"],
 	agitarDados: ["dice-shake-1", "dice-shake-2", "dice-shake-3"],
 } as const;
