@@ -94,17 +94,44 @@ le falta una cadena le sale la inglesa.
   `disenar` (la vista «Diseñar» del editor de cartas de la 2.0), `tutorial`
   (el recorrido guiado de cada pantalla: pasos con su ancla `data-tutorial`;
   sale solo la primera vez y con el botón de ayuda de la barra), `mesa`
-  (la pestaña «Jugar»: entrada, tablero, menús, diálogos, atajos).
+  (la pestaña «Jugar»: entrada, tablero, menús, diálogos, atajos, `red/`
+  para el código directo), `salas` (playgroups y salas del servidor).
 - `src/stores/`: `deck-store` (deck, historial, autoguardado), `plan-store`
   (el `PagePlan` de Rust con 100 ms de espera), `ui-store` (zoom, selección,
   diálogos, preferencias, `mesa` = Ajustes > Mesa), `trabajo-store` (el
   trabajo largo en marcha), `mesa-store` (la vista del motor y sus parches;
-  selectores con referencias estables: `NINGUNA` o `useShallow`).
+  selectores con referencias estables: `NINGUNA` o `useShallow`),
+  `chat-store` (silenciados, bocadillos, sin leer), `repeticion-store`,
+  `red-store` (código directo y estado de la red), `salas-store`,
+  `originales-store`, `vivo-store` (movimiento en vivo de los demás).
 - `src/lib/trabajos.ts`: lanzar un trabajo de Rust con eventos de progreso
   (escucha antes de lanzar). `src/lib/image-url.ts`: URLs de `pbimg://`.
 - Diálogos de ficheros SOLO por `src/lib/dialogos.ts` (`abrirParaImportar`,
   `guardarParaExportar`): recuerdan en Rust (`commands/carpetas.rs`,
   `app_settings`) la última carpeta de importar y la de exportar, por separado.
+- **Mesa de juego: dónde está cada cosa.**
+  - `src-tauri/crates/mesa/src/`: el motor puro (`modelo`, `accion`,
+    `resolver`, `aplicar`, `registro`, `visibilidad`, `vista`, `azar`,
+    `huella`, `formato`, `encuentro`, `muerte`, `ausencia`, `resumen`,
+    `lista`, `sparring/`); tests en `crates/mesa/tests/` (catálogo en
+    `tests/catalogo/v<N>.json`).
+  - `src-tauri/src/mesa/`: la partida abierta en la app (`sesion`,
+    `preparar`, `guardada`, `historial`, `repeticion`, `encuentro`,
+    `imagenes`, `tapete`, `dados`, `originales`); comandos en
+    `commands/mesa.rs`; historial en `store/partidas.rs`, listas en
+    `store/listas.rs`.
+  - `src-tauri/src/red/`: el juego en red con iroh (`nodo`, `protocolo`,
+    `anfitrion`, `invitado`, `mirada`, `latencia`, `imagenes`, `codigo`,
+    `identidad`, `perfil`) y `red/servidor/` (cliente del servidor de
+    salas); comandos en `commands/{red,salas}.rs`; enlaces en `enlace.rs`.
+  - `src/features/mesa/`: la pestaña «Jugar» (`entrada`, `mesa-screen`,
+    `tablero`, `tablero-mini`, `disposicion`, `menus/`, `dialogos/`,
+    `chat`, `registro-panel`, `fin-partida`, `repeticion`,
+    `historial-general`, `dados/`, `sparring/`, `listas/`, `red/`; la
+    lógica pura en `cuentas-*.ts`); `src/features/salas/`.
+  - `server/`: el servidor de salas (repo aparte `proxy-builder-server`,
+    ignorado aquí): `src/{servidor,protocolo,salas,playgroups,invitaciones,
+    eleccion,identidad,db}.ts`, `docs/protocolo.md`, `docs/despliegue.md`.
 - **Mesa de juego** (Pablo, 24/10/2026; plan `plans/20261024 - mesa-de-juego/`).
   Motor puro en `src-tauri/crates/mesa` (sin Tauri, red, base de datos, reloj
   ni azar de fuera; nunca `HashMap` en el modelo): `Intencion` → `resolver`

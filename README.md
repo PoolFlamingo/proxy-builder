@@ -372,15 +372,66 @@ printing, with the same images you will print (designed proxies included):
 
 ![Each card's menu on the table](docs/presentacion/en/mesa-menu.jpg)
 
+### Sparring, dice and coins
+
+- **Sparring:** in a solo game you can turn on a ghost opponent that answers
+  your plays now and then, the way a real table would: it counters a spell,
+  removes a creature that just came in, sweeps the board after an attack. You
+  choose how hard it plays, and you decide whether each answer happens.
+- **Dice and coins** in real 3D with physics (or a lighter 3D or a flat 2D
+  version, in Settings), with your colours, finish or your own image. The
+  result is decided before the animation, so it is always fair.
+
+### With other players
+
+- **Up to 10 players** on one computer («Local game»: each takes their turn
+  on the same screen) or **online**. The table can show one board, one large
+  and the rest as thumbnails, two side by side, or a grid.
+- **Online without accounts:** create a game and send the code or the link
+  (`proxybuilder://`); your friends join with their own deck, or just to watch.
+  The connection goes straight between computers, and only uses a relay when
+  there is no direct path. Playgroups and rooms through the room server are on
+  the way too.
+- **Formats:** Commander (commander damage and tax), 60 cards, Limited or free
+  play; teams with shared life or not, Two-Headed Giant, Archenemy and
+  Planechase; best of 1, 3 or 5 with sideboarding between games.
+- **Hands are private:** you always see how many cards the others hold, as
+  card backs (the deck's own back, also for double-faced cards). Teammates see
+  each other's hand unless you turn it off.
+- **Chat, quick notices** («Wait», «I respond», «OK»…) and priority signals,
+  with a speech bubble on each player's board, and table sounds.
+
+![Four boards in a grid](docs/presentacion/en/mesa-rejilla.jpg)
+
+![Thumbnails with each player's hand: the teammate's face up, the rivals' as backs](docs/presentacion/en/mesa-manos.jpg)
+
+![The chat and the quick notices](docs/presentacion/en/mesa-chat.jpg)
+
+### After the game
+
+- A **summary** with who won and how, each player's place, rounds and
+  duration.
+- A **replay** of the whole game: move to any moment, play it at the speed you
+  want, and see it as any player.
+- The **history** of all your games, with the deck and the game list each seat
+  used, filters by result and format, and each deck's own record in its
+  properties.
+
+![The end of a game](docs/presentacion/en/mesa-fin.jpg)
+
+![Watching the replay](docs/presentacion/en/mesa-repeticion.jpg)
+
+![The history of your games](docs/presentacion/en/mesa-historial.jpg)
+
 ---
 
 ## Under the hood
 
 - **Native application** built with Tauri and Rust: everything heavy (searches,
   downloads, images, PDF, statistics) runs in Rust and uses all the cores.
-- **Local and private.** Your decks and images stay on your computer. The only
-  connection is to Scryfall, for cards, images and prices, and what has already
-  been downloaded is cached.
+- **Local and private.** Your decks and images stay on your computer. It
+  connects to Scryfall for cards, images and prices (what has already been
+  downloaded is cached), and to the other players only when you play online.
 - **Exact to the millimetre.** The preview and the PDF use the same geometry, so
   what you see on screen is what comes out of the printer.
 
