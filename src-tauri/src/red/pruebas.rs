@@ -10,7 +10,7 @@ use mesa::accion::{Accion, Destino, Sitio, ZonaDestino};
 use mesa::modelo::{Pos, RefZona, Zona};
 use mesa::{Azar, IdJugador};
 
-use super::anfitrion::{atender, empezar_partida, Anfitrion};
+use super::anfitrion::{atender, empezar_partida, vigilar_ausentes, Anfitrion};
 use super::codigo::{secreto_nuevo, Codigo};
 use super::imagenes::{la_tengo, ruta_cruda, traer_propia, Por};
 use super::invitado::{unirse, Conexion, Union};
@@ -743,4 +743,126 @@ async fn al_espectador_solo_le_llega_el_movimiento_de_lo_que_ve() {
         fantasmas(&p.host.mesa).iter().any(|f| f.2 == Some(oculta))
     })
     .await;
+}
+
+#[tokio::test]
+async fn quien_se_va_aparece_como_ausente_para_todos_y_deja_de_estarlo_al_volver() {
+    let mut p = partida(2).await;
+    quedarse_todos(&p).await;
+    // El jugador 2 se va (cierra su conexión).
+    p.invitados[1].conexion.take().unwrap().salir().await;
+    esperar("que el anfitrión lo apunte", || {
+        p.anf.ausentes().iter().any(|a| a.jugador == IdJugador(2))
+    })
+    .await;
+    let lo_ve = |m: &MesaEnMemoria| {
+        m.avisos.lock().unwrap().iter().any(|a| match a {
+            AvisoRed::Ausentes { filas } => filas.iter().any(|f| f.jugador == IdJugador(2)),
+            _ => false,
+        })
+    };
+    // La pantalla del anfitrión (su vigía) y la del otro jugador (el latido).
+    esperar("que lo vea el anfitrión", || lo_ve(&p.host.mesa)).await;
+    esperar("que lo vea el otro jugador", || lo_ve(&p.invitados[0].mesa)).await;
+    // Vuelve (por su nodo, con el mismo secreto): ya no falta.
+    let j = &p.invitados[1];
+    unirse(
+        j.ep.clone(),
+        Union {
+            codigo: p.codigo.clone(),
+            apodo: "Invitado 1".into(),
+            rol: Rol::Jugador,
+            deck: None,
+        },
+        j.mesa.clone(),
+    )
+    .await
+    .unwrap();
+    esperar("que ya no falte", || p.anf.ausentes().is_empty()).await;
+}
+
+#[tokio::test]
+async fn si_el_ausente_no_decide_su_mano_el_anfitrion_se_queda_por_el() {
+    let mut p = partida(2).await;
+    // Un vigía con prisa (el de verdad espera un minuto).
+    vigilar_ausentes(&p.anf, p.host.mesa.clone(), Duration::from_millis(1_200));
+    p.invitados[1].conexion.take().unwrap().salir().await;
+    // Los otros dos deciden; falta el que se fue.
+    for m in [&p.host.mesa, &p.invitados[0].mesa] {
+        m.con(|s| {
+            s.as_mut()
+                .unwrap()
+                .accion(Accion::QuedarseCon { al_fondo: vec![] }, None)
+                .unwrap()
+        });
+    }
+    esperar("que empiece la partida sin él", || {
+        p.host
+            .mesa
+            .con(|s| s.as_ref().is_some_and(|s| s.partida().mulligan.is_none()))
+    })
+    .await;
+    esperar("que el otro jugador también la vea empezada", || {
+        p.invitados[0]
+            .mesa
+            .con(|s| s.as_ref().is_some_and(|s| s.partida().mulligan.is_none()))
+    })
+    .await;
+}
+
+#[tokio::test]
+async fn el_expulsado_queda_eliminado_se_le_corta_y_no_vuelve_a_entrar() {
+    let p = partida(2).await;
+    quedarse_todos(&p).await;
+    let nodo = p.invitados[1].ep.id();
+    let jugador = p.anf.expulsar(nodo);
+    assert_eq!(jugador, Some(IdJugador(2)));
+    p.host.mesa.con(|s| {
+        let s = s.as_mut().unwrap();
+        s.suplir(
+            IdJugador(0),
+            Accion::Eliminar {
+                jugador: IdJugador(2),
+                por: None,
+            },
+        )
+        .unwrap()
+    });
+    // Los que quedan ven que está fuera.
+    esperar("que lo vea el otro jugador", || {
+        p.invitados[0].mesa.con(|s| {
+            s.as_ref().is_some_and(|s| {
+                s.partida()
+                    .jugador(IdJugador(2))
+                    .is_some_and(|j| j.eliminado.is_some())
+            })
+        })
+    })
+    .await;
+    // No cuenta como ausente (ya está eliminado) y no puede volver.
+    assert!(p.anf.ausentes().is_empty());
+    let j = &p.invitados[1];
+    let r = unirse(
+        j.ep.clone(),
+        Union {
+            codigo: p.codigo.clone(),
+            apodo: "Invitado 1".into(),
+            rol: Rol::Jugador,
+            deck: None,
+        },
+        MesaEnMemoria::default(),
+    )
+    .await;
+    assert!(r.is_err(), "el expulsado no debería poder volver");
+    // Solo el anfitrión puede suplir: un invitado, no.
+    let e = p.invitados[0].mesa.con(|s| {
+        s.as_mut().unwrap().suplir(
+            IdJugador(1),
+            Accion::Eliminar {
+                jugador: IdJugador(0),
+                por: None,
+            },
+        )
+    });
+    assert!(e.is_err());
 }

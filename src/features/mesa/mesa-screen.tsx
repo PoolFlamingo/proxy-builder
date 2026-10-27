@@ -14,6 +14,7 @@ import { BanquilloDialog } from "./banquillo-dialog";
 import { BarraMesa } from "./barra-mesa";
 import { guardar, salir, suscribir, suscrito } from "./conexion";
 import { CapaDados } from "./dados/capa";
+import { DanoDeQuien } from "./dano-de-quien";
 import { DialogosMesa } from "./dialogos";
 import { COMO } from "./dialogos/terminar";
 import { useEncuentro } from "./encuentro";
@@ -21,8 +22,10 @@ import { EntradaMesa } from "./entrada";
 import { ContadorFps, VigiaFps } from "./fps";
 import { Mesas } from "./mesas";
 import { useSeguirTurno } from "./mirar";
+import { Muertes } from "./muerte";
 import { Mulligan } from "./mulligan";
 import { useOriginalesAlDia } from "./originales";
+import { Ausentes } from "./red/ausentes";
 import { refrescarRed } from "./red/conexion-red";
 import { AvisoConexion, SelectorTablero } from "./red/estado-red";
 import { ReaccionPendiente } from "./sparring/reaccion";
@@ -90,10 +93,13 @@ function Mesa({ deckId }: { deckId: string | null }) {
 			/>
 			<SelectorTablero />
 			<AvisoConexion />
+			<Ausentes />
 			<CapaDados />
 			<ReaccionPendiente />
 			<VistaGrande />
 			<Mulligan />
+			<DanoDeQuien />
+			<Muertes />
 			<FinDePartida />
 			<DialogosMesa deckId={deckId2} />
 			<ContadorFps />

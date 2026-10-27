@@ -52,6 +52,8 @@ function escuchar() {
 	void listen<MotivoFuera>("salas://fuera", (e) => {
 		if (e.payload === "terminada") {
 			toast(traduccionSuelta(paraTraducir("La sala ha terminado.")));
+		} else if (e.payload === "expulsado") {
+			toast.error(traduccionSuelta(paraTraducir("Quien creó la sala te ha expulsado de ella.")));
 		}
 		s().sinSala();
 	});

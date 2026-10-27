@@ -322,6 +322,8 @@ export interface Commands {
 		result: EstadoSala;
 	};
 	salas_sala_salir: { args: Record<string, never>; result: null };
+	salas_sala_expulsar: { args: { clave: string }; result: null };
+	salas_sala_expulsar_jugador: { args: { jugador: number }; result: null };
 	salas_deck: {
 		args: { deckId: string; lista: string | null; formato: Formato };
 		result: number;

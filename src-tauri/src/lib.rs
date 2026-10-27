@@ -303,6 +303,8 @@ pub fn run() {
             commands::salas::salas_sala_crear,
             commands::salas::salas_sala_unirse,
             commands::salas::salas_sala_salir,
+            commands::salas::salas_sala_expulsar,
+            commands::salas::salas_sala_expulsar_jugador,
             commands::salas::salas_deck,
             commands::salas::salas_empezar,
             commands::salas::salas_terminar,

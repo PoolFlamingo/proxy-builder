@@ -1,6 +1,5 @@
 import { Crown, Hand, RotateCcw, Skull } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { useMesa } from "@/stores/mesa-store";
@@ -18,9 +17,10 @@ type Boton = "enderezar" | "robar" | "rad";
  * - al empezar mi turno, si las ayudas de enderezar o robar están apagadas,
  *   salen sus botones (en ese orden) durante 10 s; con contadores de rad,
  *   también el recordatorio de moler;
- * - el monarca tiene siempre a mano su «Robar»;
- * - un aviso al quedarme sin vidas, con los venenos del límite o con el
- *   daño de comandante del límite (si `avisarVidaCero` está encendida).
+ * - el monarca tiene siempre a mano su «Robar».
+ *
+ * Los avisos de vida a 0, veneno y comandante los da `muerte.tsx`, con lo
+ * que dice Rust (`fueraDeJuego`).
  */
 export function AyudasTurno() {
 	const { t } = useLang();
@@ -49,8 +49,6 @@ export function AyudasTurno() {
 		const id = window.setTimeout(() => setBotones([]), DURAN_MS);
 		return () => window.clearTimeout(id);
 	}, [botones]);
-
-	useAvisos();
 
 	const quitar = (b: Boton) => setBotones((l) => l.filter((x) => x !== b));
 	if (fin || (botones.length === 0 && !monarca)) return null;
@@ -100,29 +98,4 @@ export function AyudasTurno() {
 			)}
 		</div>
 	);
-}
-
-/** Los avisos de vida, veneno y comandante del jugador de esta pantalla. */
-function useAvisos() {
-	const { t } = useLang();
-	const yo = useMesa((s) => s.yo ?? 0);
-	const avisar = useMesa((s) => s.opciones?.ayudas.avisarVidaCero ?? false);
-	const limiteVeneno = useMesa((s) => s.opciones?.limiteVeneno ?? 10);
-	const limiteComandante = useMesa((s) => s.opciones?.limiteComandante ?? 21);
-	const vida = useMesa((s) => s.jugadores[yo]?.vida ?? 1);
-	const veneno = useMesa((s) => s.jugadores[yo]?.veneno ?? 0);
-	const comandante = useMesa((s) =>
-		Math.max(0, ...Object.values(s.jugadores[yo]?.danoComandante ?? {})),
-	);
-	const antes = useRef({ vida, veneno, comandante });
-	useEffect(() => {
-		const a = antes.current;
-		antes.current = { vida, veneno, comandante };
-		if (!avisar) return;
-		if (a.vida > 0 && vida <= 0) toast.warning(t("Te has quedado sin vidas."));
-		if (a.veneno < limiteVeneno && veneno >= limiteVeneno)
-			toast.warning(t("Tienes {n} contadores de veneno.", { n: veneno }));
-		if (a.comandante < limiteComandante && comandante >= limiteComandante)
-			toast.warning(t("Has recibido {n} de daño de un mismo comandante.", { n: comandante }));
-	}, [vida, veneno, comandante, avisar, limiteVeneno, limiteComandante, t]);
 }

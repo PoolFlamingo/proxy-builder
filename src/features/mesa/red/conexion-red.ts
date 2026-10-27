@@ -46,6 +46,9 @@ function alAviso(a: AvisoRed) {
 		case "enlaces":
 			r.poner({ desfaseMs: a.desfaseMs, enlaces: a.filas });
 			break;
+		case "ausentes":
+			r.poner({ ausentes: a.filas.map((f) => ({ ...f, visto: Date.now() })) });
+			break;
 		case "fantasma":
 			if (useUi.getState().mesa.movimientoEnVivo) {
 				useVivo

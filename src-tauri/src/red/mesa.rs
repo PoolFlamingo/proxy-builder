@@ -10,7 +10,7 @@ use tauri::{Emitter, Manager};
 use ts_rs::TS;
 
 use super::mirada::Mirada;
-use super::protocolo::{EnSala, Enlace};
+use super::protocolo::{Ausente, EnSala, Enlace};
 use crate::mesa::sesion::Sesion;
 use crate::state::AppState;
 
@@ -45,6 +45,11 @@ pub enum AvisoRed {
     Enlaces {
         desfase_ms: i32,
         filas: Vec<Enlace>,
+    },
+    /// Quién falta de la partida (los que no están conectados con el
+    /// anfitrión) y desde hace cuánto: sustituye a la lista anterior.
+    Ausentes {
+        filas: Vec<Ausente>,
     },
     /// Alguien arrastra una carta (o mueve su cursor, sin carta) por un
     /// tablero, en coordenadas 0–10.000. Nada de esto se guarda.

@@ -133,6 +133,10 @@ pub enum AlServidor {
         registro: Option<RegistroSala>,
     },
     SalaSalir,
+    /// Quien creó la sala saca a otro miembro (y ya no puede volver).
+    SalaExpulsar {
+        clave: String,
+    },
     SalaDireccion {
         direccion: String,
     },
@@ -235,6 +239,8 @@ pub struct EstadoSala {
 pub enum MotivoFuera {
     Terminada,
     Salida,
+    /// Quien creó la sala lo ha expulsado.
+    Expulsado,
 }
 
 /// Lo que manda el servidor (el `re`, si lo lleva, va en `Llegada`).
@@ -274,6 +280,11 @@ pub enum DelServidor {
     SalaFuera {
         sala: String,
         motivo: MotivoFuera,
+    },
+    /// A los que quedan: se ha expulsado a `clave` (el host lo da por eliminado).
+    SalaExpulsado {
+        sala: String,
+        clave: String,
     },
 }
 
@@ -383,6 +394,7 @@ mod tests {
                 ],
             },
             AlServidor::SalaEmpezar,
+            AlServidor::SalaExpulsar { clave: B.into() },
             AlServidor::SalaHostCaido { epoch: 1 },
             AlServidor::SalaTerminada,
         ];
@@ -438,6 +450,6 @@ mod tests {
             // Y escrito de nuevo es lo mismo (no se pierde ningún campo).
             assert_eq!(serde_json::to_value(&l).unwrap(), m);
         }
-        assert_eq!(tipos.len(), 10, "{tipos:?}");
+        assert_eq!(tipos.len(), 11, "{tipos:?}");
     }
 }

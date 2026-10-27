@@ -1,14 +1,18 @@
-import { Eye, Heart, Languages, Loader2, Wifi, WifiOff } from "lucide-react";
+import { Eye, Heart, Languages, Loader2, UserX, Wifi, WifiOff } from "lucide-react";
+import { useState } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { Confirmar } from "@/components/confirmar";
 import { ContenidoContextual } from "@/components/contenido-contextual";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { WithTooltip } from "@/components/ui/with-tooltip";
+import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { NINGUNA, tableroDe, useMesa } from "@/stores/mesa-store";
 import { useOriginales } from "@/stores/originales-store";
 import { useRed } from "@/stores/red-store";
+import { useSalas } from "@/stores/salas-store";
 import { useVivo } from "@/stores/vivo-store";
 import { salir } from "../conexion";
 import { senalar } from "../en-vivo/emitir";
@@ -63,6 +67,11 @@ export function SelectorTablero() {
 	const originales = useOriginales((s) => s.modos);
 	const equipos = useMesa((s) => s.general?.equipos ?? NINGUNA);
 	const { config } = useDisposicion();
+	const creador = useSalas((s) => s.sala?.sala.creador ?? null);
+	const claveYo = useSalas((s) => s.yo);
+	const [porExpulsar, setPorExpulsar] = useState<number | null>(null);
+	// Expulsa quien creó la sala del servidor o, con un código, el anfitrión.
+	const puedeExpulsar = creador !== null ? creador === claveYo : papel === "anfitrion";
 	// Con varios tableros a la vez, cada miniatura ya lleva su nombre y su vida.
 	if (asientos.length < 2 || config.modo !== "unico") return null;
 	return (
@@ -121,10 +130,31 @@ export function SelectorTablero() {
 								{originales[id] ? "✓ " : ""}
 								{t("Cartas originales en mi idioma")}
 							</ContextMenuItem>
+							{puedeExpulsar && id !== yo && !j.eliminado && (
+								<ContextMenuItem variant="destructive" onSelect={() => setPorExpulsar(id)}>
+									<UserX />
+									{t("Expulsar de la partida")}
+								</ContextMenuItem>
+							)}
 						</ContenidoContextual>
 					</ContextMenu>
 				);
 			})}
+			<Confirmar
+				abierto={porExpulsar !== null}
+				onCerrar={() => setPorExpulsar(null)}
+				titulo={t("¿Expulsar a {nombre}?", {
+					nombre: porExpulsar !== null ? (jugadores[porExpulsar]?.nombre ?? "") : "",
+				})}
+				descripcion={t("Quedará eliminado de la partida y no podrá volver a entrar en ella.")}
+				accion={t("Expulsar")}
+				destructiva
+				onConfirmar={() => {
+					if (porExpulsar !== null)
+						void call("salas_sala_expulsar_jugador", { jugador: porExpulsar });
+					setPorExpulsar(null);
+				}}
+			/>
 		</div>
 	);
 }

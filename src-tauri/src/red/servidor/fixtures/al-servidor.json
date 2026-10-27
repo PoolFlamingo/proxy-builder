@@ -121,12 +121,17 @@
 		"t": "sala_empezar"
 	},
 	{
-		"epoch": 1,
+		"clave": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
 		"id": 18,
+		"t": "sala_expulsar"
+	},
+	{
+		"epoch": 1,
+		"id": 19,
 		"t": "sala_host_caido"
 	},
 	{
-		"id": 19,
+		"id": 20,
 		"t": "sala_terminada"
 	}
 ]

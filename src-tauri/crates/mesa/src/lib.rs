@@ -23,6 +23,7 @@
 
 pub mod accion;
 pub mod aplicar;
+pub mod ausencia;
 pub mod azar;
 pub mod encuentro;
 pub mod error;
@@ -31,6 +32,7 @@ pub mod huella;
 pub mod ids;
 pub mod lista;
 pub mod modelo;
+pub mod muerte;
 pub mod preparar;
 pub mod registro;
 pub mod resolver;
@@ -45,6 +47,7 @@ pub use error::Rechazo;
 pub use huella::huella;
 pub use ids::{IdCarta, IdEquipo, IdJugador};
 pub use modelo::Partida;
+pub use muerte::{fuera_de_juego, Causa};
 pub use registro::{ModoDeshacer, Registro};
 pub use resolver::resolver;
 pub use visibilidad::Mirador;

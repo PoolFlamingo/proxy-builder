@@ -17,7 +17,6 @@ use crate::accion::{
 };
 use crate::azar::Azar;
 use crate::error::Rechazo;
-use crate::formato::ModoMulligan;
 use crate::ids::{IdCarta, IdJugador};
 use crate::modelo::{
     Bolita, Carta, Eliminacion, Extremo, Flecha, InfoCarta, OrigenCarta, Partida, Pos, RefImagen,
@@ -1304,14 +1303,7 @@ fn accion_(q: &mut Partida, a: &Accion, ctx: &mut Ctx, seq: u64) -> Result<(), R
                 return Err(Rechazo::NoSePuede);
             }
             let mulligans = q.jugador(yo).ok_or(Rechazo::NoExiste)?.mulligans;
-            let toca = match q.opciones.mulligan {
-                ModoMulligan::Londres => Some(usize::from(mulligans)),
-                ModoMulligan::LondresPrimeroGratis => {
-                    Some(usize::from(mulligans.saturating_sub(1)))
-                }
-                ModoMulligan::Amistoso => Some(0),
-                ModoMulligan::Libre => None,
-            };
+            let toca = crate::ausencia::toca_al_fondo(q.opciones.mulligan, mulligans);
             let mano = RefZona::de(yo, Zona::Mano);
             let en_mano = q.zona(&mano).len();
             let toca = toca.map(|t| t.min(en_mano));

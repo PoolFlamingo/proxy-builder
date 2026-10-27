@@ -1,8 +1,10 @@
-import { Crown, Eye, Layers, Loader2, LogOut, Play, Smartphone } from "lucide-react";
+import { Crown, Eye, Layers, Loader2, LogOut, Play, Smartphone, UserX } from "lucide-react";
 import { useState } from "react";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { WithTooltip } from "@/components/ui/with-tooltip";
+import { call } from "@/lib/ipc";
 import { useSalas } from "@/stores/salas-store";
 import { useTrabajo } from "@/stores/trabajo-store";
 import type { Preparacion } from "../mesa/red/red-dialog";
@@ -105,6 +107,17 @@ export function SalaEspera({ preparar }: { preparar: Preparacion }) {
 												: t("{ms} ms · por relé", { ms: e.rttMs })
 											: "—"}
 									</span>
+								)}
+								{soyCreador && m.clave !== yo && (
+									<WithTooltip content={t("Expulsar de la sala")}>
+										<Button
+											size="icon-sm"
+											variant="ghost"
+											onClick={() => void call("salas_sala_expulsar", { clave: m.clave })}
+										>
+											<UserX className="size-3.5" />
+										</Button>
+									</WithTooltip>
 								)}
 							</li>
 						);

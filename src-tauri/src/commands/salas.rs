@@ -335,6 +335,60 @@ pub async fn salas_sala_unirse(
     .await
 }
 
+/// Quien creó la sala expulsa a otro miembro por su clave (en espera o en juego).
+#[tauri::command]
+pub fn salas_sala_expulsar(state: State<'_, AppState>, clave: String) -> AppResult<()> {
+    cliente(&state)?.mandar(AlServidor::SalaExpulsar { clave });
+    Ok(())
+}
+
+/// Lo mismo, pero por el jugador de la partida (sale de su nodo).
+#[tauri::command]
+pub fn salas_sala_expulsar_jugador(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    jugador: u8,
+) -> AppResult<()> {
+    let yo = state.red.con_salon(|s| s.as_ref().map(|s| s.yo));
+    let nodo = {
+        let g = match state.mesa.lock() {
+            Ok(g) => g,
+            Err(e) => e.into_inner(),
+        };
+        match g.as_ref().and_then(|s| s.red.as_ref()) {
+            Some(crate::mesa::sesion::RedSesion::Invitado(i)) => i
+                .nodos
+                .iter()
+                .find(|n| n.jugador == mesa::IdJugador(jugador))
+                .map(|n| n.nodo.clone()),
+            Some(crate::mesa::sesion::RedSesion::Anfitrion(anf)) => yo.and_then(|yo| {
+                anf.nodos(yo)
+                    .into_iter()
+                    .find(|n| n.jugador == mesa::IdJugador(jugador))
+                    .map(|n| n.nodo)
+            }),
+            None => None,
+        }
+    };
+    let clave = nodo.ok_or_else(|| AppError::new(ErrorCode::NotFound))?;
+    match cliente(&state) {
+        // En una sala del servidor, lo hace quien la creó (que puede no ser el host).
+        Ok(c) if state.red.con_salon(|s| s.is_some()) => {
+            c.mandar(AlServidor::SalaExpulsar { clave })
+        }
+        // Con un código, el anfitrión lo hace directamente.
+        _ => {
+            let nodo = clave
+                .parse::<iroh::EndpointId>()
+                .map_err(|_| AppError::new(ErrorCode::NotFound))?;
+            if !sala::expulsar_en_host(&app, nodo) {
+                return Err(AppError::new(ErrorCode::Rejected).with("motivo", "no_anfitrion"));
+            }
+        }
+    }
+    Ok(())
+}
+
 /// Sale de la sala (y de su partida, si la hay).
 #[tauri::command]
 pub async fn salas_sala_salir(app: AppHandle, state: State<'_, AppState>) -> AppResult<()> {

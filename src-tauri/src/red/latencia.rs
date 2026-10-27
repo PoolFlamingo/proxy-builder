@@ -185,7 +185,7 @@ pub async fn atender_host<M: Mesa>(
                     anf.poner_enlace(conexion, rtt, directo);
                 }
                 let filas = anf.enlaces();
-                enviar(&conn, &Datagrama::Enlaces { filas: filas.clone(), t: ahora_ms() });
+                enviar(&conn, &Datagrama::Enlaces { filas: filas.clone(), ausentes: anf.ausentes(), t: ahora_ms() });
                 mesa.avisar(AvisoRed::Enlaces { desfase_ms: 0, filas });
             }
         }
@@ -343,8 +343,9 @@ pub async fn atender_invitado<M: Mesa>(
                             avisar_enlaces(&mesa, &conn, &reloj, &filas, rtt_app);
                         }
                     }
-                    Datagrama::Enlaces { filas: nuevas, .. } => {
+                    Datagrama::Enlaces { filas: nuevas, ausentes, .. } => {
                         filas = nuevas;
+                        mesa.avisar(AvisoRed::Ausentes { filas: ausentes });
                         avisar_enlaces(&mesa, &conn, &reloj, &filas, rtt_app);
                     }
                     Datagrama::Fantasma { jugador, t, .. } => {

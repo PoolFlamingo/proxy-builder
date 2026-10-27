@@ -367,6 +367,16 @@ impl Sesion {
         self.hacer(jugador, accion, Some((jugador, id)))
     }
 
+    /// El anfitrión hace algo en nombre de otro jugador: darlo por eliminado
+    /// al expulsarlo o quedarse con su mano si se fue durante el mulligan
+    /// (G8). Solo vale en el anfitrión de una partida en red.
+    pub fn suplir(&mut self, actor: IdJugador, accion: Accion) -> AppResult<()> {
+        if !matches!(self.red, Some(RedSesion::Anfitrion(_))) {
+            return Err(AppError::new(ErrorCode::Rejected).with("motivo", "no_anfitrion"));
+        }
+        self.hacer(actor, accion, None)
+    }
+
     fn hacer(
         &mut self,
         actor: IdJugador,

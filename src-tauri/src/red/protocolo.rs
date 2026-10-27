@@ -188,6 +188,16 @@ pub struct Enlace {
     pub directo: bool,
 }
 
+/// Un jugador de la partida que no está conectado con el anfitrión (G8).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct Ausente {
+    pub jugador: IdJugador,
+    /// Desde hace cuánto, en milisegundos (en el reloj del anfitrión).
+    pub hace_ms: u32,
+}
+
 /// Las coordenadas de un `Fantasma` van de 0 a este valor (como `Pos`).
 pub const COORD_MAX: u16 = 10_000;
 
@@ -223,8 +233,14 @@ pub enum Datagrama {
         a: Option<IdJugador>,
         t: u64,
     },
-    /// Anfitrión → jugador, cada 2 s: cómo va el enlace de cada uno con él.
-    Enlaces { filas: Vec<Enlace>, t: u64 },
+    /// Anfitrión → jugador, cada 2 s: cómo va el enlace de cada uno con él y
+    /// quién falta (`ausentes`, para saltar su turno si hace falta).
+    Enlaces {
+        filas: Vec<Enlace>,
+        #[serde(default)]
+        ausentes: Vec<Ausente>,
+        t: u64,
+    },
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -551,6 +567,10 @@ mod tests {
                     rtt_ms: 23,
                     directo: true,
                 }],
+                ausentes: vec![Ausente {
+                    jugador: IdJugador(2),
+                    hace_ms: 31_000,
+                }],
                 t: 9,
             },
         ] {
@@ -634,6 +654,10 @@ mod tests {
                         directo: false,
                     },
                 ],
+                ausentes: vec![Ausente {
+                    jugador: IdJugador(2),
+                    hace_ms: 31_000,
+                }],
                 t: 10,
             },
         ];

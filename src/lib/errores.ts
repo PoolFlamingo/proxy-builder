@@ -67,6 +67,8 @@ const MOTIVOS: Partial<Record<ErrorCode, Record<string, string>>> = {
 		ritmo: paraTraducir("Demasiadas acciones seguidas: espera un momento."),
 		espectador: paraTraducir("Estás mirando: los espectadores no pueden jugar."),
 		sin_partida: paraTraducir("La partida aún no ha empezado."),
+		expulsado: paraTraducir("Quien creó la sala te ha expulsado de ella."),
+		no_anfitrion: paraTraducir("Solo el anfitrión puede hacer eso."),
 	},
 	// Los códigos del servidor de salas (`params.code`; `server/docs/protocolo.md`).
 	Server: {
@@ -78,6 +80,7 @@ const MOTIVOS: Partial<Record<ErrorCode, Record<string, string>>> = {
 		llena: paraTraducir("Está llena."),
 		sin_permiso: paraTraducir("No tienes permiso para eso."),
 		ya_empezada: paraTraducir("La partida ya ha empezado: puedes entrar a mirar."),
+		expulsado: paraTraducir("Quien creó la sala te ha expulsado de ella."),
 		mensaje: paraTraducir("El servidor no ha entendido la petición."),
 	},
 };

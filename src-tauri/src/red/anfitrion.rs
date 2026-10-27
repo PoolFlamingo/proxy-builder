@@ -37,8 +37,8 @@ use super::codigo::mismo_secreto;
 use super::mesa::{AvisoRed, Mesa};
 use super::nodo::{ALPN_IMG, ALPN_MESA};
 use super::protocolo::{
-    datagrama_a_bytes, escribir_del_host, leer_al_host, leer_hola, version_app, AlHost, Datagrama,
-    DelHost, EnSala, Enlace, NodoJugador, Rol, PROTOCOLO,
+    datagrama_a_bytes, escribir_del_host, leer_al_host, leer_hola, version_app, AlHost, Ausente,
+    Datagrama, DelHost, EnSala, Enlace, NodoJugador, Rol, PROTOCOLO,
 };
 
 /// Cada cuántos eventos va la huella de la partida.
@@ -66,6 +66,8 @@ struct Par {
     ritmo: VecDeque<Instant>,
     /// Lo último que se midió de su conexión: RTT (ms) y si va directa.
     enlace: Option<(u32, bool)>,
+    /// Desde cuándo falta, si ya empezó la partida y se fue (G8).
+    ausente_desde: Option<Instant>,
 }
 
 struct Sala {
@@ -84,6 +86,8 @@ pub struct Anfitrion {
     /// Con el servidor de salas no hay secreto: entra quien está en la sala
     /// (su nodo de iroh es su clave en el servidor).
     permitidos: Mutex<Option<std::collections::BTreeSet<EndpointId>>>,
+    /// Los expulsados de esta partida: no vuelven a entrar (G8).
+    expulsados: Mutex<std::collections::BTreeSet<EndpointId>>,
 }
 
 /// Cómo queda quien entra.
@@ -114,6 +118,7 @@ impl Anfitrion {
             }),
             siguiente: AtomicU64::new(1),
             permitidos: Mutex::new(None),
+            expulsados: Mutex::new(Default::default()),
         })
     }
 
@@ -136,6 +141,8 @@ impl Anfitrion {
                     ultimo_id: 0,
                     ritmo: VecDeque::new(),
                     enlace: None,
+                    // Al migrar nadie está conectado todavía: cuentan desde ahora.
+                    ausente_desde: Some(Instant::now()),
                 })
             })
             .collect();
@@ -150,6 +157,7 @@ impl Anfitrion {
             }),
             siguiente: AtomicU64::new(1),
             permitidos: Mutex::new(None),
+            expulsados: Mutex::new(Default::default()),
         })
     }
 
@@ -164,6 +172,9 @@ impl Anfitrion {
 
     /// Si este nodo con este secreto puede entrar.
     fn deja_entrar(&self, nodo: EndpointId, secreto: Option<&str>) -> bool {
+        if cerrojo(&self.expulsados).contains(&nodo) {
+            return false;
+        }
         match cerrojo(&self.permitidos).as_ref() {
             Some(p) => p.contains(&nodo),
             None => secreto.is_some_and(|s| mismo_secreto(s, &self.secreto)),
@@ -228,6 +239,7 @@ impl Anfitrion {
             };
             p.conexion = conexion;
             p.tx = Some(tx);
+            p.ausente_desde = None;
             if !apodo.is_empty() {
                 p.apodo = apodo;
             }
@@ -263,6 +275,7 @@ impl Anfitrion {
             ultimo_id: 0,
             ritmo: VecDeque::new(),
             enlace: None,
+            ausente_desde: None,
         });
         Ok(Admision {
             conexion,
@@ -328,6 +341,28 @@ impl Anfitrion {
         v
     }
 
+    /// Los jugadores de la partida que faltan y desde hace cuánto (los
+    /// expulsados no cuentan: ya están eliminados).
+    pub fn ausentes(&self) -> Vec<Ausente> {
+        let expulsados = cerrojo(&self.expulsados).clone();
+        let s = cerrojo(&self.sala);
+        if !s.empezada {
+            return Vec::new();
+        }
+        s.pares
+            .iter()
+            .filter(|p| p.rol == Rol::Jugador && p.tx.is_none() && !expulsados.contains(&p.nodo))
+            .filter_map(|p| {
+                Some(Ausente {
+                    jugador: p.jugador?,
+                    hace_ms: p.ausente_desde.map_or(0, |t| {
+                        u32::try_from(t.elapsed().as_millis()).unwrap_or(u32::MAX)
+                    }),
+                })
+            })
+            .collect()
+    }
+
     /// Reparte un datagrama a los conectados, salvo a `excepto`. A los
     /// espectadores solo si `a_espectadores` (lo que no ven, no se les cuenta).
     pub fn repartir(&self, d: &Datagrama, excepto: Option<IdJugador>, a_espectadores: bool) {
@@ -359,6 +394,34 @@ impl Anfitrion {
         {
             c.close(3u32.into(), b"cortada");
         }
+    }
+
+    /// Expulsa a un nodo (G8): se corta su conexión y ya no entra más a esta
+    /// partida. Con la partida empezada devuelve su jugador, para darlo por
+    /// eliminado; en la sala de espera simplemente deja de estar.
+    pub fn expulsar(&self, nodo: EndpointId) -> Option<IdJugador> {
+        cerrojo(&self.expulsados).insert(nodo);
+        let mut s = cerrojo(&self.sala);
+        let empezada = s.empezada;
+        let mut jugador = None;
+        for p in s.pares.iter_mut().filter(|p| p.nodo == nodo) {
+            if empezada && p.rol == Rol::Jugador {
+                jugador = p.jugador;
+            }
+            if let Some(tx) = p.tx.take() {
+                let _ = tx.send(DelHost::Rechazo {
+                    id: None,
+                    motivo: "expulsado".into(),
+                });
+            }
+            if let Some(c) = p.conn.take() {
+                c.close(4u32.into(), b"expulsado");
+            }
+        }
+        if !empezada {
+            s.pares.retain(|p| p.nodo != nodo);
+        }
+        jugador
     }
 
     /// Cierra la partida para todos.
@@ -395,6 +458,9 @@ impl Anfitrion {
         let mut s = cerrojo(&self.sala);
         if s.empezada {
             if let Some(p) = s.pares.iter_mut().find(|p| p.conexion == conexion) {
+                if p.tx.is_some() {
+                    p.ausente_desde = Some(Instant::now());
+                }
                 p.tx = None;
                 p.conn = None;
             }
@@ -599,7 +665,53 @@ pub fn empezar_partida<M: Mesa>(
     anf.empezar(&asignados);
     mesa.con(|m| *m = Some(sesion));
     anf.bienvenidas(&partida, yo);
+    vigilar_ausentes(anf, mesa.clone(), ESPERA_MULLIGAN);
     Ok(())
+}
+
+/// Lo que se espera a un jugador que se fue en el mulligan antes de quedarse
+/// por él con la mano que tiene.
+pub const ESPERA_MULLIGAN: Duration = Duration::from_secs(60);
+
+/// Vigila a los que faltan de una partida ya abierta en `mesa` (G8): le dice
+/// a la pantalla del anfitrión quién falta cuando cambia (a los demás se lo
+/// cuenta el latido) y, pasado un minuto en el mulligan, se queda por ellos
+/// con su mano. Acaba sola cuando se cierra la partida.
+pub fn vigilar_ausentes<M: Mesa>(anf: &Arc<Anfitrion>, mesa: M, espera_mulligan: Duration) {
+    let debil = Arc::downgrade(anf);
+    tauri::async_runtime::spawn(async move {
+        let mut ultimos: Option<Vec<IdJugador>> = None;
+        loop {
+            tokio::time::sleep(Duration::from_secs(1)).await;
+            let Some(anf) = debil.upgrade() else { return };
+            if mesa.con(|m| m.is_none()) {
+                return;
+            }
+            let ausentes = anf.ausentes();
+            let quienes: Vec<IdJugador> = ausentes.iter().map(|a| a.jugador).collect();
+            if ultimos.as_ref() != Some(&quienes) {
+                ultimos = Some(quienes);
+                mesa.avisar(AvisoRed::Ausentes {
+                    filas: ausentes.clone(),
+                });
+            }
+            for a in ausentes
+                .iter()
+                .filter(|a| u128::from(a.hace_ms) >= espera_mulligan.as_millis())
+            {
+                mesa.con(|m| {
+                    let Some(s) = m.as_mut() else { return };
+                    if let Some(accion) =
+                        mesa::ausencia::quedarse_por_defecto(s.partida(), a.jugador)
+                    {
+                        if let Err(e) = s.suplir(a.jugador, accion) {
+                            tracing::warn!(error = ?e.code, "no se pudo quedar por el ausente");
+                        }
+                    }
+                });
+            }
+        }
+    });
 }
 
 fn para_espectador(epoch: u32, partida: &Partida, hecho: &Hecho, restaura: bool) -> DelHost {

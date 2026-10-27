@@ -19,6 +19,7 @@ use crate::modelo::{
     Bolita, Carta, Designaciones, Eliminacion, Equipo, EstadoMulligan, Etiqueta, Flecha, Jugador,
     OrigenCarta, Partida, Pos, Pt, RefImagen, RefZona, Resultado, Senal, Turno, VidaFantasma, Zona,
 };
+use crate::muerte::{fuera_de_juego, Causa};
 use crate::sparring::EstadoSparring;
 use crate::visibilidad::{ve, zona_abierta, Mirador};
 
@@ -75,6 +76,9 @@ pub struct VistaJugador {
     pub tapete: Option<RefImagen>,
     pub mulligans: u8,
     pub eliminado: Option<Eliminacion>,
+    /// Ha llegado a un límite (vida, veneno, comandante) y no ha sido
+    /// eliminado: la mesa lo avisa y la persona lo confirma (G8).
+    pub fuera_de_juego: Option<Causa>,
     pub mano_revelada: bool,
     pub de_arriba_revelada: bool,
     pub senal: Option<Senal>,
@@ -146,7 +150,7 @@ pub struct ParcheVista {
     pub general: Option<VistaGeneral>,
 }
 
-fn vista_jugador(j: &Jugador, m: Mirador) -> VistaJugador {
+fn vista_jugador(p: &Partida, j: &Jugador, m: Mirador) -> VistaJugador {
     VistaJugador {
         id: j.id,
         nombre: j.nombre.clone(),
@@ -161,6 +165,7 @@ fn vista_jugador(j: &Jugador, m: Mirador) -> VistaJugador {
         tapete: j.tapete.clone(),
         mulligans: j.mulligans,
         eliminado: j.eliminado.clone(),
+        fuera_de_juego: fuera_de_juego(p, j.id),
         mano_revelada: j.mano_revelada,
         de_arriba_revelada: j.de_arriba_revelada,
         senal: j.senal,
@@ -284,7 +289,7 @@ pub fn vista(p: &Partida, m: Mirador) -> VistaMesa {
         formato: p.formato,
         variantes: p.variantes.clone(),
         opciones: p.opciones.clone(),
-        jugadores: p.jugadores.iter().map(|j| vista_jugador(j, m)).collect(),
+        jugadores: p.jugadores.iter().map(|j| vista_jugador(p, j, m)).collect(),
         cartas,
         zonas,
         general: vista_general(p),
@@ -331,8 +336,9 @@ pub fn parche(p: &Partida, t: &Tocado, m: Mirador) -> ParcheVista {
         jugadores: p
             .jugadores
             .iter()
-            .filter(|j| t.jugadores.contains(&j.id))
-            .map(|j| vista_jugador(j, m))
+            // La vida compartida de un equipo está en `general`, no en el jugador.
+            .filter(|j| t.jugadores.contains(&j.id) || (t.general && j.equipo.is_some()))
+            .map(|j| vista_jugador(p, j, m))
             .collect(),
         general: t.general.then(|| vista_general(p)),
     }

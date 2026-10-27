@@ -206,6 +206,45 @@ pub fn al_estado(app: &AppHandle, e: &EstadoSala) {
     });
 }
 
+/// Quien creó la sala ha expulsado a `clave`. Si esta app es el host, lo
+/// saca de la partida.
+fn expulsado(app: &AppHandle, sala: &str, clave: &str) {
+    let st = app.state::<AppState>();
+    if !st
+        .red
+        .con_salon(|s| s.as_ref().is_some_and(|s| s.id == sala))
+    {
+        return;
+    }
+    if let Ok(nodo) = clave.parse::<EndpointId>() {
+        expulsar_en_host(app, nodo);
+    }
+}
+
+/// Si esta app es el anfitrión: corta la conexión de `nodo`, ya no entra y,
+/// con la partida empezada, se le da por eliminado. Devuelve si lo era.
+pub fn expulsar_en_host(app: &AppHandle, nodo: EndpointId) -> bool {
+    let st = app.state::<AppState>();
+    let anf = st.red.con_sala(|s| match s {
+        Some(Sala::Anfitrion { anf, .. }) => Some(anf.clone()),
+        _ => None,
+    });
+    let Some(anf) = anf else { return false };
+    let mesa = MesaDeApp(app.clone());
+    match anf.expulsar(nodo) {
+        Some(jugador) => mesa.con(|m| {
+            if let Some(s) = m.as_mut() {
+                let yo = s.yo;
+                if let Err(e) = s.suplir(yo, mesa::Accion::Eliminar { jugador, por: None }) {
+                    tracing::warn!(error = ?e.code, "no se pudo eliminar al expulsado");
+                }
+            }
+        }),
+        None => anf.avisar_sala(&mesa),
+    }
+    true
+}
+
 fn nodos_de(e: &EstadoSala) -> Vec<EndpointId> {
     e.miembros
         .iter()
@@ -265,6 +304,11 @@ fn hacer_de_host(app: &AppHandle, salon: &Arc<Salon>, epoch: u32, hay_partida: b
                 s.red = Some(RedSesion::Anfitrion(anf.clone()));
             }
         });
+        crate::red::anfitrion::vigilar_ausentes(
+            &anf,
+            mesa.clone(),
+            crate::red::anfitrion::ESPERA_MULLIGAN,
+        );
         anf
     } else {
         let anf = Anfitrion::nuevo(salon.apodo.clone(), String::new());
@@ -534,6 +578,7 @@ impl super::cliente::Avisos for AvisosApp {
                 al_host(&self.0, &sala, epoch, &host);
                 let _ = self.0.emit("salas://host", HostSala { sala, epoch, host });
             }
+            D::SalaExpulsado { sala, clave } => expulsado(&self.0, &sala, &clave),
             D::SalaFuera { sala, motivo } => {
                 let st = self.0.state::<AppState>();
                 if st
