@@ -12,6 +12,7 @@ import {
 	FlipHorizontal2,
 	Ghost,
 	Gift,
+	Grid3x3,
 	Hand,
 	Hash,
 	Highlighter,
@@ -519,11 +520,31 @@ function DelMando({ c }: { c: VistaCarta }) {
 
 function DeOtraZona({ c }: { c: VistaCarta }) {
 	const { t } = useLang();
+	const zona = c.zona.tipo === "de" ? c.zona.zona : null;
+	const jugador = c.zona.tipo === "de" ? c.zona.jugador : null;
+	const nombre =
+		zona === "cementerio"
+			? t("Cementerio")
+			: zona === "exilio"
+				? t("Exilio")
+				: zona === "banquillo"
+					? t("Banquillo")
+					: "";
 	return (
-		<ContextMenuItem onSelect={() => op.aLaPila(c.id)}>
-			<Sparkles />
-			{t("Lanzar (a la pila)")}
-		</ContextMenuItem>
+		<>
+			<ContextMenuItem onSelect={() => op.aLaPila(c.id)}>
+				<Sparkles />
+				{t("Lanzar (a la pila)")}
+			</ContextMenuItem>
+			{zona !== null && jugador !== null && (
+				<ContextMenuItem
+					onSelect={() => usePantalla.getState().abrir({ tipo: "zona", jugador, zona })}
+				>
+					<Grid3x3 />
+					{t("Ver todas las cartas ({zona})", { zona: nombre })}
+				</ContextMenuItem>
+			)}
+		</>
 	);
 }
 

@@ -1211,5 +1211,6 @@
 	"tú": "ти",
 	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "З'являється на полі бою {quien}. Натисни на ту, яку хочеш створити.",
 	"Scryfall no ha encontrado nada. Prueba con el nombre de la ficha, como «Beast».": "Scryfall нічого не знайшов. Спробуй назву жетона, наприклад «Beast».",
-	"Cementerios y exilios": "Кладовища та вигнання"
+	"Cementerios y exilios": "Кладовища та вигнання",
+	"Ver todas las cartas ({zona})": "Показати всі карти ({zona})"
 }

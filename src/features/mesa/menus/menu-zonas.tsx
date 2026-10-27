@@ -310,6 +310,14 @@ export function MenuCampo({
 					<SquareStack />
 					{t("Crear ficha…")}
 				</ContextMenuItem>
+				<ContextMenuItem
+					onSelect={() =>
+						usePantalla.getState().abrir({ tipo: "zona", jugador, zona: "cementerio" })
+					}
+				>
+					<Skull />
+					{t("Cementerios y exilios")}
+				</ContextMenuItem>
 				<ContextMenuItem onSelect={() => hacer({ que: "quitarFlechas", de: null })}>
 					<Unlink />
 					{t("Quitar mis flechas")}

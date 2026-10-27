@@ -1184,5 +1184,6 @@
 	"tú": "você",
 	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "Aparece no campo de batalha de {quien}. Clique na que quiser criar.",
 	"Scryfall no ha encontrado nada. Prueba con el nombre de la ficha, como «Beast».": "O Scryfall não encontrou nada. Tente o nome da ficha, como «Beast».",
-	"Cementerios y exilios": "Cemitérios e exílio"
+	"Cementerios y exilios": "Cemitérios e exílio",
+	"Ver todas las cartas ({zona})": "Ver todas as cartas ({zona})"
 }

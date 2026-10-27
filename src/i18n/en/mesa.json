@@ -1170,5 +1170,6 @@
 	"tú": "you",
 	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "It appears on {quien}'s battlefield. Click the one you want to create.",
 	"Scryfall no ha encontrado nada. Prueba con el nombre de la ficha, como «Beast».": "Scryfall found nothing. Try the name of the token, like “Beast”.",
-	"Cementerios y exilios": "Graveyards and exile"
+	"Cementerios y exilios": "Graveyards and exile",
+	"Ver todas las cartas ({zona})": "See all cards ({zona})"
 }

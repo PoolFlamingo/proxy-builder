@@ -1116,5 +1116,6 @@
 	"tú": "你",
 	"Sale en el campo de {quien}. Pulsa la que quieras crear.": "出現在 {quien} 的戰場上。點擊想建立的那個。",
 	"Scryfall no ha encontrado nada. Prueba con el nombre de la ficha, como «Beast».": "Scryfall 沒有找到結果。試試衍生物的名稱，例如「Beast」。",
-	"Cementerios y exilios": "墳墓場與放逐區"
+	"Cementerios y exilios": "墳墓場與放逐區",
+	"Ver todas las cartas ({zona})": "查看所有牌（{zona}）"
 }
