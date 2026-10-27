@@ -21,7 +21,7 @@ import {
 	useFecha,
 	useHace,
 } from "./piezas";
-import { ascendentePorDefecto, usePrefsBiblioteca } from "./preferencias";
+import { ascendentePorDefecto, usePrefs } from "./preferencias";
 import { useBiblioteca } from "./store";
 import { PORTADA, useSeleccion } from "./vista-cuadricula";
 
@@ -64,16 +64,21 @@ const COLUMNAS: Columna[] = [
 	{ id: "abierto", titulo: paraTraducir("Abierto"), px: 112, orden: "abierto", quitar: 3 },
 ];
 
-/** Casilla, portada y menú; el hueco entre columnas y el relleno de la fila. */
-const FIJO = 28 + 40 + 32;
+/** Casilla (si hay), portada y menú; el hueco entre columnas y el relleno de la fila. */
+const CASILLA = 28;
+const FIJO = 40 + 32;
 const HUECO = 12;
 const RELLENO = 16 + 2;
 
 /** Las columnas que caben en `ancho`: quita las prescindibles hasta que entren. */
-function queCaben(ancho: number): Columna[] {
+function queCaben(ancho: number, casillas: boolean): Columna[] {
 	let cols = COLUMNAS;
 	const mide = (c: Columna[]) =>
-		FIJO + RELLENO + c.reduce((a, x) => a + x.px, 0) + HUECO * (c.length + 2);
+		FIJO +
+		(casillas ? CASILLA : 0) +
+		RELLENO +
+		c.reduce((a, x) => a + x.px, 0) +
+		HUECO * (c.length + 2);
 	const turno = COLUMNAS.filter((c) => c.quitar).sort((a, b) => (a.quitar ?? 0) - (b.quitar ?? 0));
 	for (const c of turno) {
 		if (mide(cols) <= ancho) break;
@@ -82,8 +87,8 @@ function queCaben(ancho: number): Columna[] {
 	return cols;
 }
 
-const plantilla = (cols: Columna[]) =>
-	`28px 40px ${cols.map((c) => (c.id === "nombre" ? `minmax(${c.px}px,1fr)` : `${c.px}px`)).join(" ")} 32px`;
+const plantilla = (cols: Columna[], casillas: boolean) =>
+	`${casillas ? "28px " : ""}40px ${cols.map((c) => (c.id === "nombre" ? `minmax(${c.px}px,1fr)` : `${c.px}px`)).join(" ")} 32px`;
 
 export function VistaLista({ decks }: { decks: DeckSummary[] }) {
 	// Las columnas que caben: según el ancho de la lista.
@@ -96,7 +101,8 @@ export function VistaLista({ decks }: { decks: DeckSummary[] }) {
 		setAncho(el.clientWidth);
 		return () => ro.disconnect();
 	}, [el]);
-	const cols = useMemo(() => queCaben(ancho), [ancho]);
+	const { casillas } = useSeleccion();
+	const cols = useMemo(() => queCaben(ancho, casillas), [ancho, casillas]);
 	return (
 		<div ref={setEl} className="min-w-0 rounded-lg border bg-card/40">
 			<Cabecera decks={decks} cols={cols} />
@@ -112,24 +118,26 @@ export function VistaLista({ decks }: { decks: DeckSummary[] }) {
 function Cabecera({ decks, cols }: { decks: DeckSummary[]; cols: Columna[] }) {
 	const { t } = useLang();
 	const sel = useSeleccion();
-	const { orden, ascendente, poner } = usePrefsBiblioteca();
+	const { orden, ascendente, poner } = usePrefs();
 	const todos = decks.length > 0 && decks.every((d) => sel.seleccion.includes(d.id));
 	const alguno = decks.some((d) => sel.seleccion.includes(d.id));
 	return (
 		<div
 			className="grid items-center gap-3 rounded-t-lg border-b bg-card px-2 py-1.5 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase [&>*]:min-w-0"
-			style={{ gridTemplateColumns: plantilla(cols) }}
+			style={{ gridTemplateColumns: plantilla(cols, sel.casillas) }}
 		>
-			<Checkbox
-				checked={todos ? true : alguno ? "indeterminate" : false}
-				onCheckedChange={() =>
-					sel.marcar(
-						decks.map((d) => d.id),
-						!todos,
-					)
-				}
-				aria-label={t("Seleccionar todos")}
-			/>
+			{sel.casillas && (
+				<Checkbox
+					checked={todos ? true : alguno ? "indeterminate" : false}
+					onCheckedChange={() =>
+						sel.marcar(
+							decks.map((d) => d.id),
+							!todos,
+						)
+					}
+					aria-label={t("Seleccionar todos")}
+				/>
+			)}
 			<span />
 			{cols.map((c) => (
 				<div key={c.id} className={cn("flex", c.derecha && "justify-end")}>
@@ -257,22 +265,24 @@ function Fila({ deck: d, cols }: { deck: DeckSummary; cols: Columna[] }) {
 		<MenuContextualDeck deck={d}>
 			<div
 				ref={setRef}
-				onDoubleClick={() => sel.abrir(d.id)}
+				onDoubleClick={() => (sel.alDobleClic ?? sel.abrir)(d.id)}
 				className={cn(
 					"group grid items-center gap-3 px-2 py-1.5 text-xs hover:bg-accent/50 [&>*]:min-w-0",
 					marcado && "bg-primary/10 hover:bg-primary/15",
 					d.id === sel.abierto && "shadow-[inset_3px_0_0_var(--primary)]",
 				)}
-				style={{ gridTemplateColumns: plantilla(cols) }}
+				style={{ gridTemplateColumns: plantilla(cols, sel.casillas) }}
 			>
-				<Checkbox
-					checked={marcado}
-					onClick={(e) => {
-						e.preventDefault();
-						sel.alternar(d.id, e);
-					}}
-					aria-label={t("Seleccionar")}
-				/>
+				{sel.casillas && (
+					<Checkbox
+						checked={marcado}
+						onClick={(e) => {
+							e.preventDefault();
+							sel.alternar(d.id, e);
+						}}
+						aria-label={t("Seleccionar")}
+					/>
+				)}
 				<button
 					type="button"
 					onClick={(e) => sel.pulsar(d.id, e)}

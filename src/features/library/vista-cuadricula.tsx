@@ -11,7 +11,7 @@ import { EDICION_NEUTRA, urlMiniatura } from "@/lib/image-url";
 import { cn } from "@/lib/utils";
 import { MenuContextualDeck, MenuDeck } from "./menu-deck";
 import { ChipsEtiquetas, CLASES, Identidad, useHace } from "./piezas";
-import { usePrefsBiblioteca } from "./preferencias";
+import { usePrefsSel } from "./preferencias";
 import { useBiblioteca } from "./store";
 
 /** Parámetros neutros para la miniatura de la portada de un deck. */
@@ -46,6 +46,10 @@ export type Seleccion = {
 	/** Marca (o desmarca) varios a la vez. */
 	marcar: (ids: string[], si: boolean) => void;
 	abrir: (id: string) => void;
+	/** Con casillas se pueden elegir varios; sin ellas (Jugar) solo se elige uno. */
+	casillas: boolean;
+	/** El doble clic, si hace algo distinto de `abrir` (en la lista, `abrir`). */
+	alDobleClic?: (id: string) => void;
 };
 
 export const SeleccionDecks = createContext<Seleccion | null>(null);
@@ -63,7 +67,7 @@ const COLUMNAS = {
 };
 
 export function VistaCuadricula({ decks }: { decks: DeckSummary[] }) {
-	const tamano = usePrefsBiblioteca((s) => s.tamano);
+	const tamano = usePrefsSel((s) => s.tamano);
 	return (
 		<div className={cn("grid gap-4", COLUMNAS[tamano])}>
 			{decks.map((d) => (
@@ -79,7 +83,7 @@ function TarjetaDeck({ deck: d }: { deck: DeckSummary }) {
 	const sel = useSeleccion();
 	const det = useBiblioteca((s) => s.detalles[d.id]);
 	const etiquetas = useBiblioteca((s) => s.etiquetas);
-	const tamano = usePrefsBiblioteca((s) => s.tamano);
+	const tamano = usePrefsSel((s) => s.tamano);
 	const [ref, setRef] = useState<HTMLDivElement | null>(null);
 	const visible = useVisible(ref);
 	const marcado = sel.seleccion.includes(d.id);
@@ -97,6 +101,7 @@ function TarjetaDeck({ deck: d }: { deck: DeckSummary }) {
 				<button
 					type="button"
 					onClick={(e) => sel.pulsar(d.id, e)}
+					onDoubleClick={sel.alDobleClic && (() => sel.alDobleClic?.(d.id))}
 					className="relative aspect-[63/88] w-full overflow-hidden rounded-[4.5%] bg-muted"
 				>
 					{d.thumbnail && visible ? (
@@ -114,22 +119,24 @@ function TarjetaDeck({ deck: d }: { deck: DeckSummary }) {
 					)}
 				</button>
 				{/* Encima de la portada: casilla y favorito. */}
-				<div
-					className={cn(
-						"absolute top-4 left-4 transition-opacity",
-						conSeleccion || marcado ? "opacity-100" : "opacity-0 group-hover:opacity-100",
-					)}
-				>
-					<Checkbox
-						checked={marcado}
-						onClick={(e) => {
-							e.preventDefault();
-							sel.alternar(d.id, e);
-						}}
-						aria-label={t("Seleccionar")}
-						className="bg-background/90 shadow"
-					/>
-				</div>
+				{sel.casillas && (
+					<div
+						className={cn(
+							"absolute top-4 left-4 transition-opacity",
+							conSeleccion || marcado ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+						)}
+					>
+						<Checkbox
+							checked={marcado}
+							onClick={(e) => {
+								e.preventDefault();
+								sel.alternar(d.id, e);
+							}}
+							aria-label={t("Seleccionar")}
+							className="bg-background/90 shadow"
+						/>
+					</div>
+				)}
 				<WithTooltip content={d.pinned ? t("Quitar de favoritos") : t("Añadir a favoritos")}>
 					<button
 						type="button"

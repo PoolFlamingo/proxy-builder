@@ -37,14 +37,17 @@ import {
 import { IDIOMAS, PuntoEtiqueta } from "./piezas";
 import { useBiblioteca } from "./store";
 
-/** Lo que se puede hacer con los decks: lo pone la pantalla. */
+/**
+ * Lo que se puede hacer con los decks: lo pone la pantalla. Las acciones que
+ * faltan no salen en el menú (la pestaña «Jugar» no renombra ni borra).
+ */
 export type Acciones = {
 	abrir: (id: string) => void;
 	propiedades: (id: string) => void;
-	renombrar: (d: DeckSummary) => void;
-	duplicar: (d: DeckSummary) => void;
-	exportar: (d: DeckSummary) => void;
-	borrar: (ids: string[]) => void;
+	renombrar?: (d: DeckSummary) => void;
+	duplicar?: (d: DeckSummary) => void;
+	exportar?: (d: DeckSummary) => void;
+	borrar?: (ids: string[]) => void;
 	/** Crear una etiqueta y ponérsela a estos decks. */
 	nuevaEtiqueta: (ids: string[]) => void;
 	/** Los decks seleccionados (si el pulsado está entre ellos, la acción va a todos). */
@@ -110,6 +113,7 @@ function Items({ deck, M }: { deck: DeckSummary; M: Primitivas }) {
 		return n === 0 ? false : n === elegidos.length ? true : "indeterminate";
 	};
 	const lib = useBiblioteca.getState();
+	const { renombrar, duplicar, exportar, borrar } = a;
 	return (
 		<>
 			{!varios && (
@@ -188,25 +192,35 @@ function Items({ deck, M }: { deck: DeckSummary; M: Primitivas }) {
 						<Settings2 />
 						{t("Propiedades…")}
 					</M.Item>
-					<M.Item onSelect={() => a.renombrar(deck)}>
-						<Pencil />
-						{t("Renombrar")}
-					</M.Item>
-					<M.Item onSelect={() => a.duplicar(deck)}>
-						<Copy />
-						{t("Duplicar")}
-					</M.Item>
-					<M.Item onSelect={() => a.exportar(deck)}>
-						<PackageOpen />
-						{t("Exportar .pbdeck")}
+					{renombrar && (
+						<M.Item onSelect={() => renombrar(deck)}>
+							<Pencil />
+							{t("Renombrar")}
+						</M.Item>
+					)}
+					{duplicar && (
+						<M.Item onSelect={() => duplicar(deck)}>
+							<Copy />
+							{t("Duplicar")}
+						</M.Item>
+					)}
+					{exportar && (
+						<M.Item onSelect={() => exportar(deck)}>
+							<PackageOpen />
+							{t("Exportar .pbdeck")}
+						</M.Item>
+					)}
+				</>
+			)}
+			{borrar && (
+				<>
+					<M.Separator />
+					<M.Item variant="destructive" onSelect={() => borrar(ids)}>
+						<Trash2 />
+						{varios ? t("Eliminar los {n}", { n: ids.length }) : t("Eliminar")}
 					</M.Item>
 				</>
 			)}
-			<M.Separator />
-			<M.Item variant="destructive" onSelect={() => a.borrar(ids)}>
-				<Trash2 />
-				{varios ? t("Eliminar los {n}", { n: ids.length }) : t("Eliminar")}
-			</M.Item>
 		</>
 	);
 }

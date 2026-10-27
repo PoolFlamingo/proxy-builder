@@ -1,19 +1,7 @@
-import {
-	ChevronRight,
-	FilterX,
-	HardDriveDownload,
-	Import,
-	Layers,
-	MoreHorizontal,
-	Plus,
-	Star,
-	Trash2,
-	X,
-} from "lucide-react";
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { HardDriveDownload, Import, MoreHorizontal, Plus, Star, Trash2, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { DeckSummary } from "@/bindings/DeckSummary";
-import type { Tag } from "@/bindings/Tag";
 import { Confirmar } from "@/components/confirmar";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
@@ -25,34 +13,23 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import {
-	Empty,
-	EmptyContent,
-	EmptyDescription,
-	EmptyHeader,
-	EmptyMedia,
-	EmptyTitle,
-} from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { megas, nombreSeguro } from "@/features/export/acciones";
-import { RaizScroll } from "@/features/preview/visibilidad";
 import { abrirParaImportar, guardarParaExportar } from "@/lib/dialogos";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { abrirDeck, guardarAhora, useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
-import { BarraHerramientas, FiltrosActivos } from "./barra-herramientas";
+import { BarraHerramientas } from "./barra-herramientas";
 import { BarraLateral } from "./barra-lateral";
-import { type EditandoEtiqueta, EtiquetaDialog } from "./etiqueta-dialog";
+import { useEtiquetasUi } from "./etiquetas-ui";
 import { type Acciones, AccionesDeck, MenuDeck } from "./menu-deck";
-import { agrupar, type ClaveGrupo, filtrar, hayFiltros, ordenar, seleccionar } from "./organizar";
-import { ChipEtiqueta, CLASES, IDIOMAS, Identidad, nombreColores, useDinero } from "./piezas";
-import { useFiltrosBiblioteca, usePrefsBiblioteca } from "./preferencias";
+import { seleccionar } from "./organizar";
+import { useFiltros, usePrefs } from "./preferencias";
 import { PropiedadesDialog } from "./propiedades-dialog";
 import { useBiblioteca } from "./store";
-import { type Seleccion, SeleccionDecks, VistaCuadricula } from "./vista-cuadricula";
-import { VistaLista } from "./vista-lista";
+import { type Seleccion, SeleccionDecks } from "./vista-cuadricula";
+import { useOrganizados, ZonaDecks } from "./zona-decks";
 
 /**
  * **Biblioteca**: los decks guardados en este equipo, con etiquetas,
@@ -65,21 +42,17 @@ export function LibraryScreen() {
 	const { t, mensaje } = useLang();
 	const actual = useDeck((s) => s.deck?.id ?? null);
 	const decks = useBiblioteca((s) => s.decks);
-	const detalles = useBiblioteca((s) => s.detalles);
-	const etiquetas = useBiblioteca((s) => s.etiquetas);
-	const contando = useBiblioteca((s) => s.contando);
-	const prefs = usePrefsBiblioteca();
-	const { filtros, ponerFiltros, limpiar } = useFiltrosBiblioteca();
+	const prefs = usePrefs();
+	const { filtros, ponerFiltros } = useFiltros();
+	const org = useOrganizados();
+	const { enPantalla } = org;
+	const etiquetasUi = useEtiquetasUi();
 
 	const [seleccion, setSeleccion] = useState<string[]>([]);
 	const ancla = useRef<string | null>(null);
-	const [plegados, setPlegados] = useState<Set<string>>(new Set());
 	const [renombrar, setRenombrar] = useState<DeckSummary | null>(null);
 	const [borrar, setBorrar] = useState<string[] | null>(null);
 	const [propiedades, setPropiedades] = useState<string | null>(null);
-	const [editandoEtiqueta, setEditandoEtiqueta] = useState<EditandoEtiqueta | null>(null);
-	const [borrarEtiqueta, setBorrarEtiqueta] = useState<Tag | null>(null);
-	const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
 	const buscar = useRef<HTMLInputElement>(null);
 
 	const intentar = useCallback(
@@ -96,32 +69,6 @@ export function LibraryScreen() {
 			.cargar()
 			.catch((e) => toast.error(mensaje(e)));
 	}, [mensaje]);
-
-	// Lo que se ve: filtrado, ordenado y repartido en grupos.
-	const visibles = useMemo(
-		() =>
-			ordenar(
-				filtrar(decks ?? [], detalles, etiquetas, filtros),
-				detalles,
-				prefs.orden,
-				prefs.ascendente,
-				prefs.favoritosArriba,
-			),
-		[decks, detalles, etiquetas, filtros, prefs.orden, prefs.ascendente, prefs.favoritosArriba],
-	);
-	const grupos = useMemo(
-		() => agrupar(visibles, detalles, etiquetas, prefs.agrupar),
-		[visibles, detalles, etiquetas, prefs.agrupar],
-	);
-	// En el orden de la pantalla (sin repetir), para Mayús + clic.
-	const enPantalla = useMemo(
-		() => [
-			...new Set(
-				grupos.filter((g) => !plegados.has(g.id)).flatMap((g) => g.decks.map((d) => d.id)),
-			),
-		],
-		[grupos, plegados],
-	);
 
 	// Fuera de la selección lo que ya no existe.
 	useEffect(() => {
@@ -204,12 +151,13 @@ export function LibraryScreen() {
 		duplicar,
 		exportar: exportarPaquete,
 		borrar: setBorrar,
-		nuevaEtiqueta: (ids) => setEditandoEtiqueta({ tipo: "nueva", para: ids }),
+		nuevaEtiqueta: (ids) => etiquetasUi.editar({ tipo: "nueva", para: ids }),
 		seleccion,
 	};
 
 	const sel: Seleccion = {
 		seleccion,
+		casillas: true,
 		abierto: actual,
 		pulsar: (id, e) => {
 			if (e.shiftKey) {
@@ -263,24 +211,13 @@ export function LibraryScreen() {
 		return () => window.removeEventListener("keydown", tecla);
 	}, [enPantalla, seleccion, filtros.texto, ponerFiltros]);
 
-	const plegar = (id: string) =>
-		setPlegados((p) => {
-			const n = new Set(p);
-			if (n.has(id)) n.delete(id);
-			else n.add(id);
-			return n;
-		});
-
-	const totalDecks = decks?.length ?? 0;
-	const Vista = prefs.vista === "lista" ? VistaLista : VistaCuadricula;
-	const conGrupos = prefs.agrupar !== "ninguno";
-
 	return (
 		<AccionesDeck.Provider value={acciones}>
 			<SeleccionDecks.Provider value={sel}>
 				<section className="flex h-full min-h-0 flex-col">
 					<BarraHerramientas
 						ref={buscar}
+						titulo={t("Biblioteca")}
 						acciones={
 							<>
 								<Button size="sm" variant="ghost" onClick={liberar}>
@@ -301,91 +238,25 @@ export function LibraryScreen() {
 					<div className="flex min-h-0 flex-1">
 						{prefs.lateral && (
 							<BarraLateral
-								onNuevaEtiqueta={() => setEditandoEtiqueta({ tipo: "nueva", para: seleccion })}
-								onEditarEtiqueta={(tag) => setEditandoEtiqueta({ tipo: "editar", tag })}
-								onBorrarEtiqueta={setBorrarEtiqueta}
+								onNuevaEtiqueta={() => etiquetasUi.editar({ tipo: "nueva", para: seleccion })}
+								onEditarEtiqueta={(tag) => etiquetasUi.editar({ tipo: "editar", tag })}
+								onBorrarEtiqueta={etiquetasUi.borrar}
 							/>
 						)}
-						<div className="relative flex min-w-0 flex-1 flex-col" data-tutorial="biblioteca-decks">
-							<FiltrosActivos />
-							{seleccion.length > 0 && (
-								<BarraSeleccion
-									seleccion={seleccion}
-									visibles={enPantalla}
-									onTodos={() => setSeleccion(enPantalla)}
-									onSoltar={() => setSeleccion([])}
-									onBorrar={() => setBorrar(seleccion)}
-								/>
-							)}
-							<ScrollArea className="min-h-0 flex-1" onViewportChange={setViewport}>
-								<RaizScroll.Provider value={viewport}>
-									{decks === null ? null : totalDecks === 0 ? (
-										<Empty className="mt-16">
-											<EmptyHeader>
-												<EmptyMedia variant="icon">
-													<Layers />
-												</EmptyMedia>
-												<EmptyTitle>{t("No hay decks guardados")}</EmptyTitle>
-												<EmptyDescription>
-													{t("Los decks se guardan solos mientras trabajas.")}
-												</EmptyDescription>
-											</EmptyHeader>
-										</Empty>
-									) : visibles.length === 0 ? (
-										<Empty className="mt-16">
-											<EmptyHeader>
-												<EmptyMedia variant="icon">
-													<FilterX />
-												</EmptyMedia>
-												<EmptyTitle>{t("Ningún deck coincide")}</EmptyTitle>
-												<EmptyDescription>
-													{contando
-														? t("Aún se están calculando los colores y precios de los decks.")
-														: t("Prueba con otra búsqueda o quita algún filtro.")}
-												</EmptyDescription>
-											</EmptyHeader>
-											{hayFiltros(filtros) && (
-												<EmptyContent>
-													<Button size="sm" variant="outline" onClick={limpiar}>
-														<X />
-														{t("Quitar los filtros")}
-													</Button>
-												</EmptyContent>
-											)}
-										</Empty>
-									) : (
-										<div className="flex flex-col gap-4 p-4">
-											{grupos.map((g) =>
-												conGrupos ? (
-													<section key={g.id} className="flex flex-col gap-2.5">
-														<button
-															type="button"
-															onClick={() => plegar(g.id)}
-															className="flex items-center gap-2 self-start rounded-md px-1 py-0.5 text-xs font-semibold hover:bg-accent"
-														>
-															<ChevronRight
-																className={cn(
-																	"size-3.5 text-muted-foreground transition-transform",
-																	!plegados.has(g.id) && "rotate-90",
-																)}
-															/>
-															<TituloGrupo clave={g.clave} contando={contando} />
-															<span className="font-mono text-[10px] font-normal text-muted-foreground tabular-nums">
-																{g.decks.length}
-															</span>
-														</button>
-														{!plegados.has(g.id) && <Vista decks={g.decks} />}
-													</section>
-												) : (
-													<Vista key={g.id} decks={g.decks} />
-												),
-											)}
-										</div>
-									)}
-								</RaizScroll.Provider>
-							</ScrollArea>
-							<Pie visibles={visibles} total={totalDecks} />
-						</div>
+						<ZonaDecks
+							org={org}
+							flotante={
+								seleccion.length > 0 && (
+									<BarraSeleccion
+										seleccion={seleccion}
+										visibles={enPantalla}
+										onTodos={() => setSeleccion(enPantalla)}
+										onSoltar={() => setSeleccion([])}
+										onBorrar={() => setBorrar(seleccion)}
+									/>
+								)
+							}
+						/>
 					</div>
 				</section>
 
@@ -402,9 +273,9 @@ export function LibraryScreen() {
 				<PropiedadesDialog
 					id={propiedades}
 					onCerrar={() => setPropiedades(null)}
-					onNuevaEtiqueta={(para) => setEditandoEtiqueta({ tipo: "nueva", para })}
+					onNuevaEtiqueta={(para) => etiquetasUi.editar({ tipo: "nueva", para })}
 				/>
-				<EtiquetaDialog editando={editandoEtiqueta} onCerrar={() => setEditandoEtiqueta(null)} />
+				{etiquetasUi.dialogos}
 				<ConfirmarBorrar
 					ids={borrar}
 					onCerrar={() => setBorrar(null)}
@@ -420,59 +291,9 @@ export function LibraryScreen() {
 						await recargar();
 					})}
 				/>
-				<Confirmar
-					abierto={borrarEtiqueta !== null}
-					onCerrar={() => setBorrarEtiqueta(null)}
-					titulo={t("¿Eliminar la etiqueta «{n}»?", { n: borrarEtiqueta?.name ?? "" })}
-					descripcion={t("Se quita de los decks que la llevan; los decks no se borran.")}
-					accion={t("Eliminar")}
-					destructiva
-					onConfirmar={intentar(async () => {
-						if (!borrarEtiqueta) return;
-						const id = borrarEtiqueta.id;
-						await useBiblioteca.getState().borrarEtiqueta(id);
-						const f = useFiltrosBiblioteca.getState().filtros;
-						if (f.etiquetas.includes(id))
-							ponerFiltros({ etiquetas: f.etiquetas.filter((x) => x !== id) });
-					})}
-				/>
 			</SeleccionDecks.Provider>
 		</AccionesDeck.Provider>
 	);
-}
-
-/** El título de un grupo según de qué es. */
-function TituloGrupo({ clave: c, contando }: { clave: ClaveGrupo; contando: boolean }) {
-	const { t } = useLang();
-	switch (c.tipo) {
-		case "todos":
-			return <span>{t("Todos los decks")}</span>;
-		case "etiqueta":
-			return <ChipEtiqueta tag={c.tag} className="text-[11px]" />;
-		case "sinEtiqueta":
-			return <span className="text-muted-foreground">{t("Sin etiqueta")}</span>;
-		case "color":
-			return (
-				<span className="flex items-center gap-1.5">
-					<Identidad colores={c.colores} />
-					{t(nombreColores(c.colores))}
-				</span>
-			);
-		case "clase":
-			return <span>{t(CLASES[c.clase])}</span>;
-		case "idioma":
-			return c.idioma ? (
-				<span>{t(IDIOMAS[c.idioma] ?? c.idioma.toUpperCase())}</span>
-			) : (
-				<span className="text-muted-foreground">{t("Sin idioma")}</span>
-			);
-		case "sinDatos":
-			return (
-				<span className="text-muted-foreground">
-					{contando ? t("Calculando…") : t("Sin datos")}
-				</span>
-			);
-	}
 }
 
 /** La franja de arriba cuando hay decks elegidos. */
@@ -541,51 +362,6 @@ function BarraSeleccion({
 				</Button>
 			</div>
 		</div>
-	);
-}
-
-/** Abajo: cuántos se ven, cuántas cartas suman y lo que costarían. */
-function Pie({ visibles, total }: { visibles: DeckSummary[]; total: number }) {
-	const { t } = useLang();
-	const detalles = useBiblioteca((s) => s.detalles);
-	const contando = useBiblioteca((s) => s.contando);
-	const dinero = useDinero();
-	let cartas = 0;
-	let eur = 0;
-	let usd = 0;
-	let conEur = false;
-	for (const d of visibles) {
-		cartas += d.cardCount;
-		const x = detalles[d.id];
-		if (x?.priceEur != null) {
-			eur += x.priceEur;
-			conEur = true;
-		}
-		if (x?.priceUsd != null) usd += x.priceUsd;
-	}
-	const precio = conEur ? dinero(eur, "EUR") : usd > 0 ? dinero(usd, "USD") : null;
-	const partes: [string, ReactNode][] = [
-		[
-			"decks",
-			visibles.length === total
-				? t("{n} decks", { n: total })
-				: t("Mostrando {a} de {b} decks", { a: visibles.length, b: total }),
-		],
-		["cartas", t("{n} cartas", { n: cartas })],
-	];
-	if (precio) partes.push(["precio", `≈ ${precio}`]);
-	return (
-		<footer className="flex items-center gap-2 border-t px-3 py-1 text-[10px] text-muted-foreground">
-			{partes.map(([k, p], i) => (
-				<span key={k} className="flex items-center gap-2">
-					{i > 0 && <span aria-hidden>·</span>}
-					{p}
-				</span>
-			))}
-			{contando && (
-				<span className="ml-auto animate-pulse">{t("Calculando colores y precios…")}</span>
-			)}
-		</footer>
 	);
 }
 

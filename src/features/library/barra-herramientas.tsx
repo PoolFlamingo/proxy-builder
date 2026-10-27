@@ -32,7 +32,7 @@ import { COLORES } from "@/features/stats/textos";
 import { cn } from "@/lib/utils";
 import { type Agrupar, filtrosDelPanel, idiomasDe, type ModoColor, type Orden } from "./organizar";
 import { ChipEtiqueta, CLASES, FORMATOS, IDIOMAS, Pip } from "./piezas";
-import { ascendentePorDefecto, useFiltrosBiblioteca, usePrefsBiblioteca } from "./preferencias";
+import { ascendentePorDefecto, useAncla, useFiltros, usePrefs } from "./preferencias";
 import { useBiblioteca } from "./store";
 
 const ORDENES: [Orden, string][] = [
@@ -55,163 +55,166 @@ const AGRUPAR: [Agrupar, string][] = [
 ];
 
 /** La búsqueda, los filtros, el orden, los grupos y la vista. */
-export const BarraHerramientas = forwardRef<HTMLInputElement, { acciones: ReactNode }>(
-	function BarraHerramientas({ acciones }, buscar) {
-		const { t } = useLang();
-		const p = usePrefsBiblioteca();
-		const { filtros: f, ponerFiltros } = useFiltrosBiblioteca();
-		return (
-			<div
-				className="flex flex-wrap items-center gap-2 border-b px-3 py-2"
-				data-tutorial="biblioteca-barra"
-			>
-				<WithTooltip content={p.lateral ? t("Ocultar etiquetas") : t("Ver etiquetas")}>
-					<Button
-						size="icon-sm"
-						variant="ghost"
-						onClick={() => p.poner({ lateral: !p.lateral })}
-						aria-label={t("Etiquetas")}
-						className={cn(p.lateral && "text-primary")}
-					>
-						<PanelLeft />
+export const BarraHerramientas = forwardRef<
+	HTMLInputElement,
+	{ acciones: ReactNode; titulo: string }
+>(function BarraHerramientas({ acciones, titulo }, buscar) {
+	const { t } = useLang();
+	const anclaBarra = useAncla("barra");
+	const anclaAcciones = useAncla("acciones");
+	const p = usePrefs();
+	const { filtros: f, ponerFiltros } = useFiltros();
+	return (
+		<div
+			className="flex flex-wrap items-center gap-2 border-b px-3 py-2"
+			data-tutorial={anclaBarra}
+		>
+			<WithTooltip content={p.lateral ? t("Ocultar etiquetas") : t("Ver etiquetas")}>
+				<Button
+					size="icon-sm"
+					variant="ghost"
+					onClick={() => p.poner({ lateral: !p.lateral })}
+					aria-label={t("Etiquetas")}
+					className={cn(p.lateral && "text-primary")}
+				>
+					<PanelLeft />
+				</Button>
+			</WithTooltip>
+			<h2 className="text-sm font-semibold">{titulo}</h2>
+			<div className="relative w-72">
+				<Search className="pointer-events-none absolute top-2 left-2 size-3.5 text-muted-foreground" />
+				<Input
+					ref={buscar}
+					value={f.texto}
+					onChange={(e) => ponerFiltros({ texto: e.target.value })}
+					placeholder={t("Buscar decks, cartas, notas…")}
+					className="h-7 pl-7 text-xs"
+					type="search"
+				/>
+			</div>
+			<PanelFiltros />
+
+			<div className="mx-1 h-5 w-px bg-border" />
+
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button size="sm" variant="ghost" className="h-7 text-xs">
+						{p.ascendente ? <ArrowUpNarrowWide /> : <ArrowDownWideNarrow />}
+						{t(ORDENES.find(([o]) => o === p.orden)?.[1] ?? "")}
 					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="start" className="text-xs">
+					<DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase">
+						{t("Ordenar por")}
+					</DropdownMenuLabel>
+					<DropdownMenuRadioGroup
+						value={p.orden}
+						onValueChange={(v) => {
+							const o = v as Orden;
+							p.poner({ orden: o, ascendente: ascendentePorDefecto(o) });
+						}}
+					>
+						{ORDENES.map(([o, nombre]) => (
+							<DropdownMenuRadioItem key={o} value={o}>
+								{t(nombre)}
+							</DropdownMenuRadioItem>
+						))}
+					</DropdownMenuRadioGroup>
+					<DropdownMenuSeparator />
+					<DropdownMenuCheckboxItem
+						checked={p.ascendente}
+						onCheckedChange={(v) => p.poner({ ascendente: v === true })}
+					>
+						{t("Ascendente")}
+					</DropdownMenuCheckboxItem>
+					<DropdownMenuCheckboxItem
+						checked={p.favoritosArriba}
+						onCheckedChange={(v) => p.poner({ favoritosArriba: v === true })}
+					>
+						{t("Favoritos primero")}
+					</DropdownMenuCheckboxItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
+
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button
+						size="sm"
+						variant="ghost"
+						className={cn("h-7 text-xs", p.agrupar !== "ninguno" && "text-primary")}
+					>
+						<Group />
+						{t(AGRUPAR.find(([a]) => a === p.agrupar)?.[1] ?? "")}
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="start" className="text-xs">
+					<DropdownMenuRadioGroup
+						value={p.agrupar}
+						onValueChange={(v) => p.poner({ agrupar: v as Agrupar })}
+					>
+						{AGRUPAR.map(([a, nombre]) => (
+							<DropdownMenuRadioItem key={a} value={a}>
+								{t(nombre)}
+							</DropdownMenuRadioItem>
+						))}
+					</DropdownMenuRadioGroup>
+					{p.agrupar === "etiqueta" && (
+						<p className="max-w-56 px-2 py-1.5 text-[10px] leading-snug text-muted-foreground">
+							{t("Un deck con varias etiquetas sale en cada una.")}
+						</p>
+					)}
+				</DropdownMenuContent>
+			</DropdownMenu>
+
+			<ToggleGroup
+				type="single"
+				size="sm"
+				variant="outline"
+				value={p.vista}
+				onValueChange={(v) => v && p.poner({ vista: v as "cuadricula" | "lista" })}
+			>
+				<WithTooltip content={t("Cuadrícula")}>
+					<ToggleGroupItem value="cuadricula" aria-label={t("Cuadrícula")} className="h-7">
+						<LayoutGrid />
+					</ToggleGroupItem>
 				</WithTooltip>
-				<h2 className="text-sm font-semibold">{t("Biblioteca")}</h2>
-				<div className="relative w-72">
-					<Search className="pointer-events-none absolute top-2 left-2 size-3.5 text-muted-foreground" />
-					<Input
-						ref={buscar}
-						value={f.texto}
-						onChange={(e) => ponerFiltros({ texto: e.target.value })}
-						placeholder={t("Buscar decks, cartas, notas…")}
-						className="h-7 pl-7 text-xs"
-						type="search"
-					/>
-				</div>
-				<PanelFiltros />
-
-				<div className="mx-1 h-5 w-px bg-border" />
-
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button size="sm" variant="ghost" className="h-7 text-xs">
-							{p.ascendente ? <ArrowUpNarrowWide /> : <ArrowDownWideNarrow />}
-							{t(ORDENES.find(([o]) => o === p.orden)?.[1] ?? "")}
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="start" className="text-xs">
-						<DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase">
-							{t("Ordenar por")}
-						</DropdownMenuLabel>
-						<DropdownMenuRadioGroup
-							value={p.orden}
-							onValueChange={(v) => {
-								const o = v as Orden;
-								p.poner({ orden: o, ascendente: ascendentePorDefecto(o) });
-							}}
-						>
-							{ORDENES.map(([o, nombre]) => (
-								<DropdownMenuRadioItem key={o} value={o}>
-									{t(nombre)}
-								</DropdownMenuRadioItem>
-							))}
-						</DropdownMenuRadioGroup>
-						<DropdownMenuSeparator />
-						<DropdownMenuCheckboxItem
-							checked={p.ascendente}
-							onCheckedChange={(v) => p.poner({ ascendente: v === true })}
-						>
-							{t("Ascendente")}
-						</DropdownMenuCheckboxItem>
-						<DropdownMenuCheckboxItem
-							checked={p.favoritosArriba}
-							onCheckedChange={(v) => p.poner({ favoritosArriba: v === true })}
-						>
-							{t("Favoritos primero")}
-						</DropdownMenuCheckboxItem>
-					</DropdownMenuContent>
-				</DropdownMenu>
-
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button
-							size="sm"
-							variant="ghost"
-							className={cn("h-7 text-xs", p.agrupar !== "ninguno" && "text-primary")}
-						>
-							<Group />
-							{t(AGRUPAR.find(([a]) => a === p.agrupar)?.[1] ?? "")}
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="start" className="text-xs">
-						<DropdownMenuRadioGroup
-							value={p.agrupar}
-							onValueChange={(v) => p.poner({ agrupar: v as Agrupar })}
-						>
-							{AGRUPAR.map(([a, nombre]) => (
-								<DropdownMenuRadioItem key={a} value={a}>
-									{t(nombre)}
-								</DropdownMenuRadioItem>
-							))}
-						</DropdownMenuRadioGroup>
-						{p.agrupar === "etiqueta" && (
-							<p className="max-w-56 px-2 py-1.5 text-[10px] leading-snug text-muted-foreground">
-								{t("Un deck con varias etiquetas sale en cada una.")}
-							</p>
-						)}
-					</DropdownMenuContent>
-				</DropdownMenu>
-
+				<WithTooltip content={t("Lista")}>
+					<ToggleGroupItem value="lista" aria-label={t("Lista")} className="h-7">
+						<List />
+					</ToggleGroupItem>
+				</WithTooltip>
+			</ToggleGroup>
+			{p.vista === "cuadricula" && (
 				<ToggleGroup
 					type="single"
 					size="sm"
-					variant="outline"
-					value={p.vista}
-					onValueChange={(v) => v && p.poner({ vista: v as "cuadricula" | "lista" })}
+					value={p.tamano}
+					onValueChange={(v) => v && p.poner({ tamano: v as "s" | "m" | "l" })}
+					aria-label={t("Tamaño")}
 				>
-					<WithTooltip content={t("Cuadrícula")}>
-						<ToggleGroupItem value="cuadricula" aria-label={t("Cuadrícula")} className="h-7">
-							<LayoutGrid />
-						</ToggleGroupItem>
-					</WithTooltip>
-					<WithTooltip content={t("Lista")}>
-						<ToggleGroupItem value="lista" aria-label={t("Lista")} className="h-7">
-							<List />
-						</ToggleGroupItem>
-					</WithTooltip>
+					{(["s", "m", "l"] as const).map((x) => (
+						<WithTooltip
+							key={x}
+							content={x === "s" ? t("Pequeñas") : x === "m" ? t("Medianas") : t("Grandes")}
+						>
+							<ToggleGroupItem value={x} className="h-7 w-7 font-mono text-[10px] uppercase">
+								{x}
+							</ToggleGroupItem>
+						</WithTooltip>
+					))}
 				</ToggleGroup>
-				{p.vista === "cuadricula" && (
-					<ToggleGroup
-						type="single"
-						size="sm"
-						value={p.tamano}
-						onValueChange={(v) => v && p.poner({ tamano: v as "s" | "m" | "l" })}
-						aria-label={t("Tamaño")}
-					>
-						{(["s", "m", "l"] as const).map((x) => (
-							<WithTooltip
-								key={x}
-								content={x === "s" ? t("Pequeñas") : x === "m" ? t("Medianas") : t("Grandes")}
-							>
-								<ToggleGroupItem value={x} className="h-7 w-7 font-mono text-[10px] uppercase">
-									{x}
-								</ToggleGroupItem>
-							</WithTooltip>
-						))}
-					</ToggleGroup>
-				)}
-				<div className="ml-auto flex items-center gap-1.5" data-tutorial="biblioteca-acciones">
-					{acciones}
-				</div>
+			)}
+			<div className="ml-auto flex items-center gap-1.5" data-tutorial={anclaAcciones}>
+				{acciones}
 			</div>
-		);
-	},
-);
+		</div>
+	);
+});
 
 /** El desplegable de filtros: colores, clase, formato, idioma… */
 function PanelFiltros() {
 	const { t } = useLang();
-	const { filtros: f, ponerFiltros } = useFiltrosBiblioteca();
+	const { filtros: f, ponerFiltros } = useFiltros();
 	const detalles = useBiblioteca((s) => s.detalles);
 	const n = filtrosDelPanel(f);
 	// Los idiomas que hay en la biblioteca.
@@ -370,7 +373,7 @@ function Bloque({ titulo, children }: { titulo: string; children: ReactNode }) {
 /** Los filtros puestos, como fichas que se quitan con la ×. */
 export function FiltrosActivos() {
 	const { t } = useLang();
-	const { filtros: f, ponerFiltros, limpiar } = useFiltrosBiblioteca();
+	const { filtros: f, ponerFiltros, limpiar } = useFiltros();
 	const etiquetas = useBiblioteca((s) => s.etiquetas);
 	const fichas: { clave: string; contenido: ReactNode; quitar: () => void }[] = [];
 	if (f.favoritos)

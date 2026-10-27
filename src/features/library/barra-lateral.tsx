@@ -29,7 +29,7 @@ import { WithTooltip } from "@/components/ui/with-tooltip";
 import { cn } from "@/lib/utils";
 import { contar } from "./organizar";
 import { COLORES_DE_ETIQUETA, COLORES_ETIQUETA, PuntoEtiqueta } from "./piezas";
-import { useFiltrosBiblioteca } from "./preferencias";
+import { useAncla, useFiltros } from "./preferencias";
 import { useBiblioteca } from "./store";
 
 /**
@@ -48,7 +48,8 @@ export function BarraLateral({
 	const { t } = useLang();
 	const decks = useBiblioteca((s) => s.decks) ?? [];
 	const etiquetas = useBiblioteca((s) => s.etiquetas);
-	const { filtros: f, ponerFiltros } = useFiltrosBiblioteca();
+	const { filtros: f, ponerFiltros } = useFiltros();
+	const ancla = useAncla("lateral");
 	const n = contar(decks);
 	const ninguno = !f.favoritos && !f.sinEtiqueta && f.etiquetas.length === 0;
 	const elegirEtiqueta = (id: string, e: React.MouseEvent) => {
@@ -68,7 +69,7 @@ export function BarraLateral({
 	return (
 		<aside
 			className="flex h-full w-56 shrink-0 flex-col border-r bg-sidebar/40"
-			data-tutorial="biblioteca-lateral"
+			data-tutorial={ancla}
 		>
 			<ScrollArea className="min-h-0 flex-1">
 				<div className="flex flex-col gap-0.5 p-2">
