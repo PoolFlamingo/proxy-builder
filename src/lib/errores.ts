@@ -69,6 +69,10 @@ const MOTIVOS: Partial<Record<ErrorCode, Record<string, string>>> = {
 		sin_partida: paraTraducir("La partida aún no ha empezado."),
 		expulsado: paraTraducir("Quien creó la sala te ha expulsado de ella."),
 		no_anfitrion: paraTraducir("Solo el anfitrión puede hacer eso."),
+		sin_mayoria: paraTraducir(
+			"Sin la mayoría de los jugadores conectados no se juega: espera a que vuelvan.",
+		),
+		no_activo: paraTraducir("Ese anfitrión aún no tiene la mayoría de los jugadores."),
 		partida_abierta: paraTraducir(
 			"Hay una partida abierta: sal de la mesa para ver una repetición.",
 		),

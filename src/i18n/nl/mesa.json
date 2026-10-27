@@ -680,7 +680,6 @@
 	"El anfitrión ha cerrado la partida.": "De host heeft het spel gesloten.",
 	"Mirando la partida": "Je kijkt naar het spel",
 	"{nombre} (tú)": "{nombre} (jij)",
-	"Reconectando con el anfitrión… (intento {intento} de 5)": "Opnieuw verbinden met de host… (poging {intento} van 5)",
 	"Se ha perdido la conexión con la partida.": "De verbinding met het spel is verbroken.",
 	"Jugar en red": "Online spelen",
 	"Sin servidor: quien crea la partida hace de anfitrión y pasa un código a los demás.": "Zonder server: wie het spel maakt, is de host en geeft de anderen een code.",
@@ -907,5 +906,12 @@
 	"y {n} más": "en nog {n}",
 	"Deck de otro jugador": "Deck van een andere speler",
 	"Lista: {lista} · {n} cartas": "Lijst: {lista} · {n} kaarten",
-	"Lista borrada": "Lijst verwijderd"
+	"Lista borrada": "Lijst verwijderd",
+	"Reconectando con el anfitrión… (intento {intento})": "Opnieuw verbinden met de host… (poging {intento})",
+	"El anfitrión no vuelve: probando con {nombre}…": "De host komt niet terug: proberen met {nombre}…",
+	"Esperando a más de la mitad de los jugadores ({conectados} de {total}): hasta entonces no se juega.": "Wachten op meer dan de helft van de spelers ({conectados} van {total}): tot dan wordt er niet gespeeld.",
+	"Ahora eres el anfitrión: la partida sigue con tu copia.": "Je bent nu de host: de partij gaat verder met jouw kopie.",
+	"{nombre} es el nuevo anfitrión.": "{nombre} is de nieuwe host.",
+	"Sin la mayoría de los jugadores conectados no se juega: espera a que vuelvan.": "Zonder de meerderheid van de spelers verbonden wordt er niet gespeeld: wacht tot ze terug zijn.",
+	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "Die host heeft nog niet de meerderheid van de spelers."
 }

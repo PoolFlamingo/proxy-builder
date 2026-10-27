@@ -629,7 +629,6 @@
 	"El anfitrión ha cerrado la partida.": "主机已关闭对局。",
 	"Mirando la partida": "正在观战",
 	"{nombre} (tú)": "{nombre}（你）",
-	"Reconectando con el anfitrión… (intento {intento} de 5)": "正在重新连接主机…（第 {intento}/5 次）",
 	"Se ha perdido la conexión con la partida.": "与对局的连接已断开。",
 	"Jugar en red": "联机对战",
 	"Sin servidor: quien crea la partida hace de anfitrión y pasa un código a los demás.": "无需服务器：创建对局的人担任主机，并把代码发给其他人。",
@@ -853,5 +852,12 @@
 	"y {n} más": "另有 {n} 人",
 	"Deck de otro jugador": "其他玩家的牌组",
 	"Lista: {lista} · {n} cartas": "名单：{lista} · {n} 张",
-	"Lista borrada": "名单已删除"
+	"Lista borrada": "名单已删除",
+	"Reconectando con el anfitrión… (intento {intento})": "正在重新连接主机…（第 {intento} 次）",
+	"El anfitrión no vuelve: probando con {nombre}…": "主机没有回来：正在尝试 {nombre}…",
+	"Esperando a más de la mitad de los jugadores ({conectados} de {total}): hasta entonces no se juega.": "正在等待超过一半的玩家（{conectados}/{total}）：在此之前无法进行游戏。",
+	"Ahora eres el anfitrión: la partida sigue con tu copia.": "现在你是主机：对局将用你的副本继续。",
+	"{nombre} es el nuevo anfitrión.": "{nombre} 是新的主机。",
+	"Sin la mayoría de los jugadores conectados no se juega: espera a que vuelvan.": "没有过半数玩家在线就无法进行游戏：请等他们回来。",
+	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "该主机还没有过半数的玩家。"
 }

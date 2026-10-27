@@ -159,23 +159,48 @@ export function SelectorTablero() {
 	);
 }
 
-/** Si la conexión con el anfitrión se corta: «Reconectando…» o perdida. */
+/**
+ * Si la conexión con el anfitrión se corta: «Reconectando…», buscando al
+ * anfitrión que sigue (Fase K) o perdida. Y, si esta app es el anfitrión y no
+ * tiene la mayoría, que no se juega hasta tenerla.
+ */
 export function AvisoConexion() {
 	const { t } = useLang();
 	const conexion = useRed((s) => s.conexion);
 	const intento = useRed((s) => s.intento);
-	if (conexion === "conectada") return null;
+	const candidato = useRed((s) => s.candidato);
+	const mayoria = useRed((s) => s.mayoria);
+	const papel = useRed((s) => s.papel);
+	const nombre = useMesa((s) => (candidato !== null ? s.jugadores[candidato]?.nombre : undefined));
+	const sinMayoria = papel === "anfitrion" && mayoria !== null && !mayoria.activa;
+	if (conexion === "conectada" && !sinMayoria) return null;
 	return (
 		<div className="absolute top-14 left-1/2 z-[7500] flex -translate-x-1/2 items-center gap-2.5 rounded-xl border border-amber-500/40 bg-black/80 px-2.5 py-1.5 text-xs text-white shadow-lg backdrop-blur-md">
 			{conexion === "reconectando" ? (
 				<>
 					<Loader2 className="size-3.5 animate-spin text-amber-400" />
-					{t("Reconectando con el anfitrión… (intento {intento} de 5)", { intento })}
+					{t("Reconectando con el anfitrión… (intento {intento})", { intento })}
 				</>
-			) : (
+			) : conexion === "buscando" ? (
+				<>
+					<Loader2 className="size-3.5 animate-spin text-amber-400" />
+					{t("El anfitrión no vuelve: probando con {nombre}…", { nombre: nombre ?? "?" })}
+				</>
+			) : conexion === "perdida" ? (
 				<>
 					<WifiOff className="size-3.5 text-red-400" />
 					{t("Se ha perdido la conexión con la partida.")}
+					<Button size="sm" variant="secondary" onClick={() => void salir(false)}>
+						{t("Salir")}
+					</Button>
+				</>
+			) : (
+				<>
+					<Loader2 className="size-3.5 animate-spin text-amber-400" />
+					{t(
+						"Esperando a más de la mitad de los jugadores ({conectados} de {total}): hasta entonces no se juega.",
+						{ conectados: mayoria?.conectados ?? 0, total: mayoria?.total ?? 0 },
+					)}
 					<Button size="sm" variant="secondary" onClick={() => void salir(false)}>
 						{t("Salir")}
 					</Button>

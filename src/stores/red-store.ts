@@ -2,10 +2,14 @@ import { create } from "zustand";
 import type { Ausente } from "@/bindings/Ausente";
 import type { Enlace } from "@/bindings/Enlace";
 import type { EnSala } from "@/bindings/EnSala";
+import type { IdJugador } from "@/bindings/IdJugador";
 import type { PapelRed } from "@/bindings/PapelRed";
 
 /** Cómo va la conexión con la partida en red (para el aviso de la mesa). */
-export type EstadoConexion = "conectada" | "reconectando" | "perdida";
+export type EstadoConexion = "conectada" | "reconectando" | "buscando" | "perdida";
+
+/** Cómo va la mayoría del anfitrión de código directo (Fase K). */
+export type MayoriaRed = { activa: boolean; conectados: number; total: number };
 
 /** Un jugador que falta de la partida: desde hace `haceMs` cuando se supo, en `visto` (reloj de aquí). */
 export type AusenteVisto = Ausente & { visto: number };
@@ -33,6 +37,10 @@ type RedStore = {
 	enlaces: Enlace[];
 	/** Los jugadores que no están conectados con el anfitrión (G8). */
 	ausentes: AusenteVisto[];
+	/** Con quién se prueba mientras se busca otro anfitrión (Fase K). */
+	candidato: IdJugador | null;
+	/** Si esta app es el anfitrión: cuántos hay conectados y si se juega. */
+	mayoria: MayoriaRed | null;
 	poner: (cambios: Partial<Omit<RedStore, "poner" | "olvidar">>) => void;
 	olvidar: () => void;
 };
@@ -47,6 +55,8 @@ const VACIA = {
 	desfaseMs: 0,
 	enlaces: [] as Enlace[],
 	ausentes: [] as AusenteVisto[],
+	candidato: null as IdJugador | null,
+	mayoria: null as MayoriaRed | null,
 };
 
 export const useRed = create<RedStore>((set) => ({

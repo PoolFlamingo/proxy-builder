@@ -9,8 +9,10 @@ use serde::Serialize;
 use tauri::{Emitter, Manager};
 use ts_rs::TS;
 
+use super::anfitrion::Anfitrion;
+use super::invitado::Conexion;
 use super::mirada::Mirada;
-use super::protocolo::{Ausente, EnSala, Enlace};
+use super::protocolo::{Ausente, EnSala, Enlace, Rol};
 use crate::mesa::sesion::Sesion;
 use crate::state::AppState;
 
@@ -67,6 +69,23 @@ pub enum AvisoRed {
         carta: Option<IdCarta>,
         a: Option<IdJugador>,
     },
+    /// El anfitrión no vuelve: se prueba con el siguiente (Fase K).
+    BuscandoAnfitrion {
+        candidato: IdJugador,
+    },
+    /// Hay anfitrión nuevo (`soy_yo`: esta app).
+    #[serde(rename_all = "camelCase")]
+    NuevoAnfitrion {
+        jugador: IdJugador,
+        soy_yo: bool,
+    },
+    /// Esta app es el anfitrión: cuántos jugadores están conectados (con
+    /// ella) de cuántos hay, y si deja jugar (con más de la mitad).
+    Mayoria {
+        activa: bool,
+        conectados: u32,
+        total: u32,
+    },
 }
 
 pub trait Mesa: Clone + Send + Sync + 'static {
@@ -77,6 +96,11 @@ pub trait Mesa: Clone + Send + Sync + 'static {
     fn avisar(&self, aviso: AvisoRed);
     /// La carpeta de las imágenes de la mesa (`app_cache_dir/mesa/`).
     fn carpeta(&self) -> std::path::PathBuf;
+    /// Esta app pasa a ser el anfitrión (Fase K): `tarea` atiende a los que
+    /// llegan y `codigo` es el código nuevo (su dirección, el mismo secreto).
+    fn ser_anfitrion(&self, anf: Arc<Anfitrion>, tarea: tokio::task::AbortHandle, codigo: String);
+    /// Esta app, que era el anfitrión, sigue como invitado de otro (Fase K).
+    fn ser_invitado(&self, conexion: Conexion, rol: Rol);
 }
 
 /// La de la app: la sesión de `AppState.mesa` y los avisos por evento.
@@ -116,6 +140,28 @@ impl<Rt: tauri::Runtime> Mesa for MesaDeApp<Rt> {
     fn carpeta(&self) -> std::path::PathBuf {
         crate::mesa::imagenes::carpeta(&self.0.state::<AppState>())
     }
+
+    fn ser_anfitrion(&self, anf: Arc<Anfitrion>, tarea: tokio::task::AbortHandle, codigo: String) {
+        let viejo = self
+            .0
+            .state::<AppState>()
+            .red
+            .con_sala(|s| s.replace(super::Sala::Anfitrion { anf, tarea, codigo }));
+        // El bucle del invitado ya terminó (o termina solo): nada que cerrar.
+        drop(viejo);
+    }
+
+    fn ser_invitado(&self, conexion: Conexion, rol: Rol) {
+        let viejo = self
+            .0
+            .state::<AppState>()
+            .red
+            .con_sala(|s| s.replace(super::Sala::Invitado { conexion, rol }));
+        // Deja de atender a los que lleguen como anfitrión.
+        if let Some(super::Sala::Anfitrion { tarea, .. }) = viejo {
+            tarea.abort();
+        }
+    }
 }
 
 /// Para los tests: una sesión en memoria y los avisos apuntados.
@@ -126,6 +172,18 @@ pub struct MesaEnMemoria {
     pub avisos: Arc<Mutex<Vec<AvisoRed>>>,
     /// Una carpeta temporal propia para las imágenes.
     pub carpeta: std::path::PathBuf,
+    /// Lo que esta app es en la partida tras un traspaso (Fase K):
+    /// `"anfitrion"` o `"invitado"`, con lo que haga falta para seguir.
+    pub papel: Arc<Mutex<Option<PapelEnMemoria>>>,
+}
+
+/// Lo que queda en los tests de un traspaso.
+pub enum PapelEnMemoria {
+    Anfitrion {
+        anf: Arc<Anfitrion>,
+        tarea: tokio::task::AbortHandle,
+    },
+    Invitado(Conexion),
 }
 
 impl Default for MesaEnMemoria {
@@ -136,6 +194,7 @@ impl Default for MesaEnMemoria {
             sesion: Arc::default(),
             mirada: Arc::default(),
             avisos: Arc::default(),
+            papel: Arc::default(),
             carpeta: std::env::temp_dir().join(format!(
                 "pb-mesa-{}-{n}-{}",
                 std::process::id(),
@@ -170,5 +229,20 @@ impl Mesa for MesaEnMemoria {
 
     fn carpeta(&self) -> std::path::PathBuf {
         self.carpeta.clone()
+    }
+
+    fn ser_anfitrion(&self, anf: Arc<Anfitrion>, tarea: tokio::task::AbortHandle, _codigo: String) {
+        if let Ok(mut p) = self.papel.lock() {
+            *p = Some(PapelEnMemoria::Anfitrion { anf, tarea });
+        }
+    }
+
+    fn ser_invitado(&self, conexion: Conexion, _rol: Rol) {
+        if let Ok(mut p) = self.papel.lock() {
+            if let Some(PapelEnMemoria::Anfitrion { tarea, .. }) = p.take() {
+                tarea.abort();
+            }
+            *p = Some(PapelEnMemoria::Invitado(conexion));
+        }
     }
 }

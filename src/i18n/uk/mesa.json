@@ -719,7 +719,6 @@
 	"El anfitrión ha cerrado la partida.": "Хост закрив партію.",
 	"Mirando la partida": "Ви дивитеся партію",
 	"{nombre} (tú)": "{nombre} (ви)",
-	"Reconectando con el anfitrión… (intento {intento} de 5)": "Повторне з'єднання з хостом… (спроба {intento} з 5)",
 	"Se ha perdido la conexión con la partida.": "З'єднання з партією втрачено.",
 	"Jugar en red": "Грати мережею",
 	"Sin servidor: quien crea la partida hace de anfitrión y pasa un código a los demás.": "Без сервера: хто створює партію, той і хост — він передає іншим код.",
@@ -948,5 +947,12 @@
 	"y {n} más": "і ще {n}",
 	"Deck de otro jugador": "Колода іншого гравця",
 	"Lista: {lista} · {n} cartas": "Список: {lista} · карт: {n}",
-	"Lista borrada": "Список видалено"
+	"Lista borrada": "Список видалено",
+	"Reconectando con el anfitrión… (intento {intento})": "Перепідключення до хоста… (спроба {intento})",
+	"El anfitrión no vuelve: probando con {nombre}…": "Хост не повертається: пробуємо {nombre}…",
+	"Esperando a más de la mitad de los jugadores ({conectados} de {total}): hasta entonces no se juega.": "Чекаємо понад половину гравців ({conectados} з {total}): до того гра стоїть.",
+	"Ahora eres el anfitrión: la partida sigue con tu copia.": "Тепер хост — ти: партія триває з твоєю копією.",
+	"{nombre} es el nuevo anfitrión.": "{nombre} — новий хост.",
+	"Sin la mayoría de los jugadores conectados no se juega: espera a que vuelvan.": "Без більшості підключених гравців гра стоїть: зачекай, поки вони повернуться.",
+	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "У цього хоста ще немає більшості гравців."
 }

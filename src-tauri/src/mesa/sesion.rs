@@ -331,6 +331,12 @@ impl Sesion {
         }
     }
 
+    /// Se queda con el canal de la pantalla (para pasarlo a otra sesión de
+    /// la misma partida: el anfitrión de antes que sigue de invitado, Fase K).
+    pub fn tomar_canal(&mut self) -> Option<Channel<MensajeMesa>> {
+        self.canal.take()
+    }
+
     pub fn suscribir(&mut self, canal: Channel<MensajeMesa>) {
         self.canal = Some(canal);
         self.mandar(self.mensaje_vista());
@@ -402,6 +408,13 @@ impl Sesion {
     ) -> AppResult<()> {
         if self.repeticion.is_some() && !accion.es_comunicacion() {
             return Err(AppError::new(ErrorCode::Rejected).with("motivo", "repeticion"));
+        }
+        // Un anfitrión sin la mayoría de los jugadores no juega (Fase K): los
+        // que faltan podrían estar siguiendo la partida con otro.
+        if let Some(RedSesion::Anfitrion(a)) = &self.red {
+            if !a.activo() {
+                return Err(AppError::new(ErrorCode::Rejected).with("motivo", "sin_mayoria"));
+            }
         }
         let ahora = ahora_ms();
         // El fantasma mira la partida de antes y la de después (solo si está

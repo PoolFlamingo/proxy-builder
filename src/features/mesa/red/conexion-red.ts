@@ -6,6 +6,7 @@ import type { PeticionUnion } from "@/bindings/PeticionUnion";
 import { paraTraducir, traduccionSuelta } from "@/components/language-provider";
 import { mensajeDeError } from "@/lib/errores";
 import { call } from "@/lib/ipc";
+import { useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
 import { useUi } from "@/stores/ui-store";
 import { useVivo } from "@/stores/vivo-store";
@@ -38,7 +39,29 @@ function alAviso(a: AvisoRed) {
 			r.poner({ conexion: "reconectando", intento: a.intento });
 			break;
 		case "conectada":
-			r.poner({ conexion: "conectada", intento: 0 });
+			r.poner({ conexion: "conectada", intento: 0, candidato: null });
+			break;
+		case "buscandoAnfitrion":
+			r.poner({ conexion: "buscando", candidato: a.candidato });
+			break;
+		case "nuevoAnfitrion":
+			r.poner({ conexion: "conectada", intento: 0, candidato: null });
+			toast(
+				a.soyYo
+					? traduccionSuelta(
+							paraTraducir("Ahora eres el anfitrión: la partida sigue con tu copia."),
+						)
+					: traduccionSuelta(paraTraducir("{nombre} es el nuevo anfitrión."), {
+							nombre: useMesa.getState().jugadores[a.jugador]?.nombre ?? "?",
+						}),
+			);
+			// El papel (y el código, si ahora es el anfitrión) cambian.
+			void refrescarRed();
+			break;
+		case "mayoria":
+			r.poner({
+				mayoria: { activa: a.activa, conectados: a.conectados, total: a.total },
+			});
 			break;
 		case "perdida":
 			r.poner({ conexion: "perdida" });

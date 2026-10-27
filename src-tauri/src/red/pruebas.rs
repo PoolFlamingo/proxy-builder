@@ -37,6 +37,8 @@ struct Partida3 {
     host: Jugador,
     invitados: Vec<Jugador>,
     codigo: Codigo,
+    /// La tarea que atiende a los que llegan al anfitrión.
+    aceptador: tokio::task::JoinHandle<()>,
 }
 
 async fn esperar(que: &str, cond: impl Fn() -> bool) {
@@ -83,7 +85,7 @@ async fn partida_con(decks: Vec<DeckDeMesa>) -> Partida3 {
     };
     let anf = Anfitrion::nuevo("Host".into(), secreto_nuevo());
     *anf.deck.lock().unwrap() = Some("Prueba".into());
-    tokio::spawn(atender(host.ep.clone(), anf.clone(), host.mesa.clone()));
+    let aceptador = tokio::spawn(atender(host.ep.clone(), anf.clone(), host.mesa.clone()));
     let codigo = Codigo {
         addr: host.ep.addr(),
         secreto: anf.secreto().to_string(),
@@ -138,6 +140,7 @@ async fn partida_con(decks: Vec<DeckDeMesa>) -> Partida3 {
         host,
         invitados,
         codigo,
+        aceptador,
     }
 }
 
@@ -303,8 +306,36 @@ async fn sin_el_secreto_o_con_otra_version_no_se_entra() {
     assert_eq!(e.params["motivo"], "empezada");
 }
 
+fn es_anfitrion(m: &MesaEnMemoria) -> bool {
+    m.con(|s| {
+        matches!(
+            s.as_ref().and_then(|s| s.red.as_ref()),
+            Some(RedSesion::Anfitrion(_))
+        )
+    })
+}
+
+fn epoch_invitado(m: &MesaEnMemoria) -> Option<u32> {
+    m.con(|s| match s.as_ref().and_then(|s| s.red.as_ref()) {
+        Some(RedSesion::Invitado(i)) => Some(i.epoch),
+        _ => None,
+    })
+}
+
+fn activo(m: &MesaEnMemoria) -> bool {
+    m.con(|s| match s.as_ref().and_then(|s| s.red.as_ref()) {
+        Some(RedSesion::Anfitrion(a)) => a.activo(),
+        _ => false,
+    })
+}
+
+fn hace(m: &MesaEnMemoria, accion: Accion) -> Result<(), String> {
+    m.con(|s| s.as_mut().unwrap().accion(accion, None))
+        .map_err(|e| e.params.get("motivo").cloned().unwrap_or_default())
+}
+
 #[tokio::test]
-async fn si_se_va_el_anfitrion_otro_sigue_la_partida() {
+async fn si_se_va_el_anfitrion_otro_sigue_la_partida_sin_servidor() {
     let p = partida(2).await;
     quedarse_todos(&p).await;
     let mut azar = Azar::new(3);
@@ -319,46 +350,32 @@ async fn si_se_va_el_anfitrion_otro_sigue_la_partida() {
     }
     todos_iguales(&p).await;
     let antes = seq(&p.invitados[0].mesa).unwrap();
-    // Se va el anfitrión.
-    p.host.ep.close().await;
-    // B (el jugador 1) sigue de anfitrión, época 2, con su copia.
-    let b = &p.invitados[0];
-    let nodos = b
+    // Todos saben quién es quién, con su dirección.
+    let nodos = p.invitados[1]
         .mesa
         .con(|s| match s.as_ref().and_then(|s| s.red.as_ref()) {
             Some(RedSesion::Invitado(i)) => i.nodos.clone(),
             _ => Vec::new(),
         });
     assert_eq!(nodos.len(), 3);
-    let anf_b = Anfitrion::desde(2, p.codigo.secreto.clone(), "B".into(), &nodos);
-    b.mesa
-        .con(|s| s.as_mut().unwrap().red = Some(RedSesion::Anfitrion(anf_b.clone())));
-    tokio::spawn(atender(b.ep.clone(), anf_b.clone(), b.mesa.clone()));
-    // C se une a B con el mismo secreto (la Fase F le dirá a quién).
+    assert!(nodos.iter().all(|n| n.direccion.is_some()), "{nodos:?}");
+    // Se va el anfitrión (se cierra su app).
+    p.host.ep.close().await;
+    // B (el jugador 1) sigue de anfitrión solo, con su copia; C lo encuentra.
+    let b = &p.invitados[0];
     let c = &p.invitados[1];
-    unirse(
-        c.ep.clone(),
-        Union {
-            codigo: Codigo {
-                addr: b.ep.addr(),
-                secreto: p.codigo.secreto.clone(),
-            },
-            apodo: "C".into(),
-            rol: Rol::Jugador,
-            deck: None,
-        },
-        c.mesa.clone(),
-    )
-    .await
-    .unwrap();
-    esperar("que C tenga la época 2", || {
-        c.mesa
-            .con(|s| match s.as_ref().and_then(|s| s.red.as_ref()) {
-                Some(RedSesion::Invitado(i)) => i.epoch == 2,
-                _ => false,
-            })
-    })
-    .await;
+    esperar("que B sea el anfitrión", || es_anfitrion(&b.mesa)).await;
+    esperar("que C se una a B", || epoch_invitado(&c.mesa) == Some(2)).await;
+    // Con 2 de 3, B tiene la mayoría y deja jugar.
+    esperar("que B juegue", || activo(&b.mesa)).await;
+    assert!(avisos(&c.mesa).contains(&AvisoRed::NuevoAnfitrion {
+        jugador: IdJugador(1),
+        soy_yo: false
+    }));
+    assert!(avisos(&b.mesa).contains(&AvisoRed::NuevoAnfitrion {
+        jugador: IdJugador(1),
+        soy_yo: true
+    }));
     // Otras 100 jugadas entre B y C.
     for _ in 0..100 {
         let quien = 1 + azar.menor_que(2) as usize;
@@ -372,6 +389,105 @@ async fn si_se_va_el_anfitrion_otro_sigue_la_partida() {
     assert_eq!(huella(&c.mesa), huella(&b.mesa));
     let despues = seq(&b.mesa).unwrap();
     assert!(despues > antes + 50, "{antes} → {despues}");
+}
+
+#[tokio::test]
+async fn con_dos_jugadores_el_que_queda_espera_sin_jugar() {
+    let p = partida(1).await;
+    quedarse_todos(&p).await;
+    p.host.ep.close().await;
+    let b = &p.invitados[0];
+    esperar("que B herede la partida", || es_anfitrion(&b.mesa)).await;
+    // 1 de 2 no es la mayoría: no se juega.
+    tokio::time::sleep(Duration::from_millis(400)).await;
+    assert!(!activo(&b.mesa));
+    assert_eq!(
+        hace(&b.mesa, Accion::Robar { n: 1 }),
+        Err("sin_mayoria".into())
+    );
+    assert!(avisos(&b.mesa).contains(&AvisoRed::Mayoria {
+        activa: false,
+        conectados: 1,
+        total: 2
+    }));
+}
+
+#[tokio::test]
+async fn el_espectador_sigue_mirando_con_el_anfitrion_nuevo() {
+    let p = partida(2).await;
+    quedarse_todos(&p).await;
+    let esp = Jugador {
+        mesa: MesaEnMemoria::default(),
+        ep: crear(SecretKey::generate(), Relay::Ninguno).await.unwrap(),
+        conexion: None,
+    };
+    let _c = unirse(
+        esp.ep.clone(),
+        Union {
+            codigo: p.codigo.clone(),
+            apodo: "Mira".into(),
+            rol: Rol::Espectador,
+            deck: None,
+        },
+        esp.mesa.clone(),
+    )
+    .await
+    .unwrap();
+    let epoch = |m: &MesaEnMemoria| m.mirada(|v| v.as_ref().map(|v| (v.epoch, v.nodos.len())));
+    esperar("la vista con los nodos", || {
+        epoch(&esp.mesa) == Some((1, 3))
+    })
+    .await;
+    p.host.ep.close().await;
+    let b = &p.invitados[0];
+    esperar("que B juegue", || activo(&b.mesa)).await;
+    esperar("que el espectador mire a B", || {
+        epoch(&esp.mesa).map(|e| e.0) == Some(2)
+    })
+    .await;
+    // Lo que se juega con B le llega.
+    let antes = esp.mesa.mirada(|v| v.as_ref().map(|v| v.vista.version));
+    hace(&b.mesa, Accion::Robar { n: 1 }).unwrap();
+    esperar("el parche de B", || {
+        esp.mesa.mirada(|v| v.as_ref().map(|v| v.vista.version)) > antes
+    })
+    .await;
+}
+
+#[tokio::test]
+async fn el_anfitrion_que_se_queda_solo_se_para_y_luego_se_une_al_nuevo() {
+    let p = partida(2).await;
+    quedarse_todos(&p).await;
+    // El anfitrión pierde la red: ya no atiende a nadie y se le cortan los
+    // dos, pero su app sigue abierta.
+    p.aceptador.abort();
+    p.anf.cortar(IdJugador(1));
+    p.anf.cortar(IdJugador(2));
+    let (b, c) = (&p.invitados[0], &p.invitados[1]);
+    // Con 1 de 3, se para: no puede seguir mientras los otros dos eligen.
+    esperar("que el anfitrión se pare", || !p.anf.activo()).await;
+    assert_eq!(
+        hace(&p.host.mesa, Accion::Robar { n: 1 }),
+        Err("sin_mayoria".into())
+    );
+    esperar("que B sea el anfitrión", || es_anfitrion(&b.mesa)).await;
+    esperar("que C se una a B", || epoch_invitado(&c.mesa) == Some(2)).await;
+    esperar("que B juegue", || activo(&b.mesa)).await;
+    // El de antes se une a B como invitado.
+    esperar("que el anfitrión de antes se una a B", || {
+        epoch_invitado(&p.host.mesa) == Some(2)
+    })
+    .await;
+    assert!(p.anf.acabado());
+    hace(&b.mesa, Accion::Robar { n: 1 }).unwrap();
+    hace(&p.host.mesa, Accion::Robar { n: 1 }).unwrap();
+    for m in [&c.mesa, &p.host.mesa] {
+        esperar("todos con la partida de B", || {
+            pendientes(m) == 0 && seq(m) == seq(&b.mesa)
+        })
+        .await;
+        assert_eq!(huella(m), huella(&b.mesa));
+    }
 }
 
 #[tokio::test]

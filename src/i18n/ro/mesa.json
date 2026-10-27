@@ -693,7 +693,6 @@
 	"El anfitrión ha cerrado la partida.": "Gazda a închis partida.",
 	"Mirando la partida": "Urmărești partida",
 	"{nombre} (tú)": "{nombre} (tu)",
-	"Reconectando con el anfitrión… (intento {intento} de 5)": "Reconectare la gazdă… (încercarea {intento} din 5)",
 	"Se ha perdido la conexión con la partida.": "Conexiunea cu partida s-a pierdut.",
 	"Jugar en red": "Joacă online",
 	"Sin servidor: quien crea la partida hace de anfitrión y pasa un código a los demás.": "Fără server: cine creează partida e gazda și le dă celorlalți un cod.",
@@ -921,5 +920,12 @@
 	"y {n} más": "și încă {n}",
 	"Deck de otro jugador": "Deck al altui jucător",
 	"Lista: {lista} · {n} cartas": "Listă: {lista} · {n} cărți",
-	"Lista borrada": "Listă ștearsă"
+	"Lista borrada": "Listă ștearsă",
+	"Reconectando con el anfitrión… (intento {intento})": "Se reconectează la gazdă… (încercarea {intento})",
+	"El anfitrión no vuelve: probando con {nombre}…": "Gazda nu revine: se încearcă cu {nombre}…",
+	"Esperando a más de la mitad de los jugadores ({conectados} de {total}): hasta entonces no se juega.": "Se așteaptă mai mult de jumătate dintre jucători ({conectados} din {total}): până atunci nu se joacă.",
+	"Ahora eres el anfitrión: la partida sigue con tu copia.": "Acum ești gazda: partida continuă cu copia ta.",
+	"{nombre} es el nuevo anfitrión.": "{nombre} este noua gazdă.",
+	"Sin la mayoría de los jugadores conectados no se juega: espera a que vuelvan.": "Fără majoritatea jucătorilor conectați nu se joacă: așteaptă să revină.",
+	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "Acea gazdă nu are încă majoritatea jucătorilor."
 }

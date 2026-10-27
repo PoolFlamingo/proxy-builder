@@ -76,6 +76,15 @@ pub enum AlHost {
         /// Al volver: el último evento que tiene y la época.
         ultimo_seq: Option<u64>,
         epoch: u32,
+        /// Su `EndpointAddr` en JSON, para que los demás puedan llegar a él
+        /// si pasa a ser anfitrión (Fase K). El host lo comprueba con el
+        /// nodo de la conexión.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        direccion: Option<String>,
+        /// Entra solo si este anfitrión ya tiene la mayoría (quien era
+        /// anfitrión y se une al nuevo, Fase K): si no, `no_activo`.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        solo_si_activo: bool,
     },
     /// El deck con el que entra (en la sala de espera).
     Preparacion {
@@ -111,6 +120,10 @@ pub struct EnSala {
 pub struct NodoJugador {
     pub jugador: IdJugador,
     pub nodo: String,
+    /// Su `EndpointAddr` en JSON, si se sabe (Fase K: para buscarlo sin
+    /// servidor si el anfitrión se va).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub direccion: Option<String>,
 }
 
 /// Lo que manda el host.
@@ -143,7 +156,13 @@ pub enum DelHost {
     /// La intención `id` no se pudo hacer (o el `Hola`, sin `id`).
     Rechazo { id: Option<u64>, motivo: String },
     /// A un espectador: su vista (nunca la partida: lo oculto no viaja).
-    VistaEspectador { epoch: u32, vista: Box<VistaMesa> },
+    VistaEspectador {
+        epoch: u32,
+        vista: Box<VistaMesa>,
+        /// Los jugadores, para seguir mirando si el anfitrión se va (Fase K).
+        #[serde(default)]
+        nodos: Vec<NodoJugador>,
+    },
     /// A un espectador: lo que cambió y, si se puede contar, el evento.
     ParcheEspectador {
         epoch: u32,
@@ -456,6 +475,8 @@ mod tests {
             secreto: Some("00".repeat(16)),
             ultimo_seq: None,
             epoch: 1,
+            direccion: None,
+            solo_si_activo: false,
         }
     }
 
@@ -777,6 +798,8 @@ mod tests {
             secreto: None,
             ultimo_seq: None,
             epoch: 1,
+            direccion: None,
+            solo_si_activo: false,
         };
         escribir_al_host(&mut a, &gordo).await.unwrap();
         assert!(matches!(

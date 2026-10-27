@@ -629,7 +629,6 @@
 	"El anfitrión ha cerrado la partida.": "El anfitrión ha cerrado la partida.",
 	"Mirando la partida": "Mirando la partida",
 	"{nombre} (tú)": "{nombre} (tú)",
-	"Reconectando con el anfitrión… (intento {intento} de 5)": "Reconectando con el anfitrión… (intento {intento} de 5)",
 	"Se ha perdido la conexión con la partida.": "Se ha perdido la conexión con la partida.",
 	"Jugar en red": "Jugar en red",
 	"Sin servidor: quien crea la partida hace de anfitrión y pasa un código a los demás.": "Sin servidor: quien crea la partida hace de anfitrión y pasa un código a los demás.",
@@ -853,5 +852,12 @@
 	"y {n} más": "y {n} más",
 	"Deck de otro jugador": "Deck de otro jugador",
 	"Lista: {lista} · {n} cartas": "Lista: {lista} · {n} cartas",
-	"Lista borrada": "Lista borrada"
+	"Lista borrada": "Lista borrada",
+	"Reconectando con el anfitrión… (intento {intento})": "Reconectando con el anfitrión… (intento {intento})",
+	"El anfitrión no vuelve: probando con {nombre}…": "El anfitrión no vuelve: probando con {nombre}…",
+	"Esperando a más de la mitad de los jugadores ({conectados} de {total}): hasta entonces no se juega.": "Esperando a más de la mitad de los jugadores ({conectados} de {total}): hasta entonces no se juega.",
+	"Ahora eres el anfitrión: la partida sigue con tu copia.": "Ahora eres el anfitrión: la partida sigue con tu copia.",
+	"{nombre} es el nuevo anfitrión.": "{nombre} es el nuevo anfitrión.",
+	"Sin la mayoría de los jugadores conectados no se juega: espera a que vuelvan.": "Sin la mayoría de los jugadores conectados no se juega: espera a que vuelvan.",
+	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "Ese anfitrión aún no tiene la mayoría de los jugadores."
 }

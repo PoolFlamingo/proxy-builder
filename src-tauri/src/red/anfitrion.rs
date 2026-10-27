@@ -20,12 +20,12 @@
 //! se pide la sesión con la sala cogida.
 
 use std::collections::VecDeque;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 
 use iroh::endpoint::Connection;
-use iroh::{Endpoint, EndpointId};
+use iroh::{Endpoint, EndpointAddr, EndpointId};
 use mesa::accion::{Cambio, Evento};
 use mesa::preparar::DeckDeMesa;
 use mesa::registro::Hecho;
@@ -68,6 +68,8 @@ struct Par {
     enlace: Option<(u32, bool)>,
     /// Desde cuándo falta, si ya empezó la partida y se fue (G8).
     ausente_desde: Option<Instant>,
+    /// Su `EndpointAddr` en JSON, comprobado con su nodo (Fase K).
+    direccion: Option<String>,
 }
 
 struct Sala {
@@ -88,6 +90,20 @@ pub struct Anfitrion {
     permitidos: Mutex<Option<std::collections::BTreeSet<EndpointId>>>,
     /// Los expulsados de esta partida: no vuelven a entrar (G8).
     expulsados: Mutex<std::collections::BTreeSet<EndpointId>>,
+    /// El asiento de esta app: el 0 al abrir la partida; al heredarla, el
+    /// suyo.
+    pub mi_jugador: IdJugador,
+    /// El nodo de esta app, si heredó la partida (no se cuenta entre los
+    /// demás).
+    mi_nodo: Option<EndpointId>,
+    /// El nodo que atiende la partida (para dar su dirección).
+    endpoint: Mutex<Option<Endpoint>>,
+    /// Si deja jugar. Con código directo, solo con la mayoría de los
+    /// jugadores conectados (Fase K): sin ella se para, para que no haya dos
+    /// partidas a la vez. Con el servidor de salas, siempre.
+    activo: AtomicBool,
+    /// Cerrado o cedido a otro anfitrión: el vigía se para.
+    acabado: AtomicBool,
 }
 
 /// Cómo queda quien entra.
@@ -119,16 +135,33 @@ impl Anfitrion {
             siguiente: AtomicU64::new(1),
             permitidos: Mutex::new(None),
             expulsados: Mutex::new(Default::default()),
+            mi_jugador: IdJugador(0),
+            mi_nodo: None,
+            endpoint: Mutex::new(None),
+            activo: AtomicBool::new(true),
+            acabado: AtomicBool::new(false),
         })
     }
 
     /// Un anfitrión que sigue una partida ya empezada (al migrar: el host
-    /// se fue y otro jugador sigue). Conoce a los jugadores por su nodo.
-    pub fn desde(epoch: u32, secreto: String, apodo: String, nodos: &[NodoJugador]) -> Arc<Self> {
+    /// se fue y otro jugador sigue). Conoce a los jugadores por su nodo; él
+    /// es `mi_jugador` (`mi_nodo`). Con código directo (`secreto`) empieza
+    /// parado hasta tener la mayoría (Fase K); con el servidor, no.
+    pub fn desde(
+        epoch: u32,
+        secreto: String,
+        apodo: String,
+        mi_nodo: EndpointId,
+        mi_jugador: IdJugador,
+        nodos: &[NodoJugador],
+    ) -> Arc<Self> {
         let pares = nodos
             .iter()
             .filter_map(|n| {
                 let nodo = n.nodo.parse::<EndpointId>().ok()?;
+                if nodo == mi_nodo {
+                    return None;
+                }
                 Some(Par {
                     conexion: 0,
                     nodo,
@@ -143,9 +176,11 @@ impl Anfitrion {
                     enlace: None,
                     // Al migrar nadie está conectado todavía: cuentan desde ahora.
                     ausente_desde: Some(Instant::now()),
+                    direccion: n.direccion.clone(),
                 })
             })
             .collect();
+        let activo = secreto.is_empty();
         Arc::new(Anfitrion {
             epoch,
             secreto,
@@ -158,7 +193,84 @@ impl Anfitrion {
             siguiente: AtomicU64::new(1),
             permitidos: Mutex::new(None),
             expulsados: Mutex::new(Default::default()),
+            mi_jugador,
+            mi_nodo: Some(mi_nodo),
+            endpoint: Mutex::new(None),
+            activo: AtomicBool::new(activo),
+            acabado: AtomicBool::new(false),
         })
+    }
+
+    /// Si la partida es de código directo (sin servidor de salas).
+    pub fn con_codigo(&self) -> bool {
+        !self.secreto.is_empty()
+    }
+
+    /// El nodo que atiende la partida (para dar su dirección a los demás).
+    pub fn poner_endpoint(&self, ep: Endpoint) {
+        *cerrojo(&self.endpoint) = Some(ep);
+    }
+
+    /// Si deja jugar (Fase K).
+    pub fn activo(&self) -> bool {
+        self.activo.load(Ordering::SeqCst)
+    }
+
+    pub fn activar(&self, si: bool) {
+        self.activo.store(si, Ordering::SeqCst);
+    }
+
+    /// Cerrado o cedido a otro.
+    pub fn acabado(&self) -> bool {
+        self.acabado.load(Ordering::SeqCst)
+    }
+
+    /// Cuántos jugadores hay en la partida (sin los expulsados, con esta
+    /// app) y cuántos están conectados con ella (con esta app).
+    pub fn recuento(&self) -> (usize, usize) {
+        let expulsados = cerrojo(&self.expulsados).clone();
+        let s = cerrojo(&self.sala);
+        let otros: Vec<&Par> = s
+            .pares
+            .iter()
+            .filter(|p| {
+                p.rol == Rol::Jugador
+                    && p.jugador.is_some()
+                    && Some(p.nodo) != self.mi_nodo
+                    && !expulsados.contains(&p.nodo)
+            })
+            .collect();
+        (
+            otros.len() + 1,
+            otros.iter().filter(|p| p.tx.is_some()).count() + 1,
+        )
+    }
+
+    /// Más de la mitad de los jugadores, con esta app, están conectados.
+    pub fn mayoria(&self) -> bool {
+        let (total, conectados) = self.recuento();
+        2 * conectados > total
+    }
+
+    /// Menos de la mitad: los que faltan podrían tener la mayoría sin esta
+    /// app (con justo la mitad, nadie la tiene).
+    pub fn minoria(&self) -> bool {
+        let (total, conectados) = self.recuento();
+        2 * conectados < total
+    }
+
+    /// Deja de ser el anfitrión (cede a otro): corta a todos sin cerrar la
+    /// partida, para que busquen al anfitrión que sigue.
+    pub fn soltar(&self) {
+        self.acabado.store(true, Ordering::SeqCst);
+        self.activar(false);
+        let mut s = cerrojo(&self.sala);
+        for p in s.pares.iter_mut() {
+            p.tx = None;
+            if let Some(c) = p.conn.take() {
+                c.close(6u32.into(), b"otro_anfitrion");
+            }
+        }
     }
 
     pub fn secreto(&self) -> &str {
@@ -225,6 +337,7 @@ impl Anfitrion {
         apodo: String,
         rol: Rol,
         tx: mpsc::UnboundedSender<DelHost>,
+        direccion: Option<String>,
     ) -> Result<Admision, &'static str> {
         let mut s = cerrojo(&self.sala);
         let conexion = self.siguiente.fetch_add(1, Ordering::SeqCst);
@@ -240,6 +353,9 @@ impl Anfitrion {
             p.conexion = conexion;
             p.tx = Some(tx);
             p.ausente_desde = None;
+            if direccion.is_some() {
+                p.direccion = direccion;
+            }
             if !apodo.is_empty() {
                 p.apodo = apodo;
             }
@@ -276,6 +392,7 @@ impl Anfitrion {
             ritmo: VecDeque::new(),
             enlace: None,
             ausente_desde: None,
+            direccion,
         });
         Ok(Admision {
             conexion,
@@ -326,7 +443,7 @@ impl Anfitrion {
     pub fn enlaces(&self) -> Vec<Enlace> {
         let s = cerrojo(&self.sala);
         let mut v = vec![Enlace {
-            jugador: IdJugador(0),
+            jugador: self.mi_jugador,
             rtt_ms: 0,
             directo: true,
         }];
@@ -426,6 +543,7 @@ impl Anfitrion {
 
     /// Cierra la partida para todos.
     pub fn cerrar(&self) {
+        self.acabado.store(true, Ordering::SeqCst);
         let s = cerrojo(&self.sala);
         for p in s.pares.iter() {
             if let Some(tx) = &p.tx {
@@ -505,17 +623,29 @@ impl Anfitrion {
 
     /// Quién es quién (para que cualquiera pueda seguir de anfitrión).
     pub fn nodos(&self, yo: EndpointId) -> Vec<NodoJugador> {
+        let expulsados = cerrojo(&self.expulsados).clone();
+        let mia = cerrojo(&self.endpoint)
+            .as_ref()
+            .and_then(|e| serde_json::to_string(&e.addr()).ok());
         let s = cerrojo(&self.sala);
         let mut v = vec![NodoJugador {
-            jugador: IdJugador(0),
+            jugador: self.mi_jugador,
             nodo: yo.to_string(),
+            direccion: mia,
         }];
-        v.extend(s.pares.iter().filter_map(|p| {
-            Some(NodoJugador {
-                jugador: p.jugador?,
-                nodo: p.nodo.to_string(),
-            })
-        }));
+        v.extend(
+            s.pares
+                .iter()
+                .filter(|p| p.nodo != yo && !expulsados.contains(&p.nodo))
+                .filter_map(|p| {
+                    Some(NodoJugador {
+                        jugador: p.jugador.filter(|_| p.rol == Rol::Jugador)?,
+                        nodo: p.nodo.to_string(),
+                        direccion: p.direccion.clone(),
+                    })
+                }),
+        );
+        v.sort_by_key(|n| n.jugador);
         v
     }
 
@@ -536,6 +666,7 @@ impl Anfitrion {
             _ => DelHost::VistaEspectador {
                 epoch: self.epoch,
                 vista: Box::new(vista(partida, Mirador::Espectador)),
+                nodos,
             },
         };
         let _ = tx.send(m);
@@ -719,6 +850,8 @@ fn para_espectador(epoch: u32, partida: &Partida, hecho: &Hecho, restaura: bool)
         DelHost::VistaEspectador {
             epoch,
             vista: Box::new(vista(partida, Mirador::Espectador)),
+            // Los nodos ya los tiene de su primera vista.
+            nodos: Vec::new(),
         }
     } else {
         let parche = parche(partida, &hecho.tocado, Mirador::Espectador);
@@ -832,6 +965,15 @@ fn evento_visible(partida: &Partida, cambio: &Cambio, quitadas: &[mesa::IdCarta]
 
 /// Atiende las conexiones que llegan al nodo mientras dure.
 pub async fn atender<M: Mesa>(ep: Endpoint, anf: Arc<Anfitrion>, mesa: M) {
+    anf.poner_endpoint(ep.clone());
+    if anf.con_codigo() {
+        // Sin servidor, el anfitrión vigila su mayoría (Fase K).
+        tokio::spawn(super::sucesion::vigilar(
+            Arc::downgrade(&anf),
+            ep.clone(),
+            mesa.clone(),
+        ));
+    }
     while let Some(entrante) = ep.accept().await {
         let anf = anf.clone();
         let mesa = mesa.clone();
@@ -875,11 +1017,16 @@ pub(crate) async fn atender_conexion<M: Mesa>(
         rol,
         apodo,
         secreto,
+        direccion,
+        solo_si_activo,
         ..
     } = hola
     else {
         return;
     };
+    // Su dirección solo vale si es la de su nodo.
+    let direccion =
+        direccion.filter(|d| serde_json::from_str::<EndpointAddr>(d).is_ok_and(|a| a.id == nodo));
     let rechazo = if protocolo != PROTOCOLO
         || v != version_app()
         || version_catalogo != mesa::VERSION_CATALOGO
@@ -887,6 +1034,8 @@ pub(crate) async fn atender_conexion<M: Mesa>(
         Some("version")
     } else if !anf.deja_entrar(nodo, secreto.as_deref()) {
         Some("codigo")
+    } else if solo_si_activo && !anf.activo() {
+        Some("no_activo")
     } else {
         None
     };
@@ -905,7 +1054,7 @@ pub(crate) async fn atender_conexion<M: Mesa>(
         return;
     }
     let (salida, mut entrada) = mpsc::unbounded_channel::<DelHost>();
-    let adm = match anf.admitir(nodo, apodo, rol, salida.clone()) {
+    let adm = match anf.admitir(nodo, apodo, rol, salida.clone(), direccion) {
         Ok(a) => a,
         Err(motivo) => {
             let _ = escribir_del_host(

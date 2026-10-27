@@ -38,6 +38,12 @@
 				"directo": false
 			}
 		],
+		"ausentes": [
+			{
+				"jugador": 2,
+				"haceMs": 31000
+			}
+		],
 		"t": 10
 	}
 ]

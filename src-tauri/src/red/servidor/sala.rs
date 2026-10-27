@@ -294,11 +294,24 @@ fn hacer_de_host(app: &AppHandle, salon: &Arc<Salon>, epoch: u32, hay_partida: b
     let mesa = MesaDeApp(app.clone());
     let anf = if hay_partida {
         // Migrar: sigue la partida con la copia de esta app.
-        let nodos = mesa.con(|m| match m.as_ref().and_then(|s| s.red.as_ref()) {
-            Some(RedSesion::Invitado(i)) => i.nodos.clone(),
-            _ => Vec::new(),
+        let (nodos, yo) = mesa.con(|m| match m.as_ref() {
+            Some(s) => (
+                match &s.red {
+                    Some(RedSesion::Invitado(i)) => i.nodos.clone(),
+                    _ => Vec::new(),
+                },
+                s.yo,
+            ),
+            None => (Vec::new(), mesa::IdJugador(0)),
         });
-        let anf = Anfitrion::desde(epoch, String::new(), salon.apodo.clone(), &nodos);
+        let anf = Anfitrion::desde(
+            epoch,
+            String::new(),
+            salon.apodo.clone(),
+            salon.yo,
+            yo,
+            &nodos,
+        );
         mesa.con(|m| {
             if let Some(s) = m.as_mut() {
                 s.red = Some(RedSesion::Anfitrion(anf.clone()));

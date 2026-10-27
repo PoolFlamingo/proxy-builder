@@ -629,7 +629,6 @@
 	"El anfitrión ha cerrado la partida.": "ホストがゲームを終了しました。",
 	"Mirando la partida": "ゲームを観戦中",
 	"{nombre} (tú)": "{nombre}（あなた）",
-	"Reconectando con el anfitrión… (intento {intento} de 5)": "ホストに再接続中…（{intento}/5 回目）",
 	"Se ha perdido la conexión con la partida.": "ゲームとの接続が切れました。",
 	"Jugar en red": "オンラインで遊ぶ",
 	"Sin servidor: quien crea la partida hace de anfitrión y pasa un código a los demás.": "サーバーなし：ゲームを作った人がホストになり、ほかの人にコードを渡します。",
@@ -853,5 +852,12 @@
 	"y {n} más": "ほか {n} 人",
 	"Deck de otro jugador": "他のプレイヤーのデッキ",
 	"Lista: {lista} · {n} cartas": "リスト: {lista}・{n}枚",
-	"Lista borrada": "リスト削除済み"
+	"Lista borrada": "リスト削除済み",
+	"Reconectando con el anfitrión… (intento {intento})": "ホストに再接続中…（{intento} 回目）",
+	"El anfitrión no vuelve: probando con {nombre}…": "ホストが戻りません：{nombre} を試しています…",
+	"Esperando a más de la mitad de los jugadores ({conectados} de {total}): hasta entonces no se juega.": "過半数のプレイヤーを待っています（{total} 人中 {conectados} 人）：それまではプレイできません。",
+	"Ahora eres el anfitrión: la partida sigue con tu copia.": "あなたがホストになりました：あなたのコピーで対戦が続きます。",
+	"{nombre} es el nuevo anfitrión.": "{nombre} が新しいホストです。",
+	"Sin la mayoría de los jugadores conectados no se juega: espera a que vuelvan.": "過半数のプレイヤーが接続していないとプレイできません：戻るのを待ってください。",
+	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "そのホストにはまだ過半数のプレイヤーがいません。"
 }

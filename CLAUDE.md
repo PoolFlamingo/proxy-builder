@@ -261,6 +261,15 @@ le falta una cadena le sale la inglesa.
   el nombre y el tamaño los apunta `store::partidas::guardar` desde
   `deck_listas`). Pantalla `features/mesa/historial-general.tsx` (botón
   «Historial» de Jugar) con filtros puros en `cuentas-historial.ts`.
+  **Traspaso del anfitrión sin servidor** (Fase K; Pablo, 27/10/2026):
+  `red/sucesion.rs`. Con código directo, el invitado que no recupera al
+  anfitrión prueba a los demás por asiento y, si le toca, sigue de anfitrión
+  con su copia y el mismo secreto (`Anfitrion::desde`). 🛑 Un anfitrión de
+  código directo solo deja jugar con más de la mitad de los jugadores
+  conectados (`sin_mayoria`; se para antes de lo que tarda otro en activarse)
+  y uno parado se une a otro (`ceder`, `solo_si_activo`): así nunca hay dos
+  partidas. Hooks `Mesa::ser_anfitrion`/`ser_invitado`. Con el servidor de
+  salas no se usa: elige él.
 - Rust: `commands/{cards,decklist,export,identify,layout,library,stats}.rs`,
   `package.rs` (.pbdeck), `render.rs` + `protocol.rs` (miniaturas),
   `ocr.rs` (OCR opcional de la carta entera con `ocrs`, a la resolución

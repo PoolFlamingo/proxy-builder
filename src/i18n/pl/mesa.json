@@ -714,7 +714,6 @@
 	"El anfitrión ha cerrado la partida.": "Gospodarz zamknął grę.",
 	"Mirando la partida": "Oglądasz grę",
 	"{nombre} (tú)": "{nombre} (ty)",
-	"Reconectando con el anfitrión… (intento {intento} de 5)": "Ponowne łączenie z gospodarzem… (próba {intento} z 5)",
 	"Se ha perdido la conexión con la partida.": "Utracono połączenie z grą.",
 	"Jugar en red": "Graj online",
 	"Sin servidor: quien crea la partida hace de anfitrión y pasa un código a los demás.": "Bez serwera: kto tworzy grę, jest gospodarzem i daje pozostałym kod.",
@@ -943,5 +942,12 @@
 	"y {n} más": "i jeszcze {n}",
 	"Deck de otro jugador": "Talia innego gracza",
 	"Lista: {lista} · {n} cartas": "Lista: {lista} · {n} kart",
-	"Lista borrada": "Lista usunięta"
+	"Lista borrada": "Lista usunięta",
+	"Reconectando con el anfitrión… (intento {intento})": "Ponowne łączenie z gospodarzem… (próba {intento})",
+	"El anfitrión no vuelve: probando con {nombre}…": "Gospodarz nie wraca: próba z {nombre}…",
+	"Esperando a más de la mitad de los jugadores ({conectados} de {total}): hasta entonces no se juega.": "Czekamy na ponad połowę graczy ({conectados} z {total}): do tego czasu się nie gra.",
+	"Ahora eres el anfitrión: la partida sigue con tu copia.": "Teraz ty jesteś gospodarzem: partia toczy się dalej na twojej kopii.",
+	"{nombre} es el nuevo anfitrión.": "{nombre} jest nowym gospodarzem.",
+	"Sin la mayoría de los jugadores conectados no se juega: espera a que vuelvan.": "Bez większości podłączonych graczy się nie gra: poczekaj, aż wrócą.",
+	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "Ten gospodarz nie ma jeszcze większości graczy."
 }

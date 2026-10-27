@@ -680,7 +680,6 @@
 	"El anfitrión ha cerrado la partida.": "The host has closed the game.",
 	"Mirando la partida": "Watching the game",
 	"{nombre} (tú)": "{nombre} (you)",
-	"Reconectando con el anfitrión… (intento {intento} de 5)": "Reconnecting to the host… (attempt {intento} of 5)",
 	"Se ha perdido la conexión con la partida.": "The connection to the game has been lost.",
 	"Jugar en red": "Play online",
 	"Sin servidor: quien crea la partida hace de anfitrión y pasa un código a los demás.": "No server: whoever creates the game is the host and gives a code to the others.",
@@ -907,5 +906,12 @@
 	"y {n} más": "and {n} more",
 	"Deck de otro jugador": "Another player's deck",
 	"Lista: {lista} · {n} cartas": "List: {lista} · {n} cards",
-	"Lista borrada": "List deleted"
+	"Lista borrada": "List deleted",
+	"Reconectando con el anfitrión… (intento {intento})": "Reconnecting to the host… (attempt {intento})",
+	"El anfitrión no vuelve: probando con {nombre}…": "The host isn't coming back: trying {nombre}…",
+	"Esperando a más de la mitad de los jugadores ({conectados} de {total}): hasta entonces no se juega.": "Waiting for more than half of the players ({conectados} of {total}): until then, nobody can play.",
+	"Ahora eres el anfitrión: la partida sigue con tu copia.": "You are now the host: the game goes on with your copy.",
+	"{nombre} es el nuevo anfitrión.": "{nombre} is the new host.",
+	"Sin la mayoría de los jugadores conectados no se juega: espera a que vuelvan.": "Without most of the players connected nobody can play: wait for them to come back.",
+	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "That host doesn't have most of the players yet."
 }

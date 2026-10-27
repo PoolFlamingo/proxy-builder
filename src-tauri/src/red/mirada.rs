@@ -9,6 +9,7 @@ use mesa::accion::Evento;
 use mesa::vista::{aplicar_parche, ParcheVista, VistaMesa};
 use tauri::ipc::Channel;
 
+use super::protocolo::NodoJugador;
 use crate::mesa::sesion::MensajeMesa;
 
 /// Cuántos eventos se guardan para el registro de la pantalla.
@@ -17,6 +18,8 @@ const REGISTRO: usize = 500;
 pub struct Mirada {
     pub epoch: u32,
     pub vista: VistaMesa,
+    /// Los jugadores de la partida, para buscar otro anfitrión (Fase K).
+    pub nodos: Vec<NodoJugador>,
     registro: VecDeque<Evento>,
     canal: Option<Channel<MensajeMesa>>,
 }
@@ -36,6 +39,7 @@ impl Mirada {
         Mirada {
             epoch,
             vista,
+            nodos: Vec::new(),
             registro: VecDeque::new(),
             canal: None,
         }
@@ -63,7 +67,9 @@ impl Mirada {
 
     /// La vista entera (al entrar, al volver, tras un deshacer).
     pub fn vista_entera(&mut self, epoch: u32, vista: VistaMesa) {
-        self.epoch = self.epoch.max(epoch);
+        // La época es la del anfitrión que la manda (tras un traspaso puede
+        // ser otra, mayor o menor).
+        self.epoch = epoch;
         self.vista = vista;
         self.mandar(self.mensaje_vista());
     }

@@ -9,7 +9,9 @@
 //! - Un hueco en los `seq` → pide desde el que falta. Un evento que no
 //!   encaja o una huella distinta → pide la partida entera.
 //! - Si se corta: hasta 5 intentos con espera creciente (1, 2, 4, 8, 16 s);
-//!   mientras, la pantalla sabe que se está reconectando.
+//!   mientras, la pantalla sabe que se está reconectando. Con código
+//!   directo, a los 3 intentos se busca al anfitrión que sigue
+//!   (`sucesion::buscar`, Fase K).
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -105,6 +107,9 @@ fn es_mia<M: Mesa>(mesa: &M, union: u64) -> bool {
     })
 }
 
+/// La conexión recién hecha y la primera respuesta del anfitrión.
+pub(super) type Primera = (Connection, SendStream, RecvStream, DelHost);
+
 /// Cómo acabó una conexión con el anfitrión.
 enum Fin {
     /// Se cortó: se intenta volver.
@@ -115,12 +120,13 @@ enum Fin {
 
 /// Conecta, manda el `Hola` y espera la primera respuesta (si es un
 /// rechazo, error con su motivo).
-async fn conectar(
+pub(super) async fn conectar(
     ep: &Endpoint,
     u: &Union,
     ultimo_seq: Option<u64>,
     epoch: u32,
-) -> AppResult<(Connection, SendStream, RecvStream, DelHost)> {
+    solo_si_activo: bool,
+) -> AppResult<Primera> {
     let conn = ep
         .connect(u.codigo.addr.clone(), ALPN_MESA)
         .await
@@ -137,6 +143,8 @@ async fn conectar(
             secreto: Some(u.codigo.secreto.clone()),
             ultimo_seq,
             epoch,
+            direccion: serde_json::to_string(&ep.addr()).ok(),
+            solo_si_activo,
         },
     )
     .await
@@ -159,6 +167,8 @@ pub struct Conexion {
     /// La conexión de ahora con el anfitrión (cambia al reconectar): por
     /// ella se le piden las imágenes.
     pub actual: Arc<std::sync::Mutex<Option<Connection>>>,
+    /// Se va a propósito: el bucle no vuelve a conectar.
+    saliendo: Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl Conexion {
@@ -171,6 +181,8 @@ impl Conexion {
 
     /// Se despide del anfitrión y deja de atenderlo.
     pub async fn salir(self) {
+        self.saliendo
+            .store(true, std::sync::atomic::Ordering::SeqCst);
         let _ = self.tx.send(AlHost::Adios);
         // Un momento para que el adiós salga antes de cortar.
         tokio::time::sleep(Duration::from_millis(150)).await;
@@ -181,17 +193,25 @@ impl Conexion {
 /// Se une a una partida: conecta (o devuelve por qué no) y deja una tarea
 /// atendiendo al anfitrión hasta que acabe.
 pub async fn unirse<M: Mesa>(ep: Endpoint, u: Union, mesa: M) -> AppResult<Conexion> {
-    let (conn, mut tx, rx, primera) = conectar(&ep, &u, None, 1).await?;
+    let (conn, mut tx, rx, primera) = conectar(&ep, &u, None, 1, false).await?;
     if let Some(deck) = &u.deck {
         escribir_al_host(&mut tx, &AlHost::Preparacion { deck: deck.clone() })
             .await
             .map_err(de_red)?;
     }
+    Ok(seguir_con(ep, u, mesa, (conn, tx, rx, primera)))
+}
+
+/// Deja una tarea atendiendo a un anfitrión con el que ya se conectó (al
+/// unirse o, en un traspaso, el anfitrión de antes que se une al nuevo).
+pub(super) fn seguir_con<M: Mesa>(ep: Endpoint, u: Union, mesa: M, primera: Primera) -> Conexion {
+    let (conn, tx, rx, primera) = primera;
     let (salida, entrada) = mpsc::unbounded_channel::<AlHost>();
     let entrada = Arc::new(Mutex::new(entrada));
     let union = UNIONES.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
     let para_salir = salida.clone();
     let actual = Arc::new(std::sync::Mutex::new(Some(conn.clone())));
+    let saliendo = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let tarea = tokio::spawn(bucle(
         ep,
         u,
@@ -201,14 +221,16 @@ pub async fn unirse<M: Mesa>(ep: Endpoint, u: Union, mesa: M) -> AppResult<Conex
             salida,
             entrada,
             conexion: actual.clone(),
+            saliendo: saliendo.clone(),
         },
         (conn, tx, rx, primera),
     ));
-    Ok(Conexion {
+    Conexion {
         tx: para_salir,
         tarea: tarea.abort_handle(),
         actual,
-    })
+        saliendo,
+    }
 }
 
 /// Lo que el bucle de una unión comparte con quien lo lanzó.
@@ -216,11 +238,12 @@ struct Canales {
     salida: mpsc::UnboundedSender<AlHost>,
     entrada: Arc<Mutex<mpsc::UnboundedReceiver<AlHost>>>,
     conexion: Arc<std::sync::Mutex<Option<Connection>>>,
+    saliendo: Arc<std::sync::atomic::AtomicBool>,
 }
 
 async fn bucle<M: Mesa>(
     ep: Endpoint,
-    u: Union,
+    mut u: Union,
     mesa: M,
     union: u64,
     canales: Canales,
@@ -230,6 +253,7 @@ async fn bucle<M: Mesa>(
         salida,
         entrada,
         conexion,
+        saliendo,
     } = canales;
     let mut actual = Some(primera);
     loop {
@@ -245,8 +269,8 @@ async fn bucle<M: Mesa>(
         if let Ok(mut c) = conexion.lock() {
             *c = None;
         }
-        // Otra unión (o esta app pasó a anfitrión): esta ya no manda.
-        if !es_mia(&mesa, union) {
+        // Otra unión (o esta app pasó a anfitrión), o se va: esta ya no manda.
+        if !es_mia(&mesa, union) || saliendo.load(std::sync::atomic::Ordering::SeqCst) {
             return;
         }
         match fin {
@@ -261,13 +285,19 @@ async fn bucle<M: Mesa>(
             }
             Fin::Cortada => {}
         }
-        // Volver a conectar, con el último evento que se tiene.
-        for intento in 1..=INTENTOS {
+        // Volver a conectar, con el último evento que se tiene. Con código
+        // directo se prueba menos: luego se busca al anfitrión que sigue.
+        let intentos = if super::sucesion::se_puede_traspasar(&u) {
+            super::sucesion::INTENTOS_ANTES
+        } else {
+            INTENTOS
+        };
+        for intento in 1..=intentos {
             if !es_mia(&mesa, union) {
                 return;
             }
             mesa.avisar(AvisoRed::Reconectando { intento });
-            tokio::time::sleep(Duration::from_secs(1 << (intento - 1))).await;
+            tokio::time::sleep(super::sucesion::UNIDAD * (1 << (intento - 1))).await;
             let (ultimo, epoch) = mesa
                 .con(|m| {
                     m.as_ref().map(|s| {
@@ -280,7 +310,13 @@ async fn bucle<M: Mesa>(
                 })
                 .or_else(|| mesa.mirada(|m| m.as_ref().map(|v| (Some(v.vista.version), v.epoch))))
                 .unwrap_or((None, 1));
-            match conectar(&ep, &u, ultimo, epoch).await {
+            let intento = tokio::time::timeout(
+                super::sucesion::ESPERA_INTENTO,
+                conectar(&ep, &u, ultimo, epoch, false),
+            )
+            .await
+            .unwrap_or_else(|_| Err(AppError::new(ErrorCode::Network)));
+            match intento {
                 Ok(c) => {
                     mesa.avisar(AvisoRed::Conectada);
                     actual = Some(c);
@@ -292,6 +328,14 @@ async fn bucle<M: Mesa>(
                     return;
                 }
                 Err(_) => {}
+            }
+        }
+        if actual.is_none() && es_mia(&mesa, union) {
+            match super::sucesion::buscar(&ep, &mut u, &mesa).await {
+                Some(super::sucesion::Busqueda::Conectado(c)) => actual = Some(c),
+                // Esta app sigue de anfitrión: este bucle ya no hace falta.
+                Some(super::sucesion::Busqueda::Anfitrion) => return,
+                None => {}
             }
         }
         if actual.is_none() {
@@ -417,8 +461,16 @@ fn recibir<M: Mesa>(
                 _ => {
                     let mut inv = Invitado::nuevo(epoch, union, salida.clone());
                     inv.nodos = nodos;
-                    *m = Some(Sesion::invitada(*partida, yo, inv));
-                    true
+                    // El anfitrión de antes que sigue de invitado (Fase K): la
+                    // pantalla ya estaba suscrita a su sesión.
+                    let canal = m.as_mut().and_then(Sesion::tomar_canal);
+                    let mut nueva = Sesion::invitada(*partida, yo, inv);
+                    let habia = canal.is_some();
+                    if let Some(c) = canal {
+                        nueva.suscribir(c);
+                    }
+                    *m = Some(nueva);
+                    !habia
                 }
             });
             if nueva {
@@ -461,16 +513,26 @@ fn recibir<M: Mesa>(
                 s.rechazada(id, motivo);
             }
         }),
-        DelHost::VistaEspectador { epoch, vista } => {
-            let nueva = mesa.mirada(|m| match m.as_mut() {
-                Some(v) => {
-                    v.vista_entera(epoch, *vista);
-                    false
+        DelHost::VistaEspectador {
+            epoch,
+            vista,
+            nodos,
+        } => {
+            let nueva = mesa.mirada(|m| {
+                let nueva = match m.as_mut() {
+                    Some(v) => {
+                        v.vista_entera(epoch, *vista);
+                        false
+                    }
+                    None => {
+                        *m = Some(Mirada::nueva(epoch, *vista));
+                        true
+                    }
+                };
+                if let Some(v) = m.as_mut().filter(|_| !nodos.is_empty()) {
+                    v.nodos = nodos;
                 }
-                None => {
-                    *m = Some(Mirada::nueva(epoch, *vista));
-                    true
-                }
+                nueva
             });
             if nueva {
                 mesa.avisar(AvisoRed::Empezada);

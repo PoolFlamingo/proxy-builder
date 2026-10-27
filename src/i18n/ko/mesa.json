@@ -629,7 +629,6 @@
 	"El anfitrión ha cerrado la partida.": "호스트가 게임을 종료했습니다.",
 	"Mirando la partida": "게임 관전 중",
 	"{nombre} (tú)": "{nombre} (나)",
-	"Reconectando con el anfitrión… (intento {intento} de 5)": "호스트에 다시 연결 중… ({intento}/5회째)",
 	"Se ha perdido la conexión con la partida.": "게임과의 연결이 끊겼습니다.",
 	"Jugar en red": "온라인으로 하기",
 	"Sin servidor: quien crea la partida hace de anfitrión y pasa un código a los demás.": "서버 없이: 게임을 만든 사람이 호스트가 되어 다른 사람들에게 코드를 줍니다.",
@@ -853,5 +852,12 @@
 	"y {n} más": "외 {n}명",
 	"Deck de otro jugador": "다른 플레이어의 덱",
 	"Lista: {lista} · {n} cartas": "목록: {lista} · {n}장",
-	"Lista borrada": "삭제된 목록"
+	"Lista borrada": "삭제된 목록",
+	"Reconectando con el anfitrión… (intento {intento})": "호스트에 다시 연결하는 중… ({intento}번째 시도)",
+	"El anfitrión no vuelve: probando con {nombre}…": "호스트가 돌아오지 않습니다: {nombre}에게 시도하는 중…",
+	"Esperando a más de la mitad de los jugadores ({conectados} de {total}): hasta entonces no se juega.": "플레이어 과반수를 기다리는 중({total}명 중 {conectados}명): 그때까지는 플레이할 수 없습니다.",
+	"Ahora eres el anfitrión: la partida sigue con tu copia.": "이제 당신이 호스트입니다: 당신의 사본으로 게임이 계속됩니다.",
+	"{nombre} es el nuevo anfitrión.": "{nombre}이(가) 새 호스트입니다.",
+	"Sin la mayoría de los jugadores conectados no se juega: espera a que vuelvan.": "플레이어 과반수가 연결되어 있지 않으면 플레이할 수 없습니다: 돌아올 때까지 기다리세요.",
+	"Ese anfitrión aún no tiene la mayoría de los jugadores.": "그 호스트는 아직 플레이어 과반수를 확보하지 못했습니다."
 }
