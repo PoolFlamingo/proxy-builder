@@ -84,3 +84,49 @@ describe("problemaDeEquipos", () => {
 		expect(problemaDeEquipos(n(10), "dosCabezas")).toBeNull();
 	});
 });
+
+describe("Archenemy y Planechase", () => {
+	const cuatro = [asiento(1), asiento(2), asiento(3), asiento(4)];
+
+	it("un archienemigo contra todos: los demás son un equipo sin fuego amigo", () => {
+		const c = construirConfig(
+			cuatro,
+			{ ...AJUSTES_LOCALES, modo: "archienemigo", archienemigo: 2, fuegoAmigo: true },
+			nombre,
+			"Héroes",
+		);
+		expect(c.variantes.archenemy).toBe(2);
+		// El fuego amigo del modo «por equipos» no cuenta aquí.
+		expect(c.variantes.equipos).toEqual({ tipo: "equipos", fuegoAmigo: false });
+		expect(c.equipos).toHaveLength(1);
+		expect(c.equipos[0].nombre).toBe("Héroes");
+		expect(c.jugadores.map((j) => j.equipo)).toEqual([0, 0, undefined, 0]);
+	});
+
+	it("el asiento del archienemigo se queda dentro de los que hay", () => {
+		const c = construirConfig(
+			[asiento(1), asiento(2)],
+			{ ...AJUSTES_LOCALES, modo: "archienemigo", archienemigo: 7 },
+			nombre,
+		);
+		expect(c.variantes.archenemy).toBe(1);
+	});
+
+	it("fuera del modo, no hay archienemigo", () => {
+		const c = construirConfig(cuatro, { ...AJUSTES_LOCALES, archienemigo: 3 }, nombre);
+		expect(c.variantes.archenemy).toBeNull();
+	});
+
+	it("Planechase se enciende solo y vale con cualquier modo", () => {
+		expect(construirConfig(cuatro, AJUSTES_LOCALES, nombre).variantes.planechase).toBe(false);
+		for (const modo of ["ninguno", "equipos", "dosCabezas", "archienemigo"] as const) {
+			const c = construirConfig(cuatro, { ...AJUSTES_LOCALES, modo, planechase: true }, nombre);
+			expect(c.variantes.planechase).toBe(true);
+		}
+	});
+
+	it("Dos Cabezas empieza con 30 vidas", () => {
+		const c = construirConfig(cuatro, { ...AJUSTES_LOCALES, modo: "dosCabezas" }, nombre);
+		expect(c.opciones?.vidaInicial).toBe(30);
+	});
+});

@@ -1,4 +1,5 @@
 import {
+	Crown,
 	Dices,
 	Expand,
 	Flag,
@@ -81,6 +82,7 @@ export function BarraMesa({
 	const turno = useMesa((s) => s.general?.turno ?? null);
 	const pausada = useMesa((s) => s.general?.pausada ?? false);
 	const mulligan = useMesa((s) => s.general?.mulligan != null);
+	const commander = useMesa((s) => s.formato === "commander");
 	// El turno cuenta desde la hora del anfitrión: aquí se corrige con el
 	// desfase que mide Rust (0 en solitario y en el propio anfitrión).
 	const desfase = useRed((s) => s.desfaseMs);
@@ -134,6 +136,14 @@ export function BarraMesa({
 					<Boton ayuda={t("Dados y monedas")} onClick={() => abrir({ tipo: "azar" })}>
 						<Dices className="size-4" />
 					</Boton>
+					{commander && (
+						<Boton
+							ayuda={t("Daño de comandante")}
+							onClick={() => abrir({ tipo: "danoComandante" })}
+						>
+							<Crown className="size-4" />
+						</Boton>
+					)}
 					<Boton ayuda={t("Crear ficha")} onClick={() => abrir({ tipo: "fichas" })}>
 						<SquareStack className="size-4" />
 					</Boton>

@@ -3,7 +3,7 @@ import type { Equipo } from "@/bindings/Equipo";
 import type { Formato } from "@/bindings/Formato";
 import type { JugadorMesa } from "@/bindings/JugadorMesa";
 import type { Variantes } from "@/bindings/Variantes";
-import { COLORES_EQUIPO, COLORES_JUGADOR } from "./colores";
+import { COLOR_CONTRA_ARCHIENEMIGO, COLORES_EQUIPO, COLORES_JUGADOR } from "./colores";
 import { opcionesDeFabrica } from "./opciones-fabrica";
 
 /**
@@ -13,7 +13,7 @@ import { opcionesDeFabrica } from "./opciones-fabrica";
  * equipo) las aplica `crates/mesa`.
  */
 
-export type ModoEquiposLocal = "ninguno" | "equipos" | "dosCabezas";
+export type ModoEquiposLocal = "ninguno" | "equipos" | "dosCabezas" | "archienemigo";
 
 export type AsientoLocal = {
 	nombre: string;
@@ -29,6 +29,10 @@ export type AjustesLocal = {
 	modo: ModoEquiposLocal;
 	fuegoAmigo: boolean;
 	vidaCompartida: boolean;
+	/** El asiento del archienemigo (con `modo: "archienemigo"`). */
+	archienemigo: number;
+	/** Planechase: un mazo común de planos con el dado planar. */
+	planechase: boolean;
 };
 
 export const AJUSTES_LOCALES: AjustesLocal = {
@@ -36,6 +40,8 @@ export const AJUSTES_LOCALES: AjustesLocal = {
 	modo: "ninguno",
 	fuegoAmigo: false,
 	vidaCompartida: false,
+	archienemigo: 0,
+	planechase: false,
 };
 
 /** Los jugadores que caben en una mesa. */
@@ -63,16 +69,22 @@ export function problemaDeEquipos(
 	return null;
 }
 
-export function variantesDe(a: AjustesLocal): Variantes {
+/** El asiento del archienemigo, dentro de los que hay. */
+export function asientoArchienemigo(a: AjustesLocal, jugadores: number): number {
+	return Math.max(0, Math.min(a.archienemigo, jugadores - 1));
+}
+
+export function variantesDe(a: AjustesLocal, jugadores = MAX_JUGADORES): Variantes {
 	return {
+		// Archenemy es «todos contra uno»: los demás van en un equipo sin fuego amigo.
 		equipos:
-			a.modo === "equipos"
-				? { tipo: "equipos", fuegoAmigo: a.fuegoAmigo }
+			a.modo === "equipos" || a.modo === "archienemigo"
+				? { tipo: "equipos", fuegoAmigo: a.modo === "equipos" && a.fuegoAmigo }
 				: a.modo === "dosCabezas"
 					? { tipo: "dosCabezas" }
 					: { tipo: "ninguno" },
-		archenemy: null,
-		planechase: false,
+		archenemy: a.modo === "archienemigo" ? asientoArchienemigo(a, jugadores) : null,
+		planechase: a.planechase,
 	};
 }
 
@@ -88,7 +100,11 @@ export function equiposDe(
 	a: AjustesLocal,
 	vidaInicial: number,
 	nombre: NombreDeEquipo,
+	heroes = nombre(1),
 ): Equipo[] {
+	if (a.modo === "archienemigo") {
+		return [{ id: 0, nombre: heroes, color: COLOR_CONTRA_ARCHIENEMIGO, vidaCompartida: null }];
+	}
 	if (a.modo !== "equipos") return [];
 	const usados = [...new Set(asientos.map((x) => x.equipo).filter((e): e is number => e !== null))];
 	return usados
@@ -106,16 +122,25 @@ export function construirConfig(
 	asientos: AsientoLocal[],
 	a: AjustesLocal,
 	nombre: NombreDeEquipo,
+	heroes?: string,
 ): ConfigMesa {
-	const variantes = variantesDe(a);
+	const variantes = variantesDe(a, asientos.length);
 	const opciones = opcionesDeFabrica(a.formato, asientos.length, variantes.equipos);
 	const porEquipos = a.modo === "equipos";
+	const archienemigo = variantes.archenemy;
 	const jugadores: JugadorMesa[] = asientos.map((s, i) => ({
 		deckId: s.deckId,
 		nombre: s.nombre.trim(),
 		color: COLORES_JUGADOR[i % COLORES_JUGADOR.length],
 		lista: s.lista,
-		equipo: porEquipos && s.equipo !== null ? s.equipo : undefined,
+		equipo:
+			archienemigo !== null
+				? i === archienemigo
+					? undefined
+					: 0
+				: porEquipos && s.equipo !== null
+					? s.equipo
+					: undefined,
 	}));
 	return {
 		jugadores,
@@ -123,6 +148,6 @@ export function construirConfig(
 		variantes,
 		opciones,
 		intensidad: "apagado",
-		equipos: equiposDe(asientos, a, opciones.vidaInicial, nombre),
+		equipos: equiposDe(asientos, a, opciones.vidaInicial, nombre, heroes),
 	};
 }

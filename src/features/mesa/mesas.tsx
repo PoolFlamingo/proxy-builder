@@ -14,6 +14,8 @@ import {
 	type Rect,
 	repartir,
 } from "./disposicion";
+import { PanelPlanes } from "./planes";
+import { PanelPlanar } from "./plano-activo";
 import { useDisposicion } from "./selector-disposicion";
 import { Tablero } from "./tablero";
 import { TableroMini } from "./tablero-mini";
@@ -46,6 +48,8 @@ function Controles() {
 			className="absolute right-3 z-[7000] flex flex-col items-end gap-1.5"
 			style={{ bottom: "calc(min(220px, max(90px, 22%)) + 24px)" }}
 		>
+			<PanelPlanar />
+			<PanelPlanes />
 			<AyudasTurno />
 			<VidaJugador jugador={yo} />
 		</div>

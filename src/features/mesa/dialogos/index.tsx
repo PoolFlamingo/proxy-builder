@@ -3,6 +3,7 @@ import { usePantalla } from "../pantalla";
 import { TapeteDialog } from "../tapete-dialog";
 import { AzarDialog } from "./azar";
 import { BuscarDialog, VerZonaDialog } from "./buscar";
+import { DanoComandanteDialog } from "./dano-comandante";
 import { FichasDialog } from "./fichas";
 import { MirarDialog } from "./mirar";
 import {
@@ -37,6 +38,7 @@ export function DialogosMesa({ deckId }: { deckId: string | null }) {
 			{d?.tipo === "fichas" && <FichasDialog />}
 			{d?.tipo === "azar" && <AzarDialog />}
 			{d?.tipo === "terminar" && !hayFin && <TerminarDialog />}
+			{d?.tipo === "danoComandante" && <DanoComandanteDialog />}
 			{d?.tipo === "atajos" && <AtajosDialog />}
 			{d?.tipo === "registro" && <RegistroDialog />}
 			<TapeteDialog

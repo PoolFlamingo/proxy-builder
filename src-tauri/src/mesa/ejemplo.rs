@@ -195,6 +195,21 @@ mod tests {
             ),
             &mut cards,
         );
+        // Planos (Planechase) y planes (Archenemy): van aparte del mazo.
+        for (n, tipo, layout) in [
+            ("Arboria", "Plane — Dominaria", "planar"),
+            ("Mercadia", "Plane — Mercadia", "planar"),
+            ("Ravnica", "Plane — Ravnica", "planar"),
+            ("Inundación", "Scheme", "scheme"),
+            ("Tormenta de espinas", "Scheme", "scheme"),
+        ] {
+            i += 1;
+            let mut c = carta(i, n, "", (tipo, tipo), "", None);
+            if let Some(d) = c.design.as_mut() {
+                d.card.layout = layout.into();
+            }
+            poner(c, &mut cards);
+        }
         let mut deck = crate::store::decks::create(&s.db, "Mesa de prueba", None).unwrap();
         deck.decklist_text = "Commander\n1 Kruphix, dios del horizonte\n".into();
         deck.cards = cards;

@@ -48,6 +48,9 @@ export const COLORES_JUGADOR = [
 /** Los colores de los equipos (hasta 5: con 10 jugadores, parejas). */
 export const COLORES_EQUIPO = ["#f43f5e", "#3b82f6", "#22c55e", "#f59e0b", "#a855f7"] as const;
 
+/** El equipo que se enfrenta al archienemigo: gris, para que no se confunda con ningún jugador. */
+export const COLOR_CONTRA_ARCHIENEMIGO = "#94a3b8";
+
 /** Los contadores de carta más usados, con su nombre (el tipo es el inglés de las reglas). */
 export const CONTADORES_CARTA: { tipo: string; nombre: string }[] = [
 	{ tipo: "+1/+1", nombre: "+1/+1" },

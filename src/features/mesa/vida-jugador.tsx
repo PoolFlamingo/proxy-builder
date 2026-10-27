@@ -32,6 +32,7 @@ import { useOriginales } from "@/stores/originales-store";
 import { useUi } from "@/stores/ui-store";
 import { hacer } from "./acciones";
 import { CONTADORES_JUGADOR } from "./colores";
+import { deltaSeguro } from "./dano-comandante";
 import * as op from "./operaciones";
 import { alternarOriginales } from "./originales";
 import { pedirNumero, usePantalla } from "./pantalla";
@@ -242,13 +243,24 @@ function MenuJugador({ jugador, children }: { jugador: IdJugador; children: Reac
 									key={c.id}
 									onSelect={() =>
 										pedirNumero(t("Daño de {nombre}", { nombre: c.origen?.nombre ?? "" }), 1, (n) =>
-											hacer({ que: "danoComandante", jugador, comandante: c.id, delta: n }),
+											hacer({
+												que: "danoComandante",
+												jugador,
+												comandante: c.id,
+												delta: deltaSeguro(j.danoComandante[c.id] ?? 0, n),
+											}),
 										)
 									}
 								>
 									{c.origen?.nombre} · {j.danoComandante[c.id] ?? 0}
 								</ContextMenuItem>
 							))}
+							<ContextMenuSeparator />
+							<ContextMenuItem
+								onSelect={() => usePantalla.getState().abrir({ tipo: "danoComandante" })}
+							>
+								{t("Tabla de daño de comandante…")}
+							</ContextMenuItem>
 						</ContextMenuSubContent>
 					</ContextMenuSub>
 				)}

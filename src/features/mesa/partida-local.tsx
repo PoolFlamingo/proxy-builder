@@ -23,6 +23,7 @@ import {
 	AJUSTES_LOCALES,
 	type AjustesLocal,
 	type AsientoLocal,
+	asientoArchienemigo,
 	construirConfig,
 	MAX_EQUIPOS,
 	MAX_JUGADORES,
@@ -84,7 +85,12 @@ export function PartidaLocalDialog({
 				}
 				conListas.push({ ...a, lista });
 			}
-			const config = construirConfig(conListas, ajustes, nombreDeEquipo);
+			const config = construirConfig(
+				conListas,
+				ajustes,
+				nombreDeEquipo,
+				t("Contra el archienemigo"),
+			);
 			if (await empezar(config)) onCerrar();
 		} catch (e) {
 			toast.error(mensaje(e));
@@ -118,15 +124,29 @@ export function PartidaLocalDialog({
 				</Fila>
 				<Fila etiqueta={t("Equipos")}>
 					<Selector<ModoEquiposLocal>
+						ancho="w-56"
 						valor={ajustes.modo}
 						onChange={(modo) => cambiarAjustes({ modo })}
 						opciones={[
 							{ valor: "ninguno", etiqueta: t("Sin equipos") },
 							{ valor: "equipos", etiqueta: t("Por equipos") },
 							{ valor: "dosCabezas", etiqueta: t("Dos Cabezas") },
+							{ valor: "archienemigo", etiqueta: t("Un archienemigo contra todos") },
 						]}
 					/>
 				</Fila>
+				{ajustes.modo === "archienemigo" && (
+					<Fila etiqueta={t("Archienemigo")}>
+						<Selector<string>
+							valor={String(asientoArchienemigo(ajustes, asientos.length))}
+							onChange={(v) => cambiarAjustes({ archienemigo: Number(v) })}
+							opciones={asientos.map((a, i) => ({
+								valor: String(i),
+								etiqueta: a.nombre.trim() || `${t("Jugador")} ${i + 1}`,
+							}))}
+						/>
+					</Fila>
+				)}
 				{porEquipos && (
 					<>
 						<FilaInterruptor
@@ -142,6 +162,21 @@ export function PartidaLocalDialog({
 							onChange={(vidaCompartida) => cambiarAjustes({ vidaCompartida })}
 						/>
 					</>
+				)}
+				<FilaInterruptor
+					etiqueta={t("Planechase")}
+					ayuda={t(
+						"Un mazo común con los planos de los decks, el plano activo en la mesa y el dado planar.",
+					)}
+					valor={ajustes.planechase}
+					onChange={(planechase) => cambiarAjustes({ planechase })}
+				/>
+				{ajustes.modo === "archienemigo" && (
+					<p className="text-xs text-muted-foreground">
+						{t(
+							"El archienemigo empieza con 40 vidas y pone en marcha los planes de su deck; los demás van juntos contra él.",
+						)}
+					</p>
 				)}
 				{ajustes.modo === "dosCabezas" && (
 					<p className="text-xs text-muted-foreground">

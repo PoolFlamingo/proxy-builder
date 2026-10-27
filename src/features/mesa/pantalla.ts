@@ -23,6 +23,7 @@ export type DialogoMesa =
 	| { tipo: "fichas" }
 	| { tipo: "azar" }
 	| { tipo: "terminar" }
+	| { tipo: "danoComandante" }
 	| { tipo: "atajos" }
 	| { tipo: "tapete" }
 	| { tipo: "registro" };
