@@ -12,23 +12,33 @@ import { cn } from "@/lib/utils";
 import { cartasDe, cuantasEn, useMesa } from "@/stores/mesa-store";
 import { useOriginales } from "@/stores/originales-store";
 import { useRed } from "@/stores/red-store";
+import { useUi } from "@/stores/ui-store";
 import { enVuelo, origenDe, useVivo } from "@/stores/vivo-store";
 import { zonaDe } from "./acciones";
 import { cartaDeArribaRevelada } from "./arriba-biblioteca";
 import { Bocadillo, InsigniaSenal } from "./chat";
-import { abanico, posAPx } from "./disposicion";
+import { abanico, disponer, posAPx } from "./disposicion";
 import { senalar } from "./en-vivo/emitir";
 import { FantasmasMini } from "./en-vivo/fantasmas";
 import { caraVisible, DorsoGenerico, ImagenCarta } from "./imagen-carta";
+import { Insignias } from "./insignias";
 import { igualesLista, useMesaLenta } from "./lento";
 import { mirarJugador } from "./mirar";
 import { alternarOriginales } from "./originales";
+import { puestosDelCampo } from "./puestos-campo";
 import { Latencia } from "./red/estado-red";
 
 /** Alto de la cabecera (nombre y vida) de una miniatura, en px. */
 const CABECERA = 20;
 /** Por debajo de este alto, la miniatura no pinta el campo, solo los números. */
 const ALTO_CON_CAMPO = 64;
+/**
+ * A partir de este ancho y alto la otra mesa se pinta **a la misma escala que
+ * la propia** (`LecturaGrande`): en «dos tableros» cada uno ocupa media
+ * pantalla y no tiene sentido enseñar cartas de 40 px.
+ */
+const ANCHO_GRANDE = 420;
+const ALTO_GRANDE = 340;
 
 type DatosMini = {
 	j: VistaJugador | undefined;
@@ -136,6 +146,7 @@ export const TableroMini = memo(function TableroMini({
 	const vida = d.equipo?.vidaCompartida ?? j.vida;
 	const eliminado = j.eliminado !== null;
 	const conCampo = h >= ALTO_CON_CAMPO;
+	const grande = w >= ANCHO_GRANDE && h >= ALTO_GRANDE;
 	const campo = { x: 0, y: CABECERA, w, h: Math.max(0, h - CABECERA) };
 	const ancho = Math.max(14, Math.min(44, w / 10));
 	const alto = (ancho * 88) / 63;
@@ -199,9 +210,11 @@ export const TableroMini = memo(function TableroMini({
 							</>
 						)}
 					</span>
-					{conCampo && d.mano > 0 && <ManoMini d={d} w={w} ancho={ancho} />}
-					{conCampo && <ZonasMini d={d} w={w} h={h} ancho={ancho} />}
+					{conCampo && grande && <LecturaGrande d={d} w={w} h={h} />}
+					{conCampo && !grande && d.mano > 0 && <ManoMini d={d} w={w} ancho={ancho} />}
+					{conCampo && !grande && <ZonasMini d={d} w={w} h={h} ancho={ancho} />}
 					{conCampo &&
+						!grande &&
 						d.campo.map((c) => {
 							if (!c.pos || c.adjuntaA !== null || c.agrupadaBajo !== null) return null;
 							// Si alguien la está arrastrando, se ve el arrastre y no su sitio de antes.
@@ -392,3 +405,129 @@ function ZonasMini({ d, w, h, ancho }: { d: DatosMini; w: number; h: number; anc
 
 /** Desde este ancho, las zonas de una miniatura van en fila (como en tu tablero). */
 const FILA_ZONAS = 400;
+
+/**
+ * **La otra mesa, a la escala de la propia** (solo se mira): el campo con las
+ * cartas del mismo tamaño que en el tablero grande (`disponer`, `puestosDelCampo`:
+ * la misma geometría), con sus contadores y su fuerza y resistencia, la mano
+ * en abanico (siempre sus reversos, salvo lo que este mirador puede ver), y
+ * las zonas con la carta de arriba. Pulsarla pasa a mirar a ese jugador.
+ */
+function LecturaGrande({ d, w, h }: { d: DatosMini; w: number; h: number }) {
+	const { t } = useLang();
+	const tamano = useUi((s) => s.mesa.tamanoCartas);
+	const alto = Math.max(0, h - CABECERA);
+	const disp = disponer(w, alto, tamano);
+	const dorso = d.j?.dorso ?? null;
+	const reverso = dorso ? <ImagenCarta imagen={dorso} ancho={244} /> : <DorsoGenerico />;
+	const cartas: Record<number, VistaCarta> = {};
+	for (const c of d.campo) cartas[c.id] = c;
+	const { puestos } = puestosDelCampo(
+		d.campo.map((c) => c.id),
+		cartas,
+		disp,
+	);
+	// La mano: reversos, y boca arriba las que este mirador ve de verdad.
+	const n = Math.min(d.mano, 30);
+	const pos = abanico(disp.mano, n, disp.cartaPequena);
+	const zonas: {
+		clave: string;
+		nombre: string;
+		carta: VistaCarta | null;
+		n: number;
+		dorso?: boolean;
+	}[] = [];
+	if (d.mando.n > 0) zonas.push({ clave: "mando", nombre: t("Mando"), ...d.mando });
+	zonas.push({
+		clave: "biblioteca",
+		nombre: t("Biblioteca"),
+		carta: d.arribaBiblioteca,
+		n: d.biblioteca,
+		dorso: d.arribaBiblioteca === null,
+	});
+	zonas.push({ clave: "cementerio", nombre: t("Cementerio"), ...d.cementerio });
+	zonas.push({ clave: "exilio", nombre: t("Exilio"), ...d.exilio });
+	return (
+		<div className="pointer-events-none absolute inset-x-0 bottom-0" style={{ top: CABECERA }}>
+			{d.campo.map((c) => {
+				const p = puestos.get(c.id);
+				if (!p) return null;
+				if (enVuelo(useVivo.getState(), c.id, () => origenDe(c))) return null;
+				const { w: cw, h: ch } = disp.carta;
+				return (
+					<span
+						key={c.id}
+						className="pointer-events-auto absolute block"
+						style={{
+							left: p.x - cw / 2,
+							top: p.y - ch / 2,
+							width: cw,
+							height: ch,
+							zIndex: p.z ?? c.z,
+						}}
+						onPointerEnter={() => useMesa.getState().setSobre(c.id)}
+						onPointerLeave={() => {
+							if (useMesa.getState().sobre === c.id) useMesa.getState().setSobre(null);
+						}}
+					>
+						<span
+							className="absolute inset-0 block overflow-hidden rounded-[5%] shadow-[0_3px_10px_rgba(0,0,0,0.55)]"
+							style={{ transform: c.girada ? "rotate(90deg)" : undefined }}
+						>
+							<ImagenCarta imagen={caraVisible(c)} ancho={244} nombre={c.origen?.nombre} />
+						</span>
+						<Insignias c={c} yo={null} />
+					</span>
+				);
+			})}
+			{Array.from({ length: n }, (_, i) => {
+				const p = pos[i];
+				if (!p) return null;
+				const visible = d.manoVista[i];
+				return (
+					<span
+						key={visible?.id ?? `r${i}`}
+						className="absolute block overflow-hidden rounded-[5%] shadow-[0_3px_10px_rgba(0,0,0,0.55)]"
+						style={{
+							left: p.x - disp.cartaPequena.w / 2,
+							top: p.y - disp.cartaPequena.h / 2,
+							width: disp.cartaPequena.w,
+							height: disp.cartaPequena.h,
+							transform: `rotate(${p.giro}deg)`,
+							zIndex: 1000 + i,
+						}}
+					>
+						{visible ? <ImagenCarta imagen={caraVisible(visible)} ancho={244} /> : reverso}
+					</span>
+				);
+			})}
+			{zonas.map((z) => {
+				const r = disp.zonas[z.clave as keyof typeof disp.zonas];
+				return r ? (
+					<span
+						key={z.clave}
+						className="pointer-events-auto absolute flex flex-col items-center"
+						style={{ left: r.x, top: r.y - 16, width: r.w, height: r.h + 16 }}
+						onPointerEnter={() => z.carta && useMesa.getState().setSobre(z.carta.id)}
+						onPointerLeave={() => {
+							if (z.carta && useMesa.getState().sobre === z.carta.id)
+								useMesa.getState().setSobre(null);
+						}}
+					>
+						<span className="h-4 text-[10px] whitespace-nowrap text-white/80">
+							{z.nombre}
+							{z.n > 0 ? ` · ${z.n}` : ""}
+						</span>
+						<span className="relative block w-full flex-1 overflow-hidden rounded-[5%] border border-dashed border-white/25 bg-black/20">
+							{z.dorso && z.n > 0 ? (
+								reverso
+							) : z.carta ? (
+								<ImagenCarta imagen={caraVisible(z.carta)} ancho={244} />
+							) : null}
+						</span>
+					</span>
+				) : null;
+			})}
+		</div>
+	);
+}
