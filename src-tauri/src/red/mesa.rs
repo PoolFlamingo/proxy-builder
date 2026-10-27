@@ -60,6 +60,8 @@ pub enum AvisoRed {
         jugador: IdJugador,
         tablero: IdJugador,
         carta: Option<IdCarta>,
+        /// Las demás cartas que arrastra con ella.
+        mas: Vec<IdCarta>,
         x: u16,
         y: u16,
     },

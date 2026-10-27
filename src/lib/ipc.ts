@@ -311,7 +311,7 @@ export interface Commands {
 	red_empezar: { args: { config: ConfigMesa; invitados: number[] }; result: number };
 	red_salir: { args: Record<string, never>; result: null };
 	mesa_fantasma: {
-		args: { tablero: IdJugador; carta: IdCarta | null; x: number; y: number };
+		args: { tablero: IdJugador; carta: IdCarta | null; mas: IdCarta[]; x: number; y: number };
 		result: null;
 	};
 	mesa_senal: { args: { carta: IdCarta | null; a: IdJugador | null }; result: null };

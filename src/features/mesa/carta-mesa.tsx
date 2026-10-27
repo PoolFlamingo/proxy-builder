@@ -5,6 +5,7 @@ import type { VistaCarta } from "@/bindings/VistaCarta";
 import { cn } from "@/lib/utils";
 import { useMesa } from "@/stores/mesa-store";
 import { useUi } from "@/stores/ui-store";
+import { enVuelo, origenDe, useVivo } from "@/stores/vivo-store";
 import { COLORES } from "./colores";
 import { useFlip } from "./flip";
 import { useSinAnimaciones } from "./fps";
@@ -55,6 +56,14 @@ export const CartaMesa = memo(function CartaMesa({
 	const reducir = useSinAnimaciones();
 	const sombras = useUi((s) => s.mesa.sombras);
 	const arrastrando = usePantalla((s) => s.arrastre?.ids.includes(id) ?? false);
+	// Otro la arrastra (o se acaba de soltar y aún no llega su movimiento):
+	// no se pinta en su sitio de antes, se ve el arrastre y nada más.
+	const enVueloAjeno = useVivo((s) =>
+		enVuelo(s, id, () => {
+			const c = useMesa.getState().cartas[id];
+			return origenDe(c ?? { zona: null, pos: null });
+		}),
+	);
 	const ref = useRef<HTMLDivElement>(null);
 	useFlip(id, ref, !reducir, `${c?.zona.tipo}${JSON.stringify(c?.zona)}${x}|${y}`);
 	if (!c) return null;
@@ -74,7 +83,8 @@ export const CartaMesa = memo(function CartaMesa({
 				className={cn(
 					"group absolute top-0 left-0 cursor-grab touch-none",
 					!reducir && "transition-[transform] duration-150 ease-out",
-					arrastrando && "opacity-30",
+					// Arrastrada (por mí o por otro): no queda su sitio de antes.
+					(arrastrando || enVueloAjeno) && "pointer-events-none opacity-0",
 				)}
 				style={{
 					width: w,

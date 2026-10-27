@@ -11,11 +11,12 @@ import { cn } from "@/lib/utils";
 import { cartasDe, cuantasEn, useMesa } from "@/stores/mesa-store";
 import { useOriginales } from "@/stores/originales-store";
 import { useRed } from "@/stores/red-store";
-import { useVivo } from "@/stores/vivo-store";
+import { enVuelo, origenDe, useVivo } from "@/stores/vivo-store";
 import { zonaDe } from "./acciones";
 import { Bocadillo, InsigniaSenal } from "./chat";
 import { abanico, posAPx } from "./disposicion";
 import { senalar } from "./en-vivo/emitir";
+import { FantasmasMini } from "./en-vivo/fantasmas";
 import { caraVisible, DorsoGenerico, ImagenCarta } from "./imagen-carta";
 import { igualesLista, useMesaLenta } from "./lento";
 import { mirarJugador } from "./mirar";
@@ -189,6 +190,8 @@ export const TableroMini = memo(function TableroMini({
 					{conCampo &&
 						d.campo.map((c) => {
 							if (!c.pos || c.adjuntaA !== null || c.agrupadaBajo !== null) return null;
+							// Si alguien la está arrastrando, se ve el arrastre y no su sitio de antes.
+							if (enVuelo(useVivo.getState(), c.id, () => origenDe(c))) return null;
 							const p = posAPx(campo, c.pos);
 							return (
 								<span
@@ -211,6 +214,7 @@ export const TableroMini = memo(function TableroMini({
 								</span>
 							);
 						})}
+					{conCampo && <FantasmasMini jugador={jugador} campo={campo} ancho={ancho} alto={alto} />}
 				</button>
 			</ContextMenuTrigger>
 			<ContenidoContextual className="w-64 text-xs">

@@ -23,25 +23,32 @@ export function mandaEnVivo(): boolean {
 	return (papel === "anfitrion" || papel === "jugador") && useUi.getState().mesa.movimientoEnVivo;
 }
 
-function mandar(tablero: IdJugador, carta: IdCarta | null, x: number, y: number) {
-	void call("mesa_fantasma", { tablero, carta, x, y }).catch(() => {});
+function mandar(tablero: IdJugador, carta: IdCarta | null, mas: IdCarta[], x: number, y: number) {
+	void call("mesa_fantasma", { tablero, carta, mas, x, y }).catch(() => {});
 }
 
-/** Una carta arrastrada pasa por `pos` (0–10.000). `fuerza`: sin esperar al ritmo. */
+/** Cuántas cartas de un arrastre de varias se cuentan (`MAX_MAS` + la primera, en Rust). */
+export const MAX_ARRASTRADAS = 9;
+
+/**
+ * Las cartas arrastradas pasan por `pos` (0–10.000); `cartas[0]` es la que se
+ * lleva el puntero. `fuerza`: sin esperar al ritmo.
+ */
 export function arrastre(
 	tablero: IdJugador,
-	carta: IdCarta,
+	cartas: IdCarta[],
 	pos: { x: number; y: number },
 	fuerza = false,
 ) {
-	if (!mandaEnVivo() || !limArrastre(fuerza)) return;
-	mandar(tablero, carta, pos.x, pos.y);
+	if (cartas.length === 0 || !mandaEnVivo() || !limArrastre(fuerza)) return;
+	const [primera, ...mas] = cartas.slice(0, MAX_ARRASTRADAS);
+	mandar(tablero, primera, mas, pos.x, pos.y);
 }
 
 /** El cursor está sobre `pos`; sin carta (`fuerza` al soltar lo arrastrado). */
 export function cursor(tablero: IdJugador, pos: { x: number; y: number }, fuerza = false) {
 	if (!mandaEnVivo() || !limCursor(fuerza)) return;
-	mandar(tablero, null, pos.x, pos.y);
+	mandar(tablero, null, [], pos.x, pos.y);
 }
 
 /** Avisa a todos con un aro sobre una carta o un jugador (2 s). */

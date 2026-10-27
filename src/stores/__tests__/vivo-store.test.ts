@@ -1,5 +1,14 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { MS_CARTA, MS_CURSOR, MS_SENAL, useVivo } from "../vivo-store";
+import {
+	cartasDeFantasma,
+	enVuelo,
+	MS_CARTA,
+	MS_CURSOR,
+	MS_SENAL,
+	MS_SOLTADA,
+	type Origen,
+	useVivo,
+} from "../vivo-store";
 
 const base = { tablero: 0, x: 10, y: 20 };
 
@@ -40,5 +49,53 @@ describe("vivo-store", () => {
 		const antes = useVivo.getState().fantasmas;
 		v.purgar(10);
 		expect(useVivo.getState().fantasmas).toBe(antes);
+	});
+
+	describe("lo que está en vuelo", () => {
+		const sitio = (x: number): Origen => ({ zona: "campo", x, y: 0 });
+
+		it("una carta que otro arrastra (la primera o las de más) está en vuelo", () => {
+			useVivo.getState().fantasma(1, { ...base, carta: 5, mas: [6, 7] }, 0);
+			const s = useVivo.getState();
+			expect(cartasDeFantasma(s.fantasmas[1])).toEqual([5, 6, 7]);
+			for (const id of [5, 6, 7]) expect(enVuelo(s, id, () => sitio(0))).toBe(true);
+			expect(enVuelo(s, 8, () => sitio(0))).toBe(false);
+		});
+
+		it("al soltar se sigue ocultando en su sitio de antes, y deja de estarlo al moverse", () => {
+			const v = useVivo.getState();
+			v.fantasma(1, { ...base, carta: 5, mas: [6] }, 0, { 5: sitio(1), 6: sitio(2) });
+			// Suelta: solo queda el cursor.
+			v.fantasma(1, { ...base, carta: null }, 50);
+			const s = useVivo.getState();
+			expect(enVuelo(s, 5, () => sitio(1))).toBe(true);
+			expect(enVuelo(s, 6, () => sitio(2))).toBe(true);
+			// Llegó el movimiento: ya está en otro sitio.
+			expect(enVuelo(s, 5, () => sitio(900))).toBe(false);
+		});
+
+		it("lo soltado caduca si el movimiento no llega", () => {
+			const v = useVivo.getState();
+			v.fantasma(1, { ...base, carta: 5 }, 0, { 5: sitio(1) });
+			v.fantasma(1, { ...base, carta: null }, 10);
+			v.purgar(10 + MS_SOLTADA - 1);
+			expect(enVuelo(useVivo.getState(), 5, () => sitio(1))).toBe(true);
+			v.purgar(10 + MS_SOLTADA + 1);
+			expect(enVuelo(useVivo.getState(), 5, () => sitio(1))).toBe(false);
+		});
+
+		it("mis cartas recién soltadas también se ocultan hasta que se muevan", () => {
+			const v = useVivo.getState();
+			v.soltar({ 3: sitio(4) }, 0);
+			expect(enVuelo(useVivo.getState(), 3, () => sitio(4))).toBe(true);
+			expect(enVuelo(useVivo.getState(), 3, () => sitio(5))).toBe(false);
+		});
+
+		it("el sitio de antes es el de la primera vez que se la ve arrastrar", () => {
+			const v = useVivo.getState();
+			v.fantasma(1, { ...base, carta: 5 }, 0, { 5: sitio(1) });
+			v.fantasma(1, { ...base, carta: 5, x: 50 }, 20, { 5: sitio(50) });
+			expect(useVivo.getState().fantasmas[1].origenes[5]).toEqual(sitio(1));
+		});
 	});
 });

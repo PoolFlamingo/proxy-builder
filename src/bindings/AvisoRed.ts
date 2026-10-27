@@ -8,4 +8,8 @@ import type { IdJugador } from "./IdJugador";
 /**
  * Lo que la red le cuenta a la pantalla (`red://aviso`).
  */
-export type AvisoRed = { "tipo": "sala", jugadores: Array<EnSala>, } | { "tipo": "empezada" } | { "tipo": "reconectando", intento: number, } | { "tipo": "conectada" } | { "tipo": "perdida" } | { "tipo": "cerrada" } | { "tipo": "rechazada", motivo: string, } | { "tipo": "enlaces", desfaseMs: number, filas: Array<Enlace>, } | { "tipo": "ausentes", filas: Array<Ausente>, } | { "tipo": "fantasma", jugador: IdJugador, tablero: IdJugador, carta: IdCarta | null, x: number, y: number, } | { "tipo": "senal", jugador: IdJugador, carta: IdCarta | null, a: IdJugador | null, } | { "tipo": "buscandoAnfitrion", candidato: IdJugador, } | { "tipo": "nuevoAnfitrion", jugador: IdJugador, soyYo: boolean, } | { "tipo": "mayoria", activa: boolean, conectados: number, total: number, };
+export type AvisoRed = { "tipo": "sala", jugadores: Array<EnSala>, } | { "tipo": "empezada" } | { "tipo": "reconectando", intento: number, } | { "tipo": "conectada" } | { "tipo": "perdida" } | { "tipo": "cerrada" } | { "tipo": "rechazada", motivo: string, } | { "tipo": "enlaces", desfaseMs: number, filas: Array<Enlace>, } | { "tipo": "ausentes", filas: Array<Ausente>, } | { "tipo": "fantasma", jugador: IdJugador, tablero: IdJugador, carta: IdCarta | null, 
+/**
+ * Las demás cartas que arrastra con ella.
+ */
+mas: Array<IdCarta>, x: number, y: number, } | { "tipo": "senal", jugador: IdJugador, carta: IdCarta | null, a: IdJugador | null, } | { "tipo": "buscandoAnfitrion", candidato: IdJugador, } | { "tipo": "nuevoAnfitrion", jugador: IdJugador, soyYo: boolean, } | { "tipo": "mayoria", activa: boolean, conectados: number, total: number, };

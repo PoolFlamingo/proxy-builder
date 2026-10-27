@@ -29,7 +29,9 @@ use mesa::{IdCarta, IdJugador, Mirador};
 
 use super::anfitrion::Anfitrion;
 use super::mesa::{AvisoRed, Mesa};
-use super::protocolo::{datagrama_a_bytes, datagrama_de_bytes, Datagrama, Enlace, Rol, COORD_MAX};
+use super::protocolo::{
+    datagrama_a_bytes, datagrama_de_bytes, Datagrama, Enlace, Rol, COORD_MAX, MAX_MAS,
+};
 use crate::state::AppState;
 
 /// Cada cuánto va el latido (y la tabla de enlaces).
@@ -212,6 +214,7 @@ fn tratar_en_host<M: Mesa>(
         Datagrama::Fantasma {
             tablero,
             carta,
+            mut mas,
             x,
             y,
             t,
@@ -223,15 +226,18 @@ fn tratar_en_host<M: Mesa>(
             if !pasa_el_ritmo(ritmo) || !fresca.admite(quien, CLASE_FANTASMA, t) {
                 return;
             }
+            mas.truncate(MAX_MAS);
+            let cartas: Vec<IdCarta> = carta.into_iter().chain(mas.iter().copied()).collect();
             let d = Datagrama::Fantasma {
                 jugador: quien,
                 tablero,
                 carta,
+                mas,
                 x: limitar_coordenada(x),
                 y: limitar_coordenada(y),
                 t,
             };
-            repartir(anf, mesa, &d, Some(quien), carta);
+            repartir(anf, mesa, &d, Some(quien), &cartas);
         }
         Datagrama::Senal { carta, a, t, .. } => {
             let Some(quien) = anf.jugador_de(conexion) else {
@@ -246,7 +252,7 @@ fn tratar_en_host<M: Mesa>(
                 a,
                 t,
             };
-            repartir(anf, mesa, &d, Some(quien), carta);
+            repartir(anf, mesa, &d, Some(quien), carta.as_slice());
         }
         // Eco y Enlaces son del anfitrión hacia los demás: de un jugador no valen.
         Datagrama::Eco { .. } | Datagrama::Enlaces { .. } => {}
@@ -274,13 +280,14 @@ fn repartir<M: Mesa>(
     mesa: &M,
     d: &Datagrama,
     excepto: Option<IdJugador>,
-    carta: Option<IdCarta>,
+    cartas: &[IdCarta],
 ) {
     // Primero la sesión y luego la sala, nunca al revés (orden de cerrojos).
-    let visible = carta.is_none_or(|c| {
+    // Al espectador solo le llega si ve todas las cartas que se arrastran.
+    let visible = cartas.iter().all(|c| {
         mesa.con(|m| {
             m.as_ref()
-                .is_some_and(|s| visible_para_espectador(s.partida(), c))
+                .is_some_and(|s| visible_para_espectador(s.partida(), *c))
         })
     });
     anf.repartir(d, excepto, visible);
@@ -294,6 +301,7 @@ fn avisar_movimiento<M: Mesa>(mesa: &M, d: &Datagrama) {
             jugador,
             tablero,
             carta,
+            mas,
             x,
             y,
             ..
@@ -301,6 +309,7 @@ fn avisar_movimiento<M: Mesa>(mesa: &M, d: &Datagrama) {
             jugador: *jugador,
             tablero: *tablero,
             carta: *carta,
+            mas: mas.clone(),
             x: *x,
             y: *y,
         }),
@@ -421,38 +430,44 @@ fn yo(state: &AppState) -> Option<IdJugador> {
     g.as_ref().map(|s| s.yo)
 }
 
-/// Si lo que se mueve es visible para un espectador.
-fn visible(state: &AppState, carta: Option<IdCarta>) -> bool {
-    let Some(c) = carta else { return true };
+/// Si lo que se mueve es visible para un espectador (todas las cartas).
+fn visible(state: &AppState, cartas: &[IdCarta]) -> bool {
     let g = match state.mesa.lock() {
         Ok(g) => g,
         Err(e) => e.into_inner(),
     };
-    g.as_ref()
-        .is_some_and(|s| visible_para_espectador(s.partida(), c))
+    cartas.iter().all(|c| {
+        g.as_ref()
+            .is_some_and(|s| visible_para_espectador(s.partida(), *c))
+    })
 }
 
-/// La pantalla mueve una carta (o su cursor, sin carta) por el `tablero`.
+/// La pantalla mueve una carta (o su cursor, sin carta) por el `tablero`, y
+/// con ella `mas` cartas si se arrastran varias.
 /// Sin partida en red (o mirando), no hace nada.
 pub fn mover_fantasma(
     state: &AppState,
     tablero: IdJugador,
     carta: Option<IdCarta>,
+    mut mas: Vec<IdCarta>,
     x: u16,
     y: u16,
 ) {
     let (Some(salida), Some(yo)) = (salida(state), yo(state)) else {
         return;
     };
+    mas.truncate(MAX_MAS);
+    let cartas: Vec<IdCarta> = carta.into_iter().chain(mas.iter().copied()).collect();
     let d = Datagrama::Fantasma {
         jugador: yo,
         tablero,
         carta,
+        mas,
         x: limitar_coordenada(x),
         y: limitar_coordenada(y),
         t: marca(),
     };
-    mandar(state, salida, &d, yo, carta);
+    mandar(state, salida, &d, yo, &cartas);
 }
 
 /// La pantalla señala una carta o un jugador (un aro de 2 s en todas).
@@ -466,12 +481,12 @@ pub fn senalar(state: &AppState, carta: Option<IdCarta>, a: Option<IdJugador>) {
         a,
         t: marca(),
     };
-    mandar(state, salida, &d, yo, carta);
+    mandar(state, salida, &d, yo, carta.as_slice());
 }
 
-fn mandar(state: &AppState, salida: Salida, d: &Datagrama, yo: IdJugador, carta: Option<IdCarta>) {
+fn mandar(state: &AppState, salida: Salida, d: &Datagrama, yo: IdJugador, cartas: &[IdCarta]) {
     match salida {
-        Salida::Anfitrion(anf) => anf.repartir(d, Some(yo), visible(state, carta)),
+        Salida::Anfitrion(anf) => anf.repartir(d, Some(yo), visible(state, cartas)),
         Salida::Invitado(conn) => enviar(&conn, d),
     }
 }

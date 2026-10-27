@@ -1,11 +1,24 @@
 import { useEffect } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useLang } from "@/components/language-provider";
+import type { AnchoMesa } from "@/lib/image-url";
 import { tableroDe, useMesa } from "@/stores/mesa-store";
 import { useUi } from "@/stores/ui-store";
-import { useVivo } from "@/stores/vivo-store";
-import { type Disposicion, posAPx } from "../disposicion";
+import { cartasDeFantasma, useVivo } from "@/stores/vivo-store";
+import { type Disposicion, posAPx, type Rect } from "../disposicion";
 import { caraVisible, DorsoGenerico, ImagenCarta } from "../imagen-carta";
+
+/**
+ * Quita lo que ya caducó (un cursor quieto se queda 5 s, una carta soltada
+ * espera 0,8 s a que llegue su movimiento). Va una vez en la mesa, no en cada
+ * tablero: las miniaturas también dependen de ello.
+ */
+export function usePurgarVivo() {
+	useEffect(() => {
+		const i = window.setInterval(() => useVivo.getState().purgar(performance.now()), 500);
+		return () => window.clearInterval(i);
+	}, []);
+}
 
 /**
  * **Lo que mueven los demás** (E7), sobre el campo que se está mirando: el
@@ -23,12 +36,6 @@ export function FantasmasVivos({ disp }: { disp: Disposicion }) {
 	const jugadores = useMesa((s) => s.jugadores);
 	const cartas = useMesa((s) => s.cartas);
 	const reducir = useUi((s) => s.mesa.reducirAnimaciones);
-
-	// Lo que ya caducó se quita (un cursor quieto se queda 5 s).
-	useEffect(() => {
-		const i = window.setInterval(() => useVivo.getState().purgar(performance.now()), 500);
-		return () => window.clearInterval(i);
-	}, []);
 
 	if (!activo) return null;
 	const transicion = reducir ? undefined : "transform 100ms linear";
@@ -66,31 +73,23 @@ export function FantasmasVivos({ disp }: { disp: Disposicion }) {
 				const p = posAPx(disp.campo, f);
 				const color = jugadores[jugador]?.color ?? "#e11d48";
 				const nombre = jugadores[jugador]?.nombre ?? t("Jugador");
-				const carta = f.carta === null ? undefined : cartas[f.carta];
 				return (
 					<div
 						key={clave}
 						className="absolute top-0 left-0 will-change-transform"
 						style={{ transform: `translate(${p.x}px, ${p.y}px)`, transition: transicion }}
 					>
-						{f.carta !== null && (
-							<div
-								className="absolute opacity-70 shadow-xl"
-								style={{
-									width: disp.carta.w,
-									height: disp.carta.h,
-									left: -disp.carta.w / 2,
-									top: -disp.carta.h / 2,
-									transform: carta?.girada ? "rotate(90deg)" : undefined,
-								}}
-							>
-								{carta ? (
-									<ImagenCarta imagen={caraVisible(carta)} ancho={244} />
-								) : (
-									<DorsoGenerico />
-								)}
-							</div>
-						)}
+						{cartasDeFantasma(f).map((id, i) => (
+							<CartaEnVuelo
+								key={id}
+								id={id}
+								w={disp.carta.w}
+								h={disp.carta.h}
+								// En pila: la primera, abajo del puntero.
+								dx={i * 12}
+								dy={i * 6}
+							/>
+						))}
 						<span
 							className="absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white shadow"
 							style={{ background: color }}
@@ -101,6 +100,88 @@ export function FantasmasVivos({ disp }: { disp: Disposicion }) {
 						>
 							{nombre}
 						</span>
+					</div>
+				);
+			})}
+		</div>
+	);
+}
+
+/** Una carta que otro lleva en la mano, centrada en su puntero (su dorso si no es visible para mí). */
+function CartaEnVuelo({
+	id,
+	w,
+	h,
+	dx,
+	dy,
+	ancho = 244,
+}: {
+	id: number;
+	w: number;
+	h: number;
+	dx: number;
+	dy: number;
+	ancho?: AnchoMesa;
+}) {
+	const carta = useMesa((s) => s.cartas[id]);
+	return (
+		<div
+			className="absolute opacity-80 shadow-xl"
+			style={{
+				width: w,
+				height: h,
+				left: -w / 2 + dx,
+				top: -h / 2 + dy,
+				transform: carta?.girada ? "rotate(90deg)" : undefined,
+			}}
+		>
+			{carta ? <ImagenCarta imagen={caraVisible(carta)} ancho={ancho} /> : <DorsoGenerico />}
+		</div>
+	);
+}
+
+/**
+ * **Lo que mueven los demás, sobre la miniatura** de un tablero: sus cursores
+ * y las cartas que arrastran por él (en pequeño), igual que en el grande.
+ * `campo` es el rectángulo del campo dentro de la miniatura.
+ */
+export function FantasmasMini({
+	jugador,
+	campo,
+	ancho,
+	alto,
+}: {
+	jugador: number;
+	campo: Rect;
+	ancho: number;
+	alto: number;
+}) {
+	const activo = useUi((s) => s.mesa.movimientoEnVivo);
+	const fantasmas = useVivo(
+		useShallow((s) => Object.entries(s.fantasmas).filter(([, f]) => f.tablero === jugador)),
+	);
+	const jugadores = useMesa((s) => s.jugadores);
+	const reducir = useUi((s) => s.mesa.reducirAnimaciones);
+	if (!activo || fantasmas.length === 0) return null;
+	const transicion = reducir ? undefined : "transform 100ms linear";
+	return (
+		<div className="pointer-events-none absolute inset-0" style={{ zIndex: 8500 }}>
+			{fantasmas.map(([clave, f]) => {
+				const p = posAPx(campo, f);
+				const color = jugadores[Number(clave)]?.color ?? "#e11d48";
+				return (
+					<div
+						key={clave}
+						className="absolute top-0 left-0 will-change-transform"
+						style={{ transform: `translate(${p.x}px, ${p.y}px)`, transition: transicion }}
+					>
+						{cartasDeFantasma(f).map((id, i) => (
+							<CartaEnVuelo key={id} id={id} w={ancho} h={alto} dx={i * 3} dy={i * 2} ancho={146} />
+						))}
+						<span
+							className="absolute size-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white shadow"
+							style={{ background: color }}
+						/>
 					</div>
 				);
 			})}

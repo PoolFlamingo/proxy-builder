@@ -13,6 +13,7 @@
 		"jugador": 1,
 		"tablero": 0,
 		"carta": 3,
+		"mas": [4],
 		"x": 5000,
 		"y": 2000,
 		"t": 9

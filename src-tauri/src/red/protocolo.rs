@@ -251,6 +251,9 @@ pub struct Ausente {
     pub hace_ms: u32,
 }
 
+/// Cuántas cartas más de la primera se cuentan de un arrastre de varias.
+pub const MAX_MAS: usize = 8;
+
 /// Las coordenadas de un `Fantasma` van de 0 a este valor (como `Pos`).
 pub const COORD_MAX: u16 = 10_000;
 
@@ -275,6 +278,10 @@ pub enum Datagrama {
         jugador: IdJugador,
         tablero: IdJugador,
         carta: Option<IdCarta>,
+        /// Las demás cartas que arrastra con `carta` (hasta `MAX_MAS`): salen
+        /// en pila junto a ella.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        mas: Vec<IdCarta>,
         x: u16,
         y: u16,
         t: u64,
@@ -633,6 +640,7 @@ mod tests {
                 jugador: IdJugador(1),
                 tablero: IdJugador(0),
                 carta: Some(IdCarta(3)),
+                mas: vec![IdCarta(4)],
                 x: 5_000,
                 y: 2_000,
                 t: 9,
@@ -739,6 +747,7 @@ mod tests {
                 jugador: IdJugador(1),
                 tablero: IdJugador(0),
                 carta: Some(IdCarta(3)),
+                mas: vec![IdCarta(4)],
                 x: 5_000,
                 y: 2_000,
                 t: 9,

@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { cartasDe, cuantasEn, NINGUNA, tableroDe, useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
 import { useUi } from "@/stores/ui-store";
+import { type Origen, origenDe, useVivo } from "@/stores/vivo-store";
 import { destino, hacer, mover, sitio, zonaComun, zonaDe } from "./acciones";
 import { destinoDeSoltar, pasaUmbral } from "./arrastre";
 import { atajoDe, teclaDe } from "./atajos";
@@ -20,6 +21,7 @@ import { abanico, type Disposicion, disponer, posAPx, pxAPos, type Rect } from "
 import * as vivo from "./en-vivo/emitir";
 import { FantasmasVivos } from "./en-vivo/fantasmas";
 import { ataqueAUnCompanero } from "./equipos";
+import { marcarArrastradas } from "./flip";
 import { caraVisible, DorsoGenerico, ImagenCarta } from "./imagen-carta";
 import { MenuBiblioteca, MenuCampo, MenuZona } from "./menus/menu-zonas";
 import * as op from "./operaciones";
@@ -111,7 +113,10 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 				m.alternar(c.id);
 				return;
 			}
-			const ids = m.seleccion.includes(c.id) ? m.seleccion : [c.id];
+			// La que se pulsa va la primera: es la que se lleva el puntero.
+			const ids = m.seleccion.includes(c.id)
+				? [c.id, ...m.seleccion.filter((x) => x !== c.id)]
+				: [c.id];
 			if (!m.seleccion.includes(c.id)) m.seleccionar([c.id]);
 			const enCampo = c.zona.tipo === "de" && c.zona.zona === "campo";
 			const p0 = punto(e);
@@ -143,7 +148,7 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 				empezado = true;
 				window.clearTimeout(sostenido);
 				// En red, los demás ven la carta moverse (20 por segundo).
-				vivo.arrastre(tableroDe(useMesa.getState()), c.id, pxAPos(dispRef.current.campo, p.x, p.y));
+				vivo.arrastre(tableroDe(useMesa.getState()), ids, pxAPos(dispRef.current.campo, p.x, p.y));
 				usePantalla.getState().setArrastre({
 					ids,
 					desde: enCampo
@@ -166,7 +171,18 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 				// La carta deja de verse en vuelo; queda el cursor.
 				const f = punto(ev);
 				vivo.cursor(tableroDe(useMesa.getState()), pxAPos(dispRef.current.campo, f.x, f.y), true);
-				soltar(ids, f, p0, enCampo, dispRef.current, ev.shiftKey);
+				// Dónde estaban, para no pintarlas ahí mientras llega el movimiento ni
+				// animarlas otra vez desde allí: la carta se mueve y acaba donde toca.
+				const antes = useMesa.getState().cartas;
+				const origenes: Record<number, Origen> = {};
+				for (const id of ids) {
+					const carta = antes[id];
+					if (carta) origenes[id] = origenDe(carta);
+				}
+				if (soltar(ids, f, p0, enCampo, dispRef.current, ev.shiftKey)) {
+					marcarArrastradas(ids);
+					useVivo.getState().soltar(origenes, performance.now());
+				}
 			};
 			window.addEventListener("pointermove", mueve);
 			window.addEventListener("pointerup", suelta);
@@ -326,9 +342,9 @@ function soltar(
 	desdeCampo: boolean,
 	disp: Disposicion,
 	alFondo: boolean,
-) {
+): boolean {
 	const d = destinoDeSoltar(disp, p.x, p.y, alFondo);
-	if (!d) return;
+	if (!d) return false;
 	const m = useMesa.getState();
 	const yo = tableroDe(m);
 	if (d.zona.tipo === "de" && d.zona.zona === "campo" && d.sitio.tipo === "enCampo") {
@@ -343,10 +359,10 @@ function soltar(
 				const nueva = pxAPos(disp.campo, c.x + dx, c.y + dy);
 				void mover([id], destino("campo", sitio.campo(nueva), yo));
 			}
-			return;
+			return true;
 		}
 		void mover(ids, { ...d, jugador: yo });
-		return;
+		return true;
 	}
 	// A la mano desde la mano: no se mueve (el orden de la mano es de pantalla).
 	const desde = m.cartas[ids[0] ?? -1]?.zona;
@@ -356,9 +372,10 @@ function soltar(
 		desde.zona === d.zona.zona &&
 		d.zona.zona !== "biblioteca"
 	) {
-		return;
+		return false;
 	}
 	void mover(ids, d);
+	return true;
 }
 
 /**

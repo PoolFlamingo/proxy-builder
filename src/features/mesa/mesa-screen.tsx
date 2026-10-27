@@ -14,6 +14,7 @@ import { guardar, salir, suscribir, suscrito } from "./conexion";
 import { CapaDados } from "./dados/capa";
 import { DanoDeQuien } from "./dano-de-quien";
 import { DialogosMesa } from "./dialogos";
+import { usePurgarVivo } from "./en-vivo/fantasmas";
 import { EntradaMesa } from "./entrada";
 import { FinDePartida } from "./fin-partida";
 import { ContadorFps, VigiaFps } from "./fps";
@@ -66,6 +67,7 @@ function Mesa({ deckId }: { deckId: string | null }) {
 	const papel = useRed((s) => s.papel);
 	const repitiendo = useRepeticion((s) => s.activa !== null);
 	useOriginalesAlDia();
+	usePurgarVivo();
 	useSeguirTurno();
 	useAtajosComunicacion();
 	const [preguntaSalir, setPreguntaSalir] = useState(false);

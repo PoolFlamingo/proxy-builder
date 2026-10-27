@@ -9,8 +9,9 @@ import { call } from "@/lib/ipc";
 import { useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
 import { useUi } from "@/stores/ui-store";
-import { useVivo } from "@/stores/vivo-store";
+import { type Origen, origenDe, useVivo } from "@/stores/vivo-store";
 import { conProgreso, suscribir, suscrito } from "../conexion";
+import { marcarArrastradas } from "../flip";
 
 /**
  * **La partida en red desde la pantalla** (código directo, Fase E): crear
@@ -74,12 +75,23 @@ function alAviso(a: AvisoRed) {
 			break;
 		case "fantasma":
 			if (useUi.getState().mesa.movimientoEnVivo) {
+				const cartas = a.carta === null ? [] : [a.carta, ...a.mas];
+				// Dónde está ahora cada una: si ya se movió, no se oculta su sitio de antes.
+				const mesa = useMesa.getState().cartas;
+				const origenes: Record<number, Origen> = {};
+				for (const id of cartas) {
+					const c = mesa[id];
+					if (c) origenes[id] = origenDe(c);
+				}
+				// Ya se vieron ir a su sitio: al llegar el movimiento no se animan otra vez.
+				marcarArrastradas(cartas);
 				useVivo
 					.getState()
 					.fantasma(
 						a.jugador,
-						{ tablero: a.tablero, carta: a.carta, x: a.x, y: a.y },
+						{ tablero: a.tablero, carta: a.carta, mas: a.mas, x: a.x, y: a.y },
 						performance.now(),
+						origenes,
 					);
 			}
 			break;

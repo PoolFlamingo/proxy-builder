@@ -335,10 +335,11 @@ pub fn mesa_fantasma(
     state: State<'_, AppState>,
     tablero: IdJugador,
     carta: Option<IdCarta>,
+    mas: Option<Vec<IdCarta>>,
     x: u16,
     y: u16,
 ) {
-    crate::red::latencia::mover_fantasma(&state, tablero, carta, x, y);
+    crate::red::latencia::mover_fantasma(&state, tablero, carta, mas.unwrap_or_default(), x, y);
 }
 
 /// Señala una carta o a un jugador: un aro de 2 s en todas las pantallas.
