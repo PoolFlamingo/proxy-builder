@@ -38,7 +38,7 @@ export async function mirarJugador(id: IdJugador): Promise<void> {
 
 /** Con «Seguir al jugador del turno», cada turno pasa a mirar al que juega. */
 export function useSeguirTurno() {
-	const seguir = useUi((s) => s.mesa.seguirTurno);
+	const seguir = useUi((s) => s.mesa.seguirTurnoLocal);
 	const activo = useMesa((s) => s.general?.turno.activo ?? null);
 	const espectador = useRed((s) => s.papel === "espectador");
 	const { config } = useDisposicion();

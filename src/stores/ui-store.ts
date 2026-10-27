@@ -72,7 +72,7 @@ export type PreferenciasMesa = {
 	/** En red: mandar el cursor y la carta que se arrastra, y ver los de los demás. */
 	movimientoEnVivo: boolean;
 	/** En una partida local de varios, pasar a mirar al jugador del turno. */
-	seguirTurno: boolean;
+	seguirTurnoLocal: boolean;
 	/** Los contadores de jugador que se enseñan junto a la vida. */
 	trackers: string[];
 	/** Cómo se reparten los tableros, recordado por número de jugadores. */
@@ -99,7 +99,7 @@ export const MESA_DE_FABRICA: PreferenciasMesa = {
 	ofrecerBono: true,
 	fantasma: true,
 	movimientoEnVivo: true,
-	seguirTurno: false,
+	seguirTurnoLocal: true,
 	trackers: [],
 	disposicion: {},
 };

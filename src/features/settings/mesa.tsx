@@ -43,8 +43,8 @@ export function AjustesMesa() {
 			/>
 			<FilaInterruptor
 				etiqueta={t("En partida local, pasar a mirar al jugador del turno")}
-				valor={m.seguirTurno}
-				onChange={(v) => set({ seguirTurno: v })}
+				valor={m.seguirTurnoLocal}
+				onChange={(v) => set({ seguirTurnoLocal: v })}
 			/>
 			<Fila etiqueta={t("Sparring al empezar en solitario")}>
 				<Selector<Intensidad>
