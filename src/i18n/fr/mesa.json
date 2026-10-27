@@ -938,5 +938,6 @@
 	"La sala ha cambiado mientras elegías: revisa los jugadores y vuelve a empezar.": "La salle a changé pendant votre choix : vérifiez les joueurs et relancez.",
 	"En red cada uno cambia solo su propio mazo.": "En ligne, chacun ne modifie que son propre deck.",
 	"Tras el traspaso del anfitrión no se puede abrir otra partida del encuentro: ya no están los mazos de todos.": "Après un changement d'hôte, on ne peut pas ouvrir la partie suivante du match : les decks de tout le monde ne sont plus là.",
-	"Ese cambio de banquillo no encaja: revisa las cartas.": "Cet échange avec la réserve ne convient pas : vérifiez les cartes."
+	"Ese cambio de banquillo no encaja: revisa las cartas.": "Cet échange avec la réserve ne convient pas : vérifiez les cartes.",
+	"Al barajar, las cartas que has puesto arriba vuelven a quedar arriba.": "En mélangeant, les cartes que vous avez mises au-dessus reviennent au-dessus."
 }

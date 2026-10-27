@@ -866,5 +866,6 @@
 	"La sala ha cambiado mientras elegías: revisa los jugadores y vuelve a empezar.": "你选择期间房间发生了变化：请检查玩家后重新开始。",
 	"En red cada uno cambia solo su propio mazo.": "联机时每个人只能更换自己的牌组。",
 	"Tras el traspaso del anfitrión no se puede abrir otra partida del encuentro: ya no están los mazos de todos.": "主机更换后无法开始比赛的下一局：已经没有所有人的牌组了。",
-	"Ese cambio de banquillo no encaja: revisa las cartas.": "这次备牌更换不成立：请检查卡牌。"
+	"Ese cambio de banquillo no encaja: revisa las cartas.": "这次备牌更换不成立：请检查卡牌。",
+	"Al barajar, las cartas que has puesto arriba vuelven a quedar arriba.": "洗牌时，你放在最上面的牌会重新回到最上面。"
 }

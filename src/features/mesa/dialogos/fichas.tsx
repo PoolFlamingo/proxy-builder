@@ -118,7 +118,8 @@ export function FichasDialog() {
 								<div className="flex flex-wrap gap-2.5">
 									{delDeck.map((f, i) => (
 										<button
-											key={f.nombre}
+											// Las variantes de una ficha comparten nombre.
+											key={`${f.nombre}-${i}`}
 											type="button"
 											onClick={() => void crear({ tipo: "delDeck", indice: i })}
 											className="h-[140px] w-[100px] overflow-hidden rounded-[5%] hover:ring-2 hover:ring-primary"

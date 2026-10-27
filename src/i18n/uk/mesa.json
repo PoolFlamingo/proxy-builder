@@ -961,5 +961,6 @@
 	"La sala ha cambiado mientras elegías: revisa los jugadores y vuelve a empezar.": "Кімната змінилася, поки ви обирали: перевірте гравців і почніть знову.",
 	"En red cada uno cambia solo su propio mazo.": "У мережі кожен змінює лише свою колоду.",
 	"Tras el traspaso del anfitrión no se puede abrir otra partida del encuentro: ya no están los mazos de todos.": "Після зміни хоста не можна відкрити наступну партію матчу: колод усіх гравців більше немає.",
-	"Ese cambio de banquillo no encaja: revisa las cartas.": "Ця заміна із сайдбордом не підходить: перевірте карти."
+	"Ese cambio de banquillo no encaja: revisa las cartas.": "Ця заміна із сайдбордом не підходить: перевірте карти.",
+	"Al barajar, las cartas que has puesto arriba vuelven a quedar arriba.": "Під час тасування карти, які ви поклали нагору, знову опиняються нагорі."
 }

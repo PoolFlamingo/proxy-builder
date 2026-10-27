@@ -4,8 +4,8 @@ mod comun;
 
 use comun::*;
 use mesa::lista::ListaDeJuego;
-use mesa::modelo::{RefZona, Zona};
-use mesa::preparar::{secciones_de_mesa, Seccion};
+use mesa::modelo::{RefImagen, RefZona, Zona};
+use mesa::preparar::{candidatas_de_lista, secciones_de_mesa, CartaDeMesa, Seccion};
 use mesa::IdJugador;
 use proxy_core::diseno::modelo::CardDesign;
 use proxy_core::model::{
@@ -198,4 +198,99 @@ fn iniciar_reparte_la_mesa() {
     assert!(mesa::preparar::iniciar("x".into(), config(11), 1, 0).is_err());
     // La misma semilla, la misma partida.
     assert_eq!(mesa::huella(&partida(3)), mesa::huella(&partida(3)));
+}
+
+#[test]
+fn las_mazmorras_son_fichas_y_no_cuentan_para_el_mazo() {
+    let mut d = yusri();
+    let antes = de(&d, Seccion::Mazo).len();
+    let mut mina = carta("Lost Mine of Phandelver");
+    mina.meta.type_line = Some("Dungeon".into());
+    let mut loca = carta("Dungeon of the Mad Mage");
+    loca.meta.type_line = Some("Dungeon".into());
+    d.cards.extend([mina, loca]);
+    assert_eq!(de(&d, Seccion::Mazo).len(), antes);
+    assert_eq!(
+        de(&d, Seccion::Ficha),
+        vec![
+            "Treasure",
+            "Lost Mine of Phandelver",
+            "Dungeon of the Mad Mage"
+        ]
+    );
+    // Ni se pueden elegir para una lista para jugar: no son del mazo.
+    let candidatas: Vec<&str> = candidatas_de_lista(&d)
+        .iter()
+        .map(|c| c.meta.name.as_str())
+        .collect();
+    assert!(!candidatas
+        .iter()
+        .any(|n| n.contains("Mine") || n.contains("Dungeon")));
+}
+
+#[test]
+fn las_fichas_propias_disenadas_como_ficha_y_sus_variantes_van_a_las_fichas() {
+    let mut diseno: CardDesign = serde_json::from_str(include_str!(
+        "../../proxy-core/tests/compatibilidad/diseno-2.5.9.json"
+    ))
+    .unwrap();
+    diseno.card.layout = "token".into();
+    let mut d = yusri();
+    let propia = |id: &str, marca: Option<MarcaCarta>| {
+        let mut c = carta("Mi ficha");
+        c.id = id.into();
+        c.source = CardSource::Custom {
+            scryfall_id: None,
+            externa: None,
+        };
+        c.design = Some(diseno.clone());
+        c.marca = marca;
+        c
+    };
+    d.cards.extend([
+        propia("a", None),
+        propia("b", Some(MarcaCarta::Variante)),
+        propia("c", Some(MarcaCarta::Variante)),
+    ]);
+    let fichas = de(&d, Seccion::Ficha);
+    assert_eq!(fichas.iter().filter(|n| *n == "Mi ficha").count(), 3);
+    assert_eq!(de(&d, Seccion::Mazo).len(), 3, "no entran en el mazo");
+    assert!(!candidatas_de_lista(&d)
+        .iter()
+        .any(|c| c.meta.name == "Mi ficha"));
+}
+
+#[test]
+fn en_la_partida_salen_las_variantes_de_una_ficha_y_las_copias_iguales_una_vez() {
+    let mut config = config(1);
+    let mazo = &mut config.jugadores[0].mazo;
+    mazo.cartas.retain(|c| c.seccion != Seccion::Ficha);
+    let ficha = |id: &str, imagen: &str| {
+        let mut o = origen("Mi ficha", "Token Creature — Soldier", 0);
+        o.carta_deck = id.into();
+        o.caras = vec![RefImagen::Propia {
+            sha256: format!("{imagen:0>64}"),
+            ancho: 745,
+            alto: 1040,
+        }];
+        CartaDeMesa {
+            carta_deck: id.into(),
+            seccion: Seccion::Ficha,
+            origen: o,
+        }
+    };
+    // Dos copias iguales y dos variantes con otra imagen.
+    mazo.cartas.extend([
+        ficha("a", "1"),
+        ficha("b", "1"),
+        ficha("c", "2"),
+        ficha("d", "3"),
+    ]);
+    let p = mesa::preparar::iniciar("p".into(), config, 1, 0).unwrap();
+    let nombres: Vec<&str> = p.jugadores[0]
+        .fichas
+        .iter()
+        .map(|f| f.carta_deck.as_str())
+        .collect();
+    assert_eq!(nombres, vec!["a", "c", "d"]);
 }

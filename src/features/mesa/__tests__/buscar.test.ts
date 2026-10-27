@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { VistaCarta } from "@/bindings/VistaCarta";
-import { filtrar } from "../dialogos/buscar";
+import { arribaTrasSacar, filtrar } from "../dialogos/buscar";
 
 function carta(id: number, nombre: string, tipo: string, colores: string[]): VistaCarta {
 	return {
@@ -60,5 +60,22 @@ describe("buscador de la biblioteca", () => {
 	it("las boca abajo que no se conocen no salen", () => {
 		const oculta = { ...cartas[0], origen: null } as unknown as VistaCarta;
 		expect(filtrar([oculta], { texto: "", tipo: "todo", color: "" })).toEqual([]);
+	});
+});
+
+describe("arribaTrasSacar", () => {
+	it("lo que se pone arriba se apunta en orden y la última queda arriba del todo", () => {
+		let a = arribaTrasSacar([], 4, "biblioteca");
+		a = arribaTrasSacar(a, 9, "biblioteca");
+		expect(a).toEqual([4, 9]);
+	});
+
+	it("ponerla otra vez arriba la deja la última, sin repetirla", () => {
+		expect(arribaTrasSacar([4, 9], 4, "biblioteca")).toEqual([9, 4]);
+	});
+
+	it("lo que se manda a otra zona ya no se vuelve a poner arriba", () => {
+		expect(arribaTrasSacar([4, 9], 4, "mano")).toEqual([9]);
+		expect(arribaTrasSacar([4, 9], 7, "cementerio")).toEqual([4, 9]);
 	});
 });

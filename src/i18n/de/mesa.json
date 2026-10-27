@@ -920,5 +920,6 @@
 	"La sala ha cambiado mientras elegías: revisa los jugadores y vuelve a empezar.": "Der Raum hat sich geändert, während du gewählt hast: Prüfe die Spieler und starte erneut.",
 	"En red cada uno cambia solo su propio mazo.": "Online ändert jeder nur sein eigenes Deck.",
 	"Tras el traspaso del anfitrión no se puede abrir otra partida del encuentro: ya no están los mazos de todos.": "Nach einem Wechsel des Gastgebers lässt sich die nächste Partie des Matches nicht öffnen: Die Decks aller sind nicht mehr da.",
-	"Ese cambio de banquillo no encaja: revisa las cartas.": "Dieser Sideboard-Tausch passt nicht: Prüfe die Karten."
+	"Ese cambio de banquillo no encaja: revisa las cartas.": "Dieser Sideboard-Tausch passt nicht: Prüfe die Karten.",
+	"Al barajar, las cartas que has puesto arriba vuelven a quedar arriba.": "Beim Mischen kommen die Karten, die du nach oben gelegt hast, wieder nach oben."
 }

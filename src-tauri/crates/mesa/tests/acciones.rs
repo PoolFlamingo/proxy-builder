@@ -965,6 +965,39 @@ fn lo_mismo_con_el_dano_de_comandante_del_fantasma() {
 }
 
 #[test]
+fn una_carta_puesta_arriba_es_la_siguiente_que_se_roba_mientras_no_se_baraje() {
+    let mut m = Mesa::nueva(1);
+    // Un tutor: una carta cualquiera de la biblioteca, arriba.
+    let elegida = m.zona(YO, Zona::Biblioteca)[7];
+    m.haz(Accion::Mover {
+        cartas: vec![elegida],
+        a: a(Zona::Biblioteca, Sitio::Arriba),
+        como: None,
+    });
+    assert_eq!(m.zona(YO, Zona::Biblioteca)[0], elegida);
+    m.haz(Accion::Robar { n: 1 });
+    assert_eq!(m.zona(YO, Zona::Mano).last(), Some(&elegida));
+    // Robada por error: vuelve arriba y es la que se roba otra vez.
+    m.haz(Accion::Mover {
+        cartas: vec![elegida],
+        a: a(Zona::Biblioteca, Sitio::Arriba),
+        como: None,
+    });
+    assert_eq!(m.zona(YO, Zona::Biblioteca)[0], elegida);
+    m.haz(Accion::Robar { n: 1 });
+    assert_eq!(m.zona(YO, Zona::Mano).last(), Some(&elegida));
+    // Con varias a la vez, la última de la lista queda arriba del todo.
+    let lib = m.zona(YO, Zona::Biblioteca);
+    let (x, y) = (lib[3], lib[4]);
+    m.haz(Accion::Mover {
+        cartas: vec![x, y],
+        a: a(Zona::Biblioteca, Sitio::Arriba),
+        como: None,
+    });
+    assert_eq!(&m.zona(YO, Zona::Biblioteca)[..2], &[y, x]);
+}
+
+#[test]
 fn ayudas_al_pasar_el_turno_y_contadores_al_entrar() {
     let mut m = Mesa::nueva(2);
     let pw = m.al_campo("Garruk");

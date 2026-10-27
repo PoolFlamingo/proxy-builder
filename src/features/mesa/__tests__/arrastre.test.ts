@@ -40,7 +40,10 @@ describe("geometría de la mesa", () => {
 		const d = disponer(1280, 720);
 		const lib = d.zonas.biblioteca;
 		expect(destinoDeSoltar(d, lib.x + 5, lib.y + 5)?.sitio).toEqual({ tipo: "arriba" });
-		expect(destinoDeSoltar(d, lib.x + 5, lib.y + lib.h - 5)?.sitio).toEqual({ tipo: "abajo" });
+		// Soltar en la mitad de abajo no esconde la carta: sigue yendo arriba.
+		expect(destinoDeSoltar(d, lib.x + 5, lib.y + lib.h - 5)?.sitio).toEqual({ tipo: "arriba" });
+		// Al fondo solo con Mayús.
+		expect(destinoDeSoltar(d, lib.x + 5, lib.y + 5, true)?.sitio).toEqual({ tipo: "abajo" });
 		const cem = d.zonas.cementerio;
 		expect(destinoDeSoltar(d, cem.x + 2, cem.y + 2)?.zona).toEqual({
 			tipo: "de",

@@ -71,6 +71,16 @@ export function filtrar(cartas: VistaCarta[], f: FiltroBusqueda): VistaCarta[] {
 	});
 }
 
+/**
+ * Las cartas que se han puesto arriba de la biblioteca (en orden, la última
+ * arriba del todo) tras mover `id` a `zona`: se añade si va arriba y se quita
+ * si va a otro sitio.
+ */
+export function arribaTrasSacar(arriba: IdCarta[], id: IdCarta, zona: Zona): IdCarta[] {
+	const sin = arriba.filter((x) => x !== id);
+	return zona === "biblioteca" ? [...sin, id] : sin;
+}
+
 const TIPOS: { tipo: FiltroBusqueda["tipo"]; nombre: string }[] = [
 	{ tipo: "todo", nombre: "Todo" },
 	{ tipo: "tierra", nombre: "Tierras" },
@@ -204,6 +214,9 @@ export function BuscarDialog({ de, filtro }: { de: IdJugador; filtro: "todo" | "
 	const lib = useMesa((s) => s.zonas[`${de}:biblioteca`]);
 	const todas = useMesa((s) => s.cartas);
 	const [sacada, setSacada] = useState(false);
+	// Lo que se ha puesto arriba mientras está abierto, en el orden en que se puso
+	// (la última queda arriba del todo): barajar no lo deshace.
+	const [arriba, setArriba] = useState<IdCarta[]>([]);
 	const cartas = useMemo(
 		() =>
 			(lib?.visibles ?? [])
@@ -214,11 +227,18 @@ export function BuscarDialog({ de, filtro }: { de: IdJugador; filtro: "todo" | "
 	);
 	const sacar = (id: IdCarta, zona: Zona, s = sitio.arriba) => {
 		setSacada(true);
+		setArriba((a) => arribaTrasSacar(a, id, zona));
 		void mover([id], destino(zona, s, zona === "campo" ? de : null));
 	};
 	const cerrar = (barajar: boolean) => {
 		usePantalla.getState().abrir(null);
-		void (barajar ? hacer({ que: "barajar" }) : hacer({ que: "dejarDeMirar", de }));
+		if (!barajar) return void hacer({ que: "dejarDeMirar", de });
+		// En una partida de verdad se baraja y luego se pone la carta arriba:
+		// aquí, lo mismo, aunque se haya puesto antes de barajar.
+		void (async () => {
+			if (!(await hacer({ que: "barajar" })) || arriba.length === 0) return;
+			await mover(arriba, destino("biblioteca", sitio.arriba));
+		})();
 	};
 	return (
 		<Dialog open onOpenChange={(o) => !o && cerrar(false)}>
@@ -250,6 +270,11 @@ export function BuscarDialog({ de, filtro }: { de: IdJugador; filtro: "todo" | "
 						</>
 					)}
 				/>
+				{arriba.length > 0 && (
+					<p className="text-xs text-muted-foreground">
+						{t("Al barajar, las cartas que has puesto arriba vuelven a quedar arriba.")}
+					</p>
+				)}
 				<DialogFooter>
 					<Button variant="outline" onClick={() => cerrar(false)}>
 						{t("Cerrar sin barajar")}

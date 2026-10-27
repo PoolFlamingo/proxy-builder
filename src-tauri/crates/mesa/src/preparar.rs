@@ -59,15 +59,23 @@ pub struct DeckDeMesa {
     pub dorso: RefImagen,
 }
 
+/// Si una carta del deck no es del mazo sino una ficha: las fichas y
+/// emblemas, las mazmorras (salen con la carta que las activa, no se
+/// roban: ni cuentan para el tamaño) y las cartas propias, incluso las
+/// diseñadas como ficha, con sus variantes.
 fn es_ficha(c: &DeckCard) -> bool {
     let tipo_ficha = c.meta.type_line.as_deref().is_some_and(|t| {
         let t = t.to_lowercase();
-        t.starts_with("token") || t.contains(" token") || t.starts_with("emblem")
+        t.starts_with("token")
+            || t.contains(" token")
+            || t.starts_with("emblem")
+            || t.starts_with("dungeon")
     });
+    let disenada = c.design.as_ref().is_some_and(|d| d.card.es_ficha());
     match &c.source {
         CardSource::Token { .. } => true,
-        CardSource::Custom { externa, .. } => externa.is_some() || tipo_ficha,
-        _ => tipo_ficha,
+        CardSource::Custom { externa, .. } => externa.is_some() || tipo_ficha || disenada,
+        _ => tipo_ficha || disenada,
     }
 }
 
@@ -281,7 +289,14 @@ pub fn iniciar(
         let mut fichas: Vec<OrigenCarta> = Vec::new();
         for c in &j.mazo.cartas {
             if c.seccion == Seccion::Ficha {
-                if !fichas.iter().any(|f| f.nombre == c.origen.nombre) {
+                // Las copias iguales salen una vez; las variantes (otra
+                // imagen con el mismo nombre) salen cada una.
+                let igual = |f: &OrigenCarta| {
+                    f.nombre == c.origen.nombre
+                        && f.caras == c.origen.caras
+                        && f.dorso == c.origen.dorso
+                };
+                if !fichas.iter().any(igual) {
                     fichas.push(c.origen.clone());
                 }
                 continue;

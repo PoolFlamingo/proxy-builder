@@ -166,7 +166,7 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 				// La carta deja de verse en vuelo; queda el cursor.
 				const f = punto(ev);
 				vivo.cursor(tableroDe(useMesa.getState()), pxAPos(dispRef.current.campo, f.x, f.y), true);
-				soltar(ids, f, p0, enCampo, dispRef.current);
+				soltar(ids, f, p0, enCampo, dispRef.current, ev.shiftKey);
 			};
 			window.addEventListener("pointermove", mueve);
 			window.addEventListener("pointerup", suelta);
@@ -325,8 +325,9 @@ function soltar(
 	p0: { x: number; y: number },
 	desdeCampo: boolean,
 	disp: Disposicion,
+	alFondo: boolean,
 ) {
-	const d = destinoDeSoltar(disp, p.x, p.y);
+	const d = destinoDeSoltar(disp, p.x, p.y, alFondo);
 	if (!d) return;
 	const m = useMesa.getState();
 	const yo = tableroDe(m);
