@@ -3,4 +3,4 @@
 /**
  * Las marcas fijas de una carta del deck.
  */
-export type MarcaCarta = "variante" | "opcional" | "banquillo";
+export type MarcaCarta = "variante" | "opcional" | "banquillo" | "copia";

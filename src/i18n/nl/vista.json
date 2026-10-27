@@ -55,7 +55,6 @@
 	"Usar el reverso del deck": "Achterkant van het deck gebruiken",
 	"Idioma de la imagen": "Taal van de afbeelding",
 	"Sin indicar": "Niet opgegeven",
-	"Marcadas como variante de diseño, opcional o banquillo: se imprimen, pero no cuentan para el mazo.": "Gemarkeerd als ontwerpvariant, optioneel of sideboard: ze worden geprint, maar tellen niet mee voor het deck.",
 	"{n} marcadas": {
 		"one": "{n} gemarkeerd",
 		"other": "{n} gemarkeerd"
@@ -71,5 +70,6 @@
 	"Banquillo": "Sideboard",
 	"BANQUILLO": "SIDEBOARD",
 	"Del banquillo (sideboard): no cuenta para el mazo.": "Uit de sideboard: telt niet mee voor het deck.",
-	"Cambiar carta…": "Kaart wijzigen…"
+	"Cambiar carta…": "Kaart wijzigen…",
+	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "Gemarkeerd als ontwerpvariant, optioneel, sideboard of kopie: ze worden geprint, maar tellen niet mee voor het deck."
 }

@@ -595,7 +595,6 @@
 	"Como mucho, dos comandantes.": "Como mucho, dos comandantes.",
 	"{carta} no puede ser comandante.": "{carta} no puede ser comandante.",
 	"Dos comandantes solo con compañero o trasfondo.": "Dos comandantes solo con compañero o trasfondo.",
-	"{carta} va {veces} veces.": "{carta} va {veces} veces.",
 	"{carta} se sale de la identidad de color del comandante.": "{carta} se sale de la identidad de color del comandante.",
 	"{n} cartas de la lista ya no están en el deck.": "{n} cartas de la lista ya no están en el deck.",
 	"Editar la lista para jugar": "Editar la lista para jugar",
@@ -1130,5 +1129,6 @@
 	"Dejar de mostrar": "Dejar de mostrar",
 	"Mostrar a todos / dejar de mostrar": "Mostrar a todos / dejar de mostrar",
 	"{quien} muestra {cartas} a todos": "{quien} muestra {cartas} a todos",
-	"{quien} deja de mostrar {cartas}": "{quien} deja de mostrar {cartas}"
+	"{quien} deja de mostrar {cartas}": "{quien} deja de mostrar {cartas}",
+	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia)."
 }

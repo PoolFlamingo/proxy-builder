@@ -274,6 +274,10 @@ pub enum MarcaCarta {
     Opcional,
     /// Del banquillo (sideboard): no cuenta para el mazo.
     Banquillo,
+    /// Una copia que se usa como ficha (una carta de verdad que hace de la
+    /// ficha de un Clone, de un cambiaformas…): se imprime, pero no cuenta
+    /// para el mazo y en la mesa sale entre las fichas, no en la biblioteca.
+    Copia,
 }
 
 /// Cuántas copias se quedan fuera de las cuentas del mazo por su marca.
@@ -284,11 +288,13 @@ pub struct Apartadas {
     pub variantes: u32,
     pub opcionales: u32,
     pub banquillo: u32,
+    #[serde(default)]
+    pub copias: u32,
 }
 
 impl Apartadas {
     pub fn total(&self) -> u32 {
-        self.variantes + self.opcionales + self.banquillo
+        self.variantes + self.opcionales + self.banquillo + self.copias
     }
 }
 
@@ -312,6 +318,7 @@ pub fn cuentan(cards: &[DeckCard]) -> (Vec<&DeckCard>, Apartadas) {
             None => out.push(c),
             Some(MarcaCarta::Opcional) => ap.opcionales += 1,
             Some(MarcaCarta::Banquillo) => ap.banquillo += 1,
+            Some(MarcaCarta::Copia) => ap.copias += 1,
             Some(MarcaCarta::Variante) => {
                 let n = nombre(c);
                 if !sin_marcar.contains(&n) && variante_puesta.insert(n) {
@@ -676,6 +683,9 @@ mod tests {
             copia("yusri", Some(Variante)),
             copia("Counterspell", Some(Opcional)),
             copia("Pyroblast", Some(Banquillo)),
+            // Copias que hacen de ficha: ni cuentan ni se repiten.
+            copia("Veyron", Some(Copia)),
+            copia("Veyron", Some(Copia)),
         ];
         let (dentro, ap) = cuentan(&cartas);
         let nombres: Vec<&str> = dentro.iter().map(|c| c.meta.name.as_str()).collect();
@@ -685,10 +695,11 @@ mod tests {
             Apartadas {
                 variantes: 2,
                 opcionales: 1,
-                banquillo: 1
+                banquillo: 1,
+                copias: 2
             }
         );
-        assert_eq!(ap.total(), 4);
+        assert_eq!(ap.total(), 6);
     }
 
     #[test]

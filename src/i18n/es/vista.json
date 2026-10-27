@@ -49,7 +49,6 @@
 	"Usar el reverso del deck": "Usar el reverso del deck",
 	"Idioma de la imagen": "Idioma de la imagen",
 	"Sin indicar": "Sin indicar",
-	"Marcadas como variante de diseño, opcional o banquillo: se imprimen, pero no cuentan para el mazo.": "Marcadas como variante de diseño, opcional o banquillo: se imprimen, pero no cuentan para el mazo.",
 	"{n} marcadas": "{n} marcadas",
 	"Marca": "Marca",
 	"Se imprimen igual; no cuentan para el tamaño del mazo, las copias ni las estadísticas.": "Se imprimen igual; no cuentan para el tamaño del mazo, las copias ni las estadísticas.",
@@ -62,5 +61,6 @@
 	"Banquillo": "Banquillo",
 	"BANQUILLO": "BANQUILLO",
 	"Del banquillo (sideboard): no cuenta para el mazo.": "Del banquillo (sideboard): no cuenta para el mazo.",
-	"Cambiar carta…": "Cambiar carta…"
+	"Cambiar carta…": "Cambiar carta…",
+	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo."
 }

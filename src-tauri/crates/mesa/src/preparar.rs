@@ -59,7 +59,8 @@ pub struct DeckDeMesa {
     pub dorso: RefImagen,
 }
 
-/// Si una carta del deck no es del mazo sino una ficha: las fichas y
+/// Si una carta del deck no es del mazo sino una ficha (las marcadas como
+/// «copia» van aparte, en `secciones_de_mesa`): las fichas y
 /// emblemas, las mazmorras (salen con la carta que las activa, no se
 /// roban: ni cuentan para el tamaño) y las cartas propias, incluso las
 /// diseñadas como ficha, con sus variantes.
@@ -116,7 +117,10 @@ pub fn secciones_de_mesa<'a>(
         }
         let layouts = layout_de(c);
         let seccion_lista = seccion_de(&secciones, &c.meta.name);
-        let s = if es_ficha(c) || seccion_lista == Section::Tokens {
+        let s = if es_ficha(c)
+            || seccion_lista == Section::Tokens
+            || c.marca == Some(MarcaCarta::Copia)
+        {
             Seccion::Ficha
         } else if layouts.iter().any(|l| l == "planar" || l == "phenomenon") {
             Seccion::Plano
@@ -164,7 +168,11 @@ pub fn candidatas_de_lista(deck: &Deck) -> Vec<&DeckCard> {
     deck.cards
         .iter()
         .filter(|c| !matches!(c.source, CardSource::Blank))
-        .filter(|c| !es_ficha(c) && seccion_de(&secciones, &c.meta.name) != Section::Tokens)
+        .filter(|c| {
+            !es_ficha(c)
+                && seccion_de(&secciones, &c.meta.name) != Section::Tokens
+                && c.marca != Some(MarcaCarta::Copia)
+        })
         .filter(|c| {
             !layout_de(c)
                 .iter()

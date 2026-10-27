@@ -59,7 +59,6 @@
 	"Usar el reverso del deck": "Использовать рубашку колоды",
 	"Idioma de la imagen": "Язык изображения",
 	"Sin indicar": "Не указан",
-	"Marcadas como variante de diseño, opcional o banquillo: se imprimen, pero no cuentan para el mazo.": "Отмечены как вариант дизайна, необязательные или сайдборд: печатаются, но не входят в колоду.",
 	"{n} marcadas": {
 		"one": "{n} отмечена",
 		"few": "{n} отмечены",
@@ -77,5 +76,6 @@
 	"Banquillo": "Сайдборд",
 	"BANQUILLO": "САЙДБОРД",
 	"Del banquillo (sideboard): no cuenta para el mazo.": "Из сайдборда: в колоду не засчитывается.",
-	"Cambiar carta…": "Сменить карту…"
+	"Cambiar carta…": "Сменить карту…",
+	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "Помечены как вариант дизайна, необязательные, сайдборд или копия: они печатаются, но не считаются в колоде."
 }

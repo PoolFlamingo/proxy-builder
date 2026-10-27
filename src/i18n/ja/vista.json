@@ -49,7 +49,6 @@
 	"Usar el reverso del deck": "デッキの裏面を使う",
 	"Idioma de la imagen": "画像の言語",
 	"Sin indicar": "未指定",
-	"Marcadas como variante de diseño, opcional o banquillo: se imprimen, pero no cuentan para el mazo.": "デザイン違い、任意、サイドボードの印が付いたカードです。印刷されますが、デッキには数えません。",
 	"{n} marcadas": "{n} 枚に印",
 	"Marca": "印",
 	"Se imprimen igual; no cuentan para el tamaño del mazo, las copias ni las estadísticas.": "印刷はされますが、デッキの枚数、コピー数、統計には数えません。",
@@ -62,5 +61,6 @@
 	"Banquillo": "サイドボード",
 	"BANQUILLO": "サイドボード",
 	"Del banquillo (sideboard): no cuenta para el mazo.": "サイドボードのカードです。デッキには数えません。",
-	"Cambiar carta…": "カードを変更…"
+	"Cambiar carta…": "カードを変更…",
+	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "デザイン違い・任意・サイドボード・コピーとして印をつけたカード：印刷はされますが、デッキの枚数には数えません。"
 }

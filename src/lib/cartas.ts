@@ -65,6 +65,13 @@ export const MARCAS: Record<MarcaCarta, { nombre: string; insignia: string; ayud
 		insignia: paraTraducir("BANQUILLO"),
 		ayuda: paraTraducir("Del banquillo (sideboard): no cuenta para el mazo."),
 	},
+	copia: {
+		nombre: paraTraducir("Copia (hace de ficha)"),
+		insignia: paraTraducir("COPIA"),
+		ayuda: paraTraducir(
+			"Una carta que hace de ficha (la copia de un Clone, un cambiaformas…): no cuenta para el mazo y en la mesa sale entre las fichas.",
+		),
+	},
 };
 
 /** Las marcas que se pintan sobre una carta (CUSTOM, ↩ EN, LOWRES…). */

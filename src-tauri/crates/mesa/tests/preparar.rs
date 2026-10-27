@@ -109,6 +109,34 @@ fn las_marcas_cuentan_como_cuentan() {
 }
 
 #[test]
+fn las_copias_marcadas_son_fichas_y_no_son_candidatas_de_una_lista() {
+    use mesa::preparar::candidatas_de_lista;
+    let mut d = yusri();
+    // Una carta de verdad que hace de ficha de un Clone, ocho veces.
+    for i in 0..8 {
+        let mut v = carta("Veyron");
+        v.id = format!("veyron-{i}");
+        v.marca = Some(MarcaCarta::Copia);
+        d.cards.push(v);
+    }
+    assert_eq!(
+        de(&d, Seccion::Ficha)
+            .iter()
+            .filter(|n| *n == "Veyron")
+            .count(),
+        8,
+        "salen entre las fichas"
+    );
+    assert!(!de(&d, Seccion::Mazo).contains(&"Veyron".to_string()));
+    assert!(
+        candidatas_de_lista(&d)
+            .iter()
+            .all(|c| c.meta.name != "Veyron"),
+        "no se eligen para la lista, no cuentan ni se repiten"
+    );
+}
+
+#[test]
 fn con_una_lista_solo_va_lo_elegido() {
     let mut d = yusri();
     // Otra variante de diseño de Yusri y una alternativa que no se juega.

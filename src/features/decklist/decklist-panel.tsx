@@ -490,7 +490,7 @@ function PiePanel() {
 						{marcadas > 0 && (
 							<WithTooltip
 								content={t(
-									"Marcadas como variante de diseño, opcional o banquillo: se imprimen, pero no cuentan para el mazo.",
+									"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.",
 								)}
 							>
 								<span className="text-muted-foreground">

@@ -55,7 +55,6 @@
 	"Usar el reverso del deck": "Rückseite des Decks verwenden",
 	"Idioma de la imagen": "Sprache des Bildes",
 	"Sin indicar": "Nicht angegeben",
-	"Marcadas como variante de diseño, opcional o banquillo: se imprimen, pero no cuentan para el mazo.": "Als Designvariante, optional oder Sideboard markiert: Sie werden gedruckt, zählen aber nicht zum Deck.",
 	"{n} marcadas": "{n} markiert",
 	"Marca": "Markierung",
 	"Se imprimen igual; no cuentan para el tamaño del mazo, las copias ni las estadísticas.": "Sie werden trotzdem gedruckt, zählen aber nicht zur Deckgröße, zu den Kopien oder zu den Statistiken.",
@@ -68,5 +67,6 @@
 	"Banquillo": "Sideboard",
 	"BANQUILLO": "SIDEBOARD",
 	"Del banquillo (sideboard): no cuenta para el mazo.": "Aus dem Sideboard: zählt nicht zum Deck.",
-	"Cambiar carta…": "Karte ändern…"
+	"Cambiar carta…": "Karte ändern…",
+	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "Als Design-Variante, optional, Sideboard oder Kopie markiert: Sie werden gedruckt, zählen aber nicht zum Deck."
 }

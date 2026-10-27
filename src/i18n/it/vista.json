@@ -57,7 +57,6 @@
 	"Usar el reverso del deck": "Usa il retro del mazzo",
 	"Idioma de la imagen": "Lingua dell'immagine",
 	"Sin indicar": "Non indicata",
-	"Marcadas como variante de diseño, opcional o banquillo: se imprimen, pero no cuentan para el mazo.": "Segnate come variante di design, opzionale o sideboard: vengono stampate, ma non contano per il mazzo.",
 	"{n} marcadas": {
 		"one": "{n} segnata",
 		"many": "{n} segnate",
@@ -74,5 +73,6 @@
 	"Banquillo": "Sideboard",
 	"BANQUILLO": "SIDEBOARD",
 	"Del banquillo (sideboard): no cuenta para el mazo.": "Dal sideboard: non conta per il mazzo.",
-	"Cambiar carta…": "Cambia carta…"
+	"Cambiar carta…": "Cambia carta…",
+	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "Segnate come variante di design, opzionale, sideboard o copia: si stampano, ma non contano per il mazzo."
 }

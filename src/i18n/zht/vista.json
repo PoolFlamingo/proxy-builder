@@ -49,7 +49,6 @@
 	"Usar el reverso del deck": "使用套牌的牌背",
 	"Idioma de la imagen": "圖片語言",
 	"Sin indicar": "未指定",
-	"Marcadas como variante de diseño, opcional o banquillo: se imprimen, pero no cuentan para el mazo.": "已標記為設計變體、可選或備牌：會印出，但不計入套牌。",
 	"{n} marcadas": "已標記 {n} 張",
 	"Marca": "標記",
 	"Se imprimen igual; no cuentan para el tamaño del mazo, las copias ni las estadísticas.": "一樣會印出；不計入套牌張數、副本數或統計。",
@@ -62,5 +61,6 @@
 	"Banquillo": "備牌",
 	"BANQUILLO": "備牌",
 	"Del banquillo (sideboard): no cuenta para el mazo.": "來自備牌（sideboard）：不計入套牌。",
-	"Cambiar carta…": "更換牌…"
+	"Cambiar carta…": "更換牌…",
+	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "標記為設計變體、可選、備牌或複製品的牌：會列印，但不計入牌組。"
 }

@@ -680,7 +680,6 @@
 	"Como mucho, dos comandantes.": "Не більше двох командирів.",
 	"{carta} no puede ser comandante.": "{carta} не може бути командиром.",
 	"Dos comandantes solo con compañero o trasfondo.": "Два командири — лише з партнером або передісторією.",
-	"{carta} va {veces} veces.": "{carta}: копій — {veces}.",
 	"{carta} se sale de la identidad de color del comandante.": "{carta} виходить за межі колірної ідентичності командира.",
 	"{n} cartas de la lista ya no están en el deck.": {
 		"one": "{n} карта зі списку вже не входить до колоди.",
@@ -1225,5 +1224,6 @@
 	"Dejar de mostrar": "Перестати показувати",
 	"Mostrar a todos / dejar de mostrar": "Показати всім / перестати показувати",
 	"{quien} muestra {cartas} a todos": "{quien} показує {cartas} всім",
-	"{quien} deja de mostrar {cartas}": "{quien} перестає показувати {cartas}"
+	"{quien} deja de mostrar {cartas}": "{quien} перестає показувати {cartas}",
+	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} трапляється {veces} разів. Якщо це копії, що замінюють жетони, познач їх у колоді (правий клік › Позначка › Копія)."
 }

@@ -59,7 +59,6 @@
 	"Usar el reverso del deck": "Użyj rewersu talii",
 	"Idioma de la imagen": "Język obrazu",
 	"Sin indicar": "Nie podano",
-	"Marcadas como variante de diseño, opcional o banquillo: se imprimen, pero no cuentan para el mazo.": "Oznaczone jako wariant projektu, opcjonalne lub sideboard: są drukowane, ale nie liczą się do talii.",
 	"{n} marcadas": "Oznaczone: {n}",
 	"Marca": "Oznaczenie",
 	"Se imprimen igual; no cuentan para el tamaño del mazo, las copias ni las estadísticas.": "Są drukowane normalnie; nie liczą się do rozmiaru talii, limitu kopii ani statystyk.",
@@ -72,5 +71,6 @@
 	"Banquillo": "Sideboard",
 	"BANQUILLO": "SIDEBOARD",
 	"Del banquillo (sideboard): no cuenta para el mazo.": "Z sideboardu: nie liczy się do talii.",
-	"Cambiar carta…": "Zmień kartę…"
+	"Cambiar carta…": "Zmień kartę…",
+	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "Oznaczone jako wariant projektu, opcjonalne, sideboard lub kopia: są drukowane, ale nie liczą się do talii."
 }

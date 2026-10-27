@@ -57,7 +57,6 @@
 	"Usar el reverso del deck": "Folosește versoul pachetului",
 	"Idioma de la imagen": "Limba imaginii",
 	"Sin indicar": "Nespecificată",
-	"Marcadas como variante de diseño, opcional o banquillo: se imprimen, pero no cuentan para el mazo.": "Marcate ca variantă de design, opțională sau sideboard: se tipăresc, dar nu se numără în pachet.",
 	"{n} marcadas": {
 		"one": "{n} marcată",
 		"few": "{n} marcate",
@@ -74,5 +73,6 @@
 	"Banquillo": "Sideboard",
 	"BANQUILLO": "SIDEBOARD",
 	"Del banquillo (sideboard): no cuenta para el mazo.": "Din sideboard: nu se numără în pachet.",
-	"Cambiar carta…": "Schimbă cartea…"
+	"Cambiar carta…": "Schimbă cartea…",
+	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "Marcate ca variantă de design, opțională, sideboard sau copie: se imprimă, dar nu contează pentru deck."
 }

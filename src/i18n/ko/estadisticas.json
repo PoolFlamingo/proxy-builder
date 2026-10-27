@@ -141,5 +141,6 @@
 	"Hasta tres Game Changers, sin destrucción masiva de tierras ni combos de dos cartas tempranos.": "Game Changer 최대 3장, 대량 대지 파괴 없음, 초반 2장 콤보 없음.",
 	"Optimizado": "최적화",
 	"Sin restricciones: más de tres Game Changers o destrucción masiva de tierras.": "제한 없음: Game Changer 3장 초과 또는 대량 대지 파괴.",
-	"Aparte, por su marca (no cuentan aquí): {v} variantes de diseño, {o} opcionales y {b} en el banquillo.": "표시로 따로 분류됨(여기 포함 안 됨): 디자인 변형 {v}장, 선택 사항 {o}장, 사이드보드 {b}장."
+	"Aparte, por su marca (no cuentan aquí): {v} variantes de diseño, {o} opcionales y {b} en el banquillo.": "표시로 따로 분류됨(여기 포함 안 됨): 디자인 변형 {v}장, 선택 사항 {o}장, 사이드보드 {b}장.",
+	"{n} copias que hacen de ficha (no cuentan aquí).": "토큰 대신 쓰는 복사본 {n}장(여기서는 세지 않아요)."
 }

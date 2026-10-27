@@ -643,7 +643,6 @@
 	"Como mucho, dos comandantes.": "Hoogstens twee commanders.",
 	"{carta} no puede ser comandante.": "{carta} kan geen commander zijn.",
 	"Dos comandantes solo con compañero o trasfondo.": "Twee commanders alleen met partner of background.",
-	"{carta} va {veces} veces.": "{carta} zit er {veces} keer in.",
 	"{carta} se sale de la identidad de color del comandante.": "{carta} valt buiten de kleuridentiteit van de commander.",
 	"{n} cartas de la lista ya no están en el deck.": {
 		"one": "{n} kaart uit de lijst zit niet meer in het deck.",
@@ -1184,5 +1183,6 @@
 	"Dejar de mostrar": "Niet meer tonen",
 	"Mostrar a todos / dejar de mostrar": "Aan iedereen tonen / niet meer tonen",
 	"{quien} muestra {cartas} a todos": "{quien} toont {cartas} aan iedereen",
-	"{quien} deja de mostrar {cartas}": "{quien} toont {cartas} niet meer"
+	"{quien} deja de mostrar {cartas}": "{quien} toont {cartas} niet meer",
+	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} komt {veces} keer voor. Als het kopieën zijn die als token fungeren, markeer ze dan in het deck (rechtsklik › Markering › Kopie)."
 }

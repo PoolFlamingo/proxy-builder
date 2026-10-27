@@ -57,7 +57,10 @@ export function textoAviso(a: AvisoLista, t: T): string {
 		case "sinPareja":
 			return t("Dos comandantes solo con compañero o trasfondo.");
 		case "repetida":
-			return t("{carta} va {veces} veces.", { carta: a.nombre, veces: a.veces });
+			return t(
+				"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).",
+				{ carta: a.nombre, veces: a.veces },
+			);
 		case "fueraDeIdentidad":
 			return t("{carta} se sale de la identidad de color del comandante.", { carta: a.nombre });
 		case "yaNoEstan":

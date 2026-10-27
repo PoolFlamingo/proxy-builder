@@ -643,7 +643,6 @@
 	"Como mucho, dos comandantes.": "Höchstens zwei Commander.",
 	"{carta} no puede ser comandante.": "{carta} kann kein Commander sein.",
 	"Dos comandantes solo con compañero o trasfondo.": "Zwei Commander nur mit Partner oder Hintergrund.",
-	"{carta} va {veces} veces.": "{carta} ist {veces}-mal enthalten.",
 	"{carta} se sale de la identidad de color del comandante.": "{carta} liegt außerhalb der Farbidentität des Commanders.",
 	"{n} cartas de la lista ya no están en el deck.": {
 		"one": "{n} Karte der Liste ist nicht mehr im Deck.",
@@ -1184,5 +1183,6 @@
 	"Dejar de mostrar": "Nicht mehr zeigen",
 	"Mostrar a todos / dejar de mostrar": "Allen zeigen / nicht mehr zeigen",
 	"{quien} muestra {cartas} a todos": "{quien} zeigt {cartas} allen",
-	"{quien} deja de mostrar {cartas}": "{quien} zeigt {cartas} nicht mehr"
+	"{quien} deja de mostrar {cartas}": "{quien} zeigt {cartas} nicht mehr",
+	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} kommt {veces}-mal vor. Wenn es Kopien sind, die als Spielmarke dienen, markiere sie im Deck (Rechtsklick › Markierung › Kopie)."
 }

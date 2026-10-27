@@ -145,5 +145,8 @@
 	"Victoria": "勝利",
 	"En solitario": "單人",
 	"Con {rivales}": "與 {rivales}",
-	"Ver repetición": "觀看重播"
+	"Ver repetición": "觀看重播",
+	"Copia (hace de ficha)": "複製品（充當衍生物）",
+	"COPIA": "複製品",
+	"Una carta que hace de ficha (la copia de un Clone, un cambiaformas…): no cuenta para el mazo y en la mesa sale entre las fichas.": "充當衍生物的牌（複製類生物的複製品、變形者等）：不計入牌組，在牌桌上出現在衍生物之中。"
 }

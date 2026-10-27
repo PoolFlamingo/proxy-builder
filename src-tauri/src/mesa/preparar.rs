@@ -248,6 +248,7 @@ fn carta_de_lista(c: &DeckCard, s: Option<&ScryCard>) -> CartaDeLista {
                 MarcaCarta::Variante => "variante",
                 MarcaCarta::Opcional => "opcional",
                 MarcaCarta::Banquillo => "banquillo",
+                MarcaCarta::Copia => "copia",
             }
             .to_string()
         }),

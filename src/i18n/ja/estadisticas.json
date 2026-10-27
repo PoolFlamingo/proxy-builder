@@ -141,5 +141,6 @@
 	"Hasta tres Game Changers, sin destrucción masiva de tierras ni combos de dos cartas tempranos.": "ゲームチェンジャー 3 枚まで、大量土地破壊と序盤の 2 枚コンボなし。",
 	"Optimizado": "最適化",
 	"Sin restricciones: más de tres Game Changers o destrucción masiva de tierras.": "制限なし：ゲームチェンジャー 4 枚以上、または大量土地破壊。",
-	"Aparte, por su marca (no cuentan aquí): {v} variantes de diseño, {o} opcionales y {b} en el banquillo.": "印により別扱い（ここでは数えません）：デザイン違い {v} 枚、任意 {o} 枚、サイドボード {b} 枚。"
+	"Aparte, por su marca (no cuentan aquí): {v} variantes de diseño, {o} opcionales y {b} en el banquillo.": "印により別扱い（ここでは数えません）：デザイン違い {v} 枚、任意 {o} 枚、サイドボード {b} 枚。",
+	"{n} copias que hacen de ficha (no cuentan aquí).": "トークンの代わりのコピー {n} 枚（ここには数えません）。"
 }

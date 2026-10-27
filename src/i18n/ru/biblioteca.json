@@ -190,5 +190,8 @@
 	"Victoria": "Победа",
 	"En solitario": "В одиночку",
 	"Con {rivales}": "С: {rivales}",
-	"Ver repetición": "Смотреть повтор"
+	"Ver repetición": "Смотреть повтор",
+	"Copia (hace de ficha)": "Копия (заменяет жетон)",
+	"COPIA": "КОПИЯ",
+	"Una carta que hace de ficha (la copia de un Clone, un cambiaformas…): no cuenta para el mazo y en la mesa sale entre las fichas.": "Карта, заменяющая жетон (копия Клона, оборотень…): не считается в колоде, а за столом оказывается среди жетонов."
 }

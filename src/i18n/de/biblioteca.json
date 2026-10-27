@@ -172,5 +172,8 @@
 	"Victoria": "Sieg",
 	"En solitario": "Solo",
 	"Con {rivales}": "Mit {rivales}",
-	"Ver repetición": "Wiederholung ansehen"
+	"Ver repetición": "Wiederholung ansehen",
+	"Copia (hace de ficha)": "Kopie (dient als Spielmarke)",
+	"COPIA": "KOPIE",
+	"Una carta que hace de ficha (la copia de un Clone, un cambiaformas…): no cuenta para el mazo y en la mesa sale entre las fichas.": "Eine Karte, die als Spielmarke dient (die Kopie eines Klons, ein Gestaltwandler …): Sie zählt nicht zum Deck und liegt am Tisch bei den Spielmarken."
 }

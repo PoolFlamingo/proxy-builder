@@ -172,5 +172,8 @@
 	"Victoria": "Winst",
 	"En solitario": "Alleen",
 	"Con {rivales}": "Met {rivales}",
-	"Ver repetición": "Herhaling bekijken"
+	"Ver repetición": "Herhaling bekijken",
+	"Copia (hace de ficha)": "Kopie (fungeert als token)",
+	"COPIA": "KOPIE",
+	"Una carta que hace de ficha (la copia de un Clone, un cambiaformas…): no cuenta para el mazo y en la mesa sale entre las fichas.": "Een kaart die als token fungeert (de kopie van een Clone, een gedaanteverwisselaar…): telt niet mee voor het deck en staat aan tafel bij de tokens."
 }

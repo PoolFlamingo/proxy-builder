@@ -3,4 +3,4 @@
 /**
  * Cuántas copias se quedan fuera de las cuentas del mazo por su marca.
  */
-export type Apartadas = { variantes: number, opcionales: number, banquillo: number, };
+export type Apartadas = { variantes: number, opcionales: number, banquillo: number, copias: number, };

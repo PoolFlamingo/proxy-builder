@@ -84,6 +84,12 @@ export function Resumen({ s, moneda }: { s: DeckStats; moneda: Moneda }) {
 				)}
 			</div>
 
+			{s.setAside.copias > 0 && (
+				<p className="flex items-center gap-1.5 rounded-lg border bg-muted/40 p-2.5 text-xs text-muted-foreground">
+					<Tag className="size-3.5 shrink-0" />
+					{t("{n} copias que hacen de ficha (no cuentan aquí).", { n: s.setAside.copias })}
+				</p>
+			)}
 			{s.setAside.variantes + s.setAside.opcionales + s.setAside.banquillo > 0 && (
 				<p className="flex items-center gap-1.5 rounded-lg border bg-muted/40 p-2.5 text-xs text-muted-foreground">
 					<Tag className="size-3.5 shrink-0" />

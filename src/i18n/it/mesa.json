@@ -655,7 +655,6 @@
 	"Como mucho, dos comandantes.": "Al massimo due comandanti.",
 	"{carta} no puede ser comandante.": "{carta} non può essere un comandante.",
 	"Dos comandantes solo con compañero o trasfondo.": "Due comandanti solo con partner o background.",
-	"{carta} va {veces} veces.": "{carta} compare {veces} volte.",
 	"{carta} se sale de la identidad de color del comandante.": "{carta} è fuori dall'identità di colore del comandante.",
 	"{n} cartas de la lista ya no están en el deck.": {
 		"one": "{n} carta della lista non è più nel mazzo.",
@@ -1198,5 +1197,6 @@
 	"Dejar de mostrar": "Smetti di mostrare",
 	"Mostrar a todos / dejar de mostrar": "Mostra a tutti / smetti di mostrare",
 	"{quien} muestra {cartas} a todos": "{quien} mostra {cartas} a tutti",
-	"{quien} deja de mostrar {cartas}": "{quien} smette di mostrare {cartas}"
+	"{quien} deja de mostrar {cartas}": "{quien} smette di mostrare {cartas}",
+	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} compare {veces} volte. Se sono copie che fanno da pedina, segnale nel mazzo (clic destro › Segno › Copia)."
 }

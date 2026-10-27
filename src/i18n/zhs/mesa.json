@@ -595,7 +595,6 @@
 	"Como mucho, dos comandantes.": "最多两个指挥官。",
 	"{carta} no puede ser comandante.": "{carta}不能作为指挥官。",
 	"Dos comandantes solo con compañero o trasfondo.": "只有具备携伴或背景时才能有两个指挥官。",
-	"{carta} va {veces} veces.": "{carta}放了 {veces} 张。",
 	"{carta} se sale de la identidad de color del comandante.": "{carta}超出了指挥官的标识色。",
 	"{n} cartas de la lista ya no están en el deck.": "列表中有 {n} 张牌已不在套牌中。",
 	"Editar la lista para jugar": "编辑游玩列表",
@@ -1130,5 +1129,6 @@
 	"Dejar de mostrar": "不再展示",
 	"Mostrar a todos / dejar de mostrar": "展示给所有人 / 不再展示",
 	"{quien} muestra {cartas} a todos": "{quien} 向所有人展示 {cartas}",
-	"{quien} deja de mostrar {cartas}": "{quien} 不再展示 {cartas}"
+	"{quien} deja de mostrar {cartas}": "{quien} 不再展示 {cartas}",
+	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} 出现了 {veces} 次。如果是充当衍生物的复制品，请在牌组中标记（右键 › 标记 › 复制品）。"
 }

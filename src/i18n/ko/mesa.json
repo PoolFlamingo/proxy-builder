@@ -595,7 +595,6 @@
 	"Como mucho, dos comandantes.": "커맨더는 최대 두 개까지예요.",
 	"{carta} no puede ser comandante.": "{carta}: 커맨더가 될 수 없어요.",
 	"Dos comandantes solo con compañero o trasfondo.": "커맨더 두 개는 동료나 배경이 있을 때만 가능해요.",
-	"{carta} va {veces} veces.": "{carta}: {veces}장 들어 있어요.",
 	"{carta} se sale de la identidad de color del comandante.": "{carta}: 커맨더의 색 정체성을 벗어나요.",
 	"{n} cartas de la lista ya no están en el deck.": "목록의 카드 {n}장이 더 이상 덱에 없어요.",
 	"Editar la lista para jugar": "플레이용 목록 편집",
@@ -1130,5 +1129,6 @@
 	"Dejar de mostrar": "보여주기 그만두기",
 	"Mostrar a todos / dejar de mostrar": "모두에게 보여주기 / 그만두기",
 	"{quien} muestra {cartas} a todos": "{quien}이(가) {cartas}을(를) 모두에게 보여줌",
-	"{quien} deja de mostrar {cartas}": "{quien}이(가) {cartas} 보여주기를 그만둠"
+	"{quien} deja de mostrar {cartas}": "{quien}이(가) {cartas} 보여주기를 그만둠",
+	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta}이(가) {veces}번 들어 있어요. 토큰 대신 쓰는 복사본이라면 덱에서 표시하세요(오른쪽 클릭 › 표시 › 복사본)."
 }

@@ -595,7 +595,6 @@
 	"Como mucho, dos comandantes.": "統率者は 2 体までです。",
 	"{carta} no puede ser comandante.": "{carta} は統率者にできません。",
 	"Dos comandantes solo con compañero o trasfondo.": "統率者 2 体は、共闘か背景がある場合のみです。",
-	"{carta} va {veces} veces.": "{carta} が {veces} 枚入っています。",
 	"{carta} se sale de la identidad de color del comandante.": "{carta} は統率者の固有色に含まれません。",
 	"{n} cartas de la lista ya no están en el deck.": "リストのうち {n} 枚が、もうデッキにありません。",
 	"Editar la lista para jugar": "プレイ用リストを編集",
@@ -1130,5 +1129,6 @@
 	"Dejar de mostrar": "見せるのをやめる",
 	"Mostrar a todos / dejar de mostrar": "全員に見せる／やめる",
 	"{quien} muestra {cartas} a todos": "{quien} が {cartas} を全員に見せる",
-	"{quien} deja de mostrar {cartas}": "{quien} が {cartas} を見せるのをやめる"
+	"{quien} deja de mostrar {cartas}": "{quien} が {cartas} を見せるのをやめる",
+	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} が {veces} 枚あります。トークンの代わりのコピーなら、デッキで印をつけてください（右クリック › 印 › コピー）。"
 }

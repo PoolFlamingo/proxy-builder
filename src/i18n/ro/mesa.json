@@ -655,7 +655,6 @@
 	"Como mucho, dos comandantes.": "Cel mult doi commanderi.",
 	"{carta} no puede ser comandante.": "{carta} nu poate fi commander.",
 	"Dos comandantes solo con compañero o trasfondo.": "Doi commanderi doar cu partner sau background.",
-	"{carta} va {veces} veces.": "{carta} apare de {veces} ori.",
 	"{carta} se sale de la identidad de color del comandante.": "{carta} iese din identitatea de culoare a commanderului.",
 	"{n} cartas de la lista ya no están en el deck.": {
 		"one": "{n} carte din listă nu mai este în pachet.",
@@ -1198,5 +1197,6 @@
 	"Dejar de mostrar": "Nu mai arăta",
 	"Mostrar a todos / dejar de mostrar": "Arată tuturor / nu mai arăta",
 	"{quien} muestra {cartas} a todos": "{quien} arată {cartas} tuturor",
-	"{quien} deja de mostrar {cartas}": "{quien} nu mai arată {cartas}"
+	"{quien} deja de mostrar {cartas}": "{quien} nu mai arată {cartas}",
+	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} apare de {veces} ori. Dacă sunt copii care țin loc de jeton, marchează-le în deck (clic dreapta › Marcaj › Copie)."
 }

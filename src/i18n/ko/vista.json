@@ -49,7 +49,6 @@
 	"Usar el reverso del deck": "덱 뒷면 사용",
 	"Idioma de la imagen": "이미지 언어",
 	"Sin indicar": "지정 안 함",
-	"Marcadas como variante de diseño, opcional o banquillo: se imprimen, pero no cuentan para el mazo.": "디자인 변형, 선택 사항 또는 사이드보드로 표시된 카드: 인쇄는 되지만 덱에 포함되지 않아요.",
 	"{n} marcadas": "{n}장 표시됨",
 	"Marca": "표시",
 	"Se imprimen igual; no cuentan para el tamaño del mazo, las copias ni las estadísticas.": "똑같이 인쇄되지만 덱 크기, 사본 수 제한, 통계에는 포함되지 않아요.",
@@ -62,5 +61,6 @@
 	"Banquillo": "사이드보드",
 	"BANQUILLO": "사이드보드",
 	"Del banquillo (sideboard): no cuenta para el mazo.": "사이드보드 카드: 덱에 포함되지 않아요.",
-	"Cambiar carta…": "카드 변경…"
+	"Cambiar carta…": "카드 변경…",
+	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "디자인 변형, 선택, 사이드보드 또는 복사본으로 표시한 카드: 인쇄는 되지만 덱 수에는 세지 않아요."
 }
