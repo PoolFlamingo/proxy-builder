@@ -1,5 +1,6 @@
 import { Crown, Eye, Layers, Loader2, LogOut, Play, Smartphone, UserX } from "lucide-react";
 import { useState } from "react";
+import type { Formato } from "@/bindings/Formato";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -143,7 +144,7 @@ export function SalaEspera({ preparar }: { preparar: Preparacion }) {
 							void prepararDeck(
 								preparar.deckId,
 								preparar.lista,
-								preparar.formato,
+								formatoDeSala(sala.sala.formato, preparar.formato),
 								preparar.deckNombre ?? "",
 							)
 						}
@@ -180,4 +181,15 @@ export function SalaEspera({ preparar }: { preparar: Preparacion }) {
 			</div>
 		</div>
 	);
+}
+
+const FORMATOS: readonly Formato[] = ["commander", "constructed", "limited", "libre"];
+
+/**
+ * El formato con el que se comprueba la lista: el de la sala (es con el que
+ * se juega), y si el servidor mandara uno que esta versión no conoce, el de
+ * la entrada de «Jugar».
+ */
+export function formatoDeSala(deLaSala: string, porDefecto: Formato): Formato {
+	return FORMATOS.find((f) => f === deLaSala) ?? porDefecto;
 }

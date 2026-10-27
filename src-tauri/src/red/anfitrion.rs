@@ -721,12 +721,113 @@ fn para_espectador(epoch: u32, partida: &Partida, hecho: &Hecho, restaura: bool)
             vista: Box::new(vista(partida, Mirador::Espectador)),
         }
     } else {
+        let parche = parche(partida, &hecho.tocado, Mirador::Espectador);
+        let evento = evento_visible(partida, &hecho.evento.cambio, &parche.quitadas)
+            .then(|| Box::new(hecho.evento.clone()));
         DelHost::ParcheEspectador {
             epoch,
-            parche: Box::new(parche(partida, &hecho.tocado, Mirador::Espectador)),
-            evento: Some(Box::new(hecho.evento.clone())),
+            parche: Box::new(parche),
+            evento,
         }
     }
+}
+
+/// Los campos de `Accion` (y de lo que lleva dentro) que nombran cartas, como
+/// salen en JSON.
+const CAMPOS_DE_CARTA: &[&str] = &[
+    "carta",
+    "cartas",
+    "a",
+    "abajo",
+    "alFondo",
+    "arriba",
+    "bajo",
+    "cementerio",
+    "comandante",
+    "eleccion",
+    "elegidas",
+    "exilio",
+    "monton",
+    "resto",
+];
+
+/// Las cartas que nombra un cambio. Se leen del JSON por el nombre del campo
+/// para no tener que tocar este código con cada acción nueva; si sobra algún
+/// número, el espectador se queda sin esa línea del registro, nunca al revés.
+fn cartas_nombradas(cambio: &Cambio) -> Vec<u32> {
+    fn ids(v: &serde_json::Value, out: &mut Vec<u32>) {
+        match v {
+            serde_json::Value::Number(n) => {
+                out.extend(n.as_u64().and_then(|x| u32::try_from(x).ok()))
+            }
+            serde_json::Value::Array(a) => {
+                for x in a {
+                    match x {
+                        serde_json::Value::Number(_) => ids(x, out),
+                        // `(IdCarta, Destino)`: la carta va primero.
+                        serde_json::Value::Array(par) => {
+                            if let Some(primero) = par.first() {
+                                ids(primero, out);
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    fn recorrer(v: &serde_json::Value, out: &mut Vec<u32>) {
+        match v {
+            serde_json::Value::Object(m) => {
+                // `ModoDescarte::Elegidas` va como `{tipo: "elegidas", valor: [...]}`.
+                if m.get("tipo").and_then(|t| t.as_str()) == Some("elegidas") {
+                    if let Some(valor) = m.get("valor") {
+                        ids(valor, out);
+                    }
+                }
+                for (k, x) in m {
+                    if CAMPOS_DE_CARTA.contains(&k.as_str()) {
+                        ids(x, out);
+                    }
+                    recorrer(x, out);
+                }
+            }
+            serde_json::Value::Array(a) => a.iter().for_each(|x| recorrer(x, out)),
+            _ => {}
+        }
+    }
+    let mut out = Vec::new();
+    if let Ok(v) = serde_json::to_value(cambio) {
+        recorrer(&v, &mut out);
+    }
+    out
+}
+
+/// Si el espectador puede recibir el evento tal cual: todas las cartas que
+/// nombra las ve ahora (en una zona pública o enseñadas) o las veía antes de
+/// este evento (`quitadas` del parche). Si no, solo le llega el parche: el
+/// id de una carta oculta (de la mano a la biblioteca, por ejemplo) diría
+/// algo que su vista no dice. Deshacer nunca le llega como evento (lleva la
+/// partida entera).
+fn evento_visible(partida: &Partida, cambio: &Cambio, quitadas: &[mesa::IdCarta]) -> bool {
+    if matches!(cambio, Cambio::Restaurar { .. }) {
+        return false;
+    }
+    cartas_nombradas(cambio).into_iter().all(|n| {
+        let id = mesa::IdCarta(n);
+        if quitadas.contains(&id) {
+            return true;
+        }
+        match (partida.donde(id), partida.cartas.get(&id)) {
+            (Some((zona, i)), Some(c)) => {
+                zona.es_publica()
+                    || mesa::visibilidad::ve(partida, c, &zona, i, Mirador::Espectador)
+            }
+            // Ya no existe (una ficha que se fue): estaba a la vista.
+            _ => true,
+        }
+    })
 }
 
 /// Atiende las conexiones que llegan al nodo mientras dure.
@@ -949,4 +1050,67 @@ pub(crate) async fn atender_conexion<M: Mesa>(
     escritor.abort();
     imagenes.abort();
     latencia.abort();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::mesa::sesion::tests::{config, mazo};
+    use crate::mesa::sesion::Sesion;
+    use mesa::accion::{Destino, Sitio, ZonaDestino};
+    use mesa::modelo::{RefZona, Zona};
+    use mesa::Accion;
+
+    fn mover(cartas: Vec<mesa::IdCarta>, zona: Zona) -> Cambio {
+        Cambio::Accion {
+            accion: Accion::Mover {
+                cartas,
+                a: Destino {
+                    zona: ZonaDestino::De(zona),
+                    jugador: None,
+                    sitio: Sitio::Arriba,
+                },
+                como: None,
+            },
+            azar: None,
+        }
+    }
+
+    #[test]
+    fn al_espectador_no_le_llega_el_id_de_una_carta_oculta() {
+        let s = Sesion::nueva(config(), vec![mazo()]).unwrap();
+        let p = s.partida();
+        let yo = IdJugador(0);
+        let oculta = p.zona(&RefZona::de(yo, Zona::Biblioteca))[5];
+        // De la biblioteca a la mano: no la ve antes ni después.
+        assert!(!evento_visible(p, &mover(vec![oculta], Zona::Mano), &[]));
+        // Si el parche la quita de su vista, es que la veía.
+        assert!(evento_visible(
+            p,
+            &mover(vec![oculta], Zona::Mano),
+            &[oculta]
+        ));
+        // Acciones sin cartas (robar) y cartas que ya no existen, sí.
+        let robar = Cambio::Accion {
+            accion: Accion::Robar { n: 1 },
+            azar: None,
+        };
+        assert!(evento_visible(p, &robar, &[]));
+        assert!(evento_visible(
+            p,
+            &mover(vec![mesa::IdCarta(9_999)], Zona::Cementerio),
+            &[]
+        ));
+    }
+
+    #[test]
+    fn las_cartas_se_leen_de_todos_los_campos_que_las_nombran() {
+        let c = mover(vec![mesa::IdCarta(3), mesa::IdCarta(4)], Zona::Mano);
+        assert_eq!(cartas_nombradas(&c), vec![3, 4]);
+        let d = Cambio::Dados {
+            tiradas: vec![],
+            semilla_animacion: 7,
+        };
+        assert!(cartas_nombradas(&d).is_empty());
+    }
 }
