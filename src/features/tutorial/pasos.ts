@@ -19,9 +19,9 @@ export const PASOS: Record<Vista, Paso[]> = {
 		},
 		{
 			ancla: "pestanas",
-			titulo: paraTraducir("Tres pantallas"),
+			titulo: paraTraducir("Cuatro pantallas"),
 			texto: paraTraducir(
-				"Deck: la lista, las hojas y la exportación. Diseñar: el editor de cartas, para hacer tus propias proxies. Biblioteca: todos tus decks guardados.",
+				"Deck: la lista, las hojas y la exportación. Diseñar: el editor de cartas, para hacer tus propias proxies. Biblioteca: todos tus decks guardados. Jugar: la mesa, para probar un deck en solitario.",
 			),
 		},
 		{
@@ -171,6 +171,77 @@ export const PASOS: Record<Vista, Paso[]> = {
 			titulo: paraTraducir("Tus decks"),
 			texto: paraTraducir(
 				"Cada deck enseña sus colores, cartas, precio e idiomas. Con clic derecho o los tres puntos: abrir, renombrar, duplicar, etiquetas, idioma, propiedades (notas y portada), exportar .pbdeck o eliminar. Con Ctrl o Mayús eliges varios y actúas sobre todos.",
+			),
+		},
+	],
+	mesa: [
+		{
+			titulo: paraTraducir("La mesa de juego"),
+			texto: paraTraducir(
+				"Juega con tus decks como en una mesa de verdad: sin reglas programadas, solo las cartas, la vida, los contadores y los dados. Tú decides qué pasa.",
+			),
+		},
+		{
+			ancla: "mesa-entrada",
+			titulo: paraTraducir("Elige deck y formato"),
+			texto: paraTraducir(
+				"Elige un deck de la biblioteca, el formato, las vidas y las ayudas (robar y enderezar al empezar el turno). Cada deck puede tener su tapete. Si dejaste una partida a medias, aquí la sigues.",
+			),
+		},
+		{
+			ancla: "mesa-solitario",
+			titulo: paraTraducir("Solitario"),
+			texto: paraTraducir(
+				"Prepara las imágenes (la primera vez tarda un poco con las cartas diseñadas) y reparte la mano inicial.",
+			),
+		},
+		{
+			ancla: "mesa-red",
+			titulo: paraTraducir("Jugar en red"),
+			texto: paraTraducir(
+				"Crea una partida y pasa el código a tus amigos, o pega el suyo para jugar o mirar. Las cartas propias y los tapetes de cada uno llegan solos.",
+			),
+		},
+		{
+			ancla: "mesa-barra",
+			titulo: paraTraducir("La barra de la mesa"),
+			texto: paraTraducir(
+				"El turno y su reloj, pausa, deshacer y rehacer, dados y monedas, fichas, el registro, el tapete, los atajos y terminar o reiniciar la partida.",
+			),
+		},
+		{
+			ancla: "mesa-campo",
+			titulo: paraTraducir("El campo"),
+			texto: paraTraducir(
+				"Arrastra las cartas a donde quieras; doble clic las gira. Con clic derecho en una carta, todo lo que se le puede hacer; en el campo vacío, enderezar todo, organizar o crear fichas. Arrastra en el vacío para elegir varias.",
+			),
+		},
+		{
+			ancla: "mesa-mano",
+			titulo: paraTraducir("La mano"),
+			texto: paraTraducir(
+				"Arrastra una carta al campo para jugarla, o a otra zona. Pasa el ratón por cualquier carta para verla en grande.",
+			),
+		},
+		{
+			ancla: "mesa-biblioteca",
+			titulo: paraTraducir("La biblioteca"),
+			texto: paraTraducir(
+				"Un clic roba una carta. Con clic derecho: moler, escrutar, vigilar, buscar, revelar y lanzar, barajar… Con el ratón encima, del 1 al 9 roba esas cartas.",
+			),
+		},
+		{
+			ancla: "mesa-vida",
+			titulo: paraTraducir("Tu vida"),
+			texto: paraTraducir(
+				"− y + (o la rueda) cambian la vida; los clics seguidos se juntan. Con clic derecho: daño, veneno, daño de comandante, contadores y designaciones.",
+			),
+		},
+		{
+			ancla: "mesa-tablero",
+			titulo: paraTraducir("Atajos"),
+			texto: paraTraducir(
+				"Casi todo tiene su tecla (T gira, G al cementerio, H a la mano…). Pulsa ? para ver la lista. Ctrl+Z deshace, sin límite en solitario.",
 			),
 		},
 	],

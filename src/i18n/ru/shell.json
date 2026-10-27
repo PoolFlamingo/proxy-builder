@@ -28,5 +28,6 @@
 	"No se ha podido guardar el deck: se perderán sus últimos cambios.": "Не удалось сохранить колоду: её последние изменения будут потеряны.",
 	"Cerrar igualmente": "Всё равно закрыть",
 	"Guardar y cerrar": "Сохранить и закрыть",
-	"No se ha podido cerrar la ventana.": "Не удалось закрыть окно."
+	"No se ha podido cerrar la ventana.": "Не удалось закрыть окно.",
+	"Se instalará al salir de la mesa.": "Установка начнётся, когда вы выйдете из-за стола."
 }

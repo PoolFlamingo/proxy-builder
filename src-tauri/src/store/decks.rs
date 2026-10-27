@@ -302,6 +302,22 @@ pub fn duplicate(db: &Db, id: &str, name: &str) -> AppResult<Deck> {
         "INSERT INTO deck_tags (deck_id, tag_id) SELECT ?2, tag_id FROM deck_tags WHERE deck_id = ?1",
         (id, &d.id),
     )?;
+    // Las listas para jugar, con los ids nuevos de las copias (sin el
+    // candado: `listas` pide la conexión otra vez).
+    drop(c);
+    let cambiar =
+        |v: &[String]| -> Vec<String> { v.iter().filter_map(|i| ids.get(i).cloned()).collect() };
+    for l in super::listas::de_deck(db, id)? {
+        super::listas::guardar(
+            db,
+            &d.id,
+            &mesa::lista::ListaDeJuego {
+                comandantes: cambiar(&l.comandantes),
+                cartas: cambiar(&l.cartas),
+                ..l
+            },
+        )?;
+    }
     Ok(d)
 }
 
@@ -312,6 +328,15 @@ pub fn delete(db: &Db, id: &str) -> AppResult<()> {
     tx.execute(
         "DELETE FROM blob_refs WHERE owner_kind = 'deck' AND owner_id = ?1",
         [id],
+    )?;
+    // El tapete del deck en la mesa de juego (`mesa/tapete.rs`).
+    tx.execute(
+        "DELETE FROM blob_refs WHERE owner_kind = 'mesa' AND owner_id = ?1",
+        [id],
+    )?;
+    tx.execute(
+        "DELETE FROM app_settings WHERE key = ?1",
+        [format!("mesa.tapete.{id}")],
     )?;
     tx.commit()?;
     Ok(())
@@ -623,6 +648,39 @@ mod tests {
         assert_eq!(r.removed, 1);
         assert!(s.locate(&db, &arte.blob).unwrap().is_none());
         assert!(s.locate(&db, &img.blob).unwrap().is_some());
+    }
+
+    #[test]
+    fn duplicar_copia_las_listas_para_jugar_con_los_ids_nuevos() {
+        let (_d, db, s) = entorno();
+        let img = s
+            .put_bytes(&db, &png(3, 4, 1), ImageOrigin::Upload)
+            .unwrap();
+        let mut deck = create(&db, "Uno", None).unwrap();
+        deck.cards = vec![carta(0, &img), carta(1, &img)];
+        save(&db, &deck).unwrap();
+        let (a, b) = (deck.cards[0].id.clone(), deck.cards[1].id.clone());
+        crate::store::listas::guardar(
+            &db,
+            &deck.id,
+            &mesa::lista::ListaDeJuego {
+                id: String::new(),
+                nombre: "Torneo".into(),
+                comandantes: vec![a],
+                cartas: vec![b],
+            },
+        )
+        .unwrap();
+        let copia = duplicate(&db, &deck.id, "Dos").unwrap();
+        let l = crate::store::listas::de_deck(&db, &copia.id).unwrap();
+        assert_eq!(l.len(), 1);
+        assert_eq!(l[0].comandantes, vec![copia.cards[0].id.clone()]);
+        assert_eq!(l[0].cartas, vec![copia.cards[1].id.clone()]);
+        // La del original sigue con los suyos.
+        assert_eq!(
+            crate::store::listas::de_deck(&db, &deck.id).unwrap()[0].cartas,
+            vec![deck.cards[1].id.clone()]
+        );
     }
 
     #[test]

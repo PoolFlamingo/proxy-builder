@@ -29,7 +29,8 @@ use zip::{CompressionMethod, ZipArchive, ZipWriter};
 use crate::error::{AppError, AppResult, ErrorCode};
 use crate::store::blobs::{es_huella, escribir_atomico, BlobStore};
 use crate::store::db::Db;
-use crate::store::{colecciones, decks, etiquetas};
+use crate::store::{colecciones, decks, etiquetas, listas};
+use mesa::lista::ListaDeJuego;
 
 pub const FORMATO: &str = "proxy-builder-deck";
 pub const VERSION: u32 = 2;
@@ -59,6 +60,9 @@ struct Biblioteca {
     /// El idioma del deck elegido a mano (desde la 2.3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     idioma: Option<String>,
+    /// Las listas para jugar (mesa de juego), con los ids de copias del deck.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    listas: Vec<ListaDeJuego>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -132,6 +136,7 @@ fn escribir<W: Write + Seek>(w: W, deck: &Deck, blobs: &BlobStore, db: &Db) -> A
             .collect(),
         notas: decks::notas_de(db, &deck.id)?,
         idioma: decks::idioma_de(db, &deck.id)?,
+        listas: listas::de_deck(db, &deck.id)?,
     };
     let json = serde_json::to_vec_pretty(&Manifiesto {
         format: FORMATO.into(),
@@ -244,8 +249,11 @@ pub fn import<R: Read + Seek>(r: R, blobs: &BlobStore, db: &Db) -> AppResult<Dec
     }
 
     deck.id = uuid::Uuid::new_v4().to_string();
+    // Ids nuevos para las copias; las listas para jugar los siguen.
+    let mut nuevos = std::collections::BTreeMap::new();
     for c in &mut deck.cards {
-        c.id = uuid::Uuid::new_v4().to_string();
+        let id = uuid::Uuid::new_v4().to_string();
+        nuevos.insert(std::mem::replace(&mut c.id, id.clone()), id);
     }
     let ya = decks::list(db)?;
     if ya.iter().any(|d| d.name == deck.name) {
@@ -267,6 +275,23 @@ pub fn import<R: Read + Seek>(r: R, blobs: &BlobStore, db: &Db) -> AppResult<Dec
         // Un idioma que este equipo no conoce se ignora.
         if let Some(l) = b.idioma.as_deref() {
             let _ = etiquetas::idioma(db, std::slice::from_ref(&deck.id), Some(l));
+        }
+        let cambiar = |ids: &[String]| -> Vec<String> {
+            ids.iter().filter_map(|i| nuevos.get(i).cloned()).collect()
+        };
+        for l in &b.listas {
+            // Una lista que no se puede guardar (sin nombre, hecha a mano)
+            // no deja el deck a medias: se salta.
+            let _ = listas::guardar(
+                db,
+                &deck.id,
+                &ListaDeJuego {
+                    id: String::new(),
+                    nombre: l.nombre.clone(),
+                    comandantes: cambiar(&l.comandantes),
+                    cartas: cambiar(&l.cartas),
+                },
+            );
         }
     }
     Ok(deck)
@@ -331,6 +356,34 @@ mod tests {
         });
         decks::save(db, &d).unwrap();
         d
+    }
+
+    #[test]
+    fn las_listas_para_jugar_viajan_con_los_ids_nuevos() {
+        let (dir, db, s) = entorno();
+        let d = deck_con_imagenes(&db, &s);
+        listas::guardar(
+            &db,
+            &d.id,
+            &ListaDeJuego {
+                id: String::new(),
+                nombre: "Torneo".into(),
+                comandantes: vec!["c1".into()],
+                cartas: vec!["c1".into(), "ya-no-esta".into()],
+            },
+        )
+        .unwrap();
+        let ruta = dir.path().join("x.pbdeck");
+        export(&d, &ruta, &s, &db).unwrap();
+        let (_dir2, db2, s2) = entorno();
+        let nuevo = import(std::fs::File::open(&ruta).unwrap(), &s2, &db2).unwrap();
+        let l = listas::de_deck(&db2, &nuevo.id).unwrap();
+        assert_eq!(l.len(), 1);
+        assert_eq!(l[0].nombre, "Torneo");
+        let id = nuevo.cards[0].id.clone();
+        assert_ne!(id, "c1");
+        assert_eq!(l[0].comandantes, vec![id.clone()]);
+        assert_eq!(l[0].cartas, vec![id], "la que no estaba en el deck, fuera");
     }
 
     #[test]

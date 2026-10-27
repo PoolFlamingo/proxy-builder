@@ -348,14 +348,101 @@ exportación.
 
 ---
 
+## Jugar con tu deck
+
+La pestaña **Jugar** pone tu deck en una mesa virtual para probarlo antes de
+imprimirlo, con las mismas imágenes que vas a imprimir (proxies diseñadas
+incluidas):
+
+- **Partidas en solitario** con la mano inicial y la regla de mulligan que
+  elijas (Londres, Londres con el primero gratis, amistoso o libre), turnos,
+  vidas, venenos, daño de comandante y contadores de jugador.
+- **Todo con el ratón o el teclado:** arrastra cartas entre la mano, el campo y
+  las zonas; el menú de cada carta la gira, la transforma, le pone contadores,
+  le cambia la fuerza y la resistencia, la adjunta, señala objetivos o la manda
+  a cualquier sitio; y cada acción tiene su atajo (la lista, a un clic).
+- **Lo que hace falta con la biblioteca:** robar, moler, escrutar, vigilar,
+  mirar las de arriba o abajo, buscar (con filtros por tipo y color), revelar
+  hasta (cascada, descubrir…), fichas (las del deck, rápidas como Tesoro o
+  Comida, cualquiera de Scryfall o una libre), dados y monedas.
+- **La vista grande** de la carta bajo el ratón, con un panel de estado que
+  explica cada contador y cada bono.
+- **Deshacer todo lo que quieras**, y un registro de la partida escrito en tu
+  idioma.
+- **Decks con más cartas de las que se juegan** (variantes de diseño,
+  alternativas para probar otras sinergias): guarda **listas para jugar** con
+  el comandante (la variante de diseño que quieras) y 99 más, comprobadas
+  (tamaño, repetidas e identidad de color). El deck no cambia.
+- **Tu tapete**: una imagen tuya o la ilustración de una carta, por deck, con
+  un velo oscuro y desenfoque para que las cartas destaquen.
+- **No pierde ninguna partida:** se guarda mientras juegas y «Jugar» ofrece
+  seguirla al volver a abrir la app.
+
+![Una partida en marcha](docs/presentacion/mesa.jpg)
+
+![El menú de cada carta en la mesa](docs/presentacion/mesa-menu.jpg)
+
+### Sparring, dados y monedas
+
+- **Sparring:** en solitario puedes activar un rival fantasma que de vez en
+  cuando responde a tus jugadas, como lo haría una mesa de verdad: contrarresta
+  un hechizo, quita una criatura que acaba de entrar, barre el campo después de
+  un ataque. Tú eliges lo fuerte que juega y decides si cada respuesta ocurre.
+- **Dados y monedas** en 3D de verdad, con física (o un 3D más ligero o un 2D
+  plano, en Ajustes), con tus colores, tu acabado o tu propia imagen. El
+  resultado se decide antes de la animación, así que siempre es justo.
+
+### Con otros jugadores
+
+- **Hasta 10 jugadores** en un mismo equipo («Partida local»: cada uno juega
+  su turno en la misma pantalla) o **en red**. La mesa puede enseñar un solo
+  tablero, uno grande y el resto en miniatura, dos a la vez o una rejilla.
+- **En red sin cuentas:** crea una partida y manda el código o el enlace
+  (`proxybuilder://`); tus amigos entran con su propio deck, o solo a mirar.
+  La conexión va directa entre los equipos y solo usa un relé cuando no hay
+  camino directo. También vienen los playgroups y las salas con el servidor de
+  salas.
+- **Formatos:** Commander (daño e impuesto de comandante), 60 cartas, Limitado
+  o libre; equipos con vida compartida o no, Dos Cabezas, Archienemigo y
+  Planechase; al mejor de 1, 3 o 5 con banquillo entre partidas.
+- **Las manos son privadas:** siempre ves cuántas cartas tienen los demás,
+  con su reverso (el del deck, también en las de doble cara). Los compañeros
+  de equipo se ven la mano, salvo que lo desactives.
+- **Chat, avisos rápidos** («Espera», «Respondo», «OK»…) y señales de
+  prioridad, con un bocadillo en el tablero de cada jugador, y sonidos de mesa.
+
+![Cuatro tableros en rejilla](docs/presentacion/mesa-rejilla.jpg)
+
+![Miniaturas con la mano de cada jugador: la del compañero boca arriba, la de los rivales con el reverso](docs/presentacion/mesa-manos.jpg)
+
+![El chat y los avisos rápidos](docs/presentacion/mesa-chat.jpg)
+
+### Después de la partida
+
+- Un **resumen** con quién ganó y cómo, el puesto de cada jugador, las rondas
+  y la duración.
+- La **repetición** de la partida entera: ve a cualquier momento, reprodúcela
+  a la velocidad que quieras y mírala como cualquier jugador.
+- El **historial** de todas tus partidas, con el deck y la lista para jugar de
+  cada asiento, filtros por resultado y formato, y lo de cada deck en sus
+  propiedades.
+
+![El final de una partida](docs/presentacion/mesa-fin.jpg)
+
+![Viendo la repetición](docs/presentacion/mesa-repeticion.jpg)
+
+![El historial de tus partidas](docs/presentacion/mesa-historial.jpg)
+
+---
+
 ## Por dentro
 
 - **Aplicación nativa** hecha con Tauri y Rust: todo lo pesado (búsquedas,
   descargas, imágenes, PDF, estadísticas) va en Rust y aprovecha todos los
   núcleos.
-- **Local y privada.** Tus decks y tus imágenes se quedan en tu equipo. La única
-  conexión es a Scryfall, para cartas, imágenes y precios, y lo ya descargado
-  queda en caché.
+- **Local y privada.** Tus decks y tus imágenes se quedan en tu equipo. Se
+  conecta a Scryfall para cartas, imágenes y precios (lo ya descargado queda
+  en caché), y a los demás jugadores solo cuando juegas en red.
 - **Exacta al milímetro.** La vista previa y el PDF usan la misma geometría,
   así que lo que ves en pantalla es lo que sale de la impresora.
 

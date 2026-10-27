@@ -12,13 +12,16 @@ pub mod archidekt;
 pub mod biblioteca;
 pub mod commands;
 pub mod diseno;
+pub mod enlace;
 pub mod error;
 pub mod fuentes;
 pub mod jobs;
+pub mod mesa;
 pub mod ocr;
 pub mod originales;
 pub mod package;
 pub mod protocol;
+pub mod red;
 pub mod registro;
 pub mod render;
 pub mod scryfall;
@@ -28,24 +31,48 @@ pub mod temas;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let constructor = tauri::Builder::default()
+    // `PB_PERFIL` (solo en debug): varias instancias con sus propios datos.
+    let perfil = red::perfil::actual();
+    // Una sola instancia: un enlace `proxybuilder://` abre la primera y se
+    // lo pasa. Va la primera (lo pide el plugin) y no con `PB_PERFIL`, que
+    // existe justo para abrir varias a la vez.
+    #[cfg(desktop)]
+    let constructor = if perfil.is_none() {
+        tauri::Builder::default().plugin(tauri_plugin_single_instance::init(|app, argv, _| {
+            enlace::recibir(app, argv);
+        }))
+    } else {
+        tauri::Builder::default()
+    };
+    #[cfg(not(desktop))]
+    let constructor = tauri::Builder::default();
+    let constructor = constructor
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(actualizar::Actualizador::default());
 
+    // Los enlaces `proxybuilder://unirse/<código>` (`enlace.rs`).
     #[cfg(desktop)]
+    let constructor = constructor.plugin(tauri_plugin_deep_link::init());
+
     // La ventana arranca oculta (sin el destello blanco del primer
     // fotograma) y la enseña la pantalla cuando ya está pintada: el estado
-    // guardado no debe enseñarla antes.
-    let constructor = constructor.plugin(
-        tauri_plugin_window_state::Builder::new()
-            .with_state_flags(
-                tauri_plugin_window_state::StateFlags::all()
-                    & !tauri_plugin_window_state::StateFlags::VISIBLE,
-            )
-            .build(),
-    );
+    // guardado no debe enseñarla antes. Con perfil, sin estado guardado (las
+    // instancias se pisarían la posición).
+    #[cfg(desktop)]
+    let constructor = if perfil.is_none() {
+        constructor.plugin(
+            tauri_plugin_window_state::Builder::new()
+                .with_state_flags(
+                    tauri_plugin_window_state::StateFlags::all()
+                        & !tauri_plugin_window_state::StateFlags::VISIBLE,
+                )
+                .build(),
+        )
+    } else {
+        constructor
+    };
 
     // En cuanto la página ha cargado, la ventana se enseña (con su fondo
     // oscuro, sin destello blanco). No se espera a que pinte la pantalla:
@@ -63,16 +90,44 @@ pub fn run() {
         .register_asynchronous_uri_scheme_protocol(protocol::ESQUEMA, protocol::manejador);
 
     let resultado = constructor
-        .setup(|app| {
+        .setup(move |app| {
             use tauri::Manager;
             let rutas = app.path();
+            let p = perfil.as_deref();
             let paths = state::Paths {
-                data: rutas.app_data_dir()?,
-                cache: rutas.app_cache_dir()?,
+                data: red::perfil::carpeta(&rutas.app_data_dir()?, p),
+                cache: red::perfil::carpeta(&rutas.app_cache_dir()?, p),
             };
-            registro::iniciar(&rutas.app_log_dir()?);
+            #[cfg(desktop)]
+            {
+                use tauri_plugin_deep_link::DeepLinkExt;
+                let h = app.handle().clone();
+                app.deep_link().on_open_url(move |e| {
+                    enlace::recibir(&h, e.urls().iter().map(|u| u.as_str().to_owned()));
+                });
+                // El que abrió la app, si la abrió un enlace.
+                if let Ok(Some(urls)) = app.deep_link().get_current() {
+                    enlace::recibir(app.handle(), urls.iter().map(|u| u.as_str().to_owned()));
+                }
+                // AppImage y las pruebas (`pnpm tauri dev`) no pasan por un
+                // instalador que registre el esquema: se registra aquí.
+                #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
+                if let Err(e) = app.deep_link().register_all() {
+                    tracing::warn!("no se pudo registrar proxybuilder://: {e}");
+                }
+            }
+            registro::iniciar(&red::perfil::carpeta(&rutas.app_log_dir()?, p));
+            crear_ventana(app, p, &paths.cache)?;
             let estado = state::AppState::open(paths).map_err(|e| e.to_string())?;
             app.manage(estado);
+            // Las partidas que terminan se guardan en el historial (Fase H).
+            let h = app.handle().clone();
+            mesa::historial::instalar(move |p| {
+                let estado = h.state::<state::AppState>();
+                if let Err(e) = store::partidas::guardar(&estado.db, &p) {
+                    tracing::warn!(codigo = ?e.code, "no se pudo guardar la partida en el historial");
+                }
+            });
             // Los marcos «Original» que pida esta versión y aún no estén.
             let app1 = app.handle().clone();
             tauri::async_runtime::spawn(async move {
@@ -202,6 +257,73 @@ pub fn run() {
             commands::diseno::art_from_blob,
             commands::diseno::art_from_scryfall,
             commands::diseno::art_from_card,
+            commands::mesa::mesa_empezar,
+            commands::mesa::mesa_retomar,
+            commands::mesa::mesa_estado,
+            commands::mesa::mesa_suscribir,
+            commands::mesa::mesa_vista,
+            commands::mesa::mesa_accion,
+            commands::mesa::mesa_mirar_como,
+            commands::mesa::mesa_encuentro,
+            commands::mesa::mesa_resumen,
+            commands::mesa::partidas_de_deck,
+            commands::mesa::partidas_todas,
+            commands::mesa::partida_borrar,
+            commands::mesa::repeticion_abrir,
+            commands::mesa::repeticion_actual,
+            commands::mesa::repeticion_ir,
+            commands::mesa::repeticion_salir,
+            commands::mesa::mesa_banquillo,
+            commands::mesa::mesa_banquillo_cambiar,
+            commands::mesa::mesa_siguiente_partida,
+            commands::mesa::mesa_guardar,
+            commands::mesa::mesa_salir,
+            commands::mesa::mesa_info_carta,
+            commands::mesa::mesa_origen_scryfall,
+            commands::mesa::mesa_originales,
+            enlace::enlace_pendiente,
+            enlace::enlace_invitacion,
+            commands::mesa::mesa_sparring_carta,
+            commands::mesa::mesa_tapete_get,
+            commands::mesa::mesa_tapete_set,
+            commands::mesa::mesa_tapete_ajustes,
+            commands::mesa::mesa_dados_get,
+            commands::mesa::mesa_dados_set,
+            commands::mesa::mesa_dados_imagen,
+            commands::mesa::mesa_listas,
+            commands::mesa::mesa_lista_cartas,
+            commands::mesa::mesa_lista_comprobar,
+            commands::mesa::mesa_lista_guardar,
+            commands::mesa::mesa_lista_borrar,
+            commands::red::red_identidad,
+            commands::red::red_identidad_set,
+            commands::red::red_identidad_exportar,
+            commands::red::red_identidad_importar,
+            commands::red::red_estado,
+            commands::red::red_crear,
+            commands::red::red_unirse,
+            commands::red::red_empezar,
+            commands::red::red_salir,
+            commands::red::mesa_fantasma,
+            commands::red::mesa_senal,
+            commands::salas::salas_conectar,
+            commands::salas::salas_estado,
+            commands::salas::salas_playgroups,
+            commands::salas::salas_pg_crear,
+            commands::salas::salas_pg_salir,
+            commands::salas::salas_pg_expulsar,
+            commands::salas::salas_pg_rol,
+            commands::salas::salas_invitar,
+            commands::salas::salas_revocar,
+            commands::salas::salas_usar,
+            commands::salas::salas_sala_crear,
+            commands::salas::salas_sala_unirse,
+            commands::salas::salas_sala_salir,
+            commands::salas::salas_sala_expulsar,
+            commands::salas::salas_sala_expulsar_jugador,
+            commands::salas::salas_deck,
+            commands::salas::salas_empezar,
+            commands::salas::salas_terminar,
         ])
         .run(tauri::generate_context!());
 
@@ -210,4 +332,32 @@ pub fn run() {
         eprintln!("Proxy Builder no ha podido arrancar: {e}");
         std::process::exit(1);
     }
+}
+
+/// La ventana principal, desde su configuración (`tauri.conf.json`, que la
+/// tiene con `create: false`). Con perfil, con su propio directorio de la
+/// vista web (otro `localStorage`) y el perfil en el título.
+fn crear_ventana(
+    app: &tauri::App,
+    perfil: Option<&str>,
+    cache: &std::path::Path,
+) -> tauri::Result<()> {
+    let Some(cfg) = app
+        .config()
+        .app
+        .windows
+        .iter()
+        .find(|w| w.label == "main")
+        .cloned()
+    else {
+        return Ok(());
+    };
+    let mut b = tauri::WebviewWindowBuilder::from_config(app.handle(), &cfg)?;
+    if let Some(p) = perfil {
+        b = b
+            .data_directory(cache.join("webview"))
+            .title(format!("{} · {p}", cfg.title));
+    }
+    b.build()?;
+    Ok(())
 }

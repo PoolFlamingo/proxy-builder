@@ -13,6 +13,7 @@
 		"windows": [
 			{
 				"label": "main",
+				"create": false,
 				"title": "Proxy Builder",
 				"width": 1440,
 				"height": 900,
@@ -25,7 +26,7 @@
 		"security": {
 			"csp": {
 				"default-src": "'self'",
-				"script-src": "'self'",
+				"script-src": "'self' 'wasm-unsafe-eval'",
 				"img-src": "'self' pbimg: http://pbimg.localhost data: blob:",
 				"style-src": "'self' 'unsafe-inline'",
 				"font-src": "'self' data: pbimg: http://pbimg.localhost",
@@ -57,6 +58,11 @@
 		}
 	},
 	"plugins": {
+		"deep-link": {
+			"desktop": {
+				"schemes": ["proxybuilder"]
+			}
+		},
 		"updater": {
 			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ3QUQ1QjE0NkQ0M0Y1NDUKUldSRjlVTnRGRnV0MTZ5cFZHd3FCZ1NjaHgyRU9OZXBDVklNZkhzemo3VXpyek53dmM0dUJkanIK",
 			"endpoints": [

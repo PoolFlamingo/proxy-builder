@@ -5,7 +5,7 @@ import { create } from "zustand";
  * PDF o completar un idioma de diseño. Lo pintan el pie del panel izquierdo y el botón de exportar, y desde
  * aquí se cancela.
  */
-export type TipoTrabajo = "resolver" | "exportar" | "idioma";
+export type TipoTrabajo = "resolver" | "exportar" | "idioma" | "mesa";
 
 export type EstadoTrabajo = {
 	tipo: TipoTrabajo;

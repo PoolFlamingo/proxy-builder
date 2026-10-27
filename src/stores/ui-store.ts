@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import type { ImagePolicy } from "@/bindings/ImagePolicy";
+import type { Intensidad } from "@/bindings/Intensidad";
+import type { ConfigDisposicion } from "@/features/mesa/disposicion";
 import type { AnchoMiniatura } from "@/lib/image-url";
 
 /**
@@ -21,6 +23,85 @@ type Preferencias = {
 	disenarCopias: boolean;
 	/** Las pantallas cuyo tutorial ya ha salido (solo sale solo la primera vez). */
 	tutorialesVistos: Vista[];
+	/** Ajustes > Mesa. */
+	mesa: PreferenciasMesa;
+};
+
+/**
+ * Cómo se pintan los dados y las monedas: 3D (three.js y física), CSS 3D
+ * (low poly, sin WebGL), 2D o lo mejor que aguante el equipo.
+ */
+export type NivelDados = "auto" | "3d" | "css" | "2d";
+
+/** Los ajustes de la mesa de juego (Ajustes > Mesa). */
+export type PreferenciasMesa = {
+	/** Tamaño de las cartas del campo, en % (25–200). */
+	tamanoCartas: number;
+	/** Ancho de la imagen de las cartas del campo. */
+	calidad: 146 | 244 | 488;
+	/** Ancho de la vista grande al pasar el ratón, en px. */
+	vistaGrande: number;
+	/** El panel de estado junto a la vista grande. */
+	panelEstado: boolean;
+	reducirAnimaciones: boolean;
+	sombras: boolean;
+	/** Contador de fotogramas (depuración). */
+	fps: boolean;
+	/** Cómo se pintan las tiradas. */
+	dados: NivelDados;
+	/** Volumen de los sonidos de la mesa (0–100). */
+	volumen: number;
+	/** Sonido al tirar dados y lanzar monedas. */
+	sonidoDados: boolean;
+	/** Sonido de las cartas: barajar, robar, girar y jugar. */
+	sonidoCartas: boolean;
+	/** Sonido al pasar el turno y cuando es el tuyo. */
+	sonidoTurno: boolean;
+	/** Sonido de los mensajes y avisos del chat y del fantasma del sparring. */
+	sonidoChat: boolean;
+	/** La intensidad del sparring con la que empieza el solitario. */
+	sparring: Intensidad;
+	/** Si ya se enseñó la tarjeta de «Cómo funciona» del sparring. */
+	sparringVisto: boolean;
+	/** Mantener pulsado el botón izquierdo abre el menú de la carta. */
+	clicSostenido: boolean;
+	/** Al adjuntar un aura o equipo con un «+N/+N» fijo, ofrecer sumarlo. */
+	ofrecerBono: boolean;
+	/** La vida del fantasma en solitario. */
+	fantasma: boolean;
+	/** En red: mandar el cursor y la carta que se arrastra, y ver los de los demás. */
+	movimientoEnVivo: boolean;
+	/** En una partida local de varios, pasar a mirar al jugador del turno. */
+	seguirTurno: boolean;
+	/** Los contadores de jugador que se enseñan junto a la vida. */
+	trackers: string[];
+	/** Cómo se reparten los tableros, recordado por número de jugadores. */
+	disposicion: Record<number, ConfigDisposicion>;
+};
+
+export const MESA_DE_FABRICA: PreferenciasMesa = {
+	tamanoCartas: 100,
+	calidad: 244,
+	vistaGrande: 320,
+	panelEstado: true,
+	reducirAnimaciones: false,
+	sombras: true,
+	fps: false,
+	dados: "auto",
+	volumen: 60,
+	sonidoDados: true,
+	sonidoCartas: true,
+	sonidoTurno: true,
+	sonidoChat: true,
+	sparring: "apagado",
+	sparringVisto: false,
+	clicSostenido: false,
+	ofrecerBono: true,
+	fantasma: true,
+	movimientoEnVivo: true,
+	seguirTurno: false,
+	trackers: [],
+	disposicion: {},
 };
 
 /** Los diálogos que se abren desde las cartas o las barras. */
@@ -44,7 +125,7 @@ export type Dialogo =
 	| { tipo: "disenarDeck" }
 	| { tipo: "exportarPng" };
 
-export type Vista = "deck" | "biblioteca" | "disenar";
+export type Vista = "deck" | "biblioteca" | "disenar" | "mesa";
 
 type UiStore = Preferencias & {
 	vista: Vista;
@@ -71,6 +152,7 @@ type UiStore = Preferencias & {
 	abrir: (d: Dialogo | null) => void;
 	anunciar: (texto: string | null) => void;
 	setPreferencia: <K extends keyof Preferencias>(k: K, v: Preferencias[K]) => void;
+	setMesa: (cambio: Partial<PreferenciasMesa>) => void;
 };
 
 const CLAVE = "proxybuilder.preferencias";
@@ -89,13 +171,19 @@ const PREDETERMINADAS: Preferencias = {
 	actualizarSola: true,
 	disenarCopias: false,
 	tutorialesVistos: [],
+	mesa: MESA_DE_FABRICA,
 };
 
 function leer(): Preferencias {
 	try {
 		const crudo = localStorage.getItem(CLAVE);
 		if (!crudo) return PREDETERMINADAS;
-		return { ...PREDETERMINADAS, ...(JSON.parse(crudo) as Partial<Preferencias>) };
+		const leidas = JSON.parse(crudo) as Partial<Preferencias>;
+		return {
+			...PREDETERMINADAS,
+			...leidas,
+			mesa: { ...MESA_DE_FABRICA, ...(leidas.mesa ?? {}) },
+		};
 	} catch {
 		return PREDETERMINADAS;
 	}
@@ -113,6 +201,7 @@ function guardar(s: Preferencias) {
 		actualizarSola: s.actualizarSola,
 		disenarCopias: s.disenarCopias,
 		tutorialesVistos: s.tutorialesVistos,
+		mesa: s.mesa,
 	};
 	try {
 		localStorage.setItem(CLAVE, JSON.stringify(p));
@@ -160,6 +249,10 @@ export const useUi = create<UiStore>((set, get) => ({
 	anunciar: (ultimaAccion) => set({ ultimaAccion }),
 	setPreferencia: (k, v) => {
 		set({ [k]: v } as Partial<UiStore>);
+		guardar(get());
+	},
+	setMesa: (cambio) => {
+		set({ mesa: { ...get().mesa, ...cambio } });
 		guardar(get());
 	},
 }));

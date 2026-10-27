@@ -28,5 +28,6 @@
 	"No se ha podido guardar el deck: se perderán sus últimos cambios.": "Pachetul nu a putut fi salvat: ultimele lui modificări se vor pierde.",
 	"Cerrar igualmente": "Închide oricum",
 	"Guardar y cerrar": "Salvează și închide",
-	"No se ha podido cerrar la ventana.": "Fereastra nu a putut fi închisă."
+	"No se ha podido cerrar la ventana.": "Fereastra nu a putut fi închisă.",
+	"Se instalará al salir de la mesa.": "Se va instala când ieși de la masă."
 }

@@ -1,0 +1,71 @@
+[
+	{
+		"tipo": "sala",
+		"jugadores": [
+			{
+				"id": 0,
+				"apodo": "Pablo",
+				"rol": "jugador",
+				"deck": "Prueba"
+			}
+		]
+	},
+	{
+		"tipo": "evento",
+		"epoch": 1,
+		"evento": {
+			"seq": 41,
+			"actor": {
+				"tipo": "jugador",
+				"id": 1
+			},
+			"tMs": 5,
+			"cambio": {
+				"tipo": "accion",
+				"accion": {
+					"que": "robar",
+					"n": 1
+				}
+			}
+		},
+		"confirma": 7,
+		"huella": null
+	},
+	{
+		"tipo": "rechazo",
+		"id": 8,
+		"motivo": "ritmo"
+	},
+	{
+		"tipo": "cerrada"
+	},
+	{
+		"tipo": "traspaso",
+		"jugador": 0,
+		"sucesor": 1
+	},
+	{
+		"tipo": "banquillo",
+		"vista": {
+			"mazo": [
+				{
+					"id": "c1",
+					"nombre": "Isla"
+				}
+			],
+			"banquillo": []
+		}
+	},
+	{
+		"tipo": "banquilloNo",
+		"motivo": "sin_terminar"
+	},
+	{
+		"tipo": "encuentro",
+		"encuentro": {
+			"alMejorDe": 3,
+			"cerradas": []
+		},
+		"primero": 1
+	}
+]

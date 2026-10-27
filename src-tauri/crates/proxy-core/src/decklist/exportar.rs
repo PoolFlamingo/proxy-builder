@@ -183,7 +183,7 @@ fn es_ficha(tipo: Option<&str>) -> bool {
 
 /// La sección de cada nombre según la lista escrita (la primera vez que
 /// sale). Con las dos caras, también por la de delante.
-fn secciones_de(texto: &str) -> Vec<(String, Section)> {
+pub fn secciones_de(texto: &str) -> Vec<(String, Section)> {
     let mut v: Vec<(String, Section)> = Vec::new();
     for l in parse(texto).lines {
         if l.kind != LineKind::Card {
@@ -197,7 +197,7 @@ fn secciones_de(texto: &str) -> Vec<(String, Section)> {
     v
 }
 
-fn seccion_de(secciones: &[(String, Section)], nombre: &str) -> Section {
+pub fn seccion_de(secciones: &[(String, Section)], nombre: &str) -> Section {
     let n = nombre.to_lowercase();
     let delante = n.split(" // ").next().unwrap_or(&n).to_string();
     secciones

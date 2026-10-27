@@ -1,9 +1,12 @@
-import { invoke } from "@tauri-apps/api/core";
+import { type Channel, invoke } from "@tauri-apps/api/core";
+import type { Accion } from "@/bindings/Accion";
 import type { ActualizacionEstado } from "@/bindings/ActualizacionEstado";
 import type { ActualizacionInfo } from "@/bindings/ActualizacionInfo";
 import type { ArchidektImport } from "@/bindings/ArchidektImport";
 import type { ArtRef } from "@/bindings/ArtRef";
+import type { AspectoDados } from "@/bindings/AspectoDados";
 import type { Aviso } from "@/bindings/Aviso";
+import type { AvisoLista } from "@/bindings/AvisoLista";
 import type { CacheStats } from "@/bindings/CacheStats";
 import type { CalibrationTextsInput } from "@/bindings/CalibrationTextsInput";
 import type { CapaInfo } from "@/bindings/CapaInfo";
@@ -12,7 +15,10 @@ import type { CardIdentify } from "@/bindings/CardIdentify";
 import type { CardMeta } from "@/bindings/CardMeta";
 import type { CardSize } from "@/bindings/CardSize";
 import type { CardSummary } from "@/bindings/CardSummary";
+import type { CartaDeLista } from "@/bindings/CartaDeLista";
 import type { Collection } from "@/bindings/Collection";
+import type { ComoEnSala } from "@/bindings/ComoEnSala";
+import type { ConfigMesa } from "@/bindings/ConfigMesa";
 import type { Deck } from "@/bindings/Deck";
 import type { DeckCard } from "@/bindings/DeckCard";
 import type { DeckDetails } from "@/bindings/DeckDetails";
@@ -22,33 +28,62 @@ import type { DeckSummary } from "@/bindings/DeckSummary";
 import type { DescargableInfo } from "@/bindings/DescargableInfo";
 import type { DesignDraft } from "@/bindings/DesignDraft";
 import type { DesignLang } from "@/bindings/DesignLang";
+import type { EstadoMesa } from "@/bindings/EstadoMesa";
+import type { EstadoRed } from "@/bindings/EstadoRed";
+import type { EstadoSala } from "@/bindings/EstadoSala";
+import type { EstadoSalas } from "@/bindings/EstadoSalas";
 import type { ExportEstimate } from "@/bindings/ExportEstimate";
 import type { FaceImage } from "@/bindings/FaceImage";
 import type { FichaPropuesta } from "@/bindings/FichaPropuesta";
+import type { Formato } from "@/bindings/Formato";
 import type { FormatoLista } from "@/bindings/FormatoLista";
 import type { FuenteCarta } from "@/bindings/FuenteCarta";
 import type { GcReport } from "@/bindings/GcReport";
+import type { HistorialDeck } from "@/bindings/HistorialDeck";
+import type { HistorialGeneral } from "@/bindings/HistorialGeneral";
+import type { IdCarta } from "@/bindings/IdCarta";
+import type { Identidad } from "@/bindings/Identidad";
 import type { IdentifyRequest } from "@/bindings/IdentifyRequest";
+import type { IdJugador } from "@/bindings/IdJugador";
+import type { Invitacion } from "@/bindings/Invitacion";
 import type { LetraInfo } from "@/bindings/LetraInfo";
 import type { LetraLibre } from "@/bindings/LetraLibre";
+import type { ListaDeJuego } from "@/bindings/ListaDeJuego";
+import type { ListasDeDeck } from "@/bindings/ListasDeDeck";
+import type { MensajeMesa } from "@/bindings/MensajeMesa";
 import type { NombresIdiomasInfo } from "@/bindings/NombresIdiomasInfo";
+import type { OrigenCarta } from "@/bindings/OrigenCarta";
+import type { OrigenTapete } from "@/bindings/OrigenTapete";
 import type { OriginalInfo } from "@/bindings/OriginalInfo";
 import type { PackInfo } from "@/bindings/PackInfo";
 import type { PagePlan } from "@/bindings/PagePlan";
 import type { ParsedDecklist } from "@/bindings/ParsedDecklist";
+import type { PeticionUnion } from "@/bindings/PeticionUnion";
+import type { Playgroup } from "@/bindings/Playgroup";
 import type { Preset } from "@/bindings/Preset";
 import type { PresetKind } from "@/bindings/PresetKind";
 import type { PrintSettings } from "@/bindings/PrintSettings";
+import type { ReglasCarta } from "@/bindings/ReglasCarta";
 import type { ResolveOptions } from "@/bindings/ResolveOptions";
 import type { Resumen } from "@/bindings/Resumen";
+import type { ResumenPartida } from "@/bindings/ResumenPartida";
+import type { RolPlaygroup } from "@/bindings/RolPlaygroup";
+import type { SalaNueva } from "@/bindings/SalaNueva";
 import type { SaveResult } from "@/bindings/SaveResult";
 import type { SetInfo } from "@/bindings/SetInfo";
 import type { SimbolosInfo } from "@/bindings/SimbolosInfo";
 import type { Sugerencia } from "@/bindings/Sugerencia";
 import type { Tag } from "@/bindings/Tag";
+import type { Tapete } from "@/bindings/Tapete";
 import type { TemaCatalogo } from "@/bindings/TemaCatalogo";
 import type { TemaInstalado } from "@/bindings/TemaInstalado";
 import type { TipoCarpeta } from "@/bindings/TipoCarpeta";
+import type { Usada } from "@/bindings/Usada";
+import type { VistaAspectoDados } from "@/bindings/VistaAspectoDados";
+import type { VistaBanquillo } from "@/bindings/VistaBanquillo";
+import type { VistaEncuentro } from "@/bindings/VistaEncuentro";
+import type { VistaMesa } from "@/bindings/VistaMesa";
+import type { VistaRepeticion } from "@/bindings/VistaRepeticion";
 
 /**
  * **La única puerta a Rust.** Cada comando de `src-tauri/src/commands/` tiene
@@ -224,6 +259,97 @@ export interface Commands {
 	preset_list: { args: { kind: PresetKind }; result: Preset[] };
 	preset_save: { args: { kind: PresetKind; name: string; json: string }; result: Preset };
 	preset_delete: { args: { id: string }; result: null };
+	mesa_empezar: { args: { config: ConfigMesa }; result: number };
+	mesa_retomar: { args: Record<string, never>; result: number };
+	enlace_pendiente: { args: Record<string, never>; result: string | null };
+	enlace_invitacion: { args: { codigo: string }; result: string | null };
+	mesa_estado: { args: Record<string, never>; result: EstadoMesa };
+	mesa_suscribir: { args: { canal: Channel<MensajeMesa> }; result: null };
+	mesa_vista: { args: Record<string, never>; result: VistaMesa };
+	mesa_mirar_como: { args: { jugador: IdJugador }; result: null };
+	mesa_encuentro: { args: Record<string, never>; result: VistaEncuentro };
+	mesa_resumen: { args: Record<string, never>; result: ResumenPartida };
+	partidas_de_deck: { args: { deck: string }; result: HistorialDeck };
+	partidas_todas: { args: { limite: number; desde: number }; result: HistorialGeneral };
+	partida_borrar: { args: { id: string }; result: null };
+	repeticion_abrir: { args: { id: string }; result: VistaRepeticion };
+	repeticion_actual: { args: Record<string, never>; result: VistaRepeticion };
+	repeticion_ir: { args: { pos: number; como: IdJugador | null }; result: VistaRepeticion };
+	repeticion_salir: { args: Record<string, never>; result: null };
+	mesa_banquillo: { args: { jugador: IdJugador }; result: VistaBanquillo };
+	mesa_banquillo_cambiar: {
+		args: { jugador: IdJugador; sale: string[]; entra: string[] };
+		result: null;
+	};
+	mesa_siguiente_partida: { args: Record<string, never>; result: null };
+	mesa_accion: { args: { accion: Accion; como: IdJugador | null }; result: null };
+	mesa_guardar: { args: Record<string, never>; result: null };
+	mesa_salir: { args: { guardar: boolean }; result: null };
+	mesa_info_carta: { args: { carta: IdCarta }; result: ReglasCarta };
+	mesa_origen_scryfall: { args: { scryfallId: string }; result: OrigenCarta };
+	mesa_originales: { args: { ids: string[]; idioma: string }; result: null };
+	mesa_sparring_carta: { args: { nombre: string }; result: OrigenCarta };
+	mesa_tapete_get: { args: { deck: string | null }; result: Tapete | null };
+	mesa_tapete_set: {
+		args: { deck: string | null; origen: OrigenTapete | null; velo: number; desenfoque: number };
+		result: Tapete | null;
+	};
+	mesa_tapete_ajustes: {
+		args: { deck: string | null; velo: number; desenfoque: number };
+		result: null;
+	};
+	mesa_dados_get: { args: Record<string, never>; result: VistaAspectoDados };
+	mesa_dados_set: { args: { aspecto: AspectoDados }; result: VistaAspectoDados };
+	mesa_dados_imagen: { args: { ruta: string | null }; result: VistaAspectoDados };
+	red_identidad: { args: Record<string, never>; result: Identidad };
+	red_identidad_set: { args: { apodo: string; avatar: string | null }; result: Identidad };
+	red_identidad_exportar: { args: { ruta: string }; result: null };
+	red_identidad_importar: { args: { ruta: string }; result: Identidad };
+	red_estado: { args: Record<string, never>; result: EstadoRed };
+	red_crear: { args: { apodo: string; deck: string | null }; result: string };
+	red_unirse: { args: { peticion: PeticionUnion }; result: number };
+	red_empezar: { args: { config: ConfigMesa; invitados: number[] }; result: number };
+	red_salir: { args: Record<string, never>; result: null };
+	mesa_fantasma: {
+		args: { tablero: IdJugador; carta: IdCarta | null; mas: IdCarta[]; x: number; y: number };
+		result: null;
+	};
+	mesa_senal: { args: { carta: IdCarta | null; a: IdJugador | null }; result: null };
+	salas_conectar: { args: { apodo: string }; result: EstadoSalas };
+	salas_estado: { args: Record<string, never>; result: EstadoSalas };
+	salas_playgroups: { args: Record<string, never>; result: Playgroup[] };
+	salas_pg_crear: { args: { nombre: string }; result: Playgroup[] };
+	salas_pg_salir: { args: { playgroup: string }; result: Playgroup[] };
+	salas_pg_expulsar: { args: { playgroup: string; clave: string }; result: Playgroup[] };
+	salas_pg_rol: {
+		args: { playgroup: string; clave: string; rol: RolPlaygroup };
+		result: Playgroup[];
+	};
+	salas_invitar: { args: { playgroup: string | null }; result: Invitacion };
+	salas_revocar: { args: { codigo: string }; result: null };
+	salas_usar: { args: { codigo: string; como: ComoEnSala | null; apodo: string }; result: Usada };
+	salas_sala_crear: { args: { nueva: SalaNueva; apodo: string }; result: EstadoSala };
+	salas_sala_unirse: {
+		args: { sala: string; como: ComoEnSala; apodo: string };
+		result: EstadoSala;
+	};
+	salas_sala_salir: { args: Record<string, never>; result: null };
+	salas_sala_expulsar: { args: { clave: string }; result: null };
+	salas_sala_expulsar_jugador: { args: { jugador: number }; result: null };
+	salas_deck: {
+		args: { deckId: string; lista: string | null; formato: Formato };
+		result: number;
+	};
+	salas_empezar: { args: Record<string, never>; result: null };
+	salas_terminar: { args: Record<string, never>; result: null };
+	mesa_listas: { args: { deck: string }; result: ListasDeDeck };
+	mesa_lista_cartas: { args: { deck: string }; result: CartaDeLista[] };
+	mesa_lista_comprobar: {
+		args: { deck: string; formato: Formato; lista: ListaDeJuego };
+		result: AvisoLista[];
+	};
+	mesa_lista_guardar: { args: { deck: string; lista: ListaDeJuego }; result: ListaDeJuego };
+	mesa_lista_borrar: { args: { deck: string; id: string }; result: null };
 }
 
 export function call<C extends keyof Commands>(
@@ -251,6 +377,9 @@ export interface Events {
 	"packs://progress": import("@/bindings/DescargaProgressEvent").DescargaProgressEvent;
 	"names://progress": import("@/bindings/NombresProgressEvent").NombresProgressEvent;
 	"update://progress": import("@/bindings/ActualizacionProgressEvent").ActualizacionProgressEvent;
+	"salas://enlace": string;
+	"mesa://progress": import("@/bindings/MesaProgressEvent").MesaProgressEvent;
+	"mesa://done": import("@/bindings/MesaDoneEvent").MesaDoneEvent;
 }
 
 /** Escucha un evento de Rust. Devuelve la función que deja de escuchar. */

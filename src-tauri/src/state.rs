@@ -43,6 +43,12 @@ pub struct AppState {
     pub detalles: crate::biblioteca::CacheDetalles,
     /// Cuántas miniaturas se procesan a la vez (una por núcleo).
     pub renders: tokio::sync::Semaphore,
+    /// La partida de la mesa de juego, si hay una abierta.
+    pub mesa: Mutex<Option<crate::mesa::sesion::Sesion>>,
+    /// La identidad y el nodo de la partida en red.
+    pub red: crate::red::Red,
+    /// Lo que ve esta app si mira una partida en red como espectador.
+    pub mirada: Mutex<Option<crate::red::mirada::Mirada>>,
     /// Trabajos de resolución/exportación en marcha (la limpieza de imágenes
     /// no corre mientras haya alguno).
     trabajos: AtomicUsize,
@@ -57,6 +63,7 @@ impl AppState {
         crate::store::decks::rellenar_refs(&db)?;
         let blobs = BlobStore::new(paths.data.join("blobs"));
         let diseno = crate::diseno::recursos::Recursos::abrir(&paths.data);
+        let red = crate::red::Red::nueva(crate::red::identidad::cargar_o_crear(&paths.data)?);
         Ok(AppState {
             db,
             blobs,
@@ -74,12 +81,26 @@ impl AppState {
                     .map(|n| n.get())
                     .unwrap_or(4),
             ),
+            mesa: Mutex::new(None),
+            mirada: Mutex::new(None),
+            red,
             trabajos: AtomicUsize::new(0),
         })
     }
 
+    /// Hay un trabajo en marcha o una partida abierta: ni la limpieza de
+    /// imágenes ni la actualización (que reinicia la app) deben correr.
     pub fn ocupado(&self) -> bool {
-        self.trabajos.load(Ordering::SeqCst) > 0
+        self.trabajos.load(Ordering::SeqCst) > 0 || self.hay_partida()
+    }
+
+    pub fn hay_partida(&self) -> bool {
+        self.mesa.lock().map(|m| m.is_some()).unwrap_or(false)
+    }
+
+    /// Si esta app mira una partida en red como espectador.
+    pub fn hay_mirada(&self) -> bool {
+        self.mirada.lock().map(|m| m.is_some()).unwrap_or(false)
     }
 
     /// Marca un trabajo en marcha hasta que se suelte el guardián.

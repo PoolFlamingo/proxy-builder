@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Actualizaciones, ReiniciarParaActualizar } from "./actualizaciones";
 import { Appearance } from "./appearance";
+import { AjustesMesa } from "./mesa";
 import { NombresIdiomas } from "./nombres-idiomas";
 
 /** Ajustes de la app: idioma, actualizaciones, nombres en otros idiomas y apariencia. */
@@ -54,6 +55,7 @@ export function SettingsDialog({
 						<Actualizaciones />
 						<NombresIdiomas />
 						<Appearance />
+						<AjustesMesa />
 					</div>
 				</DialogCuerpo>
 			</DialogContent>

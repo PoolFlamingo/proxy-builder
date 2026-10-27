@@ -8,6 +8,7 @@ import { PngDialog } from "@/features/disenar/png-dialog";
 import { RecursosDialog } from "@/features/disenar/recursos-dialog";
 import { ExportPanel } from "@/features/export/export-panel";
 import { LibraryScreen } from "@/features/library/library-screen";
+import { MesaScreen } from "@/features/mesa/mesa-screen";
 import { MoverADialog } from "@/features/preview/mover-a-dialog";
 import { PreviewPane } from "@/features/preview/preview-pane";
 import { SetBrowserDialog } from "@/features/set-browser/set-browser-dialog";
@@ -36,6 +37,7 @@ export default function App() {
 				derecha={<ExportPanel />}
 				biblioteca={<LibraryScreen />}
 				disenar={<DisenarScreen />}
+				mesa={<MesaScreen />}
 			/>
 			<AddCardDialog />
 			<VariantDialog />

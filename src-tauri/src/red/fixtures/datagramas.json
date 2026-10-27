@@ -1,0 +1,50 @@
+[
+	{
+		"tipo": "latido",
+		"t": 1
+	},
+	{
+		"tipo": "eco",
+		"t": 1,
+		"tHost": 2
+	},
+	{
+		"tipo": "fantasma",
+		"jugador": 1,
+		"tablero": 0,
+		"carta": 3,
+		"mas": [4],
+		"x": 5000,
+		"y": 2000,
+		"t": 9
+	},
+	{
+		"tipo": "senal",
+		"jugador": 0,
+		"carta": null,
+		"a": 1,
+		"t": 9
+	},
+	{
+		"tipo": "enlaces",
+		"filas": [
+			{
+				"jugador": 0,
+				"rttMs": 0,
+				"directo": true
+			},
+			{
+				"jugador": 1,
+				"rttMs": 42,
+				"directo": false
+			}
+		],
+		"ausentes": [
+			{
+				"jugador": 2,
+				"haceMs": 31000
+			}
+		],
+		"t": 10
+	}
+]

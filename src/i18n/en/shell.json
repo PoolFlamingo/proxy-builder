@@ -28,5 +28,6 @@
 	"No se ha podido guardar el deck: se perderán sus últimos cambios.": "The deck could not be saved: its latest changes will be lost.",
 	"Cerrar igualmente": "Close anyway",
 	"Guardar y cerrar": "Save and close",
-	"No se ha podido cerrar la ventana.": "The window could not be closed."
+	"No se ha podido cerrar la ventana.": "The window could not be closed.",
+	"Se instalará al salir de la mesa.": "It will be installed when you leave the table."
 }

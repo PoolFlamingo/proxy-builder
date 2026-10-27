@@ -1,0 +1,15 @@
+//! **La mesa de juego en la app**: la sesión de partida (con el motor del
+//! crate `mesa`), el deck de mesa con sus imágenes y la partida guardada.
+
+pub mod dados;
+pub mod encuentro;
+pub mod guardada;
+pub mod historial;
+pub mod imagenes;
+pub mod originales;
+pub mod preparar;
+pub mod repeticion;
+pub mod sesion;
+pub mod tapete;
+
+mod ejemplo;

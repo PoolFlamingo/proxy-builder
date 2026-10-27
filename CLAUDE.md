@@ -93,15 +93,204 @@ le falta una cadena le sale la inglesa.
   Scryfall), `card-editor`, `library`, `stats`, `set-browser`, `shell`,
   `disenar` (la vista «Diseñar» del editor de cartas de la 2.0), `tutorial`
   (el recorrido guiado de cada pantalla: pasos con su ancla `data-tutorial`;
-  sale solo la primera vez y con el botón de ayuda de la barra).
+  sale solo la primera vez y con el botón de ayuda de la barra), `mesa`
+  (la pestaña «Jugar»: entrada, tablero, menús, diálogos, atajos, `red/`
+  para el código directo), `salas` (playgroups y salas del servidor).
 - `src/stores/`: `deck-store` (deck, historial, autoguardado), `plan-store`
   (el `PagePlan` de Rust con 100 ms de espera), `ui-store` (zoom, selección,
-  diálogos, preferencias), `trabajo-store` (el trabajo largo en marcha).
+  diálogos, preferencias, `mesa` = Ajustes > Mesa), `trabajo-store` (el
+  trabajo largo en marcha), `mesa-store` (la vista del motor y sus parches;
+  selectores con referencias estables: `NINGUNA` o `useShallow`),
+  `chat-store` (silenciados, bocadillos, sin leer), `repeticion-store`,
+  `red-store` (código directo y estado de la red), `salas-store`,
+  `originales-store`, `vivo-store` (movimiento en vivo de los demás).
 - `src/lib/trabajos.ts`: lanzar un trabajo de Rust con eventos de progreso
   (escucha antes de lanzar). `src/lib/image-url.ts`: URLs de `pbimg://`.
 - Diálogos de ficheros SOLO por `src/lib/dialogos.ts` (`abrirParaImportar`,
   `guardarParaExportar`): recuerdan en Rust (`commands/carpetas.rs`,
   `app_settings`) la última carpeta de importar y la de exportar, por separado.
+- **Mesa de juego: dónde está cada cosa.**
+  - `src-tauri/crates/mesa/src/`: el motor puro (`modelo`, `accion`,
+    `resolver`, `aplicar`, `registro`, `visibilidad`, `vista`, `azar`,
+    `huella`, `formato`, `encuentro`, `muerte`, `ausencia`, `resumen`,
+    `lista`, `sparring/`); tests en `crates/mesa/tests/` (catálogo en
+    `tests/catalogo/v<N>.json`).
+  - `src-tauri/src/mesa/`: la partida abierta en la app (`sesion`,
+    `preparar`, `guardada`, `historial`, `repeticion`, `encuentro`,
+    `imagenes`, `tapete`, `dados`, `originales`); comandos en
+    `commands/mesa.rs`; historial en `store/partidas.rs`, listas en
+    `store/listas.rs`.
+  - `src-tauri/src/red/`: el juego en red con iroh (`nodo`, `protocolo`,
+    `anfitrion`, `invitado`, `mirada`, `latencia`, `imagenes`, `codigo`,
+    `identidad`, `perfil`) y `red/servidor/` (cliente del servidor de
+    salas); comandos en `commands/{red,salas}.rs`; enlaces en `enlace.rs`.
+  - `src/features/mesa/`: la pestaña «Jugar» (`entrada`, `mesa-screen`,
+    `tablero`, `tablero-mini`, `disposicion`, `menus/`, `dialogos/`,
+    `chat`, `registro-panel`, `fin-partida`, `repeticion`,
+    `historial-general`, `dados/`, `sparring/`, `listas/`, `red/`; la
+    lógica pura en `cuentas-*.ts`); `src/features/salas/`.
+  - `server/`: el servidor de salas (repo aparte `proxy-builder-server`,
+    ignorado aquí): `src/{servidor,protocolo,salas,playgroups,invitaciones,
+    eleccion,identidad,db}.ts`, `docs/protocolo.md`, `docs/despliegue.md`.
+- **Mesa de juego** (Pablo, 24/10/2026; plan `plans/20261024 - mesa-de-juego/`).
+  Motor puro en `src-tauri/crates/mesa` (sin Tauri, red, base de datos, reloj
+  ni azar de fuera; nunca `HashMap` en el modelo): `Intencion` → `resolver`
+  (permisos y azar: semilla por evento) → `Evento` → `aplicar` (total: sobre
+  una copia, `Err` no cambia nada) → `vista`/`parche` por mirador (de una
+  zona oculta solo el número). `registro.rs` deshace con `Cambio::Restaurar`
+  (la partida entera), rehace re-resolviendo intenciones y repite con fotos
+  cada 50. 🛑 `Accion`/`Cambio` nunca se cambian ni se quitan: variante nueva
+  = subir `VERSION_CATALOGO` y escribir `tests/catalogo/v<N>.json`.
+  La app: `src-tauri/src/mesa/` (`preparar.rs` del deck a la mesa, con las
+  imágenes a 745 px en `app_cache_dir/mesa/` servidas por `pbimg://…/m/`;
+  `sesion.rs` la partida abierta, que manda vista y parches por un
+  `tauri::ipc::Channel`; `guardada.rs` en `app_data_dir/partidas/actual.json.gz`
+  cada 50 eventos, a los 20 s con algo sin guardar y al salir; `tapete.rs`
+  con `blob_refs` de tipo `mesa`) y `commands/mesa.rs`. La pantalla nunca
+  decide reglas: manda `Accion` por `mesa_accion` y pinta lo que vuelve; el
+  registro lo escribe `features/mesa/textos-eventos.ts` con `t()`. Un
+  rechazo llega como `Rejected` con `motivo` (`lib/errores.ts`). Con la mesa
+  abierta no se reinicia a instalar una actualización: la pantalla la deja en
+  cola (`useActualizacion.alSalirDeLaMesa`) y la instala al salir de la mesa;
+  Rust sigue rechazando `update_install` con `Busy`, `motivo: partida`.
+  **Listas para jugar** (Pablo, 26/10/2026): un deck con más cartas de las
+  que se juegan (variantes de diseño, alternativas) elige una lista: el
+  comandante (una copia concreta) y 99 más. `mesa::lista` (dato y
+  comprobación: tamaño, copias salvo básicas, identidad de color; solo
+  avisa de la identidad), tabla `deck_listas` (migración 0005, aparte del
+  deck como las etiquetas: el autoguardado no la pisa; viaja en el
+  `.pbdeck`), `store/listas.rs`, comandos `mesa_lista*` y
+  `features/mesa/listas/`. Commander con más de 100 que cuentan no empieza
+  sin lista (`motivo: falta_lista`).
+  **Sparring** (Fase D): el rival fantasma del solitario, como el de
+  Playgroup (tablas, no IA). `mesa::sparring::reaccionar(antes, después,
+  evento, azar)` (contrarresta al lanzar, elimina/devuelve/sacrificio al
+  llegar al campo, barre al pasar con criaturas; de las tierras solo quita las muy fuertes —legendarias o `TIERRAS_FUERTES`—, y las rocas y elfos de maná pesan menos; Pablo, 26/10/2026); la sesión mete la reacción
+  como `Cambio::Sparring` de la mesa y el jugador decide con
+  `DecidirSparring`. Bases, ritmo e intensidades arriba de
+  `sparring/reacciones.rs`, calibradas con `tests/sparring.rs` (500
+  partidas por intensidad, reparto de Playgroup ±5 puntos); las 128 cartas
+  del fantasma en `mesa/assets/sparring/cartas.json`, por nombre
+  (`mesa_sparring_carta` las busca en Scryfall). Pantalla en
+  `features/mesa/sparring/`.
+  **Dados y monedas** (`features/mesa/dados/`): el resultado lo decide Rust
+  y la animación solo lo enseña. Tres niveles (Ajustes > Mesa): 3D con
+  three.js y física de Rapier determinista (`fisica.ts` simula entera la
+  tirada, mira qué cara quedó arriba y `conResultado` le pone el número del
+  motor), CSS 3D low poly (`css3d.tsx`, la pose final ya calculada) y 2D
+  (`plano.tsx`). three y Rapier van con `import()` en trozos aparte; Rapier
+  necesita `'wasm-unsafe-eval'` en la CSP. El aspecto de cada jugador
+  (color, números, acabado, imagen propia, metal de la moneda; Pablo,
+  26/10/2026) lo guarda `mesa/dados.rs` (`app_settings` `mesa.dados`, la
+  imagen en blobs con `blob_refs` `mesa`/`dados`, a la pantalla como `data:`
+  URL para que WebGL pueda usarla); `texturas.ts` pinta el fondo de las
+  caras para los tres niveles. Sonido sintetizado (`sonidos.ts`, Web Audio,
+  sin ficheros) con los golpes que graba la física; los demás sonidos, en la
+  Fase H. 🛑 Nunca coger `state.db.conn()` y llamar con ella cogida a algo
+  que la vuelva a pedir (`settings::set`…): el `Mutex` se bloquea para
+  siempre.
+  **En red** (Fases E y F): iroh 1.4.1 (QUIC P2P con relé), en estrella
+  con el host: los invitados mandan intenciones (ALPN `proxy-builder/mesa/1`,
+  tramas de `red/protocolo.rs`), el host resuelve y reparte eventos con la
+  huella cada 50; cada jugador guarda la partida entera, el espectador solo
+  su vista (`red/mirada.rs`, `AppState.mirada`). Imágenes por `/img/1` a
+  través del host (`red/imagenes.rs`, `app_cache_dir/mesa/r/`, se limpian
+  siempre). La clave del nodo en `app_data_dir/identidad/clave`;
+  `PB_PERFIL` (debug) separa varias instancias en la misma máquina
+  (`perfiles/<x>/`). Código directo: comandos `red_*`
+  (`commands/red.rs`, `features/mesa/red/`, `stores/red-store.ts`).
+  Servidor de salas y playgroups: cliente en `red/servidor/` (WebSocket
+  con rustls y los certificados del sistema, nada de OpenSSL; reto firmado
+  con la clave del nodo; `sala.rs` hace la malla, mide RTT y cambia de host
+  cuando el servidor lo elige), comandos `salas_*`, pantalla en
+  `features/salas/` y `stores/salas-store.ts`. El servidor (Node ≥ 22.13,
+  `node:sqlite`, `ws`, `zod`) es un repo aparte, `proxy-builder-server`,
+  clonado en `server/` (ignorado por la app; su protocolo en
+  `server/docs/protocolo.md` y el despliegue con nginx e `iroh-relay`
+  1.4.1 en `server/docs/despliegue.md`). Mientras no haya dominio,
+  `PRODUCCION` (`red/servidor/mod.rs`) y `RELE_PROPIO` (`red/nodo.rs`) son
+  `None`; en debug, `PB_SERVIDOR` y `PB_RELAY` los cambian.
+  **Ajustes de sala, banquillo y salida del anfitrión** (Pablo, 27/10/2026):
+  en la sala de espera el anfitrión elige asientos (él, siempre el primero;
+  `config-sala.ts`, `ajustes-partida.tsx` compartido con la partida local),
+  equipos, «al mejor de» y quién empieza; `red_empezar(config, invitados)`
+  recibe los ids de la sala (`EnSala.id`) por asiento y rechaza con
+  `sala_cambio` si ya no son los de la sala. Los invitados llevan el marcador
+  del encuentro (`DelHost::Encuentro`) y cambian **su** banquillo pidiéndoselo
+  al anfitrión (`PideBanquillo`/`CambiaBanquillo`; `mesa_banquillo*` son
+  `async`); la siguiente partida la abre el anfitrión, y tras un traspaso no
+  se puede (`sin_mazos`: cada uno guarda solo su mazo). Si el anfitrión se va
+  a propósito (`Anfitrion::irse`, también al cerrar la ventana) con código
+  directo y algún jugador conectado, **cede la partida** (`DelHost::Traspaso`,
+  sucesor = asiento más bajo conectado; el que se fue no cuenta para la
+  mayoría, `ido`) en vez de cerrarla. `PROTOCOLO` = 2. Prueba con procesos
+  reales: `red/pruebas_procesos.rs` (`#[ignore]`, `--ignored`); un host
+  matado con `SIGKILL` se nota a los ~30 s (tiempo de inactividad de QUIC).
+  **Tiempo real y enlaces** (Fase E cerrada): `red/latencia.rs` manda por
+  datagramas latido/eco (RTT y desfase de reloj con el host, que cuenta el
+  temporizador del turno), la tabla de enlaces (`AvisoRed::Enlaces`) y los
+  fantasmas/aros (`mesa_fantasma`, `mesa_senal`; el host pone el remitente,
+  60/s por jugador, al espectador solo lo que ve). «Originales en mi idioma»
+  es solo de pantalla (`mesa/originales.rs`, `mesa_originales`). Con
+  `RELE_PROPIO` puesto se usan el propio **y** los de n0 (`Relay::PropioYN0`).
+  Identidad exportable/importable (`red_identidad_exportar/importar`, `Busy`
+  con partida o sala). Enlaces `proxybuilder://unirse/<código>` en
+  `enlace.rs` (`tauri-plugin-deep-link` + single-instance, este solo sin
+  `PB_PERFIL`; `rust-ini` fijado a 0.21.1 en `Cargo.lock`); el enlace solo
+  rellena «Unirse con un código», unirse lo pulsa la persona.
+  **Varios jugadores** (Fase G; Pablo, 27/10/2026): de 1 a 10 en una partida
+  local («Partida local…», `partida-local.tsx` + `config-local.ts`: quien se
+  mira es quien juega, `mesa_mirar_como`) o en red. Disposiciones solo de
+  pantalla (`disposicion.ts::repartir`: único, dividido, foco, rejilla,
+  equipos; miniaturas `tablero-mini.tsx` muestreadas a 10/s por `lento.ts`;
+  se recuerdan por número de jugadores). Lo que decide reglas es del motor:
+  equipos y fuego amigo (`Partida::oponentes`, vida compartida, 2HG),
+  orden de turnos (la ronda sube al pasar por el asiento del primero), quién
+  está fuera (`mesa::fuera_de_juego`, `muerte.rs`: solo **avisa**; la persona
+  confirma con `Eliminar`), `ausencia.rs` y el encuentro al mejor de 1/3/5 con
+  banquillo (`mesa::encuentro`; vive en la sesión, `mesa/encuentro.rs`, no en
+  la `Partida`: `Accion`/`Cambio` no cambian). Desconectados y expulsión:
+  `Enlaces.ausentes`, `red/anfitrion.rs::{vigilar_ausentes, expulsar}`,
+  `Sesion::suplir`, `sala_expulsar` en el servidor; pantalla en
+  `features/mesa/{muerte,dano-de-quien}.tsx` y `red/ausentes.tsx`.
+  **Final, historial, registro, chat y sonidos** (Fase H; Pablo, 27/10/2026):
+  `mesa::resumir` (`crates/mesa/src/resumen.rs`) cuenta puestos, rondas y
+  duración del registro (la pantalla nunca recuenta). Al `Terminar`, la
+  sesión da una `NuevaPartida` al gancho de `mesa/historial.rs` y
+  `store/partidas.rs` la guarda (migración 0006: `partidas`, `partida_decks`,
+  `registro` BLOB; no cuelga de los decks, no toca `updated_at`); un invitado
+  en red guarda solo el resumen. Repetición (`mesa/repeticion.rs`,
+  `repeticion_*`, `features/mesa/repeticion.tsx`): la misma sesión en «solo
+  mirar» con la partida de `Registro::en`, desde el final o desde la pestaña
+  «Partidas» del deck (`library/partidas-deck.tsx`). Panel lateral con
+  Registro y Chat (`registro-panel.tsx`, `chat.tsx`); `Accion::Chat/Aviso/Senal`
+  ya se usan (sin variantes nuevas: el catálogo no cambió). Sonidos
+  sintetizados (`sonidos.ts`, `audio.ts`, por grupos en Ajustes). **Manos**
+  (Pablo, 27/10/2026): la mano ajena se ve siempre como reversos del deck de
+  ese jugador (también en las miniaturas, `ManoMini`, y en doble cara);
+  con equipos los compañeros se ven la mano (`ve_la_mano_de_un_companero`,
+  `Variantes.mano_privada_en_equipo` la apaga; el oráculo de
+  `tests/comun::sin_fugas` lleva la misma regla). Las manos de las
+  miniaturas van en abanico sutil (`abanico` de `disposicion.ts`, a escala),
+  y con sus zonas como en tu tablero (`ZonasMini`: mando, biblioteca con el
+  reverso, cementerio y exilio con la de arriba). Sin reverso propio, la mesa
+  usa el de la app (`Blobs::generic_back`), no uno dibujado.
+  **Historial general** (Fase J; Pablo, 27/10/2026): `partidas_todas(limite,
+  desde)` → `HistorialGeneral` (todas las partidas de todos los decks, por
+  páginas); cada `JugadorHistorial` lleva la lista para jugar usada
+  (`lista_id`, `lista`, `cartas_lista`, con `#[serde(default)]`: sin migración;
+  el nombre y el tamaño los apunta `store::partidas::guardar` desde
+  `deck_listas`). Pantalla `features/mesa/historial-general.tsx` (botón
+  «Historial» de Jugar) con filtros puros en `cuentas-historial.ts`.
+  **Traspaso del anfitrión sin servidor** (Fase K; Pablo, 27/10/2026):
+  `red/sucesion.rs`. Con código directo, el invitado que no recupera al
+  anfitrión prueba a los demás por asiento y, si le toca, sigue de anfitrión
+  con su copia y el mismo secreto (`Anfitrion::desde`). 🛑 Un anfitrión de
+  código directo solo deja jugar con más de la mitad de los jugadores
+  conectados (`sin_mayoria`; se para antes de lo que tarda otro en activarse)
+  y uno parado se une a otro (`ceder`, `solo_si_activo`): así nunca hay dos
+  partidas. Hooks `Mesa::ser_anfitrion`/`ser_invitado`. Con el servidor de
+  salas no se usa: elige él.
 - Rust: `commands/{cards,decklist,export,identify,layout,library,stats}.rs`,
   `package.rs` (.pbdeck), `render.rs` + `protocol.rs` (miniaturas),
   `ocr.rs` (OCR opcional de la carta entera con `ocrs`, a la resolución
@@ -109,7 +298,7 @@ le falta una cadena le sale la inglesa.
   resto; modelos descargados la primera vez a `app_data_dir/modelos/`),
   `scryfall/nombres.rs` (catálogo de nombres de Scryfall en `app_cache_dir`,
   renovado cada semana, para reconocer en local lo que lee el OCR),
-  `proxy-core::{layout,imaging,pdf,stats,decklist}`.
+  `proxy-core::{layout,imaging,pdf,stats,decklist}`, `mesa`.
 - Estadísticas: todo el cálculo en `proxy-core::stats` (`mod.rs` cuenta;
   `funciones.rs` deduce rampa/robo/eliminación… por el texto de reglas;
   `mana.rs` lee costes; `prob.rs` hipergeométrica). `commands/stats.rs` pide

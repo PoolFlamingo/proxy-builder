@@ -28,5 +28,6 @@
 	"No se ha podido guardar el deck: se perderán sus últimos cambios.": "デッキを保存できませんでした。最新の変更は失われます。",
 	"Cerrar igualmente": "このまま閉じる",
 	"Guardar y cerrar": "保存して閉じる",
-	"No se ha podido cerrar la ventana.": "ウィンドウを閉じられませんでした。"
+	"No se ha podido cerrar la ventana.": "ウィンドウを閉じられませんでした。",
+	"Se instalará al salir de la mesa.": "テーブルを離れたらインストールされます。"
 }

@@ -1,0 +1,137 @@
+[
+	{
+		"apodo": "Ana",
+		"clave": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+		"firma": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+		"id": 1,
+		"plataforma": "escritorio",
+		"t": "hola",
+		"version": 1
+	},
+	{
+		"id": 2,
+		"t": "ping"
+	},
+	{
+		"id": 3,
+		"nombre": "Los del jueves",
+		"t": "pg_crear"
+	},
+	{
+		"id": 4,
+		"t": "pg_listar"
+	},
+	{
+		"id": 5,
+		"playgroup": "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+		"t": "pg_salir"
+	},
+	{
+		"clave": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+		"id": 6,
+		"playgroup": "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+		"t": "pg_expulsar"
+	},
+	{
+		"clave": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+		"id": 7,
+		"playgroup": "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+		"rol": "admin",
+		"t": "pg_rol"
+	},
+	{
+		"caducaHoras": 168,
+		"id": 8,
+		"playgroup": "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+		"t": "inv_crear",
+		"usosMax": 5
+	},
+	{
+		"codigo": "7K3QX-9MZ2D",
+		"id": 9,
+		"t": "inv_revocar"
+	},
+	{
+		"codigo": "7K3QX9MZ2D",
+		"como": "jugador",
+		"id": 10,
+		"t": "inv_usar"
+	},
+	{
+		"espectadores": true,
+		"formato": "commander",
+		"id": 11,
+		"maxJugadores": 4,
+		"playgroup": "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+		"t": "sala_crear"
+	},
+	{
+		"como": "jugador",
+		"id": 12,
+		"registro": {
+			"creador": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+			"epoch": 3,
+			"espectadores": true,
+			"fase": "juego",
+			"formato": "commander",
+			"host": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+			"maxJugadores": 4,
+			"playgroup": "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+			"sucesion": [
+				"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+				"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+				"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+			]
+		},
+		"sala": "3f2b8c1e-5d7a-4c2e-9f10-2a6b7c8d9e01",
+		"t": "sala_unirse"
+	},
+	{
+		"id": 13,
+		"t": "sala_salir"
+	},
+	{
+		"direccion": "{\"id\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"addrs\":[]}",
+		"id": 14,
+		"t": "sala_direccion"
+	},
+	{
+		"deck": "Atraxa superfriends",
+		"id": 15,
+		"t": "sala_deck"
+	},
+	{
+		"fila": [
+			{
+				"clave": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+				"directo": true,
+				"rttMs": 23
+			},
+			{
+				"clave": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+				"directo": false,
+				"rttMs": 71
+			}
+		],
+		"id": 16,
+		"t": "sala_latencias"
+	},
+	{
+		"id": 17,
+		"t": "sala_empezar"
+	},
+	{
+		"clave": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+		"id": 18,
+		"t": "sala_expulsar"
+	},
+	{
+		"epoch": 1,
+		"id": 19,
+		"t": "sala_host_caido"
+	},
+	{
+		"id": 20,
+		"t": "sala_terminada"
+	}
+]

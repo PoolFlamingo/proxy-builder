@@ -136,5 +136,14 @@
 	"Idioma: {i}": "언어: {i}",
 	"Idioma de los {n}": "덱 {n}개의 언어",
 	"Automático (según las cartas)": "자동(카드 기준)",
-	"Elegido a mano": "직접 선택"
+	"Elegido a mano": "직접 선택",
+	"Propiedades": "속성",
+	"Partidas: {partidas} · Victorias: {victorias} ({porcentaje} %)": "게임: {partidas} · 승리: {victorias} ({porcentaje}%)",
+	"Todavía no has terminado ninguna partida con este deck.": "이 덱으로 끝낸 게임이 아직 없습니다.",
+	"¿Borrar esta partida del historial?": "이 게임을 기록에서 삭제할까요?",
+	"Se borra también su repetición.": "리플레이도 함께 삭제됩니다.",
+	"Victoria": "승리",
+	"En solitario": "혼자",
+	"Con {rivales}": "{rivales}와(과)",
+	"Ver repetición": "리플레이 보기"
 }
