@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { useShallow } from "zustand/react/shallow";
+import { useEffect, useMemo } from "react";
 import { useLang } from "@/components/language-provider";
 import type { AnchoMesa } from "@/lib/image-url";
 import { tableroDe, useMesa } from "@/stores/mesa-store";
@@ -31,9 +30,15 @@ export function FantasmasVivos({ disp }: { disp: Disposicion }) {
 	const { t } = useLang();
 	const activo = useUi((s) => s.mesa.movimientoEnVivo);
 	const viendo = useMesa(tableroDe);
-	const fantasmas = useVivo(useShallow((s) => Object.entries(s.fantasmas)));
-	const soltadas = useVivo(
-		useShallow((s) => Object.entries(s.soltadas).filter(([, x]) => x.donde?.tablero === viendo)),
+	// Se eligen los registros del store (misma referencia mientras no cambian) y
+	// la lista se saca aparte: un selector que devuelve tuplas nuevas en cada
+	// lectura no lo arregla ni `useShallow` y React entra en bucle (#185).
+	const fantasmasVivos = useVivo((s) => s.fantasmas);
+	const soltadasVivas = useVivo((s) => s.soltadas);
+	const fantasmas = useMemo(() => Object.entries(fantasmasVivos), [fantasmasVivos]);
+	const soltadas = useMemo(
+		() => Object.entries(soltadasVivas).filter(([, x]) => x.donde?.tablero === viendo),
+		[soltadasVivas, viendo],
 	);
 	const senales = useVivo((s) => s.senales);
 	const jugadores = useMesa((s) => s.jugadores);
@@ -170,11 +175,15 @@ export function FantasmasMini({
 	alto: number;
 }) {
 	const activo = useUi((s) => s.mesa.movimientoEnVivo);
-	const fantasmas = useVivo(
-		useShallow((s) => Object.entries(s.fantasmas).filter(([, f]) => f.tablero === jugador)),
+	const fantasmasVivos = useVivo((s) => s.fantasmas);
+	const soltadasVivas = useVivo((s) => s.soltadas);
+	const fantasmas = useMemo(
+		() => Object.entries(fantasmasVivos).filter(([, f]) => f.tablero === jugador),
+		[fantasmasVivos, jugador],
 	);
-	const soltadas = useVivo(
-		useShallow((s) => Object.entries(s.soltadas).filter(([, x]) => x.donde?.tablero === jugador)),
+	const soltadas = useMemo(
+		() => Object.entries(soltadasVivas).filter(([, x]) => x.donde?.tablero === jugador),
+		[soltadasVivas, jugador],
 	);
 	const jugadores = useMesa((s) => s.jugadores);
 	const reducir = useUi((s) => s.mesa.reducirAnimaciones);
