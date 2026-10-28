@@ -58,6 +58,7 @@ import { COLORES, PALABRAS_CLAVE } from "../colores";
 import { conTemporal, nombreContador } from "../contadores";
 import * as op from "../operaciones";
 import { pedirNumero, usePantalla } from "../pantalla";
+import { campoAjeno } from "../privacidad";
 
 function Tecla({ nombre }: { nombre: string }) {
 	const tecla = teclaPara("carta", nombre);
@@ -78,6 +79,8 @@ export function MenuCarta({ c, children }: { c: VistaCarta; children: ReactNode 
 		if (!m.seleccion.includes(c.id)) m.seleccionar([c.id]);
 	};
 	const soloMira = useRed((s) => s.papel === "espectador");
+	// Del campo de otro (protegido) solo se mira o se toma el control.
+	const ajena = useMesa((s) => campoAjeno(s, c));
 	if (soloMira) return <>{children}</>;
 	return (
 		<ContextMenu onOpenChange={abrir}>
@@ -89,15 +92,20 @@ export function MenuCarta({ c, children }: { c: VistaCarta; children: ReactNode 
 					<Tecla nombre="Inspeccionar" />
 				</ContextMenuItem>
 				<ContextMenuSeparator />
-				{zona === "campo" && <DelCampo c={c} />}
+				{ajena && <Control c={c} />}
+				{zona === "campo" && !ajena && <DelCampo c={c} />}
 				{zona === "mano" && <DeLaMano c={c} />}
 				{zona === "pila" && <DeLaPila c={c} />}
 				{zona === "mando" && <DelMando c={c} />}
 				{(zona === "cementerio" || zona === "exilio" || zona === "banquillo") && (
 					<DeOtraZona c={c} />
 				)}
-				<ContextMenuSeparator />
-				<MoverA c={c} />
+				{!ajena && (
+					<>
+						<ContextMenuSeparator />
+						<MoverA c={c} />
+					</>
+				)}
 			</ContenidoContextual>
 		</ContextMenu>
 	);

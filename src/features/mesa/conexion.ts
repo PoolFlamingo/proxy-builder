@@ -49,6 +49,7 @@ function alMensaje(m: MensajeMesa) {
 			break;
 		// En red: el anfitrión no hizo algo que se pidió desde aquí.
 		case "rechazo":
+			if (m.motivo === "SinPermiso") break; // tocar lo de otro no hace nada, sin aviso
 			toast.error(
 				mensajeDeError({ code: "Rejected", params: { motivo: m.motivo } }, traduccionSuelta),
 			);

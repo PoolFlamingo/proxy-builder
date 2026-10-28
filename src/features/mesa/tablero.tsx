@@ -28,7 +28,7 @@ import { MenuBiblioteca, MenuCampo, MenuManoAjena, MenuZona } from "./menus/menu
 import { elegirCarta } from "./objetivo";
 import * as op from "./operaciones";
 import { usePantalla } from "./pantalla";
-import { manoOcultaPorTurno } from "./privacidad";
+import { campoAjeno, manoOcultaPorTurno } from "./privacidad";
 import { acompanantes, conLasAjenas, puestosDelCampo } from "./puestos-campo";
 
 /** Cuánto se mantiene pulsada una carta para abrir su menú (si está activado), en ms. */
@@ -126,6 +126,7 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 			}
 			const mueve = (ev: PointerEvent) => {
 				if (useRed.getState().papel === "espectador") return; // no se arrastra
+				if (campoAjeno(useMesa.getState(), c)) return; // ni lo que no controlo
 				const p = punto(ev);
 				if (!empezado && !pasaUmbral(p.x - p0.x, p.y - p0.y)) return;
 				if (!empezado && enCampo) {
@@ -194,6 +195,7 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 	);
 
 	const alDobleClic = useCallback((c: VistaCarta) => {
+		if (campoAjeno(useMesa.getState(), c)) return;
 		if (c.zona.tipo === "de" && c.zona.zona === "campo") void op.girar(c.id);
 		else if (c.zona.tipo === "de" && c.zona.zona === "mano") {
 			void mover([c.id], destino("campo", sitio.arriba, c.dueno));

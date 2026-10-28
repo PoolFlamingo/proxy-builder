@@ -9,7 +9,7 @@ import type { Sitio } from "@/bindings/Sitio";
 import type { Zona } from "@/bindings/Zona";
 import type { ZonaComun } from "@/bindings/ZonaComun";
 import { paraTraducir, traduccionSuelta } from "@/components/language-provider";
-import { mensajeDeError } from "@/lib/errores";
+import { esAppError, mensajeDeError } from "@/lib/errores";
 import { call } from "@/lib/ipc";
 import { useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
@@ -41,9 +41,16 @@ export async function hacer(accion: Accion): Promise<boolean> {
 		await call("mesa_accion", { accion, como: null });
 		return true;
 	} catch (e) {
-		toast.error(mensajeDeError(e, traduccionSuelta));
+		// Tocar lo que no es de uno no hace nada, sin aviso (la pantalla ya no lo
+		// ofrece; esto cubre los atajos sobre una carta ajena).
+		if (!esSinPermiso(e)) toast.error(mensajeDeError(e, traduccionSuelta));
 		return false;
 	}
+}
+
+/** Si un error es el rechazo por tocar lo de otro. */
+function esSinPermiso(e: unknown): boolean {
+	return esAppError(e) && e.code === "Rejected" && e.params.motivo === "SinPermiso";
 }
 
 export const sitio = {

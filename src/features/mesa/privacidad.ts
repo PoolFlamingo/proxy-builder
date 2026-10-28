@@ -1,4 +1,5 @@
 import type { IdJugador } from "@/bindings/IdJugador";
+import type { VistaCarta } from "@/bindings/VistaCarta";
 import type { Mesa } from "@/stores/mesa-store";
 
 /**
@@ -69,4 +70,22 @@ export function siguienteAlResponder(
 	const quienes = quienResponde(m);
 	if (m.yo === null || m.yo === activo) return quienes[0] ?? null;
 	return quienes[quienes.indexOf(m.yo) + 1] ?? activo ?? null;
+}
+
+/**
+ * Una carta del campo que no controlo, con el campo de los demás protegido
+ * (`Opciones.campoAjenoProtegido`, en red): Rust no deja tocarla, así que la
+ * pantalla ni la arrastra ni ofrece lo que se rechazaría. Solo se mira o se
+ * toma el control.
+ */
+export function campoAjeno(
+	m: Pick<Mesa, "opciones" | "yo">,
+	c: Pick<VistaCarta, "zona" | "controlador">,
+): boolean {
+	return (
+		m.opciones?.campoAjenoProtegido === true &&
+		c.zona.tipo === "de" &&
+		c.zona.zona === "campo" &&
+		c.controlador !== m.yo
+	);
 }
