@@ -15,6 +15,7 @@ import {
 	type Rect,
 	repartir,
 } from "./disposicion";
+import { MesasAlrededor } from "./flechas";
 import { PanelPlanes } from "./planes";
 import { PanelPlanar } from "./plano-activo";
 import { deckDelTablero } from "./privacidad";
@@ -105,6 +106,21 @@ function VariosTableros({ deckId }: { deckId: string | null }) {
 	}, [orden, equiposPorJugador, asientos, tam, config, grande]);
 
 	const rectGrande = rects[Math.max(0, orden.indexOf(grande))];
+	// El centro de cada miniatura visto desde el tablero grande: por ahí entran
+	// las flechas que vienen de esa mesa o van a ella.
+	const alrededor = useMemo(() => {
+		const m: Partial<Record<number, { x: number; y: number }>> = {};
+		if (!rectGrande) return m;
+		orden.forEach((id, i) => {
+			const r = rects[i];
+			if (id === grande || !r) return;
+			m[id] = {
+				x: r.x + r.w / 2 - rectGrande.x,
+				y: r.y + r.h / 2 - rectGrande.y,
+			};
+		});
+		return m;
+	}, [orden, rects, rectGrande, grande]);
 	const arrastrar = (e: React.PointerEvent<HTMLDivElement>) => {
 		e.preventDefault();
 		const el = e.currentTarget;
@@ -149,7 +165,9 @@ function VariosTableros({ deckId }: { deckId: string | null }) {
 							height: rectGrande.h,
 						}}
 					>
-						<Tablero deckId={deckId} />
+						<MesasAlrededor.Provider value={alrededor}>
+							<Tablero deckId={deckId} />
+						</MesasAlrededor.Provider>
 						<Controles />
 						<div
 							className="pointer-events-none absolute inset-0 z-[6600] rounded-md border-2"

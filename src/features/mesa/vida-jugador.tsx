@@ -125,6 +125,8 @@ export function VidaJugador({ jugador }: { jugador: IdJugador }) {
 				)}
 				<MenuJugador jugador={jugador}>
 					<div
+						// Ahí apuntan las flechas que me atacan (`flechas.tsx`).
+						data-vida-de={jugador}
 						className={cn(
 							"flex items-center gap-1 rounded-full border border-white/15 bg-black/60 px-2 py-1 text-white shadow-lg backdrop-blur-md",
 							vida <= 0 && "ring-2 ring-rose-500",

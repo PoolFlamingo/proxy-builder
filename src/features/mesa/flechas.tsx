@@ -1,12 +1,25 @@
 import { Swords, Target } from "lucide-react";
-import { useMemo } from "react";
+import { createContext, useContext, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { IdJugador } from "@/bindings/IdJugador";
 import { useLang } from "@/components/language-provider";
 import { NINGUNA, tableroDe, useMesa } from "@/stores/mesa-store";
-import { duenoDeExtremo, idDePunta } from "./cuentas-flechas";
+import { duenoDeExtremo, entradaDesde, idDePunta } from "./cuentas-flechas";
 import { type Disposicion, posAPx } from "./disposicion";
 
 /** Un color de reserva para una flecha de alguien que ya no está. */
 const COLOR_FLECHA = "#e11d48";
+
+/**
+ * Dónde está la mesa de cada jugador (su centro) visto desde el tablero
+ * grande, en sus coordenadas. Lo pone `mesas.tsx` con varios tableros; sin
+ * él (un solo tablero), lo de fuera entra por arriba en el centro.
+ */
+export const MesasAlrededor = createContext<Partial<Record<IdJugador, { x: number; y: number }>>>(
+	{},
+);
+
+/** Atributo del marcador de vida del que juega (`vida-jugador.tsx`): ahí apuntan las flechas que le llegan. */
+const ATRIBUTO_VIDA = "data-vida-de";
 
 /**
  * **Las flechas de ataque y objetivo** entre cartas (y hacia los jugadores),
@@ -21,34 +34,67 @@ export function Flechas({ disp }: { disp: Disposicion }) {
 	const flechas = useMesa((s) => s.general?.flechas ?? NINGUNA);
 	const cartas = useMesa((s) => s.cartas);
 	const jugadores = useMesa((s) => s.jugadores);
-	const yo = useMesa(tableroDe);
+	const viendo = useMesa(tableroDe);
+	const yo = useMesa((s) => s.yo);
 	const varios = useMesa((s) => s.asientos.length > 1);
+	const alrededor = useContext(MesasAlrededor);
+	const svg = useRef<SVGSVGElement>(null);
+	// Dónde está mi marcador de vida (abajo a la derecha del tablero grande): se
+	// mide, porque crece con los contadores y el botón de pasar turno.
+	const [vida, setVida] = useState<{ x: number; y: number } | null>(null);
+	useLayoutEffect(() => {
+		const caja = svg.current?.getBoundingClientRect();
+		const el = yo === null ? null : document.querySelector(`[${ATRIBUTO_VIDA}="${yo}"]`);
+		if (!caja || !el) {
+			setVida(null);
+			return;
+		}
+		const r = el.getBoundingClientRect();
+		// Al borde de arriba, en el centro: la punta no tapa el número.
+		setVida({ x: r.left + r.width / 2 - caja.left, y: r.top - caja.top - 4 });
+	}, [yo, disp, flechas]);
 	const colores = useMemo(
 		() => [...new Set(flechas.map((f) => jugadores[f.deJugador]?.color ?? COLOR_FLECHA))],
 		[flechas, jugadores],
 	);
 	if (flechas.length === 0) return null;
-	const punto = (e: (typeof flechas)[number]["de"]): { x: number; y: number } | null => {
+	const desde = (j: IdJugador) => entradaDesde(disp.campo.w, disp.campo.h, alrededor[j]);
+	/** El punto de un extremo y si está en este tablero (o es mi vida) o fuera. */
+	const punto = (
+		e: (typeof flechas)[number]["de"],
+	): { x: number; y: number; aqui: boolean } | null => {
 		if (e.tipo === "carta") {
 			const c = cartas[e.id];
 			if (!c?.pos) return null;
-			// Una carta de la mesa de otro (en una partida local se ve en pequeño): la
-			// flecha apunta hacia allí, arriba en el centro, como a un jugador.
-			return c.controlador === yo ? posAPx(disp.campo, c.pos) : { x: disp.campo.w / 2, y: 30 };
+			// Una carta de la mesa de otro: la flecha entra por el lado de esa mesa.
+			if (c.controlador === viendo) return { ...posAPx(disp.campo, c.pos), aqui: true };
+			return { ...desde(c.controlador), aqui: false };
 		}
-		// Un jugador: arriba en el centro (el rival imaginado) o mi vida.
-		return { x: disp.campo.w / 2, y: 30 };
+		// Yo: mi marcador de vida. El de este tablero (si miro el de otro): arriba
+		// en el centro. Otro: por el lado de su mesa.
+		if (e.id === yo && vida) return { ...vida, aqui: true };
+		if (e.id === viendo)
+			return { x: disp.campo.w / 2, y: Math.min(30, disp.campo.h / 2), aqui: true };
+		return { ...desde(e.id), aqui: false };
 	};
 	const dibujadas = flechas.flatMap((f, i) => {
 		const a = punto(f.de);
 		const b = punto(f.a);
 		if (!a || !b) return [];
+		// Entre dos mesas que no son esta: se ve en sus miniaturas, no aquí (y sería
+		// una flecha de un borde a sí mismo).
+		if (!a.aqui && !b.aqui) return [];
+		if (Math.hypot(b.x - a.x, b.y - a.y) < 12) return [];
 		const color = jugadores[f.deJugador]?.color ?? COLOR_FLECHA;
 		return [{ f, i, a, b, color }];
 	});
 	return (
 		<>
-			<svg className="pointer-events-none absolute inset-0 size-full" style={{ zIndex: 6000 }}>
+			<svg
+				ref={svg}
+				className="pointer-events-none absolute inset-0 size-full"
+				style={{ zIndex: 6000 }}
+			>
 				<defs>
 					{colores.map((color) => (
 						<marker
