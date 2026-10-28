@@ -1201,5 +1201,7 @@
 	"Ataque": "Attack",
 	"Objetivo": "Target",
 	"Respondiendo como {nombre}": "Responding as {nombre}",
-	"Cambiar de jugador que responde (Mayús+R)": "Switch the responding player (Shift+R)"
+	"Cambiar de jugador que responde (Mayús+R)": "Switch the responding player (Shift+R)",
+	"Proteger el campo de los demás": "Protect other players' battlefields",
+	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "On the battlefield you only touch what you control; take someone else's with “Take control”. Graveyard, exile and stack stay open."
 }

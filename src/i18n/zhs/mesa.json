@@ -1147,5 +1147,7 @@
 	"Ataque": "攻击",
 	"Objetivo": "目标",
 	"Respondiendo como {nombre}": "正以{nombre}的身份响应",
-	"Cambiar de jugador que responde (Mayús+R)": "切换响应的玩家 (Shift+R)"
+	"Cambiar de jugador que responde (Mayús+R)": "切换响应的玩家 (Shift+R)",
+	"Proteger el campo de los demás": "保护其他玩家的战场",
+	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "在战场上你只能操作自己操控的牌；别人的牌要用“获得操控权”拿过来。坟墓场、放逐区和堆叠仍然开放。"
 }

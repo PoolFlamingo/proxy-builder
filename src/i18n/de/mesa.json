@@ -1201,5 +1201,7 @@
 	"Ataque": "Angriff",
 	"Objetivo": "Ziel",
 	"Respondiendo como {nombre}": "Antwortet als {nombre}",
-	"Cambiar de jugador que responde (Mayús+R)": "Antwortenden Spieler wechseln (Umschalt+R)"
+	"Cambiar de jugador que responde (Mayús+R)": "Antwortenden Spieler wechseln (Umschalt+R)",
+	"Proteger el campo de los demás": "Das Schlachtfeld der anderen schützen",
+	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "Auf dem Schlachtfeld fasst du nur an, was du kontrollierst; Fremdes nimmst du mit „Kontrolle übernehmen“. Friedhof, Exil und Stapel bleiben offen."
 }

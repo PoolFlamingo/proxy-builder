@@ -1147,5 +1147,7 @@
 	"Ataque": "공격",
 	"Objetivo": "대상",
 	"Respondiendo como {nombre}": "{nombre}(으)로 대응 중",
-	"Cambiar de jugador que responde (Mayús+R)": "대응하는 플레이어 전환 (Shift+R)"
+	"Cambiar de jugador que responde (Mayús+R)": "대응하는 플레이어 전환 (Shift+R)",
+	"Proteger el campo de los demás": "다른 플레이어의 전장 보호",
+	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "전장에서는 내가 조종하는 것만 만질 수 있어요. 다른 사람의 것은 「조종권 얻기」로 가져오세요. 무덤, 추방 영역, 스택은 계속 열려 있어요."
 }

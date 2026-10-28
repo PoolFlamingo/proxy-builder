@@ -1147,5 +1147,7 @@
 	"Ataque": "Ataque",
 	"Objetivo": "Objetivo",
 	"Respondiendo como {nombre}": "Respondiendo como {nombre}",
-	"Cambiar de jugador que responde (Mayús+R)": "Cambiar de jugador que responde (Mayús+R)"
+	"Cambiar de jugador que responde (Mayús+R)": "Cambiar de jugador que responde (Mayús+R)",
+	"Proteger el campo de los demás": "Proteger el campo de los demás",
+	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos."
 }

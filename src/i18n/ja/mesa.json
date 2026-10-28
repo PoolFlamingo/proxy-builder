@@ -1147,5 +1147,7 @@
 	"Ataque": "攻撃",
 	"Objetivo": "対象",
 	"Respondiendo como {nombre}": "{nombre}として対応中",
-	"Cambiar de jugador que responde (Mayús+R)": "対応するプレイヤーを切り替える（Shift+R）"
+	"Cambiar de jugador que responde (Mayús+R)": "対応するプレイヤーを切り替える（Shift+R）",
+	"Proteger el campo de los demás": "他のプレイヤーの戦場を守る",
+	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "戦場では自分がコントロールしているものだけ動かせます。他の人のものは「コントロールを得る」で取ります。墓地・追放領域・スタックは誰でも触れます。"
 }

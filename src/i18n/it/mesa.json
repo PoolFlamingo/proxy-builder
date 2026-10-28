@@ -1215,5 +1215,7 @@
 	"Ataque": "Attacco",
 	"Objetivo": "Bersaglio",
 	"Respondiendo como {nombre}": "Rispondi come {nombre}",
-	"Cambiar de jugador que responde (Mayús+R)": "Cambia il giocatore che risponde (Maiusc+R)"
+	"Cambiar de jugador que responde (Mayús+R)": "Cambia il giocatore che risponde (Maiusc+R)",
+	"Proteger el campo de los demás": "Proteggi il campo di battaglia degli altri",
+	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "Sul campo di battaglia tocchi solo ciò che controlli; quello di un altro lo prendi con «Prendi il controllo». Cimitero, esilio e pila restano aperti."
 }

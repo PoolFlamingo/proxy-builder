@@ -1215,5 +1215,7 @@
 	"Ataque": "Atac",
 	"Objetivo": "Țintă",
 	"Respondiendo como {nombre}": "Răspunzi ca {nombre}",
-	"Cambiar de jugador que responde (Mayús+R)": "Schimbă jucătorul care răspunde (Shift+R)"
+	"Cambiar de jugador que responde (Mayús+R)": "Schimbă jucătorul care răspunde (Shift+R)",
+	"Proteger el campo de los demás": "Protejează câmpul de luptă al celorlalți",
+	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "Pe câmpul de luptă atingi doar ce controlezi; ce e al altcuiva iei cu «Preia controlul». Cimitirul, exilul și stiva rămân deschise."
 }

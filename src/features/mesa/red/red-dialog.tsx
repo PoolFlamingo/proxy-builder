@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Formato } from "@/bindings/Formato";
 import type { Opciones } from "@/bindings/Opciones";
 import type { RolEnSala } from "@/bindings/RolEnSala";
-import { Selector } from "@/components/campos";
+import { FilaInterruptor, Selector } from "@/components/campos";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -193,6 +193,8 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 		...AJUSTES_LOCALES,
 		formato: preparar.formato,
 	});
+	// En red el campo de los demás va cerrado de fábrica (ver `Opciones`).
+	const [campoProtegido, setCampoProtegido] = useState(true);
 	const [ids, setIds] = useState<number[]>([ID_ANFITRION]);
 	const idsActuales = useRef(ids);
 	const [equipos, setEquipos] = useState<Record<number, number | null>>({});
@@ -252,7 +254,8 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 			t("Contra el archienemigo"),
 		);
 		// Sin equipos valen las opciones que se eligieron al preparar la mesa.
-		if (ajustes.modo === "ninguno") config.opciones = preparar.opciones;
+		const base = ajustes.modo === "ninguno" ? preparar.opciones : config.opciones;
+		if (base) config.opciones = { ...base, campoAjenoProtegido: campoProtegido };
 		void empezarRed(config, ids.slice(1));
 	};
 
@@ -399,6 +402,14 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 								onChange={(c) => setAjustes((a) => ({ ...a, ...c }))}
 								asientos={ids.length}
 								nombreDeAsiento={nombreDeAsiento}
+							/>
+							<FilaInterruptor
+								etiqueta={t("Proteger el campo de los demás")}
+								ayuda={t(
+									"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.",
+								)}
+								valor={campoProtegido}
+								onChange={setCampoProtegido}
 							/>
 							<AvisoDeEquipos asientos={asientos} modo={ajustes.modo} />
 						</>

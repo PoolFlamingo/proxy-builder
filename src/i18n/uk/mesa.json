@@ -1242,5 +1242,7 @@
 	"Ataque": "Атака",
 	"Objetivo": "Ціль",
 	"Respondiendo como {nombre}": "Відповідаєте за {nombre}",
-	"Cambiar de jugador que responde (Mayús+R)": "Змінити гравця, що відповідає (Shift+R)"
+	"Cambiar de jugador que responde (Mayús+R)": "Змінити гравця, що відповідає (Shift+R)",
+	"Proteger el campo de los demás": "Захищати поле бою інших",
+	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "На полі бою ви чіпаєте лише те, що контролюєте; чуже береться через «Отримати контроль». Кладовище, вигнання та стек залишаються відкритими."
 }
