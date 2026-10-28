@@ -10,8 +10,19 @@ import { useUi } from "@/stores/ui-store";
 import { hacer } from "../acciones";
 import { ComoFunciona } from "./como-funciona";
 import { INTENSIDADES, nombreIntensidad, resumen } from "./textos";
+import { useSenalarFantasma } from "./vista-fantasma";
 
 const NINGUNA: never[] = [];
+
+/** El nombre de la carta de una reacción: al pasar el ratón sale en grande. */
+function NombreSenalable({ nombre }: { nombre: string }) {
+	const senalar = useSenalarFantasma(nombre);
+	return (
+		<p className="w-fit max-w-full cursor-zoom-in truncate font-medium" {...senalar}>
+			{nombre}
+		</p>
+	);
+}
 
 /**
  * **El botón «Sparring»** de la barra (`capturas/pablo/00.jpg`,
@@ -107,7 +118,7 @@ export function BotonSparring() {
 										className="flex items-center gap-2 rounded-md border bg-muted/40 px-2 py-1.5"
 									>
 										<div className="min-w-0 flex-1">
-											<p className="truncate font-medium">{r.reaccion.carta.nombre}</p>
+											<NombreSenalable nombre={r.reaccion.carta.nombre} />
 											<p className="truncate text-muted-foreground">
 												{resumen(r.reaccion, nombre(r.reaccion.objetivo[0]), t)}
 											</p>

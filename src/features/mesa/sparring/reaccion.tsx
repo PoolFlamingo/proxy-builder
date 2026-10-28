@@ -9,6 +9,7 @@ import { claveZona, useMesa } from "@/stores/mesa-store";
 import { hacer } from "../acciones";
 import { CartaFantasma } from "./carta-fantasma";
 import { lineaBase, porQue, titulo } from "./textos";
+import { useSenalarFantasma } from "./vista-fantasma";
 
 const NINGUNA: IdCarta[] = [];
 
@@ -17,6 +18,16 @@ function Tecla({ children }: { children: React.ReactNode }) {
 		<kbd className="rounded border border-current/40 px-1 font-mono text-[10px] opacity-80">
 			{children}
 		</kbd>
+	);
+}
+
+/** La carta del aviso: al pasar el ratón por ella sale en grande (`VistaFantasma`). */
+function CartaSenalable({ nombre }: { nombre: string }) {
+	const senalar = useSenalarFantasma(nombre);
+	return (
+		<div className="shrink-0 cursor-zoom-in" {...senalar}>
+			<CartaFantasma nombre={nombre} ancho={488} className="w-36" />
+		</div>
 	);
 }
 
@@ -104,7 +115,7 @@ export function ReaccionPendiente() {
 			</div>
 			<h3 className="text-sm font-semibold">{titulo(r, objetivo, t)}</h3>
 			<div className="flex items-start gap-2.5">
-				<CartaFantasma nombre={r.carta.nombre} ancho={488} className="w-36 shrink-0" />
+				<CartaSenalable nombre={r.carta.nombre} />
 				<div className="flex min-w-0 flex-col gap-1.5">
 					<p className="font-medium">
 						{r.carta.nombre}{" "}

@@ -30,6 +30,7 @@ import { AvisoConexion, SelectorTablero } from "./red/estado-red";
 import { PanelLateral } from "./registro-panel";
 import { BarraRepeticion } from "./repeticion";
 import { ReaccionPendiente } from "./sparring/reaccion";
+import { VistaFantasma } from "./sparring/vista-fantasma";
 import { VistaGrande } from "./vista-grande";
 
 /**
@@ -133,6 +134,7 @@ function Mesa({ deckIds }: { deckIds: string[] }) {
 			<BocadillosFlotantes />
 			<PanelLateral />
 			<VistaGrande />
+			<VistaFantasma />
 			{!repitiendo && (
 				<>
 					<Mulligan />

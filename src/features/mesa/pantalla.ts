@@ -76,7 +76,10 @@ type Pantalla = {
 	 * (el que responde fuera de su turno). Cambiar de jugador la vuelve a tapar.
 	 */
 	manoMostrada: IdJugador | null;
+	/** La carta del fantasma (por nombre) que se señala, para verla en grande. */
+	fantasma: string | null;
 	avisarTapete: () => void;
+	setFantasma: (nombre: string | null) => void;
 	abrir: (d: DialogoMesa | null) => void;
 	setPanel: (p: PanelMesa | null) => void;
 	mostrarMano: (j: IdJugador | null) => void;
@@ -93,6 +96,8 @@ export const usePantalla = create<Pantalla>((set) => ({
 	tapeteCambiado: 0,
 	panel: null,
 	manoMostrada: null,
+	fantasma: null,
+	setFantasma: (fantasma) => set({ fantasma }),
 	avisarTapete: () => set((s) => ({ tapeteCambiado: s.tapeteCambiado + 1 })),
 	abrir: (dialogo) => set({ dialogo }),
 	setPanel: (panel) => set({ panel }),
