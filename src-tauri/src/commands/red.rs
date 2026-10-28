@@ -21,6 +21,7 @@ use crate::red::invitado::{unirse, Union};
 use crate::red::mesa::MesaDeApp;
 use crate::red::nodo::{relay_de_entorno, Relay};
 use crate::red::protocolo::{EnSala, Rol};
+use crate::red::vuelta::{self, VueltaRed};
 use crate::red::Sala;
 use crate::state::AppState;
 
@@ -259,6 +260,76 @@ pub fn red_unirse(
             estado
                 .red
                 .con_sala(|s| *s = Some(Sala::Invitado { conexion, rol }));
+            Ok(())
+        }
+        .await;
+        terminar(&app, job_id, r);
+    });
+    Ok(job_id)
+}
+
+/// La partida en red de la que se cayó este invitado y a la que puede volver
+/// (`red/vuelta.rs`), si la hay.
+#[tauri::command]
+pub fn red_vuelta(state: State<'_, AppState>) -> AppResult<Option<VueltaRed>> {
+    vuelta::leer(&state.db)
+}
+
+/// Ya no se quiere volver a esa partida.
+#[tauri::command]
+pub fn red_vuelta_olvidar(state: State<'_, AppState>) -> AppResult<()> {
+    vuelta::olvidar(&state.db)
+}
+
+/// Vuelve a la partida en red de la que se cayó: se une con el mismo código
+/// y, como el anfitrión lo reconoce por su nodo, recupera su asiento y la
+/// partida entera (no hace falta deck). Vale también con la mesa abierta tras
+/// perder la conexión (la sesión de invitado se pone al día). Si el
+/// anfitrión ya no la tiene, la olvida.
+#[tauri::command]
+pub fn red_volver(app: AppHandle, state: State<'_, AppState>) -> AppResult<u32> {
+    let invitado_caido = state
+        .mesa
+        .lock()
+        .map_err(|_| AppError::new(ErrorCode::Internal))?
+        .as_ref()
+        .is_some_and(|s| matches!(s.red, Some(crate::mesa::sesion::RedSesion::Invitado(_))));
+    if !invitado_caido && ocupado(&state) {
+        return Err(ocupada());
+    }
+    let (codigo, apodo) = vuelta::para_volver(&state.db)?
+        .ok_or_else(|| AppError::new(ErrorCode::NotFound).with("motivo", "sin_vuelta"))?;
+    let (job_id, _) = state.jobs.alta();
+    lanzar_trabajo(app.clone(), job_id, async move {
+        let estado = app.state::<AppState>();
+        let r = async {
+            let _marca = estado.trabajo();
+            if let Some(vieja) = estado.red.quitar_sala() {
+                vieja.cerrar().await;
+            }
+            let ep = estado.red.nodo().await?;
+            let union = Union {
+                codigo,
+                apodo,
+                rol: Rol::Jugador,
+                deck: None,
+            };
+            let conexion = match unirse(ep, union, MesaDeApp(app.clone())).await {
+                Ok(c) => c,
+                Err(e) => {
+                    // Ya no hay a qué volver (cerrada, otra partida, expulsado).
+                    if e.code == ErrorCode::Rejected {
+                        vuelta::olvidar(&estado.db)?;
+                    }
+                    return Err(e);
+                }
+            };
+            estado.red.con_sala(|s| {
+                *s = Some(Sala::Invitado {
+                    conexion,
+                    rol: Rol::Jugador,
+                })
+            });
             Ok(())
         }
         .await;

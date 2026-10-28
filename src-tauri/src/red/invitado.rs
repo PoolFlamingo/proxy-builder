@@ -284,7 +284,7 @@ async fn bucle<M: Mesa>(
         if let Ok(mut c) = conexion.lock() {
             *c = Some(conn.clone());
         }
-        let fin = atender(&conn, tx, rx, m, &mesa, union, &salida, &entrada).await;
+        let fin = atender(&conn, tx, rx, m, &mesa, union, &salida, &entrada, &u).await;
         // Sin conexión hasta que vuelva (la sala del servidor lo mira para
         // avisar de que el host se cayó).
         if let Ok(mut c) = conexion.lock() {
@@ -296,11 +296,13 @@ async fn bucle<M: Mesa>(
         }
         match fin {
             Fin::Cerrada => {
+                mesa.recordar_vuelta(None);
                 cerrar(&mesa);
                 mesa.avisar(AvisoRed::Cerrada);
                 return;
             }
             Fin::Rechazada(motivo) => {
+                mesa.recordar_vuelta(None);
                 mesa.avisar(AvisoRed::Rechazada { motivo });
                 return;
             }
@@ -349,6 +351,7 @@ async fn bucle<M: Mesa>(
                 }
                 Err(e) if e.code == ErrorCode::Rejected => {
                     let motivo = e.params.get("motivo").cloned().unwrap_or_default();
+                    mesa.recordar_vuelta(None);
                     mesa.avisar(AvisoRed::Rechazada { motivo });
                     return;
                 }
@@ -412,6 +415,7 @@ async fn atender<M: Mesa>(
     union: u64,
     salida: &mpsc::UnboundedSender<AlHost>,
     entrada: &Arc<Mutex<mpsc::UnboundedReceiver<AlHost>>>,
+    u: &Union,
 ) -> Fin {
     // Lo que sale hacia el anfitrión, por su propia tarea.
     let entrada2 = entrada.clone();
@@ -455,7 +459,7 @@ async fn atender<M: Mesa>(
                 }
             },
         };
-        if let Some(fin) = recibir(m, mesa, union, salida) {
+        if let Some(fin) = recibir(m, mesa, union, salida, u) {
             break fin;
         }
     };
@@ -474,6 +478,7 @@ fn recibir<M: Mesa>(
     mesa: &M,
     union: u64,
     salida: &mpsc::UnboundedSender<AlHost>,
+    u: &Union,
 ) -> Option<Fin> {
     match m {
         DelHost::Sala { jugadores } => mesa.avisar(AvisoRed::Sala { jugadores }),
@@ -513,6 +518,11 @@ fn recibir<M: Mesa>(
             });
             if nueva {
                 mesa.avisar(AvisoRed::Empezada);
+            }
+            // Desde aquí, si se cae, puede volver (`vuelta.rs`); con el código
+            // del anfitrión de ahora, que tras un traspaso es otro.
+            if u.rol == Rol::Jugador {
+                mesa.recordar_vuelta(Some(u));
             }
         }
         DelHost::Evento {

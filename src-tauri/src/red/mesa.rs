@@ -103,6 +103,9 @@ pub trait Mesa: Clone + Send + Sync + 'static {
     fn ser_anfitrion(&self, anf: Arc<Anfitrion>, tarea: tokio::task::AbortHandle, codigo: String);
     /// Esta app, que era el anfitrión, sigue como invitado de otro (Fase K).
     fn ser_invitado(&self, conexion: Conexion, rol: Rol);
+    /// Apunta (o, con `None`, olvida) la partida a la que se puede volver
+    /// (`vuelta.rs`). En los tests no se guarda nada.
+    fn recordar_vuelta(&self, _u: Option<&super::invitado::Union>) {}
 }
 
 /// La de la app: la sesión de `AppState.mesa` y los avisos por evento.
@@ -162,6 +165,17 @@ impl<Rt: tauri::Runtime> Mesa for MesaDeApp<Rt> {
         // Deja de atender a los que lleguen como anfitrión.
         if let Some(super::Sala::Anfitrion { tarea, .. }) = viejo {
             tarea.abort();
+        }
+    }
+
+    fn recordar_vuelta(&self, u: Option<&super::invitado::Union>) {
+        let db = &self.0.state::<AppState>().db;
+        let r = match u {
+            Some(u) => super::vuelta::recordar(db, u),
+            None => super::vuelta::olvidar(db),
+        };
+        if let Err(e) = r {
+            tracing::warn!(error = ?e, "no se pudo apuntar la partida a la que volver");
         }
     }
 }

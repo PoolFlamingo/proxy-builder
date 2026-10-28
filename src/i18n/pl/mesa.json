@@ -1239,5 +1239,11 @@
 	"Respondiendo como {nombre}": "Odpowiadasz jako {nombre}",
 	"Cambiar de jugador que responde (Mayús+R)": "Zmień odpowiadającego gracza (Shift+R)",
 	"Proteger el campo de los demás": "Chroń pole bitwy innych graczy",
-	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "Na polu bitwy ruszasz tylko to, co kontrolujesz; cudze bierzesz przez „Przejmij kontrolę”. Cmentarz, wygnanie i stack pozostają otwarte."
+	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "Na polu bitwy ruszasz tylko to, co kontrolujesz; cudze bierzesz przez „Przejmij kontrolę”. Cmentarz, wygnanie i stack pozostają otwarte.",
+	"Ya no hay ninguna partida a la que volver.": "Nie ma już gry, do której można wrócić.",
+	"Partida en red a medias": "Niedokończona gra online",
+	"Te desconectaste de una partida en red ({cuando}).": "Rozłączono z grą online ({cuando}).",
+	"Volver a la partida": "Wróć do gry",
+	"Olvidar": "Zapomnij",
+	"Volver a conectar": "Połącz ponownie"
 }

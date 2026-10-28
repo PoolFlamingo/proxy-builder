@@ -19,6 +19,7 @@ import { senalar } from "../en-vivo/emitir";
 import { mirarJugador } from "../mirar";
 import { alternarOriginales } from "../originales";
 import { useDisposicion } from "../selector-disposicion";
+import { volverARed } from "./conexion-red";
 
 /** Verde, ámbar o rojo según lo que tarda el ida y vuelta. */
 export function colorDeLatencia(rttMs: number): string {
@@ -190,6 +191,11 @@ export function AvisoConexion() {
 				<>
 					<WifiOff className="size-3.5 text-red-400" />
 					{t("Se ha perdido la conexión con la partida.")}
+					{papel === "jugador" && (
+						<Button size="sm" onClick={() => void volverARed()}>
+							{t("Volver a conectar")}
+						</Button>
+					)}
 					<Button size="sm" variant="secondary" onClick={() => void salir(false)}>
 						{t("Salir")}
 					</Button>

@@ -1149,5 +1149,11 @@
 	"Respondiendo como {nombre}": "Respondiendo como {nombre}",
 	"Cambiar de jugador que responde (Mayús+R)": "Cambiar de jugador que responde (Mayús+R)",
 	"Proteger el campo de los demás": "Proteger el campo de los demás",
-	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos."
+	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.",
+	"Ya no hay ninguna partida a la que volver.": "Ya no hay ninguna partida a la que volver.",
+	"Partida en red a medias": "Partida en red a medias",
+	"Te desconectaste de una partida en red ({cuando}).": "Te desconectaste de una partida en red ({cuando}).",
+	"Volver a la partida": "Volver a la partida",
+	"Olvidar": "Olvidar",
+	"Volver a conectar": "Volver a conectar"
 }

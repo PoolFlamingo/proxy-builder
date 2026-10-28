@@ -1149,5 +1149,11 @@
 	"Respondiendo como {nombre}": "正以{nombre}的身分回應",
 	"Cambiar de jugador que responde (Mayús+R)": "切換回應的玩家 (Shift+R)",
 	"Proteger el campo de los demás": "保護其他玩家的戰場",
-	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "在戰場上你只能操作自己操控的牌；別人的牌要用「獲得操控權」拿過來。墳墓場、放逐區和堆疊仍然開放。"
+	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "在戰場上你只能操作自己操控的牌；別人的牌要用「獲得操控權」拿過來。墳墓場、放逐區和堆疊仍然開放。",
+	"Ya no hay ninguna partida a la que volver.": "已經沒有可以返回的對局了。",
+	"Partida en red a medias": "未完成的線上對局",
+	"Te desconectaste de una partida en red ({cuando}).": "你已從一場線上對局斷線（{cuando}）。",
+	"Volver a la partida": "返回對局",
+	"Olvidar": "忘記",
+	"Volver a conectar": "重新連線"
 }

@@ -84,6 +84,7 @@ import type { VistaBanquillo } from "@/bindings/VistaBanquillo";
 import type { VistaEncuentro } from "@/bindings/VistaEncuentro";
 import type { VistaMesa } from "@/bindings/VistaMesa";
 import type { VistaRepeticion } from "@/bindings/VistaRepeticion";
+import type { VueltaRed } from "@/bindings/VueltaRed";
 
 /**
  * **La única puerta a Rust.** Cada comando de `src-tauri/src/commands/` tiene
@@ -308,6 +309,9 @@ export interface Commands {
 	red_estado: { args: Record<string, never>; result: EstadoRed };
 	red_crear: { args: { apodo: string; deck: string | null }; result: string };
 	red_unirse: { args: { peticion: PeticionUnion }; result: number };
+	red_vuelta: { args: Record<string, never>; result: VueltaRed | null };
+	red_vuelta_olvidar: { args: Record<string, never>; result: null };
+	red_volver: { args: Record<string, never>; result: number };
 	red_empezar: { args: { config: ConfigMesa; invitados: number[] }; result: number };
 	red_salir: { args: Record<string, never>; result: null };
 	mesa_fantasma: {

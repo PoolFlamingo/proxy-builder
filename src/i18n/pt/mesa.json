@@ -1217,5 +1217,11 @@
 	"Respondiendo como {nombre}": "Respondendo como {nombre}",
 	"Cambiar de jugador que responde (Mayús+R)": "Trocar o jogador que responde (Shift+R)",
 	"Proteger el campo de los demás": "Proteger o campo de batalha dos outros",
-	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "No campo de batalha você só mexe no que controla; o de outro jogador se pega com «Tomar o controle». Cemitério, exílio e pilha continuam abertos."
+	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "No campo de batalha você só mexe no que controla; o de outro jogador se pega com «Tomar o controle». Cemitério, exílio e pilha continuam abertos.",
+	"Ya no hay ninguna partida a la que volver.": "Não há mais nenhuma partida para voltar.",
+	"Partida en red a medias": "Partida online pela metade",
+	"Te desconectaste de una partida en red ({cuando}).": "Você se desconectou de uma partida online ({cuando}).",
+	"Volver a la partida": "Voltar à partida",
+	"Olvidar": "Esquecer",
+	"Volver a conectar": "Reconectar"
 }

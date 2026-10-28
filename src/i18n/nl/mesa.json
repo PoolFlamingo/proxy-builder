@@ -1203,5 +1203,11 @@
 	"Respondiendo como {nombre}": "Reageert als {nombre}",
 	"Cambiar de jugador que responde (Mayús+R)": "Reagerende speler wisselen (Shift+R)",
 	"Proteger el campo de los demás": "Het slagveld van anderen beschermen",
-	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "Op het slagveld raak je alleen aan wat je controleert; dat van een ander pak je met «Controle overnemen». Kerkhof, exile en stack blijven open."
+	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "Op het slagveld raak je alleen aan wat je controleert; dat van een ander pak je met «Controle overnemen». Kerkhof, exile en stack blijven open.",
+	"Ya no hay ninguna partida a la que volver.": "Er is geen spel meer om naar terug te gaan.",
+	"Partida en red a medias": "Onafgemaakt online spel",
+	"Te desconectaste de una partida en red ({cuando}).": "Je bent losgekoppeld van een online spel ({cuando}).",
+	"Volver a la partida": "Terug naar het spel",
+	"Olvidar": "Vergeten",
+	"Volver a conectar": "Opnieuw verbinden"
 }

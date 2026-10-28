@@ -53,6 +53,7 @@ import { ListaDialog } from "./listas/lista-dialog";
 import { opcionesDeFabrica } from "./opciones-fabrica";
 import { PartidaLocalDialog } from "./partida-local";
 import { RedDialog } from "./red/red-dialog";
+import { VolverARed } from "./red/volver-red";
 import { INTENSIDADES } from "./sparring/textos";
 import { TapeteDialog } from "./tapete-dialog";
 
@@ -279,6 +280,7 @@ function Entrada() {
 					</section>
 
 					<aside className="flex w-80 shrink-0 flex-col gap-2.5">
+						<VolverARed />
 						{guardada && (
 							<section className="flex flex-col gap-2.5 rounded-lg border border-primary/40 bg-primary/5 p-2.5">
 								<h3 className="text-xs font-semibold">{t("Partida a medias")}</h3>

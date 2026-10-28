@@ -51,6 +51,7 @@ const MOTIVOS: Partial<Record<ErrorCode, Record<string, string>>> = {
 	},
 	NotFound: {
 		sin_sala: paraTraducir("No hay ninguna partida en red abierta."),
+		sin_vuelta: paraTraducir("Ya no hay ninguna partida a la que volver."),
 	},
 	Rejected: {
 		NoExiste: paraTraducir("Esa carta o ese jugador ya no está ahí."),

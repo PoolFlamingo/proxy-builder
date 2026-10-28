@@ -1239,5 +1239,11 @@
 	"Respondiendo como {nombre}": "Отвечаете за {nombre}",
 	"Cambiar de jugador que responde (Mayús+R)": "Сменить отвечающего игрока (Shift+R)",
 	"Proteger el campo de los demás": "Защищать поле битвы других",
-	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "На поле битвы вы трогаете только то, что контролируете; чужое берётся через «Получить контроль». Кладбище, изгнание и стек остаются открытыми."
+	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "На поле битвы вы трогаете только то, что контролируете; чужое берётся через «Получить контроль». Кладбище, изгнание и стек остаются открытыми.",
+	"Ya no hay ninguna partida a la que volver.": "Больше нет игры, в которую можно вернуться.",
+	"Partida en red a medias": "Незаконченная сетевая игра",
+	"Te desconectaste de una partida en red ({cuando}).": "Вы отключились от сетевой игры ({cuando}).",
+	"Volver a la partida": "Вернуться в игру",
+	"Olvidar": "Забыть",
+	"Volver a conectar": "Переподключиться"
 }

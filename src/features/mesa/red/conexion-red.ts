@@ -152,6 +152,24 @@ export async function unirsePartida(peticion: PeticionUnion): Promise<boolean> {
 	return ok;
 }
 
+/**
+ * Vuelve a la partida en red de la que se cayó (`red/vuelta.rs`): desde la
+ * entrada o con la mesa abierta tras perder la conexión.
+ */
+export async function volverARed(): Promise<boolean> {
+	await escuchar();
+	const ok = await conProgreso(
+		() => call("red_volver"),
+		async () => true,
+	);
+	if (ok) {
+		// Con la mesa abierta no llega «empezada»: la conexión vuelve sin más.
+		useRed.getState().poner({ conexion: "conectada", intento: 0, candidato: null });
+		await refrescarRed();
+	}
+	return ok;
+}
+
 /** El anfitrión empieza con los de la sala; `invitados` son sus ids (`EnSala.id`) por asiento. */
 export async function empezarRed(config: ConfigMesa, invitados: number[]): Promise<boolean> {
 	const ok = await conProgreso(() => call("red_empezar", { config, invitados }));

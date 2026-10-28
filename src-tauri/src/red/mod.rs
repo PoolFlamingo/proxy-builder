@@ -32,6 +32,7 @@ mod pruebas;
 mod pruebas_procesos;
 pub mod servidor;
 pub mod sucesion;
+pub mod vuelta;
 
 use std::sync::Arc;
 

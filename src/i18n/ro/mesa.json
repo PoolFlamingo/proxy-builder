@@ -1217,5 +1217,11 @@
 	"Respondiendo como {nombre}": "Răspunzi ca {nombre}",
 	"Cambiar de jugador que responde (Mayús+R)": "Schimbă jucătorul care răspunde (Shift+R)",
 	"Proteger el campo de los demás": "Protejează câmpul de luptă al celorlalți",
-	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "Pe câmpul de luptă atingi doar ce controlezi; ce e al altcuiva iei cu «Preia controlul». Cimitirul, exilul și stiva rămân deschise."
+	"Solo tocas lo que controlas en el campo; lo de otro se coge con «Tomar el control». Cementerio, exilio y pila siguen abiertos.": "Pe câmpul de luptă atingi doar ce controlezi; ce e al altcuiva iei cu «Preia controlul». Cimitirul, exilul și stiva rămân deschise.",
+	"Ya no hay ninguna partida a la que volver.": "Nu mai există niciun joc la care să te întorci.",
+	"Partida en red a medias": "Joc online neterminat",
+	"Te desconectaste de una partida en red ({cuando}).": "Te-ai deconectat de la un joc online ({cuando}).",
+	"Volver a la partida": "Înapoi la joc",
+	"Olvidar": "Uită",
+	"Volver a conectar": "Reconectează-te"
 }
