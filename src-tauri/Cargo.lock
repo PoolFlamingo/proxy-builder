@@ -5234,7 +5234,7 @@ dependencies = [
 
 [[package]]
 name = "proxy-builder"
-version = "3.0.4"
+version = "3.0.5"
 dependencies = [
  "arboard",
  "base64 0.22.1",
