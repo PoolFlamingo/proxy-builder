@@ -1199,5 +1199,7 @@
 	"Ataques contra {nombre}: {cuantos}": "Aanvallen op {nombre}: {cuantos}",
 	"{tipo} a {nombre}": "{tipo} → {nombre}",
 	"Ataque": "Aanval",
-	"Objetivo": "Doelwit"
+	"Objetivo": "Doelwit",
+	"Respondiendo como {nombre}": "Reageert als {nombre}",
+	"Cambiar de jugador que responde (Mayús+R)": "Reagerende speler wisselen (Shift+R)"
 }

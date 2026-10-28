@@ -1235,5 +1235,7 @@
 	"Ataques contra {nombre}: {cuantos}": "Ataki na {nombre}: {cuantos}",
 	"{tipo} a {nombre}": "{tipo} → {nombre}",
 	"Ataque": "Atak",
-	"Objetivo": "Cel"
+	"Objetivo": "Cel",
+	"Respondiendo como {nombre}": "Odpowiadasz jako {nombre}",
+	"Cambiar de jugador que responde (Mayús+R)": "Zmień odpowiadającego gracza (Shift+R)"
 }

@@ -1199,5 +1199,7 @@
 	"Ataques contra {nombre}: {cuantos}": "Angriffe auf {nombre}: {cuantos}",
 	"{tipo} a {nombre}": "{tipo} → {nombre}",
 	"Ataque": "Angriff",
-	"Objetivo": "Ziel"
+	"Objetivo": "Ziel",
+	"Respondiendo como {nombre}": "Antwortet als {nombre}",
+	"Cambiar de jugador que responde (Mayús+R)": "Antwortenden Spieler wechseln (Umschalt+R)"
 }

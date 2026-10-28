@@ -8,7 +8,7 @@ import { useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
 import { useUi } from "@/stores/ui-store";
 import { usePantalla } from "./pantalla";
-import { quienResponde } from "./privacidad";
+import { quienResponde, siguienteAlResponder } from "./privacidad";
 import { useDisposicion } from "./selector-disposicion";
 
 /**
@@ -75,11 +75,11 @@ export async function volverAlTurno(): Promise<void> {
 	if (activo !== undefined) await mirarJugador(activo);
 }
 
-/** El atajo: responder si miras al del turno; si no, volver a él. */
+/** El atajo: pasa por quienes pueden responder y, tras el último, vuelve al del turno. */
 export async function alternarRespuesta(): Promise<void> {
 	if (!esLocalDeVarios()) return;
 	const m = useMesa.getState();
 	if (m.general?.mulligan != null) return;
-	if (m.yo !== null && m.yo !== m.general?.turno.activo) await volverAlTurno();
-	else await responderComo();
+	const quien = siguienteAlResponder(m);
+	if (quien !== null) await mirarJugador(quien);
 }

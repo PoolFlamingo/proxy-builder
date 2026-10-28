@@ -1217,5 +1217,7 @@
 	"Ataques contra {nombre}: {cuantos}": "Attaques contre {nombre} : {cuantos}",
 	"{tipo} a {nombre}": "{tipo} → {nombre}",
 	"Ataque": "Attaque",
-	"Objetivo": "Cible"
+	"Objetivo": "Cible",
+	"Respondiendo como {nombre}": "En réponse en tant que {nombre}",
+	"Cambiar de jugador que responde (Mayús+R)": "Changer de joueur qui répond (Maj+R)"
 }

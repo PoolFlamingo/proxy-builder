@@ -1235,5 +1235,7 @@
 	"Ataques contra {nombre}: {cuantos}": "Атаки на {nombre}: {cuantos}",
 	"{tipo} a {nombre}": "{tipo} → {nombre}",
 	"Ataque": "Атака",
-	"Objetivo": "Цель"
+	"Objetivo": "Цель",
+	"Respondiendo como {nombre}": "Отвечаете за {nombre}",
+	"Cambiar de jugador que responde (Mayús+R)": "Сменить отвечающего игрока (Shift+R)"
 }

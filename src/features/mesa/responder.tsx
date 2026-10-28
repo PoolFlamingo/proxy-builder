@@ -1,6 +1,7 @@
 import { CornerUpLeft, Reply } from "lucide-react";
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
+import type { IdJugador } from "@/bindings/IdJugador";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,6 +9,7 @@ import {
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuLabel,
+	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { WithTooltip } from "@/components/ui/with-tooltip";
@@ -41,18 +43,45 @@ export function BotonResponder() {
 		return null;
 	}
 	if (viendo !== activo) {
+		const otros = quienes.filter((j) => j !== viendo);
+		if (otros.length === 0) {
+			return (
+				<WithTooltip content={t("Volver al jugador del turno (Mayús+R)")}>
+					<Button
+						size="sm"
+						variant="secondary"
+						className="h-7 gap-1 px-2 text-xs"
+						onClick={() => void volverAlTurno()}
+					>
+						<CornerUpLeft className="size-3.5" />
+						{t("Volver a {nombre}", { nombre: jugadores[activo]?.nombre ?? "" })}
+					</Button>
+				</WithTooltip>
+			);
+		}
+		// Con más de un jugador que responde: volver al turno o saltar a otro.
 		return (
-			<WithTooltip content={t("Volver al jugador del turno (Mayús+R)")}>
-				<Button
-					size="sm"
-					variant="secondary"
-					className="h-7 gap-1 px-2 text-xs"
-					onClick={() => void volverAlTurno()}
-				>
-					<CornerUpLeft className="size-3.5" />
-					{t("Volver a {nombre}", { nombre: jugadores[activo]?.nombre ?? "" })}
-				</Button>
-			</WithTooltip>
+			<DropdownMenu>
+				<WithTooltip content={t("Cambiar de jugador que responde (Mayús+R)")}>
+					<DropdownMenuTrigger asChild>
+						<Button size="sm" variant="secondary" className="h-7 gap-1 px-2 text-xs">
+							<Reply className="size-3.5" />
+							{t("Respondiendo como {nombre}", { nombre: jugadores[viendo]?.nombre ?? "" })}
+						</Button>
+					</DropdownMenuTrigger>
+				</WithTooltip>
+				<DropdownMenuContent align="center" className="z-[9000] w-56">
+					<DropdownMenuItem onSelect={() => void volverAlTurno()}>
+						<CornerUpLeft className="size-3.5" />
+						{t("Volver a {nombre}", { nombre: jugadores[activo]?.nombre ?? "" })}
+					</DropdownMenuItem>
+					<DropdownMenuSeparator />
+					<DropdownMenuLabel>{t("Responder como…")}</DropdownMenuLabel>
+					{otros.map((j) => (
+						<ItemJugador key={j} id={j} />
+					))}
+				</DropdownMenuContent>
+			</DropdownMenu>
 		);
 	}
 	if (quienes.length === 0) return null;
@@ -85,15 +114,21 @@ export function BotonResponder() {
 			<DropdownMenuContent align="center" className="z-[9000] w-56">
 				<DropdownMenuLabel>{t("Responder como…")}</DropdownMenuLabel>
 				{quienes.map((j) => (
-					<DropdownMenuItem key={j} onSelect={() => void responderComo(j)}>
-						<span
-							className="size-2 shrink-0 rounded-full"
-							style={{ background: jugadores[j]?.color }}
-						/>
-						{jugadores[j]?.nombre}
-					</DropdownMenuItem>
+					<ItemJugador key={j} id={j} />
 				))}
 			</DropdownMenuContent>
 		</DropdownMenu>
+	);
+}
+
+/** Una entrada del menú: responder como este jugador, con el punto de su color. */
+function ItemJugador({ id }: { id: IdJugador }) {
+	const nombre = useMesa((s) => s.jugadores[id]?.nombre ?? "");
+	const color = useMesa((s) => s.jugadores[id]?.color);
+	return (
+		<DropdownMenuItem onSelect={() => void responderComo(id)}>
+			<span className="size-2 shrink-0 rounded-full" style={{ background: color }} />
+			{nombre}
+		</DropdownMenuItem>
 	);
 }

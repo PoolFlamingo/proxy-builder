@@ -1213,5 +1213,7 @@
 	"Ataques contra {nombre}: {cuantos}": "Atacuri asupra lui {nombre}: {cuantos}",
 	"{tipo} a {nombre}": "{tipo} → {nombre}",
 	"Ataque": "Atac",
-	"Objetivo": "Țintă"
+	"Objetivo": "Țintă",
+	"Respondiendo como {nombre}": "Răspunzi ca {nombre}",
+	"Cambiar de jugador que responde (Mayús+R)": "Schimbă jucătorul care răspunde (Shift+R)"
 }

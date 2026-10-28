@@ -1145,5 +1145,7 @@
 	"Ataques contra {nombre}: {cuantos}": "{nombre}への攻撃：{cuantos}",
 	"{tipo} a {nombre}": "{tipo} → {nombre}",
 	"Ataque": "攻撃",
-	"Objetivo": "対象"
+	"Objetivo": "対象",
+	"Respondiendo como {nombre}": "{nombre}として対応中",
+	"Cambiar de jugador que responde (Mayús+R)": "対応するプレイヤーを切り替える（Shift+R）"
 }

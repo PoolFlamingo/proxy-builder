@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { deckDelTablero, manoOcultaPorTurno, quienResponde } from "../privacidad";
+import {
+	deckDelTablero,
+	manoOcultaPorTurno,
+	quienResponde,
+	siguienteAlResponder,
+} from "../privacidad";
 
 const mesa = (activo: number, mulligan = false, asientos = [0, 1]) =>
 	({ asientos, general: { turno: { activo }, mulligan: mulligan ? {} : null } }) as never;
@@ -55,5 +60,25 @@ describe("responder fuera de tu turno", () => {
 	});
 	it("sin turno no hay quien responda", () => {
 		expect(quienResponde({ asientos: [0, 1], general: null, jugadores: {} } as never)).toEqual([]);
+	});
+});
+
+describe("el atajo de responder con varios jugadores", () => {
+	const mesa4 = (yo: number, activo = 0) =>
+		({
+			yo,
+			asientos: [0, 1, 2, 3],
+			general: { turno: { activo } },
+			jugadores: Object.fromEntries([0, 1, 2, 3].map((j) => [j, { eliminado: null }])),
+		}) as never;
+
+	it("desde el del turno va al primero que puede responder", () => {
+		expect(siguienteAlResponder(mesa4(0))).toBe(1);
+	});
+	it("de uno que responde pasa al siguiente y, tras el último, vuelve al turno", () => {
+		expect(siguienteAlResponder(mesa4(1))).toBe(2);
+		expect(siguienteAlResponder(mesa4(3))).toBe(0);
+		expect(siguienteAlResponder(mesa4(0, 2))).toBe(1);
+		expect(siguienteAlResponder(mesa4(1, 2))).toBe(2);
 	});
 });

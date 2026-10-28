@@ -56,3 +56,17 @@ export function deckDelTablero(
 	if (!enRed) return deckIds[i] ?? null;
 	return esAnfitrion && i === 0 ? (deckIds[0] ?? null) : null;
 }
+
+/**
+ * A quién pasa a mirar el atajo de responder: desde el del turno, al primero que
+ * puede responder; de uno que responde, al siguiente y, tras el último, de
+ * vuelta al del turno. Así con varios jugadores se llega a cualquiera.
+ */
+export function siguienteAlResponder(
+	m: Pick<Mesa, "general" | "asientos" | "jugadores" | "yo">,
+): IdJugador | null {
+	const activo = m.general?.turno.activo;
+	const quienes = quienResponde(m);
+	if (m.yo === null || m.yo === activo) return quienes[0] ?? null;
+	return quienes[quienes.indexOf(m.yo) + 1] ?? activo ?? null;
+}

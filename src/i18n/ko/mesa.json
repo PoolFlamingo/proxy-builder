@@ -1145,5 +1145,7 @@
 	"Ataques contra {nombre}: {cuantos}": "{nombre}에 대한 공격: {cuantos}",
 	"{tipo} a {nombre}": "{tipo} → {nombre}",
 	"Ataque": "공격",
-	"Objetivo": "대상"
+	"Objetivo": "대상",
+	"Respondiendo como {nombre}": "{nombre}(으)로 대응 중",
+	"Cambiar de jugador que responde (Mayús+R)": "대응하는 플레이어 전환 (Shift+R)"
 }

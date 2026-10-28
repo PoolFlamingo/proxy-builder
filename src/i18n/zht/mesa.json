@@ -1145,5 +1145,7 @@
 	"Ataques contra {nombre}: {cuantos}": "對{nombre}的攻擊：{cuantos}",
 	"{tipo} a {nombre}": "{tipo} → {nombre}",
 	"Ataque": "攻擊",
-	"Objetivo": "目標"
+	"Objetivo": "目標",
+	"Respondiendo como {nombre}": "正以{nombre}的身分回應",
+	"Cambiar de jugador que responde (Mayús+R)": "切換回應的玩家 (Shift+R)"
 }
