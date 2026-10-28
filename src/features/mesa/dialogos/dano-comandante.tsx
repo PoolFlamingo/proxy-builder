@@ -154,6 +154,8 @@ function Celda({
 	const { t } = useLang();
 	const dano = useMesa((s) => s.jugadores[jugador]?.danoComandante[comandante.id] ?? 0);
 	const nombre = useMesa((s) => s.jugadores[jugador]?.nombre ?? "");
+	// Un comandante no le hace daño de comandante a su dueño: la celda se apaga
+	// (solo se puede quitar lo que ya hubiera, por si se apuntó de más).
 	const propio = comandante.dueno === jugador;
 	const mover = (delta: number) =>
 		void hacer({
@@ -187,6 +189,7 @@ function Celda({
 						comandante: comandante.nombre,
 						jugador: nombre,
 					})}
+					disabled={propio}
 					onClick={() => mover(1)}
 				>
 					<Plus className="size-3" />
