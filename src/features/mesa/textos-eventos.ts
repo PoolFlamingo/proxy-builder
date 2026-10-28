@@ -148,6 +148,9 @@ const DESTINOS: Record<string, string> = {
 const ABRE = "\u0001";
 const MEDIO = "\u0002";
 const CIERRA = "\u0003";
+/** Las de una carta del fantasma, que no está en la mesa y se señala por su nombre. */
+const ABRE_FANTASMA = "\u0004";
+const CIERRA_FANTASMA = "\u0005";
 
 function nombreCarta(m: Pick<Mesa, "cartas">, id: IdCarta, t: T, marcar: boolean): string {
 	const nombre = m.cartas[id]?.origen?.nombre;
@@ -161,7 +164,7 @@ function nombresCartas(m: Pick<Mesa, "cartas">, ids: IdCarta[], t: T, marcar: bo
 }
 
 /** Una pieza de una frase del registro: texto suelto o el nombre de una carta que se puede ver. */
-export type PiezaTexto = string | { carta: IdCarta; nombre: string };
+export type PiezaTexto = string | { carta: IdCarta; nombre: string } | { fantasma: string };
 
 /** Parte un texto escrito con `marcar` en sus piezas (los nombres de carta, aparte). */
 export function piezasDeTexto(texto: string): PiezaTexto[] {
@@ -169,6 +172,15 @@ export function piezasDeTexto(texto: string): PiezaTexto[] {
 	let resto = texto;
 	for (;;) {
 		const a = resto.indexOf(ABRE);
+		const f = resto.indexOf(ABRE_FANTASMA);
+		if (f >= 0 && (a < 0 || f < a)) {
+			const z = resto.indexOf(CIERRA_FANTASMA, f);
+			if (z < 0) break;
+			if (f > 0) piezas.push(resto.slice(0, f));
+			piezas.push({ fantasma: resto.slice(f + 1, z) });
+			resto = resto.slice(z + 1);
+			continue;
+		}
 		const z = a < 0 ? -1 : resto.indexOf(CIERRA, a);
 		if (a < 0 || z < 0) break;
 		const medio = resto.indexOf(MEDIO, a);
@@ -224,6 +236,7 @@ export function textoDeEvento(
 				r,
 				r.objetivo.length > 0 ? nombresCartas(m, r.objetivo, t, marcar) : "",
 				t,
+				marcar ? `${ABRE_FANTASMA}${r.carta.nombre}${CIERRA_FANTASMA}` : r.carta.nombre,
 			);
 		}
 		case "accion":

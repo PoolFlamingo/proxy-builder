@@ -32,6 +32,7 @@ import { ChatPanel } from "./chat";
 import { formatoDuracion } from "./cuentas-fin";
 import { cartaParaApilar, duracionDeTurno } from "./cuentas-registro";
 import { ANCHO_PANEL, type PanelMesa, usePantalla } from "./pantalla";
+import { useSenalarFantasma } from "./sparring/vista-fantasma";
 import { piezasDeTexto, textoDeEvento } from "./textos-eventos";
 
 const ICONOS: Record<CategoriaEvento, React.ComponentType<{ className?: string }>> = {
@@ -180,6 +181,8 @@ function RegistroLista() {
 									{piezasDeTexto(texto).map((p, k) =>
 										typeof p === "string" ? (
 											<Fragment key={k}>{p}</Fragment>
+										) : "fantasma" in p ? (
+											<NombreDeFantasma key={k} nombre={p.fantasma} />
 										) : (
 											<NombreDeCarta key={k} carta={p.carta} nombre={p.nombre} />
 										),
@@ -223,6 +226,19 @@ function RegistroLista() {
 				)}
 			</div>
 		</ScrollArea>
+	);
+}
+
+/** El nombre de la carta del fantasma en el registro: al pasar el ratón sale en grande. */
+function NombreDeFantasma({ nombre }: { nombre: string }) {
+	const senalar = useSenalarFantasma(nombre);
+	return (
+		<span
+			className="cursor-help font-medium underline decoration-dotted underline-offset-2"
+			{...senalar}
+		>
+			{nombre}
+		</span>
 	);
 }
 

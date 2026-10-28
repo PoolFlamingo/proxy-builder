@@ -124,8 +124,13 @@ export function resumen(r: ReaccionSparring, objetivo: string, t: T): string {
 }
 
 /** La línea del registro de la partida. */
-export function lineaRegistro(r: ReaccionSparring, objetivo: string, t: T): string {
-	const vars = { carta: r.carta.nombre, objetivo };
+export function lineaRegistro(
+	r: ReaccionSparring,
+	objetivo: string,
+	t: T,
+	carta = r.carta.nombre,
+): string {
+	const vars = { carta, objetivo };
 	switch (r.tipo) {
 		case "eliminar":
 			return r.exilia

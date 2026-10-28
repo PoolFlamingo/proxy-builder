@@ -98,6 +98,30 @@ describe("textos en piezas", () => {
 		const e = accion(1, 0, { que: "adjuntar", carta: 9, a: 3 } as never);
 		expect(textoDeEvento(e, { cartas, jugadores }, t, true)).toBe("Ana adjunta una carta");
 	});
+	it("la carta del fantasma sale como pieza aparte, junto a las de la mesa", () => {
+		const e = ev(1, 0, {
+			tipo: "sparring",
+			reaccion: {
+				id: 1,
+				tipo: "contrarrestar",
+				objetivo: [7],
+				carta: { nombre: "Counterspell", scryfallId: "x", coste: "{U}{U}" },
+				exilia: false,
+				porQue: { clave: "contrarrestar", params: {} },
+				base: [],
+			},
+		} as unknown as Cambio);
+		const texto = textoDeEvento(e, { cartas, jugadores }, t, true);
+		expect(piezasDeTexto(texto)).toEqual([
+			"El fantasma contrarresta ",
+			{ carta: 7, nombre: "Sol Ring" },
+			" con ",
+			{ fantasma: "Counterspell" },
+		]);
+		expect(textoDeEvento(e, { cartas, jugadores }, t)).toBe(
+			"El fantasma contrarresta Sol Ring con Counterspell",
+		);
+	});
 	it("pasar el turno dice cuánto tardó", () => {
 		const e = accion(1, 0, { que: "pasarTurno" });
 		expect(textoDeEvento(e, { cartas, jugadores }, t, false, "00:51")).toBe(
