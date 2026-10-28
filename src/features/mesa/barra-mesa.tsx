@@ -29,6 +29,7 @@ import { useRed } from "@/stores/red-store";
 import { hacer } from "./acciones";
 import * as op from "./operaciones";
 import { usePantalla } from "./pantalla";
+import { BotonResponder } from "./responder";
 import { SelectorDisposicion } from "./selector-disposicion";
 import { BotonSparring } from "./sparring/boton";
 
@@ -152,6 +153,7 @@ export function BarraMesa({
 					>
 						{pausada ? <Play className="size-4" /> : <Pause className="size-4" />}
 					</Boton>
+					<BotonResponder />
 					<span className="mx-0.5 h-5 w-px bg-white/15" />
 					<Boton ayuda={t("Deshacer (Ctrl+Z)")} onClick={() => void op.deshacer()}>
 						<Undo2 className="size-4" />

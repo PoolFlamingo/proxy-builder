@@ -1227,5 +1227,18 @@
 	"{quien} deja de mostrar {cartas}": "{quien} перестає показувати {cartas}",
 	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} трапляється {veces} разів. Якщо це копії, що замінюють жетони, познач їх у колоді (правий клік › Позначка › Копія).",
 	"Editar la lista…": "Змінити список…",
-	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: у колоді понад 100 карт, а в Commander грають зі 100. Склади список із командира та ще 99."
+	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: у колоді понад 100 карт, а в Commander грають зі 100. Склади список із командира та ще 99.",
+	"Mano de {nombre}: pulsa para verla": "Рука {nombre}: натисніть, щоб побачити",
+	"Responder / volver al turno": "Відповісти / повернутися до ходу",
+	"Volver al jugador del turno (Mayús+R)": "Повернутися до гравця, чий хід (Shift+R)",
+	"Volver a {nombre}": "Повернутися до {nombre}",
+	"Responder como {nombre}": "Відповісти за {nombre}",
+	"Responder desde la mesa de otro jugador (Mayús+R)": "Відповісти зі столу іншого гравця (Shift+R)",
+	"Responder": "Відповісти",
+	"Responder como…": "Відповісти за…",
+	"Hay algo en la pila: ¿responder?": "Щось у стеку: відповісти?",
+	"Ataques contra {nombre}: {cuantos}": "Атаки на {nombre}: {cuantos}",
+	"{tipo} a {nombre}": "{tipo} → {nombre}",
+	"Ataque": "Атака",
+	"Objetivo": "Ціль"
 }

@@ -1,4 +1,4 @@
-import { Hand, Heart, Languages, Library, Skull } from "lucide-react";
+import { Hand, Heart, Languages, Library, Reply, Skull, Swords } from "lucide-react";
 import { memo } from "react";
 import type { Equipo } from "@/bindings/Equipo";
 import type { IdJugador } from "@/bindings/IdJugador";
@@ -9,14 +9,15 @@ import { useLang } from "@/components/language-provider";
 import { ContextMenu, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { urlMesa } from "@/lib/image-url";
 import { cn } from "@/lib/utils";
-import { cartasDe, cuantasEn, useMesa } from "@/stores/mesa-store";
+import { cartasDe, cuantasEn, NINGUNA, useMesa } from "@/stores/mesa-store";
 import { useOriginales } from "@/stores/originales-store";
 import { useRed } from "@/stores/red-store";
 import { useUi } from "@/stores/ui-store";
 import { enVuelo, origenDe, useVivo } from "@/stores/vivo-store";
-import { zonaDe } from "./acciones";
+import { zonaComun, zonaDe } from "./acciones";
 import { cartaDeArribaRevelada } from "./arriba-biblioteca";
 import { Bocadillo, InsigniaSenal } from "./chat";
+import { atacantesDe } from "./cuentas-flechas";
 import { abanico, disponer, posAPx } from "./disposicion";
 import { senalar } from "./en-vivo/emitir";
 import { FantasmasMini } from "./en-vivo/fantasmas";
@@ -143,6 +144,17 @@ export const TableroMini = memo(function TableroMini({
 	const senalada = useVivo((s) => s.senales.some((x) => x.a === jugador));
 	const originales = useOriginales((s) => s.modos[jugador]);
 	const modo = usePantalla((s) => s.modo);
+	// Cuántas flechas de ataque le apuntan (a él o a sus cartas).
+	const atacantes = useMesa((s) => atacantesDe(s.general?.flechas ?? NINGUNA, s.cartas, jugador));
+	// Con algo en la pila y el turno de quien miro, esta mesa puede responder.
+	const respondible = useMesa(
+		(s) =>
+			!enRed &&
+			!d.activo &&
+			s.yo !== null &&
+			s.yo === s.general?.turno.activo &&
+			cuantasEn(s, zonaComun("pila")) > 0,
+	);
 	const j = d.j;
 	if (!j) return null;
 	const color = d.equipo?.color ?? j.color;
@@ -188,6 +200,14 @@ export const TableroMini = memo(function TableroMini({
 						/>
 					)}
 					<Bocadillo jugador={jugador} className="absolute bottom-1 left-1" />
+					{respondible && !modo && (
+						<span className="pointer-events-none absolute inset-x-0 bottom-1 z-[9500] flex justify-center">
+							<span className="flex animate-pulse items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-lg">
+								<Reply className="size-3" />
+								{t("Hay algo en la pila: ¿responder?")}
+							</span>
+						</span>
+					)}
 					<span
 						className="absolute inset-x-0 top-0 flex items-center gap-1.5 px-1.5 text-[11px] leading-none"
 						style={{ height: CABECERA, background: `${color}66` }}
@@ -197,6 +217,18 @@ export const TableroMini = memo(function TableroMini({
 						<InsigniaSenal jugador={jugador} />
 						{enRed && <Latencia id={jugador} />}
 						{originales && <Languages className="size-3 shrink-0 text-white/60" />}
+						{atacantes > 0 && (
+							<span
+								className="flex shrink-0 items-center gap-0.5 rounded-sm bg-rose-600 px-1 py-0.5 font-semibold tabular-nums"
+								aria-label={t("Ataques contra {nombre}: {cuantos}", {
+									nombre: j.nombre,
+									cuantos: atacantes,
+								})}
+							>
+								<Swords className="size-3" />
+								{atacantes}
+							</span>
+						)}
 						<span className="flex shrink-0 items-center gap-0.5 tabular-nums">
 							<Heart className="size-3" />
 							{vida}

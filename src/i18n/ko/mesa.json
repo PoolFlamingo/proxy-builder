@@ -1132,5 +1132,18 @@
 	"{quien} deja de mostrar {cartas}": "{quien}이(가) {cartas} 보여주기를 그만둠",
 	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta}이(가) {veces}번 들어 있어요. 토큰 대신 쓰는 복사본이라면 덱에서 표시하세요(오른쪽 클릭 › 표시 › 복사본).",
 	"Editar la lista…": "목록 편집…",
-	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: 덱이 100장보다 많은데 커맨더는 100장으로 해요. 커맨더와 99장으로 목록을 만드세요."
+	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: 덱이 100장보다 많은데 커맨더는 100장으로 해요. 커맨더와 99장으로 목록을 만드세요.",
+	"Mano de {nombre}: pulsa para verla": "{nombre}의 손패: 클릭하여 보기",
+	"Responder / volver al turno": "대응 / 턴으로 돌아가기",
+	"Volver al jugador del turno (Mayús+R)": "턴 플레이어에게 돌아가기 (Shift+R)",
+	"Volver a {nombre}": "{nombre}에게 돌아가기",
+	"Responder como {nombre}": "{nombre}(으)로 대응",
+	"Responder desde la mesa de otro jugador (Mayús+R)": "다른 플레이어의 판에서 대응 (Shift+R)",
+	"Responder": "대응",
+	"Responder como…": "다음으로 대응…",
+	"Hay algo en la pila: ¿responder?": "스택에 무언가 있습니다: 대응할까요?",
+	"Ataques contra {nombre}: {cuantos}": "{nombre}에 대한 공격: {cuantos}",
+	"{tipo} a {nombre}": "{tipo} → {nombre}",
+	"Ataque": "공격",
+	"Objetivo": "대상"
 }

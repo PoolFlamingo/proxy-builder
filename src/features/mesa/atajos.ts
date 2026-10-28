@@ -3,6 +3,7 @@ import { paraTraducir } from "@/components/language-provider";
 import { useMesa } from "@/stores/mesa-store";
 import { hacer, objetivo, sitio } from "./acciones";
 import { AVISOS, SENALES, senalTrasElegir } from "./cuentas-chat";
+import { alternarRespuesta } from "./mirar";
 import * as op from "./operaciones";
 import { usePantalla } from "./pantalla";
 
@@ -224,6 +225,12 @@ export const ATAJOS: Atajo[] = [
 		hacer: () => op.deshacer(),
 	},
 	{ contexto: "mesa", tecla: "Ctrl+y", nombre: paraTraducir("Rehacer"), hacer: () => op.rehacer() },
+	{
+		contexto: "mesa",
+		tecla: "Mayús+R",
+		nombre: paraTraducir("Responder / volver al turno"),
+		hacer: () => void alternarRespuesta(),
+	},
 	{
 		contexto: "mesa",
 		tecla: "Ctrl+Enter",

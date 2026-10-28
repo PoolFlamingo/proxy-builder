@@ -21,6 +21,7 @@ import { COLORES } from "./colores";
 import { abanico, type Disposicion, disponer, posAPx, pxAPos, type Rect } from "./disposicion";
 import * as vivo from "./en-vivo/emitir";
 import { FantasmasVivos } from "./en-vivo/fantasmas";
+import { Flechas } from "./flechas";
 import { marcarArrastradas } from "./flip";
 import { caraVisible, DorsoGenerico, ImagenCarta } from "./imagen-carta";
 import { MenuBiblioteca, MenuCampo, MenuManoAjena, MenuZona } from "./menus/menu-zonas";
@@ -528,7 +529,9 @@ function Mano({
 	const todas = useMesa((s) => cartasDe(s, zonaDe(yo, "mano")));
 	// En una partida local, la mano de quien no tiene el turno no se enseña.
 	const enRed = useRed((s) => s.papel !== null);
-	const privada = useMesa((s) => manoOcultaPorTurno(s, yo, enRed));
+	const mostrada = usePantalla((s) => s.manoMostrada);
+	const privada = useMesa((s) => manoOcultaPorTurno(s, yo, enRed, mostrada));
+	const nombre = useMesa((s) => s.jugadores[yo]?.nombre ?? "");
 	const ids = privada ? NINGUNA : todas;
 	// La mano de otro (en red): solo cuántas, boca abajo.
 	const ocultas = useMesa((s) =>
@@ -552,6 +555,24 @@ function Mano({
 			>
 				{n === 1 ? t("Una carta en la mano") : t("{n} cartas en la mano", { n })}
 			</div>
+			{privada && (
+				// La cortina: quien responde fuera de su turno destapa su mano.
+				<button
+					type="button"
+					className="absolute flex items-center justify-center gap-1.5 rounded-md border border-dashed border-white/40 bg-black/55 text-xs font-medium text-white backdrop-blur-sm hover:bg-black/70"
+					style={{
+						left: disp.mano.x,
+						top: disp.mano.y,
+						width: disp.mano.w,
+						height: disp.mano.h,
+						zIndex: 5000,
+					}}
+					onClick={() => usePantalla.getState().mostrarMano(yo)}
+				>
+					<Eye className="size-4" />
+					{t("Mano de {nombre}: pulsa para verla", { nombre })}
+				</button>
+			)}
 			{ajena && (
 				<MenuManoAjena jugador={yo}>
 					<div
@@ -835,63 +856,6 @@ function Bolitas({ campo }: { campo: Rect }) {
 					);
 				})}
 		</>
-	);
-}
-
-/** Las flechas de ataque y objetivo entre cartas (y hacia los jugadores). */
-function Flechas({ disp }: { disp: Disposicion }) {
-	const flechas = useMesa((s) => s.general?.flechas ?? NINGUNA);
-	const cartas = useMesa((s) => s.cartas);
-	const jugadores = useMesa((s) => s.jugadores);
-	const yo = useMesa(tableroDe);
-	if (flechas.length === 0) return null;
-	const punto = (e: (typeof flechas)[number]["de"]): { x: number; y: number } | null => {
-		if (e.tipo === "carta") {
-			const c = cartas[e.id];
-			// Una carta de la mesa de otro (en una partida local se ve en pequeño): la
-			// flecha apunta hacia allí, arriba en el centro, como a un jugador.
-			if (!c?.pos) return null;
-			return c.controlador === yo ? posAPx(disp.campo, c.pos) : { x: disp.campo.w / 2, y: 30 };
-		}
-		// Un jugador: arriba en el centro (el rival imaginado) o mi vida.
-		return { x: disp.campo.w / 2, y: 30 };
-	};
-	return (
-		<svg className="pointer-events-none absolute inset-0 size-full" style={{ zIndex: 6000 }}>
-			<defs>
-				<marker
-					id="punta"
-					viewBox="0 0 10 10"
-					refX="8"
-					refY="5"
-					markerWidth="6"
-					markerHeight="6"
-					orient="auto-start-reverse"
-				>
-					<path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" />
-				</marker>
-			</defs>
-			{flechas.map((f, i) => {
-				const a = punto(f.de);
-				const b = punto(f.a);
-				if (!a || !b) return null;
-				const color = jugadores[f.deJugador]?.color ?? "#e11d48";
-				return (
-					<line
-						key={i}
-						x1={a.x}
-						y1={a.y}
-						x2={b.x}
-						y2={b.y}
-						stroke={color}
-						strokeWidth={f.tipo === "ataque" ? 4 : 2.5}
-						strokeDasharray={f.tipo === "objetivo" ? "8 5" : undefined}
-						markerEnd="url(#punta)"
-						opacity={0.9}
-					/>
-				);
-			})}
-		</svg>
 	);
 }
 

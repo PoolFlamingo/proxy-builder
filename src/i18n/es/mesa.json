@@ -1132,5 +1132,18 @@
 	"{quien} deja de mostrar {cartas}": "{quien} deja de mostrar {cartas}",
 	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).",
 	"Editar la lista…": "Editar la lista…",
-	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más."
+	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.",
+	"Mano de {nombre}: pulsa para verla": "Mano de {nombre}: pulsa para verla",
+	"Responder / volver al turno": "Responder / volver al turno",
+	"Volver al jugador del turno (Mayús+R)": "Volver al jugador del turno (Mayús+R)",
+	"Volver a {nombre}": "Volver a {nombre}",
+	"Responder como {nombre}": "Responder como {nombre}",
+	"Responder desde la mesa de otro jugador (Mayús+R)": "Responder desde la mesa de otro jugador (Mayús+R)",
+	"Responder": "Responder",
+	"Responder como…": "Responder como…",
+	"Hay algo en la pila: ¿responder?": "Hay algo en la pila: ¿responder?",
+	"Ataques contra {nombre}: {cuantos}": "Ataques contra {nombre}: {cuantos}",
+	"{tipo} a {nombre}": "{tipo} a {nombre}",
+	"Ataque": "Ataque",
+	"Objetivo": "Objetivo"
 }

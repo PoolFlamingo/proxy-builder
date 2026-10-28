@@ -1200,5 +1200,18 @@
 	"{quien} deja de mostrar {cartas}": "{quien} smette di mostrare {cartas}",
 	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} compare {veces} volte. Se sono copie che fanno da pedina, segnale nel mazzo (clic destro › Segno › Copia).",
 	"Editar la lista…": "Modifica la lista…",
-	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: il mazzo ha più di 100 carte e a Commander si gioca con 100. Crea una lista con il comandante e altre 99."
+	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: il mazzo ha più di 100 carte e a Commander si gioca con 100. Crea una lista con il comandante e altre 99.",
+	"Mano de {nombre}: pulsa para verla": "Mano di {nombre}: clicca per vederla",
+	"Responder / volver al turno": "Rispondi / torna al turno",
+	"Volver al jugador del turno (Mayús+R)": "Torna al giocatore di turno (Maiusc+R)",
+	"Volver a {nombre}": "Torna a {nombre}",
+	"Responder como {nombre}": "Rispondi come {nombre}",
+	"Responder desde la mesa de otro jugador (Mayús+R)": "Rispondi dal tavolo di un altro giocatore (Maiusc+R)",
+	"Responder": "Rispondi",
+	"Responder como…": "Rispondi come…",
+	"Hay algo en la pila: ¿responder?": "C'è qualcosa sulla pila: rispondere?",
+	"Ataques contra {nombre}: {cuantos}": "Attacchi contro {nombre}: {cuantos}",
+	"{tipo} a {nombre}": "{tipo} → {nombre}",
+	"Ataque": "Attacco",
+	"Objetivo": "Bersaglio"
 }

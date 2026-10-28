@@ -1200,5 +1200,18 @@
 	"{quien} deja de mostrar {cartas}": "{quien} deixa de mostrar {cartas}",
 	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} aparece {veces} vezes. Se são cópias que fazem de ficha, marque-as no deck (clique direito › Marca › Cópia).",
 	"Editar la lista…": "Editar a lista…",
-	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: o deck tem mais de 100 cartas e em Commander se joga com 100. Faça uma lista com o comandante e mais 99."
+	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: o deck tem mais de 100 cartas e em Commander se joga com 100. Faça uma lista com o comandante e mais 99.",
+	"Mano de {nombre}: pulsa para verla": "Mão de {nombre}: clique para ver",
+	"Responder / volver al turno": "Responder / voltar ao turno",
+	"Volver al jugador del turno (Mayús+R)": "Voltar ao jogador do turno (Shift+R)",
+	"Volver a {nombre}": "Voltar para {nombre}",
+	"Responder como {nombre}": "Responder como {nombre}",
+	"Responder desde la mesa de otro jugador (Mayús+R)": "Responder a partir da mesa de outro jogador (Shift+R)",
+	"Responder": "Responder",
+	"Responder como…": "Responder como…",
+	"Hay algo en la pila: ¿responder?": "Há algo na pilha: responder?",
+	"Ataques contra {nombre}: {cuantos}": "Ataques contra {nombre}: {cuantos}",
+	"{tipo} a {nombre}": "{tipo} → {nombre}",
+	"Ataque": "Ataque",
+	"Objetivo": "Alvo"
 }

@@ -1186,5 +1186,18 @@
 	"{quien} deja de mostrar {cartas}": "{quien} toont {cartas} niet meer",
 	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} komt {veces} keer voor. Als het kopieën zijn die als token fungeren, markeer ze dan in het deck (rechtsklik › Markering › Kopie).",
 	"Editar la lista…": "Lijst bewerken…",
-	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: het deck heeft meer dan 100 kaarten en Commander speel je met 100. Maak een lijst met de commander en 99 andere."
+	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: het deck heeft meer dan 100 kaarten en Commander speel je met 100. Maak een lijst met de commander en 99 andere.",
+	"Mano de {nombre}: pulsa para verla": "Hand van {nombre}: klik om te bekijken",
+	"Responder / volver al turno": "Reageren / terug naar de beurt",
+	"Volver al jugador del turno (Mayús+R)": "Terug naar de speler aan de beurt (Shift+R)",
+	"Volver a {nombre}": "Terug naar {nombre}",
+	"Responder como {nombre}": "Reageren als {nombre}",
+	"Responder desde la mesa de otro jugador (Mayús+R)": "Reageren vanaf het speelveld van een andere speler (Shift+R)",
+	"Responder": "Reageren",
+	"Responder como…": "Reageren als…",
+	"Hay algo en la pila: ¿responder?": "Er ligt iets op de stack: reageren?",
+	"Ataques contra {nombre}: {cuantos}": "Aanvallen op {nombre}: {cuantos}",
+	"{tipo} a {nombre}": "{tipo} → {nombre}",
+	"Ataque": "Aanval",
+	"Objetivo": "Doelwit"
 }

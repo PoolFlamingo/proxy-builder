@@ -1200,5 +1200,18 @@
 	"{quien} deja de mostrar {cartas}": "{quien} nu mai arată {cartas}",
 	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} apare de {veces} ori. Dacă sunt copii care țin loc de jeton, marchează-le în deck (clic dreapta › Marcaj › Copie).",
 	"Editar la lista…": "Editează lista…",
-	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: deck-ul are peste 100 de cărți, iar în Commander se joacă cu 100. Fă o listă cu comandantul și încă 99."
+	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: deck-ul are peste 100 de cărți, iar în Commander se joacă cu 100. Fă o listă cu comandantul și încă 99.",
+	"Mano de {nombre}: pulsa para verla": "Mâna lui {nombre}: apasă ca s-o vezi",
+	"Responder / volver al turno": "Răspunde / înapoi la tură",
+	"Volver al jugador del turno (Mayús+R)": "Înapoi la jucătorul turei (Shift+R)",
+	"Volver a {nombre}": "Înapoi la {nombre}",
+	"Responder como {nombre}": "Răspunde ca {nombre}",
+	"Responder desde la mesa de otro jugador (Mayús+R)": "Răspunde de la masa altui jucător (Shift+R)",
+	"Responder": "Răspunde",
+	"Responder como…": "Răspunde ca…",
+	"Hay algo en la pila: ¿responder?": "Ceva este pe stivă: răspunzi?",
+	"Ataques contra {nombre}: {cuantos}": "Atacuri asupra lui {nombre}: {cuantos}",
+	"{tipo} a {nombre}": "{tipo} → {nombre}",
+	"Ataque": "Atac",
+	"Objetivo": "Țintă"
 }

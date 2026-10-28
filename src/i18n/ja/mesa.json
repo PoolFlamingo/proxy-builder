@@ -1132,5 +1132,18 @@
 	"{quien} deja de mostrar {cartas}": "{quien} が {cartas} を見せるのをやめる",
 	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} が {veces} 枚あります。トークンの代わりのコピーなら、デッキで印をつけてください（右クリック › 印 › コピー）。",
 	"Editar la lista…": "リストを編集…",
-	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}：デッキが100枚を超えていますが、統率者戦は100枚で遊びます。統率者と99枚のリストを作ってください。"
+	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}：デッキが100枚を超えていますが、統率者戦は100枚で遊びます。統率者と99枚のリストを作ってください。",
+	"Mano de {nombre}: pulsa para verla": "{nombre}の手札：クリックで表示",
+	"Responder / volver al turno": "対応する／ターンに戻る",
+	"Volver al jugador del turno (Mayús+R)": "ターンのプレイヤーに戻る（Shift+R）",
+	"Volver a {nombre}": "{nombre}に戻る",
+	"Responder como {nombre}": "{nombre}として対応する",
+	"Responder desde la mesa de otro jugador (Mayús+R)": "他のプレイヤーの場から対応する（Shift+R）",
+	"Responder": "対応する",
+	"Responder como…": "…として対応する",
+	"Hay algo en la pila: ¿responder?": "スタックに何かあります：対応しますか？",
+	"Ataques contra {nombre}: {cuantos}": "{nombre}への攻撃：{cuantos}",
+	"{tipo} a {nombre}": "{tipo} → {nombre}",
+	"Ataque": "攻撃",
+	"Objetivo": "対象"
 }

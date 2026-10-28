@@ -1204,5 +1204,18 @@
 	"{quien} deja de mostrar {cartas}": "{quien} ne montre plus {cartas}",
 	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} apparaît {veces} fois. Si ce sont des copies qui font office de jeton, marque-les dans le deck (clic droit › Marque › Copie).",
 	"Editar la lista…": "Modifier la liste…",
-	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores} : son deck a plus de 100 cartes et en Commander on joue à 100. Fais une liste avec le commandant et 99 autres."
+	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores} : son deck a plus de 100 cartes et en Commander on joue à 100. Fais une liste avec le commandant et 99 autres.",
+	"Mano de {nombre}: pulsa para verla": "Main de {nombre} : cliquez pour la voir",
+	"Responder / volver al turno": "Répondre / revenir au tour",
+	"Volver al jugador del turno (Mayús+R)": "Revenir au joueur du tour (Maj+R)",
+	"Volver a {nombre}": "Revenir à {nombre}",
+	"Responder como {nombre}": "Répondre en tant que {nombre}",
+	"Responder desde la mesa de otro jugador (Mayús+R)": "Répondre depuis le plateau d'un autre joueur (Maj+R)",
+	"Responder": "Répondre",
+	"Responder como…": "Répondre en tant que…",
+	"Hay algo en la pila: ¿responder?": "Il y a quelque chose sur la pile : répondre ?",
+	"Ataques contra {nombre}: {cuantos}": "Attaques contre {nombre} : {cuantos}",
+	"{tipo} a {nombre}": "{tipo} → {nombre}",
+	"Ataque": "Attaque",
+	"Objetivo": "Cible"
 }

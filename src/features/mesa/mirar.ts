@@ -7,6 +7,8 @@ import { call } from "@/lib/ipc";
 import { useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
 import { useUi } from "@/stores/ui-store";
+import { usePantalla } from "./pantalla";
+import { quienResponde } from "./privacidad";
 import { useDisposicion } from "./selector-disposicion";
 
 /**
@@ -24,6 +26,8 @@ export function esLocalDeVarios(): boolean {
  * red solo cambia el tablero que se ve.
  */
 export async function mirarJugador(id: IdJugador): Promise<void> {
+	// Cambiar de jugador vuelve a tapar la mano de quien respondía.
+	usePantalla.getState().mostrarMano(null);
 	if (!esLocalDeVarios()) {
 		useMesa.getState().mirar(id);
 		return;
@@ -51,4 +55,31 @@ export function useSeguirTurno() {
 		if (!seguir || activo === null || !esLocalDeVarios()) return;
 		if (useMesa.getState().yo !== activo) void mirarJugador(activo);
 	}, [seguir, activo]);
+}
+
+/**
+ * **Responder** fuera de tu turno (un instantáneo, un contrahechizo): pasa a
+ * mirar como `id`, con su mano tapada por la cortina hasta que lo decida. Sin
+ * `id`, el siguiente que puede responder desde el turno.
+ */
+export async function responderComo(id?: IdJugador): Promise<void> {
+	const m = useMesa.getState();
+	const quien = id ?? quienResponde(m)[0];
+	if (quien === undefined) return;
+	await mirarJugador(quien);
+}
+
+/** Vuelve a mirar al jugador del turno (su mano, destapada, como siempre). */
+export async function volverAlTurno(): Promise<void> {
+	const activo = useMesa.getState().general?.turno.activo;
+	if (activo !== undefined) await mirarJugador(activo);
+}
+
+/** El atajo: responder si miras al del turno; si no, volver a él. */
+export async function alternarRespuesta(): Promise<void> {
+	if (!esLocalDeVarios()) return;
+	const m = useMesa.getState();
+	if (m.general?.mulligan != null) return;
+	if (m.yo !== null && m.yo !== m.general?.turno.activo) await volverAlTurno();
+	else await responderComo();
 }

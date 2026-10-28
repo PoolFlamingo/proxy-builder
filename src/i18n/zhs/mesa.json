@@ -1132,5 +1132,18 @@
 	"{quien} deja de mostrar {cartas}": "{quien} 不再展示 {cartas}",
 	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} 出现了 {veces} 次。如果是充当衍生物的复制品，请在牌组中标记（右键 › 标记 › 复制品）。",
 	"Editar la lista…": "编辑列表…",
-	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}：牌组超过 100 张，而指挥官赛用 100 张。请建立包含指挥官和另外 99 张的列表。"
+	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}：牌组超过 100 张，而指挥官赛用 100 张。请建立包含指挥官和另外 99 张的列表。",
+	"Mano de {nombre}: pulsa para verla": "{nombre}的手牌：点击查看",
+	"Responder / volver al turno": "响应 / 回到当前回合",
+	"Volver al jugador del turno (Mayús+R)": "回到当前回合的玩家 (Shift+R)",
+	"Volver a {nombre}": "回到{nombre}",
+	"Responder como {nombre}": "以{nombre}的身份响应",
+	"Responder desde la mesa de otro jugador (Mayús+R)": "从其他玩家的牌桌响应 (Shift+R)",
+	"Responder": "响应",
+	"Responder como…": "以…的身份响应",
+	"Hay algo en la pila: ¿responder?": "堆叠上有东西：要响应吗？",
+	"Ataques contra {nombre}: {cuantos}": "对{nombre}的攻击：{cuantos}",
+	"{tipo} a {nombre}": "{tipo} → {nombre}",
+	"Ataque": "攻击",
+	"Objetivo": "目标"
 }

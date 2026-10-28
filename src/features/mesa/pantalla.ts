@@ -71,9 +71,15 @@ type Pantalla = {
 	tapeteCambiado: number;
 	/** El panel lateral abierto (registro o chat). */
 	panel: PanelMesa | null;
+	/**
+	 * En una partida local, el jugador cuya mano se ha destapado con la cortina
+	 * (el que responde fuera de su turno). Cambiar de jugador la vuelve a tapar.
+	 */
+	manoMostrada: IdJugador | null;
 	avisarTapete: () => void;
 	abrir: (d: DialogoMesa | null) => void;
 	setPanel: (p: PanelMesa | null) => void;
+	mostrarMano: (j: IdJugador | null) => void;
 	setModo: (m: ModoObjetivo | null) => void;
 	setArrastre: (a: Arrastre | null) => void;
 	setZonaSobre: (z: Zona | null) => void;
@@ -86,9 +92,11 @@ export const usePantalla = create<Pantalla>((set) => ({
 	zonaSobre: null,
 	tapeteCambiado: 0,
 	panel: null,
+	manoMostrada: null,
 	avisarTapete: () => set((s) => ({ tapeteCambiado: s.tapeteCambiado + 1 })),
 	abrir: (dialogo) => set({ dialogo }),
 	setPanel: (panel) => set({ panel }),
+	mostrarMano: (manoMostrada) => set({ manoMostrada }),
 	setModo: (modo) => set({ modo }),
 	setArrastre: (arrastre) => set({ arrastre }),
 	setZonaSobre: (zonaSobre) => set({ zonaSobre }),

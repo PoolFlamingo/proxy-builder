@@ -1186,5 +1186,18 @@
 	"{quien} deja de mostrar {cartas}": "{quien} stops showing {cartas}",
 	"{carta} va {veces} veces. Si son copias que hacen de ficha, márcalas en el deck (clic derecho › Marca › Copia).": "{carta} appears {veces} times. If they are copies that act as tokens, mark them in the deck (right click › Mark › Copy).",
 	"Editar la lista…": "Edit the list…",
-	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: their deck has more than 100 cards and Commander is played with 100. Make a list with the commander and 99 more."
+	"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.": "{jugadores}: their deck has more than 100 cards and Commander is played with 100. Make a list with the commander and 99 more.",
+	"Mano de {nombre}: pulsa para verla": "{nombre}'s hand: click to see it",
+	"Responder / volver al turno": "Respond / back to the turn",
+	"Volver al jugador del turno (Mayús+R)": "Back to the turn's player (Shift+R)",
+	"Volver a {nombre}": "Back to {nombre}",
+	"Responder como {nombre}": "Respond as {nombre}",
+	"Responder desde la mesa de otro jugador (Mayús+R)": "Respond from another player's board (Shift+R)",
+	"Responder": "Respond",
+	"Responder como…": "Respond as…",
+	"Hay algo en la pila: ¿responder?": "Something is on the stack: respond?",
+	"Ataques contra {nombre}: {cuantos}": "Attacks on {nombre}: {cuantos}",
+	"{tipo} a {nombre}": "{tipo} → {nombre}",
+	"Ataque": "Attack",
+	"Objetivo": "Target"
 }
