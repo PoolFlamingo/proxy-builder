@@ -105,6 +105,13 @@ pub struct Opciones {
     /// Cualquiera mueve las cartas de cualquiera (como en una mesa de
     /// verdad). De fábrica, cada uno lo suyo (Q-A1).
     pub todos_tocan_todo: bool,
+    /// En el campo solo se toca lo que uno controla: lo de otro, con
+    /// «Tomar el control» (queda en el registro) y, una vez suyo, es suyo
+    /// (también para su dueño). Cementerio, exilio y pila siguen abiertos.
+    /// Es lo que se usa en red; de fábrica, apagado (mesa local y solitario).
+    /// Las partidas guardadas de antes no lo traen: apagado.
+    #[serde(default)]
+    pub campo_ajeno_protegido: bool,
 }
 
 impl Opciones {
@@ -129,6 +136,7 @@ impl Opciones {
             limite_veneno: 10,
             limite_comandante: 21,
             todos_tocan_todo: false,
+            campo_ajeno_protegido: false,
         }
     }
 }

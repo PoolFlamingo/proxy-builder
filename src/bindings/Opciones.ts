@@ -11,4 +11,12 @@ primeroNoRoba: boolean, ayudas: Ayudas, limiteVeneno: number, limiteComandante: 
  * Cualquiera mueve las cartas de cualquiera (como en una mesa de
  * verdad). De fábrica, cada uno lo suyo (Q-A1).
  */
-todosTocanTodo: boolean, };
+todosTocanTodo: boolean, 
+/**
+ * En el campo solo se toca lo que uno controla: lo de otro, con
+ * «Tomar el control» (queda en el registro) y, una vez suyo, es suyo
+ * (también para su dueño). Cementerio, exilio y pila siguen abiertos.
+ * Es lo que se usa en red; de fábrica, apagado (mesa local y solitario).
+ * Las partidas guardadas de antes no lo traen: apagado.
+ */
+campoAjenoProtegido: boolean, };

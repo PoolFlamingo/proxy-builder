@@ -23,5 +23,6 @@ export function opcionesDeFabrica(
 		limiteVeneno: 10,
 		limiteComandante: 21,
 		todosTocanTodo: false,
+		campoAjenoProtegido: false,
 	};
 }

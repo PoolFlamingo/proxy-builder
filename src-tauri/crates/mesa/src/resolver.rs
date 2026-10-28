@@ -8,14 +8,16 @@
 //! Permisos de fábrica (como en una mesa de verdad, pero cada uno lo suyo):
 //! las cartas que controla, su mano, su biblioteca y lo suyo de las demás
 //! zonas; la vida de cualquiera, las flechas, las señales y el chat, todos.
-//! «Todos tocan todo» (`Opciones::todos_tocan_todo`) lo abre.
+//! «Todos tocan todo» (`Opciones::todos_tocan_todo`) lo abre. Con
+//! `Opciones::campo_ajeno_protegido` (red) el campo de los demás se cierra: solo
+//! se toca lo que uno controla.
 
 use crate::accion::{Accion, Actor, Cambio, Evento, Intencion, Tirada};
 use crate::aplicar::cara_planar;
 use crate::azar::Azar;
 use crate::error::Rechazo;
 use crate::ids::{IdCarta, IdJugador};
-use crate::modelo::{Extremo, Partida};
+use crate::modelo::{Extremo, Partida, RefZona, Zona};
 
 /// Caras de dado que se pueden tirar.
 pub const CARAS: [u8; 7] = [4, 6, 8, 10, 12, 20, 100];
@@ -142,6 +144,20 @@ pub fn puede_tocar(p: &Partida, yo: IdJugador, id: IdCarta) -> Result<(), Rechaz
         return Ok(());
     }
     let (zona, indice) = p.donde(id).ok_or(Rechazo::NoExiste)?;
+    // En red, lo que está en el campo es de quien lo controla (se coge con
+    // `TomarControl`, que todos pueden hacer).
+    if p.opciones.campo_ajeno_protegido
+        && matches!(
+            zona,
+            RefZona::De {
+                zona: Zona::Campo,
+                ..
+            }
+        )
+        && c.controlador != yo
+    {
+        return Err(Rechazo::SinPermiso);
+    }
     if zona.es_publica() || zona.jugador() == Some(yo) {
         return Ok(());
     }
