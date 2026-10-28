@@ -24,7 +24,9 @@ import { caraVisible, DorsoGenerico, ImagenCarta } from "./imagen-carta";
 import { Insignias } from "./insignias";
 import { igualesLista, useMesaLenta } from "./lento";
 import { mirarJugador } from "./mirar";
+import { elegirCarta, elegirJugador } from "./objetivo";
 import { alternarOriginales } from "./originales";
+import { usePantalla } from "./pantalla";
 import { puestosDelCampo } from "./puestos-campo";
 import { Latencia } from "./red/estado-red";
 
@@ -140,6 +142,7 @@ export const TableroMini = memo(function TableroMini({
 	const enRed = useRed((s) => s.papel !== null);
 	const senalada = useVivo((s) => s.senales.some((x) => x.a === jugador));
 	const originales = useOriginales((s) => s.modos[jugador]);
+	const modo = usePantalla((s) => s.modo);
 	const j = d.j;
 	if (!j) return null;
 	const color = d.equipo?.color ?? j.color;
@@ -156,6 +159,12 @@ export const TableroMini = memo(function TableroMini({
 				<button
 					type="button"
 					onClick={(e) => {
+						// Eligiendo objetivo: la flecha va a este jugador (adjuntar pide una carta,
+						// y pulsar el fondo no cambia de mesa a mitad de elegir).
+						if (modo) {
+							elegirJugador(jugador, t);
+							return;
+						}
 						// Alt + clic: un aro de aviso sobre el jugador, en todas las pantallas.
 						if (e.altKey && enRed) senalar(null, jugador);
 						else void mirarJugador(jugador);
@@ -166,6 +175,7 @@ export const TableroMini = memo(function TableroMini({
 						d.activo && "ring-2 ring-primary",
 						eliminado && "opacity-50",
 						senalada && "animate-pulse ring-2 ring-primary",
+						modo?.tipo === "flecha" && "cursor-crosshair ring-2 ring-primary",
 					)}
 					style={{ borderColor: color }}
 				>
@@ -464,6 +474,10 @@ function LecturaGrande({ d, w, h }: { d: DatosMini; w: number; h: number }) {
 							width: cw,
 							height: ch,
 							zIndex: p.z ?? c.z,
+						}}
+						onClick={(e) => {
+							// Con una flecha o un adjuntar en marcha, la carta es el objetivo.
+							if (elegirCarta(c, t)) e.stopPropagation();
 						}}
 						onPointerEnter={() => useMesa.getState().setSobre(c.id)}
 						onPointerLeave={() => {

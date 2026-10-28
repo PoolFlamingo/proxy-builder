@@ -1,6 +1,5 @@
 import { Eye, EyeOff, Layers } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
 import type { IdCarta } from "@/bindings/IdCarta";
 import type { Tapete as TapeteGuardado } from "@/bindings/Tapete";
 import type { VistaCarta } from "@/bindings/VistaCarta";
@@ -22,10 +21,10 @@ import { COLORES } from "./colores";
 import { abanico, type Disposicion, disponer, posAPx, pxAPos, type Rect } from "./disposicion";
 import * as vivo from "./en-vivo/emitir";
 import { FantasmasVivos } from "./en-vivo/fantasmas";
-import { ataqueAUnCompanero } from "./equipos";
 import { marcarArrastradas } from "./flip";
 import { caraVisible, DorsoGenerico, ImagenCarta } from "./imagen-carta";
 import { MenuBiblioteca, MenuCampo, MenuManoAjena, MenuZona } from "./menus/menu-zonas";
+import { elegirCarta } from "./objetivo";
 import * as op from "./operaciones";
 import { usePantalla } from "./pantalla";
 import { manoOcultaPorTurno } from "./privacidad";
@@ -83,36 +82,13 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 			if (e.button !== 0) return;
 			e.stopPropagation();
 			const m = useMesa.getState();
-			const pantalla = usePantalla.getState();
 			// Alt + clic: un aro de aviso sobre la carta, en todas las pantallas (en red).
 			if (e.altKey) {
 				vivo.senalar(c.id, null);
 				return;
 			}
 			// Elegir objetivo (adjuntar, flecha).
-			if (pantalla.modo) {
-				const md = pantalla.modo;
-				pantalla.setModo(null);
-				if (md.tipo === "adjuntar" && md.carta !== c.id) {
-					void op.adjuntar(md.carta, c.id);
-				} else if (md.tipo === "flecha" && md.de !== c.id) {
-					const origen = m.cartas[md.de];
-					if (
-						md.flecha === "ataque" &&
-						origen &&
-						ataqueAUnCompanero(m.jugadores, m.variantes, origen.controlador, c.controlador)
-					) {
-						toast.warning(t("Ese jugador es de tu equipo y el fuego amigo está apagado."));
-					}
-					void hacer({
-						que: "flecha",
-						de: { tipo: "carta", id: md.de },
-						a: { tipo: "carta", id: c.id },
-						tipo: md.flecha,
-					});
-				}
-				return;
-			}
+			if (elegirCarta(c, t)) return;
 			if (e.ctrlKey || e.metaKey || e.shiftKey) {
 				m.alternar(c.id);
 				return;
@@ -867,11 +843,15 @@ function Flechas({ disp }: { disp: Disposicion }) {
 	const flechas = useMesa((s) => s.general?.flechas ?? NINGUNA);
 	const cartas = useMesa((s) => s.cartas);
 	const jugadores = useMesa((s) => s.jugadores);
+	const yo = useMesa(tableroDe);
 	if (flechas.length === 0) return null;
 	const punto = (e: (typeof flechas)[number]["de"]): { x: number; y: number } | null => {
 		if (e.tipo === "carta") {
-			const p = cartas[e.id]?.pos;
-			return p ? posAPx(disp.campo, p) : null;
+			const c = cartas[e.id];
+			// Una carta de la mesa de otro (en una partida local se ve en pequeño): la
+			// flecha apunta hacia allí, arriba en el centro, como a un jugador.
+			if (!c?.pos) return null;
+			return c.controlador === yo ? posAPx(disp.campo, c.pos) : { x: disp.campo.w / 2, y: 30 };
 		}
 		// Un jugador: arriba en el centro (el rival imaginado) o mi vida.
 		return { x: disp.campo.w / 2, y: 30 };
