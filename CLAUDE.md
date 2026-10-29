@@ -47,6 +47,15 @@ materiales. Radio 14 px, densidad 10 px (`p-2.5`/`gap-2.5`), texto base
 El texto no se selecciona (`src/index.css`, Pablo, 20/10/2026): solo los
 campos y los cuadros de copiar, que llevan `select-text`.
 
+**Iconos: Iconify** (Pablo, 29/10/2026), como en la web: `<Icono
+icon="prefijo:nombre">` (`components/icono.tsx`), nunca `lucide-react` fuera
+de `components/ui/` (de solo lectura). Los ids escritos tal cual van dentro
+(`pnpm iconos` → `src/lib/iconos/incluidos.ts`, de `@iconify/json`; `pnpm
+check` falla si no está al día); lo de juego, con `game-icons:*`. Los que
+elige la persona: `components/selector-icono.tsx` (hoy, el icono de las
+etiquetas), que Rust pide a la API de Iconify (`iconos.rs`, `PERMITIDOS`) y
+guarda en `app_data_dir/iconos/elegidos.json` (catálogo en caché).
+
 Textos: siempre por `t()` con la cadena fuente en español; la traducción va
 en **los 15 diccionarios** `src/i18n/<código>/<área>.json` (`es`, la fuente, que repite cada cadena; `en`, `fr`, `de`,
 `it`, `pt`, `ro`, `pl`, `nl`, `ru`, `uk`, `ja`, `ko`, `zhs`, `zht`; Pablo,
@@ -223,7 +232,7 @@ le falta una cadena le sale la inglesa.
   a propósito (`Anfitrion::irse`, también al cerrar la ventana) con código
   directo y algún jugador conectado, **cede la partida** (`DelHost::Traspaso`,
   sucesor = asiento más bajo conectado; el que se fue no cuenta para la
-  mayoría, `ido`) en vez de cerrarla. `PROTOCOLO` = 4 (notas y 16 colores de etiqueta; catálogo v3) y antes 3 (Pablo, 29/10/2026: `AlHost::Apodo`; en la sala de espera cada uno cambia su nombre y su deck/lista en caliente, `features/mesa/red/eleccion-en-sala.tsx`, comandos `red_apodo`, `red_deck`, `red_anfitrion_deck`; el nombre se recuerda en `features/mesa/nombre.ts`). Prueba con procesos
+  mayoría, `ido`) en vez de cerrarla. `PROTOCOLO` = 5 (catálogo v4: veneno y flechas al fantasma, notas atadas a cartas, `Colocar` para soltar varias cartas en un solo evento; Pablo, 29/10/2026), antes 4 (notas y 16 colores de etiqueta; catálogo v3) y 3 (Pablo, 29/10/2026: `AlHost::Apodo`; en la sala de espera cada uno cambia su nombre y su deck/lista en caliente, `features/mesa/red/eleccion-en-sala.tsx`, comandos `red_apodo`, `red_deck`, `red_anfitrion_deck`; el nombre se recuerda en `features/mesa/nombre.ts`). Prueba con procesos
   reales: `red/pruebas_procesos.rs` (`#[ignore]`, `--ignored`); un host
   matado con `SIGKILL` se nota a los ~30 s (tiempo de inactividad de QUIC).
   **Tiempo real y enlaces** (Fase E cerrada): `red/latencia.rs` manda por
@@ -254,7 +263,16 @@ le falta una cadena le sale la inglesa.
   `Sesion::suplir`, `sala_expulsar` en el servidor; pantalla en
   `features/mesa/{muerte,dano-de-quien}.tsx` y `red/ausentes.tsx`.
   **Notas** (Pablo, 29/10/2026): `Accion::{PonerNota,EditarNota,QuitarNota}`
-  (catálogo v3, `tests/catalogo/v3.json`) y `Partida.notas` (`Nota`: autor,
+  (catálogo v3, `tests/catalogo/v3.json`) y `NotaEnCarta`/`AtarNota` (v4: una
+  nota atada a una carta del campo, `Nota.carta`; se suelta sola si la carta
+  sale del campo). En la mesa: clic derecho en una carta o en el campo vacío,
+  pósits sueltos arriba a la izquierda que se atan con un clic y otro en la
+  carta (`features/mesa/notas-mesa.tsx`); en la carta, su insignia
+  (`insignias.tsx`, con «no se endereza» y «fuera de fase»). El fantasma es
+  como un jugador más (`vida-fantasma.tsx`: daño, veneno, comandante, objetivo
+  de flechas con `Extremo::Fantasma`), y lo que lleva cada jugador (monarca,
+  iniciativa, bendición, veneno, daño de comandante) se ve en
+  `marcas-jugador.tsx`. y `Partida.notas` (`Nota`: autor,
   texto, `temporal` —se borra en `pasar_turno`— y `privada`). Cada una es de su
   autor; `VistaGeneral.notas` se filtra por mirador (`Nota::la_ve`, ni la
   repetición «todo» enseña las privadas) y el registro oculta las privadas
@@ -268,7 +286,16 @@ le falta una cadena le sale la inglesa.
   sesión da una `NuevaPartida` al gancho de `mesa/historial.rs` y
   `store/partidas.rs` la guarda (migración 0006: `partidas`, `partida_decks`,
   `registro` BLOB; no cuelga de los decks, no toca `updated_at`); un invitado
-  en red guarda solo el resumen. Repetición (`mesa/repeticion.rs`,
+  en red guarda la repetición entera si su copia empieza antes del primer
+  turno (si no, solo el resumen) y bajo su deck (`red::mi_deck`). Las
+  imágenes propias de una partida del historial se copian a
+  `app_data_dir/partidas/imagenes/` (migración 0008, `partida_imagenes`; se
+  borran con la última partida que las usa) y `mesa/imagenes::servir` las
+  devuelve a la caché si se borró. El invitado precarga en segundo plano las
+  imágenes de los demás (`red/imagenes::precargar_invitado`). 🛑
+  `Sesion::partida()` es siempre la de verdad; la del punto de la repetición
+  es `en_pantalla()`, solo para la pantalla (nunca para la red ni lo que se
+  guarda). Repetición (`mesa/repeticion.rs`,
   `repeticion_*`, `features/mesa/repeticion.tsx`): la misma sesión en «solo
   mirar» con la partida de `Registro::en`, desde el final o desde la pestaña
   «Partidas» del deck (`library/partidas-deck.tsx`). Panel lateral con

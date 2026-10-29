@@ -24,5 +24,16 @@
 	"Salir sin guardar": "저장하지 않고 나가기",
 	"Cerrar": "닫기",
 	"Cancelar": "취소",
-	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.": "지금 나가면 작업이 멈춰요. 이미 보낸 요청은 알아서 끝나지만, 남은 작업은 진행되지 않고 하다 만 작업도 저장되지 않아요."
+	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.": "지금 나가면 작업이 멈춰요. 이미 보낸 요청은 알아서 끝나지만, 남은 작업은 진행되지 않고 하다 만 작업도 저장되지 않아요.",
+	"Buscar colección…": "컬렉션 검색…",
+	"Buscar en todas (2 letras o más)…": "전체 검색(2글자 이상)…",
+	"Cargando…": "불러오는 중…",
+	"Elegir un icono": "아이콘 선택",
+	"Escribe para buscar en todas las colecciones.": "입력하면 모든 컬렉션에서 검색합니다.",
+	"Filtrar por nombre…": "이름으로 거르기…",
+	"Mostrar más": "더 보기",
+	"Ningún icono con ese nombre.": "그 이름의 아이콘이 없습니다.",
+	"Sin icono": "아이콘 없음",
+	"Todas las colecciones": "모든 컬렉션",
+	"Reintentar": "다시 시도"
 }

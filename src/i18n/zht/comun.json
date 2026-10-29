@@ -24,5 +24,16 @@
 	"Salir sin guardar": "不儲存就離開",
 	"Cerrar": "關閉",
 	"Cancelar": "取消",
-	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.": "現在離開的話就會停止。已送出的部分會自行完成，但剩下的不會繼續，做到一半的也不會儲存。"
+	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.": "現在離開的話就會停止。已送出的部分會自行完成，但剩下的不會繼續，做到一半的也不會儲存。",
+	"Buscar colección…": "搜尋合集…",
+	"Buscar en todas (2 letras o más)…": "在全部中搜尋（至少 2 個字）…",
+	"Cargando…": "正在載入…",
+	"Elegir un icono": "選擇圖示",
+	"Escribe para buscar en todas las colecciones.": "輸入以在所有合集中搜尋。",
+	"Filtrar por nombre…": "按名稱篩選…",
+	"Mostrar más": "顯示更多",
+	"Ningún icono con ese nombre.": "沒有這個名稱的圖示。",
+	"Sin icono": "無圖示",
+	"Todas las colecciones": "所有合集",
+	"Reintentar": "重試"
 }

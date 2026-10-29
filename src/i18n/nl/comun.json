@@ -24,5 +24,16 @@
 	"Salir sin guardar": "Afsluiten zonder opslaan",
 	"Cerrar": "Sluiten",
 	"Cancelar": "Annuleren",
-	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.": "Als je nu afsluit, stopt het. Wat al verstuurd is, wordt zelf afgerond, maar de rest gebeurt niet en half afgemaakt werk wordt niet opgeslagen."
+	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.": "Als je nu afsluit, stopt het. Wat al verstuurd is, wordt zelf afgerond, maar de rest gebeurt niet en half afgemaakt werk wordt niet opgeslagen.",
+	"Buscar colección…": "Collectie zoeken…",
+	"Buscar en todas (2 letras o más)…": "Overal zoeken (2 letters of meer)…",
+	"Cargando…": "Laden…",
+	"Elegir un icono": "Kies een pictogram",
+	"Escribe para buscar en todas las colecciones.": "Typ om in alle collecties te zoeken.",
+	"Filtrar por nombre…": "Filteren op naam…",
+	"Mostrar más": "Meer tonen",
+	"Ningún icono con ese nombre.": "Geen pictogram met die naam.",
+	"Sin icono": "Geen pictogram",
+	"Todas las colecciones": "Alle collecties",
+	"Reintentar": "Opnieuw proberen"
 }

@@ -148,5 +148,7 @@
 	"Ver repetición": "리플레이 보기",
 	"Copia (hace de ficha)": "복사본(토큰 대신)",
 	"COPIA": "복사본",
-	"Una carta que hace de ficha (la copia de un Clone, un cambiaformas…): no cuenta para el mazo y en la mesa sale entre las fichas.": "토큰 대신 쓰는 카드(클론의 복사본, 변신체 등): 덱 수에 세지 않고 테이블에서는 토큰 사이에 나와요."
+	"Una carta que hace de ficha (la copia de un Clone, un cambiaformas…): no cuenta para el mazo y en la mesa sale entre las fichas.": "토큰 대신 쓰는 카드(클론의 복사본, 변신체 등): 덱 수에 세지 않고 테이블에서는 토큰 사이에 나와요.",
+	"Empezar un deck": "덱 만들기 시작",
+	"Los decks se guardan solos mientras trabajas: pega una lista o añade cartas en la pestaña «Deck».": "덱은 작업하는 동안 저절로 저장됩니다. “Deck” 탭에서 리스트를 붙여 넣거나 카드를 추가하세요."
 }

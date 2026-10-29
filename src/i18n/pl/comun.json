@@ -24,5 +24,16 @@
 	"Salir sin guardar": "Wyjdź bez zapisywania",
 	"Cerrar": "Zamknij",
 	"Cancelar": "Anuluj",
-	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.": "Wyjście teraz zatrzyma zadanie. To, co już wysłano, skończy się samo, ale reszta nie zostanie wykonana, a niedokończona praca nie zostanie zapisana."
+	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.": "Wyjście teraz zatrzyma zadanie. To, co już wysłano, skończy się samo, ale reszta nie zostanie wykonana, a niedokończona praca nie zostanie zapisana.",
+	"Buscar colección…": "Szukaj kolekcji…",
+	"Buscar en todas (2 letras o más)…": "Szukaj wszędzie (2 litery lub więcej)…",
+	"Cargando…": "Wczytywanie…",
+	"Elegir un icono": "Wybierz ikonę",
+	"Escribe para buscar en todas las colecciones.": "Pisz, aby szukać we wszystkich kolekcjach.",
+	"Filtrar por nombre…": "Filtruj po nazwie…",
+	"Mostrar más": "Pokaż więcej",
+	"Ningún icono con ese nombre.": "Brak ikony o tej nazwie.",
+	"Sin icono": "Bez ikony",
+	"Todas las colecciones": "Wszystkie kolekcje",
+	"Reintentar": "Spróbuj ponownie"
 }

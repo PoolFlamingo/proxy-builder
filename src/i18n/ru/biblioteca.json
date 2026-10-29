@@ -193,5 +193,7 @@
 	"Ver repetición": "Смотреть повтор",
 	"Copia (hace de ficha)": "Копия (заменяет жетон)",
 	"COPIA": "КОПИЯ",
-	"Una carta que hace de ficha (la copia de un Clone, un cambiaformas…): no cuenta para el mazo y en la mesa sale entre las fichas.": "Карта, заменяющая жетон (копия Клона, оборотень…): не считается в колоде, а за столом оказывается среди жетонов."
+	"Una carta que hace de ficha (la copia de un Clone, un cambiaformas…): no cuenta para el mazo y en la mesa sale entre las fichas.": "Карта, заменяющая жетон (копия Клона, оборотень…): не считается в колоде, а за столом оказывается среди жетонов.",
+	"Empezar un deck": "Начать колоду",
+	"Los decks se guardan solos mientras trabajas: pega una lista o añade cartas en la pestaña «Deck».": "Колоды сохраняются сами, пока вы работаете: вставьте список или добавьте карты на вкладке «Deck»."
 }

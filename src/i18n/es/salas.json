@@ -58,5 +58,12 @@
 	"La invitación ha caducado o ya se usó del todo.": "La invitación ha caducado o ya se usó del todo.",
 	"Está llena.": "Está llena.",
 	"No tienes permiso para eso.": "No tienes permiso para eso.",
-	"El servidor no ha entendido la petición.": "El servidor no ha entendido la petición."
+	"El servidor no ha entendido la petición.": "El servidor no ha entendido la petición.",
+	"Dejarás de ser quien manda en el playgroup y no podrás deshacerlo.": "Dejarás de ser quien manda en el playgroup y no podrás deshacerlo.",
+	"El servidor no responde.": "El servidor no responde.",
+	"Falta que todos elijan su deck.": "Falta que todos elijan su deck.",
+	"Jugar con un código…": "Jugar con un código…",
+	"¿Pasarle el playgroup a {nombre}?": "¿Pasarle el playgroup a {nombre}?",
+	"Pasárselo": "Pasárselo",
+	"Sale de la sala ahora mismo.": "Sale de la sala ahora mismo."
 }

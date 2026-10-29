@@ -62,5 +62,12 @@
 	"La invitación ha caducado o ya se usó del todo.": "L'invito è scaduto o è stato usato del tutto.",
 	"Está llena.": "È piena.",
 	"No tienes permiso para eso.": "Non hai il permesso per farlo.",
-	"El servidor no ha entendido la petición.": "Il server non ha capito la richiesta."
+	"El servidor no ha entendido la petición.": "Il server non ha capito la richiesta.",
+	"Dejarás de ser quien manda en el playgroup y no podrás deshacerlo.": "Non guiderai più il playgroup e non potrai annullarlo.",
+	"El servidor no responde.": "Il server non risponde.",
+	"Falta que todos elijan su deck.": "Tutti devono ancora scegliere il mazzo.",
+	"Jugar con un código…": "Gioca con un codice…",
+	"¿Pasarle el playgroup a {nombre}?": "Passare il playgroup a {nombre}?",
+	"Pasárselo": "Passalo",
+	"Sale de la sala ahora mismo.": "Esce subito dalla stanza."
 }

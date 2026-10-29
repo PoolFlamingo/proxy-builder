@@ -30,5 +30,6 @@
 	"Guardar y cerrar": "儲存並關閉",
 	"No se ha podido cerrar la ventana.": "無法關閉視窗。",
 	"Se instalará al salir de la mesa.": "離開牌桌後會自動安裝。",
-	"Beta": "測試版"
+	"Beta": "測試版",
+	"Pulsa para reintentar.": "點擊重試。"
 }

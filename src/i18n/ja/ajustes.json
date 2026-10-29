@@ -79,5 +79,12 @@
 	"Reiniciar y actualizar a la {version}": "再起動して {version} に更新",
 	"Descargando Proxy Builder {version}…": "Proxy Builder {version} をダウンロード中…",
 	"No se ha podido descargar la actualización.": "アップデートをダウンロードできませんでした。",
-	"La {version} está lista: reinicia desde Ajustes.": "{version} の準備ができました。設定から再起動してください。"
+	"La {version} está lista: reinicia desde Ajustes.": "{version} の準備ができました。設定から再起動してください。",
+	"Almacenamiento": "ストレージ",
+	"Caché de miniaturas": "サムネイルのキャッシュ",
+	"Caché de miniaturas: {mb}": "サムネイルのキャッシュ：{mb}",
+	"Idioma, aspecto, mesa de juego, actualizaciones y almacenamiento.": "言語、外観、ゲームテーブル、アップデート、ストレージ。",
+	"Imágenes que ya no usa ningún deck.": "どのデッキでも使われなくなった画像。",
+	"Para volver a tenerlos hay que descargarlos otra vez ({mb} MB).": "元に戻すには再ダウンロードが必要です（{mb} MB）。",
+	"¿Quitar los nombres en otros idiomas?": "他の言語の名前を削除しますか？"
 }

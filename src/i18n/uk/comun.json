@@ -24,5 +24,16 @@
 	"Salir sin guardar": "Вийти без збереження",
 	"Cerrar": "Закрити",
 	"Cancelar": "Скасувати",
-	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.": "Якщо вийти зараз, усе зупиниться. Те, що вже надіслано, завершиться само, але решта не виконається, а незавершене не збережеться."
+	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.": "Якщо вийти зараз, усе зупиниться. Те, що вже надіслано, завершиться само, але решта не виконається, а незавершене не збережеться.",
+	"Buscar colección…": "Шукати колекцію…",
+	"Buscar en todas (2 letras o más)…": "Шукати всюди (від 2 літер)…",
+	"Cargando…": "Завантаження…",
+	"Elegir un icono": "Вибрати значок",
+	"Escribe para buscar en todas las colecciones.": "Почніть вводити, щоб шукати в усіх колекціях.",
+	"Filtrar por nombre…": "Фільтр за назвою…",
+	"Mostrar más": "Показати більше",
+	"Ningún icono con ese nombre.": "Немає значка з такою назвою.",
+	"Sin icono": "Без значка",
+	"Todas las colecciones": "Усі колекції",
+	"Reintentar": "Повторити"
 }

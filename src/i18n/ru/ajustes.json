@@ -84,5 +84,12 @@
 	"Reiniciar y actualizar a la {version}": "Перезапустить и обновить до {version}",
 	"Descargando Proxy Builder {version}…": "Скачивание Proxy Builder {version}…",
 	"No se ha podido descargar la actualización.": "Не удалось скачать обновление.",
-	"La {version} está lista: reinicia desde Ajustes.": "Версия {version} готова: перезапустите из настроек."
+	"La {version} está lista: reinicia desde Ajustes.": "Версия {version} готова: перезапустите из настроек.",
+	"Almacenamiento": "Хранилище",
+	"Caché de miniaturas": "Кэш миниатюр",
+	"Caché de miniaturas: {mb}": "Кэш миниатюр: {mb}",
+	"Idioma, aspecto, mesa de juego, actualizaciones y almacenamiento.": "Язык, внешний вид, игровой стол, обновления и хранилище.",
+	"Imágenes que ya no usa ningún deck.": "Изображения, которые больше не нужны ни одной колоде.",
+	"Para volver a tenerlos hay que descargarlos otra vez ({mb} MB).": "Чтобы вернуть их, придётся скачать заново ({mb} МБ).",
+	"¿Quitar los nombres en otros idiomas?": "Убрать названия на других языках?"
 }

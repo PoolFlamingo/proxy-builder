@@ -79,5 +79,12 @@
 	"Reiniciar y actualizar a la {version}": "重启并更新到 {version}",
 	"Descargando Proxy Builder {version}…": "正在下载 Proxy Builder {version}…",
 	"No se ha podido descargar la actualización.": "无法下载更新。",
-	"La {version} está lista: reinicia desde Ajustes.": "{version} 已就绪：请在“设置”中重启。"
+	"La {version} está lista: reinicia desde Ajustes.": "{version} 已就绪：请在“设置”中重启。",
+	"Almacenamiento": "存储",
+	"Caché de miniaturas": "缩略图缓存",
+	"Caché de miniaturas: {mb}": "缩略图缓存：{mb}",
+	"Idioma, aspecto, mesa de juego, actualizaciones y almacenamiento.": "语言、外观、游戏桌、更新和存储。",
+	"Imágenes que ya no usa ningún deck.": "不再被任何套牌使用的图片。",
+	"Para volver a tenerlos hay que descargarlos otra vez ({mb} MB).": "要再用就得重新下载（{mb} MB）。",
+	"¿Quitar los nombres en otros idiomas?": "移除其他语言的名称？"
 }

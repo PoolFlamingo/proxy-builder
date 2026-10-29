@@ -61,5 +61,12 @@
 	"La invitación ha caducado o ya se usó del todo.": "De uitnodiging is verlopen of opgebruikt.",
 	"Está llena.": "Hij is vol.",
 	"No tienes permiso para eso.": "Daar heb je geen toestemming voor.",
-	"El servidor no ha entendido la petición.": "De server begreep het verzoek niet."
+	"El servidor no ha entendido la petición.": "De server begreep het verzoek niet.",
+	"Dejarás de ser quien manda en el playgroup y no podrás deshacerlo.": "Je bent dan niet langer de baas van de playgroup en dit kan niet ongedaan worden.",
+	"El servidor no responde.": "De server reageert niet.",
+	"Falta que todos elijan su deck.": "Iedereen moet nog een deck kiezen.",
+	"Jugar con un código…": "Spelen met een code…",
+	"¿Pasarle el playgroup a {nombre}?": "De playgroup aan {nombre} overdragen?",
+	"Pasárselo": "Overdragen",
+	"Sale de la sala ahora mismo.": "Verlaat de kamer meteen."
 }

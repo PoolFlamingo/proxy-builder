@@ -24,5 +24,16 @@
 	"Salir sin guardar": "Ieși fără a salva",
 	"Cerrar": "Închide",
 	"Cancelar": "Anulează",
-	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.": "Dacă ieși acum, se oprește. Ce s-a trimis deja se termină singur, dar restul nu se mai face, iar ce a rămas neterminat nu se salvează."
+	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.": "Dacă ieși acum, se oprește. Ce s-a trimis deja se termină singur, dar restul nu se mai face, iar ce a rămas neterminat nu se salvează.",
+	"Buscar colección…": "Caută colecția…",
+	"Buscar en todas (2 letras o más)…": "Caută peste tot (2 litere sau mai mult)…",
+	"Cargando…": "Se încarcă…",
+	"Elegir un icono": "Alege o pictogramă",
+	"Escribe para buscar en todas las colecciones.": "Scrie pentru a căuta în toate colecțiile.",
+	"Filtrar por nombre…": "Filtrează după nume…",
+	"Mostrar más": "Arată mai mult",
+	"Ningún icono con ese nombre.": "Nicio pictogramă cu acest nume.",
+	"Sin icono": "Fără pictogramă",
+	"Todas las colecciones": "Toate colecțiile",
+	"Reintentar": "Reîncearcă"
 }

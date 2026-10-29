@@ -83,5 +83,12 @@
 	"Reiniciar y actualizar a la {version}": "Riavvia e aggiorna alla {version}",
 	"Descargando Proxy Builder {version}…": "Download di Proxy Builder {version}…",
 	"No se ha podido descargar la actualización.": "Impossibile scaricare l'aggiornamento.",
-	"La {version} está lista: reinicia desde Ajustes.": "La {version} è pronta: riavvia dalle Impostazioni."
+	"La {version} está lista: reinicia desde Ajustes.": "La {version} è pronta: riavvia dalle Impostazioni.",
+	"Almacenamiento": "Archiviazione",
+	"Caché de miniaturas": "Cache delle miniature",
+	"Caché de miniaturas: {mb}": "Cache delle miniature: {mb}",
+	"Idioma, aspecto, mesa de juego, actualizaciones y almacenamiento.": "Lingua, aspetto, tavolo di gioco, aggiornamenti e archiviazione.",
+	"Imágenes que ya no usa ningún deck.": "Immagini che nessun mazzo usa più.",
+	"Para volver a tenerlos hay que descargarlos otra vez ({mb} MB).": "Per riaverli dovrai scaricarli di nuovo ({mb} MB).",
+	"¿Quitar los nombres en otros idiomas?": "Rimuovere i nomi in altre lingue?"
 }

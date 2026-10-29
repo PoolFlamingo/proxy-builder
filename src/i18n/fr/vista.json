@@ -74,5 +74,7 @@
 	"BANQUILLO": "RÉSERVE",
 	"Del banquillo (sideboard): no cuenta para el mazo.": "De la réserve (sideboard) : elle ne compte pas pour le deck.",
 	"Cambiar carta…": "Changer de carte…",
-	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "Marquées comme variante de design, optionnelle, réserve ou copie : elles s'impriment, mais ne comptent pas pour le deck."
+	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "Marquées comme variante de design, optionnelle, réserve ou copie : elles s'impriment, mais ne comptent pas pour le deck.",
+	"Cartas quitadas": "Cartes retirées",
+	"Rehacer (Ctrl+Mayús+Z)": "Rétablir (Ctrl+Maj+Z)"
 }

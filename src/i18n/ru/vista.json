@@ -77,5 +77,7 @@
 	"BANQUILLO": "САЙДБОРД",
 	"Del banquillo (sideboard): no cuenta para el mazo.": "Из сайдборда: в колоду не засчитывается.",
 	"Cambiar carta…": "Сменить карту…",
-	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "Помечены как вариант дизайна, необязательные, сайдборд или копия: они печатаются, но не считаются в колоде."
+	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "Помечены как вариант дизайна, необязательные, сайдборд или копия: они печатаются, но не считаются в колоде.",
+	"Cartas quitadas": "Карты убраны",
+	"Rehacer (Ctrl+Mayús+Z)": "Повторить (Ctrl+Shift+Z)"
 }

@@ -58,5 +58,12 @@
 	"La invitación ha caducado o ya se usó del todo.": "招待は期限切れか、使い切られています。",
 	"Está llena.": "満員です。",
 	"No tienes permiso para eso.": "その権限がありません。",
-	"El servidor no ha entendido la petición.": "サーバーがリクエストを理解できませんでした。"
+	"El servidor no ha entendido la petición.": "サーバーがリクエストを理解できませんでした。",
+	"Dejarás de ser quien manda en el playgroup y no podrás deshacerlo.": "プレイグループの管理者ではなくなり、元に戻せません。",
+	"El servidor no responde.": "サーバーが応答しません。",
+	"Falta que todos elijan su deck.": "まだ全員がデッキを選んでいません。",
+	"Jugar con un código…": "コードで遊ぶ…",
+	"¿Pasarle el playgroup a {nombre}?": "プレイグループを {nombre} に引き継ぎますか？",
+	"Pasárselo": "引き継ぐ",
+	"Sale de la sala ahora mismo.": "すぐに部屋から退出します。"
 }

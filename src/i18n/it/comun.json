@@ -24,5 +24,16 @@
 	"Salir sin guardar": "Esci senza salvare",
 	"Cerrar": "Chiudi",
 	"Cancelar": "Annulla",
-	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.": "Se esci ora, si ferma. Ciò che è già stato inviato finisce da solo, ma non si prosegue con il resto né si salva ciò che è rimasto a metà."
+	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.": "Se esci ora, si ferma. Ciò che è già stato inviato finisce da solo, ma non si prosegue con il resto né si salva ciò che è rimasto a metà.",
+	"Buscar colección…": "Cerca collezione…",
+	"Buscar en todas (2 letras o más)…": "Cerca ovunque (2 lettere o più)…",
+	"Cargando…": "Caricamento…",
+	"Elegir un icono": "Scegli un'icona",
+	"Escribe para buscar en todas las colecciones.": "Scrivi per cercare in tutte le collezioni.",
+	"Filtrar por nombre…": "Filtra per nome…",
+	"Mostrar más": "Mostra altro",
+	"Ningún icono con ese nombre.": "Nessuna icona con quel nome.",
+	"Sin icono": "Nessuna icona",
+	"Todas las colecciones": "Tutte le collezioni",
+	"Reintentar": "Riprova"
 }

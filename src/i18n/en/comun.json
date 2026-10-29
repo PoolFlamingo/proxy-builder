@@ -24,5 +24,16 @@
 	"Salir sin guardar": "Leave without saving",
 	"Cerrar": "Close",
 	"Cancelar": "Cancel",
-	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.": "If you leave now, it stops. Anything already sent finishes on its own, but nothing else is done and half-finished work isn't saved."
+	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.": "If you leave now, it stops. Anything already sent finishes on its own, but nothing else is done and half-finished work isn't saved.",
+	"Buscar colección…": "Search collections…",
+	"Buscar en todas (2 letras o más)…": "Search all (2 letters or more)…",
+	"Cargando…": "Loading…",
+	"Elegir un icono": "Choose an icon",
+	"Escribe para buscar en todas las colecciones.": "Type to search every collection.",
+	"Filtrar por nombre…": "Filter by name…",
+	"Mostrar más": "Show more",
+	"Ningún icono con ese nombre.": "No icon with that name.",
+	"Sin icono": "No icon",
+	"Todas las colecciones": "All collections",
+	"Reintentar": "Retry"
 }

@@ -83,5 +83,12 @@
 	"Reiniciar y actualizar a la {version}": "Repornește și actualizează la {version}",
 	"Descargando Proxy Builder {version}…": "Se descarcă Proxy Builder {version}…",
 	"No se ha podido descargar la actualización.": "Actualizarea nu a putut fi descărcată.",
-	"La {version} está lista: reinicia desde Ajustes.": "{version} este gata: repornește din Setări."
+	"La {version} está lista: reinicia desde Ajustes.": "{version} este gata: repornește din Setări.",
+	"Almacenamiento": "Stocare",
+	"Caché de miniaturas": "Memoria cache a miniaturilor",
+	"Caché de miniaturas: {mb}": "Memoria cache a miniaturilor: {mb}",
+	"Idioma, aspecto, mesa de juego, actualizaciones y almacenamiento.": "Limbă, aspect, masa de joc, actualizări și stocare.",
+	"Imágenes que ya no usa ningún deck.": "Imagini pe care nu le mai folosește niciun pachet.",
+	"Para volver a tenerlos hay que descargarlos otra vez ({mb} MB).": "Ca să le ai din nou, trebuie descărcate iar ({mb} MB).",
+	"¿Quitar los nombres en otros idiomas?": "Elimini numele în alte limbi?"
 }

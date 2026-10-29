@@ -79,5 +79,12 @@
 	"Reiniciar y actualizar a la {version}": "다시 시작하고 {version}(으)로 업데이트",
 	"Descargando Proxy Builder {version}…": "Proxy Builder {version} 다운로드 중…",
 	"No se ha podido descargar la actualización.": "업데이트를 다운로드할 수 없어요.",
-	"La {version} está lista: reinicia desde Ajustes.": "{version}이(가) 준비됐어요. 설정에서 다시 시작하세요."
+	"La {version} está lista: reinicia desde Ajustes.": "{version}이(가) 준비됐어요. 설정에서 다시 시작하세요.",
+	"Almacenamiento": "저장 공간",
+	"Caché de miniaturas": "썸네일 캐시",
+	"Caché de miniaturas: {mb}": "썸네일 캐시: {mb}",
+	"Idioma, aspecto, mesa de juego, actualizaciones y almacenamiento.": "언어, 모양, 게임 테이블, 업데이트, 저장 공간.",
+	"Imágenes que ya no usa ningún deck.": "더 이상 어떤 덱도 쓰지 않는 이미지.",
+	"Para volver a tenerlos hay que descargarlos otra vez ({mb} MB).": "다시 쓰려면 새로 내려받아야 합니다({mb}MB).",
+	"¿Quitar los nombres en otros idiomas?": "다른 언어의 이름을 지울까요?"
 }

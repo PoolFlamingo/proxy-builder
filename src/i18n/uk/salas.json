@@ -63,5 +63,12 @@
 	"La invitación ha caducado o ya se usó del todo.": "Запрошення минуло або вже використане.",
 	"Está llena.": "Місць немає.",
 	"No tienes permiso para eso.": "У вас немає на це дозволу.",
-	"El servidor no ha entendido la petición.": "Сервер не зрозумів запит."
+	"El servidor no ha entendido la petición.": "Сервер не зрозумів запит.",
+	"Dejarás de ser quien manda en el playgroup y no podrás deshacerlo.": "Ви більше не керуватимете плейгрупою, і це не можна скасувати.",
+	"El servidor no responde.": "Сервер не відповідає.",
+	"Falta que todos elijan su deck.": "Ще не всі вибрали колоду.",
+	"Jugar con un código…": "Грати за кодом…",
+	"¿Pasarle el playgroup a {nombre}?": "Передати плейгрупу {nombre}?",
+	"Pasárselo": "Передати",
+	"Sale de la sala ahora mismo.": "Одразу виходить із кімнати."
 }

@@ -105,5 +105,6 @@
 	"Para Arena": "Arena용",
 	"Para MTGO": "MTGO용",
 	"En texto plano": "일반 텍스트",
-	"65 × 90 mm llena justa una funda: es como 1 mm de sangrado, pero con la imagen entera a ese tamaño en vez del borde repetido.": "65 × 90 mm는 슬리브에 딱 맞아요. 1 mm 도련과 같지만 가장자리를 반복하지 않고 이미지 전체를 그 크기로 만들어요."
+	"65 × 90 mm llena justa una funda: es como 1 mm de sangrado, pero con la imagen entera a ese tamaño en vez del borde repetido.": "65 × 90 mm는 슬리브에 딱 맞아요. 1 mm 도련과 같지만 가장자리를 반복하지 않고 이미지 전체를 그 크기로 만들어요.",
+	"¿Borrar el preset «{n}»?": "프리셋 “{n}”을(를) 삭제할까요?"
 }

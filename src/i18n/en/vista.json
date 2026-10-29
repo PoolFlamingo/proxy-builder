@@ -62,5 +62,7 @@
 	"BANQUILLO": "SIDEBOARD",
 	"Del banquillo (sideboard): no cuenta para el mazo.": "From the sideboard: it doesn't count for the deck.",
 	"Cambiar carta…": "Change card…",
-	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "Marked as design variant, optional, sideboard or copy: they are printed, but do not count for the deck."
+	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "Marked as design variant, optional, sideboard or copy: they are printed, but do not count for the deck.",
+	"Cartas quitadas": "Cards removed",
+	"Rehacer (Ctrl+Mayús+Z)": "Redo (Ctrl+Shift+Z)"
 }

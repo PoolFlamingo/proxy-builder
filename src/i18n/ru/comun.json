@@ -24,5 +24,16 @@
 	"Salir sin guardar": "Выйти без сохранения",
 	"Cerrar": "Закрыть",
 	"Cancelar": "Отмена",
-	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.": "Если выйти сейчас, задача остановится. Уже отправленное завершится само, но остальное выполнено не будет, а незаконченное не сохранится."
+	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.": "Если выйти сейчас, задача остановится. Уже отправленное завершится само, но остальное выполнено не будет, а незаконченное не сохранится.",
+	"Buscar colección…": "Искать коллекцию…",
+	"Buscar en todas (2 letras o más)…": "Искать везде (от 2 букв)…",
+	"Cargando…": "Загрузка…",
+	"Elegir un icono": "Выбрать значок",
+	"Escribe para buscar en todas las colecciones.": "Начните вводить, чтобы искать во всех коллекциях.",
+	"Filtrar por nombre…": "Фильтр по названию…",
+	"Mostrar más": "Показать ещё",
+	"Ningún icono con ese nombre.": "Нет значка с таким названием.",
+	"Sin icono": "Без значка",
+	"Todas las colecciones": "Все коллекции",
+	"Reintentar": "Повторить"
 }

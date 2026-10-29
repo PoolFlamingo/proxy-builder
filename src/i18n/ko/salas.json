@@ -58,5 +58,12 @@
 	"La invitación ha caducado o ya se usó del todo.": "초대가 만료되었거나 모두 사용되었습니다.",
 	"Está llena.": "가득 찼습니다.",
 	"No tienes permiso para eso.": "그럴 권한이 없습니다.",
-	"El servidor no ha entendido la petición.": "서버가 요청을 이해하지 못했습니다."
+	"El servidor no ha entendido la petición.": "서버가 요청을 이해하지 못했습니다.",
+	"Dejarás de ser quien manda en el playgroup y no podrás deshacerlo.": "더 이상 플레이그룹을 관리하지 않게 되며, 되돌릴 수 없습니다.",
+	"El servidor no responde.": "서버가 응답하지 않습니다.",
+	"Falta que todos elijan su deck.": "아직 모두가 덱을 고르지 않았습니다.",
+	"Jugar con un código…": "코드로 플레이…",
+	"¿Pasarle el playgroup a {nombre}?": "플레이그룹을 {nombre}님에게 넘길까요?",
+	"Pasárselo": "넘기기",
+	"Sale de la sala ahora mismo.": "바로 방에서 나갑니다."
 }

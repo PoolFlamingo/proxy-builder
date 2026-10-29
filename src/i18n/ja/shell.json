@@ -30,5 +30,6 @@
 	"Guardar y cerrar": "保存して閉じる",
 	"No se ha podido cerrar la ventana.": "ウィンドウを閉じられませんでした。",
 	"Se instalará al salir de la mesa.": "テーブルを離れたらインストールされます。",
-	"Beta": "ベータ"
+	"Beta": "ベータ",
+	"Pulsa para reintentar.": "クリックして再試行。"
 }

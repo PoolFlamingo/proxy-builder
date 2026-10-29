@@ -24,5 +24,16 @@
 	"Salir sin guardar": "保存せずに閉じる",
 	"Cerrar": "閉じる",
 	"Cancelar": "キャンセル",
-	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.": "今閉じると処理は止まります。送信済みのものはそのまま完了しますが、残りは実行されず、途中のものは保存されません。"
+	"Si sales ahora, se para. Lo que ya se haya enviado termina por su cuenta, pero no se sigue con lo que faltaba ni se guarda lo que quedó a medias.": "今閉じると処理は止まります。送信済みのものはそのまま完了しますが、残りは実行されず、途中のものは保存されません。",
+	"Buscar colección…": "コレクションを検索…",
+	"Buscar en todas (2 letras o más)…": "すべてを検索（2文字以上）…",
+	"Cargando…": "読み込み中…",
+	"Elegir un icono": "アイコンを選ぶ",
+	"Escribe para buscar en todas las colecciones.": "入力するとすべてのコレクションを検索します。",
+	"Filtrar por nombre…": "名前で絞り込む…",
+	"Mostrar más": "さらに表示",
+	"Ningún icono con ese nombre.": "その名前のアイコンはありません。",
+	"Sin icono": "アイコンなし",
+	"Todas las colecciones": "すべてのコレクション",
+	"Reintentar": "再試行"
 }

@@ -71,5 +71,7 @@
 	"BANQUILLO": "SIDEBOARD",
 	"Del banquillo (sideboard): no cuenta para el mazo.": "Uit de sideboard: telt niet mee voor het deck.",
 	"Cambiar carta…": "Kaart wijzigen…",
-	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "Gemarkeerd als ontwerpvariant, optioneel, sideboard of kopie: ze worden geprint, maar tellen niet mee voor het deck."
+	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "Gemarkeerd als ontwerpvariant, optioneel, sideboard of kopie: ze worden geprint, maar tellen niet mee voor het deck.",
+	"Cartas quitadas": "Kaarten verwijderd",
+	"Rehacer (Ctrl+Mayús+Z)": "Opnieuw (Ctrl+Shift+Z)"
 }

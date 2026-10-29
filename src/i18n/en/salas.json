@@ -61,5 +61,12 @@
 	"La invitación ha caducado o ya se usó del todo.": "The invitation has expired or has been used up.",
 	"Está llena.": "It's full.",
 	"No tienes permiso para eso.": "You don't have permission for that.",
-	"El servidor no ha entendido la petición.": "The server didn't understand the request."
+	"El servidor no ha entendido la petición.": "The server didn't understand the request.",
+	"Dejarás de ser quien manda en el playgroup y no podrás deshacerlo.": "You'll no longer be in charge of the playgroup, and you can't undo it.",
+	"El servidor no responde.": "The server isn't responding.",
+	"Falta que todos elijan su deck.": "Everyone still has to choose their deck.",
+	"Jugar con un código…": "Play with a code…",
+	"¿Pasarle el playgroup a {nombre}?": "Hand the playgroup over to {nombre}?",
+	"Pasárselo": "Hand it over",
+	"Sale de la sala ahora mismo.": "They leave the room right away."
 }

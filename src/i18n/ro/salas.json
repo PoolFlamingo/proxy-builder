@@ -62,5 +62,12 @@
 	"La invitación ha caducado o ya se usó del todo.": "Invitația a expirat sau a fost folosită complet.",
 	"Está llena.": "E plină.",
 	"No tienes permiso para eso.": "Nu ai permisiunea pentru asta.",
-	"El servidor no ha entendido la petición.": "Serverul nu a înțeles cererea."
+	"El servidor no ha entendido la petición.": "Serverul nu a înțeles cererea.",
+	"Dejarás de ser quien manda en el playgroup y no podrás deshacerlo.": "Nu vei mai conduce playgroup-ul și nu poți anula asta.",
+	"El servidor no responde.": "Serverul nu răspunde.",
+	"Falta que todos elijan su deck.": "Toți trebuie încă să-și aleagă pachetul.",
+	"Jugar con un código…": "Joacă cu un cod…",
+	"¿Pasarle el playgroup a {nombre}?": "Predai playgroup-ul lui {nombre}?",
+	"Pasárselo": "Predă-l",
+	"Sale de la sala ahora mismo.": "Iese imediat din cameră."
 }

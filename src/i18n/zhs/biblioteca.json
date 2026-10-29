@@ -148,5 +148,7 @@
 	"Ver repetición": "观看回放",
 	"Copia (hace de ficha)": "复制品（充当衍生物）",
 	"COPIA": "复制品",
-	"Una carta que hace de ficha (la copia de un Clone, un cambiaformas…): no cuenta para el mazo y en la mesa sale entre las fichas.": "充当衍生物的牌（复制类生物的复制品、变形者等）：不计入牌组，在牌桌上出现在衍生物之中。"
+	"Una carta que hace de ficha (la copia de un Clone, un cambiaformas…): no cuenta para el mazo y en la mesa sale entre las fichas.": "充当衍生物的牌（复制类生物的复制品、变形者等）：不计入牌组，在牌桌上出现在衍生物之中。",
+	"Empezar un deck": "开始一副套牌",
+	"Los decks se guardan solos mientras trabajas: pega una lista o añade cartas en la pestaña «Deck».": "套牌会在你工作时自动保存：在“Deck”标签页粘贴列表或添加卡牌。"
 }

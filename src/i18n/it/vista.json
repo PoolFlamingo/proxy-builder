@@ -74,5 +74,7 @@
 	"BANQUILLO": "SIDEBOARD",
 	"Del banquillo (sideboard): no cuenta para el mazo.": "Dal sideboard: non conta per il mazzo.",
 	"Cambiar carta…": "Cambia carta…",
-	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "Segnate come variante di design, opzionale, sideboard o copia: si stampano, ma non contano per il mazzo."
+	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "Segnate come variante di design, opzionale, sideboard o copia: si stampano, ma non contano per il mazzo.",
+	"Cartas quitadas": "Carte rimosse",
+	"Rehacer (Ctrl+Mayús+Z)": "Ripeti (Ctrl+Maiusc+Z)"
 }

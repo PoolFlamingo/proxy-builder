@@ -82,5 +82,12 @@
 	"Reiniciar y actualizar a la {version}": "Herstarten en bijwerken naar {version}",
 	"Descargando Proxy Builder {version}…": "Proxy Builder {version} wordt gedownload…",
 	"No se ha podido descargar la actualización.": "Kan de update niet downloaden.",
-	"La {version} está lista: reinicia desde Ajustes.": "{version} is klaar: herstart via Instellingen."
+	"La {version} está lista: reinicia desde Ajustes.": "{version} is klaar: herstart via Instellingen.",
+	"Almacenamiento": "Opslag",
+	"Caché de miniaturas": "Miniatuurcache",
+	"Caché de miniaturas: {mb}": "Miniatuurcache: {mb}",
+	"Idioma, aspecto, mesa de juego, actualizaciones y almacenamiento.": "Taal, uiterlijk, speltafel, updates en opslag.",
+	"Imágenes que ya no usa ningún deck.": "Afbeeldingen die geen deck meer gebruikt.",
+	"Para volver a tenerlos hay que descargarlos otra vez ({mb} MB).": "Om ze terug te krijgen moet je ze opnieuw downloaden ({mb} MB).",
+	"¿Quitar los nombres en otros idiomas?": "De namen in andere talen verwijderen?"
 }

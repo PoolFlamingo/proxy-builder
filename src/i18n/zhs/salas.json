@@ -58,5 +58,12 @@
 	"La invitación ha caducado o ya se usó del todo.": "邀请已过期或已用完。",
 	"Está llena.": "已满。",
 	"No tienes permiso para eso.": "你没有这样做的权限。",
-	"El servidor no ha entendido la petición.": "服务器无法理解该请求。"
+	"El servidor no ha entendido la petición.": "服务器无法理解该请求。",
+	"Dejarás de ser quien manda en el playgroup y no podrás deshacerlo.": "你将不再管理这个游戏组，且无法撤销。",
+	"El servidor no responde.": "服务器没有响应。",
+	"Falta que todos elijan su deck.": "还有人没有选择套牌。",
+	"Jugar con un código…": "用代码游戏…",
+	"¿Pasarle el playgroup a {nombre}?": "把游戏组交给 {nombre}？",
+	"Pasárselo": "交出",
+	"Sale de la sala ahora mismo.": "会立即离开房间。"
 }

@@ -180,5 +180,7 @@
 	"Ver repetición": "Voir le replay",
 	"Copia (hace de ficha)": "Copie (fait office de jeton)",
 	"COPIA": "COPIE",
-	"Una carta que hace de ficha (la copia de un Clone, un cambiaformas…): no cuenta para el mazo y en la mesa sale entre las fichas.": "Une carte qui fait office de jeton (la copie d'un Clone, un métamorphe…) : elle ne compte pas pour le deck et, sur la table, elle est parmi les jetons."
+	"Una carta que hace de ficha (la copia de un Clone, un cambiaformas…): no cuenta para el mazo y en la mesa sale entre las fichas.": "Une carte qui fait office de jeton (la copie d'un Clone, un métamorphe…) : elle ne compte pas pour le deck et, sur la table, elle est parmi les jetons.",
+	"Empezar un deck": "Commencer un deck",
+	"Los decks se guardan solos mientras trabajas: pega una lista o añade cartas en la pestaña «Deck».": "Les decks s'enregistrent seuls pendant que vous travaillez : collez une liste ou ajoutez des cartes dans l'onglet « Deck »."
 }
