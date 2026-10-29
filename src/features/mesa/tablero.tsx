@@ -397,27 +397,39 @@ function Tapete({
 	deckId: string | null;
 }) {
 	const version = usePantalla((s) => s.tapeteCambiado);
-	const [propio, setPropio] = useState<TapeteGuardado | null>(null);
+	// Lo último que se leyó de cada deck: al cambiar de tablero, el del deck
+	// nuevo se ve ya (o, si nunca se leyó, ninguno) en vez de dejar un instante
+	// el del deck anterior hasta que llegue el suyo.
+	const [leidos, setLeidos] = useState<Record<string, TapeteGuardado | null>>({});
 	useEffect(() => {
+		if (!deckId) return;
 		let vivo = true;
 		void (async () => {
+			let t: TapeteGuardado | null = null;
 			try {
-				// Sin deck (el tablero de otro jugador) no se leen mis ajustes: vale el
-				// tapete que la partida preparó para él.
-				const t = deckId
-					? ((await call("mesa_tapete_get", { deck: deckId })) ??
-						(await call("mesa_tapete_get", { deck: null })))
-					: null;
-				if (vivo) setPropio(t);
+				t =
+					(await call("mesa_tapete_get", { deck: deckId })) ??
+					(await call("mesa_tapete_get", { deck: null }));
 			} catch {
-				if (vivo) setPropio(null);
+				t = null;
 			}
+			if (vivo) setLeidos((l) => (l[deckId] === t ? l : { ...l, [deckId]: t }));
 		})();
 		return () => {
 			vivo = false;
 		};
 	}, [deckId, version]);
-	const url = propio ? urlArte(propio.blob, 2000) : tapete ? urlMesa(tapete, 1920) : null;
+	// Sin deck (el tablero de otro jugador) no se leen mis ajustes: vale el
+	// tapete que la partida preparó para él.
+	const sinLeer = deckId !== null && !(deckId in leidos);
+	const propio = deckId ? (leidos[deckId] ?? null) : null;
+	const url = sinLeer
+		? null
+		: propio
+			? urlArte(propio.blob, 2000)
+			: tapete
+				? urlMesa(tapete, 1920)
+				: null;
 	const velo = propio ? propio.velo / 100 : 0.35;
 	return (
 		<div className="pointer-events-none absolute inset-0 overflow-hidden bg-gradient-to-b from-background to-muted/40">
