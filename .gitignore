@@ -10,7 +10,7 @@ dist-ssr
 tmp
 
 # Los planes viven solo en el disco local, como en judlex (Pablo, 12/10/2026).
-# plans
+plans
 
 # Rust / Tauri
 src-tauri/target
