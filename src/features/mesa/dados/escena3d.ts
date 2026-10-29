@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { type Estilo, METALES } from "./aspecto";
 import type { PiezaTirada, Tirada } from "./cola";
 import { ANCHO, FONDO, type Grabacion, HZ, MONEDA, simular } from "./fisica";
-import { esquinasD4, geometria, planoCara, textoCara } from "./geometria";
+import { angulosEsquinas, esquinasD4, geometria, planoCara, textoCara } from "./geometria";
 import { tipoDe, valoresPintados } from "./piezas";
 import { CAOS, CARA, CRUZ, PLANESWALK } from "./simbolos";
 import { LADO_FONDO, trozoDeCara } from "./texturas";
@@ -25,7 +25,12 @@ export type AlGolpe = (moneda: boolean, fuerza: number) => void;
 /** Píxeles de la textura por cara. */
 const CELDA = 128;
 
-type Pintable = { texto: string } | { simbolo: string } | { esquinas: string[] } | null;
+type Pintable =
+	| { texto: string }
+	| { simbolo: string }
+	/** `angulos`: dónde está cada esquina, desde la primera (que va arriba). */
+	| { esquinas: string[]; angulos?: number[] }
+	| null;
 
 /** Pinta lo de una cara en el centro de una celda (con «arriba» hacia +y de la cara). */
 function pintar(
@@ -62,8 +67,8 @@ function pintar(
 		ctx.fill(p);
 	} else {
 		// d4: un número junto a cada esquina, mirando hacia ella.
-		cosa.esquinas.forEach((t, i, todas) => {
-			const a = (i / todas.length) * Math.PI * 2;
+		cosa.esquinas.forEach((t, i) => {
+			const a = cosa.angulos?.[i] ?? 0;
 			ctx.save();
 			ctx.rotate(a);
 			const tam = r * 0.38;
@@ -173,7 +178,15 @@ function mallaDado(p: PiezaTirada, cara: number, e: Estilo, fondo: HTMLCanvasEle
 				ctx.save();
 				ctx.translate(cx, cy);
 				ctx.rotate(Math.atan2(x0, y0));
-				pintar(ctx, 0, 0, CELDA * 0.5 * (pl.radio * k * 2), cosa, false, tinta);
+				pintar(
+					ctx,
+					0,
+					0,
+					CELDA * 0.5 * (pl.radio * k * 2),
+					{ ...cosa, angulos: angulosEsquinas(pl.puntos) },
+					false,
+					tinta,
+				);
 				ctx.restore();
 			} else {
 				pintar(ctx, cx, cy, CELDA * 0.5, cosa, t >= 12 || t === 4 || t === 8, tinta);

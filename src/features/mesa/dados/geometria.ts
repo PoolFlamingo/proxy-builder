@@ -277,11 +277,49 @@ export function esquinasD4(g: Geometria, valores: number[], cara: number): numbe
 	});
 }
 
+/**
+ * El ángulo de cada esquina de una cara del d4, en radianes y en sentido
+ * horario desde «arriba», contando desde la primera esquina (que queda en 0).
+ * Se saca de los puntos de la cara: sus vértices van en sentido antihorario,
+ * así que cada esquina está 120° **antes** que la anterior, no después.
+ */
+export function angulosEsquinas(puntos: [number, number][]): number[] {
+	const [x0, y0] = puntos[0];
+	const base = Math.atan2(x0, y0);
+	return puntos.map(([x, y]) => Math.atan2(x, y) - base);
+}
+
+/** Una matriz 3×3 por filas. */
+export type M3 = [number, number, number, number, number, number, number, number, number];
+
+/**
+ * El giro con el que la cara `cara` queda **de frente** a quien mira (+z) y su
+ * «arriba» hacia arriba (+y), con `ladeo` radianes de giro sobre la vista.
+ * Es la pose final de los dados en CSS 3D. El d4 se lee por la cara de abajo:
+ * se le da la vuelta, para que quien mira vea la punta contraria a esa cara
+ * (con su número repetido en las tres caras que la rodean).
+ */
+export function giroDeCara(g: Geometria, cara: number, ladeo: number): M3 {
+	const { w, u, n } = planoCara(g, cara);
+	const s = seLeeAbajo(g.tipo) ? -1 : 1;
+	const base: M3 = [s * w[0], s * w[1], s * w[2], u[0], u[1], u[2], s * n[0], s * n[1], s * n[2]];
+	const c = Math.cos(ladeo);
+	const si = Math.sin(ladeo);
+	const rz: M3 = [c, -si, 0, si, c, 0, 0, 0, 1];
+	const r: M3 = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+	for (let i = 0; i < 3; i++)
+		for (let j = 0; j < 3; j++)
+			r[i * 3 + j] =
+				rz[i * 3] * base[j] + rz[i * 3 + 1] * base[3 + j] + rz[i * 3 + 2] * base[6 + j];
+	return r;
+}
+
 /** Lo que se escribe en una cara (el d10 de decenas lleva «00», «10»…). */
 export function textoCara(tipo: TipoDado, valor: number, decenas = false): string {
-	if (decenas) return `${valor}0`;
-	// El 6 y el 9 llevan punto, como en los dados de verdad, para no confundirlos.
-	return (valor === 6 || valor === 9) && tipo >= 8 ? `${valor}.` : String(valor);
+	// El 6 y el 9 llevan punto, como en los dados de verdad, para no confundirlos
+	// (también el 60 y el 90 del d10 de decenas).
+	const punto = (valor === 6 || valor === 9) && (decenas || tipo >= 8) ? "." : "";
+	return decenas ? `${valor}0${punto}` : `${valor}${punto}`;
 }
 
 /** Los dados que se pintan para una tirada de `caras` con `valor` (el d100, dos d10). */

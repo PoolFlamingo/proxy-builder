@@ -2,7 +2,15 @@ import { useEffect, useMemo, useRef } from "react";
 import { type Estilo, METALES } from "./aspecto";
 import { entre, generador, giroAlAzar } from "./azar";
 import type { PiezaTirada, Tirada } from "./cola";
-import { esquinasD4, geometria, planoCara, textoCara, type V3 } from "./geometria";
+import {
+	esquinasD4,
+	geometria,
+	giroDeCara,
+	type M3,
+	planoCara,
+	textoCara,
+	type V3,
+} from "./geometria";
 import { caraDelResultado, tipoDe } from "./piezas";
 import { CAOS, CARA, CRUZ, PLANESWALK } from "./simbolos";
 import { golpeDado, golpeMoneda, lanzarMoneda } from "./sonidos";
@@ -17,8 +25,6 @@ import { LADO_FONDO, trozoDeCara } from "./texturas";
  * de las caras (`fondo`, del mismo lienzo que el 3D) y el color de los
  * números; el translúcido aquí es solo un poco de transparencia.
  */
-
-type M3 = [number, number, number, number, number, number, number, number, number];
 
 /** Píxeles por unidad de la geometría (los dados miden ~1,2). */
 const ESCALA = 66;
@@ -78,25 +84,9 @@ function css(m: M3): string {
 	return `matrix3d(${c[0]},${c[3]},${c[6]},0,${c[1]},${c[4]},${c[7]},0,${c[2]},${c[5]},${c[8]},0,0,0,0,1)`;
 }
 
-/**
- * El giro final: la cara del resultado de frente (en el d4, de espaldas, con
- * la punta hacia quien mira) y su «arriba» hacia arriba, con un poco de
- * ladeo. Filas = los ejes de la cara (w, u, n).
- */
+/** El giro final: la cara del resultado de frente (`geometria.giroDeCara`). */
 function giroFinal(p: PiezaTirada, ladeo: number): M3 {
-	const t = tipoDe(p) ?? 6;
-	const { w, u, n } = planoCara(geometria(t), caraDelResultado(p));
-	const s = t === 4 ? -1 : 1;
-	const base: M3 = [s * w[0], s * w[1], s * w[2], u[0], u[1], u[2], s * n[0], s * n[1], s * n[2]];
-	const c = Math.cos(ladeo);
-	const si = Math.sin(ladeo);
-	const rz: M3 = [c, -si, 0, si, c, 0, 0, 0, 1];
-	const r: M3 = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-	for (let i = 0; i < 3; i++)
-		for (let j = 0; j < 3; j++)
-			r[i * 3 + j] =
-				rz[i * 3] * base[j] + rz[i * 3 + 1] * base[3 + j] + rz[i * 3 + 2] * base[6 + j];
-	return r;
+	return giroDeCara(geometria(tipoDe(p) ?? 6), caraDelResultado(p), ladeo);
 }
 
 const LUZ: V3 = (() => {
