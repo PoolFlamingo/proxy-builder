@@ -1400,3 +1400,114 @@ async fn el_invitado_cambia_su_banquillo_y_el_anfitrion_abre_la_siguiente_partid
     );
     assert!(!en_juego.contains(&sale), "{sale} debería haber salido");
 }
+
+/// Lo último que dijo la sala de espera a esta pantalla: (apodo, deck) de cada uno.
+fn sala_vista(m: &MesaEnMemoria) -> Vec<(String, Option<String>)> {
+    avisos(m)
+        .into_iter()
+        .rev()
+        .find_map(|a| match a {
+            AvisoRed::Sala { jugadores } => Some(
+                jugadores
+                    .into_iter()
+                    .map(|j| (j.apodo, j.deck))
+                    .collect::<Vec<_>>(),
+            ),
+            _ => None,
+        })
+        .unwrap_or_default()
+}
+
+#[tokio::test]
+async fn en_la_sala_cada_uno_cambia_su_nombre_y_su_deck_y_todos_lo_ven_al_momento() {
+    let _ = tracing_subscriber::fmt()
+        .with_test_writer()
+        .with_max_level(tracing::Level::INFO)
+        .try_init();
+    let host = Jugador {
+        mesa: MesaEnMemoria::default(),
+        ep: crear(SecretKey::generate(), Relay::Ninguno).await.unwrap(),
+        conexion: None,
+    };
+    let anf = Anfitrion::nuevo("Host".into(), secreto_nuevo());
+    *anf.deck.lock().unwrap() = Some("Prueba".into());
+    let aceptador = tokio::spawn(atender(host.ep.clone(), anf.clone(), host.mesa.clone()));
+    let codigo = Codigo {
+        addr: host.ep.addr(),
+        secreto: anf.secreto().to_string(),
+    };
+    let mut invitados = Vec::new();
+    for i in 0..2 {
+        let mut j = Jugador {
+            mesa: MesaEnMemoria::default(),
+            ep: crear(SecretKey::generate(), Relay::Ninguno).await.unwrap(),
+            conexion: None,
+        };
+        j.conexion = Some(
+            unirse(
+                j.ep.clone(),
+                Union {
+                    codigo: codigo.clone(),
+                    apodo: format!("Invitado {i}"),
+                    rol: Rol::Jugador,
+                    deck: Some(mazo()),
+                },
+                j.mesa.clone(),
+            )
+            .await
+            .unwrap(),
+        );
+        invitados.push(j);
+        esperar("el deck en la sala", || anf.para_empezar().len() == i + 1).await;
+    }
+    let (a, b) = (&invitados[0], &invitados[1]);
+    let nombres =
+        |m: &MesaEnMemoria| -> Vec<String> { sala_vista(m).into_iter().map(|(n, _)| n).collect() };
+
+    // Un invitado se cambia el nombre: el anfitrión y el otro lo ven.
+    let limpio = a
+        .conexion
+        .as_ref()
+        .unwrap()
+        .cambiar_apodo("  Ana   la  Grande ");
+    assert_eq!(limpio, "Ana la Grande");
+    esperar("el nombre nuevo en el otro invitado", || {
+        nombres(&b.mesa) == ["Host", "Ana la Grande", "Invitado 1"]
+    })
+    .await;
+    assert_eq!(anf.vista_sala()[1].apodo, "Ana la Grande");
+
+    // Uno vacío no cambia nada.
+    assert_eq!(a.conexion.as_ref().unwrap().cambiar_apodo("   "), "");
+    // El anfitrión se cambia el suyo: lo ven los dos.
+    assert!(anf.poner_apodo("Pablo"));
+    assert!(!anf.poner_apodo("Pablo"));
+    anf.avisar_sala(&host.mesa);
+    esperar("el nombre del anfitrión en los invitados", || {
+        nombres(&a.mesa).first().map(String::as_str) == Some("Pablo")
+            && nombres(&b.mesa).first().map(String::as_str) == Some("Pablo")
+    })
+    .await;
+    assert_eq!(
+        nombres(&host.mesa),
+        ["Pablo", "Ana la Grande", "Invitado 1"]
+    );
+
+    // Un invitado cambia de deck: se ve el nuevo en todas las salas.
+    let mut otro = mazo();
+    otro.nombre = "Otro deck".into();
+    b.conexion.as_ref().unwrap().cambiar_deck(otro);
+    esperar("el deck nuevo en el otro invitado", || {
+        sala_vista(&a.mesa)
+            .get(2)
+            .and_then(|(_, d)| d.clone())
+            .as_deref()
+            == Some("Otro deck")
+    })
+    .await;
+    assert_eq!(anf.vista_sala()[2].deck.as_deref(), Some("Otro deck"));
+    // Y quien no lo cambió, conserva el suyo.
+    assert_eq!(anf.vista_sala()[1].deck, Some(mazo().nombre));
+
+    aceptador.abort();
+}

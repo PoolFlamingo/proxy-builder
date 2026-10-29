@@ -59,6 +59,10 @@
 		}
 	},
 	{
+		"tipo": "apodo",
+		"apodo": "Ana"
+	},
+	{
 		"tipo": "intencion",
 		"id": 7,
 		"accion": {

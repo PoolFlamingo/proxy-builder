@@ -50,22 +50,13 @@ import { COLORES_JUGADOR } from "./colores";
 import { empezar, retomar, salir } from "./conexion";
 import { HistorialGeneralDialog } from "./historial-general";
 import { ListaDialog } from "./listas/lista-dialog";
+import { MAX_NOMBRE, useNombre } from "./nombre";
 import { opcionesDeFabrica } from "./opciones-fabrica";
 import { PartidaLocalDialog } from "./partida-local";
 import { RedDialog } from "./red/red-dialog";
 import { VolverARed } from "./red/volver-red";
 import { INTENSIDADES } from "./sparring/textos";
 import { TapeteDialog } from "./tapete-dialog";
-
-const CLAVE_NOMBRE = "proxybuilder.mesa.nombre";
-
-function nombreGuardado(): string {
-	try {
-		return localStorage.getItem(CLAVE_NOMBRE) ?? "";
-	} catch {
-		return "";
-	}
-}
 
 /**
  * **La entrada a la mesa** (pestaña «Jugar»): elegir un deck de la
@@ -98,13 +89,16 @@ function Entrada() {
 	const sparring = useUi((s) => s.mesa.sparring);
 	const [formato, setFormato] = useState<Formato>("commander");
 	const [opciones, setOpciones] = useState<Opciones>(() => opcionesDeFabrica("commander", 1));
-	const [nombre, setNombre] = useState(nombreGuardado);
+	const nombre = useNombre((s) => s.nombre);
+	const setNombre = useNombre((s) => s.poner);
 	const [tapete, setTapete] = useState(false);
 	const [descartar, setDescartar] = useState(false);
 	const [reemplazar, setReemplazar] = useState(false);
 	// Las listas para jugar del deck elegido y la que se usa.
 	const [listas, setListas] = useState<ListasDeDeck | null>(null);
 	const [listaId, setListaId] = useState<string | null>(null);
+	// De qué deck son las listas que hay: la sala de espera espera a tenerlas.
+	const [listasDe, setListasDe] = useState<string | null>(null);
 	const [editando, setEditando] = useState<{ lista: ListaDeJuego | null } | null>(null);
 	const [red, setRed] = useState(false);
 	const [amigos, setAmigos] = useState(false);
@@ -139,13 +133,15 @@ function Entrada() {
 	useEffect(() => {
 		setListas(null);
 		setListaId(null);
+		setListasDe(null);
 		if (!elegido) return;
 		call("mesa_listas", { deck: elegido })
 			.then((l) => {
 				setListas(l);
 				setListaId(l.listas[0]?.id ?? null);
 			})
-			.catch(() => setListas(null));
+			.catch(() => setListas(null))
+			.finally(() => setListasDe(elegido));
 	}, [elegido]);
 	/** El deck pasa del tamaño del formato: hay que elegir una lista (como `Construccion::pide_lista`). */
 	const pideLista = formato === "commander" && (listas?.cuentan ?? 0) > 100;
@@ -248,6 +244,11 @@ function Entrada() {
 		deckNombre: decks.find((d) => d.id === elegido)?.name ?? null,
 		lista: listaId,
 		sinLista,
+		pideLista,
+		listas,
+		listo: elegido === null || listasDe === elegido,
+		elegirDeck: setElegido,
+		elegirLista: setListaId,
 		formato,
 		opciones,
 		nombre: nombre.trim() || t("Jugador"),
@@ -313,16 +314,9 @@ function Entrada() {
 									<User className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
 									<Input
 										value={nombre}
-										onChange={(e) => {
-											setNombre(e.target.value);
-											try {
-												localStorage.setItem(CLAVE_NOMBRE, e.target.value);
-											} catch {
-												/* sin almacenamiento */
-											}
-										}}
+										onChange={(e) => setNombre(e.target.value)}
 										placeholder={t("Jugador")}
-										maxLength={24}
+										maxLength={MAX_NOMBRE}
 										className="h-7 w-36 pl-7 text-xs"
 									/>
 								</div>

@@ -35,7 +35,7 @@ use ts_rs::TS;
 use crate::mesa::encuentro::VistaBanquillo;
 
 /// La versión del protocolo (sube con cualquier cambio incompatible).
-pub const PROTOCOLO: u32 = 2;
+pub const PROTOCOLO: u32 = 3;
 pub const TOPE_GENERAL: usize = 64 * 1024;
 pub const TOPE_PREPARACION: usize = 2 * 1024 * 1024;
 pub const TOPE_PARTIDA: usize = 4 * 1024 * 1024;
@@ -89,9 +89,15 @@ pub enum AlHost {
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         solo_si_activo: bool,
     },
-    /// El deck con el que entra (en la sala de espera).
+    /// El deck con el que entra (en la sala de espera). Mandarlo otra vez
+    /// lo cambia por el nuevo.
     Preparacion {
         deck: DeckDeMesa,
+    },
+    /// Cómo se llama en la sala de espera: lo cambió a mano. El host lo
+    /// limpia (`limpiar_apodo`) y se lo cuenta a todos.
+    Apodo {
+        apodo: String,
     },
     /// Una intención: el host pone el actor según la conexión.
     Intencion {
@@ -528,6 +534,9 @@ mod tests {
         let al_host = vec![
             hola(),
             AlHost::Preparacion { deck: deck(3) },
+            AlHost::Apodo {
+                apodo: "Ana".into(),
+            },
             AlHost::Intencion {
                 id: 7,
                 accion: Accion::Robar { n: 1 },

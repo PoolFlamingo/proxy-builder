@@ -171,6 +171,105 @@ pub async fn red_crear(
     Ok(codigo)
 }
 
+fn sin_sala() -> AppError {
+    AppError::new(ErrorCode::NotFound).with("motivo", "sin_sala")
+}
+
+/// Cambia cómo se llama esta app en la sala de espera: el anfitrión se lo
+/// cuenta a todos al momento; un invitado se lo pide al anfitrión, que hace
+/// lo mismo. Sin sala, `NotFound`.
+#[tauri::command]
+pub fn red_apodo(app: AppHandle, state: State<'_, AppState>, apodo: String) -> AppResult<()> {
+    let anfitrion = state.red.con_sala(|s| match s {
+        Some(Sala::Anfitrion { anf, .. }) => Ok(Some(anf.clone())),
+        Some(Sala::Invitado { conexion, .. }) => {
+            conexion.cambiar_apodo(&apodo);
+            Ok(None)
+        }
+        None => Err(sin_sala()),
+    })?;
+    if let Some(anf) = anfitrion {
+        if anf.poner_apodo(&apodo) {
+            anf.avisar_sala(&MesaDeApp(app));
+        }
+    }
+    Ok(())
+}
+
+/// El anfitrión cambia el deck con el que se le ve en la sala de espera (el
+/// suyo se prepara al empezar, no hace falta antes). `None`: sin deck.
+#[tauri::command]
+pub fn red_anfitrion_deck(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    deck_id: Option<String>,
+) -> AppResult<()> {
+    let anf = state
+        .red
+        .con_sala(|s| match s {
+            Some(Sala::Anfitrion { anf, .. }) if !anf.empezada() => Some(anf.clone()),
+            _ => None,
+        })
+        .ok_or_else(sin_sala)?;
+    let nombre = match deck_id {
+        Some(id) => Some(crate::store::decks::open(&state.db, &id)?.name),
+        None => None,
+    };
+    if let Ok(mut d) = anf.deck.lock() {
+        *d = nombre;
+    }
+    anf.avisar_sala(&MesaDeApp(app));
+    Ok(())
+}
+
+/// Un invitado cambia el deck (y la lista) con el que juega, ya en la sala de
+/// espera: lo prepara y se lo manda al anfitrión, que se lo cuenta a todos. Es
+/// un trabajo (`mesa://progress`, `mesa://done`), como unirse.
+#[tauri::command]
+pub fn red_deck(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    deck_id: String,
+    lista: Option<String>,
+    formato: Formato,
+) -> AppResult<u32> {
+    let juega = state.red.con_sala(|s| {
+        matches!(
+            s,
+            Some(Sala::Invitado {
+                rol: Rol::Jugador,
+                ..
+            })
+        )
+    });
+    if !juega {
+        return Err(sin_sala());
+    }
+    let (job_id, _) = state.jobs.alta();
+    lanzar_trabajo(app.clone(), job_id, async move {
+        let estado = app.state::<AppState>();
+        let r = async {
+            let _marca = estado.trabajo();
+            let p = Progreso {
+                job_id,
+                mazo: 0,
+                mazos: 1,
+            };
+            let deck = preparar_mazo(&app, &estado, p, &deck_id, lista.as_deref(), formato).await?;
+            estado.red.con_sala(|s| match s {
+                Some(Sala::Invitado { conexion, .. }) => {
+                    conexion.cambiar_deck(deck);
+                    Ok(())
+                }
+                _ => Err(sin_sala()),
+            })
+        }
+        .await;
+        terminar(&app, job_id, r);
+    });
+    Ok(job_id)
+}
+
 fn terminar(app: &AppHandle, job_id: u32, r: AppResult<()>) {
     let estado = app.state::<AppState>();
     estado.jobs.baja(job_id);

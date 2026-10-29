@@ -309,6 +309,12 @@ export interface Commands {
 	red_estado: { args: Record<string, never>; result: EstadoRed };
 	red_crear: { args: { apodo: string; deck: string | null }; result: string };
 	red_unirse: { args: { peticion: PeticionUnion }; result: number };
+	red_apodo: { args: { apodo: string }; result: null };
+	red_anfitrion_deck: { args: { deckId: string | null }; result: null };
+	red_deck: {
+		args: { deckId: string; lista: string | null; formato: Formato };
+		result: number;
+	};
 	red_vuelta: { args: Record<string, never>; result: VueltaRed | null };
 	red_vuelta_olvidar: { args: Record<string, never>; result: null };
 	red_volver: { args: Record<string, never>; result: number };

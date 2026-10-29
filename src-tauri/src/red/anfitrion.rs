@@ -84,8 +84,9 @@ struct Sala {
 pub struct Anfitrion {
     pub epoch: u32,
     secreto: String,
-    /// El anfitrión en la sala: su apodo y su deck.
-    pub apodo: String,
+    /// El anfitrión en la sala: su apodo (que puede cambiar mientras se espera)
+    /// y su deck.
+    apodo: Mutex<String>,
     pub deck: Mutex<Option<String>>,
     sala: Mutex<Sala>,
     siguiente: AtomicU64,
@@ -122,6 +123,15 @@ pub struct Admision {
     pub empezada: bool,
 }
 
+/// Lo más largo que puede ser un nombre en la sala, en caracteres.
+const MAX_APODO: usize = 32;
+
+/// Un nombre de la sala: sin espacios de más y hasta `MAX_APODO` caracteres.
+pub fn limpiar_apodo(apodo: &str) -> String {
+    let junto = apodo.split_whitespace().collect::<Vec<_>>().join(" ");
+    junto.chars().take(MAX_APODO).collect()
+}
+
 fn cerrojo<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
     match m.lock() {
         Ok(g) => g,
@@ -134,7 +144,7 @@ impl Anfitrion {
         Arc::new(Anfitrion {
             epoch: 1,
             secreto,
-            apodo,
+            apodo: Mutex::new(limpiar_apodo(&apodo)),
             deck: Mutex::new(None),
             sala: Mutex::new(Sala {
                 empezada: false,
@@ -194,7 +204,7 @@ impl Anfitrion {
         Arc::new(Anfitrion {
             epoch,
             secreto,
-            apodo,
+            apodo: Mutex::new(limpiar_apodo(&apodo)),
             deck: Mutex::new(None),
             sala: Mutex::new(Sala {
                 empezada: true,
@@ -398,7 +408,7 @@ impl Anfitrion {
         let s = cerrojo(&self.sala);
         let mut v = vec![EnSala {
             id: 0,
-            apodo: self.apodo.clone(),
+            apodo: self.apodo(),
             rol: Rol::Jugador,
             deck: cerrojo(&self.deck).clone(),
         }];
@@ -439,7 +449,7 @@ impl Anfitrion {
     ) -> Result<Admision, &'static str> {
         let mut s = cerrojo(&self.sala);
         let conexion = self.siguiente.fetch_add(1, Ordering::SeqCst);
-        let apodo: String = apodo.chars().take(32).collect();
+        let apodo = limpiar_apodo(&apodo);
         if s.empezada && rol == Rol::Jugador {
             let Some(p) = s
                 .pares
@@ -649,6 +659,42 @@ impl Anfitrion {
             if let Some(tx) = &p.tx {
                 let _ = tx.send(DelHost::Cerrada);
             }
+        }
+    }
+
+    /// Cómo se llama el anfitrión.
+    pub fn apodo(&self) -> String {
+        cerrojo(&self.apodo).clone()
+    }
+
+    /// El anfitrión cambia su nombre en la sala de espera; `false` si no
+    /// cambia nada (vacío, igual o ya empezada).
+    pub fn poner_apodo(&self, apodo: &str) -> bool {
+        let nuevo = limpiar_apodo(apodo);
+        if nuevo.is_empty() || self.empezada() {
+            return false;
+        }
+        let mut a = cerrojo(&self.apodo);
+        if *a == nuevo {
+            return false;
+        }
+        *a = nuevo;
+        true
+    }
+
+    /// Alguien de la sala cambia su nombre; `false` si no cambia nada.
+    pub fn apodo_de(&self, conexion: u64, apodo: &str) -> bool {
+        let nuevo = limpiar_apodo(apodo);
+        let mut s = cerrojo(&self.sala);
+        if nuevo.is_empty() || s.empezada {
+            return false;
+        }
+        match s.pares.iter_mut().find(|p| p.conexion == conexion) {
+            Some(p) if p.apodo != nuevo => {
+                p.apodo = nuevo;
+                true
+            }
+            _ => false,
         }
     }
 
@@ -1299,6 +1345,11 @@ pub(crate) async fn atender_conexion<M: Mesa>(
             AlHost::Hola { .. } => break,
             AlHost::Preparacion { deck } => {
                 if anf.preparacion(adm.conexion, deck) {
+                    anf.avisar_sala(&mesa);
+                }
+            }
+            AlHost::Apodo { apodo } => {
+                if anf.apodo_de(adm.conexion, &apodo) {
                     anf.avisar_sala(&mesa);
                 }
             }

@@ -1,7 +1,8 @@
 import { DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { Check, Copy, Crown, Eye, Loader2, LogOut, Play, Plug, Shuffle, Users } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Formato } from "@/bindings/Formato";
+import type { ListasDeDeck } from "@/bindings/ListasDeDeck";
 import type { Opciones } from "@/bindings/Opciones";
 import type { RolEnSala } from "@/bindings/RolEnSala";
 import { FilaInterruptor, Selector } from "@/components/campos";
@@ -39,7 +40,17 @@ import {
 	problemaDeEquipos,
 } from "../config-local";
 import { ID_ANFITRION, mismoOrden, sentados, sincronizarAsientos } from "../config-sala";
-import { crearPartida, empezarRed, refrescarRed, salirDeRed, unirsePartida } from "./conexion-red";
+import {
+	cambiarApodo,
+	cambiarDeckAnfitrion,
+	cambiarDeckInvitado,
+	crearPartida,
+	empezarRed,
+	refrescarRed,
+	salirDeRed,
+	unirsePartida,
+} from "./conexion-red";
+import { type EleccionAplicada, EleccionEnSala } from "./eleccion-en-sala";
 
 /** Lo que trae la entrada de la mesa: el deck elegido y sus opciones. */
 export type Preparacion = {
@@ -48,6 +59,15 @@ export type Preparacion = {
 	lista: string | null;
 	/** El deck pide una lista y no hay ninguna elegida. */
 	sinLista: boolean;
+	/** El deck pasa del tamaño del formato: no vale jugar con todo el deck. */
+	pideLista: boolean;
+	/** Las listas para jugar del deck elegido (`null` mientras se leen). */
+	listas: ListasDeDeck | null;
+	/** Ya se leyeron las listas del deck elegido (o no hay deck). */
+	listo: boolean;
+	/** Cambia el deck y la lista desde la sala de espera (son los de la entrada de «Jugar»). */
+	elegirDeck: (id: string) => void;
+	elegirLista: (id: string | null) => void;
 	formato: Formato;
 	opciones: Opciones;
 	nombre: string;
@@ -187,6 +207,15 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 	const trabajo = useTrabajo((s) => (s.actual?.tipo === "mesa" ? s.actual : null));
 	const [copiado, setCopiado] = useState(false);
 	const anfitrion = papel === "anfitrion";
+	// El anfitrión solo dice con qué deck se le ve (lo prepara al empezar); un
+	// invitado lo prepara y se lo manda al anfitrión.
+	const aplicarDeck = useCallback(
+		(e: EleccionAplicada) => {
+			if (anfitrion) void cambiarDeckAnfitrion(e.deckId);
+			else void cambiarDeckInvitado(e.deckId, e.lista, e.formato);
+		},
+		[anfitrion],
+	);
 
 	// Lo que decide el anfitrión: asientos (él, el primero), equipos y ajustes.
 	const [ajustes, setAjustes] = useState<AjustesLocal>({
@@ -280,6 +309,12 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 			)}
 			<ScrollArea className="max-h-[55vh]">
 				<div className="flex flex-col gap-2.5 p-1">
+					<EleccionEnSala
+						preparar={preparar}
+						juega={papel !== "espectador"}
+						alNombre={cambiarApodo}
+						aplicar={aplicarDeck}
+					/>
 					<div className="flex flex-col gap-1.5">
 						<span className="text-xs font-medium">{t("En la sala")}</span>
 						{anfitrion ? (

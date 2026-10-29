@@ -300,7 +300,7 @@ async fn ceder<M: Mesa>(anf: &Arc<Anfitrion>, ep: &Endpoint, mesa: &M) -> bool {
                 addr,
                 secreto: anf.secreto().to_string(),
             },
-            apodo: anf.apodo.clone(),
+            apodo: anf.apodo(),
             rol: Rol::Jugador,
             deck: None,
         };

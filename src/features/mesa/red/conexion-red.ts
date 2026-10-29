@@ -2,6 +2,7 @@ import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { toast } from "sonner";
 import type { AvisoRed } from "@/bindings/AvisoRed";
 import type { ConfigMesa } from "@/bindings/ConfigMesa";
+import type { Formato } from "@/bindings/Formato";
 import type { PeticionUnion } from "@/bindings/PeticionUnion";
 import { paraTraducir, traduccionSuelta } from "@/components/language-provider";
 import { mensajeDeError } from "@/lib/errores";
@@ -139,6 +140,38 @@ export async function crearPartida(apodo: string, deck: string | null): Promise<
 		toast.error(mensajeDeError(e, traduccionSuelta));
 		return false;
 	}
+}
+
+/** Cambia cómo se llama esta app en la sala de espera (los demás lo ven al momento). */
+export async function cambiarApodo(apodo: string) {
+	try {
+		await call("red_apodo", { apodo });
+	} catch {
+		/* ya no está en la sala */
+	}
+}
+
+/** El anfitrión cambia el deck con el que se le ve en la sala. */
+export async function cambiarDeckAnfitrion(deckId: string): Promise<boolean> {
+	try {
+		await call("red_anfitrion_deck", { deckId });
+		return true;
+	} catch (e) {
+		toast.error(mensajeDeError(e, traduccionSuelta));
+		return false;
+	}
+}
+
+/** Un invitado cambia el deck (y la lista) con el que juega: lo prepara y se lo manda al anfitrión. */
+export function cambiarDeckInvitado(
+	deckId: string,
+	lista: string | null,
+	formato: Formato,
+): Promise<boolean> {
+	return conProgreso(
+		() => call("red_deck", { deckId, lista, formato }),
+		async () => true,
+	);
 }
 
 /** Se une con un código (prepara antes el deck, con su progreso). */

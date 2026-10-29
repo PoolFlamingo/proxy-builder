@@ -8,6 +8,7 @@ import { WithTooltip } from "@/components/ui/with-tooltip";
 import { call } from "@/lib/ipc";
 import { useSalas } from "@/stores/salas-store";
 import { useTrabajo } from "@/stores/trabajo-store";
+import { EleccionEnSala } from "../mesa/red/eleccion-en-sala";
 import type { Preparacion } from "../mesa/red/red-dialog";
 import { empezarSala, invitar, prepararDeck, salirDeSala } from "./conexion-salas";
 import { CodigoInvitacion } from "./playgroup-panel";
@@ -125,6 +126,21 @@ export function SalaEspera({ preparar }: { preparar: Preparacion }) {
 					})}
 				</ul>
 			</ScrollArea>
+			{como === "jugador" && !empezada && (
+				<EleccionEnSala
+					preparar={preparar}
+					juega
+					alNombre={null}
+					aplicar={(e) =>
+						void prepararDeck(
+							e.deckId,
+							e.lista,
+							formatoDeSala(sala.sala.formato, e.formato),
+							preparar.deckNombre ?? "",
+						)
+					}
+				/>
+			)}
 			{como === "jugador" && !empezada && (
 				<div className="flex items-center gap-2.5 rounded-lg border bg-card/40 p-2.5">
 					<Layers className="size-4 text-primary" />

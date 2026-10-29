@@ -189,9 +189,32 @@ pub struct Conexion {
     pub actual: Arc<std::sync::Mutex<Option<Connection>>>,
     /// Se va a propósito: el bucle no vuelve a conectar.
     saliendo: Arc<std::sync::atomic::AtomicBool>,
+    /// El nombre que se puso después de unirse: al reconectar se entra con él.
+    apodo: Arc<std::sync::Mutex<Option<String>>>,
 }
 
 impl Conexion {
+    /// Cambia cómo se llama en la sala de espera: se lo dice al anfitrión,
+    /// que se lo cuenta a todos. Devuelve el nombre ya limpio.
+    pub fn cambiar_apodo(&self, apodo: &str) -> String {
+        let limpio = super::anfitrion::limpiar_apodo(apodo);
+        if limpio.is_empty() {
+            return limpio;
+        }
+        if let Ok(mut a) = self.apodo.lock() {
+            *a = Some(limpio.clone());
+        }
+        let _ = self.tx.send(AlHost::Apodo {
+            apodo: limpio.clone(),
+        });
+        limpio
+    }
+
+    /// Cambia el deck con el que se juega, en la sala de espera.
+    pub fn cambiar_deck(&self, deck: DeckDeMesa) {
+        let _ = self.tx.send(AlHost::Preparacion { deck });
+    }
+
     pub fn conexion(&self) -> Option<Connection> {
         match self.actual.lock() {
             Ok(g) => g.clone(),
@@ -232,6 +255,7 @@ pub(super) fn seguir_con<M: Mesa>(ep: Endpoint, u: Union, mesa: M, primera: Prim
     let para_salir = salida.clone();
     let actual = Arc::new(std::sync::Mutex::new(Some(conn.clone())));
     let saliendo = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let apodo = Arc::new(std::sync::Mutex::new(None));
     let tarea = tokio::spawn(bucle(
         ep,
         u,
@@ -242,6 +266,7 @@ pub(super) fn seguir_con<M: Mesa>(ep: Endpoint, u: Union, mesa: M, primera: Prim
             entrada,
             conexion: actual.clone(),
             saliendo: saliendo.clone(),
+            apodo: apodo.clone(),
         },
         (conn, tx, rx, primera),
     ));
@@ -250,6 +275,7 @@ pub(super) fn seguir_con<M: Mesa>(ep: Endpoint, u: Union, mesa: M, primera: Prim
         tarea: tarea.abort_handle(),
         actual,
         saliendo,
+        apodo,
     }
 }
 
@@ -259,6 +285,7 @@ struct Canales {
     entrada: Arc<Mutex<mpsc::UnboundedReceiver<AlHost>>>,
     conexion: Arc<std::sync::Mutex<Option<Connection>>>,
     saliendo: Arc<std::sync::atomic::AtomicBool>,
+    apodo: Arc<std::sync::Mutex<Option<String>>>,
 }
 
 async fn bucle<M: Mesa>(
@@ -274,6 +301,7 @@ async fn bucle<M: Mesa>(
         entrada,
         conexion,
         saliendo,
+        apodo,
     } = canales;
     let mut actual = Some(primera);
     loop {
@@ -308,6 +336,10 @@ async fn bucle<M: Mesa>(
             }
             Fin::Traspaso(t) => traspaso = Some(t),
             Fin::Cortada => {}
+        }
+        // Si cambió su nombre en la sala, vuelve con el nuevo.
+        if let Some(a) = apodo.lock().ok().and_then(|a| a.clone()) {
+            u.apodo = a;
         }
         // Volver a conectar, con el último evento que se tiene. Con código
         // directo se prueba menos: luego se busca al anfitrión que sigue. Si
