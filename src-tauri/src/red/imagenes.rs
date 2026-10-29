@@ -171,14 +171,21 @@ pub fn url_en_vista(v: &VistaMesa, id: &str, cara: u8) -> Option<String> {
 
 /// De quién es una imagen propia en lo que esta app tiene abierto.
 pub fn buscar<M: Mesa>(mesa: &M, sha: &str) -> Option<DeQuien> {
-    mesa.con(|s| s.as_ref().and_then(|s| en_partida(s.partida(), sha)))
-        .or_else(|| mesa.mirada(|m| m.as_ref().and_then(|m| en_vista(&m.vista, sha))))
+    // La de ahora y, en una repetición, la del punto que se mira (una ficha que
+    // ya no está).
+    mesa.con(|s| {
+        s.as_ref()
+            .and_then(|s| en_partida(s.partida(), sha).or_else(|| en_partida(s.en_pantalla(), sha)))
+    })
+    .or_else(|| mesa.mirada(|m| m.as_ref().and_then(|m| en_vista(&m.vista, sha))))
 }
 
 fn buscar_url<M: Mesa>(mesa: &M, id: &str, cara: u8) -> Option<String> {
     mesa.con(|s| {
-        s.as_ref()
-            .and_then(|s| url_en_partida(s.partida(), id, cara))
+        s.as_ref().and_then(|s| {
+            url_en_partida(s.partida(), id, cara)
+                .or_else(|| url_en_partida(s.en_pantalla(), id, cara))
+        })
     })
     .or_else(|| mesa.mirada(|m| m.as_ref().and_then(|m| url_en_vista(&m.vista, id, cara))))
 }
@@ -360,6 +367,65 @@ pub async fn bajar_scryfall<M: Mesa>(mesa: &M, id: &str, cara: u8) -> AppResult<
     .map_err(|_| AppError::new(ErrorCode::Internal))?
 }
 
+/// Las imágenes propias de una partida (de todos los jugadores): caras,
+/// fichas, reversos y tapetes, cada una con si es un tapete.
+pub fn propias_de(p: &Partida) -> Vec<(String, bool)> {
+    let mut out: BTreeMap<String, bool> = BTreeMap::new();
+    let mut meter = |r: &RefImagen, tapete: bool| {
+        if let RefImagen::Propia { sha256, .. } = r {
+            out.entry(sha256.clone()).or_insert(tapete);
+        }
+    };
+    for j in &p.jugadores {
+        if let Some(t) = &j.tapete {
+            meter(t, true);
+        }
+        meter(&j.dorso, false);
+        for f in &j.fichas {
+            caras(f).for_each(|r| meter(r, false));
+        }
+    }
+    for c in p.cartas.values() {
+        caras(&c.origen).for_each(|r| meter(r, false));
+    }
+    out.into_iter().collect()
+}
+
+/// En el invitado: trae de antemano, sin prisa y de pocas en pocas, todas las
+/// imágenes propias de la partida que aún no tiene. Así las cartas de los
+/// demás ya están cuando las juegan (antes llegaban al pedirlas la pantalla,
+/// con la carta vacía un rato). Espera a tener la partida; lo que falle se
+/// vuelve a pedir cuando la pantalla lo pida.
+pub async fn precargar_invitado<M: Mesa>(mesa: M, conn: Connection) {
+    let mut propias = Vec::new();
+    for _ in 0..60 {
+        propias = mesa.con(|s| {
+            s.as_ref()
+                .map(|s| propias_de(s.partida()))
+                .unwrap_or_default()
+        });
+        if !propias.is_empty() {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(500)).await;
+    }
+    let carpeta = mesa.carpeta();
+    let faltan: Vec<(String, bool)> = propias
+        .into_iter()
+        .filter(|(sha, _)| !la_tengo(&carpeta, sha))
+        .collect();
+    use futures::StreamExt;
+    futures::stream::iter(faltan)
+        .for_each_concurrent(A_LA_VEZ, |(sha, tapete)| {
+            let conn = conn.clone();
+            let carpeta = carpeta.clone();
+            async move {
+                let _ = traer(&conn, &carpeta, &sha, tapete).await;
+            }
+        })
+        .await;
+}
+
 /// Lo que hace falta para traer una imagen propia: la conexión por la que
 /// pedirla.
 pub enum Por {
@@ -381,13 +447,19 @@ pub async fn traer_propia<M: Mesa>(mesa: &M, por: Por, sha: &str) -> AppResult<(
     traer(&conn, &mesa.carpeta(), sha, de.tapete).await
 }
 
-/// La pantalla pide una imagen de la mesa que no está: en una partida en
-/// red, se trae (la propia, por la red; la de Scryfall, de su `url`).
+/// La pantalla pide una imagen de la mesa que no está: la de Scryfall se
+/// baja de su `url` siempre; la propia, por la red si hay partida en red.
 pub async fn asegurar<R: tauri::Runtime>(
     app: &tauri::AppHandle<R>,
     img: &crate::mesa::imagenes::ImagenMesa,
 ) -> AppResult<()> {
     use tauri::Manager;
+    let mesa = super::mesa::MesaDeApp(app.clone());
+    // Las de Scryfall no pasan por nadie: también sin sala (una repetición
+    // del historial, una caché borrada).
+    if let crate::mesa::imagenes::ImagenMesa::Scryfall(id, cara) = img {
+        return bajar_scryfall(&mesa, id, *cara).await;
+    }
     let estado = app.state::<crate::state::AppState>();
     let por = estado.red.con_sala(|s| match s {
         Some(super::Sala::Anfitrion { anf, .. }) => Some(Por::Anfitrion(anf.clone())),
@@ -397,11 +469,8 @@ pub async fn asegurar<R: tauri::Runtime>(
     let Some(por) = por else {
         return Err(AppError::new(ErrorCode::NotFound));
     };
-    let mesa = super::mesa::MesaDeApp(app.clone());
     match img {
         crate::mesa::imagenes::ImagenMesa::Propia(sha) => traer_propia(&mesa, por, sha).await,
-        crate::mesa::imagenes::ImagenMesa::Scryfall(id, cara) => {
-            bajar_scryfall(&mesa, id, *cara).await
-        }
+        crate::mesa::imagenes::ImagenMesa::Scryfall(..) => Ok(()),
     }
 }

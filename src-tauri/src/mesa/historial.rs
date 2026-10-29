@@ -28,13 +28,16 @@ pub fn avisar(p: NuevaPartida) {
 }
 
 /// Lo que se guarda de la partida de esta sesión, si ya terminó. El invitado
-/// no tiene la partida desde el principio: guarda el resultado, sin registro.
+/// recibe todos los eventos: si su copia empieza antes del primer turno (la
+/// recibió en el mulligan, no al volver de un corte a media partida), guarda
+/// la repetición entera como el anfitrión; si no, solo el resultado.
 pub fn de_sesion(s: &Sesion) -> Option<NuevaPartida> {
     let p = s.partida();
     let fin = p.fin.as_ref()?;
     let r = resumir(&s.registro);
     let invitado = matches!(s.red, Some(RedSesion::Invitado(_)));
-    let registro = if invitado {
+    let desde_el_principio = s.registro.inicial.turno.numero == 0;
+    let registro = if invitado && !desde_el_principio {
         None
     } else {
         match guardada::codificar(&guardada::de_sesion(s)) {
@@ -78,7 +81,18 @@ pub fn de_sesion(s: &Sesion) -> Option<NuevaPartida> {
                     .get(i)
                     .map(|c| c.deck_id.clone())
                     .unwrap_or_default(),
-                deck: s.mazos.get(i).map(|m| m.nombre.clone()).unwrap_or_default(),
+                deck: s
+                    .mazos
+                    .get(i)
+                    .map(|m| m.nombre.clone())
+                    // Un invitado no tiene los mazos: el suyo, el que eligió.
+                    .or_else(|| {
+                        (j.id == s.yo && invitado)
+                            .then(crate::red::mi_deck)
+                            .flatten()
+                            .map(|d| d.nombre)
+                    })
+                    .unwrap_or_default(),
                 // Su nombre y su tamaño los apunta el historial al guardar.
                 lista_id: s
                     .config
@@ -100,6 +114,18 @@ pub fn de_sesion(s: &Sesion) -> Option<NuevaPartida> {
         nota: fin.nota.clone(),
         rondas: r.rondas,
         duracion_ms: r.duracion_ms,
+        // Lo que pinta la repetición: lo del principio y lo de ahora (las
+        // fichas que se crearon y se fueron no se pintan con imagen propia).
+        imagenes: if registro.is_some() {
+            let mut v = crate::red::imagenes::propias_de(&s.registro.inicial);
+            v.extend(crate::red::imagenes::propias_de(p));
+            let mut shas: Vec<String> = v.into_iter().map(|(sha, _)| sha).collect();
+            shas.sort();
+            shas.dedup();
+            shas
+        } else {
+            Vec::new()
+        },
         registro,
     })
 }
@@ -138,5 +164,45 @@ mod tests {
         let g = guardada::decodificar(&n.registro.unwrap()).unwrap();
         let s2 = guardada::sesion(g).unwrap();
         assert_eq!(mesa::huella(s2.partida()), mesa::huella(s.partida()));
+    }
+
+    #[test]
+    fn un_invitado_que_sigue_la_partida_desde_el_mulligan_guarda_la_repeticion_entera() {
+        let mut cfg = config();
+        let mut otro = cfg.jugadores[0].clone();
+        otro.nombre = "Otro".into();
+        cfg.jugadores.push(otro);
+        let mut host = Sesion::nueva(cfg, vec![mazo(), mazo()]).unwrap();
+        let inicial = host.registro.inicial.clone();
+        let (tx, _rx) = tokio::sync::mpsc::unbounded_channel();
+        let inv = crate::red::invitado::Invitado::nuevo(1, 1, tx);
+        let mut invitado = Sesion::invitada(inicial, mesa::IdJugador(1), inv);
+        host.accion(Accion::QuedarseCon { al_fondo: vec![] }, None)
+            .unwrap();
+        host.accion(
+            Accion::QuedarseCon { al_fondo: vec![] },
+            Some(mesa::IdJugador(1)),
+        )
+        .unwrap();
+        host.accion(Accion::Robar { n: 1 }, None).unwrap();
+        host.accion(
+            Accion::Terminar {
+                resultado: Resultado {
+                    ganadores: vec![mesa::IdJugador(0)],
+                    como: ComoGano::Combo,
+                    nota: String::new(),
+                },
+            },
+            None,
+        )
+        .unwrap();
+        for ev in host.registro.eventos.clone() {
+            invitado.recibir(ev, None);
+        }
+        let n = de_sesion(&invitado).unwrap();
+        assert_eq!(n.modo, ModoPartida::EnLinea);
+        let g = guardada::decodificar(&n.registro.expect("con registro")).unwrap();
+        let s2 = guardada::sesion(g).unwrap();
+        assert_eq!(mesa::huella(s2.partida()), mesa::huella(host.partida()));
     }
 }

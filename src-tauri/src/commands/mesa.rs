@@ -489,7 +489,10 @@ pub fn partidas_todas(
 /// Borra una partida del historial.
 #[tauri::command]
 pub fn partida_borrar(state: State<'_, AppState>, id: String) -> AppResult<()> {
-    partidas::borrar(&state.db, &id)
+    for sha in partidas::borrar(&state.db, &id)? {
+        crate::mesa::imagenes::olvidar_de_historial(&state, &sha);
+    }
+    Ok(())
 }
 
 /// Si esta app es un invitado, le pide al anfitrión lo del banquillo (el
@@ -688,7 +691,7 @@ pub fn repeticion_salir(app: AppHandle, state: State<'_, AppState>) -> AppResult
 #[tauri::command]
 pub async fn mesa_info_carta(state: State<'_, AppState>, carta: IdCarta) -> AppResult<ReglasCarta> {
     let origen = con_sesion(&state, |s| {
-        let p = s.partida();
+        let p = s.en_pantalla();
         let c = p.cartas.get(&carta).ok_or_else(sin_partida)?;
         let (z, i) = p.donde(carta).ok_or_else(sin_partida)?;
         if !mesa::visibilidad::ve(p, c, &z, i, s.mirador()) {

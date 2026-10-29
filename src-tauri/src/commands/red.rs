@@ -256,6 +256,11 @@ pub fn red_deck(
                 mazos: 1,
             };
             let deck = preparar_mazo(&app, &estado, p, &deck_id, lista.as_deref(), formato).await?;
+            crate::red::recordar_mi_deck(Some(crate::red::MiDeck {
+                deck_id: deck_id.clone(),
+                lista: lista.clone(),
+                nombre: deck.nombre.clone(),
+            }));
             estado.red.con_sala(|s| match s {
                 Some(Sala::Invitado { conexion, .. }) => {
                     conexion.cambiar_deck(deck);
@@ -340,9 +345,18 @@ pub fn red_unirse(
                         mazo: 0,
                         mazos: 1,
                     };
-                    Some(preparar_mazo(&app, &estado, p, id, lista.as_deref(), formato).await?)
+                    let d = preparar_mazo(&app, &estado, p, id, lista.as_deref(), formato).await?;
+                    crate::red::recordar_mi_deck(Some(crate::red::MiDeck {
+                        deck_id: id.clone(),
+                        lista: lista.clone(),
+                        nombre: d.nombre.clone(),
+                    }));
+                    Some(d)
                 }
-                None => None,
+                None => {
+                    crate::red::recordar_mi_deck(None);
+                    None
+                }
             };
             let ep = estado.red.nodo().await?;
             let conexion = unirse(

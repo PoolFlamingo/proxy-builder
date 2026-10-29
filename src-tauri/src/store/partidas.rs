@@ -67,6 +67,9 @@ pub struct NuevaPartida {
     pub rondas: u32,
     pub duracion_ms: u64,
     pub registro: Option<Vec<u8>>,
+    /// Las huellas de las imágenes propias que pinta su repetición (vacío sin
+    /// registro): se copian aparte para que la repetición no dependa de la caché.
+    pub imagenes: Vec<String>,
 }
 
 /// Una fila de la lista de un deck.
@@ -147,6 +150,12 @@ pub fn guardar(db: &Db, p: &NuevaPartida) -> AppResult<()> {
             p.registro,
         ],
     )?;
+    for sha in &p.imagenes {
+        tx.execute(
+            "INSERT OR IGNORE INTO partida_imagenes (partida_id, sha) VALUES (?1, ?2)",
+            params![p.id, sha],
+        )?;
+    }
     for j in p.jugadores.iter().filter(|j| !j.deck_id.is_empty()) {
         tx.execute(
             "INSERT INTO partida_decks (partida_id, jugador, deck_id, puesto)
@@ -272,10 +281,32 @@ pub fn registro(db: &Db, id: &str) -> AppResult<Option<Vec<u8>>> {
         .flatten())
 }
 
-pub fn borrar(db: &Db, id: &str) -> AppResult<()> {
-    db.conn()?
-        .execute("DELETE FROM partidas WHERE id = ?1", [id])?;
-    Ok(())
+/// Borra una partida. Devuelve las huellas de las imágenes guardadas para su
+/// repetición que ya no usa ninguna otra (para borrar sus copias).
+pub fn borrar(db: &Db, id: &str) -> AppResult<Vec<String>> {
+    let mut c = db.conn()?;
+    let tx = c.transaction()?;
+    let suyas: Vec<String> = {
+        let mut st = tx.prepare("SELECT sha FROM partida_imagenes WHERE partida_id = ?1")?;
+        let v = st
+            .query_map([id], |r| r.get(0))?
+            .collect::<Result<_, _>>()?;
+        v
+    };
+    tx.execute("DELETE FROM partidas WHERE id = ?1", [id])?;
+    let mut sueltas = Vec::new();
+    for sha in suyas {
+        let usada: bool = tx.query_row(
+            "SELECT EXISTS(SELECT 1 FROM partida_imagenes WHERE sha = ?1)",
+            [&sha],
+            |r| r.get(0),
+        )?;
+        if !usada {
+            sueltas.push(sha);
+        }
+    }
+    tx.commit()?;
+    Ok(sueltas)
 }
 
 #[cfg(test)]
@@ -320,7 +351,27 @@ mod tests {
             rondas: 7,
             duracion_ms: 1_000,
             registro,
+            imagenes: Vec::new(),
         }
+    }
+
+    #[test]
+    fn al_borrar_una_partida_solo_quedan_sueltas_las_imagenes_que_nadie_usa() {
+        let dir = tempfile::tempdir().unwrap();
+        let db = Db::open(&dir.path().join("t.db")).unwrap();
+        let sha = |c: char| c.to_string().repeat(64);
+        let mut a = partida("a", 10, vec![jugador(0, "", 1)], Some(vec![1]));
+        a.imagenes = vec![sha('a'), sha('b')];
+        let mut b = partida("b", 20, vec![jugador(0, "", 1)], Some(vec![1]));
+        b.imagenes = vec![sha('b')];
+        guardar(&db, &a).unwrap();
+        guardar(&db, &b).unwrap();
+        assert_eq!(
+            borrar(&db, "a").unwrap(),
+            vec![sha('a')],
+            "la «b» la usa otra"
+        );
+        assert_eq!(borrar(&db, "b").unwrap(), vec![sha('b')]);
     }
 
     #[test]

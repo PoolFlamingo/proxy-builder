@@ -32,6 +32,35 @@ pub fn ruta_propia(state: &AppState, sha: &str) -> PathBuf {
     propia_en(&carpeta(state), sha)
 }
 
+/// Donde se guarda la copia de una imagen de una partida del historial (no es
+/// caché: la repetición la necesita y las de los demás no se pueden rehacer).
+fn ruta_historial(state: &AppState, sha: &str) -> PathBuf {
+    propia_en(&state.paths.data.join("partidas").join("imagenes"), sha)
+}
+
+/// Copia (si no están ya) las imágenes de una partida que pasa al historial.
+/// Lo que no esté en la caché se salta: no se puede hacer nada mejor.
+pub fn guardar_para_historial(state: &AppState, shas: &[String]) {
+    for sha in shas.iter().filter(|s| es_huella(s)) {
+        let destino = ruta_historial(state, sha);
+        if destino.exists() {
+            continue;
+        }
+        if let Ok(b) = std::fs::read(ruta_propia(state, sha)) {
+            if let Err(e) = escribir_atomico(&destino, &b) {
+                tracing::warn!(codigo = ?e.code, "no se pudo guardar una imagen de la partida");
+            }
+        }
+    }
+}
+
+/// Borra la copia de una imagen que ya no usa ninguna partida del historial.
+pub fn olvidar_de_historial(state: &AppState, sha: &str) {
+    if es_huella(sha) {
+        let _ = std::fs::remove_file(ruta_historial(state, sha));
+    }
+}
+
 pub fn ruta_scryfall(state: &AppState, id: &str, cara: u8) -> PathBuf {
     scryfall_en(&carpeta(state), id, cara)
 }
@@ -103,6 +132,23 @@ pub fn al_indice(state: &AppState, clave: &str, r: &RefImagen) {
     }
 }
 
+/// Los anchos que pide el tablero (miniaturas, mano y zonas, la vista grande):
+/// se hacen al preparar el deck para que nada aparezca carta a carta.
+pub const ANCHOS_DE_ANTEMANO: [u32; 3] = [146, 244, 488];
+
+/// Deja hechas las reducidas de una cara (si ya estaban, no hace nada). Un
+/// fallo no para nada: la pantalla la pedirá y se hará entonces.
+pub fn reducir_de_antemano(state: &AppState, r: &RefImagen) {
+    let img = match r {
+        RefImagen::Propia { sha256, .. } => ImagenMesa::Propia(sha256.clone()),
+        RefImagen::Scryfall { id, cara, .. } => ImagenMesa::Scryfall(id.clone(), *cara),
+        RefImagen::Generica => return,
+    };
+    for ancho in ANCHOS_DE_ANTEMANO {
+        let _ = servir(state, &img, ancho);
+    }
+}
+
 /// Qué imagen pide la pantalla.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ImagenMesa {
@@ -113,7 +159,16 @@ pub enum ImagenMesa {
 /// La imagen pedida a ese ancho (de la caché de renders si ya se hizo).
 pub fn servir(state: &AppState, img: &ImagenMesa, ancho: u32) -> AppResult<Vec<u8>> {
     let (origen, nombre) = match img {
-        ImagenMesa::Propia(sha) if es_huella(sha) => (ruta_propia(state, sha), sha.clone()),
+        ImagenMesa::Propia(sha) if es_huella(sha) => {
+            let ruta = ruta_propia(state, sha);
+            // Borrada la caché, la de una partida del historial vuelve de su copia.
+            if !ruta.exists() {
+                if let Ok(b) = std::fs::read(ruta_historial(state, sha)) {
+                    let _ = escribir_atomico(&ruta, &b);
+                }
+            }
+            (ruta, sha.clone())
+        }
         ImagenMesa::Scryfall(id, cara) if es_id_scryfall(id) => {
             (ruta_scryfall(state, id, *cara), format!("s-{id}-{cara}"))
         }

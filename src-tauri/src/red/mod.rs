@@ -34,7 +34,7 @@ pub mod servidor;
 pub mod sucesion;
 pub mod vuelta;
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use iroh::{Endpoint, SecretKey};
 
@@ -193,4 +193,27 @@ mod tests {
         assert_eq!(ep.id(), b.public());
         ep.close().await;
     }
+}
+
+/// El deck con el que juega esta app la partida en red (y su lista): el
+/// anfitrión lo tiene en su configuración, pero un invitado solo recibe la
+/// partida. Sirve para que su historial la guarde bajo ese deck.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MiDeck {
+    pub deck_id: String,
+    pub lista: Option<String>,
+    pub nombre: String,
+}
+
+static MI_DECK: Mutex<Option<MiDeck>> = Mutex::new(None);
+
+/// Apunta el deck con el que se juega (`None`: se mira, sin deck).
+pub fn recordar_mi_deck(d: Option<MiDeck>) {
+    if let Ok(mut m) = MI_DECK.lock() {
+        *m = d;
+    }
+}
+
+pub fn mi_deck() -> Option<MiDeck> {
+    MI_DECK.lock().ok().and_then(|m| m.clone())
 }

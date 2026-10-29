@@ -465,6 +465,11 @@ async fn atender<M: Mesa>(
         mesa.clone(),
         None,
     ));
+    // Las imágenes de los demás, de antemano (sin esperar a que se jueguen).
+    let precarga = tokio::spawn(super::imagenes::precargar_invitado(
+        mesa.clone(),
+        conn.clone(),
+    ));
     // Latidos, enlaces y movimiento en vivo, por datagramas (E7, E10).
     let latencia = tokio::spawn(super::latencia::atender_invitado(
         conn.clone(),
@@ -497,6 +502,7 @@ async fn atender<M: Mesa>(
     };
     escritor.abort();
     imagenes.abort();
+    precarga.abort();
     latencia.abort();
     if !matches!(fin, Fin::Cortada) {
         conn.close(0u32.into(), b"fin");

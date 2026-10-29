@@ -103,9 +103,15 @@ impl Sesion {
                 return Err(AppError::new(ErrorCode::Rejected).with("motivo", "no_existe"));
             }
         }
-        let seq = match pos {
+        // Un mensaje dicho en medio de algo que se deshizo: la mesa, la del
+        // último evento de antes que sigue en pie.
+        let mut n = pos as usize;
+        while n > 0 && self.registro.en_lo_deshecho(r.seqs[n - 1]) {
+            n -= 1;
+        }
+        let seq = match n {
             0 => r.seqs.first().map_or(0, |s| s.saturating_sub(1)),
-            n => r.seqs[n as usize - 1],
+            n => r.seqs[n - 1],
         };
         let punto = self
             .registro
@@ -118,6 +124,20 @@ impl Sesion {
         }
         self.mandar(self.mensaje_vista());
         self.vista_repeticion()
+    }
+
+    /// Con la repetición abierta llegó algo nuevo (en red, el chat o lo que
+    /// hacen los demás): la línea de tiempo se rehace para que cuadre con el
+    /// registro; el punto que se mira no cambia.
+    pub(super) fn repeticion_al_dia(&mut self) {
+        let Ok((seqs, hitos)) = indice(self) else {
+            return;
+        };
+        if let Some(r) = self.repeticion.as_mut() {
+            r.pos = r.pos.min(seqs.len() as u32);
+            r.seqs = seqs;
+            r.hitos = hitos;
+        }
     }
 
     /// Deja la repetición y vuelve a la partida tal como terminó.
@@ -211,13 +231,13 @@ mod tests {
             };
             let esperada = s.registro.en(seq).unwrap();
             assert_eq!(
-                mesa::huella(s.partida()),
+                mesa::huella(s.en_pantalla()),
                 mesa::huella(&esperada),
                 "pos {pos}"
             );
         }
         s.repeticion_ir(total, None).unwrap();
-        assert_eq!(mesa::huella(s.partida()), final_);
+        assert_eq!(mesa::huella(s.en_pantalla()), final_);
     }
 
     #[test]
@@ -233,7 +253,10 @@ mod tests {
         s.repeticion_ir(0, None).unwrap();
         s.salir_de_repeticion();
         assert!(s.repeticion.is_none());
-        assert_eq!(s.partida().turno.numero, s.registro.partida().turno.numero);
+        assert_eq!(
+            s.en_pantalla().turno.numero,
+            s.registro.partida().turno.numero
+        );
     }
 
     #[test]
@@ -274,7 +297,7 @@ mod tests {
         assert_eq!(huellas.len(), s.repeticion.as_ref().unwrap().seqs.len() + 1);
         for (pos, esperada) in huellas.iter().enumerate() {
             s.repeticion_ir(pos as u32, None).unwrap();
-            assert_eq!(&mesa::huella(s.partida()), esperada, "pos {pos}");
+            assert_eq!(&mesa::huella(s.en_pantalla()), esperada, "pos {pos}");
         }
     }
 }

@@ -431,6 +431,11 @@ pub fn salas_deck(
             let nombre = crate::store::decks::open(&estado.db, &deck_id)
                 .map(|d| d.name)
                 .unwrap_or_else(|_| mazo.nombre.clone());
+            crate::red::recordar_mi_deck(Some(crate::red::MiDeck {
+                deck_id: deck_id.clone(),
+                lista: lista.clone(),
+                nombre: nombre.clone(),
+            }));
             if let Ok(mut d) = salon.deck.lock() {
                 *d = Some(DeckListo {
                     deck_id,

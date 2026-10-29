@@ -127,7 +127,16 @@ pub fn run() {
                 let estado = h.state::<state::AppState>();
                 if let Err(e) = store::partidas::guardar(&estado.db, &p) {
                     tracing::warn!(codigo = ?e.code, "no se pudo guardar la partida en el historial");
+                    return;
                 }
+                // Las imágenes de su repetición, aparte de la caché (sin parar la mesa).
+                let h2 = h.clone();
+                std::thread::spawn(move || {
+                    mesa::imagenes::guardar_para_historial(
+                        &h2.state::<state::AppState>(),
+                        &p.imagenes,
+                    );
+                });
             });
             // Los marcos «Original» que pida esta versión y aún no estén.
             let app1 = app.handle().clone();

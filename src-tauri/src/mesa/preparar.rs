@@ -486,12 +486,16 @@ pub async fn deck_de_mesa<A: CardApi>(
             }
         },
     };
+    imagenes::reducir_de_antemano(state, &dorso);
     let total = secciones.len() as u32;
     let hechas = AtomicU32::new(0);
     let cartas: Vec<AppResult<CartaDeMesa>> = secciones
         .par_iter()
         .map(|(c, seccion)| {
             let origen = ctx.origen(c, &dorso)?;
+            for cara in &origen.caras {
+                imagenes::reducir_de_antemano(state, cara);
+            }
             progreso(hechas.fetch_add(1, Ordering::Relaxed) + 1, total);
             Ok(CartaDeMesa {
                 carta_deck: c.id.clone(),

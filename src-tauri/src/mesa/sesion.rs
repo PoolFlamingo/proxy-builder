@@ -247,15 +247,20 @@ impl Sesion {
         inv: crate::red::invitado::Invitado,
     ) -> Sesion {
         let config = ConfigMesa {
+            // De los demás no se sabe el deck; del propio, el que se eligió
+            // (para guardarla en su historial).
             jugadores: partida
                 .jugadores
                 .iter()
-                .map(|j| JugadorMesa {
-                    deck_id: String::new(),
-                    nombre: j.nombre.clone(),
-                    color: j.color.clone(),
-                    lista: None,
-                    equipo: j.equipo,
+                .map(|j| {
+                    let mio = (j.id == yo).then(crate::red::mi_deck).flatten();
+                    JugadorMesa {
+                        deck_id: mio.as_ref().map(|d| d.deck_id.clone()).unwrap_or_default(),
+                        nombre: j.nombre.clone(),
+                        color: j.color.clone(),
+                        lista: mio.and_then(|d| d.lista),
+                        equipo: j.equipo,
+                    }
                 })
                 .collect(),
             formato: partida.formato,
@@ -288,9 +293,16 @@ impl Sesion {
         }
     }
 
-    /// La partida que se ve: la de ahora o, en una repetición, la del punto
-    /// que se está mirando.
+    /// La partida de verdad, la de ahora, aunque se esté mirando la
+    /// repetición en su sitio. Es la que va a la red, se guarda y decide.
     pub fn partida(&self) -> &Partida {
+        self.registro.partida()
+    }
+
+    /// La partida que se ve: la de ahora o, en una repetición, la del punto
+    /// que se está mirando. 🛑 Solo para la pantalla: nada de la red ni de lo
+    /// que se guarda sale de aquí (un invitado que vuelve recibiría el pasado).
+    pub fn en_pantalla(&self) -> &Partida {
         match &self.repeticion {
             Some(r) => &r.punto,
             None => self.registro.partida(),
@@ -305,7 +317,7 @@ impl Sesion {
     }
 
     pub fn vista(&self) -> VistaMesa {
-        vista(self.partida(), self.mirador())
+        vista(self.en_pantalla(), self.mirador())
     }
 
     pub(super) fn mandar(&self, m: MensajeMesa) {
@@ -350,7 +362,8 @@ impl Sesion {
     /// Una acción de la pantalla. `como`: a nombre de otro jugador de esta
     /// sesión local (partida local de varios, Fase G).
     pub fn accion(&mut self, accion: Accion, como: Option<IdJugador>) -> AppResult<()> {
-        if self.repeticion.is_some() {
+        // Mirando la repetición en su sitio, la pantalla solo habla (el chat).
+        if self.repeticion.is_some() && !accion.es_comunicacion() {
             return Err(AppError::new(ErrorCode::Rejected).with("motivo", "repeticion"));
         }
         // El invitado no aplica nada: se lo pide al anfitrión (sin predecir,
@@ -406,9 +419,9 @@ impl Sesion {
         accion: Accion,
         origen: Option<(IdJugador, u64)>,
     ) -> AppResult<()> {
-        if self.repeticion.is_some() && !accion.es_comunicacion() {
-            return Err(AppError::new(ErrorCode::Rejected).with("motivo", "repeticion"));
-        }
+        // Lo que piden los demás sigue aunque el anfitrión esté mirando la
+        // repetición (un «deshacer» de un `Terminar` por error, el chat…): solo
+        // su pantalla se queda en el pasado (`accion`).
         // Un anfitrión sin la mayoría de los jugadores no juega (Fase K): los
         // que faltan podrían estar siguiendo la partida con otro.
         if let Some(RedSesion::Anfitrion(a)) = &self.red {
@@ -467,6 +480,13 @@ impl Sesion {
     pub fn recibir_partida(&mut self, partida: Partida, yo: IdJugador) {
         self.registro = Registro::nuevo(partida, ModoDeshacer::UltimaPropia);
         self.yo = yo;
+        // Una repetición abierta apuntaba al registro de antes: se rehace sobre
+        // el nuevo, en su último punto.
+        if let Some(r) = self.repeticion.take() {
+            if self.entrar_repeticion(r.desde_historial).is_ok() {
+                return;
+            }
+        }
         self.mandar(self.mensaje_vista());
     }
 
@@ -508,8 +528,10 @@ impl Sesion {
                 super::historial::avisar(n);
             }
         }
-        // Mientras se repite, la pantalla ve otro momento: lo nuevo espera.
+        // Mientras se repite, la pantalla ve otro momento: lo nuevo espera, pero
+        // la línea de tiempo crece con lo que llega.
         if self.repeticion.is_some() {
+            self.repeticion_al_dia();
             return;
         }
         if matches!(hecho.evento.cambio, Cambio::Restaurar { .. }) {
