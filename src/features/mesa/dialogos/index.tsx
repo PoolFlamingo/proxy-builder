@@ -1,4 +1,5 @@
 import { useMesa } from "@/stores/mesa-store";
+import { NotaDialog } from "../notas-mesa";
 import { usePantalla } from "../pantalla";
 import { TapeteDialog } from "../tapete-dialog";
 import { AzarDialog } from "./azar";
@@ -41,6 +42,7 @@ export function DialogosMesa({ deckId }: { deckId: string | null }) {
 			{d?.tipo === "terminar" && !hayFin && <TerminarDialog />}
 			{d?.tipo === "danoComandante" && <DanoComandanteDialog />}
 			{d?.tipo === "atajos" && <AtajosDialog />}
+			{d?.tipo === "nota" && <NotaDialog carta={d.carta} nota={d.nota} />}
 			<TapeteDialog
 				abierto={d?.tipo === "tapete"}
 				onCerrar={() => usePantalla.getState().abrir(null)}

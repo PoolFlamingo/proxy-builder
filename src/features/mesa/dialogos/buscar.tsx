@@ -1,17 +1,9 @@
-import {
-	ArrowDownToLine,
-	ArrowUpToLine,
-	Hand,
-	LayoutGrid,
-	Search,
-	Skull,
-	Trash2,
-} from "lucide-react";
 import { useMemo, useState } from "react";
 import type { IdCarta } from "@/bindings/IdCarta";
 import type { IdJugador } from "@/bindings/IdJugador";
 import type { VistaCarta } from "@/bindings/VistaCarta";
 import type { Zona } from "@/bindings/Zona";
+import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +17,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { WithTooltip } from "@/components/ui/with-tooltip";
-
 import { useMesa } from "@/stores/mesa-store";
 import { destino, hacer, mover, sitio } from "../acciones";
 import { caraVisible, ImagenCarta } from "../imagen-carta";
@@ -136,7 +127,10 @@ function Rejilla({
 		<div className="flex min-h-0 flex-col gap-2.5">
 			<div className="flex flex-wrap items-center gap-1.5" data-filtro="">
 				<div className="relative">
-					<Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+					<Icono
+						icon="lucide:search"
+						className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground"
+					/>
 					<Input
 						autoFocus
 						value={f.texto}
@@ -253,19 +247,19 @@ export function BuscarDialog({ de, filtro }: { de: IdJugador; filtro: "todo" | "
 					acciones={(c) => (
 						<>
 							<BotonCarta ayuda={t("Mano")} onClick={() => sacar(c.id, "mano")}>
-								<Hand className="size-3" />
+								<Icono icon="lucide:hand" className="size-3" />
 							</BotonCarta>
 							<BotonCarta ayuda={t("Campo")} onClick={() => sacar(c.id, "campo")}>
-								<LayoutGrid className="size-3" />
+								<Icono icon="lucide:layout-grid" className="size-3" />
 							</BotonCarta>
 							<BotonCarta
 								ayuda={t("Arriba")}
 								onClick={() => sacar(c.id, "biblioteca", sitio.arriba)}
 							>
-								<ArrowUpToLine className="size-3" />
+								<Icono icon="lucide:arrow-up-to-line" className="size-3" />
 							</BotonCarta>
 							<BotonCarta ayuda={t("Cementerio")} onClick={() => sacar(c.id, "cementerio")}>
-								<Skull className="size-3" />
+								<Icono icon="game-icons:tombstone" className="size-3" />
 							</BotonCarta>
 						</>
 					)}
@@ -343,7 +337,11 @@ export function VerZonaDialog({ jugador, zona }: { jugador: IdJugador; zona: Zon
 								variant={cual === z ? "default" : "outline"}
 								onClick={() => setCual(z)}
 							>
-								{z === "cementerio" ? <Skull /> : <Trash2 />}
+								{z === "cementerio" ? (
+									<Icono icon="game-icons:tombstone" />
+								) : (
+									<Icono icon="lucide:trash-2" />
+								)}
 								{t(NOMBRES_ZONA[z] ?? "")} · {cuantas(de, z)}
 							</Button>
 						))}
@@ -369,23 +367,23 @@ export function VerZonaDialog({ jugador, zona }: { jugador: IdJugador; zona: Zon
 					acciones={(c) => (
 						<>
 							<BotonCarta ayuda={t("Mano")} onClick={() => a(c.id, "mano")}>
-								<Hand className="size-3" />
+								<Icono icon="lucide:hand" className="size-3" />
 							</BotonCarta>
 							<BotonCarta ayuda={t("Campo")} onClick={() => a(c.id, "campo")}>
-								<LayoutGrid className="size-3" />
+								<Icono icon="lucide:layout-grid" className="size-3" />
 							</BotonCarta>
 							{cual !== "cementerio" && (
 								<BotonCarta ayuda={t("Cementerio")} onClick={() => a(c.id, "cementerio")}>
-									<Skull className="size-3" />
+									<Icono icon="game-icons:tombstone" className="size-3" />
 								</BotonCarta>
 							)}
 							{cual !== "exilio" && (
 								<BotonCarta ayuda={t("Exilio")} onClick={() => a(c.id, "exilio")}>
-									<Trash2 className="size-3" />
+									<Icono icon="lucide:trash-2" className="size-3" />
 								</BotonCarta>
 							)}
 							<BotonCarta ayuda={t("Abajo")} onClick={() => a(c.id, "biblioteca", sitio.abajo)}>
-								<ArrowDownToLine className="size-3" />
+								<Icono icon="lucide:arrow-down-to-line" className="size-3" />
 							</BotonCarta>
 						</>
 					)}

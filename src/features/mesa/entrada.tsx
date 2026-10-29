@@ -1,16 +1,3 @@
-import {
-	History,
-	Image,
-	ListChecks,
-	Loader2,
-	Pencil,
-	Play,
-	Plug,
-	Plus,
-	Trash2,
-	User,
-	Users,
-} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { EstadoMesa } from "@/bindings/EstadoMesa";
@@ -22,10 +9,13 @@ import type { ModoMulligan } from "@/bindings/ModoMulligan";
 import type { Opciones } from "@/bindings/Opciones";
 import { CampoNumero, Fila, FilaInterruptor, Selector } from "@/components/campos";
 import { Confirmar } from "@/components/confirmar";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { WithTooltip } from "@/components/ui/with-tooltip";
 import { BarraHerramientas } from "@/features/library/barra-herramientas";
 import { BarraLateral } from "@/features/library/barra-lateral";
 import { useEtiquetasUi } from "@/features/library/etiquetas-ui";
@@ -147,6 +137,8 @@ function Entrada() {
 	const pideLista = formato === "commander" && (listas?.cuentan ?? 0) > 100;
 	const sinLista = pideLista && !listaId;
 
+	const formatoActual = useRef(formato);
+	formatoActual.current = formato;
 	// El formato de fábrica, el que se deduce del deck.
 	useEffect(() => {
 		if (!elegido) return;
@@ -155,6 +147,8 @@ function Entrada() {
 				if (!d) return;
 				const f: Formato =
 					d.kind === "commander" ? "commander" : d.kind === "limited" ? "limited" : "constructed";
+				// Otro deck del mismo formato no deshace lo que se tocó (vidas, mulligan…).
+				if (f === formatoActual.current) return;
 				setFormato(f);
 				setOpciones(opcionesDeFabrica(f, 1));
 			})
@@ -263,7 +257,7 @@ function Entrada() {
 							titulo={t("Elige un deck")}
 							acciones={
 								<Button size="sm" variant="outline" onClick={() => setHistorial(true)}>
-									<History />
+									<Icono icon="lucide:history" />
 									{t("Historial")}
 								</Button>
 							}
@@ -280,7 +274,7 @@ function Entrada() {
 						</div>
 					</section>
 
-					<aside className="flex w-80 shrink-0 flex-col gap-2.5">
+					<aside className="flex min-h-0 w-80 shrink-0 flex-col gap-2.5">
 						<VolverARed />
 						{guardada && (
 							<section className="flex flex-col gap-2.5 rounded-lg border border-primary/40 bg-primary/5 p-2.5">
@@ -298,187 +292,218 @@ function Entrada() {
 										disabled={!!trabajo}
 										onClick={() => void retomar()}
 									>
-										<Play className="size-3.5" />
+										<Icono icon="lucide:play" className="size-3.5" />
 										{t("Seguir la partida")}
 									</Button>
 									<Button size="sm" variant="outline" onClick={() => setDescartar(true)}>
-										<Trash2 className="size-3.5" />
+										<Icono icon="lucide:trash-2" className="size-3.5" />
 										{t("Descartar")}
 									</Button>
 								</div>
 							</section>
 						)}
-						<section className="flex flex-col gap-2.5 rounded-lg border bg-card/40 p-2.5">
-							<Fila etiqueta={t("Tu nombre")}>
-								<div className="relative">
-									<User className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-									<Input
-										value={nombre}
-										onChange={(e) => setNombre(e.target.value)}
-										placeholder={t("Jugador")}
-										maxLength={MAX_NOMBRE}
-										className="h-7 w-36 pl-7 text-xs"
-									/>
-								</div>
-							</Fila>
-							<Fila etiqueta={t("Formato")}>
-								<Selector<Formato>
-									valor={formato}
-									onChange={cambiarFormato}
-									opciones={[
-										{ valor: "commander", etiqueta: "Commander" },
-										{ valor: "constructed", etiqueta: t("60 cartas") },
-										{ valor: "limited", etiqueta: t("Limitado") },
-										{ valor: "libre", etiqueta: t("Libre") },
-									]}
-								/>
-							</Fila>
-							{elegido && listas && (
-								<div className="flex flex-col gap-1.5" data-tutorial="mesa-lista">
-									<Fila etiqueta={t("Lista para jugar")}>
-										{pideLista && listas.listas.length === 0 ? (
-											<span className="text-xs text-muted-foreground">{t("Ninguna todavía")}</span>
-										) : (
-											<Selector<string>
-												valor={listaId ?? TODO_EL_DECK}
-												onChange={(v) => setListaId(v === TODO_EL_DECK ? null : v)}
-												opciones={[
-													...(pideLista
-														? []
-														: [
-																{
-																	valor: TODO_EL_DECK,
-																	etiqueta: t("Todo el deck ({n})", { n: listas.cuentan }),
-																},
-															]),
-													...listas.listas.map((l) => ({ valor: l.id, etiqueta: l.nombre })),
-												]}
+						{/* Las opciones se desplazan; los botones de empezar, siempre a la vista. */}
+						<ScrollArea className="min-h-0 flex-1">
+							<div className="p-1">
+								<section className="flex flex-col gap-2.5 rounded-lg border bg-card/40 p-2.5">
+									<Fila etiqueta={t("Tu nombre")}>
+										<div className="relative">
+											<Icono
+												icon="lucide:user"
+												className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground"
 											/>
-										)}
+											<Input
+												value={nombre}
+												onChange={(e) => setNombre(e.target.value)}
+												placeholder={t("Jugador")}
+												maxLength={MAX_NOMBRE}
+												className="h-7 w-36 pl-7 text-xs"
+											/>
+										</div>
 									</Fila>
-									<div className="flex justify-end gap-1.5">
-										<Button
-											size="sm"
-											variant="outline"
-											onClick={() => setEditando({ lista: null })}
-										>
-											<Plus className="size-3.5" />
-											{t("Nueva lista…")}
-										</Button>
-										<Button
-											size="sm"
-											variant="outline"
-											disabled={!listaId}
-											onClick={() =>
-												setEditando({ lista: listas.listas.find((l) => l.id === listaId) ?? null })
-											}
-										>
-											<Pencil className="size-3.5" />
-											{t("Editar…")}
-										</Button>
-									</div>
-									{sinLista && (
-										<p className="flex items-start gap-1.5 rounded-md bg-amber-500/10 p-1.5 text-[11px] text-amber-600 dark:text-amber-300">
-											<ListChecks className="mt-0.5 size-3.5 shrink-0" />
-											{t(
-												"Este deck tiene {n} cartas y en Commander se juega con 100: haz una lista con el comandante y 99 más.",
-												{ n: listas.cuentan },
+									<Fila etiqueta={t("Formato")}>
+										<Selector<Formato>
+											valor={formato}
+											onChange={cambiarFormato}
+											opciones={[
+												{ valor: "commander", etiqueta: "Commander" },
+												{ valor: "constructed", etiqueta: t("60 cartas") },
+												{ valor: "limited", etiqueta: t("Limitado") },
+												{ valor: "libre", etiqueta: t("Libre") },
+											]}
+										/>
+									</Fila>
+									{elegido && listas && (
+										<div className="flex flex-col gap-1.5" data-tutorial="mesa-lista">
+											<Fila etiqueta={t("Lista para jugar")}>
+												{pideLista && listas.listas.length === 0 ? (
+													<span className="text-xs text-muted-foreground">
+														{t("Ninguna todavía")}
+													</span>
+												) : (
+													<Selector<string>
+														valor={listaId ?? TODO_EL_DECK}
+														onChange={(v) => setListaId(v === TODO_EL_DECK ? null : v)}
+														opciones={[
+															...(pideLista
+																? []
+																: [
+																		{
+																			valor: TODO_EL_DECK,
+																			etiqueta: t("Todo el deck ({n})", { n: listas.cuentan }),
+																		},
+																	]),
+															...listas.listas.map((l) => ({ valor: l.id, etiqueta: l.nombre })),
+														]}
+													/>
+												)}
+											</Fila>
+											<div className="flex justify-end gap-1.5">
+												<Button
+													size="sm"
+													variant="outline"
+													onClick={() => setEditando({ lista: null })}
+												>
+													<Icono icon="lucide:plus" className="size-3.5" />
+													{t("Nueva lista…")}
+												</Button>
+												<Button
+													size="sm"
+													variant="outline"
+													disabled={!listaId}
+													onClick={() =>
+														setEditando({
+															lista: listas.listas.find((l) => l.id === listaId) ?? null,
+														})
+													}
+												>
+													<Icono icon="lucide:pencil" className="size-3.5" />
+													{t("Editar…")}
+												</Button>
+											</div>
+											{sinLista && (
+												<p className="flex items-start gap-1.5 rounded-md bg-amber-500/10 p-1.5 text-[11px] text-amber-600 dark:text-amber-300">
+													<Icono icon="lucide:list-checks" className="mt-0.5 size-3.5 shrink-0" />
+													{t(
+														"Este deck tiene {n} cartas y en Commander se juega con 100: haz una lista con el comandante y 99 más.",
+														{ n: listas.cuentan },
+													)}
+												</p>
 											)}
-										</p>
+										</div>
 									)}
-								</div>
-							)}
-							<Fila etiqueta={t("Vidas")}>
-								<CampoNumero
-									valor={opciones.vidaInicial}
-									onChange={(v) => setOpciones({ ...opciones, vidaInicial: v ?? 20 })}
-									min={1}
-									max={999}
-									paso={1}
-								/>
-							</Fila>
-							<Fila etiqueta={t("Mulligan")}>
-								<Selector<ModoMulligan>
-									valor={opciones.mulligan}
-									onChange={(m) => setOpciones({ ...opciones, mulligan: m })}
-									opciones={[
-										{ valor: "londres", etiqueta: t("Londres") },
-										{ valor: "londresPrimeroGratis", etiqueta: t("Londres, el primero gratis") },
-										{ valor: "amistoso", etiqueta: t("Amistoso") },
-										{ valor: "libre", etiqueta: t("Libre") },
-									]}
-								/>
-							</Fila>
-							<FilaInterruptor
-								etiqueta={t("Robar al empezar el turno")}
-								valor={opciones.ayudas.robarAlEmpezar}
-								onChange={(v) => ayuda("robarAlEmpezar", v)}
-							/>
-							<FilaInterruptor
-								etiqueta={t("Enderezar al empezar el turno")}
-								valor={opciones.ayudas.enderezarAlEmpezar}
-								onChange={(v) => ayuda("enderezarAlEmpezar", v)}
-							/>
-							<FilaInterruptor
-								etiqueta={t("El primero no roba")}
-								valor={opciones.primeroNoRoba}
-								onChange={(v) => setOpciones({ ...opciones, primeroNoRoba: v })}
-							/>
-							<FilaInterruptor
-								etiqueta={t("Sumar el impuesto del comandante")}
-								valor={opciones.ayudas.impuestoAutomatico}
-								onChange={(v) => ayuda("impuestoAutomatico", v)}
-							/>
-							<FilaInterruptor
-								etiqueta={t("Contadores al entrar (lealtad, sagas)")}
-								valor={opciones.ayudas.contadoresAlEntrar}
-								onChange={(v) => ayuda("contadoresAlEntrar", v)}
-							/>
-							<Fila etiqueta={t("Sparring (rival fantasma)")}>
-								<Selector<Intensidad>
-									valor={sparring}
-									onChange={(v) => useUi.getState().setMesa({ sparring: v })}
-									opciones={INTENSIDADES.map((i) => ({ valor: i.valor, etiqueta: t(i.nombre) }))}
-								/>
-							</Fila>
-							<Button
-								size="sm"
-								variant="outline"
-								disabled={!elegido}
-								onClick={() => setTapete(true)}
-							>
-								<Image className="size-3.5" />
-								{t("Tapete de este deck…")}
-							</Button>
-						</section>
-						<div className="mt-auto flex flex-col gap-2.5">
+									<Fila etiqueta={t("Vidas")}>
+										<CampoNumero
+											valor={opciones.vidaInicial}
+											onChange={(v) => setOpciones({ ...opciones, vidaInicial: v ?? 20 })}
+											min={1}
+											max={999}
+											paso={1}
+										/>
+									</Fila>
+									<Fila etiqueta={t("Mulligan")}>
+										<Selector<ModoMulligan>
+											valor={opciones.mulligan}
+											onChange={(m) => setOpciones({ ...opciones, mulligan: m })}
+											opciones={[
+												{ valor: "londres", etiqueta: t("Londres") },
+												{
+													valor: "londresPrimeroGratis",
+													etiqueta: t("Londres, el primero gratis"),
+												},
+												{ valor: "amistoso", etiqueta: t("Amistoso") },
+												{ valor: "libre", etiqueta: t("Libre") },
+											]}
+										/>
+									</Fila>
+									<FilaInterruptor
+										etiqueta={t("Robar al empezar el turno")}
+										valor={opciones.ayudas.robarAlEmpezar}
+										onChange={(v) => ayuda("robarAlEmpezar", v)}
+									/>
+									<FilaInterruptor
+										etiqueta={t("Enderezar al empezar el turno")}
+										valor={opciones.ayudas.enderezarAlEmpezar}
+										onChange={(v) => ayuda("enderezarAlEmpezar", v)}
+									/>
+									<FilaInterruptor
+										etiqueta={t("El primero no roba")}
+										valor={opciones.primeroNoRoba}
+										onChange={(v) => setOpciones({ ...opciones, primeroNoRoba: v })}
+									/>
+									<FilaInterruptor
+										etiqueta={t("Sumar el impuesto del comandante")}
+										valor={opciones.ayudas.impuestoAutomatico}
+										onChange={(v) => ayuda("impuestoAutomatico", v)}
+									/>
+									<FilaInterruptor
+										etiqueta={t("Contadores al entrar (lealtad, sagas)")}
+										valor={opciones.ayudas.contadoresAlEntrar}
+										onChange={(v) => ayuda("contadoresAlEntrar", v)}
+									/>
+									<Fila etiqueta={t("Sparring (rival fantasma)")}>
+										<Selector<Intensidad>
+											valor={sparring}
+											onChange={(v) => useUi.getState().setMesa({ sparring: v })}
+											opciones={INTENSIDADES.map((i) => ({
+												valor: i.valor,
+												etiqueta: t(i.nombre),
+											}))}
+										/>
+									</Fila>
+									<Button
+										size="sm"
+										variant="outline"
+										disabled={!elegido}
+										onClick={() => setTapete(true)}
+									>
+										<Icono icon="lucide:image" className="size-3.5" />
+										{t("Tapete de este deck…")}
+									</Button>
+								</section>
+							</div>
+						</ScrollArea>
+						<div className="flex shrink-0 flex-col gap-2.5">
 							{trabajo && (
 								<div className="flex flex-col gap-1">
 									<span className="text-xs text-muted-foreground">{trabajo.fase}</span>
 									<Progress value={trabajo.total ? (trabajo.hechas / trabajo.total) * 100 : 0} />
 								</div>
 							)}
-							<Button
-								size="lg"
-								disabled={!elegido || !!trabajo || sinLista}
-								onClick={pedirSolitario}
-								data-tutorial="mesa-solitario"
+							<WithTooltip
+								content={
+									!elegido
+										? t("Elige un deck.")
+										: sinLista
+											? t("Este deck tiene más cartas de las que se juegan: elige una lista.")
+											: null
+								}
 							>
-								{trabajo ? (
-									<Loader2 className="size-4 animate-spin" />
-								) : (
-									<Play className="size-4" />
-								)}
-								{t("Solitario")}
-							</Button>
+								{/* El `span`: un botón desactivado no avisa al pasar por encima. */}
+								<span className="flex flex-col">
+									<Button
+										size="lg"
+										disabled={!elegido || !!trabajo || sinLista}
+										onClick={pedirSolitario}
+										data-tutorial="mesa-solitario"
+									>
+										{trabajo ? (
+											<Icono icon="lucide:loader-2" className="size-4 animate-spin" />
+										) : (
+											<Icono icon="lucide:play" className="size-4" />
+										)}
+										{t("Solitario")}
+									</Button>
+								</span>
+							</WithTooltip>
 							<Button
 								size="lg"
 								variant={enSalaServidor ? "default" : "outline"}
 								onClick={() => setAmigos(true)}
 								data-tutorial="mesa-amigos"
 							>
-								<Users className="size-4" />
-								{enSalaServidor ? t("Volver a la sala") : t("Con amigos…")}
+								<Icono icon="lucide:users" className="size-4" />
+								{enSalaServidor ? t("Volver a la sala de amigos") : t("Con amigos…")}
 							</Button>
 							<Button
 								size="lg"
@@ -486,7 +511,7 @@ function Entrada() {
 								disabled={!!trabajo}
 								onClick={() => setLocal(true)}
 							>
-								<User className="size-4" />
+								<Icono icon="lucide:user" className="size-4" />
 								{t("Partida local…")}
 							</Button>
 							<Button
@@ -495,8 +520,8 @@ function Entrada() {
 								onClick={() => setRed(true)}
 								data-tutorial="mesa-red"
 							>
-								<Plug className="size-4" />
-								{enSala && !enSalaServidor ? t("Volver a la sala") : t("En red…")}
+								<Icono icon="lucide:plug" className="size-4" />
+								{enSala && !enSalaServidor ? t("Volver a la partida en red") : t("En red…")}
 							</Button>
 						</div>
 					</aside>
@@ -533,12 +558,14 @@ function Entrada() {
 							useSalas.getState().poner({ enlaceEntrante: null });
 						}}
 						preparar={preparar}
+						onConCodigo={() => setRed(true)}
 					/>
 					<PartidaLocalDialog
 						abierto={local}
 						onCerrar={() => setLocal(false)}
 						decks={decks}
 						deckInicial={elegido}
+						hayGuardada={!!guardada}
 					/>
 					<HistorialGeneralDialog abierto={historial} onCerrar={() => setHistorial(false)} />
 					<PropiedadesDialog

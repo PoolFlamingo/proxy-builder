@@ -1,10 +1,11 @@
-import { Swords, Target } from "lucide-react";
 import { createContext, useContext, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { IdJugador } from "@/bindings/IdJugador";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { type Mesa, NINGUNA, tableroDe, useMesa } from "@/stores/mesa-store";
 import { duenoDeExtremo, entradaDesde, idDePunta } from "./cuentas-flechas";
 import { type Disposicion, posAPx } from "./disposicion";
+import { ATRIBUTO_FANTASMA } from "./vida-fantasma";
 
 /** Un color de reserva para una flecha de alguien que ya no está. */
 const COLOR_FLECHA = "#e11d48";
@@ -52,9 +53,17 @@ export function Flechas({ disp }: { disp: Disposicion }) {
 	// Dónde está mi marcador de vida (abajo a la derecha del tablero grande): se
 	// mide, porque crece con los contadores y el botón de pasar turno.
 	const [vida, setVida] = useState<{ x: number; y: number } | null>(null);
+	// Y el del fantasma (arriba a la derecha): ahí llegan las flechas que le apuntan.
+	const [fantasma, setFantasma] = useState<{ x: number; y: number } | null>(null);
 	useLayoutEffect(() => {
 		const caja = svg.current?.getBoundingClientRect();
 		const el = document.querySelector(`[${ATRIBUTO_VIDA}="${yo}"]`);
+		const fa = document.querySelector(`[${ATRIBUTO_FANTASMA}]`);
+		if (caja && fa) {
+			const r = fa.getBoundingClientRect();
+			// Al borde de abajo, en el centro.
+			setFantasma({ x: r.left + r.width / 2 - caja.left, y: r.bottom - caja.top + 4 });
+		} else setFantasma(null);
 		if (!caja || !el) {
 			setVida(null);
 			return;
@@ -80,6 +89,11 @@ export function Flechas({ disp }: { disp: Disposicion }) {
 			if (c.controlador === viendo) return { ...posAPx(disp.campo, c.pos), aqui: true };
 			return { ...desde(c.controlador), aqui: false };
 		}
+		// El fantasma: su marcador (o arriba, donde se pone, si está oculto).
+		if (e.tipo === "fantasma")
+			return fantasma
+				? { ...fantasma, aqui: true }
+				: { x: disp.campo.w - 80, y: Math.min(30, disp.campo.h / 2), aqui: true };
 		// Yo: mi marcador de vida. El de este tablero (si miro el de otro): arriba
 		// en el centro. Otro: por el lado de su mesa.
 		if (e.id === yo && vida) return { ...vida, aqui: true };
@@ -145,7 +159,7 @@ export function Flechas({ disp }: { disp: Disposicion }) {
 					// Cerca de la punta, no de la mitad: ahí es donde se mira a qué llega.
 					const x = a.x + (b.x - a.x) * 0.72;
 					const y = a.y + (b.y - a.y) * 0.72;
-					const Icono = f.tipo === "ataque" ? Swords : Target;
+					const icono = f.tipo === "ataque" ? "game-icons:crossed-swords" : "game-icons:on-target";
 					return (
 						<div
 							key={`e${i}`}
@@ -163,7 +177,7 @@ export function Flechas({ disp }: { disp: Disposicion }) {
 								nombre: objetivo.nombre,
 							})}
 						>
-							<Icono className="size-3 shrink-0" />
+							<Icono icon={icono} className="size-3 shrink-0" />
 							<span className="truncate">
 								{carta ? `${objetivo.nombre} · ${carta}` : objetivo.nombre}
 							</span>

@@ -1,15 +1,7 @@
-import {
-	ChevronsLeft,
-	ChevronsRight,
-	LogOut,
-	Pause,
-	Play,
-	SkipBack,
-	SkipForward,
-} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Selector } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { traduccionSuelta, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -140,6 +132,8 @@ export function BarraRepeticion() {
 		const alTeclear = (e: KeyboardEvent) => {
 			const t = e.target as HTMLElement | null;
 			if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+			// Un botón o el deslizador con el foco ya responden a esas teclas: no dos veces.
+			if (t?.closest("button, [role='slider']")) return;
 			if (e.code === "Space") setReproduciendo((r) => !r);
 			else if (e.code === "ArrowRight") void ir(Math.min(total, pos + 1), como);
 			else if (e.code === "ArrowLeft") void ir(Math.max(0, pos - 1), como);
@@ -196,13 +190,13 @@ export function BarraRepeticion() {
 			</div>
 			<div className="flex items-center gap-1">
 				<Boton ayuda={t("Al principio")} onClick={() => void ir(0, como)}>
-					<SkipBack className="size-4" />
+					<Icono icon="lucide:skip-back" className="size-4" />
 				</Boton>
 				<Boton
 					ayuda={t("Turno anterior")}
 					onClick={() => void ir(hitoAnterior(rep.hitos, pos), como)}
 				>
-					<ChevronsLeft className="size-4" />
+					<Icono icon="lucide:chevrons-left" className="size-4" />
 				</Boton>
 				<Boton
 					ayuda={reproduciendo ? t("Pausar") : t("Reproducir")}
@@ -211,16 +205,20 @@ export function BarraRepeticion() {
 						setReproduciendo((r) => !r);
 					}}
 				>
-					{reproduciendo ? <Pause className="size-4" /> : <Play className="size-4" />}
+					{reproduciendo ? (
+						<Icono icon="lucide:pause" className="size-4" />
+					) : (
+						<Icono icon="lucide:play" className="size-4" />
+					)}
 				</Boton>
 				<Boton
 					ayuda={t("Turno siguiente")}
 					onClick={() => void ir(hitoSiguiente(rep.hitos, pos, total), como)}
 				>
-					<ChevronsRight className="size-4" />
+					<Icono icon="lucide:chevrons-right" className="size-4" />
 				</Boton>
 				<Boton ayuda={t("Al final")} onClick={() => void ir(total, como)}>
-					<SkipForward className="size-4" />
+					<Icono icon="lucide:skip-forward" className="size-4" />
 				</Boton>
 				<span className="mx-1 whitespace-nowrap text-[11px] text-white/60 tabular-nums">
 					{pos} / {total}
@@ -251,7 +249,7 @@ export function BarraRepeticion() {
 						className="h-7 border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white"
 						onClick={() => void salirDeLaRepeticion()}
 					>
-						<LogOut className="size-4" />
+						<Icono icon="lucide:log-out" className="size-4" />
 						{t("Salir de la repetición")}
 					</Button>
 				</span>

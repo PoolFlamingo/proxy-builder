@@ -59,6 +59,20 @@ export function CapaDados() {
 	useEffect(() => {
 		void useAspectoDados.getState().cargar();
 	}, []);
+	// Con los dados en 3D, three y Rapier se cargan en un rato libre al abrir la
+	// mesa: la primera tirada no se queda parada esperándolos.
+	useEffect(() => {
+		if (nivel !== "3d") return;
+		const pronto = () => {
+			void import("./escena3d").catch(() => {});
+			void import("./fisica").then((m) => m.cargarRapier()).catch(() => {});
+		};
+		const ric = (window as { requestIdleCallback?: (f: () => void) => number }).requestIdleCallback;
+		const id = ric ? ric(pronto) : window.setTimeout(pronto, 1500);
+		return () => {
+			if (!ric) window.clearTimeout(id);
+		};
+	}, [nivel]);
 	const estilo = useMemo(
 		() => estiloDe(aspecto, color, tirada !== null && tirada.actor === yo),
 		[aspecto, color, tirada, yo],

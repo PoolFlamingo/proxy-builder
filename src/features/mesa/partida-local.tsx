@@ -1,5 +1,4 @@
 import { DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
-import { ListChecks, Loader2, Pencil, Play, Plus, Shuffle, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { DeckSummary } from "@/bindings/DeckSummary";
@@ -7,18 +6,20 @@ import type { Formato } from "@/bindings/Formato";
 import type { ListaDeJuego } from "@/bindings/ListaDeJuego";
 import type { ListasDeDeck } from "@/bindings/ListasDeDeck";
 import { Fila, Selector } from "@/components/campos";
+import { Confirmar } from "@/components/confirmar";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
+	DialogCuerpo,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { call } from "@/lib/ipc";
 import {
@@ -62,11 +63,14 @@ export function PartidaLocalDialog({
 	onCerrar,
 	decks,
 	deckInicial,
+	hayGuardada = false,
 }: {
 	abierto: boolean;
 	onCerrar: () => void;
 	decks: DeckSummary[];
 	deckInicial: string | null;
+	/** Hay una partida a medias: empezar otra la pierde, así que se pregunta. */
+	hayGuardada?: boolean;
 }) {
 	const { t, mensaje } = useLang();
 	const [ajustes, setAjustes] = useState<AjustesLocal>(AJUSTES_LOCALES);
@@ -144,6 +148,18 @@ export function PartidaLocalDialog({
 	const nombreDeAsiento = (i: number) => asientos[i]?.nombre.trim() || `${t("Jugador")} ${i + 1}`;
 	const porEquipos = ajustes.modo === "equipos";
 
+	const [reemplazar, setReemplazar] = useState(false);
+	// Por qué no se puede empezar (el botón lo dice al pasar por encima).
+	const porQueNo =
+		asientos.length < 2
+			? t("Hacen falta al menos 2 jugadores.")
+			: asientos.some((a) => !a.deckId || !a.nombre.trim())
+				? t("A algún jugador le falta el deck o el nombre.")
+				: asientos.some(sinLista)
+					? t("A algún jugador le falta elegir la lista.")
+					: problema
+						? t("Revisa los equipos.")
+						: null;
 	const iniciar = async () => {
 		setEmpezando(true);
 		try {
@@ -163,7 +179,7 @@ export function PartidaLocalDialog({
 
 	return (
 		<Dialog open={abierto} onOpenChange={(v) => !v && onCerrar()}>
-			<DialogContent className="max-w-3xl">
+			<DialogContent className="flex max-w-3xl flex-col">
 				<DialogHeader>
 					<DialogTitle>{t("Partida local")}</DialogTitle>
 					<DialogDescription>
@@ -172,192 +188,220 @@ export function PartidaLocalDialog({
 						)}
 					</DialogDescription>
 				</DialogHeader>
-				<Fila etiqueta={t("Formato")}>
-					<Selector<Formato>
-						valor={formato}
-						onChange={(f) => cambiarAjustes({ formato: f })}
-						opciones={[
-							{ valor: "commander", etiqueta: "Commander" },
-							{ valor: "constructed", etiqueta: t("60 cartas") },
-							{ valor: "limited", etiqueta: t("Limitado") },
-							{ valor: "libre", etiqueta: t("Libre") },
-						]}
-					/>
-				</Fila>
-				<AjustesDePartida
-					ajustes={ajustes}
-					onChange={cambiarAjustes}
-					formato={formato}
-					asientos={asientos.length}
-					nombreDeAsiento={nombreDeAsiento}
-				/>
-				<ScrollArea className="max-h-80">
-					<DndContext sensors={sensores} onDragEnd={alSoltar}>
-						<div className="flex flex-col gap-1.5 p-1">
-							{asientos.map((a, i) => (
-								<FilaOrdenable
-									key={i}
-									i={i}
-									etiqueta={t("Mover a {jugador}", {
-										jugador: a.nombre.trim() || `${t("Jugador")} ${i + 1}`,
-									})}
-								>
-									<span
-										className="size-3 shrink-0 rounded-full"
-										style={{ background: COLORES_JUGADOR[i % COLORES_JUGADOR.length] }}
-									/>
-									<Input
-										value={a.nombre}
-										onChange={(e) => cambiar(i, { nombre: e.target.value })}
-										className="h-7 w-36 text-xs"
-										aria-label={t("Nombre")}
-									/>
-									<Selector<string>
-										valor={a.deckId}
-										onChange={(v) => cambiar(i, { deckId: v, lista: undefined })}
-										ancho="min-w-0 flex-1"
-										opciones={decks.map((d) => ({ valor: d.id, etiqueta: d.name }))}
-									/>
-									{(listas[a.deckId]?.listas.length ?? 0) > 0 ||
-									pideLista(listas[a.deckId], formato) ? (
-										<ListaDeAsiento
-											lista={listas[a.deckId]}
-											valor={a.lista}
-											obligatoria={pideLista(listas[a.deckId], formato)}
-											onChange={(lista) => cambiar(i, { lista })}
-											onEditar={() =>
-												setEditando({
-													asiento: i,
-													lista: listas[a.deckId]?.listas.find((l) => l.id === a.lista) ?? null,
-												})
-											}
-										/>
-									) : null}
-									{porEquipos && (
-										<SelectorDeEquipo
-											equipo={a.equipo}
-											onChange={(equipo) => cambiar(i, { equipo })}
-										/>
-									)}
-									<Button
-										size="icon"
-										variant="ghost"
-										className="size-7"
-										disabled={asientos.length <= 2}
-										onClick={() => quitar(i)}
-										aria-label={t("Quitar")}
-									>
-										<X className="size-3.5" />
-									</Button>
-								</FilaOrdenable>
-							))}
+				{/* Todo lo de en medio se desplaza: los botones, siempre a la vista. */}
+				<DialogCuerpo>
+					<div className="flex flex-col gap-2.5">
+						<Fila etiqueta={t("Formato")}>
+							<Selector<Formato>
+								valor={formato}
+								onChange={(f) => cambiarAjustes({ formato: f })}
+								opciones={[
+									{ valor: "commander", etiqueta: "Commander" },
+									{ valor: "constructed", etiqueta: t("60 cartas") },
+									{ valor: "limited", etiqueta: t("Limitado") },
+									{ valor: "libre", etiqueta: t("Libre") },
+								]}
+							/>
+						</Fila>
+						<AjustesDePartida
+							ajustes={ajustes}
+							onChange={cambiarAjustes}
+							formato={formato}
+							asientos={asientos.length}
+							nombreDeAsiento={nombreDeAsiento}
+						/>
+						<div>
+							<DndContext sensors={sensores} onDragEnd={alSoltar}>
+								<div className="flex flex-col gap-1.5 p-1">
+									{asientos.map((a, i) => (
+										<FilaOrdenable
+											key={i}
+											i={i}
+											etiqueta={t("Mover a {jugador}", {
+												jugador: a.nombre.trim() || `${t("Jugador")} ${i + 1}`,
+											})}
+										>
+											<span
+												className="size-3 shrink-0 rounded-full"
+												style={{ background: COLORES_JUGADOR[i % COLORES_JUGADOR.length] }}
+											/>
+											<Input
+												value={a.nombre}
+												onChange={(e) => cambiar(i, { nombre: e.target.value })}
+												className="h-7 w-36 text-xs"
+												aria-label={t("Nombre")}
+											/>
+											<Selector<string>
+												valor={a.deckId}
+												onChange={(v) => cambiar(i, { deckId: v, lista: undefined })}
+												ancho="min-w-0 flex-1"
+												opciones={decks.map((d) => ({ valor: d.id, etiqueta: d.name }))}
+											/>
+											{(listas[a.deckId]?.listas.length ?? 0) > 0 ||
+											pideLista(listas[a.deckId], formato) ? (
+												<ListaDeAsiento
+													lista={listas[a.deckId]}
+													valor={a.lista}
+													obligatoria={pideLista(listas[a.deckId], formato)}
+													onChange={(lista) => cambiar(i, { lista })}
+													onEditar={() =>
+														setEditando({
+															asiento: i,
+															lista: listas[a.deckId]?.listas.find((l) => l.id === a.lista) ?? null,
+														})
+													}
+												/>
+											) : null}
+											{porEquipos && (
+												<SelectorDeEquipo
+													equipo={a.equipo}
+													onChange={(equipo) => cambiar(i, { equipo })}
+												/>
+											)}
+											<Button
+												size="icon"
+												variant="ghost"
+												className="size-7"
+												disabled={asientos.length <= 2}
+												onClick={() => quitar(i)}
+												aria-label={t("Quitar")}
+											>
+												<Icono icon="lucide:x" className="size-3.5" />
+											</Button>
+										</FilaOrdenable>
+									))}
+								</div>
+							</DndContext>
 						</div>
-					</DndContext>
-				</ScrollArea>
-				<FilaEmpieza
-					ajustes={ajustes}
-					onChange={cambiarAjustes}
-					asientos={asientos.length}
-					nombreDeAsiento={nombreDeAsiento}
-				/>
-				<p className="text-xs text-muted-foreground">
-					{t(
-						"Se juega por asientos, de arriba abajo: arrastra a los jugadores para cambiar el orden.",
-					)}
-				</p>
-				<div className="flex gap-2">
-					<Button
-						size="sm"
-						variant="outline"
-						disabled={asientos.length >= MAX_JUGADORES}
-						onClick={() =>
-							setAsientos((x) => [
-								...x,
-								{
-									nombre: `${t("Jugador")} ${x.length + 1}`,
-									deckId: x[x.length - 1]?.deckId ?? decks[0]?.id ?? "",
-									equipo: null,
-								},
-							])
-						}
-					>
-						<Plus className="size-3.5" />
-						{t("Añadir jugador")}
-					</Button>
-					<Button
-						size="sm"
-						variant="outline"
-						onClick={() => reordenar(ordenAlAzar(asientos.length))}
-					>
-						<Shuffle className="size-3.5" />
-						{t("Mezclar los asientos")}
-					</Button>
-				</div>
-				{asientos.some(sinLista) && (
-					<p className="flex items-start gap-1.5 rounded-md bg-amber-500/10 p-1.5 text-[11px] text-amber-600 dark:text-amber-300">
-						<ListChecks className="mt-0.5 size-3.5 shrink-0" />
-						{t(
-							"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.",
-							{
-								jugadores: asientos
-									.map((a, i) => (sinLista(a) ? nombreDeAsiento(i) : null))
-									.filter(Boolean)
-									.join(", "),
-							},
+						<FilaEmpieza
+							ajustes={ajustes}
+							onChange={cambiarAjustes}
+							asientos={asientos.length}
+							nombreDeAsiento={nombreDeAsiento}
+						/>
+						<p className="text-xs text-muted-foreground">
+							{t(
+								"Se juega por asientos, de arriba abajo: arrastra a los jugadores para cambiar el orden.",
+							)}
+						</p>
+						<div className="flex gap-2">
+							<Button
+								size="sm"
+								variant="outline"
+								disabled={asientos.length >= MAX_JUGADORES}
+								onClick={() =>
+									setAsientos((x) => [
+										...x,
+										{
+											nombre: `${t("Jugador")} ${x.length + 1}`,
+											deckId: x[x.length - 1]?.deckId ?? decks[0]?.id ?? "",
+											equipo: null,
+										},
+									])
+								}
+							>
+								<Icono icon="lucide:plus" className="size-3.5" />
+								{t("Añadir jugador")}
+							</Button>
+							<Button
+								size="sm"
+								variant="outline"
+								onClick={() => reordenar(ordenAlAzar(asientos.length))}
+							>
+								<Icono icon="lucide:shuffle" className="size-3.5" />
+								{t("Mezclar los asientos")}
+							</Button>
+						</div>
+						{asientos.some(sinLista) && (
+							<p className="flex items-start gap-1.5 rounded-md bg-amber-500/10 p-1.5 text-[11px] text-amber-600 dark:text-amber-300">
+								<Icono icon="lucide:list-checks" className="mt-0.5 size-3.5 shrink-0" />
+								{t(
+									"{jugadores}: su deck tiene más de 100 cartas y en Commander se juega con 100. Haz una lista con el comandante y 99 más.",
+									{
+										jugadores: asientos
+											.map((a, i) => (sinLista(a) ? nombreDeAsiento(i) : null))
+											.filter(Boolean)
+											.join(", "),
+									},
+								)}
+							</p>
 						)}
-					</p>
-				)}
-				{editando && asientos[editando.asiento] && (
-					<ListaDialog
-						abierto
-						onCerrar={() => setEditando(null)}
-						deckId={asientos[editando.asiento]?.deckId ?? ""}
-						formato={formato}
-						lista={editando.lista}
-						onGuardada={(l) => {
-							const deck = asientos[editando.asiento]?.deckId ?? "";
-							setListas((x) => {
-								const actual = x[deck];
-								return actual
-									? {
-											...x,
-											[deck]: {
-												...actual,
-												listas: [...actual.listas.filter((y) => y.id !== l.id), l].sort((a, b) =>
-													a.nombre.localeCompare(b.nombre),
-												),
-											},
-										}
-									: x;
-							});
-							cambiar(editando.asiento, { lista: l.id });
-						}}
-						onBorrada={(id) => {
-							const deck = asientos[editando.asiento]?.deckId ?? "";
-							setListas((x) => {
-								const actual = x[deck];
-								return actual
-									? {
-											...x,
-											[deck]: { ...actual, listas: actual.listas.filter((y) => y.id !== id) },
-										}
-									: x;
-							});
-							setAsientos((a) => a.map((y) => (y.lista === id ? { ...y, lista: undefined } : y)));
-						}}
-					/>
-				)}
-				<AvisoDeEquipos asientos={asientos} modo={ajustes.modo} />
+						{editando && asientos[editando.asiento] && (
+							<ListaDialog
+								abierto
+								onCerrar={() => setEditando(null)}
+								deckId={asientos[editando.asiento]?.deckId ?? ""}
+								formato={formato}
+								lista={editando.lista}
+								onGuardada={(l) => {
+									const deck = asientos[editando.asiento]?.deckId ?? "";
+									setListas((x) => {
+										const actual = x[deck];
+										return actual
+											? {
+													...x,
+													[deck]: {
+														...actual,
+														listas: [...actual.listas.filter((y) => y.id !== l.id), l].sort(
+															(a, b) => a.nombre.localeCompare(b.nombre),
+														),
+													},
+												}
+											: x;
+									});
+									cambiar(editando.asiento, { lista: l.id });
+								}}
+								onBorrada={(id) => {
+									const deck = asientos[editando.asiento]?.deckId ?? "";
+									setListas((x) => {
+										const actual = x[deck];
+										return actual
+											? {
+													...x,
+													[deck]: { ...actual, listas: actual.listas.filter((y) => y.id !== id) },
+												}
+											: x;
+									});
+									setAsientos((a) =>
+										a.map((y) => (y.lista === id ? { ...y, lista: undefined } : y)),
+									);
+								}}
+							/>
+						)}
+						<AvisoDeEquipos asientos={asientos} modo={ajustes.modo} />
+					</div>
+				</DialogCuerpo>
 				<DialogFooter>
 					<Button variant="outline" onClick={onCerrar}>
 						{t("Cancelar")}
 					</Button>
-					<Button disabled={!completo || empezando} onClick={() => void iniciar()}>
-						{empezando ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
-						{t("Empezar")}
-					</Button>
+					<WithTooltip content={completo ? null : porQueNo}>
+						{/* El `span`: un botón desactivado no avisa al pasar por encima. */}
+						<span>
+							<Button
+								disabled={!completo || empezando}
+								onClick={() => (hayGuardada ? setReemplazar(true) : void iniciar())}
+							>
+								{empezando ? (
+									<Icono icon="lucide:loader-2" className="size-4 animate-spin" />
+								) : (
+									<Icono icon="lucide:play" className="size-4" />
+								)}
+								{t("Empezar")}
+							</Button>
+						</span>
+					</WithTooltip>
 				</DialogFooter>
 			</DialogContent>
+			<Confirmar
+				abierto={reemplazar}
+				onCerrar={() => setReemplazar(false)}
+				titulo={t("¿Empezar otra partida?")}
+				descripcion={t("La partida a medias se pierde.")}
+				accion={t("Empezar otra")}
+				destructiva
+				onConfirmar={() => void iniciar()}
+			/>
 		</Dialog>
 	);
 }
@@ -408,7 +452,11 @@ function ListaDeAsiento({
 					onClick={onEditar}
 					aria-label={valor ? t("Editar la lista…") : t("Nueva lista…")}
 				>
-					{valor ? <Pencil className="size-3.5" /> : <Plus className="size-3.5" />}
+					{valor ? (
+						<Icono icon="lucide:pencil" className="size-3.5" />
+					) : (
+						<Icono icon="lucide:plus" className="size-3.5" />
+					)}
 				</Button>
 			</WithTooltip>
 		</>

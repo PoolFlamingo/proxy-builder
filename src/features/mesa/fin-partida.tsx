@@ -1,7 +1,7 @@
-import { Flag, History, LogOut, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import type { ResumenPartida } from "@/bindings/ResumenPartida";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { call } from "@/lib/ipc";
@@ -51,7 +51,24 @@ export function FinDePartida() {
 	useEffect(() => {
 		if (fin) setOculto(false);
 	}, [fin]);
-	if (!fin || (oculto && !banquillo)) return null;
+	// Escape lo aparta para ver la mesa (como «Ver la mesa»).
+	useEffect(() => {
+		if (!fin || oculto) return;
+		const tecla = (e: KeyboardEvent) => e.key === "Escape" && setOculto(true);
+		window.addEventListener("keydown", tecla);
+		return () => window.removeEventListener("keydown", tecla);
+	}, [fin, oculto]);
+	if (!fin) return null;
+	// Apartado: un botón para volver al resultado (y a «Otra partida»).
+	if (oculto && !banquillo)
+		return (
+			<div className="absolute bottom-3 left-1/2 z-[8800] -translate-x-1/2">
+				<Button size="sm" className="rounded-full shadow-lg" onClick={() => setOculto(false)}>
+					<Icono icon="game-icons:checkered-flag" className="size-4" />
+					{t("Ver el resultado")}
+				</Button>
+			</div>
+		);
 	const nombre = (g: number) => jugadores[g]?.nombre ?? "?";
 	const ganadores = fin.ganadores.map(nombre);
 	const como = COMO.find((c) => c.valor === fin.como)?.nombre ?? "";
@@ -59,8 +76,8 @@ export function FinDePartida() {
 	const decide = estado?.terminado ?? false;
 	return (
 		<div className="absolute inset-0 z-[8800] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-			<div className="flex w-[34rem] max-w-[94%] flex-col items-center gap-2.5 rounded-xl border bg-card p-4 text-center shadow-2xl">
-				<Flag className="size-6 text-primary" />
+			<div className="flex w-[34rem] max-w-[94%] flex-col items-center gap-2.5 rounded-xl border bg-card p-2.5 py-4 text-center shadow-2xl">
+				<Icono icon="game-icons:checkered-flag" className="size-6 text-primary" />
 				<h2 className="text-base font-semibold">
 					{ganadores.length === 0
 						? asientos.length > 1
@@ -136,33 +153,33 @@ export function FinDePartida() {
 					</div>
 				)}
 				<div className="flex flex-wrap justify-center gap-2.5">
-					<Button variant="outline" onClick={() => setOculto(true)}>
+					<Button variant="outline" autoFocus onClick={() => setOculto(true)}>
 						{t("Ver la mesa")}
 					</Button>
 					<Button variant="outline" onClick={() => void verRepeticionActual()}>
-						<History className="size-4" />
+						<Icono icon="lucide:history" className="size-4" />
 						{t("Ver repetición")}
 					</Button>
 					<Button variant="outline" onClick={() => void salir(false)}>
-						<LogOut className="size-4" />
+						<Icono icon="lucide:log-out" className="size-4" />
 						{t("Salir")}
 					</Button>
 					{estado ? (
 						!decide &&
 						(invitado ? (
 							<Button variant="outline" onClick={() => setBanquillo(true)}>
-								<RotateCcw className="size-4" />
+								<Icono icon="lucide:rotate-ccw" className="size-4" />
 								{t("Banquillo")}
 							</Button>
 						) : (
 							<Button onClick={() => setBanquillo(true)}>
-								<RotateCcw className="size-4" />
+								<Icono icon="lucide:rotate-ccw" className="size-4" />
 								{t("Siguiente partida")}
 							</Button>
 						))
 					) : (
 						<Button onClick={() => void hacer({ que: "reiniciar" })}>
-							<RotateCcw className="size-4" />
+							<Icono icon="lucide:rotate-ccw" className="size-4" />
 							{t("Otra partida")}
 						</Button>
 					)}

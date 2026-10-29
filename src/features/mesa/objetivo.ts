@@ -34,7 +34,13 @@ export function elegirCarta(c: VistaCarta, t: Traducir): boolean {
 	const md = pantalla.modo;
 	if (!md) return false;
 	pantalla.setModo(null);
-	if (md.tipo === "adjuntar" && md.carta !== c.id) {
+	if (md.tipo === "nota") {
+		if (c.zona.tipo === "de" && c.zona.zona === "campo") {
+			void hacer({ que: "atarNota", id: md.nota, carta: c.id });
+		} else {
+			toast.warning(t("Las notas solo se atan a cartas del campo."));
+		}
+	} else if (md.tipo === "adjuntar" && md.carta !== c.id) {
 		void op.adjuntar(md.carta, c.id);
 	} else if (md.tipo === "flecha" && md.de !== c.id) {
 		avisarFuegoAmigo(useMesa.getState().cartas[md.de], c.controlador, t, md);
@@ -45,6 +51,24 @@ export function elegirCarta(c: VistaCarta, t: Traducir): boolean {
 			tipo: md.flecha,
 		});
 	}
+	return true;
+}
+
+/**
+ * Con una flecha en marcha, el fantasma del solitario es el objetivo (su
+ * marcador de vida). Devuelve `false` si no hay una flecha que poner.
+ */
+export function elegirFantasma(_t: Traducir): boolean {
+	const pantalla = usePantalla.getState();
+	const md = pantalla.modo;
+	if (md?.tipo !== "flecha") return false;
+	pantalla.setModo(null);
+	void hacer({
+		que: "flecha",
+		de: { tipo: "carta", id: md.de },
+		a: { tipo: "fantasma" },
+		tipo: md.flecha,
+	});
 	return true;
 }
 

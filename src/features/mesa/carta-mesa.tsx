@@ -1,7 +1,7 @@
-import { Eye } from "lucide-react";
 import { memo, useRef } from "react";
 import type { IdCarta } from "@/bindings/IdCarta";
 import type { VistaCarta } from "@/bindings/VistaCarta";
+import { Icono } from "@/components/icono";
 import { cn } from "@/lib/utils";
 import { useMesa } from "@/stores/mesa-store";
 import { useRepeticion } from "@/stores/repeticion-store";
@@ -16,6 +16,15 @@ import { MenuCarta } from "./menus/menu-carta";
 import { usePantalla } from "./pantalla";
 
 export type AlPulsar = (e: React.PointerEvent, c: VistaCarta) => void;
+
+/**
+ * El ancho de imagen de una carta del campo que mide `w` px: el mismo para la
+ * carta y para su copia arrastrada (otro ancho es otra URL, otra carga y un
+ * parpadeo al soltar).
+ */
+export function anchoDeCarta(w: number, calidad: 146 | 244 | 488): 146 | 244 | 488 {
+	return calidad === 488 || w > 200 ? 488 : w > 120 ? 244 : calidad;
+}
 
 /**
  * **Una carta en la mesa**, en su sitio (`x`, `y`: el centro en píxeles del
@@ -77,16 +86,17 @@ export const CartaMesa = memo(function CartaMesa({
 			return origenDe(c ?? { zona: null, pos: null });
 		}),
 	);
+	const redimensionando = usePantalla((s) => s.redimensionando);
 	const ref = useRef<HTMLDivElement>(null);
 	useFlip(
 		id,
 		ref,
-		!reducir && (!repetida || animarRep > 0),
+		!reducir && !redimensionando && (!repetida || animarRep > 0),
 		`${c?.zona.tipo}${JSON.stringify(c?.zona)}${x}|${y}|${saltos}`,
 		repetida ? { duracion: animarRep, sinCaducidad: true } : undefined,
 	);
 	if (!c) return null;
-	const ancho = calidad === 488 || w > 200 ? 488 : w > 120 ? 244 : calidad;
+	const ancho = anchoDeCarta(w, calidad);
 	const conocida = c.origen !== null && !c.bocaAbajo;
 	return (
 		<MenuCarta c={c}>
@@ -101,7 +111,10 @@ export const CartaMesa = memo(function CartaMesa({
 				}}
 				className={cn(
 					"group absolute top-0 left-0 cursor-grab touch-none",
-					!reducir && !aterriza && "transition-[transform] duration-150 ease-out",
+					!reducir &&
+						!aterriza &&
+						!redimensionando &&
+						"transition-[transform] duration-150 ease-out",
 					// Arrastrada (por mí o por otro): no queda su sitio de antes.
 					(arrastrando || acompana || enVueloAjeno) && "pointer-events-none opacity-0",
 				)}
@@ -158,12 +171,12 @@ export const CartaMesa = memo(function CartaMesa({
 							))}
 						{c.revelada && c.zona.tipo === "de" && c.zona.zona === "mano" && (
 							<span className="pointer-events-none absolute top-1 right-1 rounded-full bg-amber-400 p-0.5 text-black shadow">
-								<Eye className="size-3" />
+								<Icono icon="lucide:eye" className="size-3" />
 							</span>
 						)}
 						{c.bocaAbajo && c.origen && (
 							<span className="pointer-events-none absolute right-1 bottom-1 rounded bg-black/70 p-0.5 text-white">
-								<Eye className="size-2.5" />
+								<Icono icon="lucide:eye" className="size-2.5" />
 							</span>
 						)}
 					</div>

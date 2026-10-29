@@ -11,7 +11,10 @@ import { useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
 import { useRepeticion } from "@/stores/repeticion-store";
 import { useTrabajo } from "@/stores/trabajo-store";
+import { useVivo } from "@/stores/vivo-store";
 import { useDados } from "./dados/cola";
+import { usePantalla } from "./pantalla";
+import { precargar } from "./precarga";
 import { reaccionarAEvento, reaccionarEnRepeticion } from "./reaccion-eventos";
 
 /**
@@ -29,7 +32,32 @@ export async function pedirVista() {
 	}
 }
 
+/**
+ * Mientras se precargan las imágenes de la primera vista, lo que llega espera
+ * aquí y luego se aplica en orden (un parche nunca se adelanta a su vista).
+ */
+let enEspera: MensajeMesa[] | null = null;
+
 function alMensaje(m: MensajeMesa) {
+	if (enEspera) {
+		enEspera.push(m);
+		return;
+	}
+	// La primera vista (abrir la mesa): antes de enseñarla, sus imágenes.
+	if (m.tipo === "vista" && !useMesa.getState().activa) {
+		enEspera = [];
+		void precargar(m.vista).finally(() => {
+			const pendientes = enEspera ?? [];
+			enEspera = null;
+			aplicar(m);
+			for (const x of pendientes) alMensaje(x);
+		});
+		return;
+	}
+	aplicar(m);
+}
+
+function aplicar(m: MensajeMesa) {
 	const s = useMesa.getState();
 	switch (m.tipo) {
 		case "vista": {
@@ -46,12 +74,15 @@ function alMensaje(m: MensajeMesa) {
 			break;
 		case "cerrada":
 			canal = null;
+			enEspera = null;
 			s.cerrar();
 			useRepeticion.getState().poner(null);
 			useChat.getState().limpiar();
 			break;
 		// En red: el anfitrión no hizo algo que se pidió desde aquí.
 		case "rechazo":
+			useVivo.getState().olvidarSoltadas();
+			usePantalla.getState().setArrastre(null);
 			if (m.motivo === "SinPermiso") break; // tocar lo de otro no hace nada, sin aviso
 			toast.error(
 				mensajeDeError({ code: "Rejected", params: { motivo: m.motivo } }, traduccionSuelta),

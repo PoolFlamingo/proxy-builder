@@ -1,6 +1,6 @@
-import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Skull, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { IdCarta } from "@/bindings/IdCarta";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -67,10 +67,26 @@ export function MirarDialog({ d }: { d: Extract<DialogoMesa, { tipo: "mirar" }> 
 		setOrden(v);
 	};
 	const opciones: { pila: Pila; icono: React.ReactNode; nombre: string }[] = [
-		{ pila: "arriba", icono: <ArrowUp className="size-3.5" />, nombre: t("Arriba") },
-		{ pila: "abajo", icono: <ArrowDown className="size-3.5" />, nombre: t("Abajo") },
-		{ pila: "cementerio", icono: <Skull className="size-3.5" />, nombre: t("Cementerio") },
-		{ pila: "exilio", icono: <Trash2 className="size-3.5" />, nombre: t("Exilio") },
+		{
+			pila: "arriba",
+			icono: <Icono icon="lucide:arrow-up" className="size-3.5" />,
+			nombre: t("Arriba"),
+		},
+		{
+			pila: "abajo",
+			icono: <Icono icon="lucide:arrow-down" className="size-3.5" />,
+			nombre: t("Abajo"),
+		},
+		{
+			pila: "cementerio",
+			icono: <Icono icon="game-icons:tombstone" className="size-3.5" />,
+			nombre: t("Cementerio"),
+		},
+		{
+			pila: "exilio",
+			icono: <Icono icon="lucide:trash-2" className="size-3.5" />,
+			nombre: t("Exilio"),
+		},
 	];
 	const titulo =
 		d.modo === "escrutar" ? t("Escrutar") : d.modo === "vigilar" ? t("Vigilar") : t("Mirar");
@@ -117,7 +133,7 @@ export function MirarDialog({ d }: { d: Extract<DialogoMesa, { tipo: "mirar" }> 
 											onClick={() => subir(i, -1)}
 											aria-label={t("Antes")}
 										>
-											<ChevronUp className="size-3.5" />
+											<Icono icon="lucide:chevron-up" className="size-3.5" />
 										</Button>
 										<Button
 											size="icon-sm"
@@ -125,7 +141,7 @@ export function MirarDialog({ d }: { d: Extract<DialogoMesa, { tipo: "mirar" }> 
 											onClick={() => subir(i, 1)}
 											aria-label={t("Después")}
 										>
-											<ChevronDown className="size-3.5" />
+											<Icono icon="lucide:chevron-down" className="size-3.5" />
 										</Button>
 									</div>
 									<div className="grid grid-cols-2 gap-1">

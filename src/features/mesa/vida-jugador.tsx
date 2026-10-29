@@ -1,20 +1,8 @@
-import {
-	Crown,
-	Eye,
-	EyeOff,
-	Flag,
-	Flame,
-	Hash,
-	Heart,
-	Languages,
-	Moon,
-	Skull,
-	Sun,
-} from "lucide-react";
 import { useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import type { IdJugador } from "@/bindings/IdJugador";
 import { ContenidoContextual } from "@/components/contenido-contextual";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +21,7 @@ import { useUi } from "@/stores/ui-store";
 import { hacer } from "./acciones";
 import { CONTADORES_JUGADOR } from "./colores";
 import { deltaSeguro } from "./dano-comandante";
+import { MarcasJugador } from "./marcas-jugador";
 import * as op from "./operaciones";
 import { alternarOriginales } from "./originales";
 import { pedirNumero, usePantalla } from "./pantalla";
@@ -55,7 +44,6 @@ export function VidaJugador({ jugador }: { jugador: IdJugador }) {
 	const equipo = useMesa((s) =>
 		j?.equipo != null ? s.general?.equipos.find((e) => e.id === j.equipo) : undefined,
 	);
-	const limiteVeneno = useMesa((s) => s.opciones?.limiteVeneno ?? 10);
 	const trackers = useUi((s) => s.mesa.trackers);
 	const [pendiente, setPendiente] = useState(0);
 	const temporizador = useRef<number | null>(null);
@@ -81,6 +69,7 @@ export function VidaJugador({ jugador }: { jugador: IdJugador }) {
 	);
 	return (
 		<div className="flex flex-col items-end gap-1.5" data-tutorial="mesa-vida">
+			<MarcasJugador jugador={jugador} />
 			{visibles.length > 0 && (
 				<div className="flex flex-wrap justify-end gap-1">
 					{visibles.map((c) => (
@@ -147,17 +136,6 @@ export function VidaJugador({ jugador }: { jugador: IdJugador }) {
 						<button type="button" className="px-1.5 text-lg leading-none" onClick={() => sumar(1)}>
 							+
 						</button>
-						{j.veneno > 0 && (
-							<span
-								className={cn(
-									"ml-1 flex items-center gap-0.5 text-xs",
-									j.veneno >= limiteVeneno && "text-rose-400",
-								)}
-							>
-								<Skull className="size-3" />
-								{j.veneno}
-							</span>
-						)}
 					</div>
 				</MenuJugador>
 			</div>
@@ -188,7 +166,7 @@ function MenuJugador({ jugador, children }: { jugador: IdJugador; children: Reac
 						pedirNumero(t("Daño"), 1, (n) => hacer({ que: "vida", jugador, delta: -Math.abs(n) }))
 					}
 				>
-					<Flame />
+					<Icono icon="game-icons:flame" />
 					{t("Daño…")}
 				</ContextMenuItem>
 				<ContextMenuItem
@@ -198,7 +176,7 @@ function MenuJugador({ jugador, children }: { jugador: IdJugador; children: Reac
 						)
 					}
 				>
-					<Heart />
+					<Icono icon="game-icons:hearts" />
 					{t("Ganar vidas…")}
 				</ContextMenuItem>
 				<ContextMenuItem
@@ -208,7 +186,7 @@ function MenuJugador({ jugador, children }: { jugador: IdJugador; children: Reac
 						)
 					}
 				>
-					<Flame />
+					<Icono icon="game-icons:flame" />
 					{t("Drenar…")}
 				</ContextMenuItem>
 				<ContextMenuItem
@@ -218,25 +196,25 @@ function MenuJugador({ jugador, children }: { jugador: IdJugador; children: Reac
 						)
 					}
 				>
-					<Heart />
+					<Icono icon="game-icons:hearts" />
 					{t("Vidas a todos…")}
 				</ContextMenuItem>
 				<ContextMenuSeparator />
 				<ContextMenuItem onSelect={() => hacer({ que: "veneno", jugador, delta: 1 })}>
-					<Skull />
+					<Icono icon="game-icons:poison-bottle" />
 					{t("Un veneno más")}
 				</ContextMenuItem>
 				<ContextMenuItem
 					disabled={j.veneno === 0}
 					onSelect={() => hacer({ que: "veneno", jugador, delta: -1 })}
 				>
-					<Skull />
+					<Icono icon="game-icons:poison-bottle" />
 					{t("Un veneno menos")}
 				</ContextMenuItem>
 				{comandantes.length > 0 && (
 					<ContextMenuSub>
 						<ContextMenuSubTrigger>
-							<Crown />
+							<Icono icon="game-icons:crown" />
 							{t("Daño de comandante")}
 						</ContextMenuSubTrigger>
 						<ContextMenuSubContent className="text-xs">
@@ -268,7 +246,7 @@ function MenuJugador({ jugador, children }: { jugador: IdJugador; children: Reac
 				)}
 				<ContextMenuSub>
 					<ContextMenuSubTrigger>
-						<Hash />
+						<Icono icon="lucide:hash" />
 						{t("Contadores")}
 					</ContextMenuSubTrigger>
 					<ContextMenuSubContent className="w-52 text-xs">
@@ -290,7 +268,7 @@ function MenuJugador({ jugador, children }: { jugador: IdJugador; children: Reac
 						})
 					}
 				>
-					<Crown />
+					<Icono icon="game-icons:crown" />
 					{designaciones?.monarca === jugador ? t("Dejar de ser el monarca") : t("Ser el monarca")}
 				</ContextMenuItem>
 				<ContextMenuItem
@@ -302,13 +280,13 @@ function MenuJugador({ jugador, children }: { jugador: IdJugador; children: Reac
 						})
 					}
 				>
-					<Flag />
+					<Icono icon="game-icons:dungeon-gate" />
 					{designaciones?.iniciativa === jugador
 						? t("Perder la iniciativa")
 						: t("Tomar la iniciativa")}
 				</ContextMenuItem>
 				<ContextMenuItem onSelect={() => hacer({ que: "designar", tipo: "bendicion", a: jugador })}>
-					<Sun />
+					<Icono icon="game-icons:castle" />
 					{designaciones?.bendicion.includes(jugador)
 						? t("Quitar la bendición de la ciudad")
 						: t("Bendición de la ciudad")}
@@ -321,21 +299,25 @@ function MenuJugador({ jugador, children }: { jugador: IdJugador; children: Reac
 						})
 					}
 				>
-					{designaciones?.diaNoche === "dia" ? <Moon /> : <Sun />}
+					{designaciones?.diaNoche === "dia" ? (
+						<Icono icon="game-icons:moon" />
+					) : (
+						<Icono icon="game-icons:sun" />
+					)}
 					{designaciones?.diaNoche === "dia" ? t("Hacer de noche") : t("Hacer de día")}
 				</ContextMenuItem>
 				<ContextMenuSeparator />
 				<ContextMenuItem onSelect={() => hacer({ que: "revelarMano", si: !j.manoRevelada })}>
-					{j.manoRevelada ? <EyeOff /> : <Eye />}
+					{j.manoRevelada ? <Icono icon="lucide:eye-off" /> : <Icono icon="lucide:eye" />}
 					{j.manoRevelada ? t("Ocultar la mano") : t("Revelar la mano")}
 				</ContextMenuItem>
 				<ContextMenuItem onSelect={() => alternarOriginales(jugador)}>
-					<Languages />
+					<Icono icon="lucide:languages" />
 					{originales ? "✓ " : ""}
 					{t("Cartas originales en mi idioma")}
 				</ContextMenuItem>
 				<ContextMenuItem onSelect={() => usePantalla.getState().abrir({ tipo: "terminar" })}>
-					<Flag />
+					<Icono icon="game-icons:checkered-flag" />
 					{t("Terminar la partida…")}
 				</ContextMenuItem>
 			</ContenidoContextual>

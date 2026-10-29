@@ -14,6 +14,8 @@ export function duenoDeExtremo(
 	cartas: Record<IdCarta, Pick<VistaCarta, "controlador"> | undefined>,
 ): IdJugador | null {
 	if (e.tipo === "jugador") return e.id;
+	// El fantasma no es un jugador de la mesa.
+	if (e.tipo === "fantasma") return null;
 	return cartas[e.id]?.controlador ?? null;
 }
 

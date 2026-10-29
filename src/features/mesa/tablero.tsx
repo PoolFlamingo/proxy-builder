@@ -1,8 +1,9 @@
-import { Eye, EyeOff, Layers } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { IdCarta } from "@/bindings/IdCarta";
+import type { Pos } from "@/bindings/Pos";
 import type { Tapete as TapeteGuardado } from "@/bindings/Tapete";
 import type { VistaCarta } from "@/bindings/VistaCarta";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { urlArte, urlMesa } from "@/lib/image-url";
@@ -12,11 +13,11 @@ import { cartasDe, cuantasEn, NINGUNA, tableroDe, useMesa } from "@/stores/mesa-
 import { useRed } from "@/stores/red-store";
 import { useUi } from "@/stores/ui-store";
 import { MS_SOLTADA, type Origen, origenDe, soltadaSigue, useVivo } from "@/stores/vivo-store";
-import { destino, hacer, mover, sitio, zonaComun, zonaDe } from "./acciones";
+import { colocar, destino, hacer, mover, sitio, zonaComun, zonaDe } from "./acciones";
 import { destinoDeSoltar, pasaUmbral } from "./arrastre";
 import { cartaDeArribaRevelada } from "./arriba-biblioteca";
 import { atajoDe, teclaDe } from "./atajos";
-import { type AlPulsar, CartaMesa } from "./carta-mesa";
+import { type AlPulsar, anchoDeCarta, CartaMesa } from "./carta-mesa";
 import { COLORES } from "./colores";
 import { abanico, type Disposicion, disponer, posAPx, pxAPos, type Rect } from "./disposicion";
 import * as vivo from "./en-vivo/emitir";
@@ -25,11 +26,13 @@ import { Flechas } from "./flechas";
 import { marcarArrastradas } from "./flip";
 import { caraVisible, DorsoGenerico, ImagenCarta } from "./imagen-carta";
 import { MenuBiblioteca, MenuCampo, MenuManoAjena, MenuZona } from "./menus/menu-zonas";
+import { NotasSueltas } from "./notas-mesa";
 import { elegirCarta } from "./objetivo";
 import * as op from "./operaciones";
 import { usePantalla } from "./pantalla";
 import { campoAjeno, manoOcultaPorTurno } from "./privacidad";
 import { acompanantes, conLasAjenas, puestosDelCampo } from "./puestos-campo";
+import { VidaFantasma } from "./vida-fantasma";
 
 /** Cuánto se mantiene pulsada una carta para abrir su menú (si está activado), en ms. */
 const MS_SOSTENIDO = 500;
@@ -54,14 +57,26 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 	const modo = usePantalla((s) => s.modo);
 	const [recuadro, setRecuadro] = useState<Rect | null>(null);
 
-	useEffect(() => {
+	// Medido antes del primer pintado: sin él, el primer fotograma reparte las
+	// cartas en un tablero de 0×0 y todas entran deslizándose desde la esquina.
+	useLayoutEffect(() => {
 		const el = caja.current;
 		if (!el) return;
+		const r = el.getBoundingClientRect();
+		setTam({ w: r.width, h: r.height });
+		let quieto = 0;
 		const ro = new ResizeObserver(([e]) => {
+			const p = usePantalla.getState();
+			if (!p.redimensionando) p.setRedimensionando(true);
+			window.clearTimeout(quieto);
+			quieto = window.setTimeout(() => usePantalla.getState().setRedimensionando(false), 200);
 			setTam({ w: e.contentRect.width, h: e.contentRect.height });
 		});
 		ro.observe(el);
-		return () => ro.disconnect();
+		return () => {
+			ro.disconnect();
+			window.clearTimeout(quieto);
+		};
 	}, []);
 
 	const disp = useMemo(
@@ -295,45 +310,53 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 			className="relative size-full overflow-hidden select-none"
 			data-tutorial="mesa-tablero"
 		>
-			<Tapete tapete={tapete} deckId={deckId} />
-			<MenuCampo jugador={yo} posicion={() => posMenu.current}>
-				<div
-					className="absolute"
-					style={{
-						left: disp.campo.x,
-						top: disp.campo.y,
-						width: disp.campo.w,
-						height: disp.campo.h,
-					}}
-					onPointerDown={alPulsarCampo}
-					onContextMenu={(e) => {
-						const p = punto(e);
-						posMenu.current = pxAPos(disp.campo, p.x, p.y);
-					}}
-					data-tutorial="mesa-campo"
-				/>
-			</MenuCampo>
-			<Bolitas campo={disp.campo} />
-			<Campo disp={disp} alPulsar={alPulsar} alDobleClic={alDobleClic} />
-			<Pila disp={disp} alPulsar={alPulsar} />
-			<Flechas disp={disp} />
-			<Mano disp={disp} alPulsar={alPulsar} alDobleClic={alDobleClic} />
-			<Zonas disp={disp} alPulsar={alPulsar} />
-			<Fantasma disp={disp} />
-			<FantasmasVivos disp={disp} />
-			<Arrastrado disp={disp} />
-			{recuadro && (
-				<div
-					className="pointer-events-none absolute border border-primary bg-primary/15"
-					style={{ left: recuadro.x, top: recuadro.y, width: recuadro.w, height: recuadro.h }}
-				/>
-			)}
-			{modo && (
-				<div className="pointer-events-none absolute top-14 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-xs text-primary-foreground shadow">
-					{modo.tipo === "adjuntar"
-						? t("Elige la carta a la que se adjunta (Esc para cancelar)")
-						: t("Elige la carta o el jugador objetivo (Esc para cancelar)")}
-				</div>
+			{/* Hasta saber cuánto mide, nada que colocar (ni que deslizar desde 0×0). */}
+			{tam.w > 0 && tam.h > 0 && (
+				<>
+					<Tapete tapete={tapete} deckId={deckId} />
+					<MenuCampo jugador={yo} posicion={() => posMenu.current}>
+						<div
+							className="absolute"
+							style={{
+								left: disp.campo.x,
+								top: disp.campo.y,
+								width: disp.campo.w,
+								height: disp.campo.h,
+							}}
+							onPointerDown={alPulsarCampo}
+							onContextMenu={(e) => {
+								const p = punto(e);
+								posMenu.current = pxAPos(disp.campo, p.x, p.y);
+							}}
+							data-tutorial="mesa-campo"
+						/>
+					</MenuCampo>
+					<Bolitas campo={disp.campo} />
+					<Campo disp={disp} alPulsar={alPulsar} alDobleClic={alDobleClic} />
+					<Pila disp={disp} alPulsar={alPulsar} />
+					<Flechas disp={disp} />
+					<Mano disp={disp} alPulsar={alPulsar} alDobleClic={alDobleClic} />
+					<Zonas disp={disp} alPulsar={alPulsar} />
+					<VidaFantasma />
+					<NotasSueltas />
+					<FantasmasVivos disp={disp} />
+					<Arrastrado disp={disp} />
+					{recuadro && (
+						<div
+							className="pointer-events-none absolute border border-primary bg-primary/15"
+							style={{ left: recuadro.x, top: recuadro.y, width: recuadro.w, height: recuadro.h }}
+						/>
+					)}
+					{modo && (
+						<div className="pointer-events-none absolute top-14 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-xs text-primary-foreground shadow">
+							{modo.tipo === "adjuntar"
+								? t("Elige la carta a la que se adjunta (Esc para cancelar)")
+								: modo.tipo === "nota"
+									? t("Elige la carta del campo a la que se ata la nota (Esc para cancelar)")
+									: t("Elige la carta o el jugador objetivo (Esc para cancelar)")}
+						</div>
+					)}
+				</>
 			)}
 		</div>
 	);
@@ -355,16 +378,20 @@ function soltar(
 	const alCampo = d.zona.tipo === "de" && d.zona.zona === "campo";
 	if (d.zona.tipo === "de" && d.zona.zona === "campo" && d.sitio.tipo === "enCampo") {
 		if (desdeCampo) {
-			// Cada una a su sitio, manteniendo las distancias.
+			// Cada una a su sitio, manteniendo las distancias, en un solo evento:
+			// llegan juntas y un «deshacer» las devuelve juntas.
 			const dx = p.x - p0.x;
 			const dy = p.y - p0.y;
+			const cartas: [IdCarta, Pos][] = [];
 			for (const id of ids) {
 				const pos = m.cartas[id]?.pos;
 				if (!pos) continue;
 				const c = posAPx(disp.campo, pos);
-				const nueva = pxAPos(disp.campo, c.x + dx, c.y + dy);
-				void mover([id], destino("campo", sitio.campo(nueva), yo));
+				cartas.push([id, pxAPos(disp.campo, c.x + dx, c.y + dy)]);
 			}
+			if (cartas.length === 1 && cartas[0])
+				void mover([cartas[0][0]], destino("campo", sitio.campo(cartas[0][1]), yo));
+			else if (cartas.length > 1) void colocar(cartas, yo);
 			return { alCampo };
 		}
 		void mover(ids, { ...d, jugador: yo });
@@ -389,6 +416,11 @@ function soltar(
  * general), con su velo y su desenfoque, y se relee al cambiarlo a media
  * partida; si no hay, el de la vista (el que se preparó al empezar).
  */
+/** El tapete guardado de cada deck, leído una vez por sesión de la app. */
+const TAPETES_LEIDOS: Record<string, TapeteGuardado | null> = {};
+/** Los tapetes que ya se pintaron una vez: al volver, sin fundido. */
+const TAPETES_PINTADOS = new Set<string>();
+
 function Tapete({
 	tapete,
 	deckId,
@@ -399,8 +431,21 @@ function Tapete({
 	const version = usePantalla((s) => s.tapeteCambiado);
 	// Lo último que se leyó de cada deck: al cambiar de tablero, el del deck
 	// nuevo se ve ya (o, si nunca se leyó, ninguno) en vez de dejar un instante
-	// el del deck anterior hasta que llegue el suyo.
-	const [leidos, setLeidos] = useState<Record<string, TapeteGuardado | null>>({});
+	// el del deck anterior hasta que llegue el suyo. Sale de lo ya leído en esta
+	// sesión (`TAPETES_LEIDOS`): volver a montar el tablero no lo hace parpadear.
+	const [leidos, setLeidosEstado] = useState<Record<string, TapeteGuardado | null>>(() => ({
+		...TAPETES_LEIDOS,
+	}));
+	const setLeidos = (
+		f: (l: Record<string, TapeteGuardado | null>) => Record<string, TapeteGuardado | null>,
+	) =>
+		setLeidosEstado((l) => {
+			const n = f(l);
+			Object.assign(TAPETES_LEIDOS, n);
+			return n;
+		});
+	// El que ya se pintó: el de ahora entra encima con un fundido, sin hueco.
+	const [cargada, setCargada] = useState<string | null>(null);
 	useEffect(() => {
 		if (!deckId) return;
 		let vivo = true;
@@ -437,7 +482,15 @@ function Tapete({
 				<img
 					src={url}
 					alt=""
-					className="size-full object-cover"
+					decoding="async"
+					onLoad={() => {
+						TAPETES_PINTADOS.add(url);
+						setCargada(url);
+					}}
+					className={cn(
+						"size-full object-cover transition-opacity duration-300",
+						cargada === url || TAPETES_PINTADOS.has(url) ? "opacity-100" : "opacity-0",
+					)}
 					style={
 						propio?.desenfoque
 							? { filter: `blur(${propio.desenfoque}px)`, scale: "1.05" }
@@ -583,7 +636,7 @@ function Mano({
 					}}
 					onClick={() => usePantalla.getState().mostrarMano(yo)}
 				>
-					<Eye className="size-4" />
+					<Icono icon="lucide:eye" className="size-4" />
 					{t("Mano de {nombre}: pulsa para verla", { nombre })}
 				</button>
 			)}
@@ -726,7 +779,7 @@ function Zonas({ disp, alPulsar }: { disp: Disposicion; alPulsar: AlPulsar }) {
 												}}
 												className="absolute top-1 right-1 flex size-6 items-center justify-center rounded-full bg-black/75 text-white ring-1 ring-white/40 hover:bg-primary"
 											>
-												<EyeOff className="size-3.5" />
+												<Icono icon="lucide:eye-off" className="size-3.5" />
 											</button>
 										</WithTooltip>
 									)}
@@ -818,7 +871,7 @@ function ZonaArriba({
 									onClick={ver}
 									className="flex size-full items-center justify-center"
 								>
-									<Layers className="size-6 text-white/60" />
+									<Icono icon="lucide:layers" className="size-6 text-white/60" />
 								</button>
 							)
 						: arriba !== undefined && (
@@ -873,61 +926,6 @@ function Bolitas({ campo }: { campo: Rect }) {
 	);
 }
 
-/** La vida del rival imaginado del solitario, arriba en el centro. */
-function Fantasma({ disp }: { disp: Disposicion }) {
-	const { t } = useLang();
-	const f = useMesa((s) => s.general?.fantasma ?? null);
-	const ver = useUi((s) => s.mesa.fantasma);
-	const modo = usePantalla((s) => s.modo);
-	if (!f?.visible || !ver) return null;
-	const comandantes = Object.entries(f.danoComandante);
-	return (
-		<div
-			className={cn(
-				"absolute flex items-center gap-1.5 rounded-full border border-white/15 bg-black/55 px-2 py-1 text-white backdrop-blur-sm",
-				modo?.tipo === "flecha" && "cursor-crosshair ring-2 ring-primary",
-			)}
-			style={{ right: 12, top: 56 }}
-			onClick={() => {
-				const md = usePantalla.getState().modo;
-				if (md?.tipo === "flecha") {
-					usePantalla.getState().setModo(null);
-					void hacer({
-						que: "flecha",
-						de: { tipo: "carta", id: md.de },
-						a: { tipo: "jugador", id: 0 },
-						tipo: md.flecha,
-					});
-				}
-			}}
-			onKeyDown={() => {}}
-			data-tutorial="mesa-fantasma"
-		>
-			<Eye className="size-3.5 opacity-70" />
-			<span className="text-[10px] opacity-70">{t("Fantasma")}</span>
-			<button
-				type="button"
-				className="px-1 text-sm"
-				onClick={() => void hacer({ que: "vidaFantasma", delta: -1 })}
-			>
-				−
-			</button>
-			<span className="min-w-6 text-center text-sm font-bold tabular-nums">{f.vida}</span>
-			<button
-				type="button"
-				className="px-1 text-sm"
-				onClick={() => void hacer({ que: "vidaFantasma", delta: 1 })}
-			>
-				+
-			</button>
-			{comandantes.length > 0 && (
-				<span className="text-[10px] opacity-80">{comandantes.map(([, n]) => n).join(" · ")}</span>
-			)}
-			<span className="sr-only">{disp.tablero.w}</span>
-		</div>
-	);
-}
-
 /**
  * Lo que se arrastra, siguiendo al puntero (sin esperar a Rust). Al soltar se
  * queda donde se soltó hasta que la carta llega a su sitio (`soltado`): así no
@@ -938,24 +936,29 @@ function Arrastrado({ disp }: { disp: Disposicion }) {
 	const cartas = useMesa((s) => s.cartas);
 	const yo = useMesa(tableroDe);
 	const delCampo = useMesa((s) => cartasDe(s, zonaDe(yo, "campo")));
-	// Ya soltada, cuando todas han llegado se quita (o si el movimiento no llega).
-	useEffect(() => {
+	const calidad = useUi((s) => s.mesa.calidad);
+	// Ya soltada, cuando todas han llegado se quita en el mismo fotograma en que
+	// las reales (y sus adjuntas) ocupan su sitio; si el movimiento no llega, al
+	// rato.
+	useLayoutEffect(() => {
 		if (!a?.soltado) return;
 		const llegaron = a.ids.every((id) => {
 			const c = cartas[id];
 			const s = useVivo.getState().soltadas[id];
 			return !c || !s || !soltadaSigue(s, c);
 		});
-		const t = window.setTimeout(
-			() => usePantalla.getState().setArrastre(null),
-			llegaron ? 0 : MS_SOLTADA,
-		);
+		if (llegaron) {
+			usePantalla.getState().setArrastre(null);
+			return;
+		}
+		const t = window.setTimeout(() => usePantalla.getState().setArrastre(null), MS_SOLTADA);
 		return () => window.clearTimeout(t);
 	}, [a, cartas]);
 	if (!a) return null;
 	const dx = a.x - a.x0;
 	const dy = a.y - a.y0;
 	const { w, h } = a.desde === "campo" || a.alCampo ? disp.carta : disp.cartaPequena;
+	const ancho = a.desde === "campo" || a.alCampo ? anchoDeCarta(w, calidad) : 244;
 	// Lo adjunto a lo que se lleva va con ello, detrás, con su misma geometría del campo.
 	const { puestos } = puestosDelCampo(
 		a.con.length > 0 ? conLasAjenas(delCampo, cartas) : [],
@@ -988,7 +991,7 @@ function Arrastrado({ disp }: { disp: Disposicion }) {
 							transform: `translate(${p.x + dx - w / 2}px, ${p.y + dy - h / 2}px) rotate(${c.girada ? 90 : 0}deg)`,
 						}}
 					>
-						<ImagenCarta imagen={caraVisible(c)} ancho={244} />
+						<ImagenCarta imagen={caraVisible(c)} ancho={anchoDeCarta(w, calidad)} />
 					</div>
 				);
 			})}
@@ -1017,7 +1020,7 @@ function Arrastrado({ disp }: { disp: Disposicion }) {
 							transform: `translate(${centro.x + dx - w / 2}px, ${centro.y + dy - h / 2}px) rotate(${c.girada ? 90 : 0}deg)`,
 						}}
 					>
-						<ImagenCarta imagen={caraVisible(c)} ancho={244} />
+						<ImagenCarta imagen={caraVisible(c)} ancho={ancho} />
 					</div>
 				);
 			})}

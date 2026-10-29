@@ -1,11 +1,11 @@
 import { DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
-import { Check, Copy, Crown, Eye, Loader2, LogOut, Play, Plug, Shuffle, Users } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Formato } from "@/bindings/Formato";
 import type { ListasDeDeck } from "@/bindings/ListasDeDeck";
 import type { Opciones } from "@/bindings/Opciones";
 import type { RolEnSala } from "@/bindings/RolEnSala";
 import { FilaInterruptor, Selector } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -99,7 +99,7 @@ export function RedDialog({
 			<DialogContent className="max-w-xl">
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-1.5">
-						<Plug className="size-4 text-primary" />
+						<Icono icon="lucide:plug" className="size-4 text-primary" />
 						{t("Jugar en red")}
 					</DialogTitle>
 					<DialogDescription>
@@ -127,10 +127,14 @@ function Entrar({ preparar }: { preparar: Preparacion }) {
 		await crearPartida(preparar.nombre, preparar.deckNombre);
 		setOcupado(false);
 	};
+	const limpio = limpiarCodigo(codigo);
+	const codigoValido = limpio.startsWith("PB1-") && limpio.length > 8;
+	const puedeUnirse = codigoValido && !(rol === "jugador" && sinDeck) && !ocupado && !trabajo;
 	const unirse = async () => {
+		if (!puedeUnirse) return;
 		setOcupado(true);
 		await unirsePartida({
-			codigo: codigo.trim(),
+			codigo: limpio,
 			apodo: preparar.nombre,
 			rol,
 			deckId: rol === "jugador" ? preparar.deckId : null,
@@ -144,7 +148,7 @@ function Entrar({ preparar }: { preparar: Preparacion }) {
 		<div className="grid grid-cols-2 gap-2.5">
 			<section className="flex flex-col gap-2.5 rounded-lg border bg-card/40 p-2.5">
 				<h3 className="flex items-center gap-1.5 text-xs font-semibold">
-					<Crown className="size-3.5 text-primary" />
+					<Icono icon="game-icons:crown" className="size-3.5 text-primary" />
 					{t("Crear una partida")}
 				</h3>
 				<p className="text-xs text-muted-foreground">
@@ -154,25 +158,37 @@ function Entrar({ preparar }: { preparar: Preparacion }) {
 				</p>
 				<Button className="mt-auto" disabled={sinDeck || ocupado || !!trabajo} onClick={crear}>
 					{ocupado && !trabajo ? (
-						<Loader2 className="size-4 animate-spin" />
+						<Icono icon="lucide:loader-2" className="size-4 animate-spin" />
 					) : (
-						<Play className="size-4" />
+						<Icono icon="lucide:play" className="size-4" />
 					)}
 					{t("Crear partida")}
 				</Button>
 			</section>
 			<section className="flex flex-col gap-2.5 rounded-lg border bg-card/40 p-2.5">
 				<h3 className="flex items-center gap-1.5 text-xs font-semibold">
-					<Users className="size-3.5 text-primary" />
+					<Icono icon="lucide:users" className="size-3.5 text-primary" />
 					{t("Unirse con un código")}
 				</h3>
 				<Input
 					value={codigo}
 					onChange={(e) => setCodigo(e.target.value)}
+					onKeyDown={(e) => {
+						if (e.key === "Enter") {
+							e.preventDefault();
+							void unirse();
+						}
+					}}
 					placeholder="PB1-…"
+					aria-label={t("Código de la partida")}
 					className="h-7 font-mono text-xs"
 					spellCheck={false}
 				/>
+				{codigo.trim() !== "" && !codigoValido && (
+					<p className="text-[11px] text-amber-700 dark:text-amber-400">
+						{t("Un código empieza por «PB1-»: pégalo entero, tal como te lo pasaron.")}
+					</p>
+				)}
 				<Selector<RolEnSala>
 					valor={rol}
 					onChange={setRol}
@@ -181,17 +197,12 @@ function Entrar({ preparar }: { preparar: Preparacion }) {
 						{ valor: "espectador", etiqueta: t("Solo mirar") },
 					]}
 				/>
-				<Button
-					className="mt-auto"
-					disabled={
-						!codigo.trim().startsWith("PB1-") ||
-						(rol === "jugador" && sinDeck) ||
-						ocupado ||
-						!!trabajo
-					}
-					onClick={unirse}
-				>
-					{trabajo ? <Loader2 className="size-4 animate-spin" /> : <Plug className="size-4" />}
+				<Button className="mt-auto" disabled={!puedeUnirse} onClick={unirse}>
+					{trabajo || ocupado ? (
+						<Icono icon="lucide:loader-2" className="size-4 animate-spin" />
+					) : (
+						<Icono icon="lucide:plug" className="size-4" />
+					)}
 					{t("Unirse")}
 				</Button>
 			</section>
@@ -301,7 +312,11 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 							{codigo}
 						</code>
 						<Button size="sm" variant="outline" onClick={() => void copiar()}>
-							{copiado ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+							{copiado ? (
+								<Icono icon="lucide:check" className="size-3.5" />
+							) : (
+								<Icono icon="lucide:copy" className="size-3.5" />
+							)}
 							{copiado ? t("Copiado") : t("Copiar")}
 						</Button>
 					</div>
@@ -331,7 +346,9 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 													style={{ background: COLORES_JUGADOR[i % COLORES_JUGADOR.length] }}
 												/>
 												<span className="truncate text-xs font-medium">{nombreDe(id)}</span>
-												{id === ID_ANFITRION && <Crown className="size-3.5 text-amber-500" />}
+												{id === ID_ANFITRION && (
+													<Icono icon="game-icons:crown" className="size-3.5 text-amber-500" />
+												)}
 												<span className="ml-auto truncate text-[11px] text-muted-foreground">
 													{detalle}
 												</span>
@@ -378,9 +395,9 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 										// El anfitrión va el primero.
 										icono={
 											i === 0 ? (
-												<Crown className="size-3.5 text-amber-500" />
+												<Icono icon="game-icons:crown" className="size-3.5 text-amber-500" />
 											) : j.rol === "espectador" ? (
-												<Eye className="size-3.5" />
+												<Icono icon="lucide:eye" className="size-3.5" />
 											) : null
 										}
 									/>
@@ -397,7 +414,11 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 											j.rol === "espectador" ? t("Mirando") : (j.deck ?? t("Preparando su deck…"))
 										}
 										color={null}
-										icono={j.rol === "espectador" ? <Eye className="size-3.5" /> : null}
+										icono={
+											j.rol === "espectador" ? (
+												<Icono icon="lucide:eye" className="size-3.5" />
+											) : null
+										}
 									/>
 								))}
 							</ul>
@@ -417,7 +438,7 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 										variant="outline"
 										onClick={() => reordenar([0, ...ordenAlAzar(ids.length - 1).map((i) => i + 1)])}
 									>
-										<Shuffle className="size-3.5" />
+										<Icono icon="lucide:shuffle" className="size-3.5" />
 										{t("Mezclar los asientos")}
 									</Button>
 									<span className="text-[11px] text-muted-foreground">
@@ -459,13 +480,13 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 				</p>
 			) : (
 				<p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-					<Loader2 className="size-3.5 animate-spin" />
+					<Icono icon="lucide:loader-2" className="size-3.5 animate-spin" />
 					{t("Esperando a que el anfitrión empiece…")}
 				</p>
 			)}
 			<div className="flex justify-end gap-2.5">
 				<Button variant="outline" onClick={() => void salirDeRed()}>
-					<LogOut className="size-4" />
+					<Icono icon="lucide:log-out" className="size-4" />
 					{anfitrion ? t("Cerrar la partida") : t("Salir")}
 				</Button>
 				{anfitrion && (
@@ -473,7 +494,11 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 						disabled={!preparar.deckId || preparar.sinLista || !!trabajo || problema !== null}
 						onClick={empezar}
 					>
-						{trabajo ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
+						{trabajo ? (
+							<Icono icon="lucide:loader-2" className="size-4 animate-spin" />
+						) : (
+							<Icono icon="lucide:play" className="size-4" />
+						)}
 						{conDeck <= 1 ? t("Empezar (solo tú)") : t("Empezar ({n} jugadores)", { n: conDeck })}
 					</Button>
 				)}
@@ -504,4 +529,14 @@ function FilaSala({
 			<span className="ml-auto truncate text-[11px] text-muted-foreground">{detalle}</span>
 		</li>
 	);
+}
+
+/**
+ * El código tal como se pega: sin espacios, sin el principio del enlace
+ * (`proxybuilder://unirse/`) y con el prefijo en mayúsculas (el resto es
+ * base64 y distingue mayúsculas: no se toca).
+ */
+function limpiarCodigo(texto: string): string {
+	const sin = texto.replace(/\s+/g, "").replace(/^proxybuilder:\/\/unirse\//i, "");
+	return sin.replace(/^pb1-/i, "PB1-");
 }

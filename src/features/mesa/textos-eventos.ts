@@ -35,6 +35,9 @@ export const FRASES: Record<Accion["que"], string> = {
 	ponerNota: paraTraducir("{quien} apunta una nota: «{texto}»"),
 	editarNota: paraTraducir("{quien} cambia una nota: «{texto}»"),
 	quitarNota: paraTraducir("{quien} borra una nota"),
+	colocar: paraTraducir("{quien} recoloca {cartas}"),
+	notaEnCarta: paraTraducir("{quien} apunta una nota en {carta}: «{texto}»"),
+	atarNota: paraTraducir("{quien} ata una nota a {carta}"),
 	adjuntar: paraTraducir("{quien} adjunta {carta}"),
 	faseFuera: paraTraducir("{quien} cambia la fase de {cartas}"),
 	noEndereza: paraTraducir("{quien} cambia si {cartas} se endereza"),
@@ -88,6 +91,7 @@ export const FRASES: Record<Accion["que"], string> = {
 	conceder: paraTraducir("{quien} concede"),
 	vidaFantasma: paraTraducir("Fantasma: {delta} vidas"),
 	danoComandanteFantasma: paraTraducir("El fantasma recibe {delta} de daño de comandante"),
+	venenoFantasma: paraTraducir("Fantasma: {delta} venenos"),
 	verFantasma: paraTraducir("{quien} cambia si se ve el fantasma"),
 	senal: paraTraducir("{quien} cambia su señal"),
 	pasarTurno: paraTraducir("{quien} pasa el turno"),
@@ -269,11 +273,42 @@ export function textoDeEvento(
 				: t("{quien} dice que la reacción del fantasma no aplica", { quien });
 	}
 	const vars: Record<string, string | number> = { quien };
-	if ("cartas" in a && Array.isArray(a.cartas)) vars.cartas = nombresCartas(m, a.cartas, t, marcar);
+	if (a.que === "colocar")
+		vars.cartas = nombresCartas(
+			m,
+			a.cartas.map(([c]) => c),
+			t,
+			marcar,
+		);
+	else if ("cartas" in a && Array.isArray(a.cartas))
+		vars.cartas = nombresCartas(m, a.cartas, t, marcar);
 	if ("carta" in a && typeof a.carta === "number") vars.carta = nombreCarta(m, a.carta, t, marcar);
 	if ("n" in a && typeof a.n === "number") vars.n = a.n;
-	if ((a.que === "ponerNota" || a.que === "editarNota") && typeof a.texto === "string") {
+	if (
+		(a.que === "ponerNota" || a.que === "editarNota" || a.que === "notaEnCarta") &&
+		typeof a.texto === "string"
+	) {
 		vars.texto = a.texto;
+	}
+	if (a.que === "notaEnCarta" && a.carta === null) return t(FRASES.ponerNota, vars);
+	if (a.que === "atarNota" && a.carta === null) return t("{quien} suelta una nota", vars);
+	if (a.que === "flecha" && a.de.tipo === "carta") {
+		const de = nombreCarta(m, a.de.id, t, marcar);
+		const ataque = a.tipo === "ataque";
+		if (a.a.tipo === "fantasma")
+			return ataque
+				? t("{quien} ataca al fantasma con {de}", { quien, de })
+				: t("{quien} señala al fantasma con {de}", { quien, de });
+		if (a.a.tipo === "jugador") {
+			const aquien = m.jugadores[a.a.id]?.nombre ?? "?";
+			return ataque
+				? t("{quien} ataca a {a} con {de}", { quien, a: aquien, de })
+				: t("{quien} señala a {a} con {de}", { quien, a: aquien, de });
+		}
+		const objetivo = nombreCarta(m, a.a.id, t, marcar);
+		return ataque
+			? t("{quien} ataca a {objetivo} con {de}", { quien, objetivo, de })
+			: t("{quien} señala {objetivo} con {de}", { quien, objetivo, de });
 	}
 	if ("delta" in a && typeof a.delta === "number")
 		vars.delta = a.delta > 0 ? `+${a.delta}` : a.delta;

@@ -1,29 +1,10 @@
-import {
-	Crown,
-	Dices,
-	Expand,
-	Eye,
-	Flag,
-	History,
-	Image,
-	Keyboard,
-	LogOut,
-	MessageSquare,
-	Pause,
-	Pencil,
-	Play,
-	Redo2,
-	RotateCcw,
-	Skull,
-	SquareStack,
-	StickyNote,
-	Undo2,
-} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { WithTooltip } from "@/components/ui/with-tooltip";
+import { cn } from "@/lib/utils";
 import { useChat } from "@/stores/chat-store";
 import { tableroDe, useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
@@ -114,6 +95,7 @@ export function BarraMesa({
 	const setPanel = usePantalla((s) => s.setPanel);
 	const sinLeer = useChat((s) => s.sinLeer);
 	const nNotas = useMesa((s) => s.general?.notas.length ?? 0);
+	const diaNoche = useMesa((s) => s.general?.designaciones.diaNoche ?? null);
 	const varios = useMesa((s) => s.asientos.length > 1);
 	// En red: el sparring no va, reiniciar y terminar son del anfitrión, y
 	// quien mira no toca nada de la partida.
@@ -132,7 +114,7 @@ export function BarraMesa({
 		>
 			{!juega && (
 				<span className="flex items-center gap-1 rounded-md bg-primary/20 px-1.5 py-0.5 text-[11px] font-medium text-primary">
-					<Eye className="size-3.5" />
+					<Icono icon="lucide:eye" className="size-3.5" />
 					{t("Mirando")}
 				</span>
 			)}
@@ -146,6 +128,21 @@ export function BarraMesa({
 					{cronometro(Number(turno.desdeMs), ahora)}
 				</span>
 			)}
+			{diaNoche && (
+				<WithTooltip content={diaNoche === "dia" ? t("Es de día") : t("Es de noche")}>
+					<span
+						className={cn(
+							"flex items-center rounded-md px-1 py-0.5",
+							diaNoche === "dia" ? "text-amber-300" : "text-indigo-300",
+						)}
+					>
+						<Icono
+							icon={diaNoche === "dia" ? "game-icons:sun" : "game-icons:moon"}
+							className="size-4"
+						/>
+					</span>
+				</WithTooltip>
+			)}
 			{juega && (
 				<>
 					<Boton
@@ -153,30 +150,34 @@ export function BarraMesa({
 						onClick={() => void hacer({ que: "pausar", si: !pausada })}
 						activo={pausada}
 					>
-						{pausada ? <Play className="size-4" /> : <Pause className="size-4" />}
+						{pausada ? (
+							<Icono icon="lucide:play" className="size-4" />
+						) : (
+							<Icono icon="lucide:pause" className="size-4" />
+						)}
 					</Boton>
 					<BotonResponder />
 					<span className="mx-0.5 h-5 w-px bg-white/15" />
 					<Boton ayuda={t("Deshacer (Ctrl+Z)")} onClick={() => void op.deshacer()}>
-						<Undo2 className="size-4" />
+						<Icono icon="lucide:undo-2" className="size-4" />
 					</Boton>
 					<Boton ayuda={t("Rehacer (Ctrl+Y)")} onClick={() => void op.rehacer()}>
-						<Redo2 className="size-4" />
+						<Icono icon="lucide:redo-2" className="size-4" />
 					</Boton>
 					<span className="mx-0.5 h-5 w-px bg-white/15" />
 					<Boton ayuda={t("Dados y monedas")} onClick={() => abrir({ tipo: "azar" })}>
-						<Dices className="size-4" />
+						<Icono icon="game-icons:rolling-dices" className="size-4" />
 					</Boton>
 					{commander && (
 						<Boton
 							ayuda={t("Daño de comandante")}
 							onClick={() => abrir({ tipo: "danoComandante" })}
 						>
-							<Crown className="size-4" />
+							<Icono icon="game-icons:crown" className="size-4" />
 						</Boton>
 					)}
 					<Boton ayuda={t("Crear ficha")} onClick={() => abrir({ tipo: "fichas" })}>
-						<SquareStack className="size-4" />
+						<Icono icon="lucide:square-stack" className="size-4" />
 					</Boton>
 				</>
 			)}
@@ -187,7 +188,7 @@ export function BarraMesa({
 						role="img"
 						aria-label={t("Mirando: {nombres}", { nombres: espectadores.join(", ") })}
 					>
-						<Eye className="size-3.5" />
+						<Icono icon="lucide:eye" className="size-3.5" />
 						{espectadores.length}
 					</span>
 				</WithTooltip>
@@ -196,14 +197,14 @@ export function BarraMesa({
 				ayuda={t("Cementerios y exilios")}
 				onClick={() => abrir({ tipo: "zona", jugador: viendo, zona: "cementerio" })}
 			>
-				<Skull className="size-4" />
+				<Icono icon="game-icons:tombstone" className="size-4" />
 			</Boton>
 			<Boton
 				ayuda={t("Registro de la partida")}
 				activo={panel === "registro"}
 				onClick={() => setPanel(panel === "registro" ? null : "registro")}
 			>
-				<History className="size-4" />
+				<Icono icon="lucide:history" className="size-4" />
 			</Boton>
 			<Boton
 				ayuda={t("Notas")}
@@ -211,7 +212,7 @@ export function BarraMesa({
 				insignia={panel === "notas" ? 0 : nNotas}
 				onClick={() => setPanel(panel === "notas" ? null : "notas")}
 			>
-				<StickyNote className="size-4" />
+				<Icono icon="lucide:sticky-note" className="size-4" />
 			</Boton>
 			{(enRed || varios) && (
 				<Boton
@@ -220,19 +221,19 @@ export function BarraMesa({
 					insignia={panel === "chat" ? 0 : sinLeer}
 					onClick={() => setPanel(panel === "chat" ? null : "chat")}
 				>
-					<MessageSquare className="size-4" />
+					<Icono icon="lucide:message-square" className="size-4" />
 				</Boton>
 			)}
 			{juega && (
 				<Boton ayuda={t("Tapete")} onClick={() => abrir({ tipo: "tapete" })}>
-					<Image className="size-4" />
+					<Icono icon="lucide:image" className="size-4" />
 				</Boton>
 			)}
 			<Boton ayuda={t("Atajos de teclado (?)")} onClick={() => abrir({ tipo: "atajos" })}>
-				<Keyboard className="size-4" />
+				<Icono icon="lucide:keyboard" className="size-4" />
 			</Boton>
 			<Boton ayuda={t("Pantalla completa")} onClick={() => void pantallaCompleta()}>
-				<Expand className="size-4" />
+				<Icono icon="lucide:expand" className="size-4" />
 			</Boton>
 			<SelectorDisposicion className="text-white hover:bg-white/10 hover:text-white" />
 			{!enRed && <BotonSparring />}
@@ -240,20 +241,20 @@ export function BarraMesa({
 			{manda && (
 				<>
 					<Boton ayuda={t("Reiniciar (misma lista, nueva partida)")} onClick={onReiniciar}>
-						<RotateCcw className="size-4" />
+						<Icono icon="lucide:rotate-ccw" className="size-4" />
 					</Boton>
 					<Boton ayuda={t("Terminar la partida")} onClick={() => abrir({ tipo: "terminar" })}>
-						<Flag className="size-4" />
+						<Icono icon="game-icons:checkered-flag" className="size-4" />
 					</Boton>
 				</>
 			)}
 			{!enRed && (
 				<Boton ayuda={t("Editar este deck")} onClick={onEditarDeck}>
-					<Pencil className="size-4" />
+					<Icono icon="lucide:pencil" className="size-4" />
 				</Boton>
 			)}
 			<Boton ayuda={t("Salir de la mesa")} onClick={onSalir}>
-				<LogOut className="size-4" />
+				<Icono icon="lucide:log-out" className="size-4" />
 			</Boton>
 		</div>
 	);

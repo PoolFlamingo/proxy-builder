@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { IdCarta } from "@/bindings/IdCarta";
 import type { IdJugador } from "@/bindings/IdJugador";
 import type { Lado } from "@/bindings/Lado";
+import type { Nota } from "@/bindings/Nota";
 import type { Zona } from "@/bindings/Zona";
 
 /**
@@ -26,6 +27,8 @@ export type DialogoMesa =
 	| { tipo: "terminar" }
 	| { tipo: "danoComandante" }
 	| { tipo: "atajos" }
+	/** Escribir una nota (suelta o atada a `carta`) o cambiar `nota`. */
+	| { tipo: "nota"; carta: IdCarta | null; nota?: Nota }
 	| { tipo: "tapete" };
 
 /** El ancho del panel lateral, en px (la vista grande se aparta de él). */
@@ -37,7 +40,9 @@ export type PanelMesa = "registro" | "chat" | "notas";
 /** Elegir con el siguiente clic la carta (o jugador) a la que se adjunta o apunta. */
 export type ModoObjetivo =
 	| { tipo: "adjuntar"; carta: IdCarta }
-	| { tipo: "flecha"; de: IdCarta; flecha: "ataque" | "objetivo" };
+	| { tipo: "flecha"; de: IdCarta; flecha: "ataque" | "objetivo" }
+	/** Atar esta nota a la carta del campo que se pulse. */
+	| { tipo: "nota"; nota: number };
 
 export type Arrastre = {
 	ids: IdCarta[];
@@ -78,6 +83,13 @@ type Pantalla = {
 	manoMostrada: IdJugador | null;
 	/** La carta del fantasma (por nombre) que se señala, para verla en grande. */
 	fantasma: string | null;
+	/**
+	 * El tablero está cambiando de tamaño (la ventana, el reparto entre mesas,
+	 * un panel): las cartas van a su sitio nuevo sin deslizarse, o se quedan
+	 * detrás de la mesa y parece que tiemblan.
+	 */
+	redimensionando: boolean;
+	setRedimensionando: (si: boolean) => void;
 	avisarTapete: () => void;
 	setFantasma: (nombre: string | null) => void;
 	abrir: (d: DialogoMesa | null) => void;
@@ -97,6 +109,8 @@ export const usePantalla = create<Pantalla>((set) => ({
 	panel: null,
 	manoMostrada: null,
 	fantasma: null,
+	redimensionando: false,
+	setRedimensionando: (redimensionando) => set({ redimensionando }),
 	setFantasma: (fantasma) => set({ fantasma }),
 	avisarTapete: () => set((s) => ({ tapeteCambiado: s.tapeteCambiado + 1 })),
 	abrir: (dialogo) => set({ dialogo }),

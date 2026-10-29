@@ -1,7 +1,7 @@
-import { Hourglass, Lock, LockOpen, Pencil, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import type { Nota } from "@/bindings/Nota";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,7 +76,10 @@ export function NotasPanel() {
 								>
 									<span className="min-w-0 flex-1 break-words whitespace-pre-wrap">{n.texto}</span>
 									{n.temporal && (
-										<Marca icono={Hourglass} ayuda={t("Se borra al terminar el turno")} />
+										<Marca
+											icono="game-icons:hourglass"
+											ayuda={t("Se borra al terminar el turno")}
+										/>
 									)}
 								</div>
 							))}
@@ -108,7 +111,7 @@ export function NotasPanel() {
 							disabled={!texto.trim()}
 							aria-label={t("Añadir nota")}
 						>
-							<Plus className="size-4" />
+							<Icono icon="lucide:plus" className="size-4" />
 						</Button>
 					</div>
 					<div className="flex flex-wrap gap-1">
@@ -120,14 +123,14 @@ export function NotasPanel() {
 									? t("Temporal: se borra al terminar el turno")
 									: t("Fija: se queda hasta que la borres")
 							}
-							icono={Hourglass}
+							icono="game-icons:hourglass"
 							etiqueta={temporal ? t("Temporal") : t("Fija")}
 						/>
 						<Interruptor
 							activo={privada}
 							onClick={() => setPrivada((x) => !x)}
 							ayuda={privada ? t("Privada: solo la ves tú") : t("Pública: la ven todos")}
-							icono={privada ? Lock : LockOpen}
+							icono={privada ? "lucide:lock" : "lucide:lock-open"}
 							etiqueta={privada ? t("Privada") : t("Pública")}
 						/>
 					</div>
@@ -151,14 +154,12 @@ function Cabecera({ children }: { children: React.ReactNode }) {
 	);
 }
 
-type Icono = React.ComponentType<{ className?: string }>;
-
 /** Un icono sin acción, con su explicación. */
-function Marca({ icono: I, ayuda }: { icono: Icono; ayuda: string }) {
+function Marca({ icono, ayuda }: { icono: string; ayuda: string }) {
 	return (
 		<WithTooltip content={ayuda}>
 			<span className="mt-0.5 shrink-0 text-muted-foreground">
-				<I className="size-3.5" />
+				<Icono icon={icono} className="size-3.5" />
 			</span>
 		</WithTooltip>
 	);
@@ -168,13 +169,13 @@ function Interruptor({
 	activo,
 	onClick,
 	ayuda,
-	icono: I,
+	icono,
 	etiqueta,
 }: {
 	activo: boolean;
 	onClick: () => void;
 	ayuda: string;
-	icono: Icono;
+	icono: string;
 	etiqueta: string;
 }) {
 	return (
@@ -186,7 +187,7 @@ function Interruptor({
 				aria-pressed={activo}
 				onClick={onClick}
 			>
-				<I className="size-3" />
+				<Icono icon={icono} className="size-3" />
 				{etiqueta}
 			</Button>
 		</WithTooltip>
@@ -252,7 +253,10 @@ function NotaPropia({ nota, puedeEditar }: { nota: Nota; puedeEditar: boolean })
 							aria-label={t("Temporal")}
 							onClick={() => void cambiar({ temporal: !nota.temporal })}
 						>
-							<Hourglass className={cn("size-3.5", !nota.temporal && "opacity-30")} />
+							<Icono
+								icon="game-icons:hourglass"
+								className={cn("size-3.5", !nota.temporal && "opacity-30")}
+							/>
 						</Button>
 					</WithTooltip>
 					<WithTooltip
@@ -266,9 +270,9 @@ function NotaPropia({ nota, puedeEditar }: { nota: Nota; puedeEditar: boolean })
 							onClick={() => void cambiar({ privada: !nota.privada })}
 						>
 							{nota.privada ? (
-								<Lock className="size-3.5" />
+								<Icono icon="lucide:lock" className="size-3.5" />
 							) : (
-								<LockOpen className="size-3.5 opacity-30" />
+								<Icono icon="lucide:lock-open" className="size-3.5 opacity-30" />
 							)}
 						</Button>
 					</WithTooltip>
@@ -279,7 +283,7 @@ function NotaPropia({ nota, puedeEditar }: { nota: Nota; puedeEditar: boolean })
 							aria-label={t("Editar nota")}
 							onClick={() => setEditando(nota.texto)}
 						>
-							<Pencil className="size-3.5" />
+							<Icono icon="lucide:pencil" className="size-3.5" />
 						</Button>
 					</WithTooltip>
 					<WithTooltip content={t("Borrar nota")}>
@@ -289,7 +293,7 @@ function NotaPropia({ nota, puedeEditar }: { nota: Nota; puedeEditar: boolean })
 							aria-label={t("Borrar nota")}
 							onClick={() => void hacer({ que: "quitarNota", id: nota.id })}
 						>
-							<Trash2 className="size-3.5" />
+							<Icono icon="lucide:trash-2" className="size-3.5" />
 						</Button>
 					</WithTooltip>
 				</span>

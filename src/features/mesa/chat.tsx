@@ -1,8 +1,8 @@
-import { Brain, CircleCheck, Hand, Mic, MicOff, Send, UserX } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import type { IdJugador } from "@/bindings/IdJugador";
 import type { Senal } from "@/bindings/Senal";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -93,7 +93,11 @@ export function ChatPanel() {
 											style={{ background: jugadores[id]?.color }}
 										/>
 										{jugadores[id]?.nombre ?? "?"}
-										{callado ? <MicOff className="size-3" /> : <Mic className="size-3" />}
+										{callado ? (
+											<Icono icon="lucide:mic-off" className="size-3" />
+										) : (
+											<Icono icon="lucide:mic" className="size-3" />
+										)}
 									</Button>
 								</WithTooltip>
 							);
@@ -158,7 +162,7 @@ export function ChatPanel() {
 							}}
 						/>
 						<Button size="icon" onClick={enviar} disabled={!texto.trim()} aria-label={t("Enviar")}>
-							<Send className="size-4" />
+							<Icono icon="lucide:send" className="size-4" />
 						</Button>
 					</div>
 				</div>
@@ -225,11 +229,11 @@ function BocadilloConNombre({ jugador }: { jugador: IdJugador }) {
 	);
 }
 
-const ICONOS_SENAL: Record<Senal, React.ComponentType<{ className?: string }>> = {
-	sinRespuesta: CircleCheck,
-	espera: Hand,
-	pensando: Brain,
-	ausente: UserX,
+const ICONOS_SENAL: Record<Senal, string> = {
+	sinRespuesta: "lucide:circle-check",
+	espera: "lucide:hand",
+	pensando: "lucide:brain",
+	ausente: "lucide:user-x",
 };
 
 /** La señal de prioridad de un jugador, junto a su nombre o su vida. */
@@ -237,7 +241,7 @@ export function InsigniaSenal({ jugador, className }: { jugador: IdJugador; clas
 	const { t } = useLang();
 	const senal = useMesa((s) => s.jugadores[jugador]?.senal ?? null);
 	if (!senal) return null;
-	const Icono = ICONOS_SENAL[senal];
+	const icono = ICONOS_SENAL[senal];
 	const texto = SENALES.find((s) => s.senal === senal)?.texto ?? "";
 	return (
 		<WithTooltip content={t(texto)}>
@@ -249,7 +253,7 @@ export function InsigniaSenal({ jugador, className }: { jugador: IdJugador; clas
 				role="img"
 				aria-label={t(texto)}
 			>
-				<Icono className="size-2.5" />
+				<Icono icon={icono} className="size-2.5" />
 			</span>
 		</WithTooltip>
 	);

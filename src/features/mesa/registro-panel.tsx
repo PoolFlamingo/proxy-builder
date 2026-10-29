@@ -1,21 +1,5 @@
-import {
-	Crown,
-	Dices,
-	Dot,
-	Flag,
-	Ghost,
-	Hash,
-	Heart,
-	Hourglass,
-	Layers,
-	Library,
-	MessageSquare,
-	Move,
-	RotateCw,
-	Undo2,
-	X,
-} from "lucide-react";
 import { Fragment, useMemo } from "react";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -36,20 +20,20 @@ import { ANCHO_PANEL, type PanelMesa, usePantalla } from "./pantalla";
 import { useSenalarFantasma } from "./sparring/vista-fantasma";
 import { piezasDeTexto, textoDeEvento } from "./textos-eventos";
 
-const ICONOS: Record<CategoriaEvento, React.ComponentType<{ className?: string }>> = {
-	mover: Move,
-	girar: RotateCw,
-	contadores: Hash,
-	vida: Heart,
-	mando: Crown,
-	biblioteca: Library,
-	turno: Hourglass,
-	azar: Dices,
-	chat: MessageSquare,
-	fin: Flag,
-	sparring: Ghost,
-	deshacer: Undo2,
-	otro: Dot,
+const ICONOS: Record<CategoriaEvento, string> = {
+	mover: "lucide:move",
+	girar: "game-icons:clockwise-rotation",
+	contadores: "game-icons:abacus",
+	vida: "game-icons:hearts",
+	mando: "game-icons:crown",
+	biblioteca: "game-icons:card-draw",
+	turno: "game-icons:hourglass",
+	azar: "game-icons:rolling-dices",
+	chat: "lucide:message-square",
+	fin: "game-icons:checkered-flag",
+	sparring: "game-icons:ghost",
+	deshacer: "lucide:undo-2",
+	otro: "lucide:dot",
 };
 
 const COLORES: Record<CategoriaEvento, string> = {
@@ -110,7 +94,7 @@ export function PanelLateral() {
 							onClick={() => setPanel(null)}
 							aria-label={t("Cerrar")}
 						>
-							<X className="size-4" />
+							<Icono icon="lucide:x" className="size-4" />
 						</Button>
 					</WithTooltip>
 				</div>
@@ -176,14 +160,14 @@ function RegistroLista() {
 			<div className="flex flex-col gap-0.5 p-1 text-xs">
 				{[...lineas].reverse().map(({ ev, i, texto }) => {
 					const categoria = categoriaDeEvento(ev);
-					const Icono = ICONOS[categoria];
+					const icono = ICONOS[categoria];
 					const apilar = repitiendo ? null : cartaParaApilar(registro, i, cartas);
 					return (
 						<div
 							key={ev.seq}
 							className="group flex items-start gap-1.5 rounded px-1.5 py-1 hover:bg-muted/60"
 						>
-							<Icono className={cn("mt-0.5 size-3.5 shrink-0", COLORES[categoria])} />
+							<Icono icon={icono} className={cn("mt-0.5 size-3.5 shrink-0", COLORES[categoria])} />
 							<span className="min-w-0 flex-1">
 								<span className="break-words">
 									{piezasDeTexto(texto).map((p, k) =>
@@ -208,7 +192,7 @@ function RegistroLista() {
 										className="opacity-0 group-hover:opacity-100"
 										onClick={() => void hacer({ que: "apilarDespues", carta: apilar })}
 									>
-										<Layers className="size-3" />
+										<Icono icon="lucide:layers" className="size-3" />
 										{t("A la pila")}
 									</Button>
 								)}
@@ -221,7 +205,7 @@ function RegistroLista() {
 											onClick={() => void hacer({ que: "deshacer", hasta: Number(ev.seq) })}
 											aria-label={t("Deshacer hasta aquí")}
 										>
-											<Undo2 className="size-3.5" />
+											<Icono icon="lucide:undo-2" className="size-3.5" />
 										</Button>
 									</WithTooltip>
 								)}

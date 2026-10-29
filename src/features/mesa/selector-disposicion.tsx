@@ -1,4 +1,4 @@
-import { LayoutGrid, PanelBottom, Rows2, Square, Users } from "lucide-react";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,12 +23,12 @@ import {
 	modosPara,
 } from "./disposicion";
 
-const ICONOS: Record<ModoDisposicion, typeof Square> = {
-	unico: Square,
-	dividido: Rows2,
-	foco: PanelBottom,
-	rejilla: LayoutGrid,
-	equipos: Users,
+const ICONOS: Record<ModoDisposicion, string> = {
+	unico: "lucide:square",
+	dividido: "lucide:rows-2",
+	foco: "lucide:panel-bottom",
+	rejilla: "lucide:layout-grid",
+	equipos: "lucide:users",
 };
 
 /** La disposición que vale ahora y cómo cambiarla (se recuerda por número de jugadores). */
@@ -69,7 +69,7 @@ export function SelectorDisposicion({ className }: { className?: string }) {
 		rejilla: t("Todos iguales"),
 		equipos: t("Por equipos"),
 	};
-	const Icono = ICONOS[config.modo];
+	const icono = ICONOS[config.modo];
 	return (
 		<DropdownMenu>
 			<WithTooltip content={t("Disposición de los tableros")}>
@@ -80,7 +80,7 @@ export function SelectorDisposicion({ className }: { className?: string }) {
 						aria-label={t("Disposición de los tableros")}
 						className={className}
 					>
-						<Icono className="size-4" />
+						<Icono icon={icono} className="size-4" />
 					</Button>
 				</DropdownMenuTrigger>
 			</WithTooltip>

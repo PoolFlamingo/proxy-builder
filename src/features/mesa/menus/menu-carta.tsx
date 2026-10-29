@@ -1,44 +1,9 @@
-import {
-	ArrowDownToLine,
-	ArrowLeftRight,
-	ArrowUpToLine,
-	Ban,
-	Clock,
-	Copy,
-	Crosshair,
-	Crown,
-	Eye,
-	EyeOff,
-	FlipHorizontal2,
-	Ghost,
-	Gift,
-	Grid3x3,
-	Hand,
-	Hash,
-	Highlighter,
-	Layers,
-	Link2,
-	Link2Off,
-	Minus,
-	MoveRight,
-	Paperclip,
-	Pencil,
-	Plus,
-	RotateCw,
-	Shuffle,
-	Skull,
-	Sparkles,
-	SquareStack,
-	Swords,
-	Tag,
-	Trash2,
-	Undo2,
-} from "lucide-react";
 import type { ReactNode } from "react";
 import type { ComoResolver } from "@/bindings/ComoResolver";
 import type { IdCarta } from "@/bindings/IdCarta";
 import type { VistaCarta } from "@/bindings/VistaCarta";
 import { ContenidoContextual } from "@/components/contenido-contextual";
+import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import {
 	ContextMenu,
@@ -56,6 +21,7 @@ import { destino, destinoComun, hacer, mover, objetivo, sitio } from "../accione
 import { bonita, teclaPara } from "../atajos";
 import { COLORES, PALABRAS_CLAVE } from "../colores";
 import { conTemporal, nombreContador } from "../contadores";
+import { NotasEnMenuCarta } from "../notas-mesa";
 import * as op from "../operaciones";
 import { pedirNumero, usePantalla } from "../pantalla";
 import { campoAjeno } from "../privacidad";
@@ -87,7 +53,7 @@ export function MenuCarta({ c, children }: { c: VistaCarta; children: ReactNode 
 			<ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
 			<ContenidoContextual className="w-64 text-xs">
 				<ContextMenuItem onSelect={() => op.inspeccionar(c.id)} disabled={!c.origen}>
-					<Eye />
+					<Icono icon="lucide:eye" />
 					{t("Inspeccionar")}
 					<Tecla nombre="Inspeccionar" />
 				</ContextMenuItem>
@@ -99,6 +65,12 @@ export function MenuCarta({ c, children }: { c: VistaCarta; children: ReactNode 
 				{zona === "mando" && <DelMando c={c} />}
 				{(zona === "cementerio" || zona === "exilio" || zona === "banquillo") && (
 					<DeOtraZona c={c} />
+				)}
+				{zona === "campo" && (
+					<>
+						<ContextMenuSeparator />
+						<NotasEnMenuCarta carta={c.id} />
+					</>
 				)}
 				{!ajena && (
 					<>
@@ -118,18 +90,18 @@ function DelCampo({ c }: { c: VistaCarta }) {
 	return (
 		<>
 			<ContextMenuItem onSelect={() => op.girar(c.id)}>
-				<RotateCw />
+				<Icono icon="lucide:rotate-cw" />
 				{c.girada ? t("Enderezar") : t("Girar")}
 				<Tecla nombre="Girar / enderezar" />
 			</ContextMenuItem>
 			<ContextMenuItem onSelect={() => op.bocaAbajo(c.id)}>
-				{c.bocaAbajo ? <Eye /> : <EyeOff />}
+				{c.bocaAbajo ? <Icono icon="lucide:eye" /> : <Icono icon="lucide:eye-off" />}
 				{c.bocaAbajo ? t("Boca arriba") : t("Boca abajo")}
 				<Tecla nombre="Boca abajo" />
 			</ContextMenuItem>
 			{caras > 1 && (
 				<ContextMenuItem onSelect={() => op.transformar(c.id)}>
-					<FlipHorizontal2 />
+					<Icono icon="lucide:flip-horizontal-2" />
 					{t("Transformar")}
 					<Tecla nombre="Transformar" />
 				</ContextMenuItem>
@@ -138,48 +110,48 @@ function DelCampo({ c }: { c: VistaCarta }) {
 			{c.bocaAbajo && c.controlador === useMesa.getState().yo && <Mostrar c={c} />}
 			<Contadores c={c} />
 			<ContextMenuItem onSelect={() => usePantalla.getState().abrir({ tipo: "pt", carta: c.id })}>
-				<Swords />
+				<Icono icon="game-icons:crossed-swords" />
 				{t("Fuerza y resistencia…")}
 				<Tecla nombre="Fuerza y resistencia" />
 			</ContextMenuItem>
 			<ContextMenuItem
 				onSelect={() => usePantalla.getState().abrir({ tipo: "etiqueta", carta: c.id })}
 			>
-				<Tag />
+				<Icono icon="lucide:tag" />
 				{t("Etiqueta…")}
 			</ContextMenuItem>
 			<ContextMenuSeparator />
 			{c.adjuntaA !== null ? (
 				<ContextMenuItem onSelect={() => op.soltarAdjunto(c.id)}>
-					<Link2Off />
+					<Icono icon="lucide:link-2-off" />
 					{t("Soltar")}
 				</ContextMenuItem>
 			) : (
 				<ContextMenuItem onSelect={() => op.adjuntarA(c.id)}>
-					<Paperclip />
+					<Icono icon="lucide:paperclip" />
 					{t("Adjuntar a…")}
 					<Tecla nombre="Adjuntar a…" />
 				</ContextMenuItem>
 			)}
 			<ContextMenuItem onSelect={() => op.flecha(c.id, "ataque")}>
-				<Crosshair />
+				<Icono icon="game-icons:on-target" />
 				{t("Atacar / objetivo")}
 				<Tecla nombre="Atacar / objetivo" />
 			</ContextMenuItem>
 			<ContextMenuItem onSelect={() => op.habilidadEnPila(c.id)}>
-				<Sparkles />
+				<Icono icon="lucide:sparkles" />
 				{t("Habilidad a la pila…")}
 			</ContextMenuItem>
 			<ContextMenuItem onSelect={() => op.faseFuera(c.id)}>
-				<Ghost />
+				<Icono icon="game-icons:ghost" />
 				{c.faseFuera ? t("Volver de la fase") : t("Fuera de fase")}
 			</ContextMenuItem>
 			<ContextMenuItem onSelect={() => op.noEndereza(c.id)}>
-				<Ban />
+				<Icono icon="lucide:ban" />
 				{c.noEndereza ? t("Se endereza") : t("No se endereza")}
 			</ContextMenuItem>
 			<ContextMenuItem onSelect={() => op.copiaFicha(c.id)}>
-				<Copy />
+				<Icono icon="lucide:copy" />
 				{t("Crear una copia ficha")}
 			</ContextMenuItem>
 			<Resaltar c={c} />
@@ -202,11 +174,11 @@ function Control({ c }: { c: VistaCarta }) {
 		return (
 			<>
 				<ContextMenuItem onSelect={() => op.tomarControl(objetivo(c.id))}>
-					<ArrowLeftRight />
+					<Icono icon="lucide:arrow-left-right" />
 					{t("Tomar el control")}
 				</ContextMenuItem>
 				<ContextMenuItem onSelect={() => op.tomarControl(objetivo(c.id), true)}>
-					<Clock />
+					<Icono icon="lucide:clock" />
 					{t("Tomar el control hasta el final del turno")}
 				</ContextMenuItem>
 			</>
@@ -216,7 +188,7 @@ function Control({ c }: { c: VistaCarta }) {
 	return (
 		<ContextMenuSub>
 			<ContextMenuSubTrigger disabled={otros.length === 0}>
-				<Gift />
+				<Icono icon="lucide:gift" />
 				{t("Dar el control a…")}
 			</ContextMenuSubTrigger>
 			<ContextMenuSubContent className="text-xs">
@@ -236,17 +208,17 @@ function Contadores({ c }: { c: VistaCarta }) {
 	return (
 		<ContextMenuSub>
 			<ContextMenuSubTrigger>
-				<Hash />
+				<Icono icon="lucide:hash" />
 				{t("Contadores")}
 			</ContextMenuSubTrigger>
 			<ContextMenuSubContent className="w-56 text-xs">
 				<ContextMenuItem onSelect={() => op.masUno(c.id, 1)}>
-					<Plus />
+					<Icono icon="lucide:plus" />
 					{t("Añadir +1/+1")}
 					<Tecla nombre="Añadir +1/+1" />
 				</ContextMenuItem>
 				<ContextMenuItem onSelect={() => op.masUno(c.id, -1)}>
-					<Minus />
+					<Icono icon="lucide:minus" />
 					{t("Quitar +1/+1")}
 					<Tecla nombre="Quitar +1/+1" />
 				</ContextMenuItem>
@@ -255,7 +227,7 @@ function Contadores({ c }: { c: VistaCarta }) {
 						usePantalla.getState().abrir({ tipo: "contador", cartas: objetivo(c.id) })
 					}
 				>
-					<Hash />
+					<Icono icon="lucide:hash" />
 					{t("Añadir contador…")}
 					<Tecla nombre="Añadir contador" />
 				</ContextMenuItem>
@@ -266,21 +238,21 @@ function Contadores({ c }: { c: VistaCarta }) {
 							.abrir({ tipo: "contador", cartas: objetivo(c.id), temporal: true })
 					}
 				>
-					<Clock />
+					<Icono icon="lucide:clock" />
 					{t("Añadir contador temporal…")}
 				</ContextMenuItem>
 				<ContextMenuItem
 					onSelect={() => usePantalla.getState().abrir({ tipo: "editarContadores", carta: c.id })}
 					disabled={Object.keys(c.contadores).length + c.palabrasClave.length === 0}
 				>
-					<Pencil />
+					<Icono icon="lucide:pencil" />
 					{t("Editar contadores…")}
 				</ContextMenuItem>
 				<ContextMenuItem
 					onSelect={() => hacer({ que: "multiplicarContadores", carta: c.id, por: 2 })}
 					disabled={Object.keys(c.contadores).length === 0}
 				>
-					<Layers />
+					<Icono icon="lucide:layers" />
 					{t("Duplicar los contadores")}
 				</ContextMenuItem>
 				<ContextMenuSub>
@@ -305,7 +277,7 @@ function Contadores({ c }: { c: VistaCarta }) {
 						<ContextMenuSeparator />
 						<ContextMenuSub>
 							<ContextMenuSubTrigger>
-								<Clock />
+								<Icono icon="lucide:clock" />
 								{t("Hasta el final del turno")}
 							</ContextMenuSubTrigger>
 							<ContextMenuSubContent className="max-h-80 overflow-y-auto text-xs">
@@ -340,7 +312,7 @@ function Contadores({ c }: { c: VistaCarta }) {
 								key={tipo}
 								onSelect={() => hacer({ que: "fijarContador", carta: c.id, tipo, valor: 0 })}
 							>
-								<Trash2 />
+								<Icono icon="lucide:trash-2" />
 								{t("Quitar los de {tipo}", { tipo: nombreContador(tipo, t) })}
 							</ContextMenuItem>
 						))}
@@ -356,7 +328,7 @@ function Resaltar({ c }: { c: VistaCarta }) {
 	return (
 		<ContextMenuSub>
 			<ContextMenuSubTrigger>
-				<Highlighter />
+				<Icono icon="lucide:highlighter" />
 				{t("Resaltar")}
 				<ContextMenuShortcut>{bonita("p")}</ContextMenuShortcut>
 			</ContextMenuSubTrigger>
@@ -374,7 +346,7 @@ function Resaltar({ c }: { c: VistaCarta }) {
 					))}
 				</div>
 				<ContextMenuItem onSelect={() => op.resaltar(c.id, null)} disabled={c.resaltada === null}>
-					<Trash2 />
+					<Icono icon="lucide:trash-2" />
 					{t("Quitar el resaltado")}
 				</ContextMenuItem>
 			</ContextMenuSubContent>
@@ -387,27 +359,27 @@ function Monton({ c, varias }: { c: VistaCarta; varias: boolean }) {
 	return (
 		<ContextMenuSub>
 			<ContextMenuSubTrigger>
-				<SquareStack />
+				<Icono icon="lucide:square-stack" />
 				{t("Montón")}
 			</ContextMenuSubTrigger>
 			<ContextMenuSubContent className="w-52 text-xs">
 				{varias && (
 					<ContextMenuItem onSelect={() => op.amontonar(c.id)}>
-						<SquareStack />
+						<Icono icon="lucide:square-stack" />
 						{t("Amontonar las elegidas")}
 					</ContextMenuItem>
 				)}
 				{c.cantidad > 1 && (
 					<>
 						<ContextMenuItem onSelect={() => op.sacarDelMonton(c.id)}>
-							<MoveRight />
+							<Icono icon="lucide:move-right" />
 							{t("Sacar una")}
 							<Tecla nombre="Sacar una del montón" />
 						</ContextMenuItem>
 						<ContextMenuItem
 							onSelect={() => pedirNumero(t("Sacar cuántas"), 1, (n) => op.sacarDelMonton(c.id, n))}
 						>
-							<MoveRight />
+							<Icono icon="lucide:move-right" />
 							{t("Sacar varias…")}
 						</ContextMenuItem>
 						<ContextMenuItem
@@ -417,11 +389,11 @@ function Monton({ c, varias }: { c: VistaCarta; varias: boolean }) {
 								)
 							}
 						>
-							<Plus />
+							<Icono icon="lucide:plus" />
 							{t("Añadir o quitar fichas…")}
 						</ContextMenuItem>
 						<ContextMenuItem onSelect={() => hacer({ que: "separar", monton: c.id })}>
-							<Layers />
+							<Icono icon="lucide:layers" />
 							{t("Separar")}
 						</ContextMenuItem>
 					</>
@@ -446,7 +418,7 @@ function Mostrar({ c }: { c: VistaCarta }) {
 	return (
 		<ContextMenuSub>
 			<ContextMenuSubTrigger>
-				<Eye />
+				<Icono icon="lucide:eye" />
 				{t("Mostrar…")}
 				<Tecla nombre="Mostrar a todos / dejar de mostrar" />
 			</ContextMenuSubTrigger>
@@ -460,7 +432,7 @@ function Mostrar({ c }: { c: VistaCarta }) {
 				))}
 				<ContextMenuSeparator />
 				<ContextMenuItem onSelect={() => op.dejarDeMostrar(c.id)}>
-					<EyeOff />
+					<Icono icon="lucide:eye-off" />
 					{t("Dejar de mostrar")}
 				</ContextMenuItem>
 			</ContextMenuSubContent>
@@ -474,16 +446,16 @@ function DeLaMano({ c }: { c: VistaCarta }) {
 		<>
 			<Mostrar c={c} />
 			<ContextMenuItem onSelect={() => op.aLaPila(c.id)}>
-				<Sparkles />
+				<Icono icon="lucide:sparkles" />
 				{t("Lanzar (a la pila)")}
 			</ContextMenuItem>
 			<ContextMenuItem onSelect={() => op.bocaAbajo(c.id)}>
-				<EyeOff />
+				<Icono icon="lucide:eye-off" />
 				{t("Jugar boca abajo")}
 				<Tecla nombre="Boca abajo" />
 			</ContextMenuItem>
 			<ContextMenuItem onSelect={() => op.habilidadEnPila(c.id)}>
-				<Sparkles />
+				<Icono icon="lucide:sparkles" />
 				{t("Habilidad a la pila…")}
 			</ContextMenuItem>
 		</>
@@ -502,7 +474,7 @@ function DeLaPila({ c }: { c: VistaCarta }) {
 	return (
 		<>
 			<ContextMenuItem onSelect={() => hacer({ que: "resolver", carta: c.id, como: "auto" })}>
-				<Undo2 />
+				<Icono icon="lucide:undo-2" />
 				{t("Resolver")}
 			</ContextMenuItem>
 			{!c.habilidad && (
@@ -533,11 +505,11 @@ function DelMando({ c }: { c: VistaCarta }) {
 	return (
 		<>
 			<ContextMenuItem onSelect={() => mover([c.id], destinoComun("pila"), "lanzar")}>
-				<Crown />
+				<Icono icon="game-icons:crown" />
 				{t("Lanzar (cuenta para el impuesto)")}
 			</ContextMenuItem>
 			<ContextMenuItem onSelect={() => mover([c.id], destino("campo", sitio.arriba, yo), "poner")}>
-				<Crown />
+				<Icono icon="game-icons:crown" />
 				{t("Ponerlo en el campo (no cuenta)")}
 			</ContextMenuItem>
 			<ContextMenuSeparator />
@@ -545,14 +517,14 @@ function DelMando({ c }: { c: VistaCarta }) {
 				{t("Veces lanzado: {n} · impuesto {coste}", { n: lanzado, coste: impuesto })}
 			</div>
 			<ContextMenuItem onSelect={() => hacer({ que: "lanzamientos", comandante: c.id, delta: 1 })}>
-				<Plus />
+				<Icono icon="lucide:plus" />
 				{t("Una vez más")}
 			</ContextMenuItem>
 			<ContextMenuItem
 				disabled={lanzado === 0}
 				onSelect={() => hacer({ que: "lanzamientos", comandante: c.id, delta: -1 })}
 			>
-				<Minus />
+				<Icono icon="lucide:minus" />
 				{t("Una vez menos")}
 			</ContextMenuItem>
 			<ContextMenuItem
@@ -580,14 +552,14 @@ function DeOtraZona({ c }: { c: VistaCarta }) {
 	return (
 		<>
 			<ContextMenuItem onSelect={() => op.aLaPila(c.id)}>
-				<Sparkles />
+				<Icono icon="lucide:sparkles" />
 				{t("Lanzar (a la pila)")}
 			</ContextMenuItem>
 			{zona !== null && jugador !== null && (
 				<ContextMenuItem
 					onSelect={() => usePantalla.getState().abrir({ tipo: "zona", jugador, zona })}
 				>
-					<Grid3x3 />
+					<Icono icon="lucide:grid-3x3" />
 					{t("Ver todas las cartas ({zona})", { zona: nombre })}
 				</ContextMenuItem>
 			)}
@@ -605,66 +577,66 @@ function MoverA({ c }: { c: VistaCarta }) {
 		<>
 			{zona !== "mano" && (
 				<ContextMenuItem onSelect={() => op.aZona(c.id, "mano")}>
-					<Hand />
+					<Icono icon="lucide:hand" />
 					{t("A la mano")}
 					<Tecla nombre="A la mano" />
 				</ContextMenuItem>
 			)}
 			{zona !== "campo" && (
 				<ContextMenuItem onSelect={() => mover(ids(), destino("campo", sitio.arriba, yo))}>
-					<ArrowUpToLine />
+					<Icono icon="lucide:arrow-up-to-line" />
 					{t("Al campo")}
 				</ContextMenuItem>
 			)}
 			{zona !== "cementerio" && (
 				<ContextMenuItem onSelect={() => op.aZona(c.id, "cementerio")}>
-					<Skull />
+					<Icono icon="game-icons:tombstone" />
 					{t("Al cementerio")}
 					<Tecla nombre="Al cementerio" />
 				</ContextMenuItem>
 			)}
 			{zona !== "exilio" && (
 				<ContextMenuItem onSelect={() => op.aZona(c.id, "exilio")}>
-					<Trash2 />
+					<Icono icon="lucide:trash-2" />
 					{t("Al exilio")}
 					<Tecla nombre="Al exilio" />
 				</ContextMenuItem>
 			)}
 			<ContextMenuSub>
 				<ContextMenuSubTrigger>
-					<MoveRight />
+					<Icono icon="lucide:move-right" />
 					{t("Mover a…")}
 				</ContextMenuSubTrigger>
 				<ContextMenuSubContent className="w-60 text-xs">
 					<ContextMenuItem onSelect={() => op.exiliarBocaAbajo(c.id)}>
-						<EyeOff />
+						<Icono icon="lucide:eye-off" />
 						{t("Al exilio boca abajo")}
 						<Tecla nombre="Al exilio boca abajo" />
 					</ContextMenuItem>
 					<ContextMenuItem onSelect={() => op.aZona(c.id, "biblioteca", sitio.arriba)}>
-						<ArrowUpToLine />
+						<Icono icon="lucide:arrow-up-to-line" />
 						{t("Arriba de la biblioteca")}
 					</ContextMenuItem>
 					<ContextMenuItem onSelect={() => op.aZona(c.id, "biblioteca", sitio.abajo)}>
-						<ArrowDownToLine />
+						<Icono icon="lucide:arrow-down-to-line" />
 						{t("Abajo de la biblioteca")}
 						<Tecla nombre="Abajo de la biblioteca" />
 					</ContextMenuItem>
 					<ContextMenuItem onSelect={() => op.aLaPosicion(c.id)}>
-						<Hash />
+						<Icono icon="lucide:hash" />
 						{t("En la biblioteca, en la posición…")}
 					</ContextMenuItem>
 					<ContextMenuItem onSelect={() => op.barajarDentro(c.id)}>
-						<Shuffle />
+						<Icono icon="lucide:shuffle" />
 						{t("Barajar en la biblioteca")}
 						<Tecla nombre="Barajar en la biblioteca" />
 					</ContextMenuItem>
 					<ContextMenuItem onSelect={() => op.aZona(c.id, "mando")}>
-						<Crown />
+						<Icono icon="game-icons:crown" />
 						{t("Al mando")}
 					</ContextMenuItem>
 					<ContextMenuItem onSelect={() => op.aLaPila(c.id)}>
-						<Link2 />
+						<Icono icon="lucide:link-2" />
 						{t("A la pila")}
 					</ContextMenuItem>
 				</ContextMenuSubContent>

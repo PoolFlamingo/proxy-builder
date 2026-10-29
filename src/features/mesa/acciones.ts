@@ -14,6 +14,8 @@ import { call } from "@/lib/ipc";
 import { useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
 import { useRepeticion } from "@/stores/repeticion-store";
+import { useVivo } from "@/stores/vivo-store";
+import { usePantalla } from "./pantalla";
 
 /**
  * **Mandar una acción a la mesa.** Rust la resuelve y la aplica; lo que
@@ -41,6 +43,9 @@ export async function hacer(accion: Accion): Promise<boolean> {
 		await call("mesa_accion", { accion, como: null });
 		return true;
 	} catch (e) {
+		// Lo soltado que no se movió vuelve a su sitio ya, sin esperar.
+		useVivo.getState().olvidarSoltadas();
+		usePantalla.getState().setArrastre(null);
 		// Tocar lo que no es de uno no hace nada, sin aviso (la pantalla ya no lo
 		// ofrece; esto cubre los atajos sobre una carta ajena).
 		if (!esSinPermiso(e)) toast.error(mensajeDeError(e, traduccionSuelta));
@@ -77,6 +82,11 @@ export function destinoComun(zona: ZonaComun, s: Sitio = sitio.arriba): Destino 
 
 export function mover(cartas: IdCarta[], a: Destino, como: "lanzar" | "poner" | null = null) {
 	return hacer({ que: "mover", cartas, a, como });
+}
+
+/** Varias cartas al campo de `jugador`, cada una en su punto (un solo evento). */
+export function colocar(cartas: [IdCarta, Pos][], jugador: IdJugador | null) {
+	return hacer({ que: "colocar", cartas, jugador });
 }
 
 export const zonaDe = (jugador: IdJugador, zona: Zona): RefZona => ({ tipo: "de", jugador, zona });

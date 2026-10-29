@@ -19,8 +19,8 @@ export const ULTIMAS_PARA_APILAR = 8;
 export function visibleEnRegistro(ev: Evento): boolean {
 	if (ev.cambio.tipo !== "accion") return true;
 	const a = ev.cambio.accion;
-	if (a.que === "quitarNota") return false;
-	if (a.que === "ponerNota" || a.que === "editarNota") return !a.privada;
+	if (a.que === "quitarNota" || a.que === "atarNota") return false;
+	if (a.que === "ponerNota" || a.que === "editarNota" || a.que === "notaEnCarta") return !a.privada;
 	return true;
 }
 

@@ -1,4 +1,3 @@
-import { Hand, Heart, Languages, Library, Reply, Skull, Swords } from "lucide-react";
 import { type ComponentProps, memo, useRef } from "react";
 import type { Equipo } from "@/bindings/Equipo";
 import type { IdCarta } from "@/bindings/IdCarta";
@@ -6,6 +5,7 @@ import type { IdJugador } from "@/bindings/IdJugador";
 import type { VistaCarta } from "@/bindings/VistaCarta";
 import type { VistaJugador } from "@/bindings/VistaJugador";
 import { ContenidoContextual } from "@/components/contenido-contextual";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { ContextMenu, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { urlMesa } from "@/lib/image-url";
@@ -28,6 +28,7 @@ import { useSinAnimaciones } from "./fps";
 import { caraVisible, DorsoGenerico, ImagenCarta } from "./imagen-carta";
 import { Insignias } from "./insignias";
 import { igualesLista, MS_MINIATURA, useMesaLenta } from "./lento";
+import { MarcasJugador } from "./marcas-jugador";
 import { mirarJugador } from "./mirar";
 import { elegirCarta, elegirJugador } from "./objetivo";
 import { alternarOriginales } from "./originales";
@@ -255,7 +256,7 @@ export const TableroMini = memo(function TableroMini({
 					{respondible && !modo && (
 						<span className="pointer-events-none absolute inset-x-0 bottom-1 z-[9500] flex justify-center">
 							<span className="flex animate-pulse items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-lg">
-								<Reply className="size-3" />
+								<Icono icon="lucide:reply" className="size-3" />
 								{t("Hay algo en la pila: ¿responder?")}
 							</span>
 						</span>
@@ -264,11 +265,13 @@ export const TableroMini = memo(function TableroMini({
 						className="absolute inset-x-0 top-0 flex items-center gap-1.5 px-1.5 text-[11px] leading-none"
 						style={{ height: CABECERA, background: `${color}66` }}
 					>
-						{eliminado && <Skull className="size-3 shrink-0" />}
+						{eliminado && <Icono icon="game-icons:death-skull" className="size-3 shrink-0" />}
 						<span className="min-w-0 flex-1 truncate font-medium">{j.nombre}</span>
 						<InsigniaSenal jugador={jugador} />
 						{enRed && <Latencia id={jugador} />}
-						{originales && <Languages className="size-3 shrink-0 text-white/60" />}
+						{originales && (
+							<Icono icon="lucide:languages" className="size-3 shrink-0 text-white/60" />
+						)}
 						{atacantes > 0 && (
 							<span
 								className="flex shrink-0 items-center gap-0.5 rounded-sm bg-rose-600 px-1 py-0.5 font-semibold tabular-nums"
@@ -277,12 +280,13 @@ export const TableroMini = memo(function TableroMini({
 									cuantos: atacantes,
 								})}
 							>
-								<Swords className="size-3" />
+								<Icono icon="game-icons:crossed-swords" className="size-3" />
 								{atacantes}
 							</span>
 						)}
+						<MarcasJugador jugador={jugador} pequeno />
 						<span className="flex shrink-0 items-center gap-0.5 tabular-nums">
-							<Heart className="size-3" />
+							<Icono icon="game-icons:hearts" className="size-3" />
 							{vida}
 						</span>
 						{w >= 120 && (
@@ -291,14 +295,14 @@ export const TableroMini = memo(function TableroMini({
 									className="flex shrink-0 items-center gap-0.5 tabular-nums"
 									aria-label={t("Mano")}
 								>
-									<Hand className="size-3" />
+									<Icono icon="lucide:hand" className="size-3" />
 									{d.mano}
 								</span>
 								<span
 									className="flex shrink-0 items-center gap-0.5 tabular-nums"
 									aria-label={t("Biblioteca")}
 								>
-									<Library className="size-3" />
+									<Icono icon="game-icons:card-draw" className="size-3" />
 									{d.biblioteca}
 								</span>
 							</>
@@ -343,7 +347,7 @@ export const TableroMini = memo(function TableroMini({
 			</ContextMenuTrigger>
 			<ContenidoContextual className="w-64 text-xs">
 				<ContextMenuItem onSelect={() => alternarOriginales(jugador)}>
-					<Languages />
+					<Icono icon="lucide:languages" />
 					{originales ? "✓ " : ""}
 					{t("Cartas originales en mi idioma")}
 				</ContextMenuItem>

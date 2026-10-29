@@ -35,8 +35,13 @@ function mismoOrigen(a: Origen, b: Origen): boolean {
 	return a.zona === b.zona && a.x === b.x && a.y === b.y;
 }
 
-/** Cuánto se sigue ocultando una carta recién soltada si aún no se ha movido (llega el evento). */
-export const MS_SOLTADA = 800;
+/**
+ * Cuánto se sigue ocultando, como mucho, una carta recién soltada que aún no
+ * se ha movido: hasta que llega su evento (en red, con un anfitrión lento,
+ * puede tardar) o un rechazo (`olvidarSoltadas`). Con menos, la carta volvía
+ * un momento a su sitio de antes y luego saltaba al nuevo.
+ */
+export const MS_SOLTADA = 5000;
 
 /**
  * Una carta que acaba de dejar de arrastrarse y aún se ve en su sitio de antes.
@@ -92,6 +97,8 @@ type VivoStore = {
 	senal: (jugador: IdJugador, carta: IdCarta | null, a: IdJugador | null, ahora: number) => void;
 	/** Quita lo que ya caducó (y no cambia nada si no hay nada). */
 	purgar: (ahora: number) => void;
+	/** El movimiento no se hizo (rechazado): lo soltado vuelve a verse ya. */
+	olvidarSoltadas: () => void;
 	limpiar: () => void;
 };
 
@@ -156,6 +163,7 @@ export const useVivo = create<VivoStore>((set, get) => ({
 			soltadas,
 		});
 	},
+	olvidarSoltadas: () => set({ soltadas: {} }),
 	soltar: (origenes, ahora) => {
 		const soltadas = { ...get().soltadas };
 		for (const [id, origen] of Object.entries(origenes)) {
