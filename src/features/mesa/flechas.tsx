@@ -2,7 +2,7 @@ import { Swords, Target } from "lucide-react";
 import { createContext, useContext, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { IdJugador } from "@/bindings/IdJugador";
 import { useLang } from "@/components/language-provider";
-import { NINGUNA, tableroDe, useMesa } from "@/stores/mesa-store";
+import { type Mesa, NINGUNA, tableroDe, useMesa } from "@/stores/mesa-store";
 import { duenoDeExtremo, entradaDesde, idDePunta } from "./cuentas-flechas";
 import { type Disposicion, posAPx } from "./disposicion";
 
@@ -17,6 +17,14 @@ const COLOR_FLECHA = "#e11d48";
 export const MesasAlrededor = createContext<Partial<Record<IdJugador, { x: number; y: number }>>>(
 	{},
 );
+
+/**
+ * El jugador cuyo marcador de vida está en pantalla: yo y, si no hay «yo» (la
+ * repetición con todo a la vista), el del tablero que se mira.
+ */
+export function duenoDeControles(m: Pick<Mesa, "yo"> & { mirando: IdJugador | null }): IdJugador {
+	return m.yo ?? tableroDe(m);
+}
 
 /** Atributo del marcador de vida del que juega (`vida-jugador.tsx`): ahí apuntan las flechas que le llegan. */
 const ATRIBUTO_VIDA = "data-vida-de";
@@ -35,7 +43,9 @@ export function Flechas({ disp }: { disp: Disposicion }) {
 	const cartas = useMesa((s) => s.cartas);
 	const jugadores = useMesa((s) => s.jugadores);
 	const viendo = useMesa(tableroDe);
-	const yo = useMesa((s) => s.yo);
+	// De quién es el marcador de vida que se enseña (`Controles`): el mío o, en una
+	// repetición con todo a la vista (sin «yo»), el del tablero que se mira.
+	const yo = useMesa(duenoDeControles);
 	const varios = useMesa((s) => s.asientos.length > 1);
 	const alrededor = useContext(MesasAlrededor);
 	const svg = useRef<SVGSVGElement>(null);
@@ -44,7 +54,7 @@ export function Flechas({ disp }: { disp: Disposicion }) {
 	const [vida, setVida] = useState<{ x: number; y: number } | null>(null);
 	useLayoutEffect(() => {
 		const caja = svg.current?.getBoundingClientRect();
-		const el = yo === null ? null : document.querySelector(`[${ATRIBUTO_VIDA}="${yo}"]`);
+		const el = document.querySelector(`[${ATRIBUTO_VIDA}="${yo}"]`);
 		if (!caja || !el) {
 			setVida(null);
 			return;

@@ -3,6 +3,7 @@ import { useShallow } from "zustand/react/shallow";
 import { useLang } from "@/components/language-provider";
 import { tableroDe, useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
+import { useRepeticion } from "@/stores/repeticion-store";
 import { AyudasTurno } from "./ayudas-turno";
 import { Bocadillo, InsigniaSenal } from "./chat";
 import {
@@ -15,7 +16,7 @@ import {
 	type Rect,
 	repartir,
 } from "./disposicion";
-import { MesasAlrededor } from "./flechas";
+import { duenoDeControles, MesasAlrededor } from "./flechas";
 import { PanelPlanes } from "./planes";
 import { PanelPlanar } from "./plano-activo";
 import { deckDelTablero } from "./privacidad";
@@ -51,7 +52,9 @@ export function Mesas({ deckIds }: { deckIds: string[] }) {
 
 /** Lo que el que juega tiene a mano sobre su tablero: las ayudas del turno y su vida. */
 function Controles() {
-	const yo = useMesa((s) => s.yo ?? 0);
+	const yo = useMesa(duenoDeControles);
+	// Las ayudas del turno son para quien juega: en una repetición no hay nadie.
+	const repitiendo = useRepeticion((s) => s.activa !== null);
 	return (
 		<div
 			className="absolute right-3 z-[7000] flex flex-col items-end gap-1.5"
@@ -60,7 +63,7 @@ function Controles() {
 			<Bocadillo jugador={yo} />
 			<PanelPlanar />
 			<PanelPlanes />
-			<AyudasTurno />
+			{!repitiendo && <AyudasTurno />}
 			<InsigniaSenal jugador={yo} />
 			<VidaJugador jugador={yo} />
 		</div>
