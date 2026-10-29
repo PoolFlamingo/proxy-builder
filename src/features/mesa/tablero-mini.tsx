@@ -1,6 +1,7 @@
 import { Hand, Heart, Languages, Library, Reply, Skull, Swords } from "lucide-react";
-import { memo } from "react";
+import { type ComponentProps, memo, useRef } from "react";
 import type { Equipo } from "@/bindings/Equipo";
+import type { IdCarta } from "@/bindings/IdCarta";
 import type { IdJugador } from "@/bindings/IdJugador";
 import type { VistaCarta } from "@/bindings/VistaCarta";
 import type { VistaJugador } from "@/bindings/VistaJugador";
@@ -12,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { cartasDe, cuantasEn, NINGUNA, useMesa } from "@/stores/mesa-store";
 import { useOriginales } from "@/stores/originales-store";
 import { useRed } from "@/stores/red-store";
+import { useRepeticion } from "@/stores/repeticion-store";
 import { useUi } from "@/stores/ui-store";
 import { enVuelo, origenDe, useVivo } from "@/stores/vivo-store";
 import { zonaComun, zonaDe } from "./acciones";
@@ -21,15 +23,47 @@ import { atacantesDe } from "./cuentas-flechas";
 import { abanico, disponer, posAPx } from "./disposicion";
 import { senalar } from "./en-vivo/emitir";
 import { FantasmasMini } from "./en-vivo/fantasmas";
+import { useDeslizar, useFlip } from "./flip";
 import { caraVisible, DorsoGenerico, ImagenCarta } from "./imagen-carta";
 import { Insignias } from "./insignias";
-import { igualesLista, useMesaLenta } from "./lento";
+import { igualesLista, MS_MINIATURA, useMesaLenta } from "./lento";
 import { mirarJugador } from "./mirar";
 import { elegirCarta, elegirJugador } from "./objetivo";
 import { alternarOriginales } from "./originales";
 import { usePantalla } from "./pantalla";
 import { puestosDelCampo } from "./puestos-campo";
 import { Latencia } from "./red/estado-red";
+
+/** Cada cuántos ms se mira la mesa para las miniaturas durante una repetición. */
+const MS_REPETICION = 30;
+
+/**
+ * Una carta de una miniatura. En una repetición se **desliza** hasta su sitio
+ * nuevo (también de una zona a otra), igual que en el tablero grande, a la
+ * escala de la miniatura; fuera de ella, es un `span` sin más.
+ */
+function Deslizante({
+	carta,
+	ambito,
+	sitio,
+	...resto
+}: {
+	carta: IdCarta;
+	/** De qué escala es: el sitio de una miniatura no vale para otra de otro tamaño. */
+	ambito: string;
+	/** Cambia cuando la carta cambia de sitio. */
+	sitio: string;
+} & ComponentProps<"span">) {
+	const ref = useRef<HTMLSpanElement>(null);
+	const ms = useDeslizar();
+	const saltos = useRepeticion((s) => s.saltos);
+	useFlip(carta, ref, ms > 0, `${sitio}|${saltos}`, {
+		duracion: ms > 0 ? ms : undefined,
+		ambito,
+		sinCaducidad: true,
+	});
+	return <span ref={ref} {...resto} />;
+}
 
 /** Alto de la cabecera (nombre y vida) de una miniatura, en px. */
 const CABECERA = 20;
@@ -139,7 +173,14 @@ export const TableroMini = memo(function TableroMini({
 	h: number;
 }) {
 	const { t } = useLang();
-	const d = useMesaLenta((m) => datosMini(m, jugador), igualMini);
+	// En una repetición se mira la mesa casi al momento: el deslizamiento de las
+	// cartas empieza con el paso, no hasta 100 ms después.
+	const repitiendo = useRepeticion((s) => s.activa !== null);
+	const d = useMesaLenta(
+		(m) => datosMini(m, jugador),
+		igualMini,
+		repitiendo ? MS_REPETICION : MS_MINIATURA,
+	);
 	const enRed = useRed((s) => s.papel !== null);
 	const senalada = useVivo((s) => s.senales.some((x) => x.a === jugador));
 	const originales = useOriginales((s) => s.modos[jugador]);
@@ -263,8 +304,11 @@ export const TableroMini = memo(function TableroMini({
 							if (enVuelo(useVivo.getState(), c.id, () => origenDe(c))) return null;
 							const p = posAPx(campo, c.pos);
 							return (
-								<span
+								<Deslizante
 									key={c.id}
+									carta={c.id}
+									ambito="mini"
+									sitio={`campo|${p.x}|${p.y}|${c.girada}`}
 									className="absolute block"
 									style={{
 										left: p.x - ancho / 2,
@@ -280,7 +324,7 @@ export const TableroMini = memo(function TableroMini({
 									}}
 								>
 									<ImagenCarta imagen={caraVisible(c)} ancho={146} />
-								</span>
+								</Deslizante>
 							);
 						})}
 					{conCampo && <FantasmasMini jugador={jugador} campo={campo} ancho={ancho} alto={alto} />}
@@ -296,6 +340,25 @@ export const TableroMini = memo(function TableroMini({
 		</ContextMenu>
 	);
 });
+
+/** Lo que se ve de una carta de la mano de una miniatura: su cara, o el reverso. */
+function CaraDeMano({
+	carta,
+	dorso,
+}: {
+	carta: VistaCarta | undefined;
+	dorso: VistaJugador["dorso"] | null;
+}) {
+	if (carta) return <ImagenCarta imagen={caraVisible(carta)} ancho={146} />;
+	return dorso ? <ImagenCarta imagen={dorso} ancho={146} /> : <DorsoGenerico />;
+}
+
+/** La transición con la que un reverso de la mano se recoloca en el abanico (en una repetición). */
+function transicionAbanico(ms: number): string | undefined {
+	return ms > 0
+		? `left ${ms}ms ease-in-out, top ${ms}ms ease-in-out, transform ${ms}ms ease-in-out`
+		: undefined;
+}
 
 /** Tope de reversos que se dibujan en la franja de la mano de una miniatura. */
 const MAX_MANO_MINI = 20;
@@ -322,6 +385,7 @@ function ManoMini({ d, w, ancho }: { d: DatosMini; w: number; ancho: number }) {
 	}));
 	const dorso = d.j?.dorso ?? null;
 	const abiertas = d.manoVista.length > 0;
+	const ms = useDeslizar();
 	return (
 		<span
 			className="pointer-events-none absolute inset-x-0 bottom-0 z-[9000] block bg-black/55"
@@ -331,25 +395,34 @@ function ManoMini({ d, w, ancho }: { d: DatosMini; w: number; ancho: number }) {
 			{Array.from({ length: n }, (_, i) => {
 				// De la mano abierta, las que se ven; si faltan, reversos.
 				const c = d.manoVista[i];
-				return (
-					<span
-						key={c?.id ?? `r${i}`}
-						className="absolute block overflow-hidden rounded-[2px]"
-						style={{
-							left: (pos[i]?.x ?? 0) - cw / 2,
-							top: (pos[i]?.y ?? ch / 2) - ch / 2 + 2,
-							width: cw,
-							height: ch,
-							transform: `rotate(${pos[i]?.giro ?? 0}deg)`,
-						}}
+				const estilo = {
+					left: (pos[i]?.x ?? 0) - cw / 2,
+					top: (pos[i]?.y ?? ch / 2) - ch / 2 + 2,
+					width: cw,
+					height: ch,
+					transform: `rotate(${pos[i]?.giro ?? 0}deg)`,
+				};
+				const clase = "absolute block overflow-hidden rounded-[2px]";
+				// Las que se ven llevan su id y se deslizan desde donde estaban; los
+				// reversos solo recolocan el abanico.
+				return c ? (
+					<Deslizante
+						key={c.id}
+						carta={c.id}
+						ambito="mini"
+						sitio={`mano|${estilo.left}|${estilo.top}`}
+						className={clase}
+						style={estilo}
 					>
-						{c ? (
-							<ImagenCarta imagen={caraVisible(c)} ancho={146} />
-						) : dorso ? (
-							<ImagenCarta imagen={dorso} ancho={146} />
-						) : (
-							<DorsoGenerico />
-						)}
+						<CaraDeMano carta={c} dorso={dorso} />
+					</Deslizante>
+				) : (
+					<span
+						key={`r${i}`}
+						className={clase}
+						style={{ ...estilo, transition: transicionAbanico(ms) }}
+					>
+						<CaraDeMano carta={c} dorso={dorso} />
 					</span>
 				);
 			})}
@@ -366,6 +439,8 @@ function ManoMini({ d, w, ancho }: { d: DatosMini; w: number; ancho: number }) {
  */
 function ZonasMini({ d, w, h, ancho }: { d: DatosMini; w: number; h: number; ancho: number }) {
 	const { t } = useLang();
+	// Mientras una carta se desliza hasta una zona, no se recorta por su marco.
+	const deslizando = useDeslizar() > 0;
 	const zonas: {
 		clave: string;
 		nombre: string;
@@ -414,7 +489,10 @@ function ZonasMini({ d, w, h, ancho }: { d: DatosMini; w: number; h: number; anc
 						</span>
 					)}
 					<span
-						className="pointer-events-auto relative block overflow-hidden rounded-[2px] border border-dashed border-white/25 bg-black/50"
+						className={cn(
+							"pointer-events-auto relative block rounded-[2px] border border-dashed border-white/25 bg-black/50",
+							!deslizando && "overflow-hidden",
+						)}
 						style={{ width: tw, height: th }}
 						aria-label={`${z.nombre}: ${z.n}`}
 						data-zona={z.clave}
@@ -431,7 +509,15 @@ function ZonasMini({ d, w, h, ancho }: { d: DatosMini; w: number; h: number; anc
 								<DorsoGenerico />
 							)
 						) : z.carta ? (
-							<ImagenCarta imagen={caraVisible(z.carta)} ancho={146} />
+							<Deslizante
+								key={z.carta.id}
+								carta={z.carta.id}
+								ambito="mini"
+								sitio={`zona|${z.clave}`}
+								className="block size-full"
+							>
+								<ImagenCarta imagen={caraVisible(z.carta)} ancho={146} />
+							</Deslizante>
 						) : null}
 						{z.n > 0 && (
 							<span className="absolute right-0 bottom-0 rounded-tl-[2px] bg-black/75 px-0.5 text-[9px] leading-none tabular-nums">
@@ -458,6 +544,7 @@ const FILA_ZONAS = 400;
 function LecturaGrande({ d, w, h }: { d: DatosMini; w: number; h: number }) {
 	const { t } = useLang();
 	const tamano = useUi((s) => s.mesa.tamanoCartas);
+	const ms = useDeslizar();
 	const alto = Math.max(0, h - CABECERA);
 	const disp = disponer(w, alto, tamano);
 	const dorso = d.j?.dorso ?? null;
@@ -497,8 +584,11 @@ function LecturaGrande({ d, w, h }: { d: DatosMini; w: number; h: number }) {
 				if (enVuelo(useVivo.getState(), c.id, () => origenDe(c))) return null;
 				const { w: cw, h: ch } = disp.carta;
 				return (
-					<span
+					<Deslizante
 						key={c.id}
+						carta={c.id}
+						ambito="lectura"
+						sitio={`campo|${p.x}|${p.y}`}
 						className="pointer-events-auto absolute block"
 						style={{
 							left: p.x - cw / 2,
@@ -523,27 +613,41 @@ function LecturaGrande({ d, w, h }: { d: DatosMini; w: number; h: number }) {
 							<ImagenCarta imagen={caraVisible(c)} ancho={244} nombre={c.origen?.nombre} />
 						</span>
 						<Insignias c={c} yo={null} />
-					</span>
+					</Deslizante>
 				);
 			})}
 			{Array.from({ length: n }, (_, i) => {
 				const p = pos[i];
 				if (!p) return null;
 				const visible = d.manoVista[i];
-				return (
-					<span
-						key={visible?.id ?? `r${i}`}
-						className="absolute block overflow-hidden rounded-[5%] shadow-[0_3px_10px_rgba(0,0,0,0.55)]"
-						style={{
-							left: p.x - disp.cartaPequena.w / 2,
-							top: p.y - disp.cartaPequena.h / 2,
-							width: disp.cartaPequena.w,
-							height: disp.cartaPequena.h,
-							transform: `rotate(${p.giro}deg)`,
-							zIndex: 1000 + i,
-						}}
+				const estilo = {
+					left: p.x - disp.cartaPequena.w / 2,
+					top: p.y - disp.cartaPequena.h / 2,
+					width: disp.cartaPequena.w,
+					height: disp.cartaPequena.h,
+					transform: `rotate(${p.giro}deg)`,
+					zIndex: 1000 + i,
+				};
+				const clase =
+					"absolute block overflow-hidden rounded-[5%] shadow-[0_3px_10px_rgba(0,0,0,0.55)]";
+				return visible ? (
+					<Deslizante
+						key={visible.id}
+						carta={visible.id}
+						ambito="lectura"
+						sitio={`mano|${estilo.left}|${estilo.top}`}
+						className={clase}
+						style={estilo}
 					>
-						{visible ? <ImagenCarta imagen={caraVisible(visible)} ancho={244} /> : reverso}
+						<ImagenCarta imagen={caraVisible(visible)} ancho={244} />
+					</Deslizante>
+				) : (
+					<span
+						key={`r${i}`}
+						className={clase}
+						style={{ ...estilo, transition: transicionAbanico(ms) }}
+					>
+						{reverso}
 					</span>
 				);
 			})}
@@ -564,11 +668,24 @@ function LecturaGrande({ d, w, h }: { d: DatosMini; w: number; h: number }) {
 							{z.nombre}
 							{z.n > 0 ? ` · ${z.n}` : ""}
 						</span>
-						<span className="relative block w-full flex-1 overflow-hidden rounded-[5%] border border-dashed border-white/25 bg-black/20">
+						<span
+							className={cn(
+								"relative block w-full flex-1 rounded-[5%] border border-dashed border-white/25 bg-black/20",
+								ms === 0 && "overflow-hidden",
+							)}
+						>
 							{z.dorso && z.n > 0 ? (
 								reverso
 							) : z.carta ? (
-								<ImagenCarta imagen={caraVisible(z.carta)} ancho={244} />
+								<Deslizante
+									key={z.carta.id}
+									carta={z.carta.id}
+									ambito="lectura"
+									sitio={`zona|${z.clave}`}
+									className="block size-full"
+								>
+									<ImagenCarta imagen={caraVisible(z.carta)} ancho={244} />
+								</Deslizante>
 							) : null}
 						</span>
 					</span>

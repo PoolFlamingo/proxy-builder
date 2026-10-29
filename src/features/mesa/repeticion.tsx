@@ -28,6 +28,7 @@ import {
 	pausaEntre,
 	VELOCIDADES,
 } from "./cuentas-repeticion";
+import { olvidarSitios } from "./flip";
 
 /**
  * **La repetición de una partida terminada** (H3): la mesa en «solo mirar»
@@ -99,11 +100,13 @@ export function BarraRepeticion() {
 					// Antes de pedirlo: la vista llega por el canal y las cartas ya tienen
 					// que saber si se deslizan hasta su sitio nuevo y cuánto.
 					const ahora = useRepeticion.getState();
-					ahora.animar(
+					const ms =
 						p.como === (ahora.activa?.como ?? null)
 							? duracionMovimiento(ahora.activa?.pos ?? p.pos, p.pos, velocidadActual.current)
-							: 0,
-					);
+							: 0;
+					// Un salto no se desliza: lo de antes no es de donde vienen las cartas.
+					if (ms === 0) olvidarSitios();
+					ahora.animar(ms);
 					poner(await call("repeticion_ir", { pos: p.pos, como: p.como }));
 				}
 			} catch (e) {

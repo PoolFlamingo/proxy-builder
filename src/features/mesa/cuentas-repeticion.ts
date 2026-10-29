@@ -56,3 +56,24 @@ export function duracionMovimiento(desde: number, hasta: number, velocidad: numb
 	if (salto === 0 || salto > SALTO_ANIMABLE) return 0;
 	return Math.max(40, Math.round((ESPERA_MINIMA_MS * 0.9) / Math.max(0.1, velocidad)));
 }
+
+/**
+ * Los eventos que trae de más la vista nueva respecto a la anterior, si es un
+ * paso corto hacia delante (`max` o menos): es lo que "acaba de pasar" y tiene
+ * que sonar y verse. Atrás, en un salto o sin relación con la anterior, ninguno.
+ */
+export function eventosNuevos<E extends { seq: number }>(
+	antes: readonly E[],
+	despues: readonly E[],
+	max = SALTO_ANIMABLE,
+): E[] {
+	const ultimo = antes[antes.length - 1]?.seq;
+	let desde = 0;
+	if (ultimo !== undefined) {
+		const i = despues.map((e) => e.seq).lastIndexOf(ultimo);
+		if (i < 0) return [];
+		desde = i + 1;
+	}
+	const nuevos = despues.slice(desde);
+	return nuevos.length > max ? [] : nuevos;
+}

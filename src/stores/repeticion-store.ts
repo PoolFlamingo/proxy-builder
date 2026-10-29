@@ -14,6 +14,8 @@ type Estado = {
 	 * por medio: lo suave lo pone la pantalla. 0: sin animar (un salto grande).
 	 */
 	animarMs: number;
+	/** Cuántos saltos sin animar van: las cartas vuelven a apuntar dónde están. */
+	saltos: number;
 	poner: (v: VistaRepeticion | null) => void;
 	animar: (ms: number) => void;
 };
@@ -21,6 +23,8 @@ type Estado = {
 export const useRepeticion = create<Estado>((set) => ({
 	activa: null,
 	animarMs: 0,
+	saltos: 0,
 	poner: (activa) => set(activa ? { activa } : { activa, animarMs: 0 }),
-	animar: (animarMs) => set({ animarMs }),
+	animar: (animarMs) =>
+		set((s) => ({ animarMs, saltos: animarMs === 0 ? s.saltos + 1 : s.saltos })),
 }));

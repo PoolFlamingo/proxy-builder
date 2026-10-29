@@ -7,6 +7,7 @@ import { call } from "@/lib/ipc";
 import { useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
 import { useUi } from "@/stores/ui-store";
+import { olvidarSitios } from "./flip";
 import { usePantalla } from "./pantalla";
 import { quienResponde, siguienteAlResponder } from "./privacidad";
 import { useDisposicion } from "./selector-disposicion";
@@ -26,6 +27,8 @@ export function esLocalDeVarios(): boolean {
  * red solo cambia el tablero que se ve.
  */
 export async function mirarJugador(id: IdJugador): Promise<void> {
+	// Otro tablero: las cartas que salen no vienen de donde estaban en el anterior.
+	olvidarSitios();
 	// Cambiar de jugador vuelve a tapar la mano de quien respondía.
 	usePantalla.getState().mostrarMano(null);
 	if (!esLocalDeVarios()) {

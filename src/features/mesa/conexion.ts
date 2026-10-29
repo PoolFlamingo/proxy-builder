@@ -12,7 +12,7 @@ import { useRed } from "@/stores/red-store";
 import { useRepeticion } from "@/stores/repeticion-store";
 import { useTrabajo } from "@/stores/trabajo-store";
 import { useDados } from "./dados/cola";
-import { reaccionarAEvento } from "./reaccion-eventos";
+import { reaccionarAEvento, reaccionarEnRepeticion } from "./reaccion-eventos";
 
 /**
  * **La pantalla y la partida de Rust.** Se suscribe por un canal
@@ -32,9 +32,12 @@ export async function pedirVista() {
 function alMensaje(m: MensajeMesa) {
 	const s = useMesa.getState();
 	switch (m.tipo) {
-		case "vista":
+		case "vista": {
+			const antes = s.registro;
 			s.recibirVista(m.vista, m.registro);
+			reaccionarEnRepeticion(antes);
 			break;
+		}
 		case "parche":
 			if (!s.recibirParche(m.parche, m.evento)) void pedirVista();
 			// Las tiradas, a la capa de los dados.

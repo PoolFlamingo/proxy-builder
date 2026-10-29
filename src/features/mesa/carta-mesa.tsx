@@ -58,6 +58,7 @@ export const CartaMesa = memo(function CartaMesa({
 	// En una repetición, lo que dura deslizarse al punto nuevo (0: ahora mismo, sin animar).
 	const repetida = useRepeticion((s) => s.activa !== null);
 	const animarRep = useRepeticion((s) => s.animarMs);
+	const saltos = useRepeticion((s) => s.saltos);
 	const sombras = useUi((s) => s.mesa.sombras);
 	// Mientras se lleva en la mano. Ya soltada, la oculta `enVueloAjeno` hasta que llega.
 	const arrastrando = usePantalla(
@@ -81,8 +82,8 @@ export const CartaMesa = memo(function CartaMesa({
 		id,
 		ref,
 		!reducir && (!repetida || animarRep > 0),
-		`${c?.zona.tipo}${JSON.stringify(c?.zona)}${x}|${y}`,
-		repetida ? animarRep : undefined,
+		`${c?.zona.tipo}${JSON.stringify(c?.zona)}${x}|${y}|${saltos}`,
+		repetida ? { duracion: animarRep, sinCaducidad: true } : undefined,
 	);
 	if (!c) return null;
 	const ancho = calidad === 488 || w > 200 ? 488 : w > 120 ? 244 : calidad;

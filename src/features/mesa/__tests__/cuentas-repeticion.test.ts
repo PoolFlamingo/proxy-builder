@@ -4,6 +4,7 @@ import {
 	duracionMovimiento,
 	ESPERA_MAXIMA_MS,
 	ESPERA_MINIMA_MS,
+	eventosNuevos,
 	hitoAnterior,
 	hitoSiguiente,
 	pausaEntre,
@@ -50,5 +51,26 @@ describe("duracionMovimiento", () => {
 	it("no anima un salto grande ni quedarse donde se está", () => {
 		expect(duracionMovimiento(0, 40, 1)).toBe(0);
 		expect(duracionMovimiento(7, 7, 1)).toBe(0);
+	});
+});
+
+describe("eventosNuevos", () => {
+	const ev = (...seqs: number[]) => seqs.map((seq) => ({ seq }));
+	it("un paso hacia delante trae el evento nuevo", () => {
+		expect(eventosNuevos(ev(1, 2, 3), ev(1, 2, 3, 4))).toEqual(ev(4));
+		expect(eventosNuevos(ev(1, 2, 3), ev(1, 2, 3, 4, 5))).toEqual(ev(4, 5));
+	});
+	it("con la ventana corrida sigue funcionando", () => {
+		expect(eventosNuevos(ev(2, 3, 4), ev(3, 4, 5))).toEqual(ev(5));
+	});
+	it("desde el principio, todos los de un paso corto", () => {
+		expect(eventosNuevos(ev(), ev(7))).toEqual(ev(7));
+		expect(eventosNuevos(ev(), ev(1, 2, 3, 4, 5))).toEqual([]);
+	});
+	it("atrás, quieto, en un salto o sin relación: ninguno", () => {
+		expect(eventosNuevos(ev(1, 2, 3), ev(1, 2))).toEqual([]);
+		expect(eventosNuevos(ev(1, 2, 3), ev(1, 2, 3))).toEqual([]);
+		expect(eventosNuevos(ev(1, 2, 3), ev(1, 2, 3, 4, 5, 6, 7))).toEqual([]);
+		expect(eventosNuevos(ev(1, 2, 3), ev(10, 11))).toEqual([]);
 	});
 });

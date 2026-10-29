@@ -104,6 +104,11 @@ export function AjustesMesa() {
 				valor={m.sonidoChat}
 				onChange={(v) => set({ sonidoChat: v })}
 			/>
+			<FilaInterruptor
+				etiqueta={t("Sonidos y dados en las repeticiones")}
+				valor={m.efectosRepeticion}
+				onChange={(v) => set({ efectosRepeticion: v })}
+			/>
 			<FilaDeslizador
 				etiqueta={t("Volumen")}
 				valor={m.volumen}
