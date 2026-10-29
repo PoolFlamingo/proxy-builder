@@ -109,57 +109,64 @@ export const CartaMesa = memo(function CartaMesa({
 					width: w,
 					height: h,
 					zIndex: z ?? c.z,
-					transform: `translate(${x - w / 2}px, ${y - h / 2}px) rotate(${(c.girada ? 90 : 0) + giro}deg)`,
+					transform: `translate(${x - w / 2}px, ${y - h / 2}px)`,
 				}}
 			>
+				{/* El giro va aparte del sitio: girar siempre se anima, aunque la carta
+				    acabe de soltarse y su sitio aterrice sin deslizarse. */}
 				<div
-					className={cn(
-						"relative size-full rounded-[5%] transition-transform",
-						levantar && "group-hover:-translate-y-[35%] group-hover:scale-110",
-						sombras && "shadow-[0_3px_10px_rgba(0,0,0,0.55)]",
-						c.faseFuera && "opacity-40",
-						elegida && "ring-2 ring-primary ring-offset-1 ring-offset-black/40",
-					)}
-					style={
-						c.resaltada !== null
-							? {
-									boxShadow: `0 0 0 3px ${COLORES[c.resaltada] ?? "#fff"}, 0 0 14px ${COLORES[c.resaltada] ?? "#fff"}`,
-								}
-							: undefined
-					}
+					className={cn("size-full", !reducir && "transition-[transform] duration-150 ease-out")}
+					style={{ transform: `rotate(${(c.girada ? 90 : 0) + giro}deg)` }}
 				>
-					<ImagenCarta
-						imagen={caraVisible(c)}
-						ancho={ancho}
-						nombre={conocida ? c.origen?.nombre : undefined}
-					/>
-					{insignias &&
-						(c.girada ? (
-							// Girada, las insignias van derechas sobre la caja apaisada
-							// que se ve, para que se lean.
-							<div
-								className="pointer-events-none absolute top-1/2 left-1/2"
-								style={{
-									width: h,
-									height: w,
-									transform: "translate(-50%, -50%) rotate(-90deg)",
-								}}
-							>
+					<div
+						className={cn(
+							"relative size-full rounded-[5%] transition-transform",
+							levantar && "group-hover:-translate-y-[35%] group-hover:scale-110",
+							sombras && "shadow-[0_3px_10px_rgba(0,0,0,0.55)]",
+							c.faseFuera && "opacity-40",
+							elegida && "ring-2 ring-primary ring-offset-1 ring-offset-black/40",
+						)}
+						style={
+							c.resaltada !== null
+								? {
+										boxShadow: `0 0 0 3px ${COLORES[c.resaltada] ?? "#fff"}, 0 0 14px ${COLORES[c.resaltada] ?? "#fff"}`,
+									}
+								: undefined
+						}
+					>
+						<ImagenCarta
+							imagen={caraVisible(c)}
+							ancho={ancho}
+							nombre={conocida ? c.origen?.nombre : undefined}
+						/>
+						{insignias &&
+							(c.girada ? (
+								// Girada, las insignias van derechas sobre la caja apaisada
+								// que se ve, para que se lean.
+								<div
+									className="pointer-events-none absolute top-1/2 left-1/2"
+									style={{
+										width: h,
+										height: w,
+										transform: "translate(-50%, -50%) rotate(-90deg)",
+									}}
+								>
+									<Insignias c={c} yo={yo} />
+								</div>
+							) : (
 								<Insignias c={c} yo={yo} />
-							</div>
-						) : (
-							<Insignias c={c} yo={yo} />
-						))}
-					{c.revelada && c.zona.tipo === "de" && c.zona.zona === "mano" && (
-						<span className="pointer-events-none absolute top-1 right-1 rounded-full bg-amber-400 p-0.5 text-black shadow">
-							<Eye className="size-3" />
-						</span>
-					)}
-					{c.bocaAbajo && c.origen && (
-						<span className="pointer-events-none absolute right-1 bottom-1 rounded bg-black/70 p-0.5 text-white">
-							<Eye className="size-2.5" />
-						</span>
-					)}
+							))}
+						{c.revelada && c.zona.tipo === "de" && c.zona.zona === "mano" && (
+							<span className="pointer-events-none absolute top-1 right-1 rounded-full bg-amber-400 p-0.5 text-black shadow">
+								<Eye className="size-3" />
+							</span>
+						)}
+						{c.bocaAbajo && c.origen && (
+							<span className="pointer-events-none absolute right-1 bottom-1 rounded bg-black/70 p-0.5 text-white">
+								<Eye className="size-2.5" />
+							</span>
+						)}
+					</div>
 				</div>
 			</div>
 		</MenuCarta>

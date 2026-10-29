@@ -24,6 +24,7 @@ import { abanico, disponer, posAPx } from "./disposicion";
 import { senalar } from "./en-vivo/emitir";
 import { FantasmasMini } from "./en-vivo/fantasmas";
 import { useDeslizar, useFlip } from "./flip";
+import { useSinAnimaciones } from "./fps";
 import { caraVisible, DorsoGenerico, ImagenCarta } from "./imagen-carta";
 import { Insignias } from "./insignias";
 import { igualesLista, MS_MINIATURA, useMesaLenta } from "./lento";
@@ -46,6 +47,7 @@ function Deslizante({
 	carta,
 	ambito,
 	sitio,
+	className,
 	...resto
 }: {
 	carta: IdCarta;
@@ -55,14 +57,23 @@ function Deslizante({
 	sitio: string;
 } & ComponentProps<"span">) {
 	const ref = useRef<HTMLSpanElement>(null);
+	const repitiendo = useRepeticion((s) => s.activa !== null);
 	const ms = useDeslizar();
 	const saltos = useRepeticion((s) => s.saltos);
-	useFlip(carta, ref, ms > 0, `${sitio}|${saltos}`, {
-		duracion: ms > 0 ? ms : undefined,
+	const reducir = useSinAnimaciones();
+	useFlip(carta, ref, !reducir && (!repitiendo || ms > 0), `${sitio}|${saltos}`, {
+		duracion: repitiendo && ms > 0 ? ms : undefined,
 		ambito,
-		sinCaducidad: true,
+		sinCaducidad: repitiendo,
 	});
-	return <span ref={ref} {...resto} />;
+	return (
+		<span
+			ref={ref}
+			// Girar también se anima en la otra mesa, igual que en la propia.
+			className={cn(!reducir && "transition-[transform] duration-150 ease-out", className)}
+			{...resto}
+		/>
+	);
 }
 
 /** Alto de la cabecera (nombre y vida) de una miniatura, en px. */
@@ -543,6 +554,7 @@ const FILA_ZONAS = 400;
  */
 function LecturaGrande({ d, w, h }: { d: DatosMini; w: number; h: number }) {
 	const { t } = useLang();
+	const reducir = useSinAnimaciones();
 	const tamano = useUi((s) => s.mesa.tamanoCartas);
 	const ms = useDeslizar();
 	const alto = Math.max(0, h - CABECERA);
@@ -607,7 +619,10 @@ function LecturaGrande({ d, w, h }: { d: DatosMini; w: number; h: number }) {
 						}}
 					>
 						<span
-							className="absolute inset-0 block overflow-hidden rounded-[5%] shadow-[0_3px_10px_rgba(0,0,0,0.55)]"
+							className={cn(
+								"absolute inset-0 block overflow-hidden rounded-[5%] shadow-[0_3px_10px_rgba(0,0,0,0.55)]",
+								!reducir && "transition-[transform] duration-150 ease-out",
+							)}
 							style={{ transform: c.girada ? "rotate(90deg)" : undefined }}
 						>
 							<ImagenCarta imagen={caraVisible(c)} ancho={244} nombre={c.origen?.nombre} />
