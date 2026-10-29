@@ -1,8 +1,8 @@
-import { HardDriveDownload, Import, MoreHorizontal, Plus, Star, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { DeckSummary } from "@/bindings/DeckSummary";
 import { Confirmar } from "@/components/confirmar";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -77,6 +77,7 @@ export function LibraryScreen() {
 		setSeleccion((s) => (s.every((id) => hay.has(id)) ? s : s.filter((id) => hay.has(id))));
 	}, [decks]);
 
+	const [importando, setImportando] = useState(false);
 	const refrescar = () => useBiblioteca.getState().refrescar();
 	const recargar = () => useBiblioteca.getState().cargar();
 
@@ -130,9 +131,16 @@ export function LibraryScreen() {
 			})
 		)?.[0];
 		if (!ruta) return;
-		const d = await call("deck_import_package", { path: ruta });
-		toast.success(t("«{n}» importado", { n: d.name }));
-		await recargar();
+		setImportando(true);
+		try {
+			const d = await call("deck_import_package", { path: ruta });
+			toast.success(t("«{n}» importado", { n: d.name }), {
+				action: { label: t("Abrir"), onClick: () => abrir(d.id) },
+			});
+			await recargar();
+		} finally {
+			setImportando(false);
+		}
 	});
 
 	const liberar = intentar(async () => {
@@ -221,15 +229,18 @@ export function LibraryScreen() {
 						acciones={
 							<>
 								<Button size="sm" variant="ghost" onClick={liberar}>
-									<HardDriveDownload />
+									<Icono icon="lucide:hard-drive-download" />
 									{t("Liberar espacio")}
 								</Button>
-								<Button size="sm" variant="outline" onClick={importarPaquete}>
-									<Import />
+								<Button size="sm" variant="outline" onClick={importarPaquete} disabled={importando}>
+									<Icono
+										icon={importando ? "lucide:loader-2" : "lucide:import"}
+										className={cn(importando && "animate-spin")}
+									/>
 									{t("Importar .pbdeck")}
 								</Button>
 								<Button size="sm" onClick={nuevo}>
-									<Plus />
+									<Icono icon="lucide:plus" />
 									{t("Nuevo deck")}
 								</Button>
 							</>
@@ -334,14 +345,17 @@ function BarraSeleccion({
 					variant="ghost"
 					onClick={() => void useBiblioteca.getState().favorito(seleccion, !todosFavoritos)}
 				>
-					<Star className={cn(todosFavoritos && "fill-amber-400 text-amber-500")} />
+					<Icono
+						icon="lucide:star"
+						className={cn(todosFavoritos && "fill-amber-400 text-amber-500")}
+					/>
 					{todosFavoritos ? t("Quitar de favoritos") : t("Añadir a favoritos")}
 				</Button>
 				{primero && (
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<Button size="xs" variant="outline">
-								<MoreHorizontal />
+								<Icono icon="lucide:more-horizontal" />
 								{t("Acciones")}
 							</Button>
 						</DropdownMenuTrigger>
@@ -349,7 +363,7 @@ function BarraSeleccion({
 					</DropdownMenu>
 				)}
 				<Button size="xs" variant="ghost" className="text-destructive" onClick={onBorrar}>
-					<Trash2 />
+					<Icono icon="lucide:trash-2" />
 					{t("Eliminar")}
 				</Button>
 				<Button
@@ -358,7 +372,7 @@ function BarraSeleccion({
 					onClick={onSoltar}
 					aria-label={t("Soltar la selección")}
 				>
-					<X />
+					<Icono icon="lucide:x" />
 				</Button>
 			</div>
 		</div>

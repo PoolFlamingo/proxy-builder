@@ -1,6 +1,6 @@
-import { ChevronRight, FilterX, Layers, X } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 import type { DeckSummary } from "@/bindings/DeckSummary";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RaizScroll } from "@/features/preview/visibilidad";
 import { cn } from "@/lib/utils";
+import { useUi } from "@/stores/ui-store";
 import { FiltrosActivos } from "./barra-herramientas";
 import { agrupar, type ClaveGrupo, filtrar, type Grupo, hayFiltros, ordenar } from "./organizar";
 import { ChipEtiqueta, CLASES, IDIOMAS, Identidad, nombreColores, useDinero } from "./piezas";
@@ -99,19 +100,27 @@ export function ZonaDecks({ org, flotante }: { org: Organizados; flotante?: Reac
 						<Empty className="mt-16">
 							<EmptyHeader>
 								<EmptyMedia variant="icon">
-									<Layers />
+									<Icono icon="lucide:layers" />
 								</EmptyMedia>
 								<EmptyTitle>{t("No hay decks guardados")}</EmptyTitle>
 								<EmptyDescription>
-									{t("Los decks se guardan solos mientras trabajas.")}
+									{t(
+										"Los decks se guardan solos mientras trabajas: pega una lista o añade cartas en la pestaña «Deck».",
+									)}
 								</EmptyDescription>
 							</EmptyHeader>
+							<EmptyContent>
+								<Button size="sm" onClick={() => useUi.getState().setVista("deck")}>
+									<Icono icon="lucide:plus" className="size-4" />
+									{t("Empezar un deck")}
+								</Button>
+							</EmptyContent>
 						</Empty>
 					) : org.visibles.length === 0 ? (
 						<Empty className="mt-16">
 							<EmptyHeader>
 								<EmptyMedia variant="icon">
-									<FilterX />
+									<Icono icon="lucide:filter-x" />
 								</EmptyMedia>
 								<EmptyTitle>{t("Ningún deck coincide")}</EmptyTitle>
 								<EmptyDescription>
@@ -123,14 +132,14 @@ export function ZonaDecks({ org, flotante }: { org: Organizados; flotante?: Reac
 							{hayFiltros(filtros) && (
 								<EmptyContent>
 									<Button size="sm" variant="outline" onClick={limpiar}>
-										<X />
+										<Icono icon="lucide:x" />
 										{t("Quitar los filtros")}
 									</Button>
 								</EmptyContent>
 							)}
 						</Empty>
 					) : (
-						<div className="flex flex-col gap-4 p-4">
+						<div className="flex flex-col gap-2.5 p-2.5">
 							{org.grupos.map((g) =>
 								conGrupos ? (
 									<section key={g.id} className="flex flex-col gap-2.5">
@@ -139,7 +148,8 @@ export function ZonaDecks({ org, flotante }: { org: Organizados; flotante?: Reac
 											onClick={() => org.plegar(g.id)}
 											className="flex items-center gap-2 self-start rounded-md px-1 py-0.5 text-xs font-semibold hover:bg-accent"
 										>
-											<ChevronRight
+											<Icono
+												icon="lucide:chevron-right"
 												className={cn(
 													"size-3.5 text-muted-foreground transition-transform",
 													!org.plegados.has(g.id) && "rotate-90",

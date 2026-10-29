@@ -20,8 +20,14 @@ type Store = {
 	/** Solo la lista y las etiquetas (tras etiquetar, marcar favorito…). */
 	refrescar: () => Promise<void>;
 	etiquetar: (decks: string[], add: string[], remove: string[]) => Promise<void>;
-	crearEtiqueta: (nombre: string, color: string) => Promise<Tag>;
-	editarEtiqueta: (id: string, nombre: string, color: string) => Promise<void>;
+	crearEtiqueta: (nombre: string, color: string, icono?: string | null) => Promise<Tag>;
+	editarEtiqueta: (
+		id: string,
+		nombre: string,
+		color: string,
+		/** Sin pasar: el icono no cambia. */
+		icono?: string | null,
+	) => Promise<void>;
 	borrarEtiqueta: (id: string) => Promise<void>;
 	favorito: (decks: string[], si: boolean) => Promise<void>;
 	/** El idioma elegido a mano (`null`: el que se calcula). */
@@ -54,13 +60,16 @@ export const useBiblioteca = create<Store>((set, get) => ({
 		await call("deck_tags_set", { decks, add, remove });
 		await get().refrescar();
 	},
-	crearEtiqueta: async (name, color) => {
+	crearEtiqueta: async (name, color, icon) => {
 		const t = await call("tag_create", { name, color });
+		// Una que ya existía guarda su icono si no se eligió otro.
+		if (icon && icon !== t.icon) await call("tag_icon_set", { id: t.id, icon });
 		await get().refrescar();
 		return t;
 	},
-	editarEtiqueta: async (id, name, color) => {
+	editarEtiqueta: async (id, name, color, icon) => {
 		await call("tag_update", { id, name, color });
+		if (icon !== undefined) await call("tag_icon_set", { id, icon });
 		await get().refrescar();
 	},
 	borrarEtiqueta: async (id) => {

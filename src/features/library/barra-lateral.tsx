@@ -1,16 +1,6 @@
-import {
-	Layers,
-	MoreHorizontal,
-	Palette,
-	Pencil,
-	Plus,
-	Star,
-	TagIcon,
-	Tags,
-	Trash2,
-} from "lucide-react";
 import { type ReactNode, useState } from "react";
 import type { Tag } from "@/bindings/Tag";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -75,14 +65,14 @@ export function BarraLateral({
 				<div className="flex flex-col gap-0.5 p-2">
 					<Entrada
 						activa={ninguno}
-						icono={<Layers className="size-3.5" />}
+						icono={<Icono icon="lucide:layers" className="size-3.5" />}
 						texto={t("Todos los decks")}
 						cuenta={decks.length}
 						onClick={() => ponerFiltros({ favoritos: false, sinEtiqueta: false, etiquetas: [] })}
 					/>
 					<Entrada
 						activa={f.favoritos}
-						icono={<Star className="size-3.5" />}
+						icono={<Icono icon="lucide:star" className="size-3.5" />}
 						texto={t("Favoritos")}
 						cuenta={n.favoritos}
 						onClick={() => ponerFiltros({ favoritos: !f.favoritos })}
@@ -99,7 +89,7 @@ export function BarraLateral({
 								onClick={onNuevaEtiqueta}
 								aria-label={t("Nueva etiqueta")}
 							>
-								<Plus />
+								<Icono icon="lucide:plus" />
 							</Button>
 						</WithTooltip>
 					</div>
@@ -109,7 +99,7 @@ export function BarraLateral({
 							onClick={onNuevaEtiqueta}
 							className="mx-1 flex flex-col items-center gap-1.5 rounded-lg border border-dashed p-3 text-center text-[11px] text-muted-foreground hover:bg-accent/50"
 						>
-							<Tags className="size-4" />
+							<Icono icon="lucide:tags" className="size-4" />
 							{t("Crea etiquetas para ordenar tus decks por formato, idioma, estado…")}
 						</button>
 					) : (
@@ -128,7 +118,7 @@ export function BarraLateral({
 					{etiquetas.length > 0 && (
 						<Entrada
 							activa={f.sinEtiqueta}
-							icono={<TagIcon className="size-3.5 opacity-50" />}
+							icono={<Icono icon="lucide:tag" className="size-3.5 opacity-50" />}
 							texto={t("Sin etiqueta")}
 							cuenta={n.sinEtiqueta}
 							onClick={() => ponerFiltros({ sinEtiqueta: !f.sinEtiqueta, etiquetas: [] })}
@@ -228,7 +218,7 @@ function FilaEtiqueta({
 				onClick={onClick}
 				className="flex min-w-0 flex-1 items-center gap-2 py-1.5 pl-2 text-left"
 			>
-				<PuntoEtiqueta color={tag.color} className="mx-[3px]" />
+				<PuntoEtiqueta color={tag.color} icono={tag.icon} className="mx-[3px]" />
 				<span className="min-w-0 flex-1 truncate">{tag.name}</span>
 			</button>
 			<span
@@ -247,17 +237,17 @@ function FilaEtiqueta({
 						className="mr-0.5 hidden group-hover:inline-flex data-[state=open]:inline-flex"
 						aria-label={t("Más acciones")}
 					>
-						<MoreHorizontal />
+						<Icono icon="lucide:more-horizontal" />
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="start" className="text-xs">
 					<DropdownMenuItem onSelect={onEditar}>
-						<Pencil />
+						<Icono icon="lucide:pencil" />
 						{t("Renombrar")}
 					</DropdownMenuItem>
 					<DropdownMenuSub>
 						<DropdownMenuSubTrigger>
-							<Palette />
+							<Icono icon="lucide:palette" />
 							{t("Color")}
 						</DropdownMenuSubTrigger>
 						<DropdownMenuSubContent className="text-xs">
@@ -271,7 +261,7 @@ function FilaEtiqueta({
 					</DropdownMenuSub>
 					<DropdownMenuSeparator />
 					<DropdownMenuItem variant="destructive" onSelect={onBorrar}>
-						<Trash2 />
+						<Icono icon="lucide:trash-2" />
 						{t("Eliminar etiqueta")}
 					</DropdownMenuItem>
 				</DropdownMenuContent>

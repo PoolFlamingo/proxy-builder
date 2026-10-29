@@ -1,19 +1,7 @@
-import {
-	Copy,
-	FolderOpen,
-	Languages,
-	PackageOpen,
-	Pencil,
-	Plus,
-	Settings2,
-	Star,
-	StarOff,
-	Tag as TagIcon,
-	Trash2,
-} from "lucide-react";
 import { type ComponentType, createContext, type ReactNode, useContext } from "react";
 import type { DeckSummary } from "@/bindings/DeckSummary";
 import { ContenidoContextual } from "@/components/contenido-contextual";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import {
 	ContextMenu,
@@ -118,17 +106,17 @@ function Items({ deck, M }: { deck: DeckSummary; M: Primitivas }) {
 		<>
 			{!varios && (
 				<M.Item onSelect={() => a.abrir(deck.id)}>
-					<FolderOpen />
+					<Icono icon="lucide:folder-open" />
 					{t("Abrir")}
 				</M.Item>
 			)}
 			<M.Item onSelect={() => void lib.favorito(ids, !todosFavoritos)}>
-				{todosFavoritos ? <StarOff /> : <Star />}
+				{todosFavoritos ? <Icono icon="lucide:star-off" /> : <Icono icon="lucide:star" />}
 				{todosFavoritos ? t("Quitar de favoritos") : t("Añadir a favoritos")}
 			</M.Item>
 			<M.Sub>
 				<M.SubTrigger>
-					<TagIcon />
+					<Icono icon="lucide:tag" />
 					{varios ? t("Etiquetas de los {n}", { n: ids.length }) : t("Etiquetas")}
 				</M.SubTrigger>
 				<M.SubContent className="max-h-80 min-w-44 text-xs">
@@ -144,21 +132,21 @@ function Items({ deck, M }: { deck: DeckSummary; M: Primitivas }) {
 									void lib.etiquetar(ids, m === true ? [] : [tag.id], m === true ? [tag.id] : []);
 								}}
 							>
-								<PuntoEtiqueta color={tag.color} />
+								<PuntoEtiqueta color={tag.color} icono={tag.icon} />
 								<span className="truncate">{tag.name}</span>
 							</M.CheckboxItem>
 						);
 					})}
 					{etiquetas.length > 0 && <M.Separator />}
 					<M.Item onSelect={() => a.nuevaEtiqueta(ids)}>
-						<Plus />
+						<Icono icon="lucide:plus" />
 						{t("Nueva etiqueta…")}
 					</M.Item>
 				</M.SubContent>
 			</M.Sub>
 			<M.Sub>
 				<M.SubTrigger>
-					<Languages />
+					<Icono icon="lucide:languages" />
 					{varios ? t("Idioma de los {n}", { n: ids.length }) : t("Idioma")}
 				</M.SubTrigger>
 				<M.SubContent className="max-h-80 min-w-44 text-xs">
@@ -189,24 +177,24 @@ function Items({ deck, M }: { deck: DeckSummary; M: Primitivas }) {
 			{!varios && (
 				<>
 					<M.Item onSelect={() => a.propiedades(deck.id)}>
-						<Settings2 />
+						<Icono icon="lucide:settings-2" />
 						{t("Propiedades…")}
 					</M.Item>
 					{renombrar && (
 						<M.Item onSelect={() => renombrar(deck)}>
-							<Pencil />
+							<Icono icon="lucide:pencil" />
 							{t("Renombrar")}
 						</M.Item>
 					)}
 					{duplicar && (
 						<M.Item onSelect={() => duplicar(deck)}>
-							<Copy />
+							<Icono icon="lucide:copy" />
 							{t("Duplicar")}
 						</M.Item>
 					)}
 					{exportar && (
 						<M.Item onSelect={() => exportar(deck)}>
-							<PackageOpen />
+							<Icono icon="lucide:package-open" />
 							{t("Exportar .pbdeck")}
 						</M.Item>
 					)}
@@ -216,7 +204,7 @@ function Items({ deck, M }: { deck: DeckSummary; M: Primitivas }) {
 				<>
 					<M.Separator />
 					<M.Item variant="destructive" onSelect={() => borrar(ids)}>
-						<Trash2 />
+						<Icono icon="lucide:trash-2" />
 						{varios ? t("Eliminar los {n}", { n: ids.length }) : t("Eliminar")}
 					</M.Item>
 				</>

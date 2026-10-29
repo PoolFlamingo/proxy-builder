@@ -1,9 +1,10 @@
-import { Trash2, Trophy } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { FilaPartida } from "@/bindings/FilaPartida";
 import type { HistorialDeck } from "@/bindings/HistorialDeck";
 import { Confirmar } from "@/components/confirmar";
+import { EstadoCarga } from "@/components/estado-carga";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -37,17 +38,26 @@ export function PartidasDeDeck({
 	const [h, setH] = useState<HistorialDeck | null>(null);
 	const [borrar, setBorrar] = useState<string | null>(null);
 
+	const [error, setError] = useState<unknown>(null);
+	const hayLista = useRef(false);
+	hayLista.current = h !== null;
 	const cargar = useCallback(() => {
+		setError(null);
 		call("partidas_de_deck", { deck: deckId })
 			.then(setH)
-			.catch((e) => toast.error(mensaje(e)));
+			.catch((e) => {
+				// Sin nada cargado, el error va en su sitio (con «Reintentar»); si ya había
+				// lista, se queda y se avisa.
+				setError(e);
+				if (hayLista.current) toast.error(mensaje(e));
+			});
 	}, [deckId, mensaje]);
 	useEffect(() => {
 		setH(null);
 		cargar();
 	}, [cargar]);
 
-	if (h === null) return <div className="h-40" />;
+	if (h === null) return <EstadoCarga error={error} onReintentar={cargar} className="h-40" />;
 	if (h.partidas === 0) {
 		return (
 			<p className="rounded-lg border p-6 text-center text-xs text-muted-foreground">
@@ -126,7 +136,7 @@ function Fila({
 					fila.gano ? "text-primary" : "text-muted-foreground",
 				)}
 			>
-				{fila.gano && <Trophy className="size-3.5" />}
+				{fila.gano && <Icono icon="lucide:trophy" className="size-3.5" />}
 				{fila.gano ? t("Victoria") : t("Puesto {puesto}", { puesto: fila.puesto })}
 			</span>
 			<span className="flex min-w-0 flex-1 flex-col">
@@ -155,7 +165,7 @@ function Fila({
 			)}
 			<WithTooltip content={t("Borrar")}>
 				<Button size="icon-sm" variant="ghost" onClick={onBorrar} aria-label={t("Borrar")}>
-					<Trash2 className="size-3.5" />
+					<Icono icon="lucide:trash-2" className="size-3.5" />
 				</Button>
 			</WithTooltip>
 		</div>

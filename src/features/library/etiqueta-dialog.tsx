@@ -1,8 +1,9 @@
-import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Tag } from "@/bindings/Tag";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
+import { SelectorIcono } from "@/components/selector-icono";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -42,14 +43,17 @@ export function EtiquetaDialog({
 	const etiquetas = useBiblioteca((s) => s.etiquetas);
 	const [nombre, setNombre] = useState("");
 	const [color, setColor] = useState("gray");
+	const [icono, setIcono] = useState<string | null>(null);
 	useEffect(() => {
 		if (!editando) return;
 		if (editando.tipo === "editar") {
 			setNombre(editando.tag.name);
 			setColor(editando.tag.color);
+			setIcono(editando.tag.icon);
 		} else {
 			setNombre("");
 			setColor(colorLibre(useBiblioteca.getState().etiquetas));
+			setIcono(null);
 		}
 	}, [editando]);
 	const limpio = nombre.trim();
@@ -65,9 +69,9 @@ export function EtiquetaDialog({
 		const b = useBiblioteca.getState();
 		try {
 			if (editando.tipo === "editar") {
-				await b.editarEtiqueta(editando.tag.id, limpio, color);
+				await b.editarEtiqueta(editando.tag.id, limpio, color, icono);
 			} else {
-				const tag = await b.crearEtiqueta(limpio, color);
+				const tag = await b.crearEtiqueta(limpio, color, icono);
 				if (editando.para.length > 0) await b.etiquetar(editando.para, [tag.id], []);
 			}
 			onCerrar();
@@ -75,7 +79,7 @@ export function EtiquetaDialog({
 			toast.error(mensaje(e));
 		}
 	};
-	const vista: Tag = { id: "", name: limpio || t("Etiqueta"), color };
+	const vista: Tag = { id: "", name: limpio || t("Etiqueta"), color, icon: icono };
 	return (
 		<Dialog open={editando !== null} onOpenChange={(o) => !o && onCerrar()}>
 			<DialogContent className="sm:max-w-sm" cambiosSinGuardar={false}>
@@ -92,15 +96,18 @@ export function EtiquetaDialog({
 					)}
 				</DialogHeader>
 				<div className="flex flex-col gap-2.5">
-					<Input
-						autoFocus
-						value={nombre}
-						maxLength={40}
-						onChange={(e) => setNombre(e.target.value)}
-						onKeyDown={(e) => e.key === "Enter" && void hecho()}
-						placeholder={t("Commander, Español, Por imprimir…")}
-						className="text-sm"
-					/>
+					<div className="flex gap-2.5">
+						<SelectorIcono valor={icono} onChange={setIcono} quitable />
+						<Input
+							autoFocus
+							value={nombre}
+							maxLength={40}
+							onChange={(e) => setNombre(e.target.value)}
+							onKeyDown={(e) => e.key === "Enter" && void hecho()}
+							placeholder={t("Commander, Español, Por imprimir…")}
+							className="text-sm"
+						/>
+					</div>
 					<div className="flex flex-wrap gap-1.5">
 						{COLORES_DE_ETIQUETA.map((c) => (
 							<WithTooltip key={c} content={t(COLORES_ETIQUETA[c].nombre)}>
@@ -114,7 +121,9 @@ export function EtiquetaDialog({
 									)}
 									aria-label={t(COLORES_ETIQUETA[c].nombre)}
 								>
-									{color === c && <Check className="size-3.5 text-white drop-shadow" />}
+									{color === c && (
+										<Icono icon="lucide:check" className="size-3.5 text-white drop-shadow" />
+									)}
 								</button>
 							</WithTooltip>
 						))}

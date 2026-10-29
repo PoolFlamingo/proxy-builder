@@ -1,7 +1,7 @@
-import { ArrowDown, ArrowUp, Layers, MoreHorizontal, Pencil, Star, StickyNote } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { DeckDetails } from "@/bindings/DeckDetails";
 import type { DeckSummary } from "@/bindings/DeckSummary";
+import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -160,7 +160,11 @@ function Cabecera({ decks, cols }: { decks: DeckSummary[]; cols: Columna[] }) {
 						>
 							{t(c.titulo)}
 							{orden === c.orden &&
-								(ascendente ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />)}
+								(ascendente ? (
+									<Icono icon="lucide:arrow-up" className="size-3" />
+								) : (
+									<Icono icon="lucide:arrow-down" className="size-3" />
+								))}
 						</button>
 					) : (
 						<span className="truncate">{t(c.titulo)}</span>
@@ -188,7 +192,12 @@ function Fila({ deck: d, cols }: { deck: DeckSummary; cols: Columna[] }) {
 				return (
 					<div className="flex min-w-0 flex-col gap-0.5">
 						<div className="flex min-w-0 items-center gap-1">
-							{d.pinned && <Star className="size-3 shrink-0 fill-amber-400 text-amber-500" />}
+							{d.pinned && (
+								<Icono
+									icon="lucide:star"
+									className="size-3 shrink-0 fill-amber-400 text-amber-500"
+								/>
+							)}
 							<button
 								type="button"
 								onClick={(e) => sel.pulsar(d.id, e)}
@@ -198,7 +207,10 @@ function Fila({ deck: d, cols }: { deck: DeckSummary; cols: Columna[] }) {
 							</button>
 							{d.notes && (
 								<WithTooltip content={<span className="whitespace-pre-line">{d.notes}</span>}>
-									<StickyNote className="size-3 shrink-0 text-muted-foreground" />
+									<Icono
+										icon="lucide:sticky-note"
+										className="size-3 shrink-0 text-muted-foreground"
+									/>
 								</WithTooltip>
 							)}
 						</div>
@@ -297,7 +309,7 @@ function Fila({ deck: d, cols }: { deck: DeckSummary; cols: Columna[] }) {
 							className="size-full object-cover"
 						/>
 					) : (
-						<Layers className="size-3.5 text-muted-foreground" />
+						<Icono icon="lucide:layers" className="size-3.5 text-muted-foreground" />
 					)}
 				</button>
 				{cols.map((c) => (
@@ -308,7 +320,7 @@ function Fila({ deck: d, cols }: { deck: DeckSummary; cols: Columna[] }) {
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<Button size="icon-xs" variant="ghost" aria-label={t("Más acciones")}>
-							<MoreHorizontal />
+							<Icono icon="lucide:more-horizontal" />
 						</Button>
 					</DropdownMenuTrigger>
 					<MenuDeck deck={d} />
@@ -365,7 +377,7 @@ function Propias({ det }: { det: DeckDetails }) {
 				{det.custom > 0 && `${det.custom}`}
 				{det.designed > 0 && (
 					<span className="ml-1 inline-flex items-center gap-0.5 text-primary">
-						<Pencil className="size-2.5" />
+						<Icono icon="lucide:pencil" className="size-2.5" />
 						{det.designed}
 					</span>
 				)}

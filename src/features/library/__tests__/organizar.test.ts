@@ -60,8 +60,8 @@ function det(id: string, c: Partial<DeckDetails> = {}): DeckDetails {
 }
 
 const tags: Tag[] = [
-	{ id: "es", name: "Español", color: "red" },
-	{ id: "tor", name: "Torneo", color: "blue" },
+	{ id: "es", name: "Español", color: "red", icon: null },
+	{ id: "tor", name: "Torneo", color: "blue", icon: null },
 ];
 
 const decks = [

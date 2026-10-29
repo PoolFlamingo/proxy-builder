@@ -1,8 +1,8 @@
-import { Lock } from "lucide-react";
 import type { DeckDetails } from "@/bindings/DeckDetails";
 import type { DeckKind } from "@/bindings/DeckKind";
 import type { DeckSummary } from "@/bindings/DeckSummary";
 import type { Tag } from "@/bindings/Tag";
+import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { COLORES } from "@/features/stats/textos";
@@ -66,7 +66,32 @@ export const COLORES_ETIQUETA: Record<string, { punto: string; chip: string; nom
 
 export const COLORES_DE_ETIQUETA = Object.keys(COLORES_ETIQUETA);
 
-export function PuntoEtiqueta({ color, className }: { color: string; className?: string }) {
+/**
+ * El punto de color de una etiqueta o, si tiene icono, su icono en ese color
+ * (mide lo mismo de ancho que la fila de puntos: nada se descoloca).
+ */
+export function PuntoEtiqueta({
+	color,
+	icono,
+	className,
+}: {
+	color: string;
+	icono?: string | null;
+	className?: string;
+}) {
+	if (icono)
+		return (
+			<Icono
+				icon={icono}
+				className={cn(
+					"-mx-[3px] size-3.5 shrink-0",
+					(COLORES_ETIQUETA[color] ?? COLORES_ETIQUETA.gray).chip
+						.split(" ")
+						.filter((c) => c.startsWith("text-") || c.startsWith("dark:text-")),
+					className,
+				)}
+			/>
+		);
 	return (
 		<span
 			className={cn(
@@ -87,6 +112,7 @@ export function ChipEtiqueta({ tag, className }: { tag: Tag; className?: string 
 				className,
 			)}
 		>
+			{tag.icon && <Icono icon={tag.icon} className="-ml-0.5 size-3 shrink-0" />}
 			<span className="truncate">{tag.name}</span>
 		</span>
 	);
@@ -188,7 +214,7 @@ export function NombresIdiomas({ deck, det }: { deck: DeckSummary; det?: DeckDet
 			<span className="truncate">{texto || "—"}</span>
 			{deck.langOverride && (
 				<WithTooltip content={t("Elegido a mano")}>
-					<Lock className="size-3 shrink-0 text-muted-foreground" />
+					<Icono icon="lucide:lock" className="size-3 shrink-0 text-muted-foreground" />
 				</WithTooltip>
 			)}
 		</span>
