@@ -1156,5 +1156,22 @@
 	"Te desconectaste de una partida en red ({cuando}).": "온라인 게임에서 연결이 끊겼어요 ({cuando}).",
 	"Volver a la partida": "게임으로 돌아가기",
 	"Olvidar": "잊기",
-	"Volver a conectar": "다시 연결"
+	"Volver a conectar": "다시 연결",
+	"Todavía no hay notas.": "아직 메모가 없어요.",
+	"Mis notas": "내 메모",
+	"Se borra al terminar el turno": "턴이 끝나면 지워져요",
+	"Apunta algo: el maná de un tesoro, un recordatorio…": "메모를 적어 보세요: 보물의 마나, 알림 등…",
+	"Nueva nota": "새 메모",
+	"Añadir nota": "메모 추가",
+	"Temporal: se borra al terminar el turno": "임시: 턴이 끝나면 지워져요",
+	"Fija: se queda hasta que la borres": "고정: 지울 때까지 남아요",
+	"Privada: solo la ves tú": "비공개: 나만 볼 수 있어요",
+	"Pública: la ven todos": "공개: 모두 볼 수 있어요",
+	"Privada": "비공개",
+	"Pública": "공개",
+	"Editar nota": "메모 편집",
+	"Borrar nota": "메모 삭제",
+	"{quien} apunta una nota: «{texto}»": "{quien}이(가) 메모를 추가했어요: “{texto}”",
+	"{quien} cambia una nota: «{texto}»": "{quien}이(가) 메모를 수정했어요: “{texto}”",
+	"{quien} borra una nota": "{quien}이(가) 메모를 삭제했어요"
 }

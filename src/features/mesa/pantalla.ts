@@ -31,8 +31,8 @@ export type DialogoMesa =
 /** El ancho del panel lateral, en px (la vista grande se aparta de él). */
 export const ANCHO_PANEL = 320;
 
-/** El panel de al lado de la mesa: el registro o el chat (`null`: cerrado). */
-export type PanelMesa = "registro" | "chat";
+/** El panel de al lado de la mesa: el registro, el chat o las notas (`null`: cerrado). */
+export type PanelMesa = "registro" | "chat" | "notas";
 
 /** Elegir con el siguiente clic la carta (o jugador) a la que se adjunta o apunta. */
 export type ModoObjetivo =
@@ -69,7 +69,7 @@ type Pantalla = {
 	zonaSobre: Zona | null;
 	/** Sube cada vez que se cambia el tapete, para que el tablero lo relea. */
 	tapeteCambiado: number;
-	/** El panel lateral abierto (registro o chat). */
+	/** El panel lateral abierto (registro, chat o notas). */
 	panel: PanelMesa | null;
 	/**
 	 * En una partida local, el jugador cuya mano se ha destapado con la cortina

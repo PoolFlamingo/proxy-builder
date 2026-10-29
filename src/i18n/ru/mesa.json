@@ -1246,5 +1246,22 @@
 	"Te desconectaste de una partida en red ({cuando}).": "Вы отключились от сетевой игры ({cuando}).",
 	"Volver a la partida": "Вернуться в игру",
 	"Olvidar": "Забыть",
-	"Volver a conectar": "Переподключиться"
+	"Volver a conectar": "Переподключиться",
+	"Todavía no hay notas.": "Пока нет заметок.",
+	"Mis notas": "Мои заметки",
+	"Se borra al terminar el turno": "Удаляется в конце хода",
+	"Apunta algo: el maná de un tesoro, un recordatorio…": "Запишите что-нибудь: ману от Сокровища, напоминание…",
+	"Nueva nota": "Новая заметка",
+	"Añadir nota": "Добавить заметку",
+	"Temporal: se borra al terminar el turno": "Временная: удаляется в конце хода",
+	"Fija: se queda hasta que la borres": "Постоянная: остаётся, пока вы её не удалите",
+	"Privada: solo la ves tú": "Личная: видите только вы",
+	"Pública: la ven todos": "Общая: видят все",
+	"Privada": "Личная",
+	"Pública": "Общая",
+	"Editar nota": "Изменить заметку",
+	"Borrar nota": "Удалить заметку",
+	"{quien} apunta una nota: «{texto}»": "{quien} добавляет заметку: «{texto}»",
+	"{quien} cambia una nota: «{texto}»": "{quien} меняет заметку: «{texto}»",
+	"{quien} borra una nota": "{quien} удаляет заметку"
 }

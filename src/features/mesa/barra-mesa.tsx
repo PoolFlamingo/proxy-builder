@@ -16,6 +16,7 @@ import {
 	RotateCcw,
 	Skull,
 	SquareStack,
+	StickyNote,
 	Undo2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -112,6 +113,7 @@ export function BarraMesa({
 	const panel = usePantalla((s) => s.panel);
 	const setPanel = usePantalla((s) => s.setPanel);
 	const sinLeer = useChat((s) => s.sinLeer);
+	const nNotas = useMesa((s) => s.general?.notas.length ?? 0);
 	const varios = useMesa((s) => s.asientos.length > 1);
 	// En red: el sparring no va, reiniciar y terminar son del anfitrión, y
 	// quien mira no toca nada de la partida.
@@ -202,6 +204,14 @@ export function BarraMesa({
 				onClick={() => setPanel(panel === "registro" ? null : "registro")}
 			>
 				<History className="size-4" />
+			</Boton>
+			<Boton
+				ayuda={t("Notas")}
+				activo={panel === "notas"}
+				insignia={panel === "notas" ? 0 : nNotas}
+				onClick={() => setPanel(panel === "notas" ? null : "notas")}
+			>
+				<StickyNote className="size-4" />
 			</Boton>
 			{(enRed || varios) && (
 				<Boton

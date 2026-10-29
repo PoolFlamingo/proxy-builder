@@ -11,6 +11,19 @@ import type { VistaCarta } from "@/bindings/VistaCarta";
 /** Las líneas de abajo de todo (las más recientes) a las que se ofrece «A la pila». */
 export const ULTIMAS_PARA_APILAR = 8;
 
+/**
+ * Si el evento sale en el registro. De las notas solo salen las que se
+ * apuntan o cambian **públicas**: una privada no se nombra (ni su texto ni
+ * que existe) y borrar una nota no dice si lo era.
+ */
+export function visibleEnRegistro(ev: Evento): boolean {
+	if (ev.cambio.tipo !== "accion") return true;
+	const a = ev.cambio.accion;
+	if (a.que === "quitarNota") return false;
+	if (a.que === "ponerNota" || a.que === "editarNota") return !a.privada;
+	return true;
+}
+
 function pasaTurno(ev: Evento): boolean {
 	return ev.cambio.tipo === "accion" && ev.cambio.accion.que === "pasarTurno";
 }

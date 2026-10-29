@@ -1210,5 +1210,22 @@
 	"Te desconectaste de una partida en red ({cuando}).": "You got disconnected from an online game ({cuando}).",
 	"Volver a la partida": "Back to the game",
 	"Olvidar": "Forget",
-	"Volver a conectar": "Reconnect"
+	"Volver a conectar": "Reconnect",
+	"Todavía no hay notas.": "No notes yet.",
+	"Mis notas": "My notes",
+	"Se borra al terminar el turno": "Cleared when the turn ends",
+	"Apunta algo: el maná de un tesoro, un recordatorio…": "Jot something down: mana from a Treasure, a reminder…",
+	"Nueva nota": "New note",
+	"Añadir nota": "Add note",
+	"Temporal: se borra al terminar el turno": "Temporary: cleared when the turn ends",
+	"Fija: se queda hasta que la borres": "Permanent: stays until you delete it",
+	"Privada: solo la ves tú": "Private: only you can see it",
+	"Pública: la ven todos": "Public: everyone can see it",
+	"Privada": "Private",
+	"Pública": "Public",
+	"Editar nota": "Edit note",
+	"Borrar nota": "Delete note",
+	"{quien} apunta una nota: «{texto}»": "{quien} adds a note: “{texto}”",
+	"{quien} cambia una nota: «{texto}»": "{quien} changes a note: “{texto}”",
+	"{quien} borra una nota": "{quien} deletes a note"
 }

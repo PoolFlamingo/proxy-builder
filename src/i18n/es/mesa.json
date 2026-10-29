@@ -1156,5 +1156,22 @@
 	"Te desconectaste de una partida en red ({cuando}).": "Te desconectaste de una partida en red ({cuando}).",
 	"Volver a la partida": "Volver a la partida",
 	"Olvidar": "Olvidar",
-	"Volver a conectar": "Volver a conectar"
+	"Volver a conectar": "Volver a conectar",
+	"Todavía no hay notas.": "Todavía no hay notas.",
+	"Mis notas": "Mis notas",
+	"Se borra al terminar el turno": "Se borra al terminar el turno",
+	"Apunta algo: el maná de un tesoro, un recordatorio…": "Apunta algo: el maná de un tesoro, un recordatorio…",
+	"Nueva nota": "Nueva nota",
+	"Añadir nota": "Añadir nota",
+	"Temporal: se borra al terminar el turno": "Temporal: se borra al terminar el turno",
+	"Fija: se queda hasta que la borres": "Fija: se queda hasta que la borres",
+	"Privada: solo la ves tú": "Privada: solo la ves tú",
+	"Pública: la ven todos": "Pública: la ven todos",
+	"Privada": "Privada",
+	"Pública": "Pública",
+	"Editar nota": "Editar nota",
+	"Borrar nota": "Borrar nota",
+	"{quien} apunta una nota: «{texto}»": "{quien} apunta una nota: «{texto}»",
+	"{quien} cambia una nota: «{texto}»": "{quien} cambia una nota: «{texto}»",
+	"{quien} borra una nota": "{quien} borra una nota"
 }

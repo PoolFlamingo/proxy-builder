@@ -1156,5 +1156,22 @@
 	"Te desconectaste de una partida en red ({cuando}).": "オンラインゲームから切断されました（{cuando}）。",
 	"Volver a la partida": "ゲームに戻る",
 	"Olvidar": "破棄",
-	"Volver a conectar": "再接続"
+	"Volver a conectar": "再接続",
+	"Todavía no hay notas.": "メモはまだありません。",
+	"Mis notas": "自分のメモ",
+	"Se borra al terminar el turno": "ターン終了時に消えます",
+	"Apunta algo: el maná de un tesoro, un recordatorio…": "メモを書きましょう：宝物のマナ、リマインダーなど…",
+	"Nueva nota": "新しいメモ",
+	"Añadir nota": "メモを追加",
+	"Temporal: se borra al terminar el turno": "一時的：ターン終了時に消えます",
+	"Fija: se queda hasta que la borres": "固定：削除するまで残ります",
+	"Privada: solo la ves tú": "非公開：自分だけが見られます",
+	"Pública: la ven todos": "公開：全員が見られます",
+	"Privada": "非公開",
+	"Pública": "公開",
+	"Editar nota": "メモを編集",
+	"Borrar nota": "メモを削除",
+	"{quien} apunta una nota: «{texto}»": "{quien}がメモを追加：「{texto}」",
+	"{quien} cambia una nota: «{texto}»": "{quien}がメモを変更：「{texto}」",
+	"{quien} borra una nota": "{quien}がメモを削除"
 }

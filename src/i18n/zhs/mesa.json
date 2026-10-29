@@ -1156,5 +1156,22 @@
 	"Te desconectaste de una partida en red ({cuando}).": "你已从一场在线对局断开（{cuando}）。",
 	"Volver a la partida": "返回对局",
 	"Olvidar": "忘记",
-	"Volver a conectar": "重新连接"
+	"Volver a conectar": "重新连接",
+	"Todavía no hay notas.": "还没有备注。",
+	"Mis notas": "我的备注",
+	"Se borra al terminar el turno": "回合结束时清除",
+	"Apunta algo: el maná de un tesoro, un recordatorio…": "记点什么：宝物产生的法术力、提醒…",
+	"Nueva nota": "新备注",
+	"Añadir nota": "添加备注",
+	"Temporal: se borra al terminar el turno": "临时：回合结束时清除",
+	"Fija: se queda hasta que la borres": "固定：保留到你删除为止",
+	"Privada: solo la ves tú": "私密：只有你能看到",
+	"Pública: la ven todos": "公开：所有人都能看到",
+	"Privada": "私密",
+	"Pública": "公开",
+	"Editar nota": "编辑备注",
+	"Borrar nota": "删除备注",
+	"{quien} apunta una nota: «{texto}»": "{quien} 添加了备注：“{texto}”",
+	"{quien} cambia una nota: «{texto}»": "{quien} 修改了备注：“{texto}”",
+	"{quien} borra una nota": "{quien} 删除了备注"
 }

@@ -1228,5 +1228,22 @@
 	"Te desconectaste de una partida en red ({cuando}).": "Vous avez été déconnecté d'une partie en ligne ({cuando}).",
 	"Volver a la partida": "Revenir à la partie",
 	"Olvidar": "Oublier",
-	"Volver a conectar": "Se reconnecter"
+	"Volver a conectar": "Se reconnecter",
+	"Todavía no hay notas.": "Aucune note pour l’instant.",
+	"Mis notas": "Mes notes",
+	"Se borra al terminar el turno": "Effacée à la fin du tour",
+	"Apunta algo: el maná de un tesoro, un recordatorio…": "Notez quelque chose : le mana d’un Trésor, un rappel…",
+	"Nueva nota": "Nouvelle note",
+	"Añadir nota": "Ajouter une note",
+	"Temporal: se borra al terminar el turno": "Temporaire : effacée à la fin du tour",
+	"Fija: se queda hasta que la borres": "Permanente : reste jusqu’à ce que vous la supprimiez",
+	"Privada: solo la ves tú": "Privée : vous seul la voyez",
+	"Pública: la ven todos": "Publique : tout le monde la voit",
+	"Privada": "Privée",
+	"Pública": "Publique",
+	"Editar nota": "Modifier la note",
+	"Borrar nota": "Supprimer la note",
+	"{quien} apunta una nota: «{texto}»": "{quien} ajoute une note : « {texto} »",
+	"{quien} cambia una nota: «{texto}»": "{quien} modifie une note : « {texto} »",
+	"{quien} borra una nota": "{quien} supprime une note"
 }

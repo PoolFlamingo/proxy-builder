@@ -20,7 +20,11 @@ export const COLORES = [
 	"#1c1917",
 ] as const;
 
-/** Los 7 colores de las etiquetas. */
+/**
+ * Los 16 colores de las etiquetas (`Etiqueta.color`). Los 7 primeros son los de
+ * siempre y no cambian de sitio: las partidas y repeticiones guardadas los
+ * nombran por su número.
+ */
 export const COLORES_ETIQUETA = [
 	"#ef4444",
 	"#f59e0b",
@@ -29,6 +33,15 @@ export const COLORES_ETIQUETA = [
 	"#8b5cf6",
 	"#ec4899",
 	"#78716c",
+	"#f97316",
+	"#65a30d",
+	"#14b8a6",
+	"#06b6d4",
+	"#6366f1",
+	"#f43f5e",
+	"#ca8a04",
+	"#92400e",
+	"#1e293b",
 ] as const;
 
 /** Los colores de los jugadores (el primero, el de la app). */

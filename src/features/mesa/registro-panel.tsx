@@ -30,7 +30,8 @@ import { hacer } from "./acciones";
 import { type CategoriaEvento, categoriaDeEvento } from "./categorias-eventos";
 import { ChatPanel } from "./chat";
 import { formatoDuracion } from "./cuentas-fin";
-import { cartaParaApilar, duracionDeTurno } from "./cuentas-registro";
+import { cartaParaApilar, duracionDeTurno, visibleEnRegistro } from "./cuentas-registro";
+import { NotasPanel } from "./notas";
 import { ANCHO_PANEL, type PanelMesa, usePantalla } from "./pantalla";
 import { useSenalarFantasma } from "./sparring/vista-fantasma";
 import { piezasDeTexto, textoDeEvento } from "./textos-eventos";
@@ -92,6 +93,7 @@ export function PanelLateral() {
 				<div className="flex items-center gap-1.5">
 					<TabsList className="flex-1">
 						<TabsTrigger value="registro">{t("Registro")}</TabsTrigger>
+						<TabsTrigger value="notas">{t("Notas")}</TabsTrigger>
 						<TabsTrigger value="chat">
 							{t("Chat")}
 							{sinLeer > 0 && panel !== "chat" && (
@@ -114,6 +116,9 @@ export function PanelLateral() {
 				</div>
 				<TabsContent value="registro" className="flex min-h-0 flex-1 flex-col">
 					<RegistroLista />
+				</TabsContent>
+				<TabsContent value="notas" className="flex min-h-0 flex-1 flex-col">
+					<NotasPanel />
 				</TabsContent>
 				<TabsContent value="chat" className="flex min-h-0 flex-1 flex-col">
 					<ChatPanel />
@@ -147,19 +152,22 @@ function RegistroLista() {
 	);
 	const lineas = useMemo(
 		() =>
-			registro.map((ev, i) => {
+			registro.flatMap((ev, i) => {
+				if (!visibleEnRegistro(ev)) return [];
 				const ms = duracionDeTurno(registro, i);
-				return {
-					ev,
-					i,
-					texto: textoDeEvento(
+				return [
+					{
 						ev,
-						{ cartas, jugadores },
-						t,
-						true,
-						ms === null ? undefined : formatoDuracion(ms),
-					),
-				};
+						i,
+						texto: textoDeEvento(
+							ev,
+							{ cartas, jugadores },
+							t,
+							true,
+							ms === null ? undefined : formatoDuracion(ms),
+						),
+					},
+				];
 			}),
 		[registro, cartas, jugadores, t],
 	);

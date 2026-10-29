@@ -1246,5 +1246,22 @@
 	"Te desconectaste de una partida en red ({cuando}).": "Rozłączono z grą online ({cuando}).",
 	"Volver a la partida": "Wróć do gry",
 	"Olvidar": "Zapomnij",
-	"Volver a conectar": "Połącz ponownie"
+	"Volver a conectar": "Połącz ponownie",
+	"Todavía no hay notas.": "Brak notatek.",
+	"Mis notas": "Moje notatki",
+	"Se borra al terminar el turno": "Usuwana na koniec tury",
+	"Apunta algo: el maná de un tesoro, un recordatorio…": "Zapisz coś: mana ze Skarbu, przypomnienie…",
+	"Nueva nota": "Nowa notatka",
+	"Añadir nota": "Dodaj notatkę",
+	"Temporal: se borra al terminar el turno": "Tymczasowa: usuwana na koniec tury",
+	"Fija: se queda hasta que la borres": "Stała: zostaje, dopóki nie zostanie usunięta",
+	"Privada: solo la ves tú": "Prywatna: widoczna tylko dla autora",
+	"Pública: la ven todos": "Publiczna: widoczna dla wszystkich",
+	"Privada": "Prywatna",
+	"Pública": "Publiczna",
+	"Editar nota": "Edytuj notatkę",
+	"Borrar nota": "Usuń notatkę",
+	"{quien} apunta una nota: «{texto}»": "{quien} dodaje notatkę: „{texto}”",
+	"{quien} cambia una nota: «{texto}»": "{quien} zmienia notatkę: „{texto}”",
+	"{quien} borra una nota": "{quien} usuwa notatkę"
 }

@@ -459,7 +459,7 @@ export function EtiquetaDialog({ carta }: { carta: IdCarta }) {
 						</button>
 					))}
 				</div>
-				<div className="flex gap-1">
+				<div className="flex flex-wrap gap-1.5 p-1">
 					{COLORES_ETIQUETA.map((col, i) => (
 						<button
 							key={col}

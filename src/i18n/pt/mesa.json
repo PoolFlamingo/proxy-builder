@@ -1224,5 +1224,22 @@
 	"Te desconectaste de una partida en red ({cuando}).": "Você se desconectou de uma partida online ({cuando}).",
 	"Volver a la partida": "Voltar à partida",
 	"Olvidar": "Esquecer",
-	"Volver a conectar": "Reconectar"
+	"Volver a conectar": "Reconectar",
+	"Todavía no hay notas.": "Ainda não há notas.",
+	"Mis notas": "Minhas notas",
+	"Se borra al terminar el turno": "Apagada ao fim do turno",
+	"Apunta algo: el maná de un tesoro, un recordatorio…": "Anote algo: o mana de um Tesouro, um lembrete…",
+	"Nueva nota": "Nova nota",
+	"Añadir nota": "Adicionar nota",
+	"Temporal: se borra al terminar el turno": "Temporária: apagada ao fim do turno",
+	"Fija: se queda hasta que la borres": "Fixa: fica até você apagá-la",
+	"Privada: solo la ves tú": "Privada: só você vê",
+	"Pública: la ven todos": "Pública: todos veem",
+	"Privada": "Privada",
+	"Pública": "Pública",
+	"Editar nota": "Editar nota",
+	"Borrar nota": "Apagar nota",
+	"{quien} apunta una nota: «{texto}»": "{quien} adiciona uma nota: «{texto}»",
+	"{quien} cambia una nota: «{texto}»": "{quien} altera uma nota: «{texto}»",
+	"{quien} borra una nota": "{quien} apaga uma nota"
 }

@@ -32,6 +32,9 @@ export const FRASES: Record<Accion["que"], string> = {
 	ponerBolita: paraTraducir("{quien} pone una bolita"),
 	moverBolita: paraTraducir("{quien} mueve una bolita"),
 	quitarBolita: paraTraducir("{quien} quita una bolita"),
+	ponerNota: paraTraducir("{quien} apunta una nota: «{texto}»"),
+	editarNota: paraTraducir("{quien} cambia una nota: «{texto}»"),
+	quitarNota: paraTraducir("{quien} borra una nota"),
 	adjuntar: paraTraducir("{quien} adjunta {carta}"),
 	faseFuera: paraTraducir("{quien} cambia la fase de {cartas}"),
 	noEndereza: paraTraducir("{quien} cambia si {cartas} se endereza"),
@@ -269,6 +272,9 @@ export function textoDeEvento(
 	if ("cartas" in a && Array.isArray(a.cartas)) vars.cartas = nombresCartas(m, a.cartas, t, marcar);
 	if ("carta" in a && typeof a.carta === "number") vars.carta = nombreCarta(m, a.carta, t, marcar);
 	if ("n" in a && typeof a.n === "number") vars.n = a.n;
+	if ((a.que === "ponerNota" || a.que === "editarNota") && typeof a.texto === "string") {
+		vars.texto = a.texto;
+	}
 	if ("delta" in a && typeof a.delta === "number")
 		vars.delta = a.delta > 0 ? `+${a.delta}` : a.delta;
 	if ("jugador" in a && typeof a.jugador === "number")

@@ -1210,5 +1210,22 @@
 	"Te desconectaste de una partida en red ({cuando}).": "Die Verbindung zu einem Online-Spiel wurde getrennt ({cuando}).",
 	"Volver a la partida": "Zurück zum Spiel",
 	"Olvidar": "Vergessen",
-	"Volver a conectar": "Neu verbinden"
+	"Volver a conectar": "Neu verbinden",
+	"Todavía no hay notas.": "Noch keine Notizen.",
+	"Mis notas": "Meine Notizen",
+	"Se borra al terminar el turno": "Wird am Ende des Zuges gelöscht",
+	"Apunta algo: el maná de un tesoro, un recordatorio…": "Schreib etwas auf: das Mana eines Schatzes, eine Erinnerung …",
+	"Nueva nota": "Neue Notiz",
+	"Añadir nota": "Notiz hinzufügen",
+	"Temporal: se borra al terminar el turno": "Temporär: wird am Ende des Zuges gelöscht",
+	"Fija: se queda hasta que la borres": "Dauerhaft: bleibt, bis du sie löschst",
+	"Privada: solo la ves tú": "Privat: nur du siehst sie",
+	"Pública: la ven todos": "Öffentlich: alle sehen sie",
+	"Privada": "Privat",
+	"Pública": "Öffentlich",
+	"Editar nota": "Notiz bearbeiten",
+	"Borrar nota": "Notiz löschen",
+	"{quien} apunta una nota: «{texto}»": "{quien} fügt eine Notiz hinzu: „{texto}“",
+	"{quien} cambia una nota: «{texto}»": "{quien} ändert eine Notiz: „{texto}“",
+	"{quien} borra una nota": "{quien} löscht eine Notiz"
 }

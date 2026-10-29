@@ -1210,5 +1210,22 @@
 	"Te desconectaste de una partida en red ({cuando}).": "Je bent losgekoppeld van een online spel ({cuando}).",
 	"Volver a la partida": "Terug naar het spel",
 	"Olvidar": "Vergeten",
-	"Volver a conectar": "Opnieuw verbinden"
+	"Volver a conectar": "Opnieuw verbinden",
+	"Todavía no hay notas.": "Nog geen notities.",
+	"Mis notas": "Mijn notities",
+	"Se borra al terminar el turno": "Wordt aan het einde van de beurt gewist",
+	"Apunta algo: el maná de un tesoro, un recordatorio…": "Noteer iets: de mana van een Schat, een herinnering…",
+	"Nueva nota": "Nieuwe notitie",
+	"Añadir nota": "Notitie toevoegen",
+	"Temporal: se borra al terminar el turno": "Tijdelijk: wordt aan het einde van de beurt gewist",
+	"Fija: se queda hasta que la borres": "Vast: blijft staan tot je hem verwijdert",
+	"Privada: solo la ves tú": "Privé: alleen jij ziet hem",
+	"Pública: la ven todos": "Openbaar: iedereen ziet hem",
+	"Privada": "Privé",
+	"Pública": "Openbaar",
+	"Editar nota": "Notitie bewerken",
+	"Borrar nota": "Notitie verwijderen",
+	"{quien} apunta una nota: «{texto}»": "{quien} voegt een notitie toe: “{texto}”",
+	"{quien} cambia una nota: «{texto}»": "{quien} wijzigt een notitie: “{texto}”",
+	"{quien} borra una nota": "{quien} verwijdert een notitie"
 }

@@ -1224,5 +1224,22 @@
 	"Te desconectaste de una partida en red ({cuando}).": "Te-ai deconectat de la un joc online ({cuando}).",
 	"Volver a la partida": "Înapoi la joc",
 	"Olvidar": "Uită",
-	"Volver a conectar": "Reconectează-te"
+	"Volver a conectar": "Reconectează-te",
+	"Todavía no hay notas.": "Încă nu există note.",
+	"Mis notas": "Notele mele",
+	"Se borra al terminar el turno": "Se șterge la sfârșitul turei",
+	"Apunta algo: el maná de un tesoro, un recordatorio…": "Notează ceva: mana unei Comori, o amintire…",
+	"Nueva nota": "Notă nouă",
+	"Añadir nota": "Adaugă o notă",
+	"Temporal: se borra al terminar el turno": "Temporară: se șterge la sfârșitul turei",
+	"Fija: se queda hasta que la borres": "Fixă: rămâne până o ștergi",
+	"Privada: solo la ves tú": "Privată: doar tu o vezi",
+	"Pública: la ven todos": "Publică: o văd toți",
+	"Privada": "Privată",
+	"Pública": "Publică",
+	"Editar nota": "Editează nota",
+	"Borrar nota": "Șterge nota",
+	"{quien} apunta una nota: «{texto}»": "{quien} adaugă o notă: „{texto}”",
+	"{quien} cambia una nota: «{texto}»": "{quien} modifică o notă: „{texto}”",
+	"{quien} borra una nota": "{quien} șterge o notă"
 }

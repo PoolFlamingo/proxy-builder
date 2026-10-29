@@ -1251,5 +1251,22 @@
 	"Te desconectaste de una partida en red ({cuando}).": "Ви від'єдналися від мережевої гри ({cuando}).",
 	"Volver a la partida": "Повернутися до гри",
 	"Olvidar": "Забути",
-	"Volver a conectar": "Перепідключитися"
+	"Volver a conectar": "Перепідключитися",
+	"Todavía no hay notas.": "Поки немає нотаток.",
+	"Mis notas": "Мої нотатки",
+	"Se borra al terminar el turno": "Видаляється в кінці ходу",
+	"Apunta algo: el maná de un tesoro, un recordatorio…": "Запишіть щось: ману від Скарбу, нагадування…",
+	"Nueva nota": "Нова нотатка",
+	"Añadir nota": "Додати нотатку",
+	"Temporal: se borra al terminar el turno": "Тимчасова: видаляється в кінці ходу",
+	"Fija: se queda hasta que la borres": "Постійна: залишається, доки ви її не видалите",
+	"Privada: solo la ves tú": "Приватна: бачите лише ви",
+	"Pública: la ven todos": "Публічна: бачать усі",
+	"Privada": "Приватна",
+	"Pública": "Публічна",
+	"Editar nota": "Змінити нотатку",
+	"Borrar nota": "Видалити нотатку",
+	"{quien} apunta una nota: «{texto}»": "{quien} додає нотатку: «{texto}»",
+	"{quien} cambia una nota: «{texto}»": "{quien} змінює нотатку: «{texto}»",
+	"{quien} borra una nota": "{quien} видаляє нотатку"
 }
