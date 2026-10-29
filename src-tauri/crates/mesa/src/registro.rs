@@ -98,19 +98,30 @@ impl Registro {
 
     /// Los eventos que siguen contando, en orden: sin lo deshecho, sin lo
     /// de antes de reiniciar y sin los propios `Restaurar` (el registro que
-    /// se enseña).
+    /// se enseña). Lo que no se deshace (el chat, los avisos, las notas) se
+    /// queda aunque caiga en medio de lo deshecho: en red, deshacer lo mío no
+    /// borra lo que dijeron los demás.
     pub fn vigentes(&self) -> Vec<&Evento> {
         let mut v: Vec<&Evento> = Vec::new();
         for ev in &self.eventos {
             match &ev.cambio {
                 Cambio::Restaurar {
                     deshecho: Some(k), ..
-                } => v.retain(|e| e.seq < *k),
+                } => v.retain(|e| e.seq < *k || !deshacible(e)),
                 Cambio::Restaurar { deshecho: None, .. } => v.clear(),
                 _ => v.push(ev),
             }
         }
         v
+    }
+
+    /// ¿Cayó este evento en medio de algo que luego se deshizo? Su momento
+    /// en la partida ya no existe (lo que había alrededor se quitó): la
+    /// repetición lo enseña con la mesa de antes.
+    pub fn en_lo_deshecho(&self, seq: u64) -> bool {
+        self.eventos.iter().any(|e| {
+            matches!(&e.cambio, Cambio::Restaurar { deshecho: Some(k), .. } if *k <= seq && seq < e.seq)
+        })
     }
 
     pub fn se_puede_rehacer(&self) -> bool {

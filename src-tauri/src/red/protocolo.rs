@@ -35,7 +35,8 @@ use ts_rs::TS;
 use crate::mesa::encuentro::VistaBanquillo;
 
 /// La versión del protocolo (sube con cualquier cambio incompatible).
-pub const PROTOCOLO: u32 = 4;
+/// 5: catálogo v4 (veneno y flechas al fantasma, notas atadas a cartas).
+pub const PROTOCOLO: u32 = 5;
 pub const TOPE_GENERAL: usize = 64 * 1024;
 pub const TOPE_PREPARACION: usize = 2 * 1024 * 1024;
 pub const TOPE_PARTIDA: usize = 4 * 1024 * 1024;

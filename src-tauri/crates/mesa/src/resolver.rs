@@ -206,6 +206,10 @@ fn permisos(p: &Partida, yo: IdJugador, a: &Accion) -> Result<(), Rechazo> {
             }
             permisos(p, *jugador, accion)
         }
+        Accion::Colocar { cartas, .. } => {
+            let ids: Vec<IdCarta> = cartas.iter().map(|(c, _)| *c).collect();
+            todas(p, yo, &ids)
+        }
         Accion::Mover { cartas, .. }
         | Accion::Girar { cartas, .. }
         | Accion::BocaAbajo { cartas, .. }
@@ -264,10 +268,10 @@ fn permisos(p: &Partida, yo: IdJugador, a: &Accion) -> Result<(), Rechazo> {
                 p.cartas.get(c).ok_or(Rechazo::NoExiste)?;
                 Ok(())
             }
-            Extremo::Jugador(_) => Ok(()),
+            Extremo::Jugador(_) | Extremo::Fantasma => Ok(()),
         },
         // Cada uno toca solo sus notas.
-        Accion::EditarNota { id, .. } | Accion::QuitarNota { id } => {
+        Accion::EditarNota { id, .. } | Accion::QuitarNota { id } | Accion::AtarNota { id, .. } => {
             let n = p
                 .notas
                 .iter()

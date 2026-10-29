@@ -314,3 +314,36 @@ fn una_partida_guardada_se_reconstruye_igual() {
     )
     .unwrap();
 }
+
+#[test]
+fn deshacer_lo_mio_no_borra_lo_que_dijeron_los_demas() {
+    let (mut r, mut azar) = empezada(2, ModoDeshacer::UltimaPropia);
+    let de = |j: u8, accion: Accion| Intencion {
+        actor: IdJugador(j),
+        accion,
+    };
+    let vida = Accion::Vida {
+        jugador: IdJugador(0),
+        delta: -3,
+    };
+    r.procesar(&de(0, vida), &mut azar, 1).unwrap();
+    let chat = r.partida().seq + 1;
+    r.procesar(
+        &de(
+            1,
+            Accion::Chat {
+                texto: "¡ay!".into(),
+            },
+        ),
+        &mut azar,
+        2,
+    )
+    .unwrap();
+    r.procesar(&de(0, Accion::Deshacer { hasta: None }), &mut azar, 3)
+        .unwrap();
+    assert_eq!(r.partida().jugador(IdJugador(0)).unwrap().vida, 40);
+    let vigentes: Vec<u64> = r.vigentes().iter().map(|e| e.seq).collect();
+    assert!(vigentes.contains(&chat), "el chat sigue en el registro");
+    assert!(r.en_lo_deshecho(chat), "pero su momento ya no existe");
+    assert!(!r.en_lo_deshecho(chat - 2));
+}

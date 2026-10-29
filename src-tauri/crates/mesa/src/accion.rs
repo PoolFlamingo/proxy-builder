@@ -37,7 +37,7 @@
 //! | `Lanzamientos`, `SinCosteExtra` | «Cast count» del comandante (§4) |
 //! | `RevelarMano`, `RevelarA`, `JugarBocaAbajo`, `Descartar` | mano (§2.3) |
 //! | `Eliminar`, `Conceder` | muerte (§6) |
-//! | `VidaFantasma`, `DanoComandanteFantasma`, `VerFantasma` | «Phantom life» (§6) |
+//! | `VidaFantasma`, `DanoComandanteFantasma`, `VerFantasma`, `VenenoFantasma` | «Phantom life» (§6); el veneno, v4 |
 //! | `Senal` | señales de prioridad (§7) |
 //! | `PasarTurno`, `TurnoExtra`, `Pausar`, `SaltarTurno` | turno (`capturas/pablo/00`, `03`) |
 //! | `Reiniciar`, `Deshacer`, `Rehacer` | los hace la sesión (`registro.rs`) |
@@ -50,6 +50,8 @@
 //! | `IntensidadSparring`, `DecidirSparring` | sparring (Fase D) |
 //! | `Chat`, `Aviso` | Fase H |
 //! | `PonerNota`, `EditarNota`, `QuitarNota` | notas de cada jugador, públicas o privadas, fijas o temporales (v3) |
+//! | `Colocar` | soltar varias cartas del campo a la vez, cada una en su sitio: un solo evento y un solo «deshacer» (v4) |
+//! | `NotaEnCarta`, `AtarNota` | una nota atada a una carta del campo, y atarla o soltarla (v4) |
 //! | `Terminar` | «¿Quién ganó?» (`capturas/pablo/21`) |
 
 use serde::{Deserialize, Serialize};
@@ -63,7 +65,7 @@ use crate::modelo::{
 use crate::sparring::{Decision, Intensidad, ReaccionSparring};
 
 /// Sube con cada variante nueva o cambiada de `Accion` o `Cambio`.
-pub const VERSION_CATALOGO: u32 = 3;
+pub const VERSION_CATALOGO: u32 = 4;
 
 impl Accion {
     /// Lo que se puede hacer por otro jugador (`PorJugador`): lo que afecta a
@@ -737,6 +739,10 @@ pub enum Accion {
     VerFantasma {
         si: bool,
     },
+    /// Catálogo v4.
+    VenenoFantasma {
+        delta: i32,
+    },
     Senal {
         senal: Option<Senal>,
     },
@@ -846,6 +852,25 @@ pub enum Accion {
     QuitarNota {
         id: u32,
     },
+    /// Varias cartas al campo de `jugador` (el del actor si no), cada una en
+    /// su punto: lo que se suelta tras arrastrar varias. Como un `Mover` por
+    /// carta, pero en un solo evento (llegan juntas y se deshacen juntas). v4.
+    Colocar {
+        cartas: Vec<(IdCarta, Pos)>,
+        jugador: Option<IdJugador>,
+    },
+    /// Como `PonerNota`, ya atada a una carta del campo (catálogo v4).
+    NotaEnCarta {
+        texto: String,
+        temporal: bool,
+        privada: bool,
+        carta: Option<IdCarta>,
+    },
+    /// Ata una nota propia a una carta del campo, o la suelta (`None`). v4.
+    AtarNota {
+        id: u32,
+        carta: Option<IdCarta>,
+    },
     // ── Fin ──
     Terminar {
         resultado: Resultado,
@@ -869,7 +894,11 @@ impl Accion {
     pub fn es_nota(&self) -> bool {
         matches!(
             self,
-            Accion::PonerNota { .. } | Accion::EditarNota { .. } | Accion::QuitarNota { .. }
+            Accion::PonerNota { .. }
+                | Accion::EditarNota { .. }
+                | Accion::QuitarNota { .. }
+                | Accion::NotaEnCarta { .. }
+                | Accion::AtarNota { .. }
         )
     }
 }

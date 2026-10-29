@@ -61,6 +61,24 @@ fn eventos_de_ejemplo() -> Vec<Evento> {
             privada: false,
         },
         Accion::QuitarNota { id: 1 },
+        // v4: el fantasma como uno más y las notas atadas a cartas.
+        Accion::VenenoFantasma { delta: 2 },
+        Accion::Colocar {
+            cartas: vec![(mesa::IdCarta(1), mesa::modelo::Pos::nueva(10, 20))],
+            jugador: None,
+        },
+        Accion::Flecha {
+            de: mesa::modelo::Extremo::Carta(mesa::IdCarta(1)),
+            a: mesa::modelo::Extremo::Fantasma,
+            tipo: mesa::modelo::TipoFlecha::Ataque,
+        },
+        Accion::NotaEnCarta {
+            texto: "+2/+0 hasta el final del turno".into(),
+            temporal: true,
+            privada: false,
+            carta: Some(mesa::IdCarta(1)),
+        },
+        Accion::AtarNota { id: 2, carta: None },
     ]
     .into_iter()
     .enumerate()

@@ -270,6 +270,7 @@ pub fn iniciar(
             vida: opciones.vida_inicial,
             dano_comandante: BTreeMap::new(),
             visible: true,
+            veneno: 0,
         }),
         sparring: EstadoSparring::default(),
         mulligan: Some(EstadoMulligan::default()),

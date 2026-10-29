@@ -464,6 +464,11 @@ pub struct Nota {
     pub temporal: bool,
     /// Solo la ve su autor.
     pub privada: bool,
+    /// La carta del campo a la que va atada (se suelta sola si la carta sale
+    /// del campo). Catálogo v4; `skip_serializing_if` para que las partidas
+    /// anteriores no cambien de huella.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub carta: Option<IdCarta>,
 }
 
 impl Nota {
@@ -503,6 +508,13 @@ pub struct VidaFantasma {
     pub vida: i32,
     pub dano_comandante: BTreeMap<IdCarta, i32>,
     pub visible: bool,
+    /// Catálogo v4; sin veneno no se escribe (la huella de antes no cambia).
+    #[serde(default, skip_serializing_if = "es_cero")]
+    pub veneno: i32,
+}
+
+fn es_cero(n: &i32) -> bool {
+    *n == 0
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -617,6 +629,8 @@ pub struct Flecha {
 pub enum Extremo {
     Carta(IdCarta),
     Jugador(IdJugador),
+    /// El rival imaginado del solitario (catálogo v4).
+    Fantasma,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]

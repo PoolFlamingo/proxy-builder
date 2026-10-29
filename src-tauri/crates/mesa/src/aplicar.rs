@@ -197,6 +197,44 @@ fn carta_mut(q: &mut Partida, id: IdCarta) -> Result<&mut Carta, Rechazo> {
     q.cartas.get_mut(&id).ok_or(Rechazo::NoExiste)
 }
 
+/// Una nota nueva del que la pide, suelta o atada a una carta del campo.
+fn poner_nota(
+    q: &mut Partida,
+    autor: IdJugador,
+    texto: &str,
+    temporal: bool,
+    privada: bool,
+    carta: Option<IdCarta>,
+) -> Result<(), Rechazo> {
+    let texto = texto_de_nota(texto)?;
+    if let Some(c) = carta {
+        en_el_campo(q, c)?;
+    }
+    if q.notas.iter().filter(|n| n.autor == autor).count() >= MAX_NOTAS {
+        return Err(Rechazo::Limite);
+    }
+    let id = q.notas.iter().map(|n| n.id).max().unwrap_or(0) + 1;
+    q.notas.push(Nota {
+        id,
+        autor,
+        texto,
+        temporal,
+        privada,
+        carta,
+    });
+    Ok(())
+}
+
+/// Solo se atan notas a cartas del campo: las de las zonas ocultas no se
+/// pueden señalar sin decir qué carta es.
+fn en_el_campo(q: &Partida, c: IdCarta) -> Result<(), Rechazo> {
+    match q.donde(c) {
+        Some((z, _)) if z.es_campo() => Ok(()),
+        Some(_) => Err(Rechazo::NoSePuede),
+        None => Err(Rechazo::NoExiste),
+    }
+}
+
 /// El texto de una nota, sin los espacios de los lados.
 fn texto_de_nota(texto: &str) -> Result<String, Rechazo> {
     let t = texto.trim();
@@ -462,6 +500,12 @@ fn soltar_de_campo(q: &mut Partida, id: IdCarta) {
         }
     }
     q.flechas.retain(|f| !toca_carta(f, id));
+    // Una nota atada a la carta se queda, suelta.
+    for n in q.notas.iter_mut() {
+        if n.carta == Some(id) {
+            n.carta = None;
+        }
+    }
 }
 
 fn toca_carta(f: &Flecha, id: IdCarta) -> bool {
@@ -1038,6 +1082,23 @@ fn accion_(q: &mut Partida, a: &Accion, ctx: &mut Ctx, seq: u64) -> Result<(), R
                 Err(Rechazo::NoSePuede)
             }
         }
+        Accion::Colocar { cartas, jugador } => {
+            let ids: Vec<IdCarta> = cartas.iter().map(|(c, _)| *c).collect();
+            sin_repetir(&ids)?;
+            for (id, pos) in cartas {
+                let mover = Accion::Mover {
+                    cartas: vec![*id],
+                    a: Destino {
+                        zona: ZonaDestino::De(Zona::Campo),
+                        jugador: *jugador,
+                        sitio: Sitio::EnCampo(*pos),
+                    },
+                    como: None,
+                };
+                accion_(q, &mover, ctx, seq)?;
+            }
+            Ok(())
+        }
         Accion::PorJugador { jugador, accion } => {
             existe_jugador(q, *jugador)?;
             if !accion.se_hace_por_otro() {
@@ -1090,6 +1151,9 @@ fn accion_(q: &mut Partida, a: &Accion, ctx: &mut Ctx, seq: u64) -> Result<(), R
                         carta(q, *c)?;
                     }
                     Extremo::Jugador(j) => existe_jugador(q, *j)?,
+                    Extremo::Fantasma => {
+                        q.fantasma.as_ref().ok_or(Rechazo::NoExiste)?;
+                    }
                 }
             }
             if q.flechas.len() >= MAX_FLECHAS {
@@ -1693,6 +1757,12 @@ fn accion_(q: &mut Partida, a: &Accion, ctx: &mut Ctx, seq: u64) -> Result<(), R
             f.vida = f.vida.saturating_sub(aplicado);
             Ok(())
         }
+        Accion::VenenoFantasma { delta } => {
+            let d = delta_ok(*delta)?;
+            let f = q.fantasma.as_mut().ok_or(Rechazo::NoExiste)?;
+            f.veneno = f.veneno.saturating_add(d).max(0);
+            Ok(())
+        }
         Accion::VerFantasma { si } => {
             q.fantasma.as_mut().ok_or(Rechazo::NoExiste)?.visible = *si;
             Ok(())
@@ -2020,20 +2090,22 @@ fn accion_(q: &mut Partida, a: &Accion, ctx: &mut Ctx, seq: u64) -> Result<(), R
             texto,
             temporal,
             privada,
-        } => {
-            let autor = ctx.actor()?;
-            let texto = texto_de_nota(texto)?;
-            if q.notas.iter().filter(|n| n.autor == autor).count() >= MAX_NOTAS {
-                return Err(Rechazo::Limite);
+        } => poner_nota(q, ctx.actor()?, texto, *temporal, *privada, None),
+        Accion::NotaEnCarta {
+            texto,
+            temporal,
+            privada,
+            carta,
+        } => poner_nota(q, ctx.actor()?, texto, *temporal, *privada, *carta),
+        Accion::AtarNota { id, carta } => {
+            if let Some(c) = carta {
+                en_el_campo(q, *c)?;
             }
-            let id = q.notas.iter().map(|n| n.id).max().unwrap_or(0) + 1;
-            q.notas.push(Nota {
-                id,
-                autor,
-                texto,
-                temporal: *temporal,
-                privada: *privada,
-            });
+            q.notas
+                .iter_mut()
+                .find(|n| n.id == *id)
+                .ok_or(Rechazo::NoExiste)?
+                .carta = *carta;
             Ok(())
         }
         Accion::EditarNota {

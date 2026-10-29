@@ -4,4 +4,8 @@ import type { IdCarta } from "./IdCarta";
 /**
  * La vida del rival imaginado del solitario.
  */
-export type VidaFantasma = { vida: number, danoComandante: { [key in IdCarta]: number }, visible: boolean, };
+export type VidaFantasma = { vida: number, danoComandante: { [key in IdCarta]: number }, visible: boolean, 
+/**
+ * Catálogo v4; sin veneno no se escribe (la huella de antes no cambia).
+ */
+veneno?: number, };

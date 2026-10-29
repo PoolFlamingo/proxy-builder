@@ -115,6 +115,10 @@ fn nombre(a: &Accion) -> &'static str {
         Accion::PonerNota { .. } => "PonerNota",
         Accion::EditarNota { .. } => "EditarNota",
         Accion::QuitarNota { .. } => "QuitarNota",
+        Accion::Colocar { .. } => "Colocar",
+        Accion::NotaEnCarta { .. } => "NotaEnCarta",
+        Accion::AtarNota { .. } => "AtarNota",
+        Accion::VenenoFantasma { .. } => "VenenoFantasma",
         Accion::Terminar { .. } => "Terminar",
         Accion::Deshacer { .. } => "Deshacer",
         Accion::Rehacer => "Rehacer",
@@ -175,6 +179,11 @@ impl Mesa {
         });
         id
     }
+}
+
+/// Una carta cualquiera del campo propio (para colocarla).
+fn atada_a_colocar(m: &Mesa) -> IdCarta {
+    m.zona(YO, Zona::Campo)[0]
 }
 
 fn campo(pos: Option<Pos>) -> Destino {
@@ -294,6 +303,65 @@ fn cada_accion_del_catalogo() {
     assert_eq!(m.p().notas[0].texto, "3 de maná");
     m.haz(Accion::QuitarNota { id: nota });
     assert!(m.p().notas.is_empty());
+    // Soltar varias a la vez: un solo evento, cada una en su punto.
+    let antes = m.p().seq;
+    let otra = m.al_campo("Bear");
+    m.haz(Accion::Colocar {
+        cartas: vec![
+            (atada_a_colocar(&m), Pos::nueva(100, 100)),
+            (otra, Pos::nueva(900, 900)),
+        ],
+        jugador: None,
+    });
+    assert_eq!(
+        m.p().seq,
+        antes + 2,
+        "un evento para traer el oso y otro para colocar"
+    );
+    assert_eq!(m.c(otra).pos, Some(Pos::nueva(900, 900)));
+    // Notas atadas a una carta del campo: se sueltan y se vuelven a atar, y
+    // se sueltan solas cuando la carta sale del campo.
+    let atada = m.al_campo("Ring");
+    m.haz(Accion::NotaEnCarta {
+        texto: "+2/+0".into(),
+        temporal: false,
+        privada: false,
+        carta: Some(atada),
+    });
+    let nota = m.p().notas[0].id;
+    assert_eq!(m.p().notas[0].carta, Some(atada));
+    m.haz(Accion::AtarNota {
+        id: nota,
+        carta: None,
+    });
+    assert_eq!(m.p().notas[0].carta, None);
+    m.haz(Accion::AtarNota {
+        id: nota,
+        carta: Some(atada),
+    });
+    assert_eq!(
+        m.como(
+            YO,
+            Accion::AtarNota {
+                id: nota,
+                carta: Some(m.zona(YO, Zona::Biblioteca)[0]),
+            }
+        ),
+        Err(Rechazo::NoSePuede),
+        "solo a cartas del campo"
+    );
+    m.haz(Accion::Mover {
+        cartas: vec![atada],
+        a: a(Zona::Cementerio, Sitio::Arriba),
+        como: None,
+    });
+    assert_eq!(m.p().notas[0].carta, None, "se suelta al salir del campo");
+    m.haz(Accion::QuitarNota { id: nota });
+    m.haz(Accion::Mover {
+        cartas: vec![atada],
+        a: campo(None),
+        como: None,
+    });
     // Adjuntar.
     let anillo = m.al_campo("Ring");
     m.haz(Accion::Adjuntar {
@@ -692,6 +760,17 @@ fn cada_accion_del_catalogo() {
         delta: 3,
     });
     assert_eq!(s.p().fantasma.as_ref().unwrap().vida, 32);
+    s.haz(Accion::VenenoFantasma { delta: 3 });
+    s.haz(Accion::VenenoFantasma { delta: -5 });
+    assert_eq!(s.p().fantasma.as_ref().unwrap().veneno, 0, "nunca negativo");
+    s.haz(Accion::VenenoFantasma { delta: 2 });
+    let atacante = s.zona(YO, Zona::Mando)[0];
+    s.haz(Accion::Flecha {
+        de: Extremo::Carta(atacante),
+        a: Extremo::Fantasma,
+        tipo: TipoFlecha::Ataque,
+    });
+    assert_eq!(s.p().flechas.last().unwrap().a, Extremo::Fantasma);
     s.haz(Accion::VerFantasma { si: false });
     s.haz(Accion::IntensidadSparring {
         intensidad: Intensidad::Realista,
@@ -862,6 +941,10 @@ const TODAS: &[&str] = &[
     "PonerNota",
     "EditarNota",
     "QuitarNota",
+    "Colocar",
+    "NotaEnCarta",
+    "AtarNota",
+    "VenenoFantasma",
     "Terminar",
     "Deshacer",
     "Rehacer",

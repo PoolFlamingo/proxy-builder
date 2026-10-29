@@ -2,4 +2,4 @@
 import type { IdCarta } from "./IdCarta";
 import type { IdJugador } from "./IdJugador";
 
-export type Extremo = { "tipo": "carta", "id": IdCarta } | { "tipo": "jugador", "id": IdJugador };
+export type Extremo = { "tipo": "carta", "id": IdCarta } | { "tipo": "jugador", "id": IdJugador } | { "tipo": "fantasma" };
