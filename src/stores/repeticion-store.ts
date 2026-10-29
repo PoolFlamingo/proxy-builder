@@ -8,10 +8,19 @@ import type { VistaRepeticion } from "@/bindings/VistaRepeticion";
  */
 type Estado = {
 	activa: VistaRepeticion | null;
+	/**
+	 * Cuánto dura (ms) el desplazamiento de las cartas al pasar al siguiente
+	 * punto. Rust manda la partida entera de cada punto, sin el movimiento de
+	 * por medio: lo suave lo pone la pantalla. 0: sin animar (un salto grande).
+	 */
+	animarMs: number;
 	poner: (v: VistaRepeticion | null) => void;
+	animar: (ms: number) => void;
 };
 
 export const useRepeticion = create<Estado>((set) => ({
 	activa: null,
-	poner: (activa) => set({ activa }),
+	animarMs: 0,
+	poner: (activa) => set(activa ? { activa } : { activa, animarMs: 0 }),
+	animar: (animarMs) => set({ animarMs }),
 }));

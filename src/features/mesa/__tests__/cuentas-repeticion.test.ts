@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Hito } from "@/bindings/Hito";
 import {
+	duracionMovimiento,
 	ESPERA_MAXIMA_MS,
 	ESPERA_MINIMA_MS,
 	hitoAnterior,
@@ -34,5 +35,20 @@ describe("pausaEntre", () => {
 	});
 	it("sin horas (el primer evento) espera lo mínimo", () => {
 		expect(pausaEntre(undefined, 500, 1)).toBe(ESPERA_MINIMA_MS);
+	});
+});
+
+describe("duracionMovimiento", () => {
+	it("anima los pasos cortos y acaba antes de la espera mínima", () => {
+		for (const v of [0.5, 1, 2, 4, 8]) {
+			const d = duracionMovimiento(5, 6, v);
+			expect(d).toBeGreaterThan(0);
+			expect(d).toBeLessThanOrEqual(ESPERA_MINIMA_MS / v);
+		}
+		expect(duracionMovimiento(6, 5, 1)).toBeGreaterThan(0);
+	});
+	it("no anima un salto grande ni quedarse donde se está", () => {
+		expect(duracionMovimiento(0, 40, 1)).toBe(0);
+		expect(duracionMovimiento(7, 7, 1)).toBe(0);
 	});
 });

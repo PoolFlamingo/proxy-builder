@@ -31,6 +31,8 @@ export function useFlip(
 	ref: RefObject<HTMLElement | null>,
 	activo: boolean,
 	clave: unknown,
+	/** Otra duración (la repetición desliza más despacio que la partida). */
+	duracion = DURACION,
 ) {
 	useLayoutEffect(() => {
 		const el = ref.current;
@@ -52,10 +54,10 @@ export function useFlip(
 		const dy = antes.y - ahora.y;
 		if (Math.abs(dx) < 2 && Math.abs(dy) < 2) return;
 		el.animate([{ translate: `${dx}px ${dy}px` }, { translate: "0 0" }], {
-			duration: DURACION,
-			easing: "cubic-bezier(.2,.8,.2,1)",
+			duration: duracion,
+			easing: duracion === DURACION ? "cubic-bezier(.2,.8,.2,1)" : "ease-in-out",
 		});
-	}, [id, activo, clave, ref]);
+	}, [id, activo, clave, ref, duracion]);
 }
 
 /** Apunta el sitio de una carta que se va a dejar de pintar (para la siguiente). */

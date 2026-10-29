@@ -21,7 +21,13 @@ import { useRepeticion } from "@/stores/repeticion-store";
 import { useUi } from "@/stores/ui-store";
 import { suscribir, suscrito } from "./conexion";
 import { formatoDuracion } from "./cuentas-fin";
-import { hitoAnterior, hitoSiguiente, pausaEntre, VELOCIDADES } from "./cuentas-repeticion";
+import {
+	duracionMovimiento,
+	hitoAnterior,
+	hitoSiguiente,
+	pausaEntre,
+	VELOCIDADES,
+} from "./cuentas-repeticion";
 
 /**
  * **La repetición de una partida terminada** (H3): la mesa en «solo mirar»
@@ -78,6 +84,8 @@ export function BarraRepeticion() {
 	// Se pide solo el último destino mientras se arrastra: no se encolan.
 	const pedido = useRef<{ pos: number; como: number | null } | null>(null);
 	const enCurso = useRef(false);
+	const velocidadActual = useRef(velocidad);
+	velocidadActual.current = velocidad;
 
 	const ir = useCallback(
 		async (pos: number, como: number | null) => {
@@ -88,6 +96,14 @@ export function BarraRepeticion() {
 				while (pedido.current) {
 					const p = pedido.current;
 					pedido.current = null;
+					// Antes de pedirlo: la vista llega por el canal y las cartas ya tienen
+					// que saber si se deslizan hasta su sitio nuevo y cuánto.
+					const ahora = useRepeticion.getState();
+					ahora.animar(
+						p.como === (ahora.activa?.como ?? null)
+							? duracionMovimiento(ahora.activa?.pos ?? p.pos, p.pos, velocidadActual.current)
+							: 0,
+					);
 					poner(await call("repeticion_ir", { pos: p.pos, como: p.como }));
 				}
 			} catch (e) {

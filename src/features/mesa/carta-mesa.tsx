@@ -4,6 +4,7 @@ import type { IdCarta } from "@/bindings/IdCarta";
 import type { VistaCarta } from "@/bindings/VistaCarta";
 import { cn } from "@/lib/utils";
 import { useMesa } from "@/stores/mesa-store";
+import { useRepeticion } from "@/stores/repeticion-store";
 import { useUi } from "@/stores/ui-store";
 import { enVuelo, origenDe, useVivo } from "@/stores/vivo-store";
 import { COLORES } from "./colores";
@@ -54,6 +55,9 @@ export const CartaMesa = memo(function CartaMesa({
 	const elegida = useMesa((s) => s.seleccion.includes(id));
 	const calidad = useUi((s) => s.mesa.calidad);
 	const reducir = useSinAnimaciones();
+	// En una repetición, lo que dura deslizarse al punto nuevo (0: ahora mismo, sin animar).
+	const repetida = useRepeticion((s) => s.activa !== null);
+	const animarRep = useRepeticion((s) => s.animarMs);
 	const sombras = useUi((s) => s.mesa.sombras);
 	// Mientras se lleva en la mano. Ya soltada, la oculta `enVueloAjeno` hasta que llega.
 	const arrastrando = usePantalla(
@@ -73,7 +77,13 @@ export const CartaMesa = memo(function CartaMesa({
 		}),
 	);
 	const ref = useRef<HTMLDivElement>(null);
-	useFlip(id, ref, !reducir, `${c?.zona.tipo}${JSON.stringify(c?.zona)}${x}|${y}`);
+	useFlip(
+		id,
+		ref,
+		!reducir && (!repetida || animarRep > 0),
+		`${c?.zona.tipo}${JSON.stringify(c?.zona)}${x}|${y}`,
+		repetida ? animarRep : undefined,
+	);
 	if (!c) return null;
 	const ancho = calidad === 488 || w > 200 ? 488 : w > 120 ? 244 : calidad;
 	const conocida = c.origen !== null && !c.bocaAbajo;
