@@ -1,10 +1,10 @@
-import { Loader2, Search } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { CardSummary } from "@/bindings/CardSummary";
 import type { IdJugador } from "@/bindings/IdJugador";
 import type { OrigenFicha } from "@/bindings/OrigenFicha";
 import { CampoNumero, Selector } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -207,9 +207,9 @@ export function FichasDialog({ para: paraInicial }: { para?: IdJugador }) {
 								</label>
 								<Button size="sm" onClick={() => void buscar(q, soloFichas)} disabled={ocupado}>
 									{ocupado ? (
-										<Loader2 className="size-3.5 animate-spin" />
+										<Icono icon="lucide:loader-2" className="size-3.5 animate-spin" />
 									) : (
-										<Search className="size-3.5" />
+										<Icono icon="lucide:search" className="size-3.5" />
 									)}
 								</Button>
 							</div>

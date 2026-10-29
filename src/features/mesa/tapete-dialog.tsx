@@ -1,10 +1,10 @@
-import { FolderOpen, Loader2, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { CardSummary } from "@/bindings/CardSummary";
 import type { OrigenTapete } from "@/bindings/OrigenTapete";
 import type { Tapete } from "@/bindings/Tapete";
 import { FilaDeslizador } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -153,7 +153,7 @@ export function TapeteDialog({
 					</div>
 					<div className="flex gap-2.5">
 						<Button size="sm" variant="outline" onClick={() => void deFichero()} disabled={ocupado}>
-							<FolderOpen className="size-3.5" />
+							<Icono icon="lucide:folder-open" className="size-3.5" />
 							{t("Imagen del equipo…")}
 						</Button>
 						<Button
@@ -162,7 +162,7 @@ export function TapeteDialog({
 							onClick={() => void poner(null)}
 							disabled={ocupado || !tapete}
 						>
-							<Trash2 className="size-3.5" />
+							<Icono icon="lucide:trash-2" className="size-3.5" />
 							{t("Quitar")}
 						</Button>
 					</div>
@@ -176,9 +176,9 @@ export function TapeteDialog({
 						/>
 						<Button size="sm" onClick={() => void buscar()} disabled={ocupado}>
 							{ocupado ? (
-								<Loader2 className="size-3.5 animate-spin" />
+								<Icono icon="lucide:loader-2" className="size-3.5 animate-spin" />
 							) : (
-								<Search className="size-3.5" />
+								<Icono icon="lucide:search" className="size-3.5" />
 							)}
 							{t("Buscar")}
 						</Button>

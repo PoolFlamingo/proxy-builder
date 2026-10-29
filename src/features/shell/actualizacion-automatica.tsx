@@ -1,7 +1,7 @@
-import { ArrowUpCircle, Loader2 } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import type { ActualizacionInfo } from "@/bindings/ActualizacionInfo";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { WithTooltip } from "@/components/ui/with-tooltip";
@@ -145,9 +145,9 @@ export function BotonActualizar() {
 				disabled={paso === "instalando" || esperando}
 			>
 				{paso === "instalando" ? (
-					<Loader2 className="size-4 animate-spin" />
+					<Icono icon="lucide:loader-2" className="size-4 animate-spin" />
 				) : (
-					<ArrowUpCircle className="size-4 text-primary" />
+					<Icono icon="lucide:arrow-up-circle" className="size-4 text-primary" />
 				)}
 				{t("Actualizar a {version}", { version: info.version })}
 			</Button>

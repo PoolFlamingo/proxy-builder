@@ -69,6 +69,9 @@ struct Biblioteca {
 struct EtiquetaPaquete {
     nombre: String,
     color: String,
+    /// Desde la 3.2.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    icono: Option<String>,
 }
 
 fn mal(motivo: &str) -> AppError {
@@ -132,6 +135,7 @@ fn escribir<W: Write + Seek>(w: W, deck: &Deck, blobs: &BlobStore, db: &Db) -> A
             .map(|t| EtiquetaPaquete {
                 nombre: t.name,
                 color: t.color,
+                icono: t.icon,
             })
             .collect(),
         notas: decks::notas_de(db, &deck.id)?,
@@ -265,6 +269,12 @@ pub fn import<R: Read + Seek>(r: R, blobs: &BlobStore, db: &Db) -> AppResult<Dec
         let mut ids = Vec::new();
         for e in &b.etiquetas {
             if let Ok(t) = etiquetas::create(db, &e.nombre, &e.color) {
+                // La de este equipo manda; solo se le pone si no tenía.
+                if t.icon.is_none() {
+                    if let Some(i) = &e.icono {
+                        let _ = etiquetas::icono(db, &t.id, Some(i));
+                    }
+                }
                 ids.push(t.id);
             }
         }

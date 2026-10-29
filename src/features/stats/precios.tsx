@@ -1,6 +1,6 @@
-import { MousePointerClick } from "lucide-react";
 import { useState } from "react";
 import type { DeckStats } from "@/bindings/DeckStats";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { WithTooltip } from "@/components/ui/with-tooltip";
@@ -120,7 +120,7 @@ export function Precios({ s, moneda }: { s: DeckStats; moneda: Moneda }) {
 													)
 												}
 											>
-												<MousePointerClick />
+												<Icono icon="lucide:mouse-pointer-click" />
 											</Button>
 										</WithTooltip>
 									</td>

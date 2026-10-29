@@ -1,8 +1,8 @@
-import { Dices, ImagePlus, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { AspectoDados } from "@/bindings/AspectoDados";
 import { Fila, FilaInterruptor, Selector } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -135,7 +135,7 @@ export function AjustesDados() {
 						setSemilla((s) => s + 1);
 					}}
 				>
-					<Dices className="size-3.5" />
+					<Icono icon="lucide:dices" className="size-3.5" />
 					{t("Probar")}
 				</Button>
 			</div>
@@ -186,7 +186,7 @@ export function AjustesDados() {
 						<img src={vista.imagen} alt="" className="size-7 rounded-md border object-cover" />
 					)}
 					<Button size="sm" variant="outline" disabled={ocupado} onClick={() => void imagen(false)}>
-						<ImagePlus className="size-3.5" />
+						<Icono icon="lucide:image-plus" className="size-3.5" />
 						{t("Elegir…")}
 					</Button>
 					{local.imagen && (
@@ -197,7 +197,7 @@ export function AjustesDados() {
 							onClick={() => void imagen(true)}
 							aria-label={t("Quitar la imagen")}
 						>
-							<X className="size-3.5" />
+							<Icono icon="lucide:x" className="size-3.5" />
 						</Button>
 					)}
 				</div>

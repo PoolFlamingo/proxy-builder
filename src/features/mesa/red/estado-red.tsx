@@ -1,8 +1,8 @@
-import { Eye, Heart, Languages, Loader2, UserX, Wifi, WifiOff } from "lucide-react";
 import { useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { Confirmar } from "@/components/confirmar";
 import { ContenidoContextual } from "@/components/contenido-contextual";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
@@ -44,7 +44,7 @@ export function Latencia({ id }: { id: number }) {
 					colorDeLatencia(e.rttMs),
 				)}
 			>
-				<Wifi className={cn("size-3", !e.directo && "opacity-60")} />
+				<Icono icon="lucide:wifi" className={cn("size-3", !e.directo && "opacity-60")} />
 				{e.rttMs}
 			</span>
 		</WithTooltip>
@@ -79,7 +79,7 @@ export function SelectorTablero() {
 		<div className="absolute top-2 left-2 z-[7000] flex flex-col gap-1 rounded-xl border border-white/10 bg-black/60 p-1 text-white shadow-lg backdrop-blur-md">
 			{espectador && (
 				<span className="flex items-center gap-1 px-1.5 text-[10px] text-white/60">
-					<Eye className="size-3" />
+					<Icono icon="lucide:eye" className="size-3" />
 					{t("Mirando la partida")}
 				</span>
 			)}
@@ -118,22 +118,24 @@ export function SelectorTablero() {
 									{id === yo ? t("{nombre} (tú)", { nombre: j.nombre }) : j.nombre}
 								</span>
 								{papel !== null && <Latencia id={id} />}
-								{originales[id] && <Languages className="size-3 text-white/60" />}
+								{originales[id] && (
+									<Icono icon="lucide:languages" className="size-3 text-white/60" />
+								)}
 								<span className="ml-auto flex items-center gap-0.5 pl-1.5 text-white/70 tabular-nums">
-									<Heart className="size-3" />
+									<Icono icon="game-icons:hearts" className="size-3" />
 									{j.vida}
 								</span>
 							</button>
 						</ContextMenuTrigger>
 						<ContenidoContextual className="w-64 text-xs">
 							<ContextMenuItem onSelect={() => alternarOriginales(id)}>
-								<Languages />
+								<Icono icon="lucide:languages" />
 								{originales[id] ? "✓ " : ""}
 								{t("Cartas originales en mi idioma")}
 							</ContextMenuItem>
 							{puedeExpulsar && id !== yo && !j.eliminado && (
 								<ContextMenuItem variant="destructive" onSelect={() => setPorExpulsar(id)}>
-									<UserX />
+									<Icono icon="lucide:user-x" />
 									{t("Expulsar de la partida")}
 								</ContextMenuItem>
 							)}
@@ -179,17 +181,17 @@ export function AvisoConexion() {
 		<div className="absolute top-14 left-1/2 z-[7500] flex -translate-x-1/2 items-center gap-2.5 rounded-xl border border-amber-500/40 bg-black/80 px-2.5 py-1.5 text-xs text-white shadow-lg backdrop-blur-md">
 			{conexion === "reconectando" ? (
 				<>
-					<Loader2 className="size-3.5 animate-spin text-amber-400" />
+					<Icono icon="lucide:loader-2" className="size-3.5 animate-spin text-amber-400" />
 					{t("Reconectando con el anfitrión… (intento {intento})", { intento })}
 				</>
 			) : conexion === "buscando" ? (
 				<>
-					<Loader2 className="size-3.5 animate-spin text-amber-400" />
+					<Icono icon="lucide:loader-2" className="size-3.5 animate-spin text-amber-400" />
 					{t("El anfitrión no vuelve: probando con {nombre}…", { nombre: nombre ?? "?" })}
 				</>
 			) : conexion === "perdida" ? (
 				<>
-					<WifiOff className="size-3.5 text-red-400" />
+					<Icono icon="lucide:wifi-off" className="size-3.5 text-red-400" />
 					{t("Se ha perdido la conexión con la partida.")}
 					{papel === "jugador" && (
 						<Button size="sm" onClick={() => void volverARed()}>
@@ -202,7 +204,7 @@ export function AvisoConexion() {
 				</>
 			) : (
 				<>
-					<Loader2 className="size-3.5 animate-spin text-amber-400" />
+					<Icono icon="lucide:loader-2" className="size-3.5 animate-spin text-amber-400" />
 					{t(
 						"Esperando a más de la mitad de los jugadores ({conectados} de {total}): hasta entonces no se juega.",
 						{ conectados: mayoria?.conectados ?? 0, total: mayoria?.total ?? 0 },

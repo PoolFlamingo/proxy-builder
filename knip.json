@@ -11,7 +11,7 @@
 		"duplicates": "off"
 	},
 	"ignore": ["src/bindings/**"],
-	"ignoreDependencies": ["tw-animate-css", "tailwindcss"],
+	"ignoreDependencies": ["tw-animate-css", "tailwindcss", "@iconify/json"],
 	"ignoreBinaries": ["rustfmt", "inkscape"],
 	"ignoreExportsUsedInFile": {
 		"interface": true,

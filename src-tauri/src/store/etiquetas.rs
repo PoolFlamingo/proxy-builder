@@ -23,6 +23,9 @@ pub struct Tag {
     pub name: String,
     /// Uno de [`COLORES`].
     pub color: String,
+    /// Un id de Iconify (`game-icons:crown`), si se le puso.
+    #[serde(default)]
+    pub icon: Option<String>,
 }
 
 fn mal(motivo: &str) -> AppError {
@@ -47,13 +50,15 @@ fn limpiar(nombre: &str, color: &str) -> AppResult<(String, String)> {
 /// Todas, por nombre.
 pub fn list(db: &Db) -> AppResult<Vec<Tag>> {
     let c = db.conn()?;
-    let mut st = c.prepare("SELECT id, name, color FROM tags ORDER BY name COLLATE NOCASE")?;
+    let mut st =
+        c.prepare("SELECT id, name, color, icon FROM tags ORDER BY name COLLATE NOCASE")?;
     let v = st
         .query_map([], |r| {
             Ok(Tag {
                 id: r.get(0)?,
                 name: r.get(1)?,
                 color: r.get(2)?,
+                icon: r.get(3)?,
             })
         })?
         .collect::<Result<_, _>>()?;
@@ -64,13 +69,14 @@ fn por_nombre(db: &Db, nombre: &str) -> AppResult<Option<Tag>> {
     Ok(db
         .conn()?
         .query_row(
-            "SELECT id, name, color FROM tags WHERE name = ?1 COLLATE NOCASE",
+            "SELECT id, name, color, icon FROM tags WHERE name = ?1 COLLATE NOCASE",
             [nombre],
             |r| {
                 Ok(Tag {
                     id: r.get(0)?,
                     name: r.get(1)?,
                     color: r.get(2)?,
+                    icon: r.get(3)?,
                 })
             },
         )
@@ -88,6 +94,7 @@ pub fn create(db: &Db, nombre: &str, color: &str) -> AppResult<Tag> {
         id: uuid::Uuid::new_v4().to_string(),
         name: nombre,
         color,
+        icon: None,
     };
     db.conn()?.execute(
         "INSERT INTO tags (id, name, color, created_at) VALUES (?1, ?2, ?3, ?4)",
@@ -109,11 +116,29 @@ pub fn update(db: &Db, id: &str, nombre: &str, color: &str) -> AppResult<Tag> {
     if n == 0 {
         return Err(AppError::new(ErrorCode::NotFound).with("tag", id));
     }
+    let icon = db
+        .conn()?
+        .query_row("SELECT icon FROM tags WHERE id = ?1", [id], |r| r.get(0))?;
     Ok(Tag {
         id: id.to_string(),
         name: nombre,
         color,
+        icon,
     })
+}
+
+/// Pone o quita el icono (un id de Iconify).
+pub fn icono(db: &Db, id: &str, icono: Option<&str>) -> AppResult<()> {
+    if icono.is_some_and(|i| !crate::iconos::id_valido(i)) {
+        return Err(mal("icono"));
+    }
+    let n = db
+        .conn()?
+        .execute("UPDATE tags SET icon = ?2 WHERE id = ?1", (id, icono))?;
+    if n == 0 {
+        return Err(AppError::new(ErrorCode::NotFound).with("tag", id));
+    }
+    Ok(())
 }
 
 /// Borra la etiqueta (y se la quita a sus decks).
@@ -151,7 +176,7 @@ pub fn etiquetar(db: &Db, decks: &[String], poner: &[String], quitar: &[String])
 pub fn de_deck(db: &Db, deck: &str) -> AppResult<Vec<Tag>> {
     let c = db.conn()?;
     let mut st = c.prepare(
-        "SELECT t.id, t.name, t.color FROM tags t JOIN deck_tags dt ON dt.tag_id = t.id
+        "SELECT t.id, t.name, t.color, t.icon FROM tags t JOIN deck_tags dt ON dt.tag_id = t.id
          WHERE dt.deck_id = ?1 ORDER BY t.name COLLATE NOCASE",
     )?;
     let v = st
@@ -160,6 +185,7 @@ pub fn de_deck(db: &Db, deck: &str) -> AppResult<Vec<Tag>> {
                 id: r.get(0)?,
                 name: r.get(1)?,
                 color: r.get(2)?,
+                icon: r.get(3)?,
             })
         })?
         .collect::<Result<_, _>>()?;

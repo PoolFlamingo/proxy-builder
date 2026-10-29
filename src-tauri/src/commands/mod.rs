@@ -8,6 +8,7 @@ pub mod decklist;
 pub mod diseno;
 pub mod export;
 pub mod fuentes;
+pub mod iconos;
 pub mod identify;
 pub mod imagen;
 pub mod layout;

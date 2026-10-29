@@ -51,6 +51,8 @@ const PERMITIDOS: &[(&str, &str)] = &[
     // Las imágenes de Scryfall de las cartas de los demás en la mesa en red
     // (`red/imagenes.rs`): sin pasar por la API ni por su limitador.
     ("cards.scryfall.io", "/"),
+    // Los iconos de Iconify del selector (`iconos.rs`).
+    ("api.iconify.design", "/"),
 ];
 
 const NAVEGADOR: &str =

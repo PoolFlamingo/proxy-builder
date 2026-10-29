@@ -1,7 +1,7 @@
-import { ListChecks, User } from "lucide-react";
 import { useEffect, useRef } from "react";
 import type { Formato } from "@/bindings/Formato";
 import { Fila, Selector } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Input } from "@/components/ui/input";
 import { useBiblioteca } from "@/features/library/store";
@@ -78,7 +78,10 @@ export function EleccionEnSala({
 			{alNombre && (
 				<Fila etiqueta={t("Tu nombre")}>
 					<div className="relative">
-						<User className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+						<Icono
+							icon="lucide:user"
+							className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground"
+						/>
 						<Input
 							value={nombre}
 							onChange={(e) => poner(e.target.value)}
@@ -131,7 +134,7 @@ export function EleccionEnSala({
 					)}
 					{preparar.sinLista && l && (
 						<p className="flex items-start gap-1.5 rounded-md bg-amber-500/10 p-1.5 text-[11px] text-amber-600 dark:text-amber-300">
-							<ListChecks className="mt-0.5 size-3.5 shrink-0" />
+							<Icono icon="lucide:list-checks" className="mt-0.5 size-3.5 shrink-0" />
 							{t(
 								"Este deck tiene {n} cartas y en Commander se juega con 100: haz una lista con el comandante y 99 más.",
 								{ n: l.cuentan },

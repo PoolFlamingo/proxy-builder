@@ -1,8 +1,8 @@
-import { Languages, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { CardDesign } from "@/bindings/CardDesign";
 import type { Sugerencia } from "@/bindings/Sugerencia";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { idioma } from "@/lib/idiomas";
@@ -92,7 +92,11 @@ export function TraduccionSugerida({
 					{t("Traducción sugerida (experimental)")}
 				</span>
 				<Button size="xs" variant="outline" onClick={buscar} disabled={buscando}>
-					{buscando ? <Loader2 className="animate-spin" /> : <Languages />}
+					{buscando ? (
+						<Icono icon="lucide:loader-2" className="animate-spin" />
+					) : (
+						<Icono icon="lucide:languages" />
+					)}
 					{t("Buscar frases oficiales")}
 				</Button>
 			</div>

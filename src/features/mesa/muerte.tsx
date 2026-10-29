@@ -1,10 +1,10 @@
-import { Skull } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useShallow } from "zustand/react/shallow";
 import type { Causa } from "@/bindings/Causa";
 import type { IdJugador } from "@/bindings/IdJugador";
 import { Selector } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -132,7 +132,7 @@ function ConfirmarMuerte() {
 			<DialogContent className="sm:max-w-sm" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-2">
-						<Skull className="size-4 text-rose-400" />
+						<Icono icon="game-icons:death-skull" className="size-4 text-rose-400" />
 						{soyYo
 							? t("¿Confirmas que estás fuera?")
 							: t("¿Confirmas que {quien} está fuera?", { quien: j.nombre })}
@@ -169,7 +169,7 @@ function ConfirmarMuerte() {
 						variant="destructive"
 						onClick={() => void hacer({ que: "eliminar", jugador: pendiente, por })}
 					>
-						<Skull className="size-4" />
+						<Icono icon="game-icons:death-skull" className="size-4" />
 						{soyYo ? t("Estoy fuera") : t("Está fuera")}
 					</Button>
 				</DialogFooter>

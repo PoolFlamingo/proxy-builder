@@ -1,6 +1,6 @@
-import { Check, Minus, Monitor, Moon, Palette, Plus, Sun } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { CampoNumero } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
@@ -64,7 +64,7 @@ function MiniCheck({
 					checked ? "border-primary bg-primary text-primary-foreground" : "border-input",
 				)}
 			>
-				{checked && <Check className="size-2.5" />}
+				{checked && <Icono icon="lucide:check" className="size-2.5" />}
 			</span>
 			{label}
 		</button>
@@ -154,15 +154,15 @@ export function Appearance() {
 						onValueChange={(v) => v && setMode(v as typeof mode)}
 					>
 						<ToggleGroupItem value="light" className="gap-1.5 px-3 text-xs">
-							<Sun className="size-3.5" />
+							<Icono icon="lucide:sun" className="size-3.5" />
 							{t("Claro")}
 						</ToggleGroupItem>
 						<ToggleGroupItem value="dark" className="gap-1.5 px-3 text-xs">
-							<Moon className="size-3.5" />
+							<Icono icon="lucide:moon" className="size-3.5" />
 							{t("Oscuro")}
 						</ToggleGroupItem>
 						<ToggleGroupItem value="system" className="gap-1.5 px-3 text-xs">
-							<Monitor className="size-3.5" />
+							<Icono icon="lucide:monitor" className="size-3.5" />
 							{t("Sistema")}
 						</ToggleGroupItem>
 					</ToggleGroup>
@@ -188,7 +188,7 @@ export function Appearance() {
 							onClick={() => setScale(Math.max(ESCALA_MIN, Math.round(scale * 100) - 5) / 100)}
 							aria-label={t("Reducir")}
 						>
-							<Minus />
+							<Icono icon="lucide:minus" />
 						</Button>
 						<CampoNumero
 							valor={Math.round(scale * 100)}
@@ -208,7 +208,7 @@ export function Appearance() {
 							onClick={() => setScale(Math.min(ESCALA_MAX, Math.round(scale * 100) + 5) / 100)}
 							aria-label={t("Ampliar")}
 						>
-							<Plus />
+							<Icono icon="lucide:plus" />
 						</Button>
 						<Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setScale(1)}>
 							100 %
@@ -347,7 +347,7 @@ export function Appearance() {
 					span
 					headerRight={
 						<Button size="sm" variant="outline" onClick={() => setMasTemas(true)}>
-							<Palette />
+							<Icono icon="lucide:palette" />
 							{t("Más temas…")}
 						</Button>
 					}
@@ -371,7 +371,7 @@ export function Appearance() {
 								/>
 								<span className="truncate text-xs font-medium">{tema.label}</span>
 								{theme === tema.name && (
-									<Check className="ml-auto size-3.5 shrink-0 text-primary" />
+									<Icono icon="lucide:check" className="ml-auto size-3.5 shrink-0 text-primary" />
 								)}
 							</button>
 						))}

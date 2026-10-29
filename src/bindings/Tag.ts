@@ -7,4 +7,8 @@ export type Tag = { id: string, name: string,
 /**
  * Uno de [`COLORES`].
  */
-color: string, };
+color: string, 
+/**
+ * Un id de Iconify (`game-icons:crown`), si se le puso.
+ */
+icon: string | null, };

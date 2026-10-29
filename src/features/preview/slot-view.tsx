@@ -1,10 +1,10 @@
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { ImageOff, Lock, Plus } from "lucide-react";
 import { memo, useCallback } from "react";
 import type { DeckCard } from "@/bindings/DeckCard";
 import type { FaceImage } from "@/bindings/FaceImage";
 import type { PrintSettings } from "@/bindings/PrintSettings";
 import type { Slot } from "@/bindings/Slot";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { insignias } from "@/lib/cartas";
@@ -139,11 +139,11 @@ export const SlotView = memo(function SlotView({
 						/>
 					) : hueco ? (
 						<div className="flex size-full items-center justify-center text-muted-foreground/60">
-							<Plus className="size-5" />
+							<Icono icon="lucide:plus" className="size-5" />
 						</div>
 					) : !imagen ? (
 						<div className="flex size-full flex-col items-center justify-center gap-1 p-2 text-center text-[10px] text-muted-foreground">
-							<ImageOff className="size-4" />
+							<Icono icon="lucide:image-off" className="size-4" />
 							{carta?.meta.name}
 						</div>
 					) : null}
@@ -177,7 +177,7 @@ export const SlotView = memo(function SlotView({
 				)}
 				{carta?.locked && (
 					<span className="absolute top-1 right-1 rounded-full bg-background/85 p-0.5 shadow-sm">
-						<Lock className="size-2.5" />
+						<Icono icon="lucide:lock" className="size-2.5" />
 					</span>
 				)}
 				{info && carta && !hueco && (

@@ -1,8 +1,8 @@
-import { Loader2 } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { ArtRef } from "@/bindings/ArtRef";
 import type { DeckCard } from "@/bindings/DeckCard";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -187,7 +187,7 @@ export function RecortarDialog({
 							onClick={recortar}
 							disabled={!elegida || ocupado || zona.w < 0.05 || zona.h < 0.05}
 						>
-							{ocupado && <Loader2 className="animate-spin" />}
+							{ocupado && <Icono icon="lucide:loader-2" className="animate-spin" />}
 							{t("Usar esta zona")}
 						</Button>
 					</DialogFooter>

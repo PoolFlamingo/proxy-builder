@@ -77,6 +77,12 @@ pub fn tag_update(
     etiquetas::update(&state.db, &id, &name, &color)
 }
 
+/// El icono de una etiqueta (`None`: sin icono).
+#[tauri::command]
+pub fn tag_icon_set(state: State<'_, AppState>, id: String, icon: Option<String>) -> AppResult<()> {
+    etiquetas::icono(&state.db, &id, icon.as_deref())
+}
+
 #[tauri::command]
 pub fn tag_delete(state: State<'_, AppState>, id: String) -> AppResult<()> {
     etiquetas::delete(&state.db, &id)

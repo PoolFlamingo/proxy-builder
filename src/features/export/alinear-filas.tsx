@@ -1,8 +1,8 @@
-import { Crosshair, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import type { Offset } from "@/bindings/Offset";
 import type { RowOffsets } from "@/bindings/RowOffsets";
 import { CampoNumero } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -93,7 +93,7 @@ export function AlinearFilas({ filas }: { filas: number }) {
 			<PresetsOffsets kind="backOffsets" />
 			<div className="grid grid-cols-2 gap-1.5">
 				<Button size="sm" variant="outline" onClick={() => setMedir(true)}>
-					<Crosshair />
+					<Icono icon="lucide:crosshair" />
 					{t("Corregir con lo medido")}
 				</Button>
 				<Button
@@ -101,7 +101,7 @@ export function AlinearFilas({ filas }: { filas: number }) {
 					variant="ghost"
 					onClick={() => setAjustes((s) => ({ ...s, rowOffsets: { front: [], back: [] } }))}
 				>
-					<RotateCcw />
+					<Icono icon="lucide:rotate-ccw" />
 					{t("Restablecer")}
 				</Button>
 			</div>

@@ -15,6 +15,7 @@ pub mod diseno;
 pub mod enlace;
 pub mod error;
 pub mod fuentes;
+pub mod iconos;
 pub mod jobs;
 pub mod mesa;
 pub mod ocr;
@@ -167,6 +168,7 @@ pub fn run() {
             commands::library::tag_list,
             commands::library::tag_create,
             commands::library::tag_update,
+            commands::library::tag_icon_set,
             commands::library::tag_delete,
             commands::library::deck_tags_set,
             commands::library::deck_pin,
@@ -215,6 +217,11 @@ pub fn run() {
             commands::fuentes::names_index_info,
             commands::fuentes::names_index_download,
             commands::fuentes::names_index_remove,
+            commands::iconos::iconos_colecciones,
+            commands::iconos::iconos_nombres,
+            commands::iconos::iconos_buscar,
+            commands::iconos::iconos_datos,
+            commands::iconos::iconos_elegir,
             commands::temas::themes_catalog,
             commands::temas::theme_fetch,
             commands::temas::theme_install,

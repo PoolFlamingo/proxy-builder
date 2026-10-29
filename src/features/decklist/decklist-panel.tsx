@@ -1,22 +1,3 @@
-import {
-	Coins,
-	Download,
-	Eraser,
-	FileText,
-	Grid3x3,
-	ImagePlus,
-	Languages,
-	Link,
-	Link2,
-	ListPlus,
-	Loader2,
-	Plus,
-	RefreshCw,
-	SquareStack,
-	Trash2,
-	Upload,
-	X,
-} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDefaultLayout } from "react-resizable-panels";
 import { toast } from "sonner";
@@ -25,6 +6,7 @@ import type { ImagePolicy } from "@/bindings/ImagePolicy";
 import type { ParsedDecklist } from "@/bindings/ParsedDecklist";
 import { Fila, FilaInterruptor, type Opcion, Seccion, Selector } from "@/components/campos";
 import { Confirmar } from "@/components/confirmar";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -140,7 +122,7 @@ export function DecklistPanel() {
 						onClick={() => useUi.getState().abrir({ tipo: "sets" })}
 						disabled={ocupado}
 					>
-						<Grid3x3 />
+						<Icono icon="lucide:grid-3x3" />
 						{t("Sets")}
 					</Button>
 				</WithTooltip>
@@ -151,7 +133,7 @@ export function DecklistPanel() {
 						onClick={() => setSinHistorial({ decklistText: EJEMPLO })}
 						disabled={ocupado}
 					>
-						<FileText />
+						<Icono icon="lucide:file-text" />
 						{t("Ejemplo")}
 					</Button>
 				</WithTooltip>
@@ -162,7 +144,7 @@ export function DecklistPanel() {
 						onClick={() => setSinHistorial({ decklistText: "" })}
 						disabled={ocupado || texto === ""}
 					>
-						<Eraser />
+						<Icono icon="lucide:eraser" />
 						{t("Limpiar")}
 					</Button>
 				</WithTooltip>
@@ -200,7 +182,7 @@ export function DecklistPanel() {
 							</div>
 							<div className="grid grid-cols-[1fr_auto] gap-1.5">
 								<Button size="sm" onClick={pulsarCargar} disabled={ocupado || !leida?.cardCount}>
-									<Download />
+									<Icono icon="lucide:download" />
 									{t("Cargar lista")}
 								</Button>
 								<WithTooltip content={t("Añadir estas cartas al final del deck")}>
@@ -210,7 +192,7 @@ export function DecklistPanel() {
 										onClick={intentar(() => cargarLista(texto, "anadir", t))}
 										disabled={ocupado || !leida?.cardCount}
 									>
-										<Plus />
+										<Icono icon="lucide:plus" />
 										{t("Añadir")}
 									</Button>
 								</WithTooltip>
@@ -234,7 +216,7 @@ export function DecklistPanel() {
 										onClick={() => useUi.getState().abrir({ tipo: "fichas" })}
 										disabled={ocupado || !hayCartas}
 									>
-										<Coins />
+										<Icono icon="lucide:coins" />
 										{t("Detectar fichas")}
 									</Button>
 								</WithTooltip>
@@ -246,7 +228,7 @@ export function DecklistPanel() {
 								<Seccion
 									id="importar"
 									titulo={t("Importar desde URL")}
-									icono={<Link className="size-3.5" />}
+									icono={<Icono icon="lucide:link" className="size-3.5" />}
 								>
 									<div className="flex gap-1.5">
 										<Input
@@ -264,7 +246,11 @@ export function DecklistPanel() {
 											disabled={!url.trim() || importando}
 											onClick={importar}
 										>
-											{importando ? <Loader2 className="animate-spin" /> : <ListPlus />}
+											{importando ? (
+												<Icono icon="lucide:loader-2" className="animate-spin" />
+											) : (
+												<Icono icon="lucide:list-plus" />
+											)}
 											{t("Importar")}
 										</Button>
 									</div>
@@ -283,7 +269,7 @@ export function DecklistPanel() {
 								<Seccion
 									id="propias"
 									titulo={t("Imágenes propias")}
-									icono={<ImagePlus className="size-3.5" />}
+									icono={<Icono icon="lucide:image-plus" className="size-3.5" />}
 								>
 									<div className="grid grid-cols-2 gap-1.5">
 										<Button
@@ -291,16 +277,16 @@ export function DecklistPanel() {
 											variant="outline"
 											onClick={intentar(() => subirCartasPropias(t))}
 										>
-											<Upload />
+											<Icono icon="lucide:upload" />
 											{t("Subir cartas")}
 										</Button>
 										<Button size="sm" variant="outline" onClick={intentar(() => subirReverso(t))}>
-											<SquareStack />
+											<Icono icon="lucide:square-stack" />
 											{t("Subir reverso")}
 										</Button>
 									</div>
 									<Button size="xs" variant="ghost" onClick={intentar(() => reversoGenerico(t))}>
-										<RefreshCw />
+										<Icono icon="lucide:refresh-cw" />
 										{t("Volver al reverso genérico")}
 									</Button>
 									<div className="flex flex-col gap-1.5">
@@ -325,7 +311,7 @@ export function DecklistPanel() {
 												}}
 												disabled={ocupado}
 											>
-												<Link2 />
+												<Icono icon="lucide:link-2" />
 												{t("Vincular con una carta")}
 											</Button>
 										</WithTooltip>
@@ -340,7 +326,7 @@ export function DecklistPanel() {
 								<Seccion
 									id="opciones"
 									titulo={t("Opciones")}
-									icono={<Languages className="size-3.5" />}
+									icono={<Icono icon="lucide:languages" className="size-3.5" />}
 								>
 									<Fila etiqueta={t("Idioma de las cartas")}>
 										<Selector
@@ -390,12 +376,12 @@ export function DecklistPanel() {
 											onClick={intentar(() => reaplicarIdioma(t))}
 											disabled={ocupado || !hayCartas}
 										>
-											<Languages />
+											<Icono icon="lucide:languages" />
 											{t("Reaplicar idioma")}
 										</Button>
 									</WithTooltip>
 									<Button size="xs" variant="ghost" onClick={pedirLimpiarCache}>
-										<Trash2 />
+										<Icono icon="lucide:trash-2" />
 										{t("Limpiar caché de miniaturas")}
 									</Button>
 								</Seccion>
@@ -466,7 +452,7 @@ function PiePanel() {
 			{trabajo ? (
 				<>
 					<div className="flex items-center gap-2">
-						<Loader2 className="size-3.5 animate-spin text-primary" />
+						<Icono icon="lucide:loader-2" className="size-3.5 animate-spin text-primary" />
 						<span className="flex-1 truncate">{trabajo.fase}</span>
 						{trabajo.total > 0 && (
 							<span className="font-mono text-muted-foreground">
@@ -474,7 +460,7 @@ function PiePanel() {
 							</span>
 						)}
 						<Button size="xs" variant="ghost" onClick={cancelarTrabajo} disabled={!trabajo.jobId}>
-							<X />
+							<Icono icon="lucide:x" />
 							{t("Cancelar")}
 						</Button>
 					</div>

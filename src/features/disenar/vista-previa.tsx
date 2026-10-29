@@ -1,10 +1,10 @@
-import { Loader2, Move } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ArtFraming } from "@/bindings/ArtFraming";
 import type { Aviso } from "@/bindings/Aviso";
 import type { CapaInfo } from "@/bindings/CapaInfo";
 import type { CardDesign } from "@/bindings/CardDesign";
 import type { DesignLang } from "@/bindings/DesignLang";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { SelectorIdioma } from "@/components/selector-idioma";
 import { Switch } from "@/components/ui/switch";
@@ -291,7 +291,10 @@ export function VistaPrevia({
 					) : (
 						<div className="flex size-full items-center justify-center rounded-[4.5%] bg-muted">
 							{cargando ? (
-								<Loader2 className="size-6 animate-spin text-muted-foreground" />
+								<Icono
+									icon="lucide:loader-2"
+									className="size-6 animate-spin text-muted-foreground"
+								/>
 							) : (
 								<span className="px-6 text-center text-xs text-muted-foreground">
 									{t("Elige una carta de la lista para diseñarla.")}
@@ -316,14 +319,17 @@ export function VistaPrevia({
 						/>
 					)}
 					{pintando && !componer && (
-						<Loader2 className="absolute top-2 right-2 size-4 animate-spin text-white drop-shadow" />
+						<Icono
+							icon="lucide:loader-2"
+							className="absolute top-2 right-2 size-4 animate-spin text-white drop-shadow"
+						/>
 					)}
 					{tieneArte && mostrada && (
 						<WithTooltip
 							content={t("Arrastra para mover la ilustración; la rueda la acerca o aleja.")}
 						>
 							<span className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-muted-foreground">
-								<Move className="size-3.5" />
+								<Icono icon="lucide:move" className="size-3.5" />
 							</span>
 						</WithTooltip>
 					)}

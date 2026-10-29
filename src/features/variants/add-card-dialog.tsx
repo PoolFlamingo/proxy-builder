@@ -1,8 +1,8 @@
-import { Loader2, Plus, Repeat2, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { CardSummary } from "@/bindings/CardSummary";
 import { CampoNumero } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -178,7 +178,10 @@ function Contenido({ en, hueco, cambiar }: { en?: number; hueco?: string; cambia
 			<div className="flex flex-col gap-2.5" data-filtro="">
 				<div className="relative flex gap-1.5">
 					<div className="relative flex-1">
-						<Search className="pointer-events-none absolute top-2 left-2 size-4 text-muted-foreground" />
+						<Icono
+							icon="lucide:search"
+							className="pointer-events-none absolute top-2 left-2 size-4 text-muted-foreground"
+						/>
 						<Input
 							autoFocus
 							value={q}
@@ -206,7 +209,11 @@ function Contenido({ en, hueco, cambiar }: { en?: number; hueco?: string; cambia
 						)}
 					</div>
 					<Button size="sm" onClick={() => buscar(q)} disabled={buscando || !q.trim()}>
-						{buscando ? <Loader2 className="animate-spin" /> : <Search />}
+						{buscando ? (
+							<Icono icon="lucide:loader-2" className="animate-spin" />
+						) : (
+							<Icono icon="lucide:search" />
+						)}
 						{t("Buscar")}
 					</Button>
 				</div>
@@ -256,7 +263,11 @@ function Contenido({ en, hueco, cambiar }: { en?: number; hueco?: string; cambia
 							</Button>
 						)}
 						<Button size="sm" onClick={() => sustituir(false)} disabled={!elegida || anadiendo}>
-							{anadiendo ? <Loader2 className="animate-spin" /> : <Repeat2 />}
+							{anadiendo ? (
+								<Icono icon="lucide:loader-2" className="animate-spin" />
+							) : (
+								<Icono icon="lucide:repeat-2" />
+							)}
 							{t("Cambiar")}
 						</Button>
 					</>
@@ -272,7 +283,11 @@ function Contenido({ en, hueco, cambiar }: { en?: number; hueco?: string; cambia
 							ancho="w-16"
 						/>
 						<Button size="sm" onClick={() => anadir()} disabled={!elegida || anadiendo}>
-							{anadiendo ? <Loader2 className="animate-spin" /> : <Plus />}
+							{anadiendo ? (
+								<Icono icon="lucide:loader-2" className="animate-spin" />
+							) : (
+								<Icono icon="lucide:plus" />
+							)}
 							{t("Añadir")}
 						</Button>
 					</>

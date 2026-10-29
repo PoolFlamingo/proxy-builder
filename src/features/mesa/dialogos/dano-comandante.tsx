@@ -1,8 +1,8 @@
-import { Minus, Plus } from "lucide-react";
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import type { IdCarta } from "@/bindings/IdCarta";
 import type { IdJugador } from "@/bindings/IdJugador";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import {
 	Dialog,
@@ -101,14 +101,14 @@ function EncabezadoComandante({ c }: { c: Comandante }) {
 						disabled={lanzado === 0}
 						onClick={() => void hacer({ que: "lanzamientos", comandante: c.id, delta: -1 })}
 					>
-						<Minus className="size-3" />
+						<Icono icon="lucide:minus" className="size-3" />
 					</BotonPaso>
 					<b className="min-w-3 text-center tabular-nums">{lanzado}</b>
 					<BotonPaso
 						etiqueta={t("Una vez más")}
 						onClick={() => void hacer({ que: "lanzamientos", comandante: c.id, delta: 1 })}
 					>
-						<Plus className="size-3" />
+						<Icono icon="lucide:plus" className="size-3" />
 					</BotonPaso>
 				</span>
 			</div>
@@ -181,7 +181,7 @@ function Celda({
 					disabled={dano === 0}
 					onClick={() => mover(-1)}
 				>
-					<Minus className="size-3" />
+					<Icono icon="lucide:minus" className="size-3" />
 				</BotonPaso>
 				<b className="min-w-5 text-sm tabular-nums">{dano}</b>
 				<BotonPaso
@@ -192,7 +192,7 @@ function Celda({
 					disabled={propio}
 					onClick={() => mover(1)}
 				>
-					<Plus className="size-3" />
+					<Icono icon="lucide:plus" className="size-3" />
 				</BotonPaso>
 			</span>
 		</td>

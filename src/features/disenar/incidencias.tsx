@@ -1,7 +1,7 @@
-import { AlertTriangle, Download, Info, OctagonAlert } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Aviso } from "@/bindings/Aviso";
 import type { DesignLang } from "@/bindings/DesignLang";
+import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
@@ -12,28 +12,28 @@ import { type NivelAviso, nivelAviso, textoAviso } from "./textos";
 /** Lo que cambia de un nivel a otro: icono, color y textos. */
 const NIVELES: {
 	nivel: NivelAviso;
-	icono: typeof Info;
+	icono: string;
 	color: string;
 	titulo: string;
 	vacio: string;
 }[] = [
 	{
 		nivel: "error",
-		icono: OctagonAlert,
+		icono: "lucide:octagon-alert",
 		color: "text-destructive",
 		titulo: paraTraducir("Errores"),
 		vacio: paraTraducir("No hay ningún error que mostrar."),
 	},
 	{
 		nivel: "aviso",
-		icono: AlertTriangle,
+		icono: "lucide:triangle-alert",
 		color: "text-amber-700 dark:text-amber-400",
 		titulo: paraTraducir("Avisos"),
 		vacio: paraTraducir("No hay ningún aviso que mostrar."),
 	},
 	{
 		nivel: "info",
-		icono: Info,
+		icono: "lucide:info",
 		color: "text-muted-foreground",
 		titulo: paraTraducir("Información"),
 		vacio: paraTraducir("No hay ninguna información que mostrar."),
@@ -74,7 +74,7 @@ export function Incidencias({
 }
 
 function Contador({
-	icono: Icono,
+	icono,
 	color,
 	titulo,
 	vacio,
@@ -109,7 +109,7 @@ function Contador({
 					onFocus={abrir}
 					onBlur={cerrar}
 				>
-					<Icono className="size-3.5" />
+					<Icono icon={icono} className="size-3.5" />
 					{avisos.length}
 				</button>
 			</PopoverAnchor>
@@ -133,11 +133,11 @@ function Contador({
 									key={JSON.stringify(a)}
 									className="flex items-start gap-1.5 text-[11px] text-popover-foreground"
 								>
-									<Icono className={cn("mt-px size-3.5 shrink-0", color)} />
+									<Icono icon={icono} className={cn("mt-px size-3.5 shrink-0", color)} />
 									<span className="min-w-0 flex-1">{textoAviso(a, t)}</span>
 									{a.kind === "faltanLetras" && (
 										<Button size="xs" variant="outline" onClick={() => setLang(a.lang)}>
-											<Download />
+											<Icono icon="lucide:download" />
 											{t("Bajar las letras")}
 										</Button>
 									)}

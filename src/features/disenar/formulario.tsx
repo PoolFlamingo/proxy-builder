@@ -1,14 +1,3 @@
-import {
-	Clipboard,
-	Crop,
-	ImagePlus,
-	Lock,
-	RotateCcw,
-	Save,
-	Sparkles,
-	Trash2,
-	Upload,
-} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { ArtRef } from "@/bindings/ArtRef";
@@ -24,6 +13,7 @@ import type { PackInfo } from "@/bindings/PackInfo";
 import type { Parte } from "@/bindings/Parte";
 import type { Resumen } from "@/bindings/Resumen";
 import { Fila, FilaDeslizador, FilaInterruptor, Selector } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -400,7 +390,7 @@ function PestanaCarta({
 		<div className="flex flex-col gap-3">
 			<div className="flex flex-col gap-1.5 rounded-lg border bg-muted/40 p-2.5">
 				<div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
-					<Lock className="size-3.5" />
+					<Icono icon="lucide:lock" className="size-3.5" />
 					{t("Datos de la carta original (no se tocan)")}
 				</div>
 				<dl className="grid grid-cols-[fit-content(50%)_minmax(0,1fr)] gap-x-2.5 gap-y-1.5 text-xs">
@@ -553,7 +543,7 @@ function PestanaTextos({
 										cambiar((d) => conTextos(d, cara, lang, { rulesOverride: undefined }))
 									}
 								>
-									<RotateCcw />
+									<Icono icon="lucide:rotate-ccw" />
 									{t("Restaurar el oficial")}
 								</Button>
 							) : (
@@ -669,26 +659,26 @@ function PestanaArte({
 		<div className="flex flex-col gap-3">
 			<div className="grid grid-cols-2 gap-1.5">
 				<Button size="sm" variant="outline" onClick={subir} disabled={ocupado}>
-					<Upload />
+					<Icono icon="lucide:upload" />
 					{t("Subir imagen…")}
 				</Button>
 				<Button size="sm" variant="outline" onClick={pegar} disabled={ocupado}>
-					<Clipboard />
+					<Icono icon="lucide:clipboard" />
 					{t("Pegar")}
 				</Button>
 				<Button size="sm" variant="outline" onClick={scryfall} disabled={ocupado}>
-					<Sparkles />
+					<Icono icon="lucide:sparkles" />
 					{t("Arte de Scryfall")}
 				</Button>
 				<Button size="sm" variant="outline" onClick={() => setRecortar(true)} disabled={ocupado}>
-					<Crop />
+					<Icono icon="lucide:crop" />
 					{t("Recortar de una carta…")}
 				</Button>
 			</div>
 			{arte ? (
 				<>
 					<div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-						<ImagePlus className="size-3.5" />
+						<Icono icon="lucide:image-plus" className="size-3.5" />
 						<span className="flex-1">
 							{origen} · {arte.image.width}×{arte.image.height}
 						</span>
@@ -698,7 +688,7 @@ function PestanaArte({
 							onClick={() => cambiar((d) => conArte(d, cara, undefined))}
 							aria-label={t("Quitar la ilustración")}
 						>
-							<Trash2 />
+							<Icono icon="lucide:trash-2" />
 						</Button>
 					</div>
 					{arte.image.width < 900 && (
@@ -748,7 +738,7 @@ function PestanaArte({
 						className="self-start"
 						onClick={() => encuadre({ zoom: 1, offsetX: 0, offsetY: 0, rotation: 0 })}
 					>
-						<RotateCcw />
+						<Icono icon="lucide:rotate-ccw" />
 						{t("Encuadre inicial")}
 					</Button>
 				</>
@@ -1093,7 +1083,7 @@ function PestanaMarco({
 			</Fila>
 			{emblema.kind === "own" && (
 				<Button size="sm" variant="outline" className="self-end" onClick={subirEmblema}>
-					<Upload />
+					<Icono icon="lucide:upload" />
 					{t("Cambiar emblema…")}
 				</Button>
 			)}
@@ -1210,7 +1200,7 @@ function PestanaAjustes({
 							disabled={guardando}
 							onClick={pasarAColeccion}
 						>
-							<Save />
+							<Icono icon="lucide:save" />
 							{t("Usar estos ajustes en toda la colección «{c}»", { c: col.name })}
 						</Button>
 					)}

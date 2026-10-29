@@ -1,5 +1,5 @@
-import { Link2Off, Search } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -53,7 +53,10 @@ export function ListaCartas({
 	return (
 		<div className="flex h-full flex-col gap-2.5 p-2.5" data-tutorial="disenar-lista">
 			<div className="relative">
-				<Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+				<Icono
+					icon="lucide:search"
+					className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground"
+				/>
 				<Input
 					value={filtro}
 					onChange={(e) => setFiltro(e.target.value)}
@@ -116,7 +119,7 @@ export function ListaCartas({
 									</div>
 								</div>
 								{estado === "sinVincular" && (
-									<Link2Off className="size-3.5 text-muted-foreground" />
+									<Icono icon="lucide:link-2-off" className="size-3.5 text-muted-foreground" />
 								)}
 							</button>
 						);

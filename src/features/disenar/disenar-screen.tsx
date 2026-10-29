@@ -1,16 +1,3 @@
-import {
-	ChevronLeft,
-	ChevronRight,
-	CopyPlus,
-	Hash,
-	ImageDown,
-	Loader2,
-	Save,
-	SlidersHorizontal,
-	Trash2,
-	Undo2,
-	Wand2,
-} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDefaultLayout } from "react-resizable-panels";
 import { toast } from "sonner";
@@ -19,6 +6,7 @@ import type { Collection } from "@/bindings/Collection";
 import type { DesignLang } from "@/bindings/DesignLang";
 import type { PackInfo } from "@/bindings/PackInfo";
 import { Confirmar } from "@/components/confirmar";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -226,7 +214,7 @@ export function DisenarScreen() {
 					onClick={() => pasarConAviso(-1)}
 					aria-label={t("Carta anterior")}
 				>
-					<ChevronLeft />
+					<Icono icon="lucide:chevron-left" />
 				</Button>
 				<Button
 					size="sm"
@@ -234,7 +222,7 @@ export function DisenarScreen() {
 					onClick={() => pasarConAviso(1)}
 					aria-label={t("Carta siguiente")}
 				>
-					<ChevronRight />
+					<Icono icon="lucide:chevron-right" />
 				</Button>
 				<span className="text-[11px] text-muted-foreground">Alt+← / Alt+→</span>
 				<div className="ml-auto flex items-center gap-1.5">
@@ -249,7 +237,7 @@ export function DisenarScreen() {
 							onClick={() => renumerar(t, mensaje)}
 							disabled={!cartas?.some((c) => c.design)}
 						>
-							<Hash />
+							<Icono icon="lucide:hash" />
 							{t("Renumerar")}
 						</Button>
 					</WithTooltip>
@@ -258,7 +246,7 @@ export function DisenarScreen() {
 						variant="ghost"
 						onClick={() => useUi.getState().abrir({ tipo: "disenarDeck" })}
 					>
-						<Wand2 />
+						<Icono icon="lucide:wand-2" />
 						{t("Diseñar el deck")}
 					</Button>
 					<Button
@@ -267,7 +255,7 @@ export function DisenarScreen() {
 						onClick={() => useUi.getState().abrir({ tipo: "exportarPng" })}
 						disabled={!cartas?.some((c) => c.design)}
 					>
-						<ImageDown />
+						<Icono icon="lucide:image-down" />
 						{t("Exportar imágenes")}
 					</Button>
 					<Button
@@ -282,7 +270,7 @@ export function DisenarScreen() {
 						variant="ghost"
 						onClick={() => useUi.getState().abrir({ tipo: "recursosDiseno" })}
 					>
-						<SlidersHorizontal />
+						<Icono icon="lucide:sliders-horizontal" />
 						{t("Letras, marcos y símbolos")}
 					</Button>
 				</div>
@@ -372,7 +360,7 @@ export function DisenarScreen() {
 												onClick={() => void crearVariante()}
 												disabled={b.guardando}
 											>
-												<CopyPlus />
+												<Icono icon="lucide:copy-plus" />
 												{t("Crear variante")}
 											</Button>
 										</WithTooltip>
@@ -403,7 +391,7 @@ export function DisenarScreen() {
 									{tieneDiseno && (
 										<WithTooltip content={t("Quita el diseño y deja la carta como estaba.")}>
 											<Button size="sm" variant="ghost" onClick={() => b.quitar(!soloEsta)}>
-												<Trash2 />
+												<Icono icon="lucide:trash-2" />
 												{t("Quitar diseño")}
 											</Button>
 										</WithTooltip>
@@ -416,7 +404,7 @@ export function DisenarScreen() {
 											disabled={!b.cambiado}
 											aria-label={t("Descartar los cambios")}
 										>
-											<Undo2 />
+											<Icono icon="lucide:undo-2" />
 										</Button>
 									</WithTooltip>
 									<div className="ml-auto flex gap-1.5">
@@ -426,7 +414,11 @@ export function DisenarScreen() {
 											onClick={() => guardar(false)}
 											disabled={b.guardando}
 										>
-											{b.guardando ? <Loader2 className="animate-spin" /> : <Save />}
+											{b.guardando ? (
+												<Icono icon="lucide:loader-2" className="animate-spin" />
+											) : (
+												<Icono icon="lucide:save" />
+											)}
 											{t("Guardar")}
 										</Button>
 										<Button size="sm" onClick={() => guardar(true)} disabled={b.guardando}>
@@ -439,7 +431,7 @@ export function DisenarScreen() {
 					) : (
 						<div className="flex h-full items-center justify-center p-6 text-center text-xs text-muted-foreground">
 							{b.cargando ? (
-								<Loader2 className="size-5 animate-spin" />
+								<Icono icon="lucide:loader-2" className="size-5 animate-spin" />
 							) : (
 								t("Elige una carta de la lista para diseñarla.")
 							)}

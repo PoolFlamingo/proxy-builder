@@ -1,6 +1,6 @@
-import { Swords } from "lucide-react";
 import type { Intensidad } from "@/bindings/Intensidad";
 import { Fila, FilaDeslizador, FilaInterruptor, Seccion, Selector } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { MODO_RENDIMIENTO } from "@/features/mesa/fps";
 import { INTENSIDADES } from "@/features/mesa/sparring/textos";
@@ -22,7 +22,7 @@ export function AjustesMesa() {
 		<Seccion
 			id="ajustes-mesa"
 			titulo={t("Mesa de juego")}
-			icono={<Swords className="size-3.5" />}
+			icono={<Icono icon="lucide:swords" className="size-3.5" />}
 			abiertaAlPrincipio={false}
 		>
 			<h4 className="text-[11px] font-semibold text-muted-foreground uppercase">{t("Jugar")}</h4>

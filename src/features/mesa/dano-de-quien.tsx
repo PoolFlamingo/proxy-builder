@@ -1,8 +1,8 @@
-import { Swords, X } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import type { IdJugador } from "@/bindings/IdJugador";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -141,7 +141,7 @@ export function DanoDeQuien() {
 	return (
 		<div className="absolute top-14 left-1/2 z-[7500] flex max-w-[90%] -translate-x-1/2 flex-col gap-1.5 rounded-xl border border-white/15 bg-black/85 p-2.5 text-xs text-white shadow-lg backdrop-blur-md">
 			<div className="flex items-center gap-2">
-				<Swords className="size-3.5 text-amber-400" />
+				<Icono icon="game-icons:crossed-swords" className="size-3.5 text-amber-400" />
 				<span>
 					{t("{quien} ha recibido {dano} de daño en el turno de otro. ¿De quién fue?", {
 						quien: quien.nombre,
@@ -154,7 +154,7 @@ export function DanoDeQuien() {
 					className="ml-auto rounded p-0.5 text-white/60 hover:bg-white/10"
 					onClick={() => useDanoDe.getState().preguntar(null)}
 				>
-					<X className="size-3.5" />
+					<Icono icon="lucide:x" className="size-3.5" />
 				</button>
 			</div>
 			<div className="flex flex-wrap gap-1.5">

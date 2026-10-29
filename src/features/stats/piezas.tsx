@@ -1,6 +1,6 @@
-import { ChevronRight, MousePointerClick } from "lucide-react";
 import { useState } from "react";
 import type { CartaCuenta } from "@/bindings/CartaCuenta";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { WithTooltip } from "@/components/ui/with-tooltip";
@@ -145,7 +145,8 @@ export function ListaCartas({
 			disabled={cartas.length === 0}
 			className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-xs disabled:opacity-50"
 		>
-			<ChevronRight
+			<Icono
+				icon="lucide:chevron-right"
 				className={cn("size-3.5 shrink-0 transition-transform", abierta && "rotate-90")}
 			/>
 			{clase && <span className={cn("size-2.5 shrink-0 rounded-[3px]", clase)} />}
@@ -171,7 +172,7 @@ export function ListaCartas({
 							)
 						}
 					>
-						<MousePointerClick />
+						<Icono icon="lucide:mouse-pointer-click" />
 					</Button>
 				</WithTooltip>
 			</div>

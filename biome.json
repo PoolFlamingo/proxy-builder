@@ -89,6 +89,7 @@
 			"!public",
 			"!plans",
 			"!src/bindings",
+			"!src/lib/iconos/incluidos.ts",
 			"!src-tauri/crates/proxy-core/tests/compatibilidad",
 			"!src-tauri/crates/mesa/tests/catalogo",
 			"!src/stores/__tests__/fixtures",

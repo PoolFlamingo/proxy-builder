@@ -1,8 +1,8 @@
-import { Loader2, Replace, ReplaceAll } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { CardSummary } from "@/bindings/CardSummary";
 import type { DeckCard } from "@/bindings/DeckCard";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -127,7 +127,10 @@ function Contenido({ carta }: { carta: DeckCard }) {
 					<RaizScroll.Provider value={viewport}>
 						{cargando && !lista ? (
 							<div className="flex justify-center py-16">
-								<Loader2 className="size-5 animate-spin text-muted-foreground" />
+								<Icono
+									icon="lucide:loader-2"
+									className="size-5 animate-spin text-muted-foreground"
+								/>
 							</div>
 						) : lista && lista.length === 0 ? (
 							<p className="py-16 text-center text-xs text-muted-foreground">
@@ -171,12 +174,16 @@ function Contenido({ carta }: { carta: DeckCard }) {
 						onClick={() => aplicar(true)}
 						disabled={!elegida || aplicando}
 					>
-						<ReplaceAll />
+						<Icono icon="lucide:replace-all" />
 						{t("Reemplazar las {n} copias", { n: copias })}
 					</Button>
 				)}
 				<Button size="sm" onClick={() => aplicar(false)} disabled={!elegida || aplicando}>
-					{aplicando ? <Loader2 className="animate-spin" /> : <Replace />}
+					{aplicando ? (
+						<Icono icon="lucide:loader-2" className="animate-spin" />
+					) : (
+						<Icono icon="lucide:replace" />
+					)}
 					{t("Reemplazar solo esta")}
 				</Button>
 			</DialogFooter>

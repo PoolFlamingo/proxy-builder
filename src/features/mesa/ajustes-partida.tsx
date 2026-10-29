@@ -1,7 +1,7 @@
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { GripVertical } from "lucide-react";
 import type { Formato } from "@/bindings/Formato";
 import { Fila, FilaInterruptor, Selector } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { cn } from "@/lib/utils";
 import { COLORES_EQUIPO } from "./colores";
@@ -249,7 +249,7 @@ export function FilaOrdenable({
 				aria-label={etiqueta}
 				className="flex size-6 shrink-0 cursor-grab touch-none items-center justify-center rounded text-muted-foreground hover:bg-accent active:cursor-grabbing"
 			>
-				<GripVertical className="size-3.5" />
+				<Icono icon="lucide:grip-vertical" className="size-3.5" />
 			</button>
 			{children}
 		</div>

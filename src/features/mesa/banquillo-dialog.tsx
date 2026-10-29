@@ -1,8 +1,8 @@
-import { Check, Minus, Play, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { IdJugador } from "@/bindings/IdJugador";
 import type { VistaBanquillo } from "@/bindings/VistaBanquillo";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -199,7 +199,11 @@ export function BanquilloDialog({ onCerrar }: { onCerrar: () => void }) {
 						{t("Cancelar")}
 					</Button>
 					<Button disabled={!todoValido || empezando} onClick={() => void empezar()}>
-						{invitado ? <Check className="size-4" /> : <Play className="size-4" />}
+						{invitado ? (
+							<Icono icon="lucide:check" className="size-4" />
+						) : (
+							<Icono icon="lucide:play" className="size-4" />
+						)}
 						{invitado ? t("Guardar") : t("Empezar la partida {siguiente}", { siguiente })}
 					</Button>
 				</DialogFooter>
@@ -249,7 +253,7 @@ function Columna({
 									disabled={n === 0}
 									onClick={() => onTocar(g.nombre, -1, g.ids.length)}
 								>
-									<Minus className="size-3" />
+									<Icono icon="lucide:minus" className="size-3" />
 								</Paso>
 								<b className="min-w-3 text-center tabular-nums">{n}</b>
 								<Paso
@@ -257,7 +261,7 @@ function Columna({
 									disabled={n >= g.ids.length}
 									onClick={() => onTocar(g.nombre, 1, g.ids.length)}
 								>
-									<Plus className="size-3" />
+									<Icono icon="lucide:plus" className="size-3" />
 								</Paso>
 							</li>
 						);

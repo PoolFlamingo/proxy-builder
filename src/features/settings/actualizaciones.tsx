@@ -1,6 +1,6 @@
-import { ArrowUpCircle, Download, Loader2, RefreshCw } from "lucide-react";
 import { useEffect, useId } from "react";
 import { toast } from "sonner";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -42,12 +42,16 @@ export function Actualizaciones() {
 		<div className="flex flex-col gap-2 rounded-lg border p-2.5">
 			<div className="flex items-center justify-between gap-2.5">
 				<span className="flex items-center gap-2 text-xs font-medium">
-					<RefreshCw className="size-3.5" />
+					<Icono icon="lucide:refresh-cw" className="size-3.5" />
 					{t("Actualizaciones")}
 				</span>
 				{soportada && (
 					<Button size="xs" variant="outline" onClick={buscar} disabled={ocupada}>
-						{paso === "buscando" ? <Loader2 className="animate-spin" /> : <RefreshCw />}
+						{paso === "buscando" ? (
+							<Icono icon="lucide:loader-2" className="animate-spin" />
+						) : (
+							<Icono icon="lucide:refresh-cw" />
+						)}
 						{t("Buscar ahora")}
 					</Button>
 				)}
@@ -80,7 +84,7 @@ export function Actualizaciones() {
 							className="self-start"
 							onClick={() => void useActualizacion.getState().bajar()}
 						>
-							<Download />
+							<Icono icon="lucide:download" />
 							{t("Descargar la {version}", { version: info.version })}
 						</Button>
 					)}
@@ -91,7 +95,11 @@ export function Actualizaciones() {
 							onClick={instalar}
 							disabled={paso === "instalando"}
 						>
-							{paso === "instalando" ? <Loader2 className="animate-spin" /> : <ArrowUpCircle />}
+							{paso === "instalando" ? (
+								<Icono icon="lucide:loader-2" className="animate-spin" />
+							) : (
+								<Icono icon="lucide:arrow-up-circle" />
+							)}
 							{t("Reiniciar y actualizar")}
 						</Button>
 					)}
@@ -164,7 +172,11 @@ export function ReiniciarParaActualizar() {
 			}}
 			disabled={paso === "instalando"}
 		>
-			{paso === "instalando" ? <Loader2 className="animate-spin" /> : <ArrowUpCircle />}
+			{paso === "instalando" ? (
+				<Icono icon="lucide:loader-2" className="animate-spin" />
+			) : (
+				<Icono icon="lucide:arrow-up-circle" />
+			)}
 			{t("Reiniciar y actualizar a la {version}", { version: info.version })}
 		</Button>
 	);

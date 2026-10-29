@@ -1,6 +1,6 @@
-import { RotateCcw } from "lucide-react";
 import type { FineTuning } from "@/bindings/FineTuning";
 import { Fila, FilaDeslizador, FilaInterruptor, Selector } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 
@@ -271,7 +271,7 @@ export function AjustesFinos({
 				disabled={!hayAjustes(valor)}
 				onClick={() => onChange(AJUSTES_CERO)}
 			>
-				<RotateCcw />
+				<Icono icon="lucide:rotate-ccw" />
 				{t("Todo como viene en el marco")}
 			</Button>
 		</div>

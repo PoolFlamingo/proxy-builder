@@ -1,8 +1,8 @@
-import { Loader2, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { DeckCard } from "@/bindings/DeckCard";
 import type { FichaPropuesta } from "@/bindings/FichaPropuesta";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -91,7 +91,7 @@ export function FichasDialog() {
 					<RaizScroll.Provider value={viewport}>
 						{propuestas === null ? (
 							<p className="flex items-center justify-center gap-2 py-16 text-xs text-muted-foreground">
-								<Loader2 className="size-4 animate-spin" />
+								<Icono icon="lucide:loader-2" className="size-4 animate-spin" />
 								{t("Buscando las fichas…")}
 							</p>
 						) : propuestas.length === 0 ? (
@@ -124,7 +124,11 @@ export function FichasDialog() {
 						{t("Cancelar")}
 					</Button>
 					<Button size="sm" onClick={anadir} disabled={anadiendo || elegidas.size === 0}>
-						{anadiendo ? <Loader2 className="animate-spin" /> : <Plus />}
+						{anadiendo ? (
+							<Icono icon="lucide:loader-2" className="animate-spin" />
+						) : (
+							<Icono icon="lucide:plus" />
+						)}
 						{t("Añadir {n} fichas", { n: elegidas.size })}
 					</Button>
 				</DialogFooter>

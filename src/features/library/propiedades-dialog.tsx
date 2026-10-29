@@ -1,7 +1,7 @@
-import { Check, Layers, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { DeckCard } from "@/bindings/DeckCard";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -160,7 +160,7 @@ export function PropiedadesDialog({
 											className="h-5 rounded-full px-2 text-[10px]"
 											onClick={() => onNuevaEtiqueta([deck.id])}
 										>
-											<Plus />
+											<Icono icon="lucide:plus" />
 											{t("Nueva")}
 										</Button>
 									</div>
@@ -186,7 +186,7 @@ export function PropiedadesDialog({
 										<RaizScroll.Provider value={viewport}>
 											{cartas === null ? (
 												<div className="flex h-24 items-center justify-center text-muted-foreground">
-													<Layers className="size-5 animate-pulse" />
+													<Icono icon="lucide:layers" className="size-5 animate-pulse" />
 												</div>
 											) : (
 												<div className="grid grid-cols-[repeat(auto-fill,minmax(56px,1fr))] gap-1.5 p-1.5">
@@ -331,7 +331,7 @@ function OpcionPortada({
 			)}
 			{elegida && (
 				<span className="absolute right-0.5 bottom-0.5 rounded-full bg-primary p-0.5 text-primary-foreground">
-					<Check className="size-2.5" />
+					<Icono icon="lucide:check" className="size-2.5" />
 				</span>
 			)}
 		</button>

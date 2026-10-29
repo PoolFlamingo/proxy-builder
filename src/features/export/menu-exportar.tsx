@@ -1,6 +1,6 @@
-import { ClipboardCopy, Download, EllipsisVertical, Package } from "lucide-react";
 import { toast } from "sonner";
 import type { FormatoLista } from "@/bindings/FormatoLista";
+import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -106,7 +106,7 @@ export function MenuExportar({ deshabilitado }: { deshabilitado: boolean }) {
 						aria-label={t("Más formas de exportar")}
 						className="h-auto w-8 shrink-0 rounded-l-none border-l border-primary-foreground/25"
 					>
-						<EllipsisVertical />
+						<Icono icon="lucide:ellipsis-vertical" />
 					</Button>
 				</DropdownMenuTrigger>
 			</WithTooltip>
@@ -116,17 +116,17 @@ export function MenuExportar({ deshabilitado }: { deshabilitado: boolean }) {
 				</DropdownMenuLabel>
 				{COPIAR.map(([formato, nombre]) => (
 					<DropdownMenuItem key={formato} onSelect={() => void copiar(formato, nombre)}>
-						<ClipboardCopy />
+						<Icono icon="lucide:clipboard-copy" />
 						{t(nombre)}
 					</DropdownMenuItem>
 				))}
 				<DropdownMenuSeparator />
 				<DropdownMenuItem onSelect={() => void descargarMtgo()}>
-					<Download />
+					<Icono icon="lucide:download" />
 					{t("Descargar para MTGO (.txt)")}
 				</DropdownMenuItem>
 				<DropdownMenuItem onSelect={() => void paquete()}>
-					<Package />
+					<Icono icon="lucide:package" />
 					{t("Deck con sus imágenes (.pbdeck)")}
 				</DropdownMenuItem>
 			</DropdownMenuContent>

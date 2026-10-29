@@ -1,6 +1,6 @@
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { useUi, type Vista } from "@/stores/ui-store";
@@ -149,7 +149,7 @@ function Recorrido({ vista }: { vista: Vista }) {
 						onClick={cerrar}
 						aria-label={t("Cerrar el tutorial")}
 					>
-						<X />
+						<Icono icon="lucide:x" />
 					</Button>
 				</div>
 				<p className="leading-relaxed text-muted-foreground">{t(paso.texto)}</p>
@@ -159,13 +159,13 @@ function Recorrido({ vista }: { vista: Vista }) {
 					</span>
 					{i > 0 && (
 						<Button size="sm" variant="ghost" onClick={() => setI(i - 1)}>
-							<ChevronLeft />
+							<Icono icon="lucide:chevron-left" />
 							{t("Anterior")}
 						</Button>
 					)}
 					<Button ref={siguiente} size="sm" onClick={() => (ultimo ? cerrar() : setI(i + 1))}>
 						{ultimo ? t("Terminar") : t("Siguiente")}
-						{!ultimo && <ChevronRight />}
+						{!ultimo && <Icono icon="lucide:chevron-right" />}
 					</Button>
 				</div>
 			</div>

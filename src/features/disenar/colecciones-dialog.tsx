@@ -1,4 +1,3 @@
-import { Copy, Loader2, MoreHorizontal, Plus, Save, Trash2, Upload, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { Collection } from "@/bindings/Collection";
@@ -6,6 +5,7 @@ import type { LetraInfo } from "@/bindings/LetraInfo";
 import type { PackInfo } from "@/bindings/PackInfo";
 import { Fila, FilaDeslizador, Selector } from "@/components/campos";
 import { Confirmar } from "@/components/confirmar";
+import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -209,13 +209,16 @@ function Contenido() {
 			<div className="flex min-h-0 flex-1 gap-2.5">
 				<div className="flex w-56 shrink-0 flex-col gap-2.5 rounded-md border p-2.5">
 					<Button size="sm" variant="outline" onClick={crear}>
-						<Plus />
+						<Icono icon="lucide:plus" />
 						{t("Nueva colección")}
 					</Button>
 					<ScrollArea className="min-h-0 flex-1">
 						<ul className="flex flex-col gap-1 p-1 pr-2.5">
 							{lista === null && (
-								<Loader2 className="mx-auto size-4 animate-spin text-muted-foreground" />
+								<Icono
+									icon="lucide:loader-2"
+									className="mx-auto size-4 animate-spin text-muted-foreground"
+								/>
 							)}
 							{lista?.length === 0 && elegida !== "" && (
 								<li className="text-xs text-muted-foreground">
@@ -255,11 +258,11 @@ function Contenido() {
 								{original && (
 									<>
 										<Button size="sm" variant="ghost" onClick={() => setBorrar(original)}>
-											<Trash2 />
+											<Icono icon="lucide:trash-2" />
 											{t("Borrar")}
 										</Button>
 										<Button size="sm" variant="ghost" onClick={() => void duplicar(original)}>
-											<Copy />
+											<Icono icon="lucide:copy" />
 											{t("Duplicar")}
 										</Button>
 									</>
@@ -278,7 +281,11 @@ function Contenido() {
 										onClick={guardar}
 										disabled={!cambiada || guardando || !borrador.name.trim()}
 									>
-										{guardando ? <Loader2 className="animate-spin" /> : <Save />}
+										{guardando ? (
+											<Icono icon="lucide:loader-2" className="animate-spin" />
+										) : (
+											<Icono icon="lucide:save" />
+										)}
 										{t("Guardar")}
 									</Button>
 								</div>
@@ -343,17 +350,17 @@ function FilaColeccion({
 						className="mr-0.5 hidden group-hover:inline-flex data-[state=open]:inline-flex"
 						aria-label={t("Más acciones")}
 					>
-						<MoreHorizontal />
+						<Icono icon="lucide:more-horizontal" />
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="start" className="text-xs">
 					<DropdownMenuItem onSelect={onDuplicar}>
-						<Copy />
+						<Icono icon="lucide:copy" />
 						{t("Duplicar")}
 					</DropdownMenuItem>
 					<DropdownMenuSeparator />
 					<DropdownMenuItem variant="destructive" onSelect={onBorrar}>
-						<Trash2 />
+						<Icono icon="lucide:trash-2" />
 						{t("Borrar")}
 					</DropdownMenuItem>
 				</DropdownMenuContent>
@@ -486,7 +493,7 @@ function Editor({
 					/>
 				)}
 				<Button size="sm" variant="outline" onClick={subirEmblema}>
-					<Upload />
+					<Icono icon="lucide:upload" />
 					{c.emblem ? t("Cambiar…") : t("Subir…")}
 				</Button>
 				{c.emblem && (
@@ -496,7 +503,7 @@ function Editor({
 						onClick={() => poner({ emblem: undefined })}
 						aria-label={t("Quitar emblema")}
 					>
-						<X />
+						<Icono icon="lucide:x" />
 					</Button>
 				)}
 			</Fila>

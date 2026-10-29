@@ -1,6 +1,6 @@
-import { Ghost } from "lucide-react";
 import { useState } from "react";
 import type { Intensidad } from "@/bindings/Intensidad";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -65,7 +65,7 @@ export function BotonSparring() {
 						)}
 						data-tutorial="mesa-sparring"
 					>
-						<Ghost className="size-3.5 shrink-0" />
+						<Icono icon="game-icons:ghost" className="size-3.5 shrink-0" />
 						<span className="flex flex-col leading-none">
 							<span className="text-[10px] font-semibold">{t("Sparring")}</span>
 							<span className={cn("text-[9px]", !encendido && "text-white/50")}>

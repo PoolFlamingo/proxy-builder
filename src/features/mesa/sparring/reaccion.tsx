@@ -1,7 +1,7 @@
-import { Ghost } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Decision } from "@/bindings/Decision";
 import type { IdCarta } from "@/bindings/IdCarta";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -110,7 +110,7 @@ export function ReaccionPendiente() {
 			className="absolute top-16 left-1/2 z-[8500] flex w-[22rem] -translate-x-1/2 flex-col gap-2.5 rounded-xl border border-primary/50 bg-card/95 p-3 text-xs shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95"
 		>
 			<div className="flex items-center gap-1.5 text-[10px] font-semibold tracking-wide text-primary uppercase">
-				<Ghost className="size-3.5" />
+				<Icono icon="game-icons:ghost" className="size-3.5" />
 				{t("Rival fantasma")}
 			</div>
 			<h3 className="text-sm font-semibold">{titulo(r, objetivo, t)}</h3>

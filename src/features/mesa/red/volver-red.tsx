@@ -1,6 +1,6 @@
-import { Plug, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { VueltaRed } from "@/bindings/VueltaRed";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { localeDe } from "@/lib/idiomas";
@@ -51,11 +51,11 @@ export function VolverARed() {
 			</p>
 			<div className="flex gap-2.5">
 				<Button size="sm" className="flex-1" disabled={trabajo} onClick={() => void volver()}>
-					<Plug className="size-3.5" />
+					<Icono icon="lucide:plug" className="size-3.5" />
 					{t("Volver a la partida")}
 				</Button>
 				<Button size="sm" variant="outline" onClick={olvidar}>
-					<X className="size-3.5" />
+					<Icono icon="lucide:x" className="size-3.5" />
 					{t("Olvidar")}
 				</Button>
 			</div>

@@ -1,8 +1,8 @@
-import { Flag } from "lucide-react";
 import { useState } from "react";
 import type { ComoGano } from "@/bindings/ComoGano";
 import type { IdJugador } from "@/bindings/IdJugador";
 import { Selector } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -132,7 +132,7 @@ export function TerminarDialog() {
 							void hacer({ que: "terminar", resultado: { ganadores, como, nota } });
 						}}
 					>
-						<Flag className="size-4" />
+						<Icono icon="game-icons:checkered-flag" className="size-4" />
 						{t("Terminar")}
 					</Button>
 				</DialogFooter>

@@ -1,10 +1,10 @@
-import { AlertTriangle, Loader2, RotateCcw, RotateCw, Undo2 } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import type { Adjustments } from "@/bindings/Adjustments";
 import type { CardEdits } from "@/bindings/CardEdits";
 import type { DeckCard } from "@/bindings/DeckCard";
 import type { Rotation } from "@/bindings/Rotation";
 import { FilaDeslizador } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -176,12 +176,15 @@ function Contenido({ carta }: { carta: DeckCard }) {
 							/>
 						)}
 						{cargando && (
-							<Loader2 className="absolute top-2 right-2 size-4 animate-spin text-white drop-shadow" />
+							<Icono
+								icon="lucide:loader-2"
+								className="absolute top-2 right-2 size-4 animate-spin text-white drop-shadow"
+							/>
 						)}
 					</div>
 					{recortaElPie && (
 						<p className="flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-400">
-							<AlertTriangle className="size-3.5" />
+							<Icono icon="lucide:alert-triangle" className="size-3.5" />
 							{t("Con este zoom se recorta el pie de la carta (artista y copyright).")}
 						</p>
 					)}
@@ -196,7 +199,7 @@ function Contenido({ carta }: { carta: DeckCard }) {
 								onClick={() => girar(-1)}
 								aria-label={t("Girar a la izquierda")}
 							>
-								<RotateCcw />
+								<Icono icon="lucide:rotate-ccw" />
 							</Button>
 							<span className="w-10 text-center font-mono text-[11px]">
 								{GIROS.indexOf(borrador.rotation) * 90}°
@@ -207,7 +210,7 @@ function Contenido({ carta }: { carta: DeckCard }) {
 								onClick={() => girar(1)}
 								aria-label={t("Girar a la derecha")}
 							>
-								<RotateCw />
+								<Icono icon="lucide:rotate-cw" />
 							</Button>
 						</div>
 						<FilaDeslizador
@@ -256,7 +259,7 @@ function Contenido({ carta }: { carta: DeckCard }) {
 					onClick={() => setBorrador(EDICION_NEUTRA)}
 					disabled={JSON.stringify(borrador) === JSON.stringify(EDICION_NEUTRA)}
 				>
-					<Undo2 />
+					<Icono icon="lucide:undo-2" />
 					{t("Restablecer todo")}
 				</Button>
 				<div className="flex flex-wrap justify-end gap-2">

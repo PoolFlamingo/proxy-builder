@@ -1,5 +1,5 @@
-import { Check, X } from "lucide-react";
 import type { DeckStats } from "@/bindings/DeckStats";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { cn } from "@/lib/utils";
@@ -36,7 +36,11 @@ export function Legalidad({ s }: { s: DeckStats }) {
 										: "text-muted-foreground",
 								)}
 							>
-								{l.legal ? <Check className="size-3.5" /> : <X className="size-3.5" />}
+								{l.legal ? (
+									<Icono icon="lucide:check" className="size-3.5" />
+								) : (
+									<Icono icon="lucide:x" className="size-3.5" />
+								)}
 								{l.format}
 								{!l.legal && l.offenders.length > 0 && (
 									<span className="ml-auto font-mono text-[10px]">{l.offenders.length}</span>
@@ -50,7 +54,7 @@ export function Legalidad({ s }: { s: DeckStats }) {
 			<Bloque titulo={t("Construcción como {c}", { c: t(CLASES_MAZO[s.kind] ?? s.kind) })}>
 				{s.problems.length === 0 ? (
 					<p className="flex items-center gap-1.5 text-xs text-green-700 dark:text-green-400">
-						<Check className="size-3.5" />
+						<Icono icon="lucide:check" className="size-3.5" />
 						{t("Tamaño y copias correctos.")}
 					</p>
 				) : (
@@ -65,7 +69,7 @@ export function Legalidad({ s }: { s: DeckStats }) {
 							/>
 						) : (
 							<p key={p.code} className="flex items-center gap-1.5 text-xs">
-								<X className="size-3.5 text-destructive" />
+								<Icono icon="lucide:x" className="size-3.5 text-destructive" />
 								{t("El mazo tiene {a} cartas y se esperan {e}.", {
 									a: p.actual ?? 0,
 									e: p.expected ?? 0,

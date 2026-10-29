@@ -1,5 +1,4 @@
 import { useDroppable } from "@dnd-kit/core";
-import { Plus, Trash2 } from "lucide-react";
 import { memo, useState } from "react";
 import type { DeckCard } from "@/bindings/DeckCard";
 import type { FaceImage } from "@/bindings/FaceImage";
@@ -7,6 +6,7 @@ import type { LineMm } from "@/bindings/LineMm";
 import type { Page } from "@/bindings/Page";
 import type { PrintSettings } from "@/bindings/PrintSettings";
 import type { RectMm } from "@/bindings/RectMm";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { WithTooltip } from "@/components/ui/with-tooltip";
@@ -70,7 +70,7 @@ export const PageView = memo(function PageView({
 						onClick={() => onBorrar(pagina)}
 						aria-label={t("Eliminar las cartas de esta página")}
 					>
-						<Trash2 />
+						<Icono icon="lucide:trash-2" />
 					</Button>
 				</WithTooltip>
 			</div>
@@ -153,7 +153,7 @@ function CeldaVacia({
 				onClick={() => useUi.getState().abrir({ tipo: "anadir" })}
 				className="flex size-full flex-col items-center justify-center gap-1 text-[10px] font-semibold tracking-wider text-black/40 uppercase hover:bg-black/5 hover:text-black/70"
 			>
-				<Plus className="size-5" />
+				<Icono icon="lucide:plus" className="size-5" />
 				{primera && t("Añadir carta")}
 			</button>
 		</div>

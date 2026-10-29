@@ -1,4 +1,3 @@
-import { Link2, Loader2, ScanText, X } from "lucide-react";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { CardIdentify } from "@/bindings/CardIdentify";
@@ -6,6 +5,7 @@ import type { CardSummary } from "@/bindings/CardSummary";
 import type { Confidence } from "@/bindings/Confidence";
 import type { DeckCard } from "@/bindings/DeckCard";
 import { type Opcion, Selector } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -253,7 +253,7 @@ function Contenido({ ids, soloSeleccion }: { ids?: string[]; soloSeleccion: bool
 					</div>
 					<label className="flex items-center gap-2 text-xs">
 						<Checkbox checked={ocr} onCheckedChange={(v) => setOcr(v === true)} />
-						<ScanText className="size-3.5" />
+						<Icono icon="lucide:scan-text" className="size-3.5" />
 						{t("Leer la carta entera con OCR (más fiable, unos 2 s por carta)")}
 					</label>
 					<p className="text-[11px] text-muted-foreground">
@@ -269,7 +269,7 @@ function Contenido({ ids, soloSeleccion }: { ids?: string[]; soloSeleccion: bool
 			{(fase === "leyendo" || fase === "aplicando") && (
 				<div className="flex flex-col gap-1.5">
 					<div className="flex items-center gap-2 text-xs">
-						<Loader2 className="size-3.5 animate-spin text-primary" />
+						<Icono icon="lucide:loader-2" className="size-3.5 animate-spin text-primary" />
 						<span className="flex-1">
 							{fase === "leyendo"
 								? t("Leyendo {h} de {n}", { h: progreso.hechas, n: progreso.total })
@@ -340,25 +340,25 @@ function Contenido({ ids, soloSeleccion }: { ids?: string[]; soloSeleccion: bool
 			<DialogFooter className="items-center">
 				{fase === "elegir" && (
 					<Button size="sm" onClick={empezar} disabled={elegidas.length === 0}>
-						<ScanText />
+						<Icono icon="lucide:scan-text" />
 						{t("Empezar ({n})", { n: elegidas.length })}
 					</Button>
 				)}
 				{fase === "leyendo" && (
 					<Button size="sm" variant="outline" onClick={cancelarLectura}>
-						<X />
+						<Icono icon="lucide:x" />
 						{t("Parar y revisar lo leído")}
 					</Button>
 				)}
 				{fase === "revisar" && (
 					<Button size="sm" onClick={aplicar} disabled={aVincular.length === 0}>
-						<Link2 />
+						<Icono icon="lucide:link-2" />
 						{t("Vincular {n}", { n: aVincular.length })}
 					</Button>
 				)}
 				{fase === "aplicando" && (
 					<Button size="sm" variant="outline" onClick={() => (parar.current = true)}>
-						<X />
+						<Icono icon="lucide:x" />
 						{t("Parar")}
 					</Button>
 				)}

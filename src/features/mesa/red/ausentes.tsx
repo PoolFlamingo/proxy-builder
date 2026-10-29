@@ -1,6 +1,6 @@
-import { Loader2, UserX } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { useMesa } from "@/stores/mesa-store";
@@ -50,7 +50,7 @@ export function Ausentes() {
 						className="flex flex-col gap-1.5 rounded-xl border border-amber-500/40 bg-black/85 p-2.5 text-xs text-white shadow-lg backdrop-blur-md"
 					>
 						<div className="flex items-center gap-2">
-							<UserX className="size-3.5 shrink-0 text-amber-400" />
+							<Icono icon="lucide:user-x" className="size-3.5 shrink-0 text-amber-400" />
 							<span>{t("{quien} está desconectado.", { quien })}</span>
 						</div>
 						{mulligan && (
@@ -58,7 +58,7 @@ export function Ausentes() {
 						)}
 						{esElTurno && !puedeSaltar && (
 							<p className="flex items-center gap-1.5 text-white/70">
-								<Loader2 className="size-3 animate-spin" />
+								<Icono icon="lucide:loader-2" className="size-3 animate-spin" />
 								{t("Su turno se podrá saltar en {segundos} s.", {
 									segundos: Math.max(0, Math.ceil(ESPERA_SALTAR_MS / 1000) - seg),
 								})}

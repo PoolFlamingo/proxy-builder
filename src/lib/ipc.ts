@@ -16,9 +16,11 @@ import type { CardMeta } from "@/bindings/CardMeta";
 import type { CardSize } from "@/bindings/CardSize";
 import type { CardSummary } from "@/bindings/CardSummary";
 import type { CartaDeLista } from "@/bindings/CartaDeLista";
+import type { ColeccionIconos } from "@/bindings/ColeccionIconos";
 import type { Collection } from "@/bindings/Collection";
 import type { ComoEnSala } from "@/bindings/ComoEnSala";
 import type { ConfigMesa } from "@/bindings/ConfigMesa";
+import type { DatosIcono } from "@/bindings/DatosIcono";
 import type { Deck } from "@/bindings/Deck";
 import type { DeckCard } from "@/bindings/DeckCard";
 import type { DeckDetails } from "@/bindings/DeckDetails";
@@ -116,6 +118,7 @@ export interface Commands {
 	tag_list: { args: Record<string, never>; result: Tag[] };
 	tag_create: { args: { name: string; color: string }; result: Tag };
 	tag_update: { args: { id: string; name: string; color: string }; result: Tag };
+	tag_icon_set: { args: { id: string; icon: string | null }; result: null };
 	tag_delete: { args: { id: string }; result: null };
 	deck_tags_set: { args: { decks: string[]; add: string[]; remove: string[] }; result: null };
 	deck_pin: { args: { decks: string[]; pinned: boolean }; result: null };
@@ -360,6 +363,11 @@ export interface Commands {
 	};
 	mesa_lista_guardar: { args: { deck: string; lista: ListaDeJuego }; result: ListaDeJuego };
 	mesa_lista_borrar: { args: { deck: string; id: string }; result: null };
+	iconos_colecciones: { args: Record<string, never>; result: ColeccionIconos[] };
+	iconos_nombres: { args: { prefijo: string }; result: string[] };
+	iconos_buscar: { args: { texto: string }; result: string[] };
+	iconos_datos: { args: { ids: string[] }; result: Record<string, DatosIcono> };
+	iconos_elegir: { args: { id: string }; result: DatosIcono };
 }
 
 export function call<C extends keyof Commands>(

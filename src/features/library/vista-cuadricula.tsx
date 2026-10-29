@@ -1,6 +1,6 @@
-import { Layers, MoreHorizontal, Star, StickyNote } from "lucide-react";
 import { createContext, useContext, useState } from "react";
 import type { DeckSummary } from "@/bindings/DeckSummary";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -114,7 +114,7 @@ function TarjetaDeck({ deck: d }: { deck: DeckSummary }) {
 						/>
 					) : (
 						<div className="flex size-full items-center justify-center text-muted-foreground">
-							<Layers className="size-8" />
+							<Icono icon="lucide:layers" className="size-8" />
 						</div>
 					)}
 				</button>
@@ -147,7 +147,8 @@ function TarjetaDeck({ deck: d }: { deck: DeckSummary }) {
 						)}
 						aria-label={d.pinned ? t("Quitar de favoritos") : t("Añadir a favoritos")}
 					>
-						<Star
+						<Icono
+							icon="lucide:star"
 							className={cn(
 								"size-3.5",
 								d.pinned ? "fill-amber-400 text-amber-500" : "text-muted-foreground",
@@ -167,7 +168,10 @@ function TarjetaDeck({ deck: d }: { deck: DeckSummary }) {
 							</button>
 							{d.notes && (
 								<WithTooltip content={<span className="whitespace-pre-line">{d.notes}</span>}>
-									<StickyNote className="size-3 shrink-0 text-muted-foreground" />
+									<Icono
+										icon="lucide:sticky-note"
+										className="size-3 shrink-0 text-muted-foreground"
+									/>
 								</WithTooltip>
 							)}
 						</div>
@@ -178,7 +182,7 @@ function TarjetaDeck({ deck: d }: { deck: DeckSummary }) {
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<Button size="icon-xs" variant="ghost" aria-label={t("Más acciones")}>
-								<MoreHorizontal />
+								<Icono icon="lucide:more-horizontal" />
 							</Button>
 						</DropdownMenuTrigger>
 						<MenuDeck deck={d} />

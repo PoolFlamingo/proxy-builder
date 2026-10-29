@@ -1,7 +1,7 @@
-import { Check, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import type { IdCarta } from "@/bindings/IdCarta";
 import type { ModoMulligan } from "@/bindings/ModoMulligan";
+import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -119,7 +119,7 @@ export function Mulligan() {
 						void hacer({ que: "mulligan" });
 					}}
 				>
-					<RefreshCw className="size-4" />
+					<Icono icon="lucide:refresh-cw" className="size-4" />
 					{t("Mulligan")}
 				</Button>
 				<Button
@@ -128,7 +128,7 @@ export function Mulligan() {
 						void hacer({ que: "quedarseCon", alFondo: fondo }).then(() => setFondo([]));
 					}}
 				>
-					<Check className="size-4" />
+					<Icono icon="lucide:check" className="size-4" />
 					{t("Quedarse")}
 				</Button>
 			</div>

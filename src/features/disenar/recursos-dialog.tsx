@@ -1,16 +1,3 @@
-import {
-	Check,
-	Download,
-	FolderOpen,
-	Images,
-	Loader2,
-	Package,
-	Plus,
-	RefreshCw,
-	SquareStack,
-	Trash2,
-	Type,
-} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { DescargableInfo } from "@/bindings/DescargableInfo";
@@ -19,6 +6,7 @@ import type { LetraLibre } from "@/bindings/LetraLibre";
 import type { PackInfo } from "@/bindings/PackInfo";
 import type { SimbolosInfo } from "@/bindings/SimbolosInfo";
 import type { TipoExtra } from "@/bindings/TipoExtra";
+import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -185,7 +173,11 @@ function Contenido() {
 							onClick={importarLetras}
 							disabled={ocupado !== null}
 						>
-							{ocupado === "letra" ? <Loader2 className="animate-spin" /> : <Type />}
+							{ocupado === "letra" ? (
+								<Icono icon="lucide:loader-2" className="animate-spin" />
+							) : (
+								<Icono icon="lucide:type" />
+							)}
 							{t("Importar letras…")}
 						</Button>
 					</div>
@@ -206,7 +198,10 @@ function Contenido() {
 						</div>
 						<ul className="flex flex-col divide-y">
 							{letras === null && (
-								<Loader2 className="m-3 size-4 animate-spin text-muted-foreground" />
+								<Icono
+									icon="lucide:loader-2"
+									className="m-3 size-4 animate-spin text-muted-foreground"
+								/>
 							)}
 							{letras?.length === 0 && (
 								<li className="p-3 text-xs text-muted-foreground">
@@ -231,7 +226,7 @@ function Contenido() {
 												con(l.id, () => call("font_remove", { id: l.id }).then(() => {}))
 											}
 										>
-											<Trash2 />
+											<Icono icon="lucide:trash-2" />
 										</Button>
 									</WithTooltip>
 								</li>
@@ -251,7 +246,11 @@ function Contenido() {
 							onClick={() => importarPack(true)}
 							disabled={ocupado !== null}
 						>
-							{ocupado === "pack" ? <Loader2 className="animate-spin" /> : <FolderOpen />}
+							{ocupado === "pack" ? (
+								<Icono icon="lucide:loader-2" className="animate-spin" />
+							) : (
+								<Icono icon="lucide:folder-open" />
+							)}
 							{t("Carpeta…")}
 						</Button>
 						<Button
@@ -260,14 +259,17 @@ function Contenido() {
 							onClick={() => importarPack(false)}
 							disabled={ocupado !== null}
 						>
-							<Package />
+							<Icono icon="lucide:package" />
 							{t(".zip…")}
 						</Button>
 					</div>
 					<ScrollArea className="min-h-0 flex-1 rounded-md border">
 						<ul className="flex flex-col divide-y">
 							{packs === null && (
-								<Loader2 className="m-3 size-4 animate-spin text-muted-foreground" />
+								<Icono
+									icon="lucide:loader-2"
+									className="m-3 size-4 animate-spin text-muted-foreground"
+								/>
 							)}
 							{packs !== null && !packs.some((p) => p.id === ID_ORIGINAL) && (
 								<FilaOriginales alTerminar={recargar} />
@@ -301,7 +303,7 @@ function Contenido() {
 													con(p.id, () => call("pack_remove", { id: p.id }).then(() => {}))
 												}
 											>
-												<Trash2 />
+												<Icono icon="lucide:trash-2" />
 											</Button>
 										</WithTooltip>
 									)}
@@ -320,7 +322,10 @@ function Contenido() {
 					<div className="flex items-center gap-2.5 rounded-md border p-3">
 						<div className="flex-1 text-xs">
 							{simbolos === null ? (
-								<Loader2 className="size-4 animate-spin text-muted-foreground" />
+								<Icono
+									icon="lucide:loader-2"
+									className="size-4 animate-spin text-muted-foreground"
+								/>
 							) : simbolos.cargados === 0 ? (
 								t("No hay símbolos: hace falta conexión para descargarlos.")
 							) : (
@@ -340,7 +345,11 @@ function Contenido() {
 							onClick={refrescarSimbolos}
 							disabled={ocupado !== null}
 						>
-							{ocupado === "simbolos" ? <Loader2 className="animate-spin" /> : <RefreshCw />}
+							{ocupado === "simbolos" ? (
+								<Icono icon="lucide:loader-2" className="animate-spin" />
+							) : (
+								<Icono icon="lucide:refresh-cw" />
+							)}
 							{t("Descargar de nuevo")}
 						</Button>
 					</div>
@@ -378,7 +387,11 @@ function FilaOriginales({ alTerminar }: { alTerminar: () => void }) {
 							.catch((e) => toast.error(mensaje(e)))
 					}
 				>
-					{progreso ? <Loader2 className="animate-spin" /> : <Download />}
+					{progreso ? (
+						<Icono icon="lucide:loader-2" className="animate-spin" />
+					) : (
+						<Icono icon="lucide:download" />
+					)}
 					{t("Descargar")}
 				</Button>
 			</div>
@@ -419,7 +432,7 @@ function FilasDescargables({ alTerminar }: { alTerminar: () => void }) {
 								variant={abierto === d.id ? "secondary" : "outline"}
 								onClick={() => setAbierto(abierto === d.id ? null : d.id)}
 							>
-								<Images />
+								<Icono icon="lucide:images" />
 								{t("Contenido")}
 							</Button>
 						) : (
@@ -433,7 +446,11 @@ function FilasDescargables({ alTerminar }: { alTerminar: () => void }) {
 										.catch((e) => toast.error(mensaje(e)))
 								}
 							>
-								{progreso?.id === d.id ? <Loader2 className="animate-spin" /> : <Download />}
+								{progreso?.id === d.id ? (
+									<Icono icon="lucide:loader-2" className="animate-spin" />
+								) : (
+									<Icono icon="lucide:download" />
+								)}
 								{t("Descargar")}
 							</Button>
 						)}
@@ -529,11 +546,11 @@ function ContenidoPack({ pack }: { pack: DescargableInfo }) {
 					disabled={!actual || !hayDeck}
 					onClick={() => usar("reverso")}
 				>
-					<SquareStack />
+					<Icono icon="lucide:square-stack" />
 					{t("Usar como reverso del deck")}
 				</Button>
 				<Button size="sm" disabled={!actual || !hayDeck} onClick={() => usar("carta")}>
-					<Plus />
+					<Icono icon="lucide:plus" />
 					{t("Añadir al deck")}
 				</Button>
 			</div>
@@ -617,7 +634,7 @@ function LetrasLibres({
 									</div>
 									{l.descargada ? (
 										<span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-											<Check className="size-3.5" />
+											<Icono icon="lucide:check" className="size-3.5" />
 											{t("Descargada")}
 										</span>
 									) : (
@@ -628,9 +645,9 @@ function LetrasLibres({
 											onClick={() => descargar(l.id)}
 										>
 											{ocupado === `libre-${l.id}` ? (
-												<Loader2 className="animate-spin" />
+												<Icono icon="lucide:loader-2" className="animate-spin" />
 											) : (
-												<Download />
+												<Icono icon="lucide:download" />
 											)}
 											{t("Descargar")}
 										</Button>

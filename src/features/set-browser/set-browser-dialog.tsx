@@ -1,9 +1,9 @@
-import { ListPlus, Loader2, Plus, Replace, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { CardSummary } from "@/bindings/CardSummary";
 import type { SetInfo } from "@/bindings/SetInfo";
 import { type Opcion, Selector } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -132,7 +132,10 @@ function Contenido() {
 			<div className="flex min-h-0 flex-1 gap-4">
 				<div className="flex w-64 shrink-0 flex-col gap-2" data-filtro="">
 					<div className="relative">
-						<Search className="pointer-events-none absolute top-2 left-2 size-3.5 text-muted-foreground" />
+						<Icono
+							icon="lucide:search"
+							className="pointer-events-none absolute top-2 left-2 size-3.5 text-muted-foreground"
+						/>
 						<Input
 							value={filtroSet}
 							onChange={(e) => setFiltroSet(e.target.value)}
@@ -144,7 +147,10 @@ function Contenido() {
 					<ScrollArea className="min-h-0 flex-1 rounded-md border">
 						{!sets ? (
 							<div className="flex justify-center py-10">
-								<Loader2 className="size-4 animate-spin text-muted-foreground" />
+								<Icono
+									icon="lucide:loader-2"
+									className="size-4 animate-spin text-muted-foreground"
+								/>
 							</div>
 						) : (
 							<div className="flex flex-col p-1">
@@ -191,7 +197,9 @@ function Contenido() {
 								</Button>
 							</>
 						)}
-						{cargando && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+						{cargando && (
+							<Icono icon="lucide:loader-2" className="size-4 animate-spin text-muted-foreground" />
+						)}
 					</div>
 					<ScrollArea className="min-h-0 flex-1" onViewportChange={setViewport}>
 						<RaizScroll.Provider value={viewport}>
@@ -227,7 +235,7 @@ function Contenido() {
 					disabled={!seleccion.length}
 					onClick={() => alLista(true)}
 				>
-					<Replace />
+					<Icono icon="lucide:replace" />
 					{t("Reemplazar lista")}
 				</Button>
 				<Button
@@ -236,11 +244,11 @@ function Contenido() {
 					disabled={!seleccion.length}
 					onClick={() => alLista(false)}
 				>
-					<ListPlus />
+					<Icono icon="lucide:list-plus" />
 					{t("Añadir a la lista")}
 				</Button>
 				<Button size="sm" disabled={!seleccion.length} onClick={cargar}>
-					<Plus />
+					<Icono icon="lucide:plus" />
 					{t("Cargar cartas")}
 				</Button>
 			</DialogFooter>

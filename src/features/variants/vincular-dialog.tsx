@@ -1,8 +1,8 @@
-import { Link2, Link2Off, Loader2, ScanText, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { CardSummary } from "@/bindings/CardSummary";
 import type { DeckCard } from "@/bindings/DeckCard";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -131,7 +131,11 @@ function Contenido({ carta }: { carta: DeckCard }) {
 						onClick={() => identificar(q, true)}
 						disabled={ocupado !== null || !carta.front}
 					>
-						{ocupado === "ocr" ? <Loader2 className="animate-spin" /> : <ScanText />}
+						{ocupado === "ocr" ? (
+							<Icono icon="lucide:loader-2" className="animate-spin" />
+						) : (
+							<Icono icon="lucide:scan-text" />
+						)}
 						{t("Detectar con OCR")}
 					</Button>
 					{!ocrListo && (
@@ -163,7 +167,10 @@ function Contenido({ carta }: { carta: DeckCard }) {
 				<div className="flex min-w-0 flex-1 flex-col gap-2.5">
 					<div className="flex gap-1.5" data-filtro="">
 						<div className="relative flex-1">
-							<Search className="pointer-events-none absolute top-2 left-2 size-4 text-muted-foreground" />
+							<Icono
+								icon="lucide:search"
+								className="pointer-events-none absolute top-2 left-2 size-4 text-muted-foreground"
+							/>
 							<Input
 								value={q}
 								onChange={(e) => setQ(e.target.value)}
@@ -177,7 +184,11 @@ function Contenido({ carta }: { carta: DeckCard }) {
 							onClick={() => identificar(q, false)}
 							disabled={ocupado !== null || q.trim().length < 3}
 						>
-							{ocupado === "buscar" ? <Loader2 className="animate-spin" /> : <Search />}
+							{ocupado === "buscar" ? (
+								<Icono icon="lucide:loader-2" className="animate-spin" />
+							) : (
+								<Icono icon="lucide:search" />
+							)}
 							{t("Buscar")}
 						</Button>
 					</div>
@@ -217,14 +228,18 @@ function Contenido({ carta }: { carta: DeckCard }) {
 							useUi.getState().abrir(null);
 						}}
 					>
-						<Link2Off />
+						<Icono icon="lucide:link-2-off" />
 						{t("Quitar el vínculo")}
 					</Button>
 				) : (
 					<span />
 				)}
 				<Button size="sm" onClick={() => aceptar()} disabled={!elegida || ocupado !== null}>
-					{ocupado === "vincular" ? <Loader2 className="animate-spin" /> : <Link2 />}
+					{ocupado === "vincular" ? (
+						<Icono icon="lucide:loader-2" className="animate-spin" />
+					) : (
+						<Icono icon="lucide:link-2" />
+					)}
 					{elegida
 						? t("Vincular con {carta}", { carta: elegida.printedName ?? elegida.name })
 						: t("Vincular")}

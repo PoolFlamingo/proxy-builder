@@ -1,5 +1,5 @@
-import { Clock } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { useMesa } from "@/stores/mesa-store";
 import { useUi } from "@/stores/ui-store";
@@ -78,7 +78,9 @@ export function VistaGrande() {
 							{contadores.map(([tipo, n]) => (
 								<div key={tipo} className="flex justify-between">
 									<span className="flex items-center gap-1">
-										{esTemporal(tipo) && <Clock className="size-3 text-amber-300" />}
+										{esTemporal(tipo) && (
+											<Icono icon="lucide:clock" className="size-3 text-amber-300" />
+										)}
 										{nombreContador(tipo, t)}
 									</span>
 									<b className="tabular-nums">{n}</b>
@@ -116,7 +118,9 @@ export function VistaGrande() {
 								<span className="flex flex-wrap items-center gap-x-1.5">
 									{c.palabrasClave.map((p) => (
 										<span key={p} className="flex items-center gap-0.5">
-											{esTemporal(p) && <Clock className="size-3 text-amber-300" />}
+											{esTemporal(p) && (
+												<Icono icon="lucide:clock" className="size-3 text-amber-300" />
+											)}
 											{nombreContador(p, t)}
 										</span>
 									))}
@@ -125,7 +129,7 @@ export function VistaGrande() {
 							{c.etiquetas.length > 0 && <span>{c.etiquetas.map((e) => e.texto).join(" · ")}</span>}
 							{c.devolverA !== null && (
 								<span className="flex items-center gap-1 text-amber-300">
-									<Clock className="size-3" />
+									<Icono icon="lucide:clock" className="size-3" />
 									{t("Vuelve a {quien} al final del turno", {
 										quien: jugadores[c.devolverA]?.nombre ?? "",
 									})}

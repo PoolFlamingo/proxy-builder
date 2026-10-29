@@ -1,7 +1,7 @@
-import { Check, Download, ExternalLink, Eye, Loader2, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { TemaCatalogo } from "@/bindings/TemaCatalogo";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
@@ -178,7 +178,11 @@ export function TemasTweakcn({ abierto, onCerrar }: { abierto: boolean; onCerrar
 								className="h-8 text-xs"
 							/>
 							<Button size="sm" onClick={ver} disabled={!enlace.trim() || ocupado !== null}>
-								{ocupado === "ver" ? <Loader2 className="animate-spin" /> : <Eye />}
+								{ocupado === "ver" ? (
+									<Icono icon="lucide:loader-2" className="animate-spin" />
+								) : (
+									<Icono icon="lucide:eye" />
+								)}
 								{t("Ver")}
 							</Button>
 							<Button
@@ -188,7 +192,7 @@ export function TemasTweakcn({ abierto, onCerrar }: { abierto: boolean; onCerrar
 									call("themes_open_community", {}).catch((e) => toast.error(mensaje(e)))
 								}
 							>
-								<ExternalLink />
+								<Icono icon="lucide:external-link" />
 								{t("Abrir la galería")}
 							</Button>
 						</div>
@@ -202,7 +206,11 @@ export function TemasTweakcn({ abierto, onCerrar }: { abierto: boolean; onCerrar
 										onClick={() => instalarYUsar(viendo)}
 										disabled={ocupado !== null}
 									>
-										{ocupado === "instalar" ? <Loader2 className="animate-spin" /> : <Download />}
+										{ocupado === "instalar" ? (
+											<Icono icon="lucide:loader-2" className="animate-spin" />
+										) : (
+											<Icono icon="lucide:download" />
+										)}
 										{yaInstalado(viendo) ? t("Volver a descargar y usar") : t("Instalar y usar")}
 									</Button>
 								</div>
@@ -257,7 +265,7 @@ export function TemasTweakcn({ abierto, onCerrar }: { abierto: boolean; onCerrar
 											<span className="truncate text-xs font-medium">{i.nombre}</span>
 											<span className="ml-auto flex items-center gap-1">
 												{theme === i.id ? (
-													<Check className="size-3.5 text-primary" />
+													<Icono icon="lucide:check" className="size-3.5 text-primary" />
 												) : (
 													<Button
 														size="sm"
@@ -275,7 +283,7 @@ export function TemasTweakcn({ abierto, onCerrar }: { abierto: boolean; onCerrar
 														onClick={() => quitarTema(i.id)}
 														aria-label={t("Quitar")}
 													>
-														<Trash2 />
+														<Icono icon="lucide:trash-2" />
 													</Button>
 												</WithTooltip>
 											</span>

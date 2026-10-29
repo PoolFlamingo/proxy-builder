@@ -1,6 +1,6 @@
-import { Check, ImageOff } from "lucide-react";
 import { memo, useState } from "react";
 import type { CardSummary } from "@/bindings/CardSummary";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { useVisible } from "@/features/preview/visibilidad";
@@ -78,12 +78,12 @@ const Tarjeta = memo(function Tarjeta({
 					/>
 				) : !c.thumb ? (
 					<div className="flex size-full items-center justify-center text-muted-foreground">
-						<ImageOff className="size-5" />
+						<Icono icon="lucide:image-off" className="size-5" />
 					</div>
 				) : null}
 				{elegida && (
 					<span className="absolute top-1 right-1 rounded-full bg-primary p-0.5 text-primary-foreground">
-						<Check className="size-3" />
+						<Icono icon="lucide:check" className="size-3" />
 					</span>
 				)}
 				<div className="absolute bottom-1 left-1 flex gap-0.5">

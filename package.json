@@ -12,7 +12,7 @@
 		"prepare": "husky",
 		"format": "biome format --write .",
 		"bindings": "cargo test --manifest-path src-tauri/Cargo.toml --workspace export_bindings",
-		"check": "pnpm run check:tipos && pnpm run test && pnpm run check:biome && pnpm run --silent check:title && pnpm run --silent idiomas && pnpm run check:knip",
+		"check": "pnpm run check:tipos && pnpm run test && pnpm run check:biome && pnpm run --silent check:title && pnpm run --silent idiomas && pnpm run --silent check:iconos && pnpm run check:knip",
 		"check:biome": "biome check .",
 		"check:knip": "knip",
 		"check:tipos": "tsc --noEmit",
@@ -20,6 +20,8 @@
 		"check:rust-fmt": "cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check",
 		"check:clippy": "cargo clippy --manifest-path src-tauri/Cargo.toml --workspace --all-targets -- -D warnings",
 		"idiomas": "node scripts/idiomas.mjs",
+		"iconos": "node scripts/iconos.mjs",
+		"check:iconos": "node scripts/iconos.mjs --check",
 		"release": "node scripts/release.mjs",
 		"test": "vitest run",
 		"test:rust": "cargo test --manifest-path src-tauri/Cargo.toml --workspace"
@@ -27,6 +29,7 @@
 	"dependencies": {
 		"@dimforge/rapier3d-deterministic-compat": "0.21.0",
 		"@dnd-kit/core": "^6.3.1",
+		"@iconify/utils": "^3.1.7",
 		"@tauri-apps/api": "^2",
 		"@tauri-apps/plugin-dialog": "^2.7.1",
 		"class-variance-authority": "^0.7.1",
@@ -44,6 +47,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.13",
+		"@iconify/json": "^2.2.549",
 		"@tailwindcss/vite": "^4.3.0",
 		"@tauri-apps/cli": "^2",
 		"@types/node": "^22",

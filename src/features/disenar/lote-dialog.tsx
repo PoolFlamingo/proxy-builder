@@ -1,9 +1,9 @@
-import { Loader2, Wand2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { Collection } from "@/bindings/Collection";
 import type { DeckCard } from "@/bindings/DeckCard";
 import { Fila, Selector } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -175,7 +175,11 @@ function Contenido() {
 					</Button>
 				) : (
 					<Button size="sm" onClick={empezar} disabled={elegidas.length === 0}>
-						{enMarcha ? <Loader2 className="animate-spin" /> : <Wand2 />}
+						{enMarcha ? (
+							<Icono icon="lucide:loader-2" className="animate-spin" />
+						) : (
+							<Icono icon="lucide:wand-2" />
+						)}
 						{t("Hacer los borradores")}
 					</Button>
 				)}

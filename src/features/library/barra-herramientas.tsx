@@ -1,16 +1,6 @@
-import {
-	ArrowDownWideNarrow,
-	ArrowUpNarrowWide,
-	Filter,
-	Group,
-	LayoutGrid,
-	List,
-	PanelLeft,
-	Search,
-	X,
-} from "lucide-react";
 import { forwardRef, type ReactNode } from "react";
 import type { DeckKind } from "@/bindings/DeckKind";
+import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -77,12 +67,15 @@ export const BarraHerramientas = forwardRef<
 					aria-label={t("Etiquetas")}
 					className={cn(p.lateral && "text-primary")}
 				>
-					<PanelLeft />
+					<Icono icon="lucide:panel-left" />
 				</Button>
 			</WithTooltip>
 			<h2 className="text-sm font-semibold">{titulo}</h2>
 			<div className="relative w-72">
-				<Search className="pointer-events-none absolute top-2 left-2 size-3.5 text-muted-foreground" />
+				<Icono
+					icon="lucide:search"
+					className="pointer-events-none absolute top-2 left-2 size-3.5 text-muted-foreground"
+				/>
 				<Input
 					ref={buscar}
 					value={f.texto}
@@ -99,7 +92,11 @@ export const BarraHerramientas = forwardRef<
 			<DropdownMenu>
 				<DropdownMenuTrigger asChild>
 					<Button size="sm" variant="ghost" className="h-7 text-xs">
-						{p.ascendente ? <ArrowUpNarrowWide /> : <ArrowDownWideNarrow />}
+						{p.ascendente ? (
+							<Icono icon="lucide:arrow-up-narrow-wide" />
+						) : (
+							<Icono icon="lucide:arrow-down-wide-narrow" />
+						)}
 						{t(ORDENES.find(([o]) => o === p.orden)?.[1] ?? "")}
 					</Button>
 				</DropdownMenuTrigger>
@@ -143,7 +140,7 @@ export const BarraHerramientas = forwardRef<
 						variant="ghost"
 						className={cn("h-7 text-xs", p.agrupar !== "ninguno" && "text-primary")}
 					>
-						<Group />
+						<Icono icon="lucide:group" />
 						{t(AGRUPAR.find(([a]) => a === p.agrupar)?.[1] ?? "")}
 					</Button>
 				</DropdownMenuTrigger>
@@ -175,12 +172,12 @@ export const BarraHerramientas = forwardRef<
 			>
 				<WithTooltip content={t("Cuadrícula")}>
 					<ToggleGroupItem value="cuadricula" aria-label={t("Cuadrícula")} className="h-7">
-						<LayoutGrid />
+						<Icono icon="lucide:layout-grid" />
 					</ToggleGroupItem>
 				</WithTooltip>
 				<WithTooltip content={t("Lista")}>
 					<ToggleGroupItem value="lista" aria-label={t("Lista")} className="h-7">
-						<List />
+						<Icono icon="lucide:list" />
 					</ToggleGroupItem>
 				</WithTooltip>
 			</ToggleGroup>
@@ -226,7 +223,7 @@ function PanelFiltros() {
 		<Popover>
 			<PopoverTrigger asChild>
 				<Button size="sm" variant={n > 0 ? "secondary" : "ghost"} className="h-7 text-xs">
-					<Filter />
+					<Icono icon="lucide:filter" />
 					{t("Filtros")}
 					{n > 0 && (
 						<span className="rounded-full bg-primary px-1.5 text-[10px] text-primary-foreground">
@@ -350,7 +347,7 @@ function PanelFiltros() {
 							})
 						}
 					>
-						<X />
+						<Icono icon="lucide:x" />
 						{t("Quitar estos filtros")}
 					</Button>
 				)}
@@ -461,7 +458,7 @@ export function FiltrosActivos() {
 						className="rounded-full p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
 						aria-label={t("Quitar")}
 					>
-						<X className="size-3" />
+						<Icono icon="lucide:x" className="size-3" />
 					</button>
 				</span>
 			))}

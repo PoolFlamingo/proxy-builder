@@ -1,5 +1,5 @@
-import { ChevronRight } from "lucide-react";
 import { type ReactNode, useEffect, useId, useState } from "react";
+import { Icono } from "@/components/icono";
 import { Input } from "@/components/ui/input";
 import {
 	Select,
@@ -63,7 +63,10 @@ export function Seccion({
 					aria-expanded={abierta}
 					className="flex flex-1 items-center gap-1.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground"
 				>
-					<ChevronRight className={cn("size-3.5 transition-transform", abierta && "rotate-90")} />
+					<Icono
+						icon="lucide:chevron-right"
+						className={cn("size-3.5 transition-transform", abierta && "rotate-90")}
+					/>
 					{icono}
 					{titulo}
 				</button>

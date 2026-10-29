@@ -1,6 +1,6 @@
-import { AlertTriangle, Tag } from "lucide-react";
 import { useState } from "react";
 import type { DeckStats } from "@/bindings/DeckStats";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { GraficoApilado, LeyendaApilado } from "@/components/ui/grafico-apilado";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -86,13 +86,13 @@ export function Resumen({ s, moneda }: { s: DeckStats; moneda: Moneda }) {
 
 			{s.setAside.copias > 0 && (
 				<p className="flex items-center gap-1.5 rounded-lg border bg-muted/40 p-2.5 text-xs text-muted-foreground">
-					<Tag className="size-3.5 shrink-0" />
+					<Icono icon="lucide:tag" className="size-3.5 shrink-0" />
 					{t("{n} copias que hacen de ficha (no cuentan aquí).", { n: s.setAside.copias })}
 				</p>
 			)}
 			{s.setAside.variantes + s.setAside.opcionales + s.setAside.banquillo > 0 && (
 				<p className="flex items-center gap-1.5 rounded-lg border bg-muted/40 p-2.5 text-xs text-muted-foreground">
-					<Tag className="size-3.5 shrink-0" />
+					<Icono icon="lucide:tag" className="size-3.5 shrink-0" />
 					{t(
 						"Aparte, por su marca (no cuentan aquí): {v} variantes de diseño, {o} opcionales y {b} en el banquillo.",
 						{
@@ -123,7 +123,7 @@ export function Resumen({ s, moneda }: { s: DeckStats; moneda: Moneda }) {
 							/>
 						) : (
 							<p key={p.code} className="flex items-center gap-1.5 text-xs">
-								<AlertTriangle className="size-3.5 text-amber-600" />
+								<Icono icon="lucide:alert-triangle" className="size-3.5 text-amber-600" />
 								{t("El mazo tiene {a} cartas y se esperan {e}.", {
 									a: p.actual ?? 0,
 									e: p.expected ?? 0,

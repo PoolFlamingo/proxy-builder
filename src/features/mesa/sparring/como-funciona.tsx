@@ -1,4 +1,4 @@
-import { Ghost } from "lucide-react";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,7 +30,7 @@ export function ComoFunciona({
 			<DialogContent className="sm:max-w-md" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-2">
-						<Ghost className="size-4 text-primary" />
+						<Icono icon="game-icons:ghost" className="size-4 text-primary" />
 						{t("Cómo funciona el sparring")}
 					</DialogTitle>
 					<DialogDescription>

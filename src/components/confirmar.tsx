@@ -1,5 +1,5 @@
-import { Loader2 } from "lucide-react";
 import { type ReactNode, useState } from "react";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -80,7 +80,7 @@ export function Confirmar({
 					</Button>
 					{accionAlternativa && (
 						<Button size="sm" autoFocus disabled={ocupado} onClick={() => void alternativa()}>
-							{ocupado && <Loader2 className="animate-spin" />}
+							{ocupado && <Icono icon="lucide:loader-2" className="animate-spin" />}
 							{accionAlternativa.texto}
 						</Button>
 					)}

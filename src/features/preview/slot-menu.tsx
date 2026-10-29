@@ -1,29 +1,8 @@
-import {
-	ArrowLeft,
-	ArrowRight,
-	Brush,
-	Copy,
-	Download,
-	Eraser,
-	Hash,
-	ImageUp,
-	Languages,
-	Link2,
-	Lock,
-	LockOpen,
-	Palette,
-	Repeat2,
-	Replace,
-	Search,
-	SlidersHorizontal,
-	SquareStack,
-	Tag,
-	Trash2,
-} from "lucide-react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 import type { MarcaCarta } from "@/bindings/MarcaCarta";
 import { ContenidoContextual } from "@/components/contenido-contextual";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import {
 	ContextMenu,
@@ -92,14 +71,14 @@ export function SlotMenu({ id, children }: { id: string; children: ReactNode }) 
 				{carta?.source.kind === "blank" && !varias && (
 					<>
 						<ContextMenuItem onSelect={() => anadirEnHueco(id)}>
-							<Search />
+							<Icono icon="lucide:search" />
 							{t("Añadir carta de Scryfall…")}
 						</ContextMenuItem>
 						<ContextMenuSeparator />
 					</>
 				)}
 				<ContextMenuItem onSelect={() => duplicarCartas(ids())}>
-					<Copy />
+					<Icono icon="lucide:copy" />
 					{t("Duplicar")}
 					<ContextMenuShortcut>Ctrl+D</ContextMenuShortcut>
 				</ContextMenuItem>
@@ -107,33 +86,33 @@ export function SlotMenu({ id, children }: { id: string; children: ReactNode }) 
 					disabled={varias || !carta?.front}
 					onSelect={() => useUi.getState().abrir({ tipo: "editar", id })}
 				>
-					<SlidersHorizontal />
+					<Icono icon="lucide:sliders-horizontal" />
 					{t("Editar carta")}
 				</ContextMenuItem>
 				<ContextMenuItem
 					disabled={varias || !esScryfall}
 					onSelect={() => useUi.getState().abrir({ tipo: "variante", id })}
 				>
-					<Palette />
+					<Icono icon="lucide:palette" />
 					{t("Cambiar variante")}
 				</ContextMenuItem>
 				<ContextMenuItem
 					disabled={varias || !esScryfall}
 					onSelect={() => useUi.getState().abrir({ tipo: "anadir", cambiar: id })}
 				>
-					<Repeat2 />
+					<Icono icon="lucide:repeat-2" />
 					{t("Cambiar carta…")}
 				</ContextMenuItem>
 				<ContextMenuItem
 					disabled={varias || !disenable}
 					onSelect={() => useUi.getState().disenar(id)}
 				>
-					<Brush />
+					<Icono icon="lucide:brush" />
 					{carta?.design ? t("Editar diseño") : t("Diseñar proxy")}
 				</ContextMenuItem>
 				{carta?.design && (
 					<ContextMenuItem onSelect={quitarDisenos}>
-						<Eraser />
+						<Icono icon="lucide:eraser" />
 						{varias ? t("Quitar el diseño de las seleccionadas") : t("Quitar diseño")}
 					</ContextMenuItem>
 				)}
@@ -143,7 +122,7 @@ export function SlotMenu({ id, children }: { id: string; children: ReactNode }) 
 							useUi.getState().abrir({ tipo: "vincularLote", ids: ids(), soloSeleccion: true })
 						}
 					>
-						<Link2 />
+						<Icono icon="lucide:link-2" />
 						{t("Vincular las seleccionadas…")}
 					</ContextMenuItem>
 				)}
@@ -152,14 +131,14 @@ export function SlotMenu({ id, children }: { id: string; children: ReactNode }) 
 						disabled={!carta.front}
 						onSelect={() => useUi.getState().abrir({ tipo: "vincular", id })}
 					>
-						<Link2 />
+						<Icono icon="lucide:link-2" />
 						{carta.source.scryfallId ? t("Cambiar el vínculo…") : t("Vincular con una carta…")}
 					</ContextMenuItem>
 				)}
 				{carta?.source.kind === "custom" && (
 					<ContextMenuSub>
 						<ContextMenuSubTrigger>
-							<Languages />
+							<Icono icon="lucide:languages" />
 							{t("Idioma de la imagen")}
 						</ContextMenuSubTrigger>
 						<ContextMenuSubContent className="text-xs">
@@ -180,7 +159,7 @@ export function SlotMenu({ id, children }: { id: string; children: ReactNode }) 
 				{carta && carta.source.kind !== "blank" && (
 					<ContextMenuSub>
 						<ContextMenuSubTrigger>
-							<Tag />
+							<Icono icon="lucide:tag" />
 							{t("Marca")}
 						</ContextMenuSubTrigger>
 						<ContextMenuSubContent className="max-w-64 text-xs">
@@ -204,17 +183,17 @@ export function SlotMenu({ id, children }: { id: string; children: ReactNode }) 
 					</ContextMenuSub>
 				)}
 				<ContextMenuItem disabled={varias} onSelect={intentar(() => reemplazarImagen(id, t))}>
-					<ImageUp />
+					<Icono icon="lucide:image-up" />
 					{t("Reemplazar imagen…")}
 				</ContextMenuItem>
 				<ContextMenuSub>
 					<ContextMenuSubTrigger>
-						<SquareStack />
+						<Icono icon="lucide:square-stack" />
 						{t("Cambiar reverso")}
 					</ContextMenuSubTrigger>
 					<ContextMenuSubContent className="text-xs">
 						<ContextMenuItem onSelect={intentar(() => cambiarReverso(ids(), t))}>
-							<Replace />
+							<Icono icon="lucide:replace" />
 							{t("Elegir imagen…")}
 						</ContextMenuItem>
 						<ContextMenuItem onSelect={() => reversoDelDeck(ids())}>
@@ -225,7 +204,7 @@ export function SlotMenu({ id, children }: { id: string; children: ReactNode }) 
 				{carta?.front && (
 					<ContextMenuSub>
 						<ContextMenuSubTrigger disabled={varias}>
-							<Download />
+							<Icono icon="lucide:download" />
 							{t("Exportar imagen")}
 						</ContextMenuSubTrigger>
 						<ContextMenuSubContent className="text-xs">
@@ -248,24 +227,24 @@ export function SlotMenu({ id, children }: { id: string; children: ReactNode }) 
 				)}
 				<ContextMenuSeparator />
 				<ContextMenuItem onSelect={() => moverUno(ids(), -1)}>
-					<ArrowLeft />
+					<Icono icon="lucide:arrow-left" />
 					{t("Mover antes")}
 				</ContextMenuItem>
 				<ContextMenuItem onSelect={() => moverUno(ids(), 1)}>
-					<ArrowRight />
+					<Icono icon="lucide:arrow-right" />
 					{t("Mover después")}
 				</ContextMenuItem>
 				<ContextMenuItem onSelect={() => useUi.getState().abrir({ tipo: "moverA", ids: ids() })}>
-					<Hash />
+					<Icono icon="lucide:hash" />
 					{t("Mover a posición…")}
 				</ContextMenuItem>
 				<ContextMenuItem onSelect={() => fijarCartas(ids(), !fijada)}>
-					{fijada ? <LockOpen /> : <Lock />}
+					{fijada ? <Icono icon="lucide:lock-open" /> : <Icono icon="lucide:lock" />}
 					{fijada ? t("Desfijar") : t("Fijar")}
 				</ContextMenuItem>
 				<ContextMenuSeparator />
 				<ContextMenuItem variant="destructive" onSelect={() => eliminarCartas(ids())}>
-					<Trash2 />
+					<Icono icon="lucide:trash-2" />
 					{varias ? t("Eliminar las seleccionadas") : t("Eliminar")}
 					<ContextMenuShortcut>Supr</ContextMenuShortcut>
 				</ContextMenuItem>

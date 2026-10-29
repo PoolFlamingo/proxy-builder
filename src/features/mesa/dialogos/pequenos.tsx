@@ -1,10 +1,10 @@
-import { Clock, Minus, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { FilaPt } from "@/bindings/FilaPt";
 import type { IdCarta } from "@/bindings/IdCarta";
 import type { ReglasCarta } from "@/bindings/ReglasCarta";
 import { CampoNumero, FilaInterruptor } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -280,7 +280,7 @@ export function EditarContadoresDialog({ carta }: { carta: IdCarta }) {
 						{grupos.map((g) => (
 							<div key={g.titulo} className="flex flex-col gap-1.5">
 								<span className="flex items-center gap-1 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-									{g.temporal && <Clock className="size-3" />}
+									{g.temporal && <Icono icon="lucide:clock" className="size-3" />}
 									{g.titulo}
 								</span>
 								{g.filas.map((f) => (
@@ -296,7 +296,7 @@ export function EditarContadoresDialog({ carta }: { carta: IdCarta }) {
 													aria-label={t("Quitar uno")}
 													onClick={() => void sumar(f.tipo, -1)}
 												>
-													<Minus />
+													<Icono icon="lucide:minus" />
 												</Button>
 												<CampoNumero
 													valor={f.n}
@@ -313,7 +313,7 @@ export function EditarContadoresDialog({ carta }: { carta: IdCarta }) {
 													aria-label={t("Añadir uno")}
 													onClick={() => void sumar(f.tipo, 1)}
 												>
-													<Plus />
+													<Icono icon="lucide:plus" />
 												</Button>
 											</>
 										)}
@@ -330,7 +330,7 @@ export function EditarContadoresDialog({ carta }: { carta: IdCarta }) {
 												aria-label={g.temporal ? t("Hacerlo permanente") : t("Hacerlo temporal")}
 												onClick={() => void alternar(f)}
 											>
-												<Clock />
+												<Icono icon="lucide:clock" />
 											</Button>
 										</WithTooltip>
 										<Button
@@ -339,7 +339,7 @@ export function EditarContadoresDialog({ carta }: { carta: IdCarta }) {
 											aria-label={t("Quitar")}
 											onClick={() => void (f.clave ? clave(f.tipo, false) : fijar(f.tipo, 0))}
 										>
-											<Trash2 />
+											<Icono icon="lucide:trash-2" />
 										</Button>
 									</div>
 								))}

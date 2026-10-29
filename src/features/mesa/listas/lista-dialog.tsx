@@ -1,10 +1,10 @@
-import { AlertTriangle, Check, Crown, Loader2, Search, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { AvisoLista } from "@/bindings/AvisoLista";
 import type { CartaDeLista } from "@/bindings/CartaDeLista";
 import type { Formato } from "@/bindings/Formato";
 import type { ListaDeJuego } from "@/bindings/ListaDeJuego";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -224,7 +224,11 @@ export function ListaDialog({
 			)}
 			{elegida && (
 				<span className="absolute top-0.5 right-0.5 rounded-full bg-primary p-0.5 text-primary-foreground">
-					{corona ? <Crown className="size-2.5" /> : <Check className="size-2.5" />}
+					{corona ? (
+						<Icono icon="game-icons:crown" className="size-2.5" />
+					) : (
+						<Icono icon="lucide:check" className="size-2.5" />
+					)}
 				</span>
 			)}
 			{c.marca && MARCAS[c.marca] && (
@@ -256,7 +260,7 @@ export function ListaDialog({
 				</DialogHeader>
 				{!todas ? (
 					<div className="flex flex-1 items-center justify-center gap-2 text-xs text-muted-foreground">
-						<Loader2 className="size-4 animate-spin" />
+						<Icono icon="lucide:loader-2" className="size-4 animate-spin" />
 						{t("Leyendo las cartas del deck…")}
 					</div>
 				) : (
@@ -280,7 +284,10 @@ export function ListaDialog({
 								{pide !== null ? `${n} / ${pide}` : t("{n} cartas", { n })}
 							</span>
 							<div className="relative ml-auto">
-								<Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+								<Icono
+									icon="lucide:search"
+									className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground"
+								/>
 								<Input
 									value={filtro}
 									onChange={(e) => setFiltro(e.target.value)}
@@ -311,7 +318,7 @@ export function ListaDialog({
 							{commander && (
 								<section className="flex w-56 shrink-0 flex-col gap-1.5 rounded-lg border p-2">
 									<h4 className="flex items-center gap-1.5 text-xs font-semibold">
-										<Crown className="size-3.5 text-amber-500" />
+										<Icono icon="game-icons:crown" className="size-3.5 text-amber-500" />
 										{t("Comandante")}
 									</h4>
 									<ScrollArea className="min-h-0 flex-1">
@@ -417,7 +424,7 @@ export function ListaDialog({
 												impide(a) ? "text-destructive" : "text-amber-600 dark:text-amber-400",
 											)}
 										>
-											<AlertTriangle className="size-3.5 shrink-0" />
+											<Icono icon="lucide:alert-triangle" className="size-3.5 shrink-0" />
 											{textoAviso(a, t)}
 										</li>
 									))}
@@ -434,7 +441,7 @@ export function ListaDialog({
 					)}
 					{lista && (
 						<Button variant="outline" onClick={() => void borrar()} disabled={guardando}>
-							<Trash2 className="size-4" />
+							<Icono icon="lucide:trash-2" className="size-4" />
 							{t("Borrar")}
 						</Button>
 					)}
@@ -442,7 +449,11 @@ export function ListaDialog({
 						{t("Cancelar")}
 					</Button>
 					<Button onClick={() => void guardar()} disabled={!todas || !nombre.trim() || guardando}>
-						{guardando ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+						{guardando ? (
+							<Icono icon="lucide:loader-2" className="size-4 animate-spin" />
+						) : (
+							<Icono icon="lucide:check" className="size-4" />
+						)}
 						{t("Guardar")}
 					</Button>
 				</DialogFooter>

@@ -1,5 +1,5 @@
-import { Swords } from "lucide-react";
 import { toast } from "sonner";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 
@@ -51,7 +51,7 @@ function AvisoBono({
 	return (
 		<div className="w-[340px] rounded-xl border-2 border-primary bg-popover p-3 text-popover-foreground shadow-2xl ring-4 ring-primary/25">
 			<div className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold tracking-wide text-primary uppercase">
-				<Swords className="size-3.5" />
+				<Icono icon="game-icons:crossed-swords" className="size-3.5" />
 				{t("Bono al adjuntar")}
 			</div>
 			<div className="flex items-center gap-3">

@@ -1,7 +1,7 @@
-import { CornerUpLeft, Reply } from "lucide-react";
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import type { IdJugador } from "@/bindings/IdJugador";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,7 +53,7 @@ export function BotonResponder() {
 						className="h-7 gap-1 px-2 text-xs"
 						onClick={() => void volverAlTurno()}
 					>
-						<CornerUpLeft className="size-3.5" />
+						<Icono icon="lucide:corner-up-left" className="size-3.5" />
 						{t("Volver a {nombre}", { nombre: jugadores[activo]?.nombre ?? "" })}
 					</Button>
 				</WithTooltip>
@@ -65,14 +65,14 @@ export function BotonResponder() {
 				<WithTooltip content={t("Cambiar de jugador que responde (Mayús+R)")}>
 					<DropdownMenuTrigger asChild>
 						<Button size="sm" variant="secondary" className="h-7 gap-1 px-2 text-xs">
-							<Reply className="size-3.5" />
+							<Icono icon="lucide:reply" className="size-3.5" />
 							{t("Respondiendo como {nombre}", { nombre: jugadores[viendo]?.nombre ?? "" })}
 						</Button>
 					</DropdownMenuTrigger>
 				</WithTooltip>
 				<DropdownMenuContent align="center" className="z-[9000] w-56">
 					<DropdownMenuItem onSelect={() => void volverAlTurno()}>
-						<CornerUpLeft className="size-3.5" />
+						<Icono icon="lucide:corner-up-left" className="size-3.5" />
 						{t("Volver a {nombre}", { nombre: jugadores[activo]?.nombre ?? "" })}
 					</DropdownMenuItem>
 					<DropdownMenuSeparator />
@@ -95,7 +95,7 @@ export function BotonResponder() {
 					className={ESTILO}
 					onClick={() => void responderComo(primero)}
 				>
-					<Reply className="size-3.5" />
+					<Icono icon="lucide:reply" className="size-3.5" />
 					{t("Responder como {nombre}", { nombre: jugadores[primero]?.nombre ?? "" })}
 				</Button>
 			</WithTooltip>
@@ -106,7 +106,7 @@ export function BotonResponder() {
 			<WithTooltip content={t("Responder desde la mesa de otro jugador (Mayús+R)")}>
 				<DropdownMenuTrigger asChild>
 					<Button size="sm" variant="ghost" className={ESTILO}>
-						<Reply className="size-3.5" />
+						<Icono icon="lucide:reply" className="size-3.5" />
 						{t("Responder")}
 					</Button>
 				</DropdownMenuTrigger>

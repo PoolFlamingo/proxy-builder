@@ -1,5 +1,5 @@
-import { Crown, Hand, RotateCcw, Skull } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { useMesa } from "@/stores/mesa-store";
@@ -69,17 +69,17 @@ export function AyudasTurno() {
 				>
 					{b === "enderezar" ? (
 						<>
-							<RotateCcw className="size-3.5" />
+							<Icono icon="lucide:rotate-ccw" className="size-3.5" />
 							{t("Enderezar todo")}
 						</>
 					) : b === "robar" ? (
 						<>
-							<Hand className="size-3.5" />
+							<Icono icon="lucide:hand" className="size-3.5" />
 							{t("Robar")}
 						</>
 					) : (
 						<>
-							<Skull className="size-3.5" />
+							<Icono icon="game-icons:tombstone" className="size-3.5" />
 							{t("Rad: moler {n}", { n: rad })}
 						</>
 					)}
@@ -92,7 +92,7 @@ export function AyudasTurno() {
 					className="rounded-full shadow-lg"
 					onClick={() => void hacer({ que: "robar", n: 1 })}
 				>
-					<Crown className="size-3.5 text-amber-400" />
+					<Icono icon="game-icons:crown" className="size-3.5 text-amber-400" />
 					{t("Robar (monarca)")}
 				</Button>
 			)}

@@ -1,9 +1,9 @@
-import { FolderOpen } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { DesignLang } from "@/bindings/DesignLang";
 import { Fila } from "@/components/campos";
 import { Bandera } from "@/components/emoji";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -185,7 +185,7 @@ function Contenido() {
 						onClick={exportar}
 						disabled={elegidas.length === 0 || idiomas.length === 0}
 					>
-						<FolderOpen />
+						<Icono icon="lucide:folder-open" />
 						{t("Elegir carpeta y exportar")}
 					</Button>
 				)}

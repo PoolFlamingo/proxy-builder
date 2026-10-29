@@ -1,5 +1,5 @@
-import { AlertTriangle } from "lucide-react";
 import type { DeckStats } from "@/bindings/DeckStats";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { cn } from "@/lib/utils";
 import { Bloque, Lista } from "./piezas";
@@ -84,7 +84,7 @@ export function Mana({ s }: { s: DeckStats }) {
 				)}
 				{pocas.length > 0 && (
 					<p className="flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400">
-						<AlertTriangle className="size-3.5" />
+						<Icono icon="lucide:alert-triangle" className="size-3.5" />
 						{t("Pocas fuentes para lo que piden los costes: {c}", {
 							c: pocas.map((c) => t(COLORES[c.color]?.nombre ?? c.color)).join(", "),
 						})}

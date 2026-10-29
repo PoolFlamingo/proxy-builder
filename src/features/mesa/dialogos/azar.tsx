@@ -1,6 +1,6 @@
-import { Coins, Dices } from "lucide-react";
 import { useState } from "react";
 import { CampoNumero, Selector } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -56,7 +56,7 @@ export function AzarDialog() {
 							size="sm"
 							onClick={() => lanzar({ que: "moneda", cuantas: 1, hastaPerder, pulgares })}
 						>
-							<Coins className="size-3.5" />
+							<Icono icon="game-icons:two-coins" className="size-3.5" />
 							{t("Lanzar la moneda")}
 						</Button>
 						<label className="flex items-center gap-1.5">
@@ -110,7 +110,7 @@ export function AzarDialog() {
 						ancho="w-20"
 					/>
 					<Button size="sm" onClick={() => tirar([[caras, n]])}>
-						<Dices className="size-3.5" />
+						<Icono icon="game-icons:rolling-dices" className="size-3.5" />
 						{t("Tirar")}
 					</Button>
 				</section>
