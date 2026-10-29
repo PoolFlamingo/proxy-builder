@@ -19,8 +19,8 @@ use crate::azar::Azar;
 use crate::error::Rechazo;
 use crate::ids::{IdCarta, IdJugador};
 use crate::modelo::{
-    Bolita, Carta, Eliminacion, Extremo, Flecha, InfoCarta, OrigenCarta, Partida, Pos, RefImagen,
-    RefZona, Senal, Vista, Zona, ZonaComun, POS_MAX, PREFIJO_TEMPORAL,
+    Bolita, Carta, Eliminacion, Extremo, Flecha, InfoCarta, Nota, OrigenCarta, Partida, Pos,
+    RefImagen, RefZona, Senal, Vista, Zona, ZonaComun, POS_MAX, PREFIJO_TEMPORAL,
 };
 use crate::sparring::{Decision, ReaccionApuntada, TipoReaccion};
 
@@ -30,8 +30,13 @@ pub const MAX_FICHAS_SUELTAS: u32 = 100;
 pub const MAX_CHAT: usize = 500;
 pub const MAX_ETIQUETA: usize = 20;
 pub const MAX_ETIQUETAS: usize = 4;
+/// Cuántos colores tienen las etiquetas (los 7 primeros son los de siempre).
+pub const COLORES_ETIQUETA: u8 = 16;
 pub const MAX_FLECHAS: usize = 200;
 pub const MAX_BOLITAS: usize = 200;
+pub const MAX_NOTA: usize = 200;
+/// Notas de cada jugador.
+pub const MAX_NOTAS: usize = 30;
 const MAX_DELTA: i32 = 1_000_000;
 const MAX_TEXTO: usize = 200;
 
@@ -41,7 +46,7 @@ pub struct Tocado {
     pub cartas: BTreeSet<IdCarta>,
     pub zonas: BTreeSet<RefZona>,
     pub jugadores: BTreeSet<IdJugador>,
-    /// Turno, flechas, bolitas, designaciones, fantasma, sparring, fin…
+    /// Turno, flechas, bolitas, notas, designaciones, fantasma, sparring, fin…
     pub general: bool,
 }
 
@@ -100,6 +105,7 @@ fn diferencias(a: &Partida, b: &Partida) -> Tocado {
     t.general = a.turno != b.turno
         || a.flechas != b.flechas
         || a.bolitas != b.bolitas
+        || a.notas != b.notas
         || a.designaciones != b.designaciones
         || a.pausada != b.pausada
         || a.fantasma != b.fantasma
@@ -189,6 +195,15 @@ fn carta(q: &Partida, id: IdCarta) -> Result<&Carta, Rechazo> {
 
 fn carta_mut(q: &mut Partida, id: IdCarta) -> Result<&mut Carta, Rechazo> {
     q.cartas.get_mut(&id).ok_or(Rechazo::NoExiste)
+}
+
+/// El texto de una nota, sin los espacios de los lados.
+fn texto_de_nota(texto: &str) -> Result<String, Rechazo> {
+    let t = texto.trim();
+    if t.is_empty() || t.chars().count() > MAX_NOTA {
+        return Err(Rechazo::Limite);
+    }
+    Ok(t.to_string())
 }
 
 fn existe_jugador(q: &Partida, j: IdJugador) -> Result<(), Rechazo> {
@@ -600,6 +615,7 @@ fn pasar_turno(q: &mut Partida, t_ms: u64) -> Result<(), Rechazo> {
         c.palabras_clave
             .retain(|palabra| !palabra.starts_with(PREFIJO_TEMPORAL));
     }
+    q.notas.retain(|n| !n.temporal);
     q.flechas.clear();
     let (siguiente, vuelta) = if q.turno.extra.is_empty() {
         siguiente_asiento(q, q.turno.activo).ok_or(Rechazo::NoSePuede)?
@@ -887,7 +903,10 @@ fn accion_(q: &mut Partida, a: &Accion, ctx: &mut Ctx, seq: u64) -> Result<(), R
             poner,
         } => {
             let texto = etiqueta.texto.trim().to_string();
-            if texto.is_empty() || texto.chars().count() > MAX_ETIQUETA || etiqueta.color >= 7 {
+            if texto.is_empty()
+                || texto.chars().count() > MAX_ETIQUETA
+                || etiqueta.color >= COLORES_ETIQUETA
+            {
                 return Err(Rechazo::Limite);
             }
             let c = carta_mut(q, *id)?;
@@ -1996,6 +2015,52 @@ fn accion_(q: &mut Partida, a: &Accion, ctx: &mut Ctx, seq: u64) -> Result<(), R
             Ok(())
         }
         Accion::Aviso { .. } => Ok(()),
+        // ── Notas ──
+        Accion::PonerNota {
+            texto,
+            temporal,
+            privada,
+        } => {
+            let autor = ctx.actor()?;
+            let texto = texto_de_nota(texto)?;
+            if q.notas.iter().filter(|n| n.autor == autor).count() >= MAX_NOTAS {
+                return Err(Rechazo::Limite);
+            }
+            let id = q.notas.iter().map(|n| n.id).max().unwrap_or(0) + 1;
+            q.notas.push(Nota {
+                id,
+                autor,
+                texto,
+                temporal: *temporal,
+                privada: *privada,
+            });
+            Ok(())
+        }
+        Accion::EditarNota {
+            id,
+            texto,
+            temporal,
+            privada,
+        } => {
+            let texto = texto_de_nota(texto)?;
+            let n = q
+                .notas
+                .iter_mut()
+                .find(|n| n.id == *id)
+                .ok_or(Rechazo::NoExiste)?;
+            n.texto = texto;
+            n.temporal = *temporal;
+            n.privada = *privada;
+            Ok(())
+        }
+        Accion::QuitarNota { id } => {
+            let antes = q.notas.len();
+            q.notas.retain(|n| n.id != *id);
+            if q.notas.len() == antes {
+                return Err(Rechazo::NoExiste);
+            }
+            Ok(())
+        }
         // ── Fin ──
         Accion::Terminar { resultado } => {
             for j in &resultado.ganadores {

@@ -266,6 +266,19 @@ fn permisos(p: &Partida, yo: IdJugador, a: &Accion) -> Result<(), Rechazo> {
             }
             Extremo::Jugador(_) => Ok(()),
         },
+        // Cada uno toca solo sus notas.
+        Accion::EditarNota { id, .. } | Accion::QuitarNota { id } => {
+            let n = p
+                .notas
+                .iter()
+                .find(|n| n.id == *id)
+                .ok_or(Rechazo::NoExiste)?;
+            if n.autor == yo || p.opciones.todos_tocan_todo {
+                Ok(())
+            } else {
+                Err(Rechazo::SinPermiso)
+            }
+        }
         Accion::PasarTurno => {
             if p.turno.activo == yo || p.opciones.todos_tocan_todo {
                 Ok(())

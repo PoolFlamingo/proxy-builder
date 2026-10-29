@@ -17,7 +17,8 @@ use crate::formato::{Formato, Opciones, Variantes};
 use crate::ids::{IdCarta, IdEquipo, IdJugador};
 use crate::modelo::{
     Bolita, Carta, Designaciones, Eliminacion, Equipo, EstadoMulligan, Etiqueta, Flecha, Jugador,
-    OrigenCarta, Partida, Pos, Pt, RefImagen, RefZona, Resultado, Senal, Turno, VidaFantasma, Zona,
+    Nota, OrigenCarta, Partida, Pos, Pt, RefImagen, RefZona, Resultado, Senal, Turno, VidaFantasma,
+    Zona,
 };
 use crate::muerte::{fuera_de_juego, Causa};
 use crate::sparring::EstadoSparring;
@@ -51,6 +52,8 @@ pub struct VistaGeneral {
     pub equipos: Vec<Equipo>,
     pub flechas: Vec<Flecha>,
     pub bolitas: Vec<Bolita>,
+    /// Las notas que este mirador puede leer (las privadas, solo su autor).
+    pub notas: Vec<Nota>,
     pub designaciones: Designaciones,
     pub pausada: bool,
     pub fantasma: Option<VidaFantasma>,
@@ -180,12 +183,18 @@ fn vista_jugador(p: &Partida, j: &Jugador, m: Mirador) -> VistaJugador {
     }
 }
 
-fn vista_general(p: &Partida) -> VistaGeneral {
+fn vista_general(p: &Partida, m: Mirador) -> VistaGeneral {
     VistaGeneral {
         turno: p.turno.clone(),
         equipos: p.equipos.clone(),
         flechas: p.flechas.clone(),
         bolitas: p.bolitas.clone(),
+        notas: p
+            .notas
+            .iter()
+            .filter(|n| n.la_ve(m.jugador()))
+            .cloned()
+            .collect(),
         designaciones: p.designaciones.clone(),
         pausada: p.pausada,
         fantasma: p.fantasma.clone(),
@@ -295,7 +304,7 @@ pub fn vista(p: &Partida, m: Mirador) -> VistaMesa {
         jugadores: p.jugadores.iter().map(|j| vista_jugador(p, j, m)).collect(),
         cartas,
         zonas,
-        general: vista_general(p),
+        general: vista_general(p, m),
     }
 }
 
@@ -343,7 +352,7 @@ pub fn parche(p: &Partida, t: &Tocado, m: Mirador) -> ParcheVista {
             .filter(|j| t.jugadores.contains(&j.id) || (t.general && j.equipo.is_some()))
             .map(|j| vista_jugador(p, j, m))
             .collect(),
-        general: t.general.then(|| vista_general(p)),
+        general: t.general.then(|| vista_general(p, m)),
     }
 }
 

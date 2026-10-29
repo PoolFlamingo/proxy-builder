@@ -1173,6 +1173,10 @@ fn evento_visible(partida: &Partida, cambio: &Cambio, quitadas: &[mesa::IdCarta]
     if matches!(cambio, Cambio::Restaurar { .. }) {
         return false;
     }
+    // Las notas (privadas o no) llegan al espectador solo en el parche.
+    if matches!(cambio, Cambio::Accion { accion, .. } if accion.es_nota()) {
+        return false;
+    }
     cartas_nombradas(cambio).into_iter().all(|n| {
         let id = mesa::IdCarta(n);
         if quitadas.contains(&id) {
@@ -1485,6 +1489,20 @@ mod tests {
             &mover(vec![mesa::IdCarta(9_999)], Zona::Cementerio),
             &[]
         ));
+    }
+
+    #[test]
+    fn al_espectador_no_le_llegan_los_eventos_de_notas() {
+        let s = Sesion::nueva(config(), vec![mazo()]).unwrap();
+        let nota = Cambio::Accion {
+            accion: Accion::PonerNota {
+                texto: "secreto".into(),
+                temporal: false,
+                privada: true,
+            },
+            azar: None,
+        };
+        assert!(!evento_visible(s.partida(), &nota, &[]));
     }
 
     #[test]

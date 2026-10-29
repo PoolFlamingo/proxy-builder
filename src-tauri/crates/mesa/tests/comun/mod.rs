@@ -442,6 +442,15 @@ fn son_companeros_con_mano_abierta(p: &Partida, yo: Option<IdJugador>, dueno: Id
 /// enseña nada que el mirador no deba ver.
 pub fn sin_fugas(p: &Partida, v: &VistaMesa, m: Mirador) {
     let yo = m.jugador();
+    // Las notas privadas son de su autor y de nadie más (tampoco de «todo a la vista»).
+    for n in &v.general.notas {
+        assert!(
+            !n.privada || Some(n.autor) == yo,
+            "nota privada de {:?} para {:?}",
+            n.autor,
+            m
+        );
+    }
     for z in &v.zonas {
         let publica = z.zona.es_publica();
         let mia = match z.zona {

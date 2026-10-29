@@ -47,6 +47,30 @@ fn eventos_de_ejemplo() -> Vec<Evento> {
         },
         ..ultimo
     });
+    // v3: las notas.
+    for (k, accion) in [
+        Accion::PonerNota {
+            texto: "2 de maná rojo".into(),
+            temporal: true,
+            privada: true,
+        },
+        Accion::EditarNota {
+            id: 1,
+            texto: "3 de maná".into(),
+            temporal: false,
+            privada: false,
+        },
+        Accion::QuitarNota { id: 1 },
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        eventos.push(Evento {
+            seq: ultimo.seq + 2 + k as u64,
+            cambio: mesa::Cambio::Accion { accion, azar: None },
+            ..ultimo.clone()
+        });
+    }
     eventos
 }
 

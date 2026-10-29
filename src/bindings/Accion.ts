@@ -38,4 +38,4 @@ dados: Array<[number, number]>, } | { "que": "moneda", cuantas: number, hastaPer
 /**
  * En un sacrificio, la que elige el jugador.
  */
-eleccion: IdCarta | null, } | { "que": "chat", texto: string, } | { "que": "aviso", tipo: AvisoRapido, } | { "que": "terminar", resultado: Resultado, } | { "que": "deshacer", hasta: number | null, } | { "que": "rehacer" };
+eleccion: IdCarta | null, } | { "que": "chat", texto: string, } | { "que": "aviso", tipo: AvisoRapido, } | { "que": "ponerNota", texto: string, temporal: boolean, privada: boolean, } | { "que": "editarNota", id: number, texto: string, temporal: boolean, privada: boolean, } | { "que": "quitarNota", id: number, } | { "que": "terminar", resultado: Resultado, } | { "que": "deshacer", hasta: number | null, } | { "que": "rehacer" };

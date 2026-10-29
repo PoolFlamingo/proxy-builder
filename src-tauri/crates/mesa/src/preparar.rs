@@ -263,6 +263,7 @@ pub fn iniciar(
         },
         flechas: Vec::new(),
         bolitas: Vec::new(),
+        notas: Vec::new(),
         designaciones: Designaciones::default(),
         pausada: false,
         fantasma: (n == 1).then(|| VidaFantasma {

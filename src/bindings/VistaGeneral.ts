@@ -5,8 +5,13 @@ import type { Equipo } from "./Equipo";
 import type { EstadoMulligan } from "./EstadoMulligan";
 import type { EstadoSparring } from "./EstadoSparring";
 import type { Flecha } from "./Flecha";
+import type { Nota } from "./Nota";
 import type { Resultado } from "./Resultado";
 import type { Turno } from "./Turno";
 import type { VidaFantasma } from "./VidaFantasma";
 
-export type VistaGeneral = { turno: Turno, equipos: Array<Equipo>, flechas: Array<Flecha>, bolitas: Array<Bolita>, designaciones: Designaciones, pausada: boolean, fantasma: VidaFantasma | null, sparring: EstadoSparring, mulligan: EstadoMulligan | null, fin: Resultado | null, };
+export type VistaGeneral = { turno: Turno, equipos: Array<Equipo>, flechas: Array<Flecha>, bolitas: Array<Bolita>, 
+/**
+ * Las notas que este mirador puede leer (las privadas, solo su autor).
+ */
+notas: Array<Nota>, designaciones: Designaciones, pausada: boolean, fantasma: VidaFantasma | null, sparring: EstadoSparring, mulligan: EstadoMulligan | null, fin: Resultado | null, };

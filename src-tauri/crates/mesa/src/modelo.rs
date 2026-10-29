@@ -36,6 +36,11 @@ pub struct Partida {
     pub turno: Turno,
     pub flechas: Vec<Flecha>,
     pub bolitas: Vec<Bolita>,
+    /// Las notas de los jugadores (el maná de un tesoro, un recordatorio…).
+    /// `skip_serializing_if` para que las partidas y los registros anteriores
+    /// no cambien de huella.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub notas: Vec<Nota>,
     pub designaciones: Designaciones,
     pub pausada: bool,
     /// La vida del rival imaginado del solitario («Phantom life»).
@@ -425,7 +430,7 @@ impl Pos {
     }
 }
 
-/// Una etiqueta de texto sobre una carta (≤ 20 caracteres, 7 colores).
+/// Una etiqueta de texto sobre una carta (≤ 20 caracteres, 16 colores).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
 pub struct Etiqueta {
@@ -444,6 +449,29 @@ pub struct Pt {
     pub hasta_fin_de_turno: (i32, i32),
     /// Tapa todo lo demás.
     pub fijo: Option<(i32, i32)>,
+}
+
+/// Una nota que apunta un jugador para acordarse de algo: el maná que dejó
+/// sacrificar un tesoro, un efecto hasta el final del turno…
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct Nota {
+    pub id: u32,
+    pub autor: IdJugador,
+    pub texto: String,
+    /// Se borra sola al terminar el turno (como los contadores `~`).
+    pub temporal: bool,
+    /// Solo la ve su autor.
+    pub privada: bool,
+}
+
+impl Nota {
+    /// Si la ve este mirador. Ni siquiera «todo a la vista» (la repetición)
+    /// enseña las privadas: son de quien las escribió.
+    pub fn la_ve(&self, yo: Option<IdJugador>) -> bool {
+        !self.privada || yo == Some(self.autor)
+    }
 }
 
 /// Un «Place marker»: una bolita de color en un punto del campo.

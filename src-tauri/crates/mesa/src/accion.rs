@@ -49,6 +49,7 @@
 //! | `AlAzarDe`, `TodoAlFondoAlAzar`, `BarajarTodoDentro`, `ExiliarTodo` | cementerio y exilio (§4) |
 //! | `IntensidadSparring`, `DecidirSparring` | sparring (Fase D) |
 //! | `Chat`, `Aviso` | Fase H |
+//! | `PonerNota`, `EditarNota`, `QuitarNota` | notas de cada jugador, públicas o privadas, fijas o temporales (v3) |
 //! | `Terminar` | «¿Quién ganó?» (`capturas/pablo/21`) |
 
 use serde::{Deserialize, Serialize};
@@ -62,7 +63,7 @@ use crate::modelo::{
 use crate::sparring::{Decision, Intensidad, ReaccionSparring};
 
 /// Sube con cada variante nueva o cambiada de `Accion` o `Cambio`.
-pub const VERSION_CATALOGO: u32 = 2;
+pub const VERSION_CATALOGO: u32 = 3;
 
 impl Accion {
     /// Lo que se puede hacer por otro jugador (`PorJugador`): lo que afecta a
@@ -828,6 +829,23 @@ pub enum Accion {
     Aviso {
         tipo: AvisoRapido,
     },
+    // ── Notas (v3) ──
+    /// Apunta una nota del que la pide.
+    PonerNota {
+        texto: String,
+        temporal: bool,
+        privada: bool,
+    },
+    /// Cambia una nota propia (el texto, si es temporal o si es privada).
+    EditarNota {
+        id: u32,
+        texto: String,
+        temporal: bool,
+        privada: bool,
+    },
+    QuitarNota {
+        id: u32,
+    },
     // ── Fin ──
     Terminar {
         resultado: Resultado,
@@ -844,5 +862,14 @@ impl Accion {
     /// Lo que no cambia la partida ni se deshace (va al registro igual).
     pub fn es_comunicacion(&self) -> bool {
         matches!(self, Accion::Chat { .. } | Accion::Aviso { .. })
+    }
+
+    /// Las notas: cambian la partida pero no son parte del juego, así que no
+    /// se deshacen ni cuentan como «la última acción» (`registro.rs`).
+    pub fn es_nota(&self) -> bool {
+        matches!(
+            self,
+            Accion::PonerNota { .. } | Accion::EditarNota { .. } | Accion::QuitarNota { .. }
+        )
     }
 }

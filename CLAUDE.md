@@ -223,7 +223,7 @@ le falta una cadena le sale la inglesa.
   a propósito (`Anfitrion::irse`, también al cerrar la ventana) con código
   directo y algún jugador conectado, **cede la partida** (`DelHost::Traspaso`,
   sucesor = asiento más bajo conectado; el que se fue no cuenta para la
-  mayoría, `ido`) en vez de cerrarla. `PROTOCOLO` = 3 (Pablo, 29/10/2026: `AlHost::Apodo`; en la sala de espera cada uno cambia su nombre y su deck/lista en caliente, `features/mesa/red/eleccion-en-sala.tsx`, comandos `red_apodo`, `red_deck`, `red_anfitrion_deck`; el nombre se recuerda en `features/mesa/nombre.ts`). Prueba con procesos
+  mayoría, `ido`) en vez de cerrarla. `PROTOCOLO` = 4 (notas y 16 colores de etiqueta; catálogo v3) y antes 3 (Pablo, 29/10/2026: `AlHost::Apodo`; en la sala de espera cada uno cambia su nombre y su deck/lista en caliente, `features/mesa/red/eleccion-en-sala.tsx`, comandos `red_apodo`, `red_deck`, `red_anfitrion_deck`; el nombre se recuerda en `features/mesa/nombre.ts`). Prueba con procesos
   reales: `red/pruebas_procesos.rs` (`#[ignore]`, `--ignored`); un host
   matado con `SIGKILL` se nota a los ~30 s (tiempo de inactividad de QUIC).
   **Tiempo real y enlaces** (Fase E cerrada): `red/latencia.rs` manda por
@@ -253,6 +253,15 @@ le falta una cadena le sale la inglesa.
   `Enlaces.ausentes`, `red/anfitrion.rs::{vigilar_ausentes, expulsar}`,
   `Sesion::suplir`, `sala_expulsar` en el servidor; pantalla en
   `features/mesa/{muerte,dano-de-quien}.tsx` y `red/ausentes.tsx`.
+  **Notas** (Pablo, 29/10/2026): `Accion::{PonerNota,EditarNota,QuitarNota}`
+  (catálogo v3, `tests/catalogo/v3.json`) y `Partida.notas` (`Nota`: autor,
+  texto, `temporal` —se borra en `pasar_turno`— y `privada`). Cada una es de su
+  autor; `VistaGeneral.notas` se filtra por mirador (`Nota::la_ve`, ni la
+  repetición «todo» enseña las privadas) y el registro oculta las privadas
+  (`visibleEnRegistro`); no se deshacen (`Accion::es_nota`) y al espectador no
+  le llegan sus eventos (`evento_visible`). Pantalla: pestaña «Notas» del panel
+  lateral (`features/mesa/notas.tsx`). Las etiquetas de carta tienen 16 colores
+  (`COLORES_ETIQUETA`; los 7 primeros no se mueven).
   **Final, historial, registro, chat y sonidos** (Fase H; Pablo, 27/10/2026):
   `mesa::resumir` (`crates/mesa/src/resumen.rs`) cuenta puestos, rondas y
   duración del registro (la pantalla nunca recuenta). Al `Terminar`, la

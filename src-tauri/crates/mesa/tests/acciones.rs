@@ -112,6 +112,9 @@ fn nombre(a: &Accion) -> &'static str {
         Accion::DecidirSparring { .. } => "DecidirSparring",
         Accion::Chat { .. } => "Chat",
         Accion::Aviso { .. } => "Aviso",
+        Accion::PonerNota { .. } => "PonerNota",
+        Accion::EditarNota { .. } => "EditarNota",
+        Accion::QuitarNota { .. } => "QuitarNota",
         Accion::Terminar { .. } => "Terminar",
         Accion::Deshacer { .. } => "Deshacer",
         Accion::Rehacer => "Rehacer",
@@ -275,6 +278,22 @@ fn cada_accion_del_catalogo() {
     });
     m.haz(Accion::QuitarBolita { id: b });
     assert!(m.p().bolitas.is_empty());
+    // Notas.
+    m.haz(Accion::PonerNota {
+        texto: "2 de maná".into(),
+        temporal: true,
+        privada: true,
+    });
+    let nota = m.p().notas[0].id;
+    m.haz(Accion::EditarNota {
+        id: nota,
+        texto: "3 de maná".into(),
+        temporal: false,
+        privada: false,
+    });
+    assert_eq!(m.p().notas[0].texto, "3 de maná");
+    m.haz(Accion::QuitarNota { id: nota });
+    assert!(m.p().notas.is_empty());
     // Adjuntar.
     let anillo = m.al_campo("Ring");
     m.haz(Accion::Adjuntar {
@@ -840,6 +859,9 @@ const TODAS: &[&str] = &[
     "DecidirSparring",
     "Chat",
     "Aviso",
+    "PonerNota",
+    "EditarNota",
+    "QuitarNota",
     "Terminar",
     "Deshacer",
     "Rehacer",
