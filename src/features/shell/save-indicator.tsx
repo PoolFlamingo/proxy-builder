@@ -1,7 +1,8 @@
-import { AlertTriangle, Check, Loader2 } from "lucide-react";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
+import { Button } from "@/components/ui/button";
 import { WithTooltip } from "@/components/ui/with-tooltip";
-import { useDeck } from "@/stores/deck-store";
+import { guardarAhora, useDeck } from "@/stores/deck-store";
 
 /** «Guardado / Guardando… / Sin guardar / Error al guardar», en la barra superior. */
 export function SaveIndicator() {
@@ -14,20 +15,20 @@ export function SaveIndicator() {
 	const contenido = {
 		saved: (
 			<>
-				<Check className="size-3.5 text-primary" />
+				<Icono icon="lucide:check" className="size-3.5 text-primary" />
 				{t("Guardado")}
 			</>
 		),
 		saving: (
 			<>
-				<Loader2 className="size-3.5 animate-spin" />
+				<Icono icon="lucide:loader-2" className="size-3.5 animate-spin" />
 				{t("Guardando…")}
 			</>
 		),
 		dirty: <>{t("Sin guardar")}</>,
 		error: (
 			<>
-				<AlertTriangle className="size-3.5 text-destructive" />
+				<Icono icon="lucide:alert-triangle" className="size-3.5 text-destructive" />
 				{t("Error al guardar")}
 			</>
 		),
@@ -36,8 +37,18 @@ export function SaveIndicator() {
 	const etiqueta = (
 		<span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">{contenido}</span>
 	);
+	// Con error, se puede volver a intentar ahí mismo (el tooltip dice qué pasó).
 	return guardado === "error" ? (
-		<WithTooltip content={mensaje(error)}>{etiqueta}</WithTooltip>
+		<WithTooltip content={`${mensaje(error)} ${t("Pulsa para reintentar.")}`}>
+			<Button
+				size="xs"
+				variant="ghost"
+				className="text-[11px] text-muted-foreground"
+				onClick={() => void guardarAhora().catch(() => {})}
+			>
+				{contenido}
+			</Button>
+		</WithTooltip>
 	) : (
 		etiqueta
 	);

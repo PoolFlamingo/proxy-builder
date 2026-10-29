@@ -1,8 +1,9 @@
-import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { DeckKind } from "@/bindings/DeckKind";
 import type { DeckStats } from "@/bindings/DeckStats";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
+import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
@@ -64,11 +65,13 @@ function Contenido() {
 	const [error, setError] = useState<unknown>(null);
 	const [pestana, setPestana] = useState<Pestana>("resumen");
 	const [moneda, setMoneda] = useState<Moneda>("eur");
+	const [intento, setIntento] = useState(0);
 
 	useEffect(() => {
 		if (!cartas) return;
 		let vigente = true;
 		setCargando(true);
+		setError(null);
 		call("deck_stats", { cards: cartas, kind })
 			.then((r) => vigente && setS(r))
 			.catch((e) => vigente && setError(e))
@@ -76,7 +79,7 @@ function Contenido() {
 		return () => {
 			vigente = false;
 		};
-	}, [cartas, kind]);
+	}, [cartas, kind, intento]);
 
 	const pestanas: { valor: Pestana; texto: string }[] = [
 		{ valor: "resumen", texto: t("Resumen") },
@@ -96,7 +99,9 @@ function Contenido() {
 			<DialogHeader className="pr-6">
 				<DialogTitle className="flex items-center gap-2">
 					{t("Estadísticas del deck")}
-					{cargando && s && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+					{cargando && s && (
+						<Icono icon="lucide:loader-2" className="size-4 animate-spin text-muted-foreground" />
+					)}
 				</DialogTitle>
 				<DialogDescription className="text-xs">
 					{t(
@@ -105,10 +110,16 @@ function Contenido() {
 				</DialogDescription>
 			</DialogHeader>
 			{error !== null ? (
-				<p className="py-10 text-center text-xs text-destructive">{mensaje(error)}</p>
+				<div className="flex flex-col items-center gap-2.5 py-10 text-xs">
+					<p className="text-center text-destructive">{mensaje(error)}</p>
+					<Button size="sm" variant="outline" onClick={() => setIntento((n) => n + 1)}>
+						<Icono icon="lucide:refresh-cw" className="size-4" />
+						{t("Reintentar")}
+					</Button>
+				</div>
 			) : !s ? (
 				<div className="flex flex-1 flex-col items-center justify-center gap-2 text-xs text-muted-foreground">
-					<Loader2 className="size-5 animate-spin" />
+					<Icono icon="lucide:loader-2" className="size-5 animate-spin" />
 					{t("Leyendo los datos de las cartas…")}
 				</div>
 			) : (

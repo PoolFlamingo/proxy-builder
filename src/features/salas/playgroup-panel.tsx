@@ -1,20 +1,9 @@
-import {
-	Check,
-	Copy,
-	Crown,
-	Eye,
-	Link2,
-	LogIn,
-	LogOut,
-	MoreHorizontal,
-	Play,
-	Shield,
-} from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Formato } from "@/bindings/Formato";
 import type { Playgroup } from "@/bindings/Playgroup";
 import { CampoNumero, Fila, FilaInterruptor, Selector } from "@/components/campos";
 import { Confirmar } from "@/components/confirmar";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { call } from "@/lib/ipc";
+import { useOcupado } from "@/lib/use-ocupado";
+import { cn } from "@/lib/utils";
 import { useSalas } from "@/stores/salas-store";
 import type { Preparacion } from "../mesa/red/red-dialog";
 import {
@@ -65,12 +56,20 @@ export function CodigoInvitacion({ codigo }: { codigo: string }) {
 				{bonito}
 			</code>
 			<Button size="sm" variant="outline" onClick={() => copiar(bonito, "codigo")}>
-				{copiado === "codigo" ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+				{copiado === "codigo" ? (
+					<Icono icon="lucide:check" className="size-3.5" />
+				) : (
+					<Icono icon="lucide:copy" className="size-3.5" />
+				)}
 				{copiado === "codigo" ? t("Copiado") : t("Copiar")}
 			</Button>
 			{enlace && (
 				<Button size="sm" variant="outline" onClick={() => copiar(enlace, "enlace")}>
-					{copiado === "enlace" ? <Check className="size-3.5" /> : <Link2 className="size-3.5" />}
+					{copiado === "enlace" ? (
+						<Icono icon="lucide:check" className="size-3.5" />
+					) : (
+						<Icono icon="lucide:link-2" className="size-3.5" />
+					)}
 					{copiado === "enlace" ? t("Copiado") : t("Copiar enlace")}
 				</Button>
 			)}
@@ -88,6 +87,13 @@ export function PanelPlaygroup({ pg, preparar }: { pg: Playgroup; preparar: Prep
 	const yo = useSalas((s) => s.yo);
 	const [codigo, setCodigo] = useState<string | null>(null);
 	const [salir, setSalir] = useState(false);
+	const [ocupado, envolver] = useOcupado();
+	// Lo que no tiene vuelta atrás, con quién: se pregunta antes.
+	const [pendiente, setPendiente] = useState<{
+		que: "pasar" | "expulsar";
+		clave: string;
+		apodo: string;
+	} | null>(null);
 	const [formato, setFormato] = useState<Formato>(preparar.formato);
 	const [maximo, setMaximo] = useState(4);
 	const [espectadores, setEspectadores] = useState(true);
@@ -98,7 +104,7 @@ export function PanelPlaygroup({ pg, preparar }: { pg: Playgroup; preparar: Prep
 			<div className="flex items-center gap-2.5">
 				<h3 className="truncate text-sm font-semibold">{pg.nombre}</h3>
 				<Button size="sm" variant="ghost" className="ml-auto" onClick={() => setSalir(true)}>
-					<LogOut className="size-3.5" />
+					<Icono icon="lucide:log-out" className="size-3.5" />
 					{t("Salir del playgroup")}
 				</Button>
 			</div>
@@ -110,7 +116,8 @@ export function PanelPlaygroup({ pg, preparar }: { pg: Playgroup; preparar: Prep
 						<Button
 							size="sm"
 							variant="outline"
-							onClick={async () => setCodigo(await invitar(pg.id))}
+							disabled={ocupado}
+							onClick={() => void envolver(async () => setCodigo(await invitar(pg.id)))}
 						>
 							{t("Invitar")}
 						</Button>
@@ -140,8 +147,12 @@ export function PanelPlaygroup({ pg, preparar }: { pg: Playgroup; preparar: Prep
 									<span className="truncate">
 										{m.clave === yo ? t("{nombre} (tú)", { nombre: m.apodo }) : m.apodo}
 									</span>
-									{m.rol === "dueno" && <Crown className="size-3.5 text-amber-500" />}
-									{m.rol === "admin" && <Shield className="size-3.5 text-sky-500" />}
+									{m.rol === "dueno" && (
+										<Icono icon="game-icons:crown" className="size-3.5 text-amber-500" />
+									)}
+									{m.rol === "admin" && (
+										<Icono icon="game-icons:shield" className="size-3.5 text-sky-500" />
+									)}
 									{manda && m.clave !== yo && m.rol !== "dueno" && (
 										<DropdownMenu>
 											<DropdownMenuTrigger asChild>
@@ -151,7 +162,7 @@ export function PanelPlaygroup({ pg, preparar }: { pg: Playgroup; preparar: Prep
 													className="ml-auto"
 													aria-label={t("Opciones")}
 												>
-													<MoreHorizontal className="size-3.5" />
+													<Icono icon="lucide:more-horizontal" className="size-3.5" />
 												</Button>
 											</DropdownMenuTrigger>
 											<DropdownMenuContent align="end">
@@ -170,14 +181,18 @@ export function PanelPlaygroup({ pg, preparar }: { pg: Playgroup; preparar: Prep
 												)}
 												{pg.rol === "dueno" && (
 													<DropdownMenuItem
-														onClick={() => void cambiarRol(pg.id, m.clave, "dueno")}
+														onClick={() =>
+															setPendiente({ que: "pasar", clave: m.clave, apodo: m.apodo })
+														}
 													>
 														{t("Pasarle el playgroup")}
 													</DropdownMenuItem>
 												)}
 												<DropdownMenuItem
 													className="text-destructive"
-													onClick={() => void expulsar(pg.id, m.clave)}
+													onClick={() =>
+														setPendiente({ que: "expulsar", clave: m.clave, apodo: m.apodo })
+													}
 												>
 													{t("Expulsar")}
 												</DropdownMenuItem>
@@ -214,18 +229,24 @@ export function PanelPlaygroup({ pg, preparar }: { pg: Playgroup; preparar: Prep
 											<Button
 												size="sm"
 												variant="outline"
-												onClick={() => void unirseASala(s.id, "jugador", preparar.nombre)}
+												disabled={ocupado}
+												onClick={() =>
+													void envolver(() => unirseASala(s.id, "jugador", preparar.nombre))
+												}
 											>
-												<LogIn className="size-3.5" />
+												<Icono icon="lucide:log-in" className="size-3.5" />
 												{t("Entrar")}
 											</Button>
 										)}
 										<Button
 											size="sm"
 											variant="ghost"
-											onClick={() => void unirseASala(s.id, "espectador", preparar.nombre)}
+											disabled={ocupado}
+											onClick={() =>
+												void envolver(() => unirseASala(s.id, "espectador", preparar.nombre))
+											}
 										>
-											<Eye className="size-3.5" />
+											<Icono icon="lucide:eye" className="size-3.5" />
 											{t("Mirar")}
 										</Button>
 									</div>
@@ -268,14 +289,20 @@ export function PanelPlaygroup({ pg, preparar }: { pg: Playgroup; preparar: Prep
 						/>
 						<Button
 							size="sm"
+							disabled={ocupado}
 							onClick={() =>
-								void crearSala(
-									{ playgroup: pg.id, formato, maxJugadores: maximo, espectadores },
-									preparar.nombre,
+								void envolver(() =>
+									crearSala(
+										{ playgroup: pg.id, formato, maxJugadores: maximo, espectadores },
+										preparar.nombre,
+									),
 								)
 							}
 						>
-							<Play className="size-3.5" />
+							<Icono
+								icon={ocupado ? "lucide:loader-2" : "lucide:play"}
+								className={cn("size-3.5", ocupado && "animate-spin")}
+							/>
 							{t("Crear sala")}
 						</Button>
 					</div>
@@ -293,6 +320,27 @@ export function PanelPlaygroup({ pg, preparar }: { pg: Playgroup; preparar: Prep
 				accion={t("Salir")}
 				destructiva
 				onConfirmar={() => void salirDePlaygroup(pg.id)}
+			/>
+			<Confirmar
+				abierto={pendiente !== null}
+				onCerrar={() => setPendiente(null)}
+				titulo={
+					pendiente?.que === "pasar"
+						? t("¿Pasarle el playgroup a {nombre}?", { nombre: pendiente.apodo })
+						: t("¿Expulsar a {nombre}?", { nombre: pendiente?.apodo ?? "" })
+				}
+				descripcion={
+					pendiente?.que === "pasar"
+						? t("Dejarás de ser quien manda en el playgroup y no podrás deshacerlo.")
+						: t("Para volver hará falta otra invitación.")
+				}
+				accion={pendiente?.que === "pasar" ? t("Pasárselo") : t("Expulsar")}
+				destructiva
+				onConfirmar={() => {
+					if (!pendiente) return;
+					if (pendiente.que === "pasar") void cambiarRol(pg.id, pendiente.clave, "dueno");
+					else void expulsar(pg.id, pendiente.clave);
+				}}
 			/>
 		</div>
 	);

@@ -1,6 +1,8 @@
+import { toast } from "sonner";
 import type { DeckCard } from "@/bindings/DeckCard";
 import type { FaceImage } from "@/bindings/FaceImage";
 import type { MarcaCarta } from "@/bindings/MarcaCarta";
+import { paraTraducir, traduccionSuelta } from "@/components/language-provider";
 import { elegirImagenes, type T } from "@/features/decklist/acciones";
 import { imagenDorso, nombreDeFichero } from "@/lib/cartas";
 import { actualizar, duplicar, huecos, moverGrupo, quitar } from "@/lib/deck-ops";
@@ -34,8 +36,20 @@ export function duplicarCartas(ids: string[]) {
 }
 
 export function eliminarCartas(ids: string[]) {
+	if (ids.length === 0) return;
 	useDeck.getState().setCartas((c) => quitar(c, ids));
 	useUi.getState().seleccionar([], null);
+	conDeshacer(paraTraducir("Cartas quitadas"));
+}
+
+/** Un aviso de algo que cambia mucho el deck, con su «Deshacer» a mano. */
+function conDeshacer(texto: string) {
+	toast(traduccionSuelta(texto), {
+		action: {
+			label: traduccionSuelta(paraTraducir("Deshacer")),
+			onClick: () => useDeck.getState().deshacer(),
+		},
+	});
 }
 
 /**
@@ -167,6 +181,7 @@ export async function autoOrdenar(t: T) {
 	});
 	useDeck.getState().setCartas(() => nuevas);
 	useUi.getState().anunciar(t("Cartas ordenadas"));
+	conDeshacer(paraTraducir("Cartas ordenadas"));
 }
 
 /** «+ Añadir página»: una página de huecos. */

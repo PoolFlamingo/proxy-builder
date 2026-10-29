@@ -1,10 +1,11 @@
-import { Save, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Offset } from "@/bindings/Offset";
 import type { Preset } from "@/bindings/Preset";
 import type { PresetKind } from "@/bindings/PresetKind";
 import type { PrintSettings } from "@/bindings/PrintSettings";
+import { Confirmar } from "@/components/confirmar";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,7 @@ function Presets({
 	const [lista, setLista] = useState<Preset[]>([]);
 	const [elegido, setElegido] = useState<string>("");
 	const [nombre, setNombre] = useState("");
+	const [confirmarBorrar, setConfirmarBorrar] = useState(false);
 	const [abierto, setAbierto] = useState(false);
 
 	const refrescar = useCallback(() => {
@@ -110,7 +112,7 @@ function Presets({
 							className="size-7"
 							aria-label={t("Guardar como preset")}
 						>
-							<Save />
+							<Icono icon="lucide:save" />
 						</Button>
 					</PopoverTrigger>
 				</WithTooltip>
@@ -135,12 +137,22 @@ function Presets({
 					variant="ghost"
 					className="size-7"
 					disabled={!elegido}
-					onClick={borrar}
+					onClick={() => setConfirmarBorrar(true)}
 					aria-label={t("Borrar el preset elegido")}
 				>
-					<Trash2 />
+					<Icono icon="lucide:trash-2" />
 				</Button>
 			</WithTooltip>
+			<Confirmar
+				abierto={confirmarBorrar}
+				onCerrar={() => setConfirmarBorrar(false)}
+				titulo={t("¿Borrar el preset «{n}»?", {
+					n: lista.find((x) => x.id === elegido)?.name ?? "",
+				})}
+				accion={t("Borrar")}
+				destructiva
+				onConfirmar={() => void borrar()}
+			/>
 		</div>
 	);
 }

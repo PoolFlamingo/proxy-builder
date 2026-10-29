@@ -1,18 +1,3 @@
-import {
-	Bookmark,
-	Contrast,
-	Crop,
-	Crosshair,
-	FileDown,
-	FileOutput,
-	Layers,
-	Loader2,
-	Printer,
-	Rows3,
-	Ruler,
-	Scissors,
-	X,
-} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { BleedMode } from "@/bindings/BleedMode";
@@ -31,6 +16,7 @@ import {
 	Seccion,
 	Selector,
 } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { SelectorIdioma } from "@/components/selector-idioma";
 import { Button } from "@/components/ui/button";
@@ -45,6 +31,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { WithTooltip } from "@/components/ui/with-tooltip";
 import { cancelarTrabajo } from "@/features/decklist/acciones";
 import { ponerIdiomaDiseno } from "@/features/disenar/renumerar";
 import { call } from "@/lib/ipc";
@@ -69,6 +56,8 @@ const TAMANOS = {
 export function ExportPanel() {
 	const { t, mensaje } = useLang();
 	const s = useDeck((st) => st.deck?.settings);
+	// Sin cartas no hay nada que imprimir (los huecos no cuentan).
+	const vacio = useDeck((st) => !st.deck?.cards.some((c) => c.source.kind !== "blank"));
 	const setAjustes = useDeck((st) => st.setAjustes);
 	const filas = usePlan((st) => st.plan?.grid.rows ?? 3);
 	const hayGrandes = usePlan((st) => !!st.plan?.bigGrid);
@@ -135,7 +124,7 @@ export function ExportPanel() {
 				{exportando ? (
 					<div className="flex flex-col gap-1.5">
 						<div className="flex items-center gap-2 text-xs">
-							<Loader2 className="size-3.5 animate-spin text-primary" />
+							<Icono icon="lucide:loader-2" className="size-3.5 animate-spin text-primary" />
 							<span className="flex-1 truncate">{trabajo.fase}</span>
 							{trabajo.total > 0 && (
 								<span className="font-mono text-[11px] text-muted-foreground">
@@ -148,21 +137,25 @@ export function ExportPanel() {
 							className="h-1.5"
 						/>
 						<Button size="sm" variant="outline" onClick={cancelarTrabajo} disabled={!trabajo.jobId}>
-							<X />
+							<Icono icon="lucide:x" />
 							{t("Cancelar exportación")}
 						</Button>
 					</div>
 				) : (
 					// El botón partido: el PDF y, en los tres puntos, las demás formas.
 					<div className="flex">
-						<Button
-							onClick={exportar}
-							disabled={trabajo !== null}
-							className="min-w-0 flex-1 rounded-r-none !text-sm"
-						>
-							<FileDown />
-							{t("Exportar PDF")}
-						</Button>
+						<WithTooltip content={vacio ? t("El deck está vacío.") : null}>
+							<span className="flex min-w-0 flex-1">
+								<Button
+									onClick={exportar}
+									disabled={trabajo !== null || vacio}
+									className="min-w-0 flex-1 rounded-r-none !text-sm"
+								>
+									<Icono icon="lucide:file-down" />
+									{t("Exportar PDF")}
+								</Button>
+							</span>
+						</WithTooltip>
 						<MenuExportar deshabilitado={trabajo !== null} />
 					</div>
 				)}
@@ -170,7 +163,11 @@ export function ExportPanel() {
 
 			<ScrollArea className="min-h-0 flex-1">
 				<div className="flex flex-col gap-2.5 p-2.5" data-tutorial="exportar-ajustes">
-					<Seccion id="exp-pdf" titulo={t("PDF")} icono={<FileOutput className="size-3.5" />}>
+					<Seccion
+						id="exp-pdf"
+						titulo={t("PDF")}
+						icono={<Icono icon="lucide:file-output" className="size-3.5" />}
+					>
 						<Fila etiqueta={t("Calidad")}>
 							<ToggleGroup
 								type="single"
@@ -244,7 +241,11 @@ export function ExportPanel() {
 						</Fila>
 					</Seccion>
 
-					<Seccion id="exp-duplex" titulo={t("Doble cara")} icono={<Layers className="size-3.5" />}>
+					<Seccion
+						id="exp-duplex"
+						titulo={t("Doble cara")}
+						icono={<Icono icon="lucide:layers" className="size-3.5" />}
+					>
 						<Fila etiqueta={t("Impresión")}>
 							<Selector
 								valor={s.duplex}
@@ -270,12 +271,16 @@ export function ExportPanel() {
 							/>
 						)}
 						<Button size="sm" variant="outline" onClick={intentar(() => exportarCalibracion(t))}>
-							<Crosshair />
+							<Icono icon="lucide:crosshair" />
 							{t("Hoja de calibración")}
 						</Button>
 					</Seccion>
 
-					<Seccion id="exp-pagina" titulo={t("Página")} icono={<Printer className="size-3.5" />}>
+					<Seccion
+						id="exp-pagina"
+						titulo={t("Página")}
+						icono={<Icono icon="lucide:printer" className="size-3.5" />}
+					>
 						<Fila etiqueta={t("Papel")}>
 							<Selector
 								valor={s.paper}
@@ -320,7 +325,7 @@ export function ExportPanel() {
 					<Seccion
 						id="exp-sangrado"
 						titulo={t("Separación y sangrado")}
-						icono={<Crop className="size-3.5" />}
+						icono={<Icono icon="lucide:crop" className="size-3.5" />}
 					>
 						<Fila etiqueta={t("Separación")} ayuda={t("Espacio entre cartas")}>
 							<CampoNumero
@@ -370,7 +375,7 @@ export function ExportPanel() {
 					<Seccion
 						id="exp-guias"
 						titulo={t("Guías de corte")}
-						icono={<Scissors className="size-3.5" />}
+						icono={<Icono icon="lucide:scissors" className="size-3.5" />}
 					>
 						<FilaInterruptor
 							etiqueta={t("Dibujar guías")}
@@ -422,7 +427,7 @@ export function ExportPanel() {
 					<Seccion
 						id="exp-bordes"
 						titulo={t("Oscurecer bordes")}
-						icono={<Contrast className="size-3.5" />}
+						icono={<Icono icon="lucide:contrast" className="size-3.5" />}
 						abiertaAlPrincipio={false}
 					>
 						<FilaInterruptor
@@ -485,7 +490,7 @@ export function ExportPanel() {
 					<Seccion
 						id="exp-filas"
 						titulo={t("Alinear filas")}
-						icono={<Rows3 className="size-3.5" />}
+						icono={<Icono icon="lucide:rows-3" className="size-3.5" />}
 						abiertaAlPrincipio={false}
 					>
 						<AlinearFilas filas={filas} />
@@ -494,7 +499,7 @@ export function ExportPanel() {
 					<Seccion
 						id="exp-presets"
 						titulo={t("Presets de impresión")}
-						icono={<Bookmark className="size-3.5" />}
+						icono={<Icono icon="lucide:bookmark" className="size-3.5" />}
 						abiertaAlPrincipio={false}
 					>
 						<p className="text-[11px] text-muted-foreground">
@@ -506,7 +511,7 @@ export function ExportPanel() {
 					</Seccion>
 
 					<p className="flex items-start gap-1.5 px-1 text-[10px] text-muted-foreground">
-						<Ruler className="mt-px size-3 shrink-0" />
+						<Icono icon="lucide:ruler" className="mt-px size-3 shrink-0" />
 						{t("Imprime al 100 % (sin «ajustar a la página») para que las medidas salgan exactas.")}
 					</p>
 				</div>

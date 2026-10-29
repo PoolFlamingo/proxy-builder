@@ -1,6 +1,6 @@
 import { getVersion } from "@tauri-apps/api/app";
-import { Languages } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { SelectorIdioma } from "@/components/selector-idioma";
 import {
@@ -12,6 +12,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Actualizaciones, ReiniciarParaActualizar } from "./actualizaciones";
+import { Almacenamiento } from "./almacenamiento";
 import { Appearance } from "./appearance";
 import { AjustesMesa } from "./mesa";
 import { NombresIdiomas } from "./nombres-idiomas";
@@ -32,7 +33,7 @@ export function SettingsDialog({
 				<DialogHeader>
 					<DialogTitle>{t("Ajustes")}</DialogTitle>
 					<DialogDescription className="flex items-center justify-between gap-2.5">
-						<span>{t("Idioma y aspecto de la aplicación.")}</span>
+						<span>{t("Idioma, aspecto, mesa de juego, actualizaciones y almacenamiento.")}</span>
 						<span className="flex items-center gap-2">
 							<ReiniciarParaActualizar />
 							{version && (
@@ -47,7 +48,7 @@ export function SettingsDialog({
 					<div className="flex flex-col gap-4">
 						<div className="flex items-center justify-between gap-2.5 rounded-lg border p-2.5">
 							<span className="flex items-center gap-2 text-xs font-medium">
-								<Languages className="size-3.5" />
+								<Icono icon="lucide:languages" className="size-3.5" />
 								{t("Idioma")}
 							</span>
 							<SelectorIdioma valor={lang} onCambio={setLang} ariaLabel={t("Idioma")} />
@@ -56,6 +57,7 @@ export function SettingsDialog({
 						<NombresIdiomas />
 						<Appearance />
 						<AjustesMesa />
+						<Almacenamiento />
 					</div>
 				</DialogCuerpo>
 			</DialogContent>

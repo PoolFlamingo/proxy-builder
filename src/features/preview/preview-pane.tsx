@@ -7,19 +7,6 @@ import {
 	useSensor,
 	useSensors,
 } from "@dnd-kit/core";
-import {
-	AlertTriangle,
-	BarChart3,
-	Eye,
-	FilePlus2,
-	Info,
-	Layers,
-	Minus,
-	Plus,
-	RotateCcw,
-	SquareStack,
-	Wand2,
-} from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { DeckCard } from "@/bindings/DeckCard";
@@ -28,6 +15,7 @@ import type { PrintSettings } from "@/bindings/PrintSettings";
 import type { RectMm } from "@/bindings/RectMm";
 import { CampoNumero } from "@/components/campos";
 import { Confirmar } from "@/components/confirmar";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -115,6 +103,8 @@ function anchoPara(mmCarta: number, escala: number, tope: AnchoMiniatura): Ancho
 export function PreviewPane() {
 	const { t, mensaje } = useLang();
 	const deck = useDeck((s) => s.deck);
+	const puedeDeshacer = useDeck((s) => s.pasado.length > 0);
+	const puedeRehacer = useDeck((s) => s.futuro.length > 0);
 	const plan = usePlan((s) => s.plan);
 	const errorPlan = usePlan((s) => s.error);
 	const zoom = useUi((s) => s.zoom);
@@ -174,9 +164,31 @@ export function PreviewPane() {
 			>
 				<WithTooltip content={t("La vista es aproximada; el resultado exacto es el del PDF.")}>
 					<span className="mr-1 flex items-center gap-1.5 text-xs font-medium">
-						<Eye className="size-3.5 text-muted-foreground" />
+						<Icono icon="lucide:eye" className="size-3.5 text-muted-foreground" />
 						{t("Vista {papel}", { papel })}
 					</span>
+				</WithTooltip>
+				<WithTooltip content={t("Deshacer (Ctrl+Z)")}>
+					<Button
+						size="icon-xs"
+						variant="outline"
+						disabled={!puedeDeshacer}
+						aria-label={t("Deshacer")}
+						onClick={() => useDeck.getState().deshacer()}
+					>
+						<Icono icon="lucide:undo-2" />
+					</Button>
+				</WithTooltip>
+				<WithTooltip content={t("Rehacer (Ctrl+Mayús+Z)")}>
+					<Button
+						size="icon-xs"
+						variant="outline"
+						disabled={!puedeRehacer}
+						aria-label={t("Rehacer")}
+						onClick={() => useDeck.getState().rehacer()}
+					>
+						<Icono icon="lucide:redo-2" />
+					</Button>
 				</WithTooltip>
 				<WithTooltip
 					content={t("Junta las copias, quita los huecos y deja las fijadas en su sitio")}
@@ -187,7 +199,7 @@ export function PreviewPane() {
 						disabled={deck.cards.length < 2}
 						onClick={() => autoOrdenar(t).catch((e) => toast.error(mensaje(e)))}
 					>
-						<Wand2 />
+						<Icono icon="lucide:wand-2" />
 						{t("Auto ordenar")}
 					</Button>
 				</WithTooltip>
@@ -198,7 +210,7 @@ export function PreviewPane() {
 					pressed={infoCarta}
 					onPressedChange={(v) => useUi.getState().setInfoCarta(v)}
 				>
-					<Info className="size-3" />
+					<Icono icon="lucide:info" className="size-3" />
 					{t("Info de carta")}
 				</Toggle>
 				<Toggle
@@ -208,7 +220,7 @@ export function PreviewPane() {
 					pressed={verReversos}
 					onPressedChange={(v) => useUi.getState().setVerReversos(v)}
 				>
-					<SquareStack className="size-3" />
+					<Icono icon="lucide:square-stack" className="size-3" />
 					{t("Ver reversos")}
 				</Toggle>
 				<ToggleGroup
@@ -239,20 +251,22 @@ export function PreviewPane() {
 						disabled={deck.cards.length === 0}
 						onClick={() => useUi.getState().abrir({ tipo: "estadisticas" })}
 					>
-						<BarChart3 />
+						<Icono icon="lucide:bar-chart-3" />
 						{t("Estadísticas")}
 					</Button>
 				</WithTooltip>
 				<div className="ml-auto flex items-center gap-1">
-					<Button
-						size="icon-xs"
-						variant="ghost"
-						onClick={() => setZoom(zoom - PASO_ZOOM)}
-						disabled={zoom <= ZOOM_MIN}
-						aria-label={t("Alejar")}
-					>
-						<Minus />
-					</Button>
+					<WithTooltip content={t("Alejar")}>
+						<Button
+							size="icon-xs"
+							variant="ghost"
+							onClick={() => setZoom(zoom - PASO_ZOOM)}
+							disabled={zoom <= ZOOM_MIN}
+							aria-label={t("Alejar")}
+						>
+							<Icono icon="lucide:minus" />
+						</Button>
+					</WithTooltip>
 					<WithTooltip content={t("Ctrl + rueda del ratón para acercar o alejar")}>
 						<div>
 							<CampoNumero
@@ -267,15 +281,17 @@ export function PreviewPane() {
 							/>
 						</div>
 					</WithTooltip>
-					<Button
-						size="icon-xs"
-						variant="ghost"
-						onClick={() => setZoom(zoom + PASO_ZOOM)}
-						disabled={zoom >= ZOOM_MAX}
-						aria-label={t("Acercar")}
-					>
-						<Plus />
-					</Button>
+					<WithTooltip content={t("Acercar")}>
+						<Button
+							size="icon-xs"
+							variant="ghost"
+							onClick={() => setZoom(zoom + PASO_ZOOM)}
+							disabled={zoom >= ZOOM_MAX}
+							aria-label={t("Acercar")}
+						>
+							<Icono icon="lucide:plus" />
+						</Button>
+					</WithTooltip>
 					<WithTooltip content={t("Volver al 100 %")}>
 						<Button
 							size="icon-xs"
@@ -284,11 +300,11 @@ export function PreviewPane() {
 							disabled={zoom === 1}
 							aria-label={t("Volver al 100 %")}
 						>
-							<RotateCcw />
+							<Icono icon="lucide:rotate-ccw" />
 						</Button>
 					</WithTooltip>
 					<Button size="xs" onClick={() => useUi.getState().abrir({ tipo: "anadir" })}>
-						<Plus />
+						<Icono icon="lucide:plus" />
 						{t("Añadir carta")}
 					</Button>
 				</div>
@@ -298,13 +314,13 @@ export function PreviewPane() {
 				<div className="flex flex-col gap-1 border-b bg-amber-500/10 px-2.5 py-1.5 text-[11px] text-amber-700 dark:text-amber-300">
 					{errorPlan !== null && (
 						<span className="flex items-center gap-1.5">
-							<AlertTriangle className="size-3.5" />
+							<Icono icon="lucide:alert-triangle" className="size-3.5" />
 							{mensaje(errorPlan)}
 						</span>
 					)}
 					{avisos.map((w) => (
 						<span key={w.kind} className="flex items-center gap-1.5">
-							<AlertTriangle className="size-3.5" />
+							<Icono icon="lucide:alert-triangle" className="size-3.5" />
 							{w.kind === "dfcWithoutBack"
 								? t(
 										"{n} cartas de doble cara sin dúplex: su otra cara no se imprime (activa «Pares DFC intercalados» o el dúplex).",
@@ -333,7 +349,7 @@ export function PreviewPane() {
 								<Empty className="mt-16">
 									<EmptyHeader>
 										<EmptyMedia variant="icon">
-											<Layers />
+											<Icono icon="lucide:layers" />
 										</EmptyMedia>
 										<EmptyTitle>{t("El deck está vacío")}</EmptyTitle>
 										<EmptyDescription>
@@ -343,7 +359,7 @@ export function PreviewPane() {
 										</EmptyDescription>
 									</EmptyHeader>
 									<Button size="sm" onClick={() => useUi.getState().abrir({ tipo: "anadir" })}>
-										<Plus />
+										<Icono icon="lucide:plus" />
 										{t("Añadir carta")}
 									</Button>
 								</Empty>
@@ -386,7 +402,7 @@ export function PreviewPane() {
 					className="absolute right-4 bottom-4 shadow-lg"
 					onClick={() => anadirPagina(porPagina)}
 				>
-					<FilePlus2 />
+					<Icono icon="lucide:file-plus-2" />
 					{t("Añadir página")}
 				</Button>
 			</div>

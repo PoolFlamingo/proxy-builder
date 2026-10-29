@@ -1,11 +1,15 @@
-import { Crown, Eye, Layers, Loader2, LogOut, Play, Smartphone, UserX } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import type { Formato } from "@/bindings/Formato";
+import { Confirmar } from "@/components/confirmar";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { call } from "@/lib/ipc";
+import { useOcupado } from "@/lib/use-ocupado";
+import { cn } from "@/lib/utils";
 import { useSalas } from "@/stores/salas-store";
 import { useTrabajo } from "@/stores/trabajo-store";
 import { EleccionEnSala } from "../mesa/red/eleccion-en-sala";
@@ -20,7 +24,10 @@ import { CodigoInvitacion } from "./playgroup-panel";
  * elige entonces el host y la partida se abre sola.
  */
 export function SalaEspera({ preparar }: { preparar: Preparacion }) {
-	const { t } = useLang();
+	const { t, mensaje } = useLang();
+	// A quién se va a expulsar (se pregunta antes).
+	const [ocupado, envolver] = useOcupado();
+	const [expulsar, setExpulsar] = useState<{ clave: string; apodo: string } | null>(null);
 	const sala = useSalas((s) => s.sala);
 	const yo = useSalas((s) => s.yo);
 	const como = useSalas((s) => s.como);
@@ -54,7 +61,8 @@ export function SalaEspera({ preparar }: { preparar: Preparacion }) {
 						<Button
 							size="sm"
 							variant="outline"
-							onClick={async () => setCodigo(await invitar(null))}
+							disabled={ocupado}
+							onClick={() => void envolver(async () => setCodigo(await invitar(null)))}
 						>
 							{t("Invitar a la sala")}
 						</Button>
@@ -80,22 +88,26 @@ export function SalaEspera({ preparar }: { preparar: Preparacion }) {
 								<span className="truncate font-medium">
 									{m.clave === yo ? t("{nombre} (tú)", { nombre: m.apodo }) : m.apodo}
 								</span>
-								{m.clave === sala.sala.creador && <Crown className="size-3.5 text-amber-500" />}
-								{m.como === "espectador" && <Eye className="size-3.5 text-muted-foreground" />}
+								{m.clave === sala.sala.creador && (
+									<Icono icon="game-icons:crown" className="size-3.5 text-amber-500" />
+								)}
+								{m.como === "espectador" && (
+									<Icono icon="lucide:eye" className="size-3.5 text-muted-foreground" />
+								)}
 								{m.plataforma !== "escritorio" && (
-									<Smartphone className="size-3.5 text-muted-foreground" />
+									<Icono icon="lucide:smartphone" className="size-3.5 text-muted-foreground" />
 								)}
 								{sala.host === m.clave && (
 									<span className="rounded bg-primary/15 px-1 text-[10px] text-primary">
 										{t("Host")}
 									</span>
 								)}
-								<span className="ml-auto flex items-center gap-1 truncate text-[11px] text-muted-foreground">
+								<span className="ml-auto flex min-w-0 items-center gap-1 text-[11px] text-muted-foreground">
 									{m.como === "jugador" &&
 										(m.deck ? (
 											<>
-												<Layers className="size-3" />
-												{m.deck}
+												<Icono icon="lucide:layers" className="size-3 shrink-0" />
+												<span className="truncate">{m.deck}</span>
 											</>
 										) : (
 											t("Sin deck todavía")
@@ -115,9 +127,10 @@ export function SalaEspera({ preparar }: { preparar: Preparacion }) {
 										<Button
 											size="icon-sm"
 											variant="ghost"
-											onClick={() => void call("salas_sala_expulsar", { clave: m.clave })}
+											aria-label={t("Expulsar de la sala")}
+											onClick={() => setExpulsar({ clave: m.clave, apodo: m.apodo })}
 										>
-											<UserX className="size-3.5" />
+											<Icono icon="lucide:user-x" className="size-3.5" />
 										</Button>
 									</WithTooltip>
 								)}
@@ -143,7 +156,7 @@ export function SalaEspera({ preparar }: { preparar: Preparacion }) {
 			)}
 			{como === "jugador" && !empezada && (
 				<div className="flex items-center gap-2.5 rounded-lg border bg-card/40 p-2.5">
-					<Layers className="size-4 text-primary" />
+					<Icono icon="lucide:layers" className="size-4 text-primary" />
 					<span className="min-w-0 flex-1 truncate text-xs">
 						{deck
 							? t("Juegas con «{deck}».", { deck })
@@ -165,7 +178,7 @@ export function SalaEspera({ preparar }: { preparar: Preparacion }) {
 							)
 						}
 					>
-						{trabajo ? <Loader2 className="size-3.5 animate-spin" /> : null}
+						{trabajo ? <Icono icon="lucide:loader-2" className="size-3.5 animate-spin" /> : null}
 						{deck ? t("Cambiar por el elegido") : t("Jugar con este deck")}
 					</Button>
 				</div>
@@ -173,28 +186,61 @@ export function SalaEspera({ preparar }: { preparar: Preparacion }) {
 			<div className="flex items-center justify-end gap-2.5">
 				{empezada ? (
 					<p className="mr-auto flex items-center gap-1.5 text-xs text-muted-foreground">
-						<Loader2 className="size-3.5 animate-spin" />
+						<Icono icon="lucide:loader-2" className="size-3.5 animate-spin" />
 						{t("Empezando: el servidor elige quién hace de host…")}
 					</p>
 				) : (
 					!soyCreador && (
 						<p className="mr-auto flex items-center gap-1.5 text-xs text-muted-foreground">
-							<Loader2 className="size-3.5 animate-spin" />
+							<Icono icon="lucide:loader-2" className="size-3.5 animate-spin" />
 							{t("Esperando a que quien creó la sala empiece…")}
 						</p>
 					)
 				)}
 				<Button variant="outline" onClick={() => void salirDeSala()}>
-					<LogOut className="size-4" />
+					<Icono icon="lucide:log-out" className="size-4" />
 					{t("Salir de la sala")}
 				</Button>
 				{soyCreador && !empezada && (
-					<Button disabled={!puedeEmpezar} onClick={() => void empezarSala()}>
-						<Play className="size-4" />
-						{t("Empezar")}
-					</Button>
+					<WithTooltip
+						content={
+							jugadores.length < 2
+								? t("Hacen falta al menos 2 jugadores.")
+								: listos < jugadores.length
+									? t("Falta que todos elijan su deck.")
+									: null
+						}
+					>
+						{/* El `span`: un botón desactivado no avisa al pasar por encima. */}
+						<span>
+							<Button
+								disabled={!puedeEmpezar || ocupado}
+								onClick={() => void envolver(() => empezarSala())}
+							>
+								<Icono
+									icon={ocupado ? "lucide:loader-2" : "lucide:play"}
+									className={cn("size-4", ocupado && "animate-spin")}
+								/>
+								{t("Empezar")}
+							</Button>
+						</span>
+					</WithTooltip>
 				)}
 			</div>
+			<Confirmar
+				abierto={expulsar !== null}
+				onCerrar={() => setExpulsar(null)}
+				titulo={t("¿Expulsar a {nombre}?", { nombre: expulsar?.apodo ?? "" })}
+				descripcion={t("Sale de la sala ahora mismo.")}
+				accion={t("Expulsar")}
+				destructiva
+				onConfirmar={() => {
+					if (!expulsar) return;
+					call("salas_sala_expulsar", { clave: expulsar.clave }).catch((e) =>
+						toast.error(mensaje(e)),
+					);
+				}}
+			/>
 		</div>
 	);
 }

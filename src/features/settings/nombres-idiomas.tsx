@@ -1,7 +1,8 @@
-import { Download, Globe, Loader2, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { NombresIdiomasInfo } from "@/bindings/NombresIdiomasInfo";
+import { Confirmar } from "@/components/confirmar";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -45,6 +46,7 @@ export function NombresIdiomas() {
 		}
 	};
 
+	const [confirmarQuitar, setConfirmarQuitar] = useState(false);
 	const quitar = async () => {
 		try {
 			await call("names_index_remove", {});
@@ -59,18 +61,22 @@ export function NombresIdiomas() {
 		<div className="flex flex-col gap-2 rounded-lg border p-2.5">
 			<div className="flex items-center justify-between gap-2.5">
 				<span className="flex items-center gap-2 text-xs font-medium">
-					<Globe className="size-3.5" />
+					<Icono icon="lucide:globe" className="size-3.5" />
 					{t("Nombres en otros idiomas")}
 				</span>
 				<div className="flex items-center gap-1.5">
 					{info?.descargado && progreso === null && (
-						<Button size="xs" variant="ghost" onClick={quitar}>
-							<Trash2 />
+						<Button size="xs" variant="ghost" onClick={() => setConfirmarQuitar(true)}>
+							<Icono icon="lucide:trash-2" />
 							{t("Quitar")}
 						</Button>
 					)}
 					<Button size="xs" variant="outline" onClick={descargar} disabled={progreso !== null}>
-						{progreso !== null ? <Loader2 className="animate-spin" /> : <Download />}
+						{progreso !== null ? (
+							<Icono icon="lucide:loader-2" className="animate-spin" />
+						) : (
+							<Icono icon="lucide:download" />
+						)}
 						{info?.descargado ? t("Actualizar") : t("Descargar (unos {mb} MB)", { mb })}
 					</Button>
 				</div>
@@ -91,6 +97,15 @@ export function NombresIdiomas() {
 					{t("{n} nombres descargados.", { n: info.nombres })}
 				</p>
 			)}
+			<Confirmar
+				abierto={confirmarQuitar}
+				onCerrar={() => setConfirmarQuitar(false)}
+				titulo={t("¿Quitar los nombres en otros idiomas?")}
+				descripcion={t("Para volver a tenerlos hay que descargarlos otra vez ({mb} MB).", { mb })}
+				accion={t("Quitar")}
+				destructiva
+				onConfirmar={() => void quitar()}
+			/>
 		</div>
 	);
 }

@@ -1,7 +1,7 @@
-import { BookOpen, Brush, CircleHelp, Layers, Settings, Swords } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useDefaultLayout } from "react-resizable-panels";
 import { Confirmar } from "@/components/confirmar";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,10 +66,10 @@ export function AppShell({
 		<div className="flex h-svh flex-col bg-background text-foreground">
 			<header className="flex h-12 shrink-0 items-center gap-2.5 border-b px-3">
 				<div className="flex items-center gap-2">
-					<Layers className="size-5 text-primary" />
+					<Icono icon="lucide:layers" className="size-5 text-primary" />
 					<div className="leading-tight">
 						<div className="text-sm font-semibold">Proxy Builder</div>
-						<div className="text-[10px] text-muted-foreground">
+						<div className="hidden text-[10px] text-muted-foreground lg:block">
 							{t("Scryfall · listo para imprimir")}
 						</div>
 					</div>
@@ -87,19 +87,19 @@ export function AppShell({
 					}
 				>
 					<ToggleGroupItem value="deck" className="gap-1.5 px-3 text-xs">
-						<Layers className="size-3.5" />
+						<Icono icon="lucide:layers" className="size-3.5" />
 						{t("Deck")}
 					</ToggleGroupItem>
 					<ToggleGroupItem value="disenar" className="gap-1.5 px-3 text-xs">
-						<Brush className="size-3.5" />
+						<Icono icon="lucide:brush" className="size-3.5" />
 						{t("Diseñar")}
 					</ToggleGroupItem>
 					<ToggleGroupItem value="biblioteca" className="gap-1.5 px-3 text-xs">
-						<BookOpen className="size-3.5" />
+						<Icono icon="lucide:book-open" className="size-3.5" />
 						{t("Biblioteca")}
 					</ToggleGroupItem>
 					<ToggleGroupItem value="mesa" className="group gap-1.5 px-3 text-xs">
-						<Swords className="size-3.5" />
+						<Icono icon="game-icons:crossed-swords" className="size-3.5" />
 						{t("Jugar")}
 						<span className="rounded-full bg-primary/15 px-1.5 text-[9px] font-semibold uppercase leading-4 text-primary group-data-[state=on]:bg-accent-foreground/20 group-data-[state=on]:text-accent-foreground">
 							{t("Beta")}
@@ -118,10 +118,11 @@ export function AppShell({
 							onClick={() => useUi.getState().abrirTutorial(vista)}
 							aria-label={t("Tutorial de esta pantalla")}
 						>
-							<CircleHelp className="size-4" />
+							<Icono icon="lucide:circle-help" className="size-4" />
 						</Button>
 					</WithTooltip>
-					<WithTooltip content={avisoAjustes}>
+					{/* Estrecha la ventana, solo el icono: el tooltip dice qué es. */}
+					<WithTooltip content={avisoAjustes ?? t("Ajustes")}>
 						<Button
 							size="sm"
 							variant="ghost"
@@ -130,8 +131,8 @@ export function AppShell({
 							aria-label={avisoAjustes ? `${t("Ajustes")}: ${avisoAjustes}` : t("Ajustes")}
 							className="relative"
 						>
-							<Settings className="size-4" />
-							{t("Ajustes")}
+							<Icono icon="lucide:settings" className="size-4" />
+							<span className="hidden lg:inline">{t("Ajustes")}</span>
 							<PuntoActualizacion />
 						</Button>
 					</WithTooltip>
@@ -212,7 +213,7 @@ function NombreDeck() {
 			}}
 			aria-label={t("Nombre del deck")}
 			data-tutorial="nombre-deck"
-			className="ml-2 h-7 w-64 border-transparent bg-transparent text-sm font-medium shadow-none hover:border-input focus-visible:border-input"
+			className="ml-2 h-7 w-64 min-w-24 shrink border-transparent bg-transparent text-sm font-medium shadow-none hover:border-input focus-visible:border-input"
 		/>
 	);
 }

@@ -1,7 +1,7 @@
-import { Loader2, LogIn, Plus, Users, WifiOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { ComoEnSala } from "@/bindings/ComoEnSala";
 import { Selector } from "@/components/campos";
+import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +20,9 @@ import { conectar, crearPlaygroup, usarCodigo } from "./conexion-salas";
 import { PanelPlaygroup } from "./playgroup-panel";
 import { SalaEspera } from "./sala-espera";
 
+/** Lo que se espera al servidor de salas antes de ofrecer reintentar, en ms. */
+const ESPERA_SERVIDOR_MS = 10_000;
+
 /**
  * **Jugar con amigos** (Fase F): los playgroups de esta instalación (solo
  * por invitación), unirse con un código y, dentro de una sala, la sala de
@@ -29,10 +32,13 @@ export function SalasDialog({
 	abierto,
 	onCerrar,
 	preparar,
+	onConCodigo,
 }: {
 	abierto: boolean;
 	onCerrar: () => void;
 	preparar: Preparacion;
+	/** Ir a «En red…» (código directo): sin servidor, el camino que queda. */
+	onConCodigo: () => void;
 }) {
 	const { t } = useLang();
 	const hayServidor = useSalas((s) => s.hayServidor);
@@ -41,11 +47,17 @@ export function SalasDialog({
 	const sala = useSalas((s) => s.sala);
 	const [elegido, setElegido] = useState<string | null>(null);
 	const [comprobado, setComprobado] = useState(false);
+	// Lo que se lleva esperando al servidor: pasado un rato, se ofrece reintentar.
+	const [tarda, setTarda] = useState(false);
+	const [intento, setIntento] = useState(0);
 
 	useEffect(() => {
 		if (!abierto) return;
+		setTarda(false);
 		void conectar(preparar.nombre).finally(() => setComprobado(true));
-	}, [abierto, preparar.nombre]);
+		const id = window.setTimeout(() => setTarda(true), ESPERA_SERVIDOR_MS);
+		return () => window.clearTimeout(id);
+	}, [abierto, preparar.nombre, intento]);
 	useEffect(() => {
 		if (!elegido || !playgroups.some((p) => p.id === elegido)) {
 			setElegido(playgroups[0]?.id ?? null);
@@ -58,7 +70,7 @@ export function SalasDialog({
 			<DialogContent className="max-w-4xl">
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-1.5">
-						<Users className="size-4 text-primary" />
+						<Icono icon="lucide:users" className="size-4 text-primary" />
 						{t("Jugar con amigos")}
 					</DialogTitle>
 					<DialogDescription>
@@ -69,21 +81,54 @@ export function SalasDialog({
 				</DialogHeader>
 				{!comprobado ? (
 					<p className="flex items-center gap-1.5 p-2.5 text-xs text-muted-foreground">
-						<Loader2 className="size-3.5 animate-spin" />
+						<Icono icon="lucide:loader-2" className="size-3.5 animate-spin" />
 						{t("Conectando con el servidor…")}
 					</p>
 				) : !hayServidor ? (
-					<p className="flex items-start gap-1.5 rounded-md bg-muted/40 p-2.5 text-xs text-muted-foreground">
-						<WifiOff className="mt-0.5 size-3.5 shrink-0" />
-						{t(
-							"Esta versión aún no tiene servidor de salas. Puedes jugar en red con un código desde «En red…».",
-						)}
-					</p>
+					<div className="flex flex-col items-start gap-2.5 rounded-md bg-muted/40 p-2.5 text-xs text-muted-foreground">
+						<p className="flex items-start gap-1.5">
+							<Icono icon="lucide:wifi-off" className="mt-0.5 size-3.5 shrink-0" />
+							{t(
+								"Esta versión aún no tiene servidor de salas. Puedes jugar en red con un código desde «En red…».",
+							)}
+						</p>
+						<Button
+							size="sm"
+							onClick={() => {
+								onCerrar();
+								onConCodigo();
+							}}
+						>
+							<Icono icon="lucide:plug" className="size-4" />
+							{t("Jugar con un código…")}
+						</Button>
+					</div>
 				) : !conectado ? (
-					<p className="flex items-center gap-1.5 p-2.5 text-xs text-muted-foreground">
-						<Loader2 className="size-3.5 animate-spin" />
-						{t("Conectando con el servidor…")}
-					</p>
+					<div className="flex flex-col items-start gap-2.5 p-2.5 text-xs text-muted-foreground">
+						<p className="flex items-center gap-1.5">
+							<Icono icon="lucide:loader-2" className="size-3.5 animate-spin" />
+							{t("Conectando con el servidor…")}
+						</p>
+						{tarda && (
+							<div className="flex flex-wrap items-center gap-2.5">
+								<span>{t("El servidor no responde.")}</span>
+								<Button size="sm" variant="outline" onClick={() => setIntento((n) => n + 1)}>
+									<Icono icon="lucide:refresh-cw" className="size-4" />
+									{t("Reintentar")}
+								</Button>
+								<Button
+									size="sm"
+									variant="ghost"
+									onClick={() => {
+										onCerrar();
+										onConCodigo();
+									}}
+								>
+									{t("Jugar con un código…")}
+								</Button>
+							</div>
+						)}
+					</div>
 				) : (
 					<div className="flex h-[min(560px,70vh)] min-h-0 gap-2.5">
 						<aside className="flex w-64 shrink-0 flex-col gap-2.5">
@@ -179,7 +224,7 @@ function CrearPlaygroup() {
 				onKeyDown={(e) => e.key === "Enter" && nombre.trim() && void crear()}
 			/>
 			<Button size="sm" variant="outline" disabled={!nombre.trim() || ocupado} onClick={crear}>
-				<Plus className="size-3.5" />
+				<Icono icon="lucide:plus" className="size-3.5" />
 				{t("Crear")}
 			</Button>
 		</div>
@@ -229,7 +274,7 @@ function UnirseConCodigo({ apodo }: { apodo: string }) {
 					disabled={codigo.replace(/[\s-]/g, "").length !== 10 || ocupado || !!sala}
 					onClick={usar}
 				>
-					<LogIn className="size-3.5" />
+					<Icono icon="lucide:log-in" className="size-3.5" />
 					{t("Unirse")}
 				</Button>
 			</div>
