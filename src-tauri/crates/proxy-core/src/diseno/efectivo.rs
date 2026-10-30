@@ -339,6 +339,16 @@ pub fn huella(e: &DisenoEfectivo, lang: DesignLang, cara: usize, recursos: &str)
     {
         h.update("|mdfc-sin-pestana");
     }
+    // Los tramos con F/R (leveler, estación, prototipo) llevan la caja del
+    // pack y el leveler su F/R de base en la primera franja: solo ellas se
+    // vuelven a pintar.
+    use super::maquetacion::Cuerpo;
+    if matches!(
+        super::maquetacion::cuerpo(card, cara),
+        Cuerpo::Leveler | Cuerpo::Estacion | Cuerpo::Prototipo
+    ) {
+        h.update("|tramos-del-pack");
+    }
     h.finalize().iter().map(|b| format!("{b:02x}")).collect()
 }
 

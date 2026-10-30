@@ -871,6 +871,10 @@ impl Carta<'_> {
     /// La caja pequeña de fuerza/resistencia de un tramo, centrada en (cx, cy).
     fn caja_fr_tramo(&mut self, fr: &str, cx: f32, cy: f32) {
         let (w, h) = (6.4, 3.2);
+        // La del pack, a lo que da la columna de la F/R del tramo.
+        if self.caja_fr_del_pack(fr, cx, cy, 7.0, 3.6) {
+            return;
+        }
         self.forma(&format!(
             r##"<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="0.6" fill="url(#panelfr)" stroke="#000" stroke-opacity="0.6" stroke-width="0.15"/>"##,
             x = cx - w / 2.0,
@@ -882,6 +886,69 @@ impl Carta<'_> {
             .and_then(|t| super::pack::rgba(t))
             .unwrap_or([255, 255, 255, 255]);
         self.texto_centrado(fr, "fr", 1.6, tinta, cx, cy, w - 0.6);
+    }
+
+    /// La caja de fuerza/resistencia del propio estilo (su capa PNG con su
+    /// hueco de texto), encogida a `w`×`h` mm y centrada en `(cx, cy)`: así
+    /// los tramos llevan la misma caja que la carta. `false` si el estilo no
+    /// la trae de imagen (los marcos de la casa la dibujan en SVG).
+    fn caja_fr_del_pack(&mut self, fr: &str, cx: f32, cy: f32, w: f32, h: f32) -> bool {
+        use super::pack::{Valor, ZonaV};
+        let Some(hueco) = self.estilo.huecos.get("fr").cloned() else {
+            return false;
+        };
+        let ev = |v: &Valor, nums: &std::collections::BTreeMap<&str, f32>| v.evaluar(nums).ok();
+        let (Some(hx), Some(hy), Some(hw), Some(hh)) = (
+            ev(&hueco.x, &self.nums),
+            ev(&hueco.y, &self.nums),
+            ev(&hueco.w, &self.nums),
+            ev(&hueco.h, &self.nums),
+        ) else {
+            return false;
+        };
+        if hw <= 0.0 || hh <= 0.0 {
+            return false;
+        }
+        let hechos = super::pack::Hechos {
+            fr: true,
+            ..self.hechos.clone()
+        };
+        let Some(mut capa) = self
+            .estilo
+            .capas
+            .iter()
+            .find(|c| {
+                c.png.is_some()
+                    && c.desde.is_none()
+                    && c.si.fr == Some(true)
+                    && c.si.cumple(&hechos)
+            })
+            .cloned()
+        else {
+            return false;
+        };
+        let Some(Ok(z)) = capa.en.as_ref().map(|z| z.evaluar(&self.nums)) else {
+            return false;
+        };
+        // La caja de la carta, a escala: su hueco de texto queda en (cx, cy).
+        let k = (w / hw).min(h / hh);
+        let (ox, oy) = (hx + hw / 2.0, hy + hh / 2.0);
+        capa.en = Some(ZonaV {
+            x: Valor::Num(cx + (z.x - ox) * k),
+            y: Valor::Num(cy + (z.y - oy) * k),
+            w: Valor::Num(z.w * k),
+            h: Valor::Num(z.h * k),
+        });
+        capa.tramos = None;
+        self.capa_png(&capa);
+        let tinta = self.color(&hueco);
+        // Las cajas muy apaisadas (pixel art) quedan bajas: la letra no baja
+        // de 1,4 mm de mayúscula mientras quepa en la caja.
+        let cap = (hueco.mayuscula.unwrap_or(2.3) * k)
+            .max(1.4)
+            .min(hh * k * 0.6);
+        self.texto_centrado(fr, "fr", cap, tinta, cx, cy, hw * k * 0.9);
+        true
     }
 }
 

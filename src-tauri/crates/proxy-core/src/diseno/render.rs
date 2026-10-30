@@ -1212,7 +1212,7 @@ impl Carta<'_> {
         (c.w > 0.0 && c.h > 0.0).then_some((h, c))
     }
 
-    fn color(&self, h: &Hueco) -> Color {
+    pub(super) fn color(&self, h: &Hueco) -> Color {
         let c = h.color.as_deref().unwrap_or("#000000");
         let c = rellenar(c, &self.vars);
         rgba(&c).unwrap_or(NEGRO)
@@ -1597,7 +1597,7 @@ impl Carta<'_> {
 
     /// Una capa PNG: la imagen del color del marco, estirada a su zona (o a
     /// la carta entera).
-    fn capa_png(&mut self, capa: &Capa) {
+    pub(super) fn capa_png(&mut self, capa: &Capa) {
         let pack = self.rec.pack;
         let Some(ruta) = capa.png_para(&pack.def, self.clave_color, &self.colores) else {
             return;
@@ -2593,7 +2593,7 @@ pub(super) fn pintar_cara(
     } else {
         Vec::new()
     };
-    let contenido = if salas.is_empty() {
+    let mut contenido = if salas.is_empty() {
         contenido_de_la_cara(d, o, lang, sabor)
     } else {
         Contenido::Texto {
@@ -2601,12 +2601,16 @@ pub(super) fn pintar_cara(
             sabor: Vec::new(),
         }
     };
-    let fr = if o.cuerpo == Cuerpo::Leveler || o.cuerpo == Cuerpo::Estacion {
-        // La F/R de cada tramo va en su franja; la de abajo, la de base.
-        fr_texto(&datos)
-    } else {
-        fr_texto(&datos)
-    };
+    let mut fr = fr_texto(&datos);
+    // Leveler: la F/R de base va en la franja de «Subir de nivel», como las
+    // de cada rango, y la carta se queda sin la caja de abajo (como impresa).
+    if o.cuerpo == Cuerpo::Leveler {
+        if let Contenido::Secciones { secciones, .. } = &mut contenido {
+            if let Some(s) = secciones.first_mut().filter(|s| s.fr.is_none()) {
+                s.fr = fr.take();
+            }
+        }
+    }
     // MDFC: la franja de la otra cara se lleva un poco de la caja.
     let franja = if o.otra_cara.is_some() { 2.6 } else { 0.0 };
 

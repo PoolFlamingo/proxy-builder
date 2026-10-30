@@ -491,6 +491,12 @@ una copia local en lugar de bajarlos.
 
 - La ilustración, el coste (símbolos de Scryfall), el emblema, la corona y
   la caja de F/R.
+- La F/R de cada tramo (leveler, estación, prototipo) va en una caja pequeña
+  que es la capa PNG de F/R del propio estilo (la que lleva `si: {"fr": true}`)
+  encogida, con el color y la letra de su hueco `fr`; solo si el estilo no la
+  trae de imagen se dibuja la de la casa. En el leveler, la F/R de base va en
+  la franja de «Subir de nivel», como en la carta impresa, y la carta no lleva
+  la caja de abajo.
 - Las insignias de las secciones (escudos de lealtad, capítulos, niveles,
   prototipo) y las franjas, en los colores de la carta.
 - El indicador de cara de las transformables (sol y luna) y de las MDFC
