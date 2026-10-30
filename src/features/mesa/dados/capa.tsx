@@ -15,6 +15,14 @@ import { lienzoFondo, urlFondo } from "./texturas";
 /** Lo que se queda el resultado en pantalla, en ms. */
 const RESULTADO_MS = 2200;
 
+/**
+ * Lo más que se espera a que una tirada acabe de animarse, en ms (la física
+ * dura como mucho 4 s, más la carga de three y Rapier la primera vez). Pasado
+ * esto sale el resultado igual: una animación que no termina no puede dejar
+ * la cola parada y sin dados el resto de la partida.
+ */
+const TOPE_TIRADA_MS = 8000;
+
 /** Si hay WebGL2 (sin él, los dados van en CSS 3D). Se mira una vez. */
 let webgl2: boolean | null = null;
 function hayWebGL2(): boolean {
@@ -51,6 +59,8 @@ export function CapaDados() {
 	const [parada, setParada] = useState<number | null>(null);
 	const lienzo = useRef<HTMLCanvasElement>(null);
 	const escena = useRef<EscenaDados | null>(null);
+	// El 3D no acabó una tirada: desde la siguiente, CSS 3D.
+	const colgado3d = useRef(false);
 	const color = useMesa((s) =>
 		tirada?.actor != null ? (s.jugadores[tirada.actor]?.color ?? "#7c3aed") : "#7c3aed",
 	);
@@ -102,11 +112,26 @@ export function CapaDados() {
 		if (tirada && nivel === null) setParada(tirada.id);
 	}, [tirada, nivel]);
 
+	// Si la animación no acaba (el 3D colgado o sin pintar), el resultado igual,
+	// y las siguientes en CSS 3D.
+	useEffect(() => {
+		if (!tirada || parada === tirada.id) return;
+		const id = window.setTimeout(() => {
+			if (nivel === "3d") {
+				escena.current?.recoger();
+				colgado3d.current = true;
+			}
+			setParada(tirada.id);
+		}, TOPE_TIRADA_MS);
+		return () => window.clearTimeout(id);
+	}, [tirada, parada, nivel]);
+
 	// Al acabar (y tras enseñar el resultado), la siguiente.
 	useEffect(() => {
 		if (!tirada || parada !== tirada.id) return;
 		const id = window.setTimeout(() => {
 			escena.current?.recoger();
+			if (colgado3d.current) setFallo3d(true);
 			useDados.getState().siguiente();
 		}, RESULTADO_MS);
 		return () => window.clearTimeout(id);
@@ -180,6 +205,7 @@ export function CapaDados() {
 					type="button"
 					onClick={() => {
 						escena.current?.recoger();
+						if (colgado3d.current) setFallo3d(true);
 						useDados.getState().siguiente();
 					}}
 					className="pointer-events-auto absolute -bottom-2 left-1/2 w-72 -translate-x-1/2 animate-in rounded-xl border bg-background/95 p-1 shadow-2xl fade-in zoom-in-95"

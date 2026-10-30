@@ -9,6 +9,8 @@ import { useUi } from "@/stores/ui-store";
  */
 
 let contexto: AudioContext | null = null;
+/** El equipo no deja crear el audio: la mesa sigue, sin sonido. */
+let sinAudio = false;
 let salida: GainNode | null = null;
 let ruido: AudioBuffer | null = null;
 /** Para no saturar: como mucho tantos sonidos por cada 100 ms. */
@@ -23,12 +25,19 @@ export function audio(
 ): Audio | null {
 	const m = useUi.getState().mesa;
 	if (!encendido(m) || m.volumen <= 0 || document.hidden) return null;
+	if (sinAudio) return null;
 	if (!contexto) {
 		const Ctx =
 			window.AudioContext ??
 			(window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
 		if (!Ctx) return null;
-		contexto = new Ctx();
+		try {
+			contexto = new Ctx();
+		} catch {
+			// Sin salida de audio (o sin permiso para usarla) el constructor falla.
+			sinAudio = true;
+			return null;
+		}
 		const compresor = contexto.createDynamicsCompressor();
 		compresor.threshold.value = -14;
 		compresor.ratio.value = 6;

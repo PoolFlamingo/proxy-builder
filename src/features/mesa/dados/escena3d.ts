@@ -355,7 +355,12 @@ export class EscenaDados {
 				// Los golpes de la física hasta este cuadro, al sonido.
 				while (sonados < grabacion.golpes.length && grabacion.golpes[sonados].cuadro <= k) {
 					const g = grabacion.golpes[sonados++];
-					alGolpe?.(t.piezas[g.pieza]?.forma === "moneda", g.fuerza);
+					// Un sonido que falla no para la animación (si no, nunca acaba).
+					try {
+						alGolpe?.(t.piezas[g.pieza]?.forma === "moneda", g.fuerza);
+					} catch {
+						/* sin sonido */
+					}
 				}
 				grabacion.piezas.forEach((g, i) => {
 					const m = this.piezas[i];
