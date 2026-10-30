@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useMesa } from "@/stores/mesa-store";
 import { useOriginales } from "@/stores/originales-store";
+import { useRed } from "@/stores/red-store";
 import { useUi } from "@/stores/ui-store";
 import { hacer } from "./acciones";
 import { CONTADORES_JUGADOR } from "./colores";
@@ -35,8 +36,21 @@ const JUNTAR_MS = 700;
  * la suma («40 + 2 = 42»). Con su menú: daño, veneno, comandante,
  * contadores, designaciones, revelar la mano y conceder. Junto a ella, el
  * botón de pasar el turno y los contadores que se hayan elegido.
+ *
+ * `ajena`: la de otro jugador, sobre su tablero cuando se le mira (en red);
+ * sin el botón de pasar el turno ni lo que solo hace uno mismo (drenar,
+ * revelar la mano, terminar). `conNombre`: con su nombre delante, para que
+ * se sepa de quién es.
  */
-export function VidaJugador({ jugador }: { jugador: IdJugador }) {
+export function VidaJugador({
+	jugador,
+	ajena = false,
+	conNombre = false,
+}: {
+	jugador: IdJugador;
+	ajena?: boolean;
+	conNombre?: boolean;
+}) {
 	const { t } = useLang();
 	const j = useMesa((s) => s.jugadores[jugador]);
 	const activo = useMesa((s) => s.general?.turno.activo === jugador);
@@ -68,7 +82,10 @@ export function VidaJugador({ jugador }: { jugador: IdJugador }) {
 		(c) => trackers.includes(c.tipo) || (j.contadores[c.tipo] ?? 0) !== 0,
 	);
 	return (
-		<div className="flex flex-col items-end gap-1.5" data-tutorial="mesa-vida">
+		<div
+			className="flex flex-col items-end gap-1.5"
+			data-tutorial={ajena ? undefined : "mesa-vida"}
+		>
 			<MarcasJugador jugador={jugador} />
 			{visibles.length > 0 && (
 				<div className="flex flex-wrap justify-end gap-1">
@@ -102,7 +119,15 @@ export function VidaJugador({ jugador }: { jugador: IdJugador }) {
 				</div>
 			)}
 			<div className="flex items-center gap-2">
-				{activo && !mulligan && (
+				{conNombre && (
+					<span
+						className="max-w-32 truncate rounded-full px-2 py-0.5 text-[11px] font-medium text-white shadow"
+						style={{ background: equipo?.color || j.color }}
+					>
+						{j.nombre}
+					</span>
+				)}
+				{activo && !mulligan && !ajena && (
 					<Button
 						size="sm"
 						onClick={() => void op.pasarTurno()}
@@ -112,7 +137,7 @@ export function VidaJugador({ jugador }: { jugador: IdJugador }) {
 						{t("Pasar turno")}
 					</Button>
 				)}
-				<MenuJugador jugador={jugador}>
+				<MenuJugador jugador={jugador} ajena={ajena}>
 					<div
 						// Ahí apuntan las flechas que me atacan (`flechas.tsx`).
 						data-vida-de={jugador}
@@ -143,7 +168,15 @@ export function VidaJugador({ jugador }: { jugador: IdJugador }) {
 	);
 }
 
-function MenuJugador({ jugador, children }: { jugador: IdJugador; children: React.ReactNode }) {
+function MenuJugador({
+	jugador,
+	ajena,
+	children,
+}: {
+	jugador: IdJugador;
+	ajena: boolean;
+	children: React.ReactNode;
+}) {
 	const { t } = useLang();
 	const j = useMesa((s) => s.jugadores[jugador]);
 	const designaciones = useMesa((s) => s.general?.designaciones);
@@ -152,6 +185,8 @@ function MenuJugador({ jugador, children }: { jugador: IdJugador; children: Reac
 	);
 	const trackers = useUi((s) => s.mesa.trackers);
 	const originales = useOriginales((s) => s.modos[jugador] === true);
+	// Terminar la partida de todos es del anfitrión (como en la barra).
+	const manda = useRed((s) => s.papel === null || s.papel === "anfitrion");
 	if (!j) return <>{children}</>;
 	const alternarTracker = (tipo: string) =>
 		useUi.getState().setMesa({
@@ -161,56 +196,32 @@ function MenuJugador({ jugador, children }: { jugador: IdJugador; children: Reac
 		<ContextMenu>
 			<ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
 			<ContenidoContextual className="w-64 text-xs">
-				<ContextMenuItem
-					onSelect={() =>
-						pedirNumero(t("Daño"), 1, (n) => hacer({ que: "vida", jugador, delta: -Math.abs(n) }))
-					}
-				>
-					<Icono icon="game-icons:flame" />
-					{t("Daño…")}
-				</ContextMenuItem>
-				<ContextMenuItem
-					onSelect={() =>
-						pedirNumero(t("Ganar vidas"), 1, (n) =>
-							hacer({ que: "vida", jugador, delta: Math.abs(n) }),
-						)
-					}
-				>
-					<Icono icon="game-icons:hearts" />
-					{t("Ganar vidas…")}
-				</ContextMenuItem>
-				<ContextMenuItem
-					onSelect={() =>
-						pedirNumero(t("Drenar (cada oponente pierde y tú ganas)"), 1, (n) =>
-							hacer({ que: "drenar", n: Math.abs(n) }),
-						)
-					}
-				>
-					<Icono icon="game-icons:flame" />
-					{t("Drenar…")}
-				</ContextMenuItem>
-				<ContextMenuItem
-					onSelect={() =>
-						pedirNumero(t("Vidas a todos (negativo: daño)"), -1, (n) =>
-							hacer({ que: "vidaATodos", delta: n, soloOponentes: false }),
-						)
-					}
-				>
-					<Icono icon="game-icons:hearts" />
-					{t("Vidas a todos…")}
-				</ContextMenuItem>
-				<ContextMenuSeparator />
-				<ContextMenuItem onSelect={() => hacer({ que: "veneno", jugador, delta: 1 })}>
-					<Icono icon="game-icons:poison-bottle" />
-					{t("Un veneno más")}
-				</ContextMenuItem>
-				<ContextMenuItem
-					disabled={j.veneno === 0}
-					onSelect={() => hacer({ que: "veneno", jugador, delta: -1 })}
-				>
-					<Icono icon="game-icons:poison-bottle" />
-					{t("Un veneno menos")}
-				</ContextMenuItem>
+				<OpcionesDeVida jugador={jugador}>
+					{!ajena && (
+						<>
+							<ContextMenuItem
+								onSelect={() =>
+									pedirNumero(t("Drenar (cada oponente pierde y tú ganas)"), 1, (n) =>
+										hacer({ que: "drenar", n: Math.abs(n) }),
+									)
+								}
+							>
+								<Icono icon="game-icons:flame" />
+								{t("Drenar…")}
+							</ContextMenuItem>
+							<ContextMenuItem
+								onSelect={() =>
+									pedirNumero(t("Vidas a todos (negativo: daño)"), -1, (n) =>
+										hacer({ que: "vidaATodos", delta: n, soloOponentes: false }),
+									)
+								}
+							>
+								<Icono icon="game-icons:hearts" />
+								{t("Vidas a todos…")}
+							</ContextMenuItem>
+						</>
+					)}
+				</OpcionesDeVida>
 				{comandantes.length > 0 && (
 					<ContextMenuSub>
 						<ContextMenuSubTrigger>
@@ -307,20 +318,76 @@ function MenuJugador({ jugador, children }: { jugador: IdJugador; children: Reac
 					{designaciones?.diaNoche === "dia" ? t("Hacer de noche") : t("Hacer de día")}
 				</ContextMenuItem>
 				<ContextMenuSeparator />
-				<ContextMenuItem onSelect={() => hacer({ que: "revelarMano", si: !j.manoRevelada })}>
-					{j.manoRevelada ? <Icono icon="lucide:eye-off" /> : <Icono icon="lucide:eye" />}
-					{j.manoRevelada ? t("Ocultar la mano") : t("Revelar la mano")}
-				</ContextMenuItem>
+				{!ajena && (
+					<ContextMenuItem onSelect={() => hacer({ que: "revelarMano", si: !j.manoRevelada })}>
+						{j.manoRevelada ? <Icono icon="lucide:eye-off" /> : <Icono icon="lucide:eye" />}
+						{j.manoRevelada ? t("Ocultar la mano") : t("Revelar la mano")}
+					</ContextMenuItem>
+				)}
 				<ContextMenuItem onSelect={() => alternarOriginales(jugador)}>
 					<Icono icon="lucide:languages" />
 					{originales ? "✓ " : ""}
 					{t("Cartas originales en mi idioma")}
 				</ContextMenuItem>
-				<ContextMenuItem onSelect={() => usePantalla.getState().abrir({ tipo: "terminar" })}>
-					<Icono icon="game-icons:checkered-flag" />
-					{t("Terminar la partida…")}
-				</ContextMenuItem>
+				{!ajena && manda && (
+					<ContextMenuItem onSelect={() => usePantalla.getState().abrir({ tipo: "terminar" })}>
+						<Icono icon="game-icons:checkered-flag" />
+						{t("Terminar la partida…")}
+					</ContextMenuItem>
+				)}
 			</ContenidoContextual>
 		</ContextMenu>
+	);
+}
+
+/**
+ * Lo de la vida de un jugador en un menú contextual: daño, ganar vidas (y lo
+ * que se pase entre medias, `children`) y veneno. Lo usan su marcador de vida
+ * y su miniatura (`tablero-mini.tsx`), así el daño va siempre a quien se
+ * señala y no a quien mira.
+ */
+export function OpcionesDeVida({
+	jugador,
+	children,
+}: {
+	jugador: IdJugador;
+	children?: React.ReactNode;
+}) {
+	const { t } = useLang();
+	const veneno = useMesa((s) => s.jugadores[jugador]?.veneno ?? 0);
+	return (
+		<>
+			<ContextMenuItem
+				onSelect={() =>
+					pedirNumero(t("Daño"), 1, (n) => hacer({ que: "vida", jugador, delta: -Math.abs(n) }))
+				}
+			>
+				<Icono icon="game-icons:flame" />
+				{t("Daño…")}
+			</ContextMenuItem>
+			<ContextMenuItem
+				onSelect={() =>
+					pedirNumero(t("Ganar vidas"), 1, (n) =>
+						hacer({ que: "vida", jugador, delta: Math.abs(n) }),
+					)
+				}
+			>
+				<Icono icon="game-icons:hearts" />
+				{t("Ganar vidas…")}
+			</ContextMenuItem>
+			{children}
+			<ContextMenuSeparator />
+			<ContextMenuItem onSelect={() => hacer({ que: "veneno", jugador, delta: 1 })}>
+				<Icono icon="game-icons:poison-bottle" />
+				{t("Un veneno más")}
+			</ContextMenuItem>
+			<ContextMenuItem
+				disabled={veneno === 0}
+				onSelect={() => hacer({ que: "veneno", jugador, delta: -1 })}
+			>
+				<Icono icon="game-icons:poison-bottle" />
+				{t("Un veneno menos")}
+			</ContextMenuItem>
+		</>
 	);
 }

@@ -7,7 +7,12 @@ import type { VistaJugador } from "@/bindings/VistaJugador";
 import { ContenidoContextual } from "@/components/contenido-contextual";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
-import { ContextMenu, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
+import {
+	ContextMenu,
+	ContextMenuItem,
+	ContextMenuSeparator,
+	ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import { urlMesa } from "@/lib/image-url";
 import { cn } from "@/lib/utils";
 import { cartasDe, cuantasEn, NINGUNA, useMesa } from "@/stores/mesa-store";
@@ -35,6 +40,7 @@ import { alternarOriginales } from "./originales";
 import { usePantalla } from "./pantalla";
 import { puestosDelCampo } from "./puestos-campo";
 import { Latencia } from "./red/estado-red";
+import { OpcionesDeVida } from "./vida-jugador";
 
 /** Cada cuántos ms se mira la mesa para las miniaturas durante una repetición. */
 const MS_REPETICION = 30;
@@ -194,6 +200,7 @@ export const TableroMini = memo(function TableroMini({
 		repitiendo ? MS_REPETICION : MS_MINIATURA,
 	);
 	const enRed = useRed((s) => s.papel !== null);
+	const espectador = useRed((s) => s.papel === "espectador");
 	const senalada = useVivo((s) => s.senales.some((x) => x.a === jugador));
 	const originales = useOriginales((s) => s.modos[jugador]);
 	const modo = usePantalla((s) => s.modo);
@@ -346,6 +353,12 @@ export const TableroMini = memo(function TableroMini({
 				</button>
 			</ContextMenuTrigger>
 			<ContenidoContextual className="w-64 text-xs">
+				{!repitiendo && !espectador && (
+					<>
+						<OpcionesDeVida jugador={jugador} />
+						<ContextMenuSeparator />
+					</>
+				)}
 				<ContextMenuItem onSelect={() => alternarOriginales(jugador)}>
 					<Icono icon="lucide:languages" />
 					{originales ? "✓ " : ""}

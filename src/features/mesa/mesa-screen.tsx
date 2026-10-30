@@ -95,10 +95,8 @@ function Mesa({ deckIds }: { deckIds: string[] }) {
 	// El deck de quien juega ahora (para editarlo y para su tapete).
 	const asientos = useMesa((s) => s.asientos);
 	const yoReal = useMesa((s) => s.yo);
-	const deckId2 =
-		papel === null
-			? (ids[Math.max(0, asientos.indexOf(yoReal ?? -1))] ?? ids[0] ?? null)
-			: (ids[0] ?? null);
+	// En red solo se sabe el propio (el de los demás llega vacío): el de mi asiento.
+	const deckId2 = ids[Math.max(0, asientos.indexOf(yoReal ?? -1))] || ids[0] || null;
 
 	const editarDeck = async () => {
 		if (!deckId2) return;

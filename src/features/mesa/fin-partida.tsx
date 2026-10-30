@@ -164,25 +164,26 @@ export function FinDePartida() {
 						<Icono icon="lucide:log-out" className="size-4" />
 						{t("Salir")}
 					</Button>
-					{estado ? (
-						!decide &&
-						(invitado ? (
-							<Button variant="outline" onClick={() => setBanquillo(true)}>
-								<Icono icon="lucide:rotate-ccw" className="size-4" />
-								{t("Banquillo")}
-							</Button>
-						) : (
-							<Button onClick={() => setBanquillo(true)}>
-								<Icono icon="lucide:rotate-ccw" className="size-4" />
-								{t("Siguiente partida")}
-							</Button>
-						))
-					) : (
-						<Button onClick={() => void hacer({ que: "reiniciar" })}>
-							<Icono icon="lucide:rotate-ccw" className="size-4" />
-							{t("Otra partida")}
-						</Button>
-					)}
+					{estado
+						? !decide &&
+							(invitado ? (
+								<Button variant="outline" onClick={() => setBanquillo(true)}>
+									<Icono icon="lucide:rotate-ccw" className="size-4" />
+									{t("Banquillo")}
+								</Button>
+							) : (
+								<Button onClick={() => setBanquillo(true)}>
+									<Icono icon="lucide:rotate-ccw" className="size-4" />
+									{t("Siguiente partida")}
+								</Button>
+							))
+						: // Otra partida la empieza el anfitrión (Rust no se la hace a un invitado).
+							!invitado && (
+								<Button onClick={() => void hacer({ que: "reiniciar" })}>
+									<Icono icon="lucide:rotate-ccw" className="size-4" />
+									{t("Otra partida")}
+								</Button>
+							)}
 				</div>
 			</div>
 			{banquillo && <BanquilloDialog onCerrar={() => setBanquillo(false)} />}

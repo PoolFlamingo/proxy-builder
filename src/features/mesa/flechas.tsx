@@ -44,8 +44,8 @@ export function Flechas({ disp }: { disp: Disposicion }) {
 	const cartas = useMesa((s) => s.cartas);
 	const jugadores = useMesa((s) => s.jugadores);
 	const viendo = useMesa(tableroDe);
-	// De quién es el marcador de vida que se enseña (`Controles`): el mío o, en una
-	// repetición con todo a la vista (sin «yo»), el del tablero que se mira.
+	// Quién soy para las flechas (`Controles`): yo o, en una repetición con todo
+	// a la vista (sin «yo»), el del tablero que se mira.
 	const yo = useMesa(duenoDeControles);
 	const varios = useMesa((s) => s.asientos.length > 1);
 	const alrededor = useContext(MesasAlrededor);
@@ -53,25 +53,28 @@ export function Flechas({ disp }: { disp: Disposicion }) {
 	// Dónde está mi marcador de vida (abajo a la derecha del tablero grande): se
 	// mide, porque crece con los contadores y el botón de pasar turno.
 	const [vida, setVida] = useState<{ x: number; y: number } | null>(null);
+	// O el del jugador del tablero, si es otro (`Controles` pone el suyo y no el mío).
+	const [vidaViendo, setVidaViendo] = useState<{ x: number; y: number } | null>(null);
 	// Y el del fantasma (arriba a la derecha): ahí llegan las flechas que le apuntan.
 	const [fantasma, setFantasma] = useState<{ x: number; y: number } | null>(null);
 	useLayoutEffect(() => {
 		const caja = svg.current?.getBoundingClientRect();
-		const el = document.querySelector(`[${ATRIBUTO_VIDA}="${yo}"]`);
 		const fa = document.querySelector(`[${ATRIBUTO_FANTASMA}]`);
 		if (caja && fa) {
 			const r = fa.getBoundingClientRect();
 			// Al borde de abajo, en el centro.
 			setFantasma({ x: r.left + r.width / 2 - caja.left, y: r.bottom - caja.top + 4 });
 		} else setFantasma(null);
-		if (!caja || !el) {
-			setVida(null);
-			return;
-		}
-		const r = el.getBoundingClientRect();
 		// Al borde de arriba, en el centro: la punta no tapa el número.
-		setVida({ x: r.left + r.width / 2 - caja.left, y: r.top - caja.top - 4 });
-	}, [yo, disp, flechas]);
+		const arriba = (j: IdJugador) => {
+			const el = document.querySelector(`[${ATRIBUTO_VIDA}="${j}"]`);
+			if (!caja || !el) return null;
+			const r = el.getBoundingClientRect();
+			return { x: r.left + r.width / 2 - caja.left, y: r.top - caja.top - 4 };
+		};
+		setVida(arriba(yo));
+		setVidaViendo(viendo !== yo ? arriba(viendo) : null);
+	}, [yo, viendo, disp, flechas]);
 	const colores = useMemo(
 		() => [...new Set(flechas.map((f) => jugadores[f.deJugador]?.color ?? COLOR_FLECHA))],
 		[flechas, jugadores],
@@ -94,9 +97,10 @@ export function Flechas({ disp }: { disp: Disposicion }) {
 			return fantasma
 				? { ...fantasma, aqui: true }
 				: { x: disp.campo.w - 80, y: Math.min(30, disp.campo.h / 2), aqui: true };
-		// Yo: mi marcador de vida. El de este tablero (si miro el de otro): arriba
-		// en el centro. Otro: por el lado de su mesa.
+		// Yo: mi marcador de vida. El de este tablero (si miro el de otro): su
+		// marcador o, sin él, arriba en el centro. Otro: por el lado de su mesa.
 		if (e.id === yo && vida) return { ...vida, aqui: true };
+		if (e.id === viendo && vidaViendo) return { ...vidaViendo, aqui: true };
 		if (e.id === viendo)
 			return { x: disp.campo.w / 2, y: Math.min(30, disp.campo.h / 2), aqui: true };
 		return { ...desde(e.id), aqui: false };

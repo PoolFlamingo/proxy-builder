@@ -25,13 +25,17 @@ describe("la mano en una partida local", () => {
 
 describe("el tapete de cada tablero", () => {
 	it("en local, el del deck de su asiento", () => {
-		expect(deckDelTablero(["a", "b"], [0, 1], 1, false, false)).toBe("b");
-		expect(deckDelTablero(["a", "b"], [0, 1], 0, false, false)).toBe("a");
+		expect(deckDelTablero(["a", "b"], [0, 1], 1)).toBe("b");
+		expect(deckDelTablero(["a", "b"], [0, 1], 0)).toBe("a");
 	});
-	it("en red, solo el del anfitrión y mirando su tablero", () => {
-		expect(deckDelTablero(["a", "b"], [0, 1], 0, true, true)).toBe("a");
-		expect(deckDelTablero(["a", "b"], [0, 1], 1, true, true)).toBeNull();
-		expect(deckDelTablero(["a", "b"], [0, 1], 0, true, false)).toBeNull();
+	it("en red, solo el propio (el de los demás llega vacío), seas anfitrión o invitado", () => {
+		// El anfitrión (asiento 0).
+		expect(deckDelTablero(["a", ""], [0, 1], 0)).toBe("a");
+		expect(deckDelTablero(["a", ""], [0, 1], 1)).toBeNull();
+		// Un invitado (asiento 1).
+		expect(deckDelTablero(["", "b"], [0, 1], 1)).toBe("b");
+		expect(deckDelTablero(["", "b"], [0, 1], 0)).toBeNull();
+		expect(deckDelTablero(["", "b"], [0, 1], 5)).toBeNull();
 	});
 });
 

@@ -174,6 +174,7 @@ export function FantasmasMini({
 	ancho: number;
 	alto: number;
 }) {
+	const { t } = useLang();
 	const activo = useUi((s) => s.mesa.movimientoEnVivo);
 	const fantasmasVivos = useVivo((s) => s.fantasmas);
 	const soltadasVivas = useVivo((s) => s.soltadas);
@@ -197,6 +198,7 @@ export function FantasmasMini({
 			{fantasmas.map(([clave, f]) => {
 				const p = posAPx(campo, f);
 				const color = jugadores[Number(clave)]?.color ?? "#e11d48";
+				const nombre = jugadores[Number(clave)]?.nombre ?? t("Jugador");
 				return (
 					<div
 						key={clave}
@@ -206,10 +208,17 @@ export function FantasmasMini({
 						{cartasDeFantasma(f).map((id, i) => (
 							<CartaEnVuelo key={id} id={id} w={ancho} h={alto} dx={i * 3} dy={i * 2} ancho={146} />
 						))}
+						{/* Como en el tablero grande: en pequeño, un punto sin nombre no se veía. */}
 						<span
-							className="absolute size-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white shadow"
+							className="absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white shadow"
 							style={{ background: color }}
 						/>
+						<span
+							className="absolute left-2 top-2 rounded px-1 text-[10px] whitespace-nowrap text-white"
+							style={{ background: color }}
+						>
+							{nombre}
+						</span>
 					</div>
 				);
 			})}

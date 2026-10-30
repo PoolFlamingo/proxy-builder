@@ -1,6 +1,6 @@
 import type { IdCarta } from "@/bindings/IdCarta";
 import { paraTraducir } from "@/components/language-provider";
-import { useMesa } from "@/stores/mesa-store";
+import { tableroDe, useMesa } from "@/stores/mesa-store";
 import { hacer, objetivo, sitio } from "./acciones";
 import { AVISOS, SENALES, senalTrasElegir } from "./cuentas-chat";
 import { alternarRespuesta } from "./mirar";
@@ -29,6 +29,9 @@ export type Atajo = {
 const conCarta = (f: (id: IdCarta) => unknown) => (id: IdCarta | null) => {
 	if (id !== null) void f(id);
 };
+
+/** De quién es la biblioteca bajo el ratón: la del tablero grande. */
+const duenoBiblioteca = () => tableroDe(useMesa.getState());
 
 export const ATAJOS: Atajo[] = [
 	// ── Carta (bajo el ratón o elegida) ──
@@ -154,62 +157,73 @@ export const ATAJOS: Atajo[] = [
 		nombre: paraTraducir("Sacar una del montón"),
 		hacer: conCarta((id) => op.sacarDelMonton(id)),
 	},
-	// ── Biblioteca (con el ratón encima) ──
-	{ contexto: "biblioteca", tecla: "d", nombre: paraTraducir("Robar"), hacer: () => op.robar() },
+	// ── Biblioteca (con el ratón encima: la del tablero grande, que en red puede
+	// ser la de otro, como en su menú) ──
+	{
+		contexto: "biblioteca",
+		tecla: "d",
+		nombre: paraTraducir("Robar"),
+		hacer: () => op.robar(1, duenoBiblioteca()),
+	},
 	{
 		contexto: "biblioteca",
 		tecla: "s",
 		nombre: paraTraducir("Escrutar"),
-		hacer: () => op.mirar("escrutar"),
+		hacer: () => op.mirar("escrutar", "arriba", duenoBiblioteca()),
 	},
 	{
 		contexto: "biblioteca",
 		tecla: "u",
 		nombre: paraTraducir("Vigilar"),
-		hacer: () => op.mirar("vigilar"),
+		hacer: () => op.mirar("vigilar", "arriba", duenoBiblioteca()),
 	},
-	{ contexto: "biblioteca", tecla: "m", nombre: paraTraducir("Moler"), hacer: () => op.moler() },
+	{
+		contexto: "biblioteca",
+		tecla: "m",
+		nombre: paraTraducir("Moler"),
+		hacer: () => op.moler(1, duenoBiblioteca()),
+	},
 	{
 		contexto: "biblioteca",
 		tecla: "e",
 		nombre: paraTraducir("Exiliar la de arriba"),
-		hacer: () => op.exiliarDeArriba("normal"),
+		hacer: () => op.exiliarDeArriba("normal", 1, duenoBiblioteca()),
 	},
 	{
 		contexto: "biblioteca",
 		tecla: "Mayús+E",
 		nombre: paraTraducir("Exiliar la de arriba boca abajo"),
-		hacer: () => op.exiliarDeArriba("bocaAbajo"),
+		hacer: () => op.exiliarDeArriba("bocaAbajo", 1, duenoBiblioteca()),
 	},
 	{
 		contexto: "biblioteca",
 		tecla: "v",
 		nombre: paraTraducir("Ver la biblioteca"),
-		hacer: () => op.buscar(),
+		hacer: () => op.buscar("todo", duenoBiblioteca()),
 	},
 	{
 		contexto: "biblioteca",
 		tecla: "t",
 		nombre: paraTraducir("Buscar una carta"),
-		hacer: () => op.buscar(),
+		hacer: () => op.buscar("todo", duenoBiblioteca()),
 	},
 	{
 		contexto: "biblioteca",
 		tecla: "l",
 		nombre: paraTraducir("Buscar una tierra"),
-		hacer: () => op.buscar("tierra"),
+		hacer: () => op.buscar("tierra", duenoBiblioteca()),
 	},
 	{
 		contexto: "biblioteca",
 		tecla: "h",
 		nombre: paraTraducir("Barajar"),
-		hacer: () => op.barajar(),
+		hacer: () => op.barajar(duenoBiblioteca()),
 	},
 	{
 		contexto: "biblioteca",
 		tecla: "o",
 		nombre: paraTraducir("Mirar la de arriba"),
-		hacer: () => op.mirar("mirar"),
+		hacer: () => op.mirar("mirar", "arriba", duenoBiblioteca()),
 	},
 	// ── Toda la mesa ──
 	{
@@ -331,7 +345,8 @@ export function atajoDe(
 	carta: IdCarta | null,
 	sobreBiblioteca: boolean,
 ): (() => void) | null {
-	if (sobreBiblioteca && /^[1-9]$/.test(tecla)) return () => void op.robar(Number(tecla));
+	if (sobreBiblioteca && /^[1-9]$/.test(tecla))
+		return () => void op.robar(Number(tecla), duenoBiblioteca());
 	const buscar = (c: Contexto) => ATAJOS.find((a) => a.contexto === c && a.tecla === tecla);
 	const a =
 		(carta !== null ? buscar("carta") : undefined) ??

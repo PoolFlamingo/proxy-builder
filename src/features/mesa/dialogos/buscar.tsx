@@ -20,6 +20,7 @@ import { WithTooltip } from "@/components/ui/with-tooltip";
 import { useMesa } from "@/stores/mesa-store";
 import { destino, hacer, mover, sitio } from "../acciones";
 import { caraVisible, ImagenCarta } from "../imagen-carta";
+import { hacerPor } from "../operaciones";
 import { usePantalla } from "../pantalla";
 
 export type FiltroBusqueda = {
@@ -230,8 +231,9 @@ export function BuscarDialog({ de, filtro }: { de: IdJugador; filtro: "todo" | "
 		// En una partida de verdad se baraja y luego se pone la carta arriba:
 		// aquí, lo mismo, aunque se haya puesto antes de barajar.
 		void (async () => {
-			if (!(await hacer({ que: "barajar" })) || arriba.length === 0) return;
-			await mover(arriba, destino("biblioteca", sitio.arriba));
+			// La biblioteca que se miró (la de otro, en red, se baraja a su nombre).
+			if (!(await hacerPor(de, { que: "barajar" })) || arriba.length === 0) return;
+			await mover(arriba, destino("biblioteca", sitio.arriba, de));
 		})();
 	};
 	return (

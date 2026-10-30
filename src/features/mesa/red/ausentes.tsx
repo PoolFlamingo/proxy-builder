@@ -35,7 +35,11 @@ export function Ausentes() {
 		(a) => jugadores[a.jugador] && jugadores[a.jugador]?.eliminado == null,
 	);
 	if (papel === null || fin || filas.length === 0) return null;
-	const vivos = asientos.filter((id) => jugadores[id]?.eliminado == null);
+	// Lo salta el siguiente que sigue en la partida y conectado (si el de después
+	// también se fue, nadie podría).
+	const vivos = asientos.filter(
+		(id) => jugadores[id]?.eliminado == null && !ausentes.some((a) => a.jugador === id),
+	);
 	const siguiente = siguienteVivo(asientos, vivos, activo);
 	return (
 		<div className="absolute top-14 right-3 z-[7500] flex max-w-72 flex-col gap-1.5">

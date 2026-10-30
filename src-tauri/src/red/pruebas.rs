@@ -1511,3 +1511,22 @@ async fn en_la_sala_cada_uno_cambia_su_nombre_y_su_deck_y_todos_lo_ven_al_moment
 
     aceptador.abort();
 }
+
+/// Empezar otra o terminar la de todos es del anfitrión: si un invitado lo
+/// pide, el anfitrión no lo hace y la partida sigue igual en todos.
+#[tokio::test]
+async fn un_invitado_no_reinicia_ni_termina_la_partida_de_todos() {
+    let p = partida(1).await;
+    quedarse_todos(&p).await;
+    let antes = seq(&p.host.mesa);
+    hace(&p.invitados[0].mesa, Accion::Reiniciar).unwrap();
+    hace(&p.invitados[0].mesa, gana_el_anfitrion()).unwrap();
+    esperar("los rechazos", || pendientes(&p.invitados[0].mesa) == 0).await;
+    // Y algo que sí puede hacer, para saber que lo de antes ya pasó.
+    hace(&p.invitados[0].mesa, Accion::Robar { n: 1 }).unwrap();
+    esperar("el robo", || seq(&p.host.mesa) == antes.map(|s| s + 1)).await;
+    todos_iguales(&p).await;
+    p.host
+        .mesa
+        .con(|s| assert!(s.as_ref().unwrap().partida().fin.is_none()));
+}

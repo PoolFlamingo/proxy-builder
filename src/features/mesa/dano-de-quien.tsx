@@ -53,15 +53,18 @@ export function DanoDeQuien() {
 	const acumulado = useRef<Record<number, number>>({});
 	const reloj = useRef<number | null>(null);
 
-	// Una partida nueva: se olvida lo de la anterior.
+	// Una partida nueva: se olvida lo de la anterior. También al reiniciar o en
+	// la siguiente de un encuentro, que siguen en la misma mesa y empiezan por el
+	// mulligan.
 	const activa = useMesa((s) => s.activa);
+	const enMulligan = useMesa((s) => s.general?.mulligan != null);
 	useEffect(() => {
-		if (!activa) {
+		if (!activa || enMulligan) {
 			useDanoDe.getState().limpiar();
 			anterior.current = null;
 			acumulado.current = {};
 		}
-	}, [activa]);
+	}, [activa, enMulligan]);
 
 	useEffect(() => {
 		const antes = anterior.current;

@@ -40,22 +40,18 @@ export function quienResponde(m: Pick<Mesa, "general" | "asientos" | "jugadores"
 }
 
 /**
- * El deck cuyo tapete se lee de los ajustes para el tablero de `jugador`: en
- * una partida local, el de su asiento; en red, solo el del anfitrión (el único
- * que sé cuál es) cuando se mira su tablero. Sin él, vale el tapete que la
- * partida preparó para ese jugador, no el mío.
+ * El deck cuyo tapete se lee de los ajustes para el tablero de `jugador`: el
+ * de su asiento, si se sabe. En red solo se sabe el propio (Rust deja vacío el
+ * de los demás: el anfitrión y cada invitado, el suyo). Sin él, vale el tapete
+ * que la partida preparó para ese jugador, no el mío.
  */
 export function deckDelTablero(
 	deckIds: string[],
 	asientos: IdJugador[],
 	jugador: IdJugador,
-	enRed: boolean,
-	esAnfitrion: boolean,
 ): string | null {
 	const i = asientos.indexOf(jugador);
-	if (i < 0) return null;
-	if (!enRed) return deckIds[i] ?? null;
-	return esAnfitrion && i === 0 ? (deckIds[0] ?? null) : null;
+	return i < 0 ? null : deckIds[i] || null;
 }
 
 /**

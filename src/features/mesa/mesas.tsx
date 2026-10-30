@@ -36,9 +36,7 @@ export function Mesas({ deckIds }: { deckIds: string[] }) {
 	// Cada tablero con el tapete de su jugador (no el del primero).
 	const asientos = useMesa(useShallow((s) => s.asientos));
 	const viendo = useMesa(tableroDe);
-	const enRed = useRed((s) => s.papel !== null);
-	const esAnfitrion = useRed((s) => s.papel === "anfitrion");
-	const deckId = deckDelTablero(deckIds, asientos, viendo, enRed, esAnfitrion);
+	const deckId = deckDelTablero(deckIds, asientos, viendo);
 	if (n < 2 || config.modo === "unico") {
 		return (
 			<div className="relative size-full">
@@ -50,9 +48,16 @@ export function Mesas({ deckIds }: { deckIds: string[] }) {
 	return <VariosTableros deckId={deckId} />;
 }
 
-/** Lo que el que juega tiene a mano sobre su tablero: las ayudas del turno y su vida. */
+/**
+ * Lo que el que juega tiene a mano sobre el tablero grande: las ayudas del
+ * turno y la vida **del jugador de ese tablero**. En red se mira el tablero
+ * de otro sin dejar de ser uno mismo: entonces la vida es la suya, con su
+ * nombre, y el daño que se le hace desde ahí es suyo, no de quien mira.
+ */
 function Controles() {
 	const yo = useMesa(duenoDeControles);
+	const viendo = useMesa(tableroDe);
+	const otro = useMesa((s) => viendo !== yo && s.jugadores[viendo] != null);
 	// Las ayudas del turno son para quien juega: en una repetición no hay nadie.
 	const repitiendo = useRepeticion((s) => s.activa !== null);
 	return (
@@ -65,7 +70,7 @@ function Controles() {
 			<PanelPlanes />
 			{!repitiendo && <AyudasTurno />}
 			<InsigniaSenal jugador={yo} />
-			<VidaJugador jugador={yo} />
+			{otro ? <VidaJugador jugador={viendo} ajena conNombre /> : <VidaJugador jugador={yo} />}
 		</div>
 	);
 }

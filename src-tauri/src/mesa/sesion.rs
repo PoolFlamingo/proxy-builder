@@ -429,6 +429,11 @@ impl Sesion {
                 return Err(AppError::new(ErrorCode::Rejected).with("motivo", "sin_mayoria"));
             }
         }
+        // Empezar otra o terminar la de todos lo decide el anfitrión (la barra
+        // solo se lo ofrece a él); lo de un invitado no se hace.
+        if origen.is_some() && matches!(accion, Accion::Reiniciar | Accion::Terminar { .. }) {
+            return Err(AppError::new(ErrorCode::Rejected).with("motivo", "SinPermiso"));
+        }
         let ahora = ahora_ms();
         // El fantasma mira la partida de antes y la de después (solo si está
         // encendido: la copia no sale gratis).

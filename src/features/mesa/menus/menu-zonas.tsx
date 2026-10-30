@@ -120,16 +120,21 @@ export function MenuBiblioteca({ jugador, children }: { jugador: IdJugador; chil
 					{t("Vigilar…")}
 					<Tecla contexto="biblioteca" nombre="Vigilar" />
 				</ContextMenuItem>
-				<ContextMenuItem
-					onSelect={() => usePantalla.getState().abrir({ tipo: "revelar", preset: "cascada" })}
-				>
-					<Icono icon="lucide:sparkles" />
-					{t("Cascada, varias veces…")}
-				</ContextMenuItem>
-				<ContextMenuItem onSelect={() => usePantalla.getState().abrir({ tipo: "revelar" })}>
-					<Icono icon="lucide:sparkles" />
-					{t("Revelar y lanzar… (cascada, descubrir)")}
-				</ContextMenuItem>
+				{/* Revelar y lanzar es de quien lanza: siempre sobre la biblioteca propia. */}
+				{!ajena && (
+					<>
+						<ContextMenuItem
+							onSelect={() => usePantalla.getState().abrir({ tipo: "revelar", preset: "cascada" })}
+						>
+							<Icono icon="lucide:sparkles" />
+							{t("Cascada, varias veces…")}
+						</ContextMenuItem>
+						<ContextMenuItem onSelect={() => usePantalla.getState().abrir({ tipo: "revelar" })}>
+							<Icono icon="lucide:sparkles" />
+							{t("Revelar y lanzar… (cascada, descubrir)")}
+						</ContextMenuItem>
+					</>
+				)}
 				<ContextMenuSeparator />
 				<ContextMenuItem onSelect={() => op.buscar("todo", jugador)}>
 					<Icono icon="lucide:search" />

@@ -268,8 +268,11 @@ function SoloQuedaUno() {
 	const { t } = useLang();
 	const asientos = useMesa(useShallow((s) => s.asientos));
 	const jugadores = useMesa((s) => s.jugadores);
+	// Terminar la partida de todos es del anfitrión (y de la partida local).
+	const manda = useRed((s) => s.papel === null || s.papel === "anfitrion");
 	const avisado = useRef<string>("");
 	useEffect(() => {
+		if (!manda) return;
 		const gana = ganadoresEnPie(asientos, (id) => {
 			const j = jugadores[id];
 			return j ? { eliminado: j.eliminado != null, equipo: j.equipo } : undefined;
@@ -295,7 +298,7 @@ function SoloQuedaUno() {
 				cancel: { label: t("Seguir jugando"), onClick: () => {} },
 			},
 		);
-	}, [asientos, jugadores, t]);
+	}, [asientos, jugadores, t, manda]);
 	useEffect(() => () => void toast.dismiss("solo-queda"), []);
 	return null;
 }
