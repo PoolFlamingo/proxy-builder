@@ -14,6 +14,11 @@ importado: boolean, estilos: Array<string>,
  */
 estilosPropios: Array<EstiloPropio>, 
 /**
+ * Estilo de serie que el pack no trae → el propio con el que se pinta
+ * (`Pack::propio_para`), para que el selector enseñe el de verdad.
+ */
+sustitutos: { [key in string]: string }, 
+/**
  * De dónde salen sus imágenes, si lo dice.
  */
 origen: string | null, };

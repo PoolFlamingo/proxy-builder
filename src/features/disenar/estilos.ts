@@ -53,8 +53,19 @@ export function opcionesEstilo(t: T, lang: string, propios: EstiloPropio[], actu
 	return opciones;
 }
 
-export function valorEstilo(style: DesignStyle, estiloPack?: string | null): string {
-	return estiloPack ? `${PREFIJO}${estiloPack}` : style;
+/**
+ * El valor del selector. Sin estilo propio elegido, si el pack no trae el de
+ * serie y Rust dice con cuál de los suyos lo pinta (`sustitutos`), ese: el
+ * selector enseña el marco que se ve de verdad.
+ */
+export function valorEstilo(
+	style: DesignStyle,
+	estiloPack?: string | null,
+	pack?: PackInfo,
+): string {
+	if (estiloPack) return `${PREFIJO}${estiloPack}`;
+	const sustituto = pack?.sustitutos[style];
+	return sustituto ? `${PREFIJO}${sustituto}` : style;
 }
 
 /** Lo elegido en el selector como `style` + `estiloPack`. */

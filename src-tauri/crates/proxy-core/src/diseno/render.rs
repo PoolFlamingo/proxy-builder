@@ -2077,14 +2077,22 @@ pub(super) fn estilo_para(
             None
         }
     });
-    // Un estilo que el pack no trae sale del pack de la casa (sus capas se
-    // buscan allí); si tampoco, el despejado del pack.
+    // Un estilo de serie que el pack no trae: uno propio del pack que lo
+    // sustituya (`Pack::propio_para`); si no tiene, el del pack de la casa
+    // (sus capas se buscan allí); si tampoco, el despejado del pack.
     let fabrica = Pack::de_fabrica_compartido();
     let base = match del_pack {
         Some(e) => e,
         None => rec
             .pack
             .estilo(nombre_estilo(style))
+            .or_else(|e| {
+                // Un pack con estilos propios (Balatro) pinta con uno suyo.
+                rec.pack
+                    .propio_para(nombre_estilo(style))
+                    .and_then(|id| rec.pack.estilo(id).ok())
+                    .ok_or(e)
+            })
             .or_else(|e| {
                 fabrica
                     .and_then(|f| f.estilo(nombre_estilo(style)).ok())
@@ -3746,6 +3754,35 @@ mod tests {
             &mut Vec::new(),
         );
         assert_eq!(e.unwrap(), clasico);
+    }
+
+    #[test]
+    fn un_pack_con_estilos_propios_pinta_lo_que_le_falta_con_uno_suyo() {
+        let mut p = casa();
+        let mut propio = p.estilo("borderless").unwrap().clone();
+        propio.radio = 7.0;
+        propio.base = Some("classic".into());
+        p.def.estilos.insert("joker".into(), propio.clone());
+        let mut otro = propio.clone();
+        otro.radio = 8.0;
+        p.def.estilos.insert("espectral".into(), otro.clone());
+        p.def.estilos.remove("classic");
+        p.def.estilos.remove("extended");
+        let s = Simbolos::nuevos();
+        let pide = |p: &Pack, style| {
+            estilo_para(&recursos(p, &s), style, None, None, None, &mut Vec::new()).unwrap()
+        };
+        // Sin decir cuál, el primero por id de los basados en el clásico.
+        assert_eq!(pide(&p, DesignStyle::Classic), otro);
+        p.def.estilo_por_defecto = Some("joker".into());
+        assert_eq!(pide(&p, DesignStyle::Classic), propio);
+        // Ninguno se basa en el extendido: el de por defecto.
+        assert_eq!(pide(&p, DesignStyle::Extended), propio);
+        // El que el pack sí trae, el suyo.
+        assert_eq!(
+            &pide(&p, DesignStyle::Borderless),
+            p.estilo("borderless").unwrap()
+        );
     }
 
     #[test]

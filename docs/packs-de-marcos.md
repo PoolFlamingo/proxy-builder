@@ -344,6 +344,16 @@ y de la colección mientras el pack esté elegido.
 Una carta con un estilo propio cuyo pack ya no está sale con su `base` y un
 aviso.
 
+Al revés, una carta con un estilo de serie que el pack no trae (un pack que
+solo tiene estilos propios, como Balatro) se pinta con uno propio del pack,
+nunca con el marco de la casa: el que diga **`estiloPorDefecto`** (arriba del
+todo de `pack.json`) si se basa en ese estilo de serie; si no, el primero por
+id de los que se basan en él; y si ninguno, el de `estiloPorDefecto`.
+
+```json
+"estiloPorDefecto": "joker"
+```
+
 ### Condiciones (`si`)
 
 Además de `corona`, `fr`, `cinta` y `emblema`:

@@ -447,6 +447,11 @@ mod tests {
         .await
         .unwrap();
         assert_eq!(info.estilos_propios.len(), 7, "{:?}", info.estilos_propios);
+        // Una carta con un estilo de serie se pinta con un marco del pack,
+        // nunca con el de la casa.
+        assert_eq!(info.sustitutos["classic"], "joker");
+        assert_eq!(info.sustitutos["borderless"], "joker");
+        assert_eq!(info.sustitutos["fullArt"], "tierra");
         let (_, d) = uno("balatro").unwrap();
         for e in &d.extras {
             assert!(ruta_extra(&s, "balatro", &e.ruta).is_ok(), "{}", e.ruta);

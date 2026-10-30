@@ -60,6 +60,9 @@ pub struct PackInfo {
     pub estilos: Vec<String>,
     /// Los estilos propios del pack (los que no son de serie), para elegirlos.
     pub estilos_propios: Vec<EstiloPropio>,
+    /// Estilo de serie que el pack no trae → el propio con el que se pinta
+    /// (`Pack::propio_para`), para que el selector enseñe el de verdad.
+    pub sustitutos: BTreeMap<String, String>,
     /// De dónde salen sus imágenes, si lo dice.
     pub origen: Option<String>,
 }
@@ -334,6 +337,10 @@ fn info_de(p: &Pack) -> PackInfo {
                     })
                     .collect(),
             })
+            .collect(),
+        sustitutos: proxy_core::diseno::pack::ESTILOS_DE_SERIE
+            .iter()
+            .filter_map(|serie| Some((serie.to_string(), p.propio_para(serie)?.to_string())))
             .collect(),
         origen: p.def.origen.clone(),
     }

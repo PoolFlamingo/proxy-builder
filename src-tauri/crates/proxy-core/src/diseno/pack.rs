@@ -674,6 +674,11 @@ pub struct PackDef {
     /// partida, 0,05).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub separacion_coste: Option<f32>,
+    /// El estilo propio que hace de estilo de serie cuando el pack no trae el
+    /// que pide la carta (ver `Pack::propio_para`). Sin decirlo, el primero
+    /// (por id) de los que se basan en ese estilo de serie.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub estilo_por_defecto: Option<String>,
 }
 
 /// Los colores de texto de las reglas de un pack.
@@ -792,6 +797,13 @@ impl Pack {
                 }
             }
         }
+        if let Some(d) = &def.estilo_por_defecto {
+            if !def.estilos.contains_key(d) || ESTILOS_DE_SERIE.contains(&d.as_str()) {
+                return Err(PackError::Json(format!(
+                    "el estilo por defecto no es un estilo propio del pack: {d}"
+                )));
+            }
+        }
         for (nombre, e) in &def.estilos {
             if let Some(b) = &e.base {
                 if !ESTILOS_DE_SERIE.contains(&b.as_str()) {
@@ -854,6 +866,19 @@ impl Pack {
             h.update(v.as_slice());
             h.update([0]);
         }
+        // A un estilo de serie que no trae, un pack con estilos propios lo
+        // pinta con uno suyo (`propio_para`; antes, con el de la casa): solo
+        // las cartas de esos packs se vuelven a pintar.
+        let sin_serie = ESTILOS_DE_SERIE
+            .iter()
+            .any(|s| !def.estilos.contains_key(*s));
+        let con_propios = def
+            .estilos
+            .keys()
+            .any(|id| !ESTILOS_DE_SERIE.contains(&id.as_str()));
+        if sin_serie && con_propios {
+            h.update(b"|sustituto-propio");
+        }
         let huella = h.finalize().iter().map(|b| format!("{b:02x}")).collect();
         let simbolos = if def.simbolos.is_empty() {
             None
@@ -911,6 +936,32 @@ impl Pack {
             .estilos
             .get(nombre)
             .ok_or_else(|| PackError::FaltaEstilo(nombre.into()))
+    }
+
+    /// El estilo propio con el que se pinta el estilo de serie `serie` si el
+    /// pack no lo trae: uno que se base en él (el `estiloPorDefecto` si es de
+    /// esos; si no, el primero por id) o, si ninguno, el `estiloPorDefecto`.
+    /// Así un pack temático (Balatro) pinta siempre con sus marcos y no con
+    /// los de la casa. `None` si el pack trae el de serie o no tiene propios.
+    pub fn propio_para(&self, serie: &str) -> Option<&str> {
+        if self.def.estilos.contains_key(serie) {
+            return None;
+        }
+        let defecto = self.def.estilo_por_defecto.as_deref();
+        let basados: Vec<&str> = self
+            .def
+            .estilos
+            .iter()
+            .filter(|(id, e)| {
+                !ESTILOS_DE_SERIE.contains(&id.as_str())
+                    && e.base.as_deref().unwrap_or("classic") == serie
+            })
+            .map(|(id, _)| id.as_str())
+            .collect();
+        defecto
+            .filter(|d| basados.contains(d))
+            .or_else(|| basados.first().copied())
+            .or(defecto)
     }
 }
 

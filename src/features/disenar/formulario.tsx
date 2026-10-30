@@ -376,9 +376,15 @@ function PestanaCarta({
 }) {
 	const { t, lang } = useLang();
 	const langDiseno = useDeck((s) => s.deck?.settings.designLang ?? "es");
-	const propios = propiosDe(packs, packEfectivo(design, colecciones));
-	const valor = valorEstilo(design.style, design.estiloPack);
-	const variantes = propios.find((e) => e.id === design.estiloPack)?.variantes ?? [];
+	const pack = packEfectivo(design, colecciones);
+	const propios = propiosDe(packs, pack);
+	const valor = valorEstilo(
+		design.style,
+		design.estiloPack,
+		packs.find((p) => p.id === pack),
+	);
+	const estiloVisto = valor.startsWith("pack:") ? valor.slice("pack:".length) : undefined;
+	const variantes = propios.find((e) => e.id === estiloVisto)?.variantes ?? [];
 	const sinVariante = "__carta";
 	const f = design.card.faces[cara] ?? design.card.faces[0];
 	const fr =

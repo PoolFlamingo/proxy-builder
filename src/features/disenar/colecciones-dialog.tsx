@@ -462,12 +462,20 @@ function Editor({
 			</Fila>
 			<Fila etiqueta={t("Estilo de las cartas nuevas")}>
 				<Selector
-					valor={valorEstilo(c.defaultStyle, c.estiloPackDefecto)}
+					valor={valorEstilo(
+						c.defaultStyle,
+						c.estiloPackDefecto,
+						packs.find((p) => p.id === c.frame.pack),
+					)}
 					opciones={opcionesEstilo(
 						t,
 						lang,
 						propiosDe(packs, c.frame.pack),
-						valorEstilo(c.defaultStyle, c.estiloPackDefecto),
+						valorEstilo(
+							c.defaultStyle,
+							c.estiloPackDefecto,
+							packs.find((p) => p.id === c.frame.pack),
+						),
 					)}
 					onChange={(v) => {
 						const e = elegirEstilo(v, propiosDe(packs, c.frame.pack), c.defaultStyle);

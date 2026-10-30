@@ -300,7 +300,11 @@ function Contenido() {
 												aria-label={t("Quitar pack")}
 												disabled={ocupado !== null}
 												onClick={() =>
-													con(p.id, () => call("pack_remove", { id: p.id }).then(() => {}))
+													con(p.id, async () => {
+														await call("pack_remove", { id: p.id });
+														// Uno descargable (Balatro) vuelve a ofrecerse para bajarlo.
+														await usePacksDescargables.getState().cargar();
+													})
 												}
 											>
 												<Icono icon="lucide:trash-2" />
