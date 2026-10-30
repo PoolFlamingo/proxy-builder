@@ -1,5 +1,10 @@
 {
 	"No hay conexión o el servidor no responde.": "没有网络连接，或服务器无响应。",
+	"No se ha podido conectar con el servidor. Revisa la conexión y que el cortafuegos o el antivirus dejen salir a la app.": "无法连接到服务器。请检查网络连接,并确认防火墙或杀毒软件允许本应用联网。",
+	"El servidor ha tardado demasiado en responder. Vuelve a intentarlo.": "服务器响应时间过长。请重试。",
+	"El servidor ha mandado una respuesta que la app no entiende.": "服务器发来了应用无法理解的响应。",
+	"El servidor ha rechazado la petición (error {estado}). Suele ser una VPN, un proxy o la red bloqueada: prueba con otra conexión.": "服务器拒绝了请求(错误 {estado})。通常是 VPN、代理或网络被屏蔽导致的:请换一个网络连接试试。",
+	"El servidor ha devuelto un error ({estado}). Vuelve a intentarlo más tarde.": "服务器返回了错误({estado})。请稍后再试。",
 	"El servicio pide ir más despacio. Vuelve a intentarlo en un momento.": "服务要求降低请求速度，请稍后重试。",
 	"No se ha encontrado lo que se buscaba.": "未找到要查找的内容。",
 	"No se ha podido leer o escribir en el disco.": "无法读写磁盘。",

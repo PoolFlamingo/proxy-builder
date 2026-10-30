@@ -182,14 +182,10 @@ pub async fn descargar(
     let http = reqwest::Client::builder()
         .user_agent(concat!("ProxyBuilder/", env!("CARGO_PKG_VERSION")))
         .build()
-        .map_err(|e| AppError::new(ErrorCode::Network).with("detalle", e))?;
+        .map_err(crate::error::red)?;
     for (ruta, sha) in faltan {
         let url = format!("{REPO}/{}/{}{ruta}", l.commit, l.base);
-        let r = http
-            .get(&url)
-            .send()
-            .await
-            .map_err(|e| AppError::new(ErrorCode::Network).with("detalle", e))?;
+        let r = http.get(&url).send().await.map_err(crate::error::red)?;
         tracing::info!(
             host = "raw.githubusercontent.com",
             fichero = ruta.as_str(),
@@ -197,12 +193,9 @@ pub async fn descargar(
             "red"
         );
         if !r.status().is_success() {
-            return Err(AppError::new(ErrorCode::Network).with("estado", r.status().as_u16()));
+            return Err(crate::error::estado_http(r.status()));
         }
-        let b = r
-            .bytes()
-            .await
-            .map_err(|e| AppError::new(ErrorCode::Network).with("detalle", e))?;
+        let b = r.bytes().await.map_err(crate::error::red)?;
         // Lo que llega tiene que ser justo lo esperado.
         if huella(&b) != sha {
             return Err(AppError::new(ErrorCode::Network).with("fichero", ruta));

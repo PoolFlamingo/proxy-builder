@@ -61,25 +61,17 @@ pub fn necesita(lang: DesignLang) -> bool {
 }
 
 async fn bajar(http: &reqwest::Client, url: &str, sha: &str) -> AppResult<Vec<u8>> {
-    let mut r = http
-        .get(url)
-        .send()
-        .await
-        .map_err(|e| AppError::new(ErrorCode::Network).with("detalle", e))?;
+    let mut r = http.get(url).send().await.map_err(crate::error::red)?;
     tracing::info!(
         host = "raw.githubusercontent.com",
         estado = r.status().as_u16(),
         "red"
     );
     if !r.status().is_success() {
-        return Err(AppError::new(ErrorCode::Network).with("estado", r.status().as_u16()));
+        return Err(crate::error::estado_http(r.status()));
     }
     let mut b = Vec::new();
-    while let Some(trozo) = r
-        .chunk()
-        .await
-        .map_err(|e| AppError::new(ErrorCode::Network).with("detalle", e))?
-    {
+    while let Some(trozo) = r.chunk().await.map_err(crate::error::red)? {
         b.extend_from_slice(&trozo);
         if b.len() > TOPE {
             return Err(AppError::new(ErrorCode::Network).with("motivo", "tamano"));
@@ -105,7 +97,7 @@ pub async fn descargar(state: &AppState, lang: DesignLang) -> AppResult<()> {
     let http = reqwest::Client::builder()
         .user_agent(concat!("ProxyBuilder/", env!("CARGO_PKG_VERSION")))
         .build()
-        .map_err(|e| AppError::new(ErrorCode::Network).with("detalle", e))?;
+        .map_err(crate::error::red)?;
     let url = |ruta: &str| {
         // Los corchetes de `[wght]` van escapados en la URL.
         let ruta = ruta.replace('[', "%5B").replace(']', "%5D");

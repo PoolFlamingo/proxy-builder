@@ -101,9 +101,7 @@ fn no_permitida(url: &str) -> AppError {
         .with("url", url)
 }
 
-fn red(e: impl std::fmt::Display) -> AppError {
-    AppError::new(ErrorCode::Network).with("detalle", e)
-}
+use crate::error::red;
 
 /// El cliente HTTP para las fuentes de fuera.
 pub struct Externo {
@@ -153,15 +151,13 @@ impl Externo {
             return Err(no_permitida(r.url().as_str()));
         }
         if !r.status().is_success() {
-            return Err(
-                AppError::new(if r.status() == reqwest::StatusCode::NOT_FOUND {
-                    ErrorCode::NotFound
-                } else {
-                    ErrorCode::Network
-                })
-                .with("url", url.as_str())
-                .with("estado", r.status().as_u16()),
-            );
+            return Err(if r.status() == reqwest::StatusCode::NOT_FOUND {
+                AppError::new(ErrorCode::NotFound)
+                    .with("url", url.as_str())
+                    .with("estado", r.status().as_u16())
+            } else {
+                crate::error::estado_http(r.status()).with("url", url.as_str())
+            });
         }
         if r.content_length().is_some_and(|n| n as usize > tope) {
             return Err(grande(url.as_str()));
@@ -200,9 +196,7 @@ impl Externo {
             return Err(no_permitida(r.url().as_str()));
         }
         if !r.status().is_success() {
-            return Err(AppError::new(ErrorCode::Network)
-                .with("url", url.as_str())
-                .with("estado", r.status().as_u16()));
+            return Err(crate::error::estado_http(r.status()).with("url", url.as_str()));
         }
         let total = r.content_length();
         if total.is_some_and(|n| n > tope) {

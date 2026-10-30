@@ -100,6 +100,51 @@ impl From<proxy_core::layout::LayoutError> for AppError {
 
 pub type AppResult<T> = Result<T, AppError>;
 
+/// Un fallo de `reqwest`, con el porqué en `motivo` para que la pantalla no
+/// lo cuente todo como «sin conexión»: `conexion` (no se llegó: DNS,
+/// cortafuegos, antivirus, proxy), `tiempo` (se pasó el plazo) o `respuesta`
+/// (llegó algo que no se entiende). `detalle` lleva la cadena entera de
+/// causas, que `reqwest` esconde en su `Display`, y queda en el registro.
+pub fn red(e: reqwest::Error) -> AppError {
+    let motivo = if e.is_timeout() {
+        "tiempo"
+    } else if e.is_connect() {
+        "conexion"
+    } else if e.is_decode() || e.is_body() {
+        "respuesta"
+    } else {
+        "otro"
+    };
+    let mut detalle = e.to_string();
+    let mut causa = std::error::Error::source(&e);
+    while let Some(c) = causa {
+        detalle.push_str(": ");
+        detalle.push_str(&c.to_string());
+        causa = c.source();
+    }
+    let host = e.url().and_then(|u| u.host_str()).unwrap_or("").to_string();
+    tracing::warn!(%host, motivo, %detalle, "red: fallo");
+    AppError::new(ErrorCode::Network)
+        .with("motivo", motivo)
+        .with("detalle", detalle)
+}
+
+/// El servidor contestó con un estado de error que no se reintenta.
+/// `motivo`: `rechazo` si es 401/403 (lo típico de Cloudflare con una IP que
+/// no le gusta, una VPN o un proxy: el navegador pasa el reto y la app no) o
+/// `estado` para los demás.
+pub fn estado_http(estado: reqwest::StatusCode) -> AppError {
+    let motivo = if matches!(estado.as_u16(), 401 | 403) {
+        "rechazo"
+    } else {
+        "estado"
+    };
+    tracing::warn!(estado = estado.as_u16(), motivo, "red: estado de error");
+    AppError::new(ErrorCode::Network)
+        .with("motivo", motivo)
+        .with("estado", estado.as_u16())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -110,5 +155,30 @@ mod tests {
         let json = serde_json::to_value(&e).unwrap();
         assert_eq!(json["code"], "InvalidInput");
         assert_eq!(json["params"]["linea"], "12");
+    }
+
+    #[test]
+    fn un_403_es_un_rechazo_y_no_falta_de_conexion() {
+        let e = estado_http(reqwest::StatusCode::FORBIDDEN);
+        assert_eq!(e.code, ErrorCode::Network);
+        assert_eq!(e.params["motivo"], "rechazo");
+        assert_eq!(e.params["estado"], "403");
+        assert_eq!(
+            estado_http(reqwest::StatusCode::BAD_REQUEST).params["motivo"],
+            "estado"
+        );
+    }
+
+    #[tokio::test]
+    async fn sin_servidor_es_un_fallo_de_conexion() {
+        // Nadie escucha en el puerto 9 de la máquina: la conexión se rechaza.
+        let e = reqwest::Client::new()
+            .get("http://127.0.0.1:9/")
+            .send()
+            .await
+            .unwrap_err();
+        let e = red(e);
+        assert_eq!(e.params["motivo"], "conexion");
+        assert!(e.params["detalle"].len() > 10);
     }
 }

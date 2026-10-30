@@ -1,5 +1,10 @@
 {
 	"No hay conexión o el servidor no responde.": "Geen verbinding of de server reageert niet.",
+	"No se ha podido conectar con el servidor. Revisa la conexión y que el cortafuegos o el antivirus dejen salir a la app.": "Kan geen verbinding maken met de server. Controleer je verbinding en of je firewall of antivirus de app naar internet laat.",
+	"El servidor ha tardado demasiado en responder. Vuelve a intentarlo.": "De server deed er te lang over om te antwoorden. Probeer het opnieuw.",
+	"El servidor ha mandado una respuesta que la app no entiende.": "De server stuurde een antwoord dat de app niet begrijpt.",
+	"El servidor ha rechazado la petición (error {estado}). Suele ser una VPN, un proxy o la red bloqueada: prueba con otra conexión.": "De server heeft het verzoek geweigerd (fout {estado}). Meestal is dat een vpn, een proxy of een geblokkeerd netwerk: probeer een andere verbinding.",
+	"El servidor ha devuelto un error ({estado}). Vuelve a intentarlo más tarde.": "De server gaf een fout terug ({estado}). Probeer het later opnieuw.",
 	"El servicio pide ir más despacio. Vuelve a intentarlo en un momento.": "De dienst vraagt om het rustiger aan te doen. Probeer het zo meteen opnieuw.",
 	"No se ha encontrado lo que se buscaba.": "Wat je zocht is niet gevonden.",
 	"No se ha podido leer o escribir en el disco.": "Kan niet lezen van of schrijven naar de schijf.",

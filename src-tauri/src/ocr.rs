@@ -63,17 +63,13 @@ pub async fn descargar_modelos(datos: &Path) -> AppResult<()> {
     let http = reqwest::Client::builder()
         .user_agent(concat!("ProxyBuilder/", env!("CARGO_PKG_VERSION")))
         .build()
-        .map_err(|e| AppError::new(ErrorCode::Network).with("detalle", e))?;
+        .map_err(crate::error::red)?;
     for (nombre, url) in MODELOS {
         let destino = dir.join(nombre);
         if destino.exists() {
             continue;
         }
-        let r = http
-            .get(url)
-            .send()
-            .await
-            .map_err(|e| AppError::new(ErrorCode::Network).with("detalle", e))?;
+        let r = http.get(url).send().await.map_err(crate::error::red)?;
         tracing::info!(
             host = "ocrs-models",
             modelo = nombre,
@@ -81,12 +77,9 @@ pub async fn descargar_modelos(datos: &Path) -> AppResult<()> {
             "red"
         );
         if !r.status().is_success() {
-            return Err(AppError::new(ErrorCode::Network).with("estado", r.status().as_u16()));
+            return Err(crate::error::estado_http(r.status()));
         }
-        let bytes = r
-            .bytes()
-            .await
-            .map_err(|e| AppError::new(ErrorCode::Network).with("detalle", e))?;
+        let bytes = r.bytes().await.map_err(crate::error::red)?;
         escribir_atomico(&destino, &bytes)?;
     }
     Ok(())

@@ -1,5 +1,10 @@
 {
 	"No hay conexión o el servidor no responde.": "Нет соединения, или сервер не отвечает.",
+	"No se ha podido conectar con el servidor. Revisa la conexión y que el cortafuegos o el antivirus dejen salir a la app.": "Не удалось подключиться к серверу. Проверьте подключение и то, что брандмауэр или антивирус пропускают приложение в интернет.",
+	"El servidor ha tardado demasiado en responder. Vuelve a intentarlo.": "Сервер слишком долго не отвечал. Попробуйте ещё раз.",
+	"El servidor ha mandado una respuesta que la app no entiende.": "Сервер прислал ответ, который приложение не понимает.",
+	"El servidor ha rechazado la petición (error {estado}). Suele ser una VPN, un proxy o la red bloqueada: prueba con otra conexión.": "Сервер отклонил запрос (ошибка {estado}). Обычно это VPN, прокси или заблокированная сеть: попробуйте другое подключение.",
+	"El servidor ha devuelto un error ({estado}). Vuelve a intentarlo más tarde.": "Сервер вернул ошибку ({estado}). Попробуйте позже.",
 	"El servicio pide ir más despacio. Vuelve a intentarlo en un momento.": "Сервис просит не торопиться. Попробуйте ещё раз чуть позже.",
 	"No se ha encontrado lo que se buscaba.": "Ничего не найдено.",
 	"No se ha podido leer o escribir en el disco.": "Не удалось прочитать или записать данные на диск.",

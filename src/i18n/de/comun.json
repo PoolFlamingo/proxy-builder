@@ -1,5 +1,10 @@
 {
 	"No hay conexión o el servidor no responde.": "Keine Verbindung oder der Server antwortet nicht.",
+	"No se ha podido conectar con el servidor. Revisa la conexión y que el cortafuegos o el antivirus dejen salir a la app.": "Keine Verbindung zum Server möglich. Prüfe deine Verbindung und ob Firewall oder Virenschutz die App ins Internet lassen.",
+	"El servidor ha tardado demasiado en responder. Vuelve a intentarlo.": "Der Server hat zu lange nicht geantwortet. Versuche es erneut.",
+	"El servidor ha mandado una respuesta que la app no entiende.": "Der Server hat eine Antwort geschickt, die die App nicht versteht.",
+	"El servidor ha rechazado la petición (error {estado}). Suele ser una VPN, un proxy o la red bloqueada: prueba con otra conexión.": "Der Server hat die Anfrage abgelehnt (Fehler {estado}). Meist liegt es an einem VPN, einem Proxy oder einem gesperrten Netz: versuche es mit einer anderen Verbindung.",
+	"El servidor ha devuelto un error ({estado}). Vuelve a intentarlo más tarde.": "Der Server hat einen Fehler gemeldet ({estado}). Versuche es später erneut.",
 	"El servicio pide ir más despacio. Vuelve a intentarlo en un momento.": "Der Dienst bittet um weniger Anfragen. Versuch es gleich noch einmal.",
 	"No se ha encontrado lo que se buscaba.": "Das Gesuchte wurde nicht gefunden.",
 	"No se ha podido leer o escribir en el disco.": "Lesen oder Schreiben auf dem Datenträger fehlgeschlagen.",

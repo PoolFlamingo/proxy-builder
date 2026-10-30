@@ -1,5 +1,10 @@
 {
 	"No hay conexión o el servidor no responde.": "Nu există conexiune sau serverul nu răspunde.",
+	"No se ha podido conectar con el servidor. Revisa la conexión y que el cortafuegos o el antivirus dejen salir a la app.": "Nu s-a putut face conexiunea cu serverul. Verifică conexiunea și dacă firewallul sau antivirusul lasă aplicația să iasă pe internet.",
+	"El servidor ha tardado demasiado en responder. Vuelve a intentarlo.": "Serverul a răspuns prea greu. Încearcă din nou.",
+	"El servidor ha mandado una respuesta que la app no entiende.": "Serverul a trimis un răspuns pe care aplicația nu îl înțelege.",
+	"El servidor ha rechazado la petición (error {estado}). Suele ser una VPN, un proxy o la red bloqueada: prueba con otra conexión.": "Serverul a refuzat cererea (eroarea {estado}). De obicei e un VPN, un proxy sau rețeaua blocată: încearcă altă conexiune.",
+	"El servidor ha devuelto un error ({estado}). Vuelve a intentarlo más tarde.": "Serverul a returnat o eroare ({estado}). Încearcă din nou mai târziu.",
 	"El servicio pide ir más despacio. Vuelve a intentarlo en un momento.": "Serviciul cere să mergem mai încet. Încearcă din nou peste puțin timp.",
 	"No se ha encontrado lo que se buscaba.": "Ce căutai nu a fost găsit.",
 	"No se ha podido leer o escribir en el disco.": "Nu s-a putut citi sau scrie pe disc.",

@@ -1,5 +1,10 @@
 {
 	"No hay conexión o el servidor no responde.": "No hay conexión o el servidor no responde.",
+	"No se ha podido conectar con el servidor. Revisa la conexión y que el cortafuegos o el antivirus dejen salir a la app.": "No se ha podido conectar con el servidor. Revisa la conexión y que el cortafuegos o el antivirus dejen salir a la app.",
+	"El servidor ha tardado demasiado en responder. Vuelve a intentarlo.": "El servidor ha tardado demasiado en responder. Vuelve a intentarlo.",
+	"El servidor ha mandado una respuesta que la app no entiende.": "El servidor ha mandado una respuesta que la app no entiende.",
+	"El servidor ha rechazado la petición (error {estado}). Suele ser una VPN, un proxy o la red bloqueada: prueba con otra conexión.": "El servidor ha rechazado la petición (error {estado}). Suele ser una VPN, un proxy o la red bloqueada: prueba con otra conexión.",
+	"El servidor ha devuelto un error ({estado}). Vuelve a intentarlo más tarde.": "El servidor ha devuelto un error ({estado}). Vuelve a intentarlo más tarde.",
 	"El servicio pide ir más despacio. Vuelve a intentarlo en un momento.": "El servicio pide ir más despacio. Vuelve a intentarlo en un momento.",
 	"No se ha encontrado lo que se buscaba.": "No se ha encontrado lo que se buscaba.",
 	"No se ha podido leer o escribir en el disco.": "No se ha podido leer o escribir en el disco.",

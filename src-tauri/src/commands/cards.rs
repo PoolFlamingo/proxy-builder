@@ -499,23 +499,20 @@ pub async fn import_archidekt(url: String, include_sideboard: bool) -> AppResult
     let r = reqwest::Client::builder()
         .user_agent(concat!("ProxyBuilder/", env!("CARGO_PKG_VERSION")))
         .build()
-        .map_err(|e| AppError::new(ErrorCode::Network).with("detalle", e))?
+        .map_err(crate::error::red)?
         .get(&api)
         .send()
         .await
-        .map_err(|e| AppError::new(ErrorCode::Network).with("detalle", e))?;
+        .map_err(crate::error::red)?;
     tracing::info!(host = "archidekt.com", ruta = %format!("/api/decks/{id}/"), estado = r.status().as_u16(), "red");
     if r.status() == reqwest::StatusCode::NOT_FOUND || r.status() == reqwest::StatusCode::FORBIDDEN
     {
         return Err(AppError::new(ErrorCode::NotFound).with("deck", id));
     }
     if !r.status().is_success() {
-        return Err(AppError::new(ErrorCode::Network).with("estado", r.status().as_u16()));
+        return Err(crate::error::estado_http(r.status()));
     }
-    let texto = r
-        .text()
-        .await
-        .map_err(|e| AppError::new(ErrorCode::Network).with("detalle", e))?;
+    let texto = r.text().await.map_err(crate::error::red)?;
     let i = archidekt::desde_json(&texto, include_sideboard)?;
     Ok(ArchidektImport {
         text: i.texto,

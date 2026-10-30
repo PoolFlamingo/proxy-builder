@@ -42,8 +42,10 @@ sha2 = "0.11"
 uuid = { version = "1", features = ["v4"] }
 # Red: Scryfall y Archidekt. 🛑 `default-features = false` y `rustls`: nada de
 # OpenSSL en el árbol (regla de judlex). Tras tocarlo, `cargo tree -i openssl`
-# tiene que salir vacío.
-reqwest = { version = "0.13", default-features = false, features = ["json", "query", "rustls", "gzip"] }
+# tiene que salir vacío. `system-proxy`: el proxy que tenga puesto Windows o
+# macOS. Ya lo encendía otra dependencia (`tauri-plugin-updater`); se pide aquí
+# para no depender de ella.
+reqwest = { version = "0.13", default-features = false, features = ["json", "query", "rustls", "gzip", "system-proxy"] }
 # El WebSocket del servidor de salas (Fase F): TLS con rustls y el verificador
 # del sistema, como reqwest (`red/servidor/cliente.rs` monta la configuración).
 tokio-tungstenite = { version = "0.30", default-features = false, features = ["connect", "__rustls-tls"] }

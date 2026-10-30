@@ -44,7 +44,19 @@ const MOTIVOS: Partial<Record<ErrorCode, Record<string, string>>> = {
 		deck: paraTraducir("Elige un deck para jugar."),
 		identidad: paraTraducir("Ese fichero no es una identidad de Proxy Builder."),
 	},
+	// Los de `crate::error::{red, estado_http}`: el porqué de un fallo de red.
 	Network: {
+		conexion: paraTraducir(
+			"No se ha podido conectar con el servidor. Revisa la conexión y que el cortafuegos o el antivirus dejen salir a la app.",
+		),
+		tiempo: paraTraducir("El servidor ha tardado demasiado en responder. Vuelve a intentarlo."),
+		respuesta: paraTraducir("El servidor ha mandado una respuesta que la app no entiende."),
+		rechazo: paraTraducir(
+			"El servidor ha rechazado la petición (error {estado}). Suele ser una VPN, un proxy o la red bloqueada: prueba con otra conexión.",
+		),
+		estado: paraTraducir(
+			"El servidor ha devuelto un error ({estado}). Vuelve a intentarlo más tarde.",
+		),
 		sin_servidor: paraTraducir("No hay conexión con el servidor de salas."),
 		sin_respuesta: paraTraducir("El anfitrión no responde."),
 		desconectado: paraTraducir("Se ha perdido la conexión con la partida."),

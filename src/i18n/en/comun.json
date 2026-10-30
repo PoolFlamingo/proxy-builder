@@ -1,5 +1,10 @@
 {
 	"No hay conexión o el servidor no responde.": "No connection, or the server isn't responding.",
+	"No se ha podido conectar con el servidor. Revisa la conexión y que el cortafuegos o el antivirus dejen salir a la app.": "Couldn't connect to the server. Check your connection and that your firewall or antivirus lets the app go online.",
+	"El servidor ha tardado demasiado en responder. Vuelve a intentarlo.": "The server took too long to respond. Try again.",
+	"El servidor ha mandado una respuesta que la app no entiende.": "The server sent a response the app doesn't understand.",
+	"El servidor ha rechazado la petición (error {estado}). Suele ser una VPN, un proxy o la red bloqueada: prueba con otra conexión.": "The server refused the request (error {estado}). This is usually a VPN, a proxy or a blocked network: try another connection.",
+	"El servidor ha devuelto un error ({estado}). Vuelve a intentarlo más tarde.": "The server returned an error ({estado}). Try again later.",
 	"El servicio pide ir más despacio. Vuelve a intentarlo en un momento.": "The service is asking us to slow down. Try again in a moment.",
 	"No se ha encontrado lo que se buscaba.": "What you were looking for wasn't found.",
 	"No se ha podido leer o escribir en el disco.": "Couldn't read from or write to the disk.",

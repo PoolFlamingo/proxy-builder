@@ -22,7 +22,7 @@ use tokio::sync::Semaphore;
 use super::busquedas::{self, Busquedas};
 use super::models::{Catalog, Collection, Identifier, ScryCard, SearchPage, SetInfo, SetList};
 use super::rate::Limitador;
-use crate::error::{AppError, AppResult, ErrorCode};
+use crate::error::{estado_http, red, AppError, AppResult, ErrorCode};
 
 const API: &str = "https://api.scryfall.com";
 const MAX_REINTENTOS: u32 = 3;
@@ -61,16 +61,14 @@ pub struct Scryfall {
     busquedas: Busquedas,
 }
 
-fn red(e: reqwest::Error) -> AppError {
-    AppError::new(ErrorCode::Network).with("detalle", e)
-}
-
 impl Scryfall {
     pub fn new() -> AppResult<Scryfall> {
         let http = Client::builder()
             .user_agent(concat!("ProxyBuilder/", env!("CARGO_PKG_VERSION")))
             .timeout(Duration::from_secs(30))
-            .connect_timeout(Duration::from_secs(10))
+            // Holgado: en Windows el TLS también pide la revocación del
+            // certificado (hasta 10 s si la red la frena) dentro de este plazo.
+            .connect_timeout(Duration::from_secs(20))
             .build()
             .map_err(red)?;
         Ok(Scryfall {
@@ -111,7 +109,7 @@ impl Scryfall {
                 return Err(if estado == StatusCode::TOO_MANY_REQUESTS {
                     AppError::new(ErrorCode::RateLimited)
                 } else {
-                    AppError::new(ErrorCode::Network).with("estado", estado.as_u16())
+                    estado_http(estado)
                 });
             }
             let pedida = r

@@ -1,5 +1,10 @@
 {
 	"No hay conexión o el servidor no responde.": "Немає зʼєднання або сервер не відповідає.",
+	"No se ha podido conectar con el servidor. Revisa la conexión y que el cortafuegos o el antivirus dejen salir a la app.": "Не вдалося під'єднатися до сервера. Перевірте з'єднання та чи брандмауер або антивірус пропускають застосунок в інтернет.",
+	"El servidor ha tardado demasiado en responder. Vuelve a intentarlo.": "Сервер надто довго не відповідав. Спробуйте ще раз.",
+	"El servidor ha mandado una respuesta que la app no entiende.": "Сервер надіслав відповідь, якої застосунок не розуміє.",
+	"El servidor ha rechazado la petición (error {estado}). Suele ser una VPN, un proxy o la red bloqueada: prueba con otra conexión.": "Сервер відхилив запит (помилка {estado}). Зазвичай це VPN, проксі або заблокована мережа: спробуйте інше з'єднання.",
+	"El servidor ha devuelto un error ({estado}). Vuelve a intentarlo más tarde.": "Сервер повернув помилку ({estado}). Спробуйте пізніше.",
 	"El servicio pide ir más despacio. Vuelve a intentarlo en un momento.": "Сервіс просить зменшити темп. Спробуйте ще раз за мить.",
 	"No se ha encontrado lo que se buscaba.": "Нічого не знайдено.",
 	"No se ha podido leer o escribir en el disco.": "Не вдалося прочитати або записати на диск.",

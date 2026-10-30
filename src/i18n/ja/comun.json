@@ -1,5 +1,10 @@
 {
 	"No hay conexión o el servidor no responde.": "接続がないか、サーバーが応答しません。",
+	"No se ha podido conectar con el servidor. Revisa la conexión y que el cortafuegos o el antivirus dejen salir a la app.": "サーバーに接続できませんでした。接続と、ファイアウォールやウイルス対策ソフトがアプリの通信を許可しているか確認してください。",
+	"El servidor ha tardado demasiado en responder. Vuelve a intentarlo.": "サーバーの応答に時間がかかりすぎました。もう一度お試しください。",
+	"El servidor ha mandado una respuesta que la app no entiende.": "サーバーからアプリが理解できない応答が届きました。",
+	"El servidor ha rechazado la petición (error {estado}). Suele ser una VPN, un proxy o la red bloqueada: prueba con otra conexión.": "サーバーがリクエストを拒否しました(エラー {estado})。VPN、プロキシ、ネットワークのブロックが原因であることが多いです。別の接続でお試しください。",
+	"El servidor ha devuelto un error ({estado}). Vuelve a intentarlo más tarde.": "サーバーがエラーを返しました({estado})。しばらくしてからもう一度お試しください。",
 	"El servicio pide ir más despacio. Vuelve a intentarlo en un momento.": "サービスから速度を落とすよう求められました。しばらくしてからもう一度お試しください。",
 	"No se ha encontrado lo que se buscaba.": "探しているものが見つかりませんでした。",
 	"No se ha podido leer o escribir en el disco.": "ディスクの読み書きができませんでした。",

@@ -28,7 +28,10 @@ imagen y PDF). Antes de tocar algo grande, leer el paso del plan que le toca.
   `src-tauri/src/commands/<área>.rs`. Que no crezca.
 - Errores: los comandos devuelven `Result<T, AppError>` (`{ code, params }`);
   la pantalla los traduce con `useLang().mensaje(e)`. Rust nunca escribe prosa
-  para el usuario.
+  para el usuario. Un fallo de HTTP se monta siempre con `error::red` o
+  `error::estado_http` (nunca `Network` a mano): dan el `motivo` (`conexion`,
+  `tiempo`, `respuesta`, `rechazo` = 401/403 de Cloudflare/VPN, `estado`) y
+  lo apuntan en `proxy-builder.log` con la cadena entera de causas.
 - Tipos compartidos: `#[derive(TS)] #[ts(export)]` en Rust y `pnpm bindings`
   los vuelca en `src/bindings/` (no se editan a mano).
 - La pantalla habla con Rust SOLO por `src/lib/ipc.ts` (`call()`), nunca con

@@ -1,5 +1,10 @@
 {
 	"No hay conexión o el servidor no responde.": "연결되어 있지 않거나 서버가 응답하지 않아요.",
+	"No se ha podido conectar con el servidor. Revisa la conexión y que el cortafuegos o el antivirus dejen salir a la app.": "서버에 연결할 수 없습니다. 연결 상태와 방화벽이나 백신 프로그램이 앱의 인터넷 사용을 허용하는지 확인하세요.",
+	"El servidor ha tardado demasiado en responder. Vuelve a intentarlo.": "서버 응답이 너무 오래 걸렸습니다. 다시 시도하세요.",
+	"El servidor ha mandado una respuesta que la app no entiende.": "서버가 앱이 이해할 수 없는 응답을 보냈습니다.",
+	"El servidor ha rechazado la petición (error {estado}). Suele ser una VPN, un proxy o la red bloqueada: prueba con otra conexión.": "서버가 요청을 거부했습니다(오류 {estado}). 보통 VPN, 프록시 또는 차단된 네트워크 때문입니다. 다른 연결로 시도해 보세요.",
+	"El servidor ha devuelto un error ({estado}). Vuelve a intentarlo más tarde.": "서버가 오류를 반환했습니다({estado}). 잠시 후 다시 시도하세요.",
 	"El servicio pide ir más despacio. Vuelve a intentarlo en un momento.": "서비스에서 요청 속도를 늦춰 달라고 해요. 잠시 후 다시 시도하세요.",
 	"No se ha encontrado lo que se buscaba.": "찾는 항목이 없어요.",
 	"No se ha podido leer o escribir en el disco.": "디스크를 읽거나 쓸 수 없어요.",
