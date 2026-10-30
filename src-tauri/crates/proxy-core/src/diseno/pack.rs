@@ -444,6 +444,22 @@ pub struct InsigniasDef {
     /// Un PNG del pack en lugar de la forma de la insignia de lealtad.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub png_lealtad: Option<String>,
+    /// Colores propios de las de nivel (leveler, estación): en las cartas
+    /// impresas son claras aunque la lealtad y los capítulos sean oscuros.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nivel: Option<PielInsignia>,
+}
+
+/// Los colores de una clase de insignia; lo que no diga, como las demás.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PielInsignia {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fondo: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub borde: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub texto: Option<String>,
 }
 
 /// La caja de reglas que crece (§3.7 del plan): de `altoMin` a `altoMax`
@@ -1382,6 +1398,11 @@ pub(crate) mod tests {
         let paisaje = p.estilo("fullArt").unwrap();
         assert!(paisaje.capas.iter().any(|c| c.png.is_some()));
         assert!(paisaje.capas.iter().all(|c| c.svg != "paisaje/franja.svg"));
+        // Las flechas de nivel, claras como las impresas; las demás insignias,
+        // las oscuras de siempre.
+        let insignias = p.def.insignias.clone().unwrap();
+        assert!(insignias.nivel.is_some_and(|n| n.fondo.is_some()));
+        assert!(insignias.fondo.is_none());
         // La lista trae justo las que piden las capas: ni una de más ni de menos.
         let mut pedidas = std::collections::BTreeSet::new();
         for e in p.def.estilos.values() {

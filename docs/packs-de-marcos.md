@@ -418,7 +418,8 @@ y `zht` (chino tradicional). Se puede traer los que se quiera:
 "etiquetas": { "rare": { "texto": { "es": "Rara", "en": "Rare" },
                          "fondo": "labels/rare.png", "color": "#ffffff" } },
 "insignias": { "fondo": "#3a3a3a", "borde": "#000000", "texto": "#ffffff",
-               "pngLealtad": "insignias/lealtad.png" },
+               "pngLealtad": "insignias/lealtad.png",
+               "nivel": { "fondo": "#ece4d0", "borde": "#4a4032", "texto": "#1d1a14" } },
 "coloresTexto": { "resalte": "#4aa0ff", "habilidad": "#ff9b2e" },
 "sustituir": { "—": "-", "•": "·" },
 "separacionCoste": 0.1,
@@ -432,7 +433,10 @@ y `zht` (chino tradicional). Se puede traer los que se quiera:
   `uncommon`, `rare`, `mythic`, `legendary`, `mountain`…). `fondo` es un PNG
   del pack o un color.
 - **`insignias`**: colores de las insignias de las secciones y, si se quiere,
-  una imagen para la de lealtad.
+  una imagen para la de lealtad. `nivel` (opcional) da otros colores solo a
+  las flechas de nivel del leveler y a los umbrales de estación (en las cartas
+  impresas son claras aunque la lealtad y los capítulos sean oscuros); lo que
+  no diga, como las demás.
 - **`coloresTexto`**: en las reglas, el color de lo marcado con `[[así]]` y
   el de las palabras de habilidad. Sin él, las marcas se quitan y todo sale del
   color normal.

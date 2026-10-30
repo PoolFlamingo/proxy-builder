@@ -773,10 +773,16 @@ impl Carta<'_> {
         let medio = self.vars.get("medio").cloned().unwrap_or_default();
         // La piel del pack, si la trae; si no, negro con el borde del color.
         let piel = self.rec.pack.def.insignias.clone().unwrap_or_default();
-        let fondo = piel.fondo.clone().unwrap_or_else(|| "#151515".into());
-        let medio = piel.borde.clone().unwrap_or(medio);
-        let tinta = piel
+        // Las de nivel pueden llevar la suya encima.
+        let propia = match ins {
+            Insignia::Nivel { .. } => piel.nivel.clone().unwrap_or_default(),
+            _ => super::pack::PielInsignia::default(),
+        };
+        let fondo = (propia.fondo.or(piel.fondo.clone())).unwrap_or_else(|| "#151515".into());
+        let medio = propia.borde.or(piel.borde.clone()).unwrap_or(medio);
+        let tinta = propia
             .texto
+            .or(piel.texto.clone())
             .as_deref()
             .and_then(super::pack::rgba)
             .unwrap_or([255, 255, 255, 255]);

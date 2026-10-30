@@ -77,6 +77,13 @@
 			"tinta": "#161616"
 		}
 	},
+	"insignias": {
+		"nivel": {
+			"fondo": "#ece4d0",
+			"borde": "#4a4032",
+			"texto": "#1d1a14"
+		}
+	},
 	"letras": {
 		"titulo": {
 			"familia": "Spectral",
