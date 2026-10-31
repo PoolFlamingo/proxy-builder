@@ -173,9 +173,12 @@ function VariosTableros({ deckId }: { deckId: string | null }) {
 							height: rectGrande.h,
 						}}
 					>
-						<MesasAlrededor.Provider value={alrededor}>
-							<Tablero deckId={deckId} />
-						</MesasAlrededor.Provider>
+						{/* Mismo radio que el borde de abajo: el tapete no asoma por las esquinas. */}
+						<div className="absolute inset-0 overflow-hidden rounded-md">
+							<MesasAlrededor.Provider value={alrededor}>
+								<Tablero deckId={deckId} />
+							</MesasAlrededor.Provider>
+						</div>
 						<Controles />
 						<div
 							className="pointer-events-none absolute inset-0 z-[6600] rounded-md border-2"
