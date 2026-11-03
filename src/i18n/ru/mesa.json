@@ -1356,5 +1356,6 @@
 	"Vuelvo enseguida": "Скоро вернусь",
 	"¡Echamos otra!": "Ещё партию?",
 	"Frases": "Фразы",
-	"Frases amigables": "Дружелюбные фразы"
+	"Frases amigables": "Дружелюбные фразы",
+	"Ver el tablero de {nombre}": "Посмотреть поле: {nombre}"
 }
