@@ -81,6 +81,7 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 	const tapete = useMesa((s) => s.jugadores[yo]?.tapete ?? null);
 	const modo = usePantalla((s) => s.modo);
 	const { tactil } = useFormato();
+	const movil = useMesaMovil();
 	const [recuadro, setRecuadro] = useState<Rect | null>(null);
 	// El zoom y el corrimiento del campo (solo con dos dedos), y si hay un gesto en marcha.
 	const [vista, setVista] = useState<VistaCampo>(VISTA_ENTERA);
@@ -114,8 +115,8 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 	}, []);
 
 	const base = useMemo(
-		() => disponer(tam.w, tam.h, tamano, hayBanquillo),
-		[tam.w, tam.h, tamano, hayBanquillo],
+		() => disponer(tam.w, tam.h, tamano, hayBanquillo, movil),
+		[tam.w, tam.h, tamano, hayBanquillo, movil],
 	);
 	// Con zoom, `campo` es el campo ampliado y `visible` lo que se ve (`gestos.ts`).
 	const disp = useMemo(() => conVista(base, vista), [base, vista]);
@@ -967,33 +968,45 @@ function Zonas({ disp, alPulsar }: { disp: Disposicion; alPulsar: AlPulsar }) {
 	// en su botón de la lupa (tocar la biblioteca roba).
 	const leerArriba = useLeerEnGrande(arribaLib, false);
 	const { tactil } = useFormato();
-	const zona = (r: Rect, nombre: string, hijo: React.ReactNode, n: number, alVer?: () => void) => (
-		<div
-			className="absolute flex flex-col items-center"
-			style={{ left: r.x, top: r.y - 16, width: r.w, height: r.h + 16 }}
-		>
-			{alVer && tactil ? (
-				// Con el dedo no hay doble clic: tocar el nombre de la zona la abre (con el
-				// ratón, como siempre, el doble clic en la zona).
-				<button
-					type="button"
-					onClick={alVer}
-					className="relative h-4 text-[10px] text-white/80 underline decoration-dotted before:absolute before:-inset-x-2 before:-inset-y-3 before:content-['']"
-				>
-					{nombre}
-					{n > 0 ? ` · ${n}` : ""}
-				</button>
-			) : (
-				<span className="h-4 text-[10px] text-white/80">
-					{nombre}
-					{n > 0 ? ` · ${n}` : ""}
-				</span>
-			)}
-			<div className="relative w-full flex-1 rounded-[5%] border border-dashed border-white/25 bg-black/20">
-				{hijo}
+	// Con las zonas encogidas del móvil de pie el nombre no cabe: letra menor y puntos.
+	const zona = (r: Rect, nombre: string, hijo: React.ReactNode, n: number, alVer?: () => void) => {
+		const estrecha = r.w < 41;
+		return (
+			<div
+				className="absolute flex flex-col items-center"
+				style={{ left: r.x, top: r.y - 16, width: r.w, height: r.h + 16 }}
+			>
+				{alVer && tactil ? (
+					// Con el dedo no hay doble clic: tocar el nombre de la zona la abre (con el
+					// ratón, como siempre, el doble clic en la zona).
+					<button
+						type="button"
+						onClick={alVer}
+						className={cn(
+							"relative h-4 text-[10px] text-white/80 underline decoration-dotted before:absolute before:-inset-x-1 before:-inset-y-3 before:content-['']",
+							estrecha && "max-w-full truncate text-[9px]",
+						)}
+					>
+						{nombre}
+						{n > 0 ? ` · ${n}` : ""}
+					</button>
+				) : (
+					<span
+						className={cn(
+							"h-4 text-[10px] text-white/80",
+							estrecha && "max-w-full truncate text-[9px]",
+						)}
+					>
+						{nombre}
+						{n > 0 ? ` · ${n}` : ""}
+					</span>
+				)}
+				<div className="relative w-full flex-1 rounded-[5%] border border-dashed border-white/25 bg-black/20">
+					{hijo}
+				</div>
 			</div>
-		</div>
-	);
+		);
+	};
 	return (
 		<>
 			<MenuBiblioteca jugador={yo}>

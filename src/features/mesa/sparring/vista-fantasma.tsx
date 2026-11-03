@@ -6,6 +6,7 @@ import { useFormato } from "@/lib/formato";
 import { useUi } from "@/stores/ui-store";
 import { CapaAlta } from "../capa-alta";
 import { useMesaMovil } from "../formato-mesa";
+import { LecturaMovil } from "../lectura-movil";
 import {
 	anchoDeLectura,
 	type EventoLeer,
@@ -32,6 +33,18 @@ export function VistaFantasma() {
 	const panelLateral = usePantalla((s) => s.panel !== null) && !movil;
 	useCerrarAlTocarFuera(tactil && nombre !== null, cerrarFantasma);
 	if (nombre === null) return null;
+	if (movil) {
+		return (
+			<CapaAlta>
+				<LecturaMovil
+					caras={1}
+					cara={() => <CartaFantasma nombre={nombre} ancho={488} className="size-full" contener />}
+					aLaIzquierda={false}
+					onCerrar={cerrarFantasma}
+				/>
+			</CapaAlta>
+		);
+	}
 	const ancho = tactil ? anchoDeLectura(anchoAjustes, window.innerHeight) : anchoAjustes;
 	return (
 		<CapaAlta>

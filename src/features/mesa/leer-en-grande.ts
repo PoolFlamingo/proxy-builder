@@ -112,3 +112,53 @@ export function anchoDeLectura(ancho: number, altoVentana: number, reserva = 0):
 	const cabe = ((altoVentana - MARGEN_VERTICAL - reserva) * 63) / 88;
 	return Math.max(120, Math.min(ancho, Math.floor(cabe)));
 }
+
+/** El margen de la carta en grande con los bordes de un móvil, en px. */
+export const MARGEN_LECTURA_MOVIL = 8;
+/** El hueco que se deja para la X de cerrar (fuera de la carta) en un móvil, en px. */
+export const HUECO_CERRAR_MOVIL = 48;
+/** El ancho del panel de estado al lado de la carta, con el móvil de lado, en px. */
+export const ANCHO_PANEL_LECTURA = 176;
+/** Lo que se reserva para el panel de estado bajo la carta, con el móvil de pie, en px. */
+const ALTO_PANEL_LECTURA = 120;
+
+/**
+ * **El tamaño de la carta en grande en un móvil**: la carta entera dentro de la
+ * pantalla, a su proporción (63 × 88), lo más grande que quepa. De lado, la carta
+ * ocupa el alto y la X (y el panel de estado, si lo hay) van a su lado; de pie,
+ * ocupa el ancho y la X y el panel van debajo. Así la X nunca tapa el título.
+ * `caras`: 1, o 2 para una de dos caras (una junto a otra).
+ */
+export function lecturaMovil(
+	anchoVentana: number,
+	altoVentana: number,
+	horizontal: boolean,
+	caras: number,
+	conPanel: boolean,
+): { ancho: number; alto: number } {
+	const m = MARGEN_LECTURA_MOVIL;
+	const hueco = 8;
+	const n = Math.max(1, caras);
+	let ancho: number;
+	let alto: number;
+	if (horizontal) {
+		alto = altoVentana - 2 * m;
+		ancho = (alto * 63) / 88;
+		const libre =
+			anchoVentana - 2 * m - HUECO_CERRAR_MOVIL - (conPanel ? ANCHO_PANEL_LECTURA + hueco : 0);
+		if (n * ancho + (n - 1) * hueco > libre) {
+			ancho = (libre - (n - 1) * hueco) / n;
+			alto = (ancho * 88) / 63;
+		}
+	} else {
+		ancho = (anchoVentana - 2 * m - (n - 1) * hueco) / n;
+		alto = (ancho * 88) / 63;
+		const libre = altoVentana - 2 * m - HUECO_CERRAR_MOVIL - (conPanel ? ALTO_PANEL_LECTURA : 0);
+		if (alto > libre) {
+			alto = libre;
+			ancho = (alto * 63) / 88;
+		}
+	}
+	const a = Math.max(60, Math.floor(ancho));
+	return { ancho: a, alto: Math.floor((a * 88) / 63) };
+}

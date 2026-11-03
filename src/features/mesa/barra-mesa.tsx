@@ -12,8 +12,8 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { WithTooltip } from "@/components/ui/with-tooltip";
-import { call } from "@/lib/ipc";
-import { esMovil } from "@/lib/plataforma";
+import { useFormato } from "@/lib/formato";
+import { useEsMovil } from "@/lib/plataforma";
 import { cn } from "@/lib/utils";
 import { useChat } from "@/stores/chat-store";
 import { tableroDe, useMesa } from "@/stores/mesa-store";
@@ -122,6 +122,8 @@ function BarraEscritorio({ onSalir, onEditarDeck, onReiniciar }: PropsBarra) {
 	const espectadores = useRed(
 		useShallow((s) => s.sala.filter((x) => x.rol === "espectador").map((x) => x.apodo)),
 	);
+	// En Android (también en una tableta) la app ya va siempre a pantalla completa.
+	const enAndroid = useEsMovil();
 
 	return (
 		<div
@@ -253,9 +255,11 @@ function BarraEscritorio({ onSalir, onEditarDeck, onReiniciar }: PropsBarra) {
 			>
 				<Icono icon="lucide:keyboard" className="size-4" />
 			</Boton>
-			<Boton ayuda={t("Pantalla completa")} onClick={() => void pantallaCompleta()}>
-				<Icono icon="lucide:expand" className="size-4" />
-			</Boton>
+			{!enAndroid && (
+				<Boton ayuda={t("Pantalla completa")} onClick={() => void pantallaCompleta()}>
+					<Icono icon="lucide:expand" className="size-4" />
+				</Boton>
+			)}
 			<SelectorDisposicion className="text-white hover:bg-white/10 hover:text-white" />
 			{!enRed && <BotonSparring />}
 			<span className="mx-0.5 h-5 w-px bg-white/15" />
@@ -281,19 +285,9 @@ function BarraEscritorio({ onSalir, onEditarDeck, onReiniciar }: PropsBarra) {
 	);
 }
 
-/** Si las barras del sistema de Android están escondidas (la pantalla completa de la mesa). */
-let completaAndroid = false;
-
+/** La ventana a pantalla completa (solo escritorio: en Android la app ya va siempre así). */
 async function pantallaCompleta() {
 	try {
-		// En el móvil la ventana ya ocupa todo: lo que se esconde son las barras del sistema.
-		if (await esMovil()) {
-			const si = !completaAndroid;
-			await call("app_pantalla_completa", { si });
-			// Solo si se pudo: si falla, sigue como estaba.
-			completaAndroid = si;
-			return;
-		}
 		const { getCurrentWindow } = await import("@tauri-apps/api/window");
 		const v = getCurrentWindow();
 		await v.setFullscreen(!(await v.isFullscreen()));
@@ -301,6 +295,13 @@ async function pantallaCompleta() {
 		/* sin permiso o fuera de Tauri */
 	}
 }
+
+/**
+ * Los botones de la barra del móvil: algo más pequeños que el mínimo táctil general
+ * (2,5 rem, `index.css`), que con la barra de un teléfono de lado se comía el tablero.
+ * Con `!` porque la regla de `index.css` pesa más que una clase.
+ */
+const BOTON_MOVIL = "size-9 !min-h-9 !min-w-9";
 
 /** Lo que enseña la barra del móvil: el turno y los botones de lo que más se usa; el resto, en «⋯». */
 function BarraMovil({ onSalir, onEditarDeck, onReiniciar }: PropsBarra) {
@@ -332,15 +333,27 @@ function BarraMovil({ onSalir, onEditarDeck, onReiniciar }: PropsBarra) {
 	const espectadores = useRed(
 		useShallow((s) => s.sala.filter((x) => x.rol === "espectador").map((x) => x.apodo)),
 	);
+	const enAndroid = useEsMovil();
+	// De pie (~390 dp de ancho) la barra va en una sola fila pegada a la izquierda, hasta
+	// «Pasar turno»: la mano, la vida, el registro y el chat pasan al menú «⋯».
+	const { horizontal } = useFormato();
 	return (
 		<div
-			className="absolute top-2 left-1/2 z-[7000] flex w-max max-w-[calc(100%-8rem)] -translate-x-1/2 flex-wrap items-center justify-center gap-0.5 rounded-xl border border-white/10 bg-black/60 px-1 py-0.5 text-white shadow-lg backdrop-blur-md"
+			// Compacta: en un teléfono de lado (~390 dp de alto) lo importante es el tablero. Los
+			// botones bajan a ~37 px (`BOTON_MOVIL`) y deja sitio a los lados para la barra de
+			// jugadores y «Pasar turno».
+			className={cn(
+				"absolute top-1 z-[7000] flex items-center gap-0 rounded-xl border border-white/10 bg-black/60 px-0.5 text-white shadow-lg backdrop-blur-md",
+				horizontal
+					? "left-1/2 w-max max-w-[calc(100%-7rem)] -translate-x-1/2 flex-wrap justify-center"
+					: "left-1 max-w-[calc(100%-3.5rem)] flex-nowrap",
+			)}
 			data-tutorial="mesa-barra"
 		>
-			<Boton ayuda={t("Salir de la mesa")} onClick={onSalir}>
-				<Icono icon="lucide:log-out" className="size-5" />
+			<Boton className={BOTON_MOVIL} ayuda={t("Salir de la mesa")} onClick={onSalir}>
+				<Icono icon="lucide:log-out" className="size-[1.125rem]" />
 			</Boton>
-			<span className="px-1.5 text-xs font-medium whitespace-nowrap tabular-nums">
+			<span className="min-w-0 truncate px-1.5 text-xs font-medium whitespace-nowrap tabular-nums">
 				{mulligan || !turno || turno.numero === 0
 					? t("Mulligan")
 					: t("Turno {n} · ronda {r}", { n: turno.numero, r: turno.ronda })}
@@ -376,49 +389,92 @@ function BarraMovil({ onSalir, onEditarDeck, onReiniciar }: PropsBarra) {
 			)}
 			{juega && (
 				<>
-					<Boton ayuda={t("Deshacer")} onClick={() => void op.deshacer()}>
-						<Icono icon="lucide:undo-2" className="size-5" />
+					<Boton className={BOTON_MOVIL} ayuda={t("Deshacer")} onClick={() => void op.deshacer()}>
+						<Icono icon="lucide:undo-2" className="size-[1.125rem]" />
 					</Boton>
-					<Boton ayuda={t("Rehacer")} onClick={() => void op.rehacer()}>
-						<Icono icon="lucide:redo-2" className="size-5" />
+					<Boton className={BOTON_MOVIL} ayuda={t("Rehacer")} onClick={() => void op.rehacer()}>
+						<Icono icon="lucide:redo-2" className="size-[1.125rem]" />
 					</Boton>
 					<BotonResponder />
-					<Boton ayuda={t("Mano")} onClick={() => usePantalla.getState().setCapa("mano")}>
-						<Icono icon="lucide:hand" className="size-5" />
+					{horizontal && (
+						<Boton
+							className={BOTON_MOVIL}
+							ayuda={t("Mano")}
+							onClick={() => usePantalla.getState().setCapa("mano")}
+						>
+							<Icono icon="lucide:hand" className="size-[1.125rem]" />
+						</Boton>
+					)}
+				</>
+			)}
+			{horizontal && (
+				<>
+					<Boton
+						className={BOTON_MOVIL}
+						ayuda={t("Vida")}
+						onClick={() => usePantalla.getState().setCapa("vida")}
+					>
+						<Icono icon="game-icons:hearts" className="size-[1.125rem]" />
+					</Boton>
+					<Boton
+						className={BOTON_MOVIL}
+						ayuda={t("Registro de la partida")}
+						onClick={() => setPanel(panel === "registro" ? null : "registro")}
+					>
+						<Icono icon="lucide:history" className="size-[1.125rem]" />
 					</Boton>
 				</>
 			)}
-			<Boton ayuda={t("Vida")} onClick={() => usePantalla.getState().setCapa("vida")}>
-				<Icono icon="game-icons:hearts" className="size-5" />
-			</Boton>
-			<Boton
-				ayuda={t("Registro de la partida")}
-				onClick={() => setPanel(panel === "registro" ? null : "registro")}
-			>
-				<Icono icon="lucide:history" className="size-5" />
-			</Boton>
-			{(enRed || varios) && (
+			{horizontal && (enRed || varios) && (
 				<Boton
+					className={BOTON_MOVIL}
 					ayuda={t("Chat")}
 					insignia={panel === "chat" ? 0 : sinLeer}
 					onClick={() => setPanel(panel === "chat" ? null : "chat")}
 				>
-					<Icono icon="lucide:message-square" className="size-5" />
+					<Icono icon="lucide:message-square" className="size-[1.125rem]" />
 				</Boton>
 			)}
-			{!enRed && <BotonSparring />}
+			{!enRed && <BotonSparring compacto />}
 			<DropdownMenu>
 				<DropdownMenuTrigger asChild>
 					<Button
 						size="icon-sm"
 						variant="ghost"
 						aria-label={t("Más")}
-						className="text-white hover:bg-white/10 hover:text-white"
+						className={cn("text-white hover:bg-white/10 hover:text-white", BOTON_MOVIL)}
 					>
-						<Icono icon="lucide:ellipsis" className="size-5" />
+						<Icono icon="lucide:ellipsis" className="size-[1.125rem]" />
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end" className="z-[9000] w-64 text-xs">
+					{/* De pie no caben en la barra: van aquí. */}
+					{!horizontal && (
+						<>
+							{juega && (
+								<DropdownMenuItem onSelect={() => usePantalla.getState().setCapa("mano")}>
+									<Icono icon="lucide:hand" />
+									{t("Mano")}
+								</DropdownMenuItem>
+							)}
+							<DropdownMenuItem onSelect={() => usePantalla.getState().setCapa("vida")}>
+								<Icono icon="game-icons:hearts" />
+								{t("Vida")}
+							</DropdownMenuItem>
+							<DropdownMenuItem onSelect={() => setPanel("registro")}>
+								<Icono icon="lucide:history" />
+								{t("Registro de la partida")}
+							</DropdownMenuItem>
+							{(enRed || varios) && (
+								<DropdownMenuItem onSelect={() => setPanel("chat")}>
+									<Icono icon="lucide:message-square" />
+									{t("Chat")}
+									{sinLeer > 0 && <span className="ml-auto tabular-nums">{sinLeer}</span>}
+								</DropdownMenuItem>
+							)}
+							<DropdownMenuSeparator />
+						</>
+					)}
 					{juega && (
 						<>
 							<DropdownMenuItem onSelect={() => void hacer({ que: "pausar", si: !pausada })}>
@@ -458,10 +514,12 @@ function BarraMovil({ onSalir, onEditarDeck, onReiniciar }: PropsBarra) {
 							{t("Tapete")}
 						</DropdownMenuItem>
 					)}
-					<DropdownMenuItem onSelect={() => void pantallaCompleta()}>
-						<Icono icon="lucide:expand" />
-						{t("Pantalla completa")}
-					</DropdownMenuItem>
+					{!enAndroid && (
+						<DropdownMenuItem onSelect={() => void pantallaCompleta()}>
+							<Icono icon="lucide:expand" />
+							{t("Pantalla completa")}
+						</DropdownMenuItem>
+					)}
 					<DropdownMenuSeparator />
 					{manda && (
 						<>

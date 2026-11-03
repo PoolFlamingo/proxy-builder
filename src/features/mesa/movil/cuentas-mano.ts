@@ -84,3 +84,22 @@ export function agruparMano(cartas: CartaMano[], por: AgruparMano): GrupoMano[] 
 		? [{ por: "coste", clave: "tierras", ids: tierras }, ...grupos]
 		: grupos;
 }
+
+/**
+ * **La mano inicial en una fila** (el mulligan con el móvil de lado): el tamaño de
+ * cada carta para que `n` quepan una junto a otra en `ancho` × `alto`, a su
+ * proporción (63 × 88) y sin pasar de `maximo` de ancho (el del escritorio).
+ */
+export function cartaEnFila(
+	ancho: number,
+	alto: number,
+	n: number,
+	hueco = 6,
+	maximo = 172,
+): { w: number; h: number } {
+	const k = Math.max(1, n);
+	const porAncho = (ancho - (k - 1) * hueco) / k;
+	const porAlto = (alto * 63) / 88;
+	const w = Math.max(24, Math.floor(Math.min(porAncho, porAlto, maximo)));
+	return { w, h: Math.floor((w * 88) / 63) };
+}

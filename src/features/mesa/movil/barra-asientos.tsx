@@ -54,7 +54,7 @@ export function BarraAsientos() {
 				type="button"
 				aria-label={t("Enseñar los jugadores")}
 				onClick={() => plegar(false)}
-				className="absolute top-14 left-2 z-[7000] flex size-11 items-center justify-center rounded-xl border border-white/10 bg-black/60 text-white shadow-lg backdrop-blur-md"
+				className="absolute top-12 left-1 z-[7000] flex size-10 items-center justify-center rounded-xl border border-white/10 bg-black/60 text-white shadow-lg backdrop-blur-md"
 				data-tutorial="mesa-asientos"
 			>
 				<Icono icon="lucide:users" className="size-5" />
@@ -68,7 +68,9 @@ export function BarraAsientos() {
 
 	return (
 		<div
-			className="absolute top-14 bottom-2 left-2 z-[7000] flex w-[6.5rem] flex-col gap-1 rounded-xl border border-white/10 bg-black/60 p-1 text-white shadow-lg backdrop-blur-md"
+			// Hasta la franja de la mano (la misma cuenta que `disponer`): no la tapa.
+			style={{ bottom: "calc(min(220px, max(90px, 22%)) + 4px)" }}
+			className="absolute top-12 left-1 z-[7000] flex w-[6.5rem] flex-col gap-1 rounded-xl border border-white/10 bg-black/60 p-1 text-white shadow-lg backdrop-blur-md"
 			data-tutorial="mesa-asientos"
 		>
 			<ScrollArea className="min-h-0 flex-1" viewportClassName="h-full">

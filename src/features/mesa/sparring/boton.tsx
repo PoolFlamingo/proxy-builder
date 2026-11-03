@@ -29,8 +29,11 @@ function NombreSenalable({ nombre }: { nombre: string }) {
  * `capturas/playgroup/83-sparring-panel.jpg`): la intensidad, y al abrirlo el
  * panel con la intensidad, las reacciones de esta partida y «Cómo funciona».
  * Solo en solitario. Cambiar la intensidad vale desde la siguiente ocasión.
+ *
+ * `compacto` (la barra del móvil): solo el fantasma, de color si está encendido; la
+ * intensidad se lee al abrirlo.
  */
-export function BotonSparring() {
+export function BotonSparring({ compacto = false }: { compacto?: boolean }) {
 	const { t } = useLang();
 	const solo = useMesa((s) => s.asientos.length === 1);
 	const intensidad = useMesa((s) => s.general?.sparring.intensidad ?? "apagado");
@@ -57,21 +60,30 @@ export function BotonSparring() {
 				<PopoverTrigger asChild>
 					<button
 						type="button"
+						aria-label={
+							compacto ? `${t("Sparring")}: ${nombreIntensidad(intensidad, t)}` : undefined
+						}
 						className={cn(
-							"flex h-7 items-center gap-1.5 rounded-lg border px-2 text-left uppercase [[data-tactil]_&]:h-11",
+							"flex items-center rounded-lg border text-left uppercase",
+							compacto ? "size-9 justify-center" : "h-7 gap-1.5 px-2 [[data-tactil]_&]:h-11",
 							encendido
 								? "border-primary/60 bg-primary/15 text-primary"
 								: "border-white/15 text-white/80 hover:bg-white/10",
 						)}
 						data-tutorial="mesa-sparring"
 					>
-						<Icono icon="game-icons:ghost" className="size-3.5 shrink-0" />
-						<span className="flex flex-col leading-none">
-							<span className="text-[10px] font-semibold">{t("Sparring")}</span>
-							<span className={cn("text-[9px]", !encendido && "text-white/50")}>
-								{nombreIntensidad(intensidad, t)}
+						<Icono
+							icon="game-icons:ghost"
+							className={cn("shrink-0", compacto ? "size-[1.125rem]" : "size-3.5")}
+						/>
+						{!compacto && (
+							<span className="flex flex-col leading-none">
+								<span className="text-[10px] font-semibold">{t("Sparring")}</span>
+								<span className={cn("text-[9px]", !encendido && "text-white/50")}>
+									{nombreIntensidad(intensidad, t)}
+								</span>
 							</span>
-						</span>
+						)}
 					</button>
 				</PopoverTrigger>
 				<PopoverContent align="end" className="flex w-80 flex-col gap-2.5 text-xs">

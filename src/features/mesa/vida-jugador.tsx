@@ -28,6 +28,11 @@ import * as op from "./operaciones";
 import { alternarOriginales } from "./originales";
 import { pedirNumero, usePantalla } from "./pantalla";
 
+/** Los «−» y «+» de la vida con el dedo (44 px) y en el móvil (~39 px: dos marcadores de
+ * 44 px se comían el campo de un teléfono de lado). */
+export const MAS_MENOS_TACTIL = "[[data-tactil]_&]:min-h-11 [[data-tactil]_&]:min-w-11";
+export const MAS_MENOS_MOVIL = "min-h-9 min-w-9";
+
 /** Lo que se espera a que paren los clics de vida para mandarlos juntos, en ms. */
 const JUNTAR_MS = 700;
 
@@ -100,7 +105,7 @@ export function VidaJugador({
 							{t(c.nombre)}
 							<button
 								type="button"
-								className="px-0.5 [[data-tactil]_&]:min-h-11 [[data-tactil]_&]:min-w-11"
+								className={cn("px-0.5", movil ? MAS_MENOS_MOVIL : MAS_MENOS_TACTIL)}
 								onClick={() =>
 									void hacer({ que: "contadorJugador", jugador, tipo: c.tipo, delta: -1 })
 								}
@@ -110,7 +115,7 @@ export function VidaJugador({
 							<b className="tabular-nums">{j.contadores[c.tipo] ?? 0}</b>
 							<button
 								type="button"
-								className="px-0.5 [[data-tactil]_&]:min-h-11 [[data-tactil]_&]:min-w-11"
+								className={cn("px-0.5", movil ? MAS_MENOS_MOVIL : MAS_MENOS_TACTIL)}
 								onClick={() =>
 									void hacer({ que: "contadorJugador", jugador, tipo: c.tipo, delta: 1 })
 								}
@@ -145,24 +150,33 @@ export function VidaJugador({
 						// Ahí apuntan las flechas que me atacan (`flechas.tsx`).
 						data-vida-de={jugador}
 						className={cn(
-							"flex items-center gap-1 rounded-full border border-white/15 bg-black/60 px-2 py-1 text-white shadow-lg backdrop-blur-md",
+							"flex items-center gap-1 rounded-full border border-white/15 bg-black/60 text-white shadow-lg backdrop-blur-md",
+							movil ? "px-1 py-0" : "px-2 py-1",
 							vida <= 0 && "ring-2 ring-rose-500",
 						)}
 						onWheel={(e) => sumar(e.deltaY < 0 ? 1 : -1)}
 					>
 						<button
 							type="button"
-							className="px-1.5 text-lg leading-none [[data-tactil]_&]:min-h-11 [[data-tactil]_&]:min-w-11"
+							className={cn(
+								"px-1.5 text-lg leading-none",
+								movil ? MAS_MENOS_MOVIL : MAS_MENOS_TACTIL,
+							)}
 							onClick={() => sumar(-1)}
 						>
 							−
 						</button>
 						<div
-							className="flex min-w-12 flex-col items-center leading-none"
+							className={cn(
+								"flex flex-col items-center leading-none",
+								movil ? "min-w-9" : "min-w-12",
+							)}
 							// En el móvil, tocar el número abre la pantalla de vida (con veneno y comandante).
 							onClick={() => movil && usePantalla.getState().setCapa("vida")}
 						>
-							<span className="text-2xl font-bold tabular-nums">{vida + pendiente}</span>
+							<span className={cn("font-bold tabular-nums", movil ? "text-xl" : "text-2xl")}>
+								{vida + pendiente}
+							</span>
 							{pendiente !== 0 && (
 								<span className="text-[10px] text-white/70 tabular-nums">
 									{vida} {pendiente > 0 ? "+" : "−"} {Math.abs(pendiente)}
@@ -171,7 +185,10 @@ export function VidaJugador({
 						</div>
 						<button
 							type="button"
-							className="px-1.5 text-lg leading-none [[data-tactil]_&]:min-h-11 [[data-tactil]_&]:min-w-11"
+							className={cn(
+								"px-1.5 text-lg leading-none",
+								movil ? MAS_MENOS_MOVIL : MAS_MENOS_TACTIL,
+							)}
 							onClick={() => sumar(1)}
 						>
 							+

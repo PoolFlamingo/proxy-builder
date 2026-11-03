@@ -3,6 +3,7 @@ import {
 	type ConfigDisposicion,
 	DISPOSICION_DE_FABRICA,
 	DISPOSICION_MOVIL,
+	disponer,
 	disposicionDe,
 	disposicionPorDefecto,
 	HUECO,
@@ -304,5 +305,24 @@ describe("proporcionPorPuntero", () => {
 		expect(proporcionPorPuntero(r, -500, 0, true)).toBe(0.2);
 		expect(proporcionPorPuntero(r, 9999, 0, true)).toBe(0.8);
 		expect(proporcionPorPuntero(r, 0, 9999, false)).toBe(0.8);
+	});
+});
+
+describe("disponer en un móvil de pie", () => {
+	it("las zonas dejan a la mano la mitad del ancho y la franja baja", () => {
+		const d = disponer(392, 800, 100, false, true);
+		const izquierda = Math.min(
+			...Object.values(d.zonas)
+				.filter((z) => z.w > 0)
+				.map((z) => z.x),
+		);
+		expect(izquierda).toBeGreaterThanOrEqual(392 * 0.5 - 1);
+		expect(d.mano.w).toBeGreaterThan(150);
+		expect(d.campo.h).toBeGreaterThan(800 - 120);
+	});
+	it("sin `movil` (o con sitio) no cambia nada", () => {
+		expect(disponer(392, 800, 100, false, false)).toEqual(disponer(392, 800));
+		expect(disponer(1400, 900, 100, true, true)).toEqual(disponer(1400, 900, 100, true));
+		expect(disponer(873, 392, 100, false, true)).toEqual(disponer(873, 392));
 	});
 });

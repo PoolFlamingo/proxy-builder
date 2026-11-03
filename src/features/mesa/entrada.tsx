@@ -40,6 +40,7 @@ import { useUi } from "@/stores/ui-store";
 import { SalasDialog } from "../salas/salas-dialog";
 import { COLORES_JUGADOR } from "./colores";
 import { empezar, retomar, salir } from "./conexion";
+import { PanelEmpezarMovil, TODO_EL_DECK } from "./entrada-movil";
 import { useMesaMovil } from "./formato-mesa";
 import { HistorialGeneralDialog } from "./historial-general";
 import { ListaDialog } from "./listas/lista-dialog";
@@ -56,8 +57,6 @@ import { TapeteDialog } from "./tapete-dialog";
  * biblioteca, el formato y las opciones, y empezar en solitario; o seguir la
  * partida que quedó a medias.
  */
-/** El valor del selector de listas para jugar con el deck entero (Radix no admite «»). */
-const TODO_EL_DECK = "*";
 
 export function EntradaMesa() {
 	return (
@@ -71,10 +70,9 @@ const SIN_DECKS: never[] = [];
 
 function Entrada() {
 	const { t, mensaje } = useLang();
-	// En el móvil la entrada se apila de pie y el lado de las opciones se estrecha.
+	// En el móvil, otra disposición con las mismas piezas (`entrada-movil.tsx`).
 	const movil = useMesaMovil();
 	const { horizontal } = useFormato();
-	const apilado = movil && !horizontal;
 	const decks = useBiblioteca((s) => s.decks) ?? SIN_DECKS;
 	const prefs = usePrefsJugar();
 	const org = useOrganizados();
@@ -101,6 +99,7 @@ function Entrada() {
 	const [amigos, setAmigos] = useState(false);
 	const [local, setLocal] = useState(false);
 	const [historial, setHistorial] = useState(false);
+	const [masOpciones, setMasOpciones] = useState(false);
 	const enSalaServidor = useSalas((s) => s.sala !== null);
 	const enlaceEntrante = useSalas((s) => s.enlaceEntrante);
 	// Un enlace de invitación abre «Con amigos…» con el código puesto.
@@ -254,17 +253,305 @@ function Entrada() {
 		opciones,
 		nombre: nombre.trim() || t("Jugador"),
 	};
+	const formatos: { valor: Formato; etiqueta: string }[] = [
+		{ valor: "commander", etiqueta: "Commander" },
+		{ valor: "constructed", etiqueta: t("60 cartas") },
+		{ valor: "limited", etiqueta: t("Limitado") },
+		{ valor: "libre", etiqueta: t("Libre") },
+	];
+	const opcionesExtra = (
+		<>
+			<Fila etiqueta={t("Vidas")}>
+				<CampoNumero
+					valor={opciones.vidaInicial}
+					onChange={(v) => setOpciones({ ...opciones, vidaInicial: v ?? 20 })}
+					min={1}
+					max={999}
+					paso={1}
+				/>
+			</Fila>
+			<Fila etiqueta={t("Mulligan")}>
+				<Selector<ModoMulligan>
+					valor={opciones.mulligan}
+					onChange={(m) => setOpciones({ ...opciones, mulligan: m })}
+					opciones={[
+						{ valor: "londres", etiqueta: t("Londres") },
+						{
+							valor: "londresPrimeroGratis",
+							etiqueta: t("Londres, el primero gratis"),
+						},
+						{ valor: "amistoso", etiqueta: t("Amistoso") },
+						{ valor: "libre", etiqueta: t("Libre") },
+					]}
+				/>
+			</Fila>
+			<FilaInterruptor
+				etiqueta={t("Robar al empezar el turno")}
+				valor={opciones.ayudas.robarAlEmpezar}
+				onChange={(v) => ayuda("robarAlEmpezar", v)}
+			/>
+			<FilaInterruptor
+				etiqueta={t("Enderezar al empezar el turno")}
+				valor={opciones.ayudas.enderezarAlEmpezar}
+				onChange={(v) => ayuda("enderezarAlEmpezar", v)}
+			/>
+			<FilaInterruptor
+				etiqueta={t("El primero no roba")}
+				valor={opciones.primeroNoRoba}
+				onChange={(v) => setOpciones({ ...opciones, primeroNoRoba: v })}
+			/>
+			<FilaInterruptor
+				etiqueta={t("Sumar el impuesto del comandante")}
+				valor={opciones.ayudas.impuestoAutomatico}
+				onChange={(v) => ayuda("impuestoAutomatico", v)}
+			/>
+			<FilaInterruptor
+				etiqueta={t("Contadores al entrar (lealtad, sagas)")}
+				valor={opciones.ayudas.contadoresAlEntrar}
+				onChange={(v) => ayuda("contadoresAlEntrar", v)}
+			/>
+			<Fila etiqueta={t("Sparring (rival fantasma)")}>
+				<Selector<Intensidad>
+					valor={sparring}
+					onChange={(v) => useUi.getState().setMesa({ sparring: v })}
+					opciones={INTENSIDADES.map((i) => ({
+						valor: i.valor,
+						etiqueta: t(i.nombre),
+					}))}
+				/>
+			</Fila>
+			<Button size="sm" variant="outline" disabled={!elegido} onClick={() => setTapete(true)}>
+				<Icono icon="lucide:image" className="size-3.5" />
+				{t("Tapete de este deck…")}
+			</Button>
+		</>
+	);
+	const botones = (
+		<div className={cn("flex shrink-0 flex-col gap-2.5", movil && "grid grid-cols-2")}>
+			{trabajo && (
+				<div className="col-span-2 flex flex-col gap-1">
+					<span className="text-xs text-muted-foreground">{trabajo.fase}</span>
+					<Progress value={trabajo.total ? (trabajo.hechas / trabajo.total) * 100 : 0} />
+				</div>
+			)}
+			<WithTooltip
+				content={
+					!elegido
+						? t("Elige un deck.")
+						: sinLista
+							? t("Este deck tiene más cartas de las que se juegan: elige una lista.")
+							: null
+				}
+			>
+				{/* El `span`: un botón desactivado no avisa al pasar por encima. */}
+				<span className="flex flex-col">
+					<Button
+						size="lg"
+						disabled={!elegido || !!trabajo || sinLista}
+						onClick={pedirSolitario}
+						data-tutorial="mesa-solitario"
+					>
+						{trabajo ? (
+							<Icono icon="lucide:loader-2" className="size-4 animate-spin" />
+						) : (
+							<Icono icon="lucide:play" className="size-4" />
+						)}
+						{t("Solitario")}
+					</Button>
+				</span>
+			</WithTooltip>
+			{/* Con el dedo no hay tooltip: el porqué de «Solitario» desactivado se lee aquí. */}
+			{(!elegido || sinLista) && (
+				<p className="col-span-2 hidden text-[11px] text-muted-foreground [[data-tactil]_&]:block">
+					{!elegido
+						? t("Elige un deck.")
+						: t("Este deck tiene más cartas de las que se juegan: elige una lista.")}
+				</p>
+			)}
+			<Button
+				size="lg"
+				variant={enSalaServidor ? "default" : "outline"}
+				onClick={() => setAmigos(true)}
+				data-tutorial="mesa-amigos"
+			>
+				<Icono icon="lucide:users" className="size-4" />
+				{enSalaServidor ? t("Volver a la sala de amigos") : t("Con amigos…")}
+			</Button>
+			<Button size="lg" variant="outline" disabled={!!trabajo} onClick={() => setLocal(true)}>
+				<Icono icon="lucide:user" className="size-4" />
+				{t("Partida local…")}
+			</Button>
+			<Button
+				size="lg"
+				variant={enSala && !enSalaServidor ? "default" : "outline"}
+				onClick={() => setRed(true)}
+				data-tutorial="mesa-red"
+			>
+				<Icono icon="lucide:plug" className="size-4" />
+				{enSala && !enSalaServidor ? t("Volver a la partida en red") : t("En red…")}
+			</Button>
+		</div>
+	);
+	const dialogos = (
+		<>
+			{elegido && editando && (
+				<ListaDialog
+					abierto
+					onCerrar={() => setEditando(null)}
+					deckId={elegido}
+					formato={formato}
+					lista={editando.lista}
+					onGuardada={(l) => {
+						setListas((x) =>
+							x
+								? {
+										...x,
+										listas: [...x.listas.filter((y) => y.id !== l.id), l].sort((a, b) =>
+											a.nombre.localeCompare(b.nombre),
+										),
+									}
+								: x,
+						);
+						setListaId(l.id);
+					}}
+					onBorrada={(id) => {
+						setListas((x) => (x ? { ...x, listas: x.listas.filter((y) => y.id !== id) } : x));
+						setListaId((actual) => (actual === id ? null : actual));
+					}}
+				/>
+			)}
+			<SalasDialog
+				abierto={amigos}
+				onCerrar={() => {
+					setAmigos(false);
+					useSalas.getState().poner({ enlaceEntrante: null });
+				}}
+				preparar={preparar}
+				onConCodigo={() => setRed(true)}
+			/>
+			<PartidaLocalDialog
+				abierto={local}
+				onCerrar={() => setLocal(false)}
+				decks={decks}
+				deckInicial={elegido}
+				hayGuardada={!!guardada}
+			/>
+			<HistorialGeneralDialog abierto={historial} onCerrar={() => setHistorial(false)} />
+			<PropiedadesDialog
+				id={propiedades}
+				onCerrar={() => setPropiedades(null)}
+				onNuevaEtiqueta={(para) => etiquetasUi.editar({ tipo: "nueva", para })}
+			/>
+			{etiquetasUi.dialogos}
+			<RedDialog abierto={red} onCerrar={() => setRed(false)} preparar={preparar} />
+			<TapeteDialog abierto={tapete} onCerrar={() => setTapete(false)} deckId={elegido} />
+			<Confirmar
+				abierto={reemplazar}
+				onCerrar={() => setReemplazar(false)}
+				titulo={t("¿Empezar otra partida?")}
+				descripcion={t("La partida a medias se pierde.")}
+				accion={t("Empezar otra")}
+				destructiva
+				onConfirmar={() => void solitario()}
+			/>
+			<Confirmar
+				abierto={descartar}
+				onCerrar={() => setDescartar(false)}
+				titulo={t("¿Descartar la partida?")}
+				descripcion={t("La partida a medias se pierde.")}
+				accion={t("Descartar")}
+				destructiva
+				onConfirmar={() => {
+					void salir().then(() => setEstado({ abierta: false, deckIds: [], guardada: null }));
+				}}
+			/>
+		</>
+	);
+	if (movil) {
+		// Móvil: los decks se quedan con la pantalla y el panel de empezar
+		// (`entrada-movil.tsx`) va fijo abajo de pie y a la derecha de lado.
+		return (
+			<AccionesDeck.Provider value={acciones}>
+				<SeleccionDecks.Provider value={sel}>
+					<div
+						className={cn("flex h-full min-h-0 min-w-0", horizontal ? "flex-row" : "flex-col")}
+						data-tutorial="mesa-entrada"
+					>
+						<section className="flex min-h-0 min-w-0 flex-1 flex-col">
+							<BarraHerramientas
+								ref={buscar}
+								titulo={t("Elige un deck")}
+								acciones={
+									<Button
+										size="icon-sm"
+										variant="ghost"
+										aria-label={t("Historial")}
+										onClick={() => setHistorial(true)}
+									>
+										<Icono icon="lucide:history" />
+									</Button>
+								}
+							/>
+							<div className="flex min-h-0 min-w-0 flex-1">
+								{/* La barra lateral del móvil es una hoja (la abre «Etiquetas»). */}
+								<BarraLateral
+									onNuevaEtiqueta={() => etiquetasUi.editar({ tipo: "nueva", para: [] })}
+									onEditarEtiqueta={(tag) => etiquetasUi.editar({ tipo: "editar", tag })}
+									onBorrarEtiqueta={etiquetasUi.borrar}
+								/>
+								<ZonaDecks org={org} />
+							</div>
+						</section>
+						<PanelEmpezarMovil
+							lado={horizontal}
+							extra={<VolverARed />}
+							guardada={
+								guardada
+									? {
+											texto: t("{deck} · turno {turno}", {
+												deck: guardada.mazos.join(", "),
+												turno: guardada.turno,
+											}),
+											seguir: () => void retomar(),
+											descartar: () => setDescartar(true),
+											ocupado: !!trabajo,
+										}
+									: null
+							}
+							nombre={nombre}
+							onNombre={setNombre}
+							formato={formato}
+							formatos={formatos}
+							onFormato={cambiarFormato}
+							listas={elegido ? listas : null}
+							listaId={listaId}
+							onLista={setListaId}
+							pideLista={pideLista}
+							sinLista={sinLista}
+							onNuevaLista={() => setEditando({ lista: null })}
+							onEditarLista={() =>
+								setEditando({
+									lista: listas?.listas.find((l) => l.id === listaId) ?? null,
+								})
+							}
+							opciones={opcionesExtra}
+							abiertas={masOpciones}
+							onAbiertas={setMasOpciones}
+							botones={botones}
+						/>
+						{dialogos}
+					</div>
+				</SeleccionDecks.Provider>
+			</AccionesDeck.Provider>
+		);
+	}
 	return (
 		<AccionesDeck.Provider value={acciones}>
 			<SeleccionDecks.Provider value={sel}>
-				<div
-					className={cn("flex h-full min-h-0 gap-2.5 p-2.5", apilado && "flex-col")}
-					data-tutorial="mesa-entrada"
-				>
+				<div className={"flex h-full min-h-0 gap-2.5 p-2.5"} data-tutorial="mesa-entrada">
 					<section
 						className={cn(
 							"flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border bg-card/40",
-							apilado && "min-h-44",
 						)}
 					>
 						<BarraHerramientas
@@ -289,12 +576,7 @@ function Entrada() {
 						</div>
 					</section>
 
-					<aside
-						className={cn(
-							"flex min-h-0 shrink-0 flex-col gap-2.5",
-							apilado ? "max-h-[55%] w-full" : movil ? "w-72" : "w-80",
-						)}
-					>
+					<aside className={cn("flex min-h-0 shrink-0 flex-col gap-2.5", "w-80")}>
 						<VolverARed />
 						{guardada && (
 							<section className="flex flex-col gap-2.5 rounded-lg border border-primary/40 bg-primary/5 p-2.5">
@@ -345,12 +627,7 @@ function Entrada() {
 										<Selector<Formato>
 											valor={formato}
 											onChange={cambiarFormato}
-											opciones={[
-												{ valor: "commander", etiqueta: "Commander" },
-												{ valor: "constructed", etiqueta: t("60 cartas") },
-												{ valor: "limited", etiqueta: t("Limitado") },
-												{ valor: "libre", etiqueta: t("Libre") },
-											]}
+											opciones={formatos}
 										/>
 									</Fila>
 									{elegido && listas && (
@@ -412,218 +689,13 @@ function Entrada() {
 											)}
 										</div>
 									)}
-									<Fila etiqueta={t("Vidas")}>
-										<CampoNumero
-											valor={opciones.vidaInicial}
-											onChange={(v) => setOpciones({ ...opciones, vidaInicial: v ?? 20 })}
-											min={1}
-											max={999}
-											paso={1}
-										/>
-									</Fila>
-									<Fila etiqueta={t("Mulligan")}>
-										<Selector<ModoMulligan>
-											valor={opciones.mulligan}
-											onChange={(m) => setOpciones({ ...opciones, mulligan: m })}
-											opciones={[
-												{ valor: "londres", etiqueta: t("Londres") },
-												{
-													valor: "londresPrimeroGratis",
-													etiqueta: t("Londres, el primero gratis"),
-												},
-												{ valor: "amistoso", etiqueta: t("Amistoso") },
-												{ valor: "libre", etiqueta: t("Libre") },
-											]}
-										/>
-									</Fila>
-									<FilaInterruptor
-										etiqueta={t("Robar al empezar el turno")}
-										valor={opciones.ayudas.robarAlEmpezar}
-										onChange={(v) => ayuda("robarAlEmpezar", v)}
-									/>
-									<FilaInterruptor
-										etiqueta={t("Enderezar al empezar el turno")}
-										valor={opciones.ayudas.enderezarAlEmpezar}
-										onChange={(v) => ayuda("enderezarAlEmpezar", v)}
-									/>
-									<FilaInterruptor
-										etiqueta={t("El primero no roba")}
-										valor={opciones.primeroNoRoba}
-										onChange={(v) => setOpciones({ ...opciones, primeroNoRoba: v })}
-									/>
-									<FilaInterruptor
-										etiqueta={t("Sumar el impuesto del comandante")}
-										valor={opciones.ayudas.impuestoAutomatico}
-										onChange={(v) => ayuda("impuestoAutomatico", v)}
-									/>
-									<FilaInterruptor
-										etiqueta={t("Contadores al entrar (lealtad, sagas)")}
-										valor={opciones.ayudas.contadoresAlEntrar}
-										onChange={(v) => ayuda("contadoresAlEntrar", v)}
-									/>
-									<Fila etiqueta={t("Sparring (rival fantasma)")}>
-										<Selector<Intensidad>
-											valor={sparring}
-											onChange={(v) => useUi.getState().setMesa({ sparring: v })}
-											opciones={INTENSIDADES.map((i) => ({
-												valor: i.valor,
-												etiqueta: t(i.nombre),
-											}))}
-										/>
-									</Fila>
-									<Button
-										size="sm"
-										variant="outline"
-										disabled={!elegido}
-										onClick={() => setTapete(true)}
-									>
-										<Icono icon="lucide:image" className="size-3.5" />
-										{t("Tapete de este deck…")}
-									</Button>
+									{opcionesExtra}
 								</section>
 							</div>
 						</ScrollArea>
-						<div className={cn("flex shrink-0 flex-col gap-2.5", movil && "grid grid-cols-2")}>
-							{trabajo && (
-								<div className="col-span-2 flex flex-col gap-1">
-									<span className="text-xs text-muted-foreground">{trabajo.fase}</span>
-									<Progress value={trabajo.total ? (trabajo.hechas / trabajo.total) * 100 : 0} />
-								</div>
-							)}
-							<WithTooltip
-								content={
-									!elegido
-										? t("Elige un deck.")
-										: sinLista
-											? t("Este deck tiene más cartas de las que se juegan: elige una lista.")
-											: null
-								}
-							>
-								{/* El `span`: un botón desactivado no avisa al pasar por encima. */}
-								<span className="flex flex-col">
-									<Button
-										size="lg"
-										disabled={!elegido || !!trabajo || sinLista}
-										onClick={pedirSolitario}
-										data-tutorial="mesa-solitario"
-									>
-										{trabajo ? (
-											<Icono icon="lucide:loader-2" className="size-4 animate-spin" />
-										) : (
-											<Icono icon="lucide:play" className="size-4" />
-										)}
-										{t("Solitario")}
-									</Button>
-								</span>
-							</WithTooltip>
-							{/* Con el dedo no hay tooltip: el porqué de «Solitario» desactivado se lee aquí. */}
-							{(!elegido || sinLista) && (
-								<p className="col-span-2 hidden text-[11px] text-muted-foreground [[data-tactil]_&]:block">
-									{!elegido
-										? t("Elige un deck.")
-										: t("Este deck tiene más cartas de las que se juegan: elige una lista.")}
-								</p>
-							)}
-							<Button
-								size="lg"
-								variant={enSalaServidor ? "default" : "outline"}
-								onClick={() => setAmigos(true)}
-								data-tutorial="mesa-amigos"
-							>
-								<Icono icon="lucide:users" className="size-4" />
-								{enSalaServidor ? t("Volver a la sala de amigos") : t("Con amigos…")}
-							</Button>
-							<Button
-								size="lg"
-								variant="outline"
-								disabled={!!trabajo}
-								onClick={() => setLocal(true)}
-							>
-								<Icono icon="lucide:user" className="size-4" />
-								{t("Partida local…")}
-							</Button>
-							<Button
-								size="lg"
-								variant={enSala && !enSalaServidor ? "default" : "outline"}
-								onClick={() => setRed(true)}
-								data-tutorial="mesa-red"
-							>
-								<Icono icon="lucide:plug" className="size-4" />
-								{enSala && !enSalaServidor ? t("Volver a la partida en red") : t("En red…")}
-							</Button>
-						</div>
+						{botones}
 					</aside>
-					{elegido && editando && (
-						<ListaDialog
-							abierto
-							onCerrar={() => setEditando(null)}
-							deckId={elegido}
-							formato={formato}
-							lista={editando.lista}
-							onGuardada={(l) => {
-								setListas((x) =>
-									x
-										? {
-												...x,
-												listas: [...x.listas.filter((y) => y.id !== l.id), l].sort((a, b) =>
-													a.nombre.localeCompare(b.nombre),
-												),
-											}
-										: x,
-								);
-								setListaId(l.id);
-							}}
-							onBorrada={(id) => {
-								setListas((x) => (x ? { ...x, listas: x.listas.filter((y) => y.id !== id) } : x));
-								setListaId((actual) => (actual === id ? null : actual));
-							}}
-						/>
-					)}
-					<SalasDialog
-						abierto={amigos}
-						onCerrar={() => {
-							setAmigos(false);
-							useSalas.getState().poner({ enlaceEntrante: null });
-						}}
-						preparar={preparar}
-						onConCodigo={() => setRed(true)}
-					/>
-					<PartidaLocalDialog
-						abierto={local}
-						onCerrar={() => setLocal(false)}
-						decks={decks}
-						deckInicial={elegido}
-						hayGuardada={!!guardada}
-					/>
-					<HistorialGeneralDialog abierto={historial} onCerrar={() => setHistorial(false)} />
-					<PropiedadesDialog
-						id={propiedades}
-						onCerrar={() => setPropiedades(null)}
-						onNuevaEtiqueta={(para) => etiquetasUi.editar({ tipo: "nueva", para })}
-					/>
-					{etiquetasUi.dialogos}
-					<RedDialog abierto={red} onCerrar={() => setRed(false)} preparar={preparar} />
-					<TapeteDialog abierto={tapete} onCerrar={() => setTapete(false)} deckId={elegido} />
-					<Confirmar
-						abierto={reemplazar}
-						onCerrar={() => setReemplazar(false)}
-						titulo={t("¿Empezar otra partida?")}
-						descripcion={t("La partida a medias se pierde.")}
-						accion={t("Empezar otra")}
-						destructiva
-						onConfirmar={() => void solitario()}
-					/>
-					<Confirmar
-						abierto={descartar}
-						onCerrar={() => setDescartar(false)}
-						titulo={t("¿Descartar la partida?")}
-						descripcion={t("La partida a medias se pierde.")}
-						accion={t("Descartar")}
-						destructiva
-						onConfirmar={() => {
-							void salir().then(() => setEstado({ abierta: false, deckIds: [], guardada: null }));
-						}}
-					/>
+					{dialogos}
 				</div>
 			</SeleccionDecks.Provider>
 		</AccionesDeck.Provider>

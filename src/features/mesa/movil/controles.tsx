@@ -25,10 +25,11 @@ export function BotonPasarTurno() {
 			size="icon"
 			onClick={() => void op.pasarTurno()}
 			aria-label={t("Pasar turno")}
-			className="absolute top-2 right-2 z-[7200] size-14 rounded-full shadow-xl"
+			// Del alto de la barra de arriba (que es compacta): más grande se comía el campo.
+			className="absolute top-1 right-1 z-[7200] size-11 rounded-full shadow-xl"
 			data-tutorial="mesa-pasar"
 		>
-			<Icono icon="lucide:skip-forward" className="size-6" />
+			<Icono icon="lucide:skip-forward" className="size-5" />
 		</Button>
 	);
 }
@@ -36,13 +37,15 @@ export function BotonPasarTurno() {
 /**
  * **«Gira el teléfono»**: la mesa se juega en horizontal. En vertical sale un
  * aviso encima, que se quita con un toque; la orientación no se bloquea (el
- * resto de la app sí va en vertical).
+ * resto de la app sí va en vertical). Durante el mulligan no sale: la mano inicial se
+ * ve bien de pie.
  */
 export function AvisoGirar() {
 	const { t } = useLang();
 	const { horizontal } = useFormato();
+	const mulligan = useMesa((s) => s.general?.mulligan != null);
 	const [oculto, setOculto] = useState(false);
-	if (horizontal || oculto) return null;
+	if (horizontal || oculto || mulligan) return null;
 	return (
 		<div className="absolute inset-x-3 top-1/3 z-[9500] flex flex-col items-center gap-3 rounded-2xl border border-white/15 bg-black/85 p-5 text-center text-white shadow-2xl">
 			<Icono icon="lucide:smartphone" className="size-12 rotate-90" />

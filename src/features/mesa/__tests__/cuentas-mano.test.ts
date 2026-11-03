@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { agruparMano, COSTE_MAXIMO, costeDeMano, tipoDeMano } from "../movil/cuentas-mano";
+import {
+	agruparMano,
+	COSTE_MAXIMO,
+	cartaEnFila,
+	costeDeMano,
+	tipoDeMano,
+} from "../movil/cuentas-mano";
 
 type Info = {
 	tipo: string | null;
@@ -73,5 +79,22 @@ describe("la mano por coste", () => {
 	it("una mano vacía no tiene grupos", () => {
 		expect(agruparMano([], "tipo")).toEqual([]);
 		expect(agruparMano([], "coste")).toEqual([]);
+	});
+});
+
+describe("la mano inicial en una fila", () => {
+	it("siete caben a lo ancho de un teléfono de lado", () => {
+		const { w, h } = cartaEnFila(857, 250, 7);
+		expect(7 * w + 6 * 6).toBeLessThanOrEqual(857);
+		expect(h).toBeLessThanOrEqual(250);
+	});
+	it("si el alto es lo que falta, manda el alto", () => {
+		const { w, h } = cartaEnFila(2000, 140, 7);
+		expect(h).toBeLessThanOrEqual(140);
+		expect(w).toBe(Math.floor((140 * 63) / 88));
+	});
+	it("nunca pasa del máximo ni baja de 24", () => {
+		expect(cartaEnFila(5000, 5000, 1).w).toBe(172);
+		expect(cartaEnFila(10, 10, 7).w).toBe(24);
 	});
 });

@@ -28,10 +28,13 @@ export function CartaFantasma({
 	nombre,
 	ancho,
 	className,
+	contener = false,
 }: {
 	nombre: string;
 	ancho: 244 | 488;
 	className?: string;
+	/** Entera, sin recortar (la carta en grande del móvil). */
+	contener?: boolean;
 }) {
 	const [origen, setOrigen] = useState<OrigenCarta | null>(null);
 	useEffect(() => {
@@ -48,6 +51,7 @@ export function CartaFantasma({
 				imagen={origen?.caras[0] ?? { tipo: "generica" }}
 				ancho={ancho}
 				nombre={nombre}
+				className={contener ? "bg-transparent object-contain" : undefined}
 			/>
 		</div>
 	);

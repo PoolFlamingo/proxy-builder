@@ -38,15 +38,30 @@ export type Disposicion = {
  * Reparte el tablero: el campo arriba; abajo, la mano a la izquierda y las
  * zonas a la derecha. `tamano` es el de Ajustes > Mesa (25–200 %).
  */
-export function disponer(w: number, h: number, tamano = 100, conBanquillo = false): Disposicion {
+export function disponer(
+	w: number,
+	h: number,
+	tamano = 100,
+	conBanquillo = false,
+	movil = false,
+): Disposicion {
 	const escala = Math.max(0.25, Math.min(2, tamano / 100));
 	// La franja de abajo: un 22 % del alto, entre 90 y 220 px.
-	const franja = Math.round(Math.max(90, Math.min(220, h * 0.22)));
-	const ch = franja - 26;
-	const cw = Math.round(ch * PROPORCION);
-	const campo: Rect = { x: 0, y: 0, w, h: Math.max(0, h - franja) };
+	let franja = Math.round(Math.max(90, Math.min(220, h * 0.22)));
 	const nZonas = conBanquillo ? 5 : 4;
 	const hueco = 8;
+	let ch = franja - 26;
+	let cw = Math.round(ch * PROPORCION);
+	// En un móvil de pie (~390 de ancho) las zonas a la altura de la franja ocupaban más
+	// que la pantalla y la mano se quedaba sin sitio: ahí las zonas (y las cartas
+	// pequeñas) se encogen hasta dejar a la mano la mitad del ancho.
+	if (movil && nZonas * (cw + hueco) + hueco > w * 0.5) {
+		cw = Math.max(20, Math.floor((w * 0.5 - hueco) / nZonas - hueco));
+		ch = Math.round(cw / PROPORCION);
+		// Y la franja baja con ellas: lo que sobra es para el campo.
+		franja = Math.max(90, ch + 26);
+	}
+	const campo: Rect = { x: 0, y: 0, w, h: Math.max(0, h - franja) };
 	const anchoZonas = nZonas * (cw + hueco) + hueco;
 	const yZonas = h - franja + 8;
 	const nombres: ZonaPantalla[] = conBanquillo

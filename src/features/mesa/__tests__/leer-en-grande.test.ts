@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { useMesa } from "@/stores/mesa-store";
-import { anchoDeLectura, hayEncima, manejadoresLeer, sobreTras } from "../leer-en-grande";
+import {
+	anchoDeLectura,
+	hayEncima,
+	lecturaMovil,
+	manejadoresLeer,
+	sobreTras,
+} from "../leer-en-grande";
 
 const evento = (pointerType: string) => ({ pointerType }) as never;
 
@@ -60,5 +66,45 @@ describe("el ancho de la vista grande", () => {
 		// Con el panel de estado debajo, menos.
 		expect(anchoDeLectura(320, 411, 120)).toBe(162);
 		expect(anchoDeLectura(320, 100)).toBe(120);
+	});
+});
+
+describe("la carta en grande en un móvil", () => {
+	const dentro = (
+		r: { ancho: number; alto: number },
+		w: number,
+		h: number,
+		caras: number,
+		horizontal: boolean,
+	) => {
+		expect(Math.abs(r.alto / r.ancho - 88 / 63)).toBeLessThan(0.02);
+		if (horizontal) {
+			expect(r.alto).toBeLessThanOrEqual(h - 16);
+			expect(caras * r.ancho + (caras - 1) * 8 + 48 + 16).toBeLessThanOrEqual(w);
+		} else {
+			expect(caras * r.ancho + (caras - 1) * 8).toBeLessThanOrEqual(w - 16);
+			expect(r.alto + 48 + 16).toBeLessThanOrEqual(h);
+		}
+	};
+
+	it("de lado ocupa el alto y deja sitio a la X al lado", () => {
+		const r = lecturaMovil(873, 392, true, 1, false);
+		expect(r.alto).toBeGreaterThan(360);
+		dentro(r, 873, 392, 1, true);
+	});
+
+	it("de lado, con dos caras y panel, se encoge para caber a lo ancho", () => {
+		const r = lecturaMovil(640, 360, true, 2, true);
+		dentro(r, 640 - 184, 360, 2, true);
+	});
+
+	it("de pie ocupa el ancho y deja la X debajo", () => {
+		const r = lecturaMovil(392, 873, false, 1, true);
+		expect(r.ancho).toBe(376);
+		dentro(r, 392, 873, 1, false);
+		dentro(lecturaMovil(392, 600, false, 2, false), 392, 600, 2, false);
+		// Muy baja: manda el alto.
+		const bajo = lecturaMovil(392, 420, false, 1, true);
+		expect(bajo.alto).toBeLessThanOrEqual(420 - 16 - 48 - 120);
 	});
 });

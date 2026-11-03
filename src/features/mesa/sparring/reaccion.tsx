@@ -5,8 +5,11 @@ import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useFormato } from "@/lib/formato";
+import { cn } from "@/lib/utils";
 import { claveZona, useMesa } from "@/stores/mesa-store";
 import { hacer } from "../acciones";
+import { useMesaMovil } from "../formato-mesa";
 import { CartaFantasma } from "./carta-fantasma";
 import { lineaBase, porQue, titulo } from "./textos";
 import { useSenalarFantasma } from "./vista-fantasma";
@@ -21,12 +24,16 @@ function Tecla({ children }: { children: React.ReactNode }) {
 	);
 }
 
-/** La carta del aviso: al pasar el ratón por ella sale en grande (`VistaFantasma`). */
-function CartaSenalable({ nombre }: { nombre: string }) {
+/** La carta del aviso: al pasar el ratón por ella (o al tocarla) sale en grande (`VistaFantasma`). */
+function CartaSenalable({ nombre, pequena = false }: { nombre: string; pequena?: boolean }) {
 	const senalar = useSenalarFantasma(nombre);
 	return (
 		<div className="shrink-0 cursor-zoom-in" {...senalar}>
-			<CartaFantasma nombre={nombre} ancho={488} className="w-36" />
+			<CartaFantasma
+				nombre={nombre}
+				ancho={pequena ? 244 : 488}
+				className={pequena ? "w-14" : "w-36"}
+			/>
 		</div>
 	);
 }
@@ -48,6 +55,8 @@ export function ReaccionPendiente() {
 		(s) => s.zonas[claveZona({ tipo: "de", jugador: yo, zona: "campo" })]?.cartas ?? NINGUNA,
 	);
 	const cartas = useMesa((s) => s.cartas);
+	const movil = useMesaMovil();
+	const { horizontal } = useFormato();
 	const [verBase, setVerBase] = useState(false);
 	const [eligiendo, setEligiendo] = useState(false);
 	const id = pendiente?.reaccion.id ?? null;
@@ -102,6 +111,112 @@ export function ReaccionPendiente() {
 		return v && (v.bocaAbajo || v.origen?.info.esCriatura);
 	});
 
+	const eleccion = (
+		<div className="flex flex-col gap-1.5">
+			<p className="font-medium">{t("Elige la criatura que sacrificas")}</p>
+			<ScrollArea viewportClassName={movil ? "max-h-28" : "max-h-40"}>
+				<div className="flex flex-col gap-1 p-1">
+					{criaturas.map((c) => (
+						<Button
+							key={c}
+							size="sm"
+							variant="outline"
+							className="justify-start"
+							onClick={() => decidir("aceptar", c)}
+						>
+							{cartas[c]?.origen?.nombre ?? t("una carta")}
+						</Button>
+					))}
+				</div>
+			</ScrollArea>
+			<Button size="sm" variant="ghost" onClick={() => setEligiendo(false)}>
+				{t("Cancelar")} {!movil && <Tecla>Esc</Tecla>}
+			</Button>
+		</div>
+	);
+
+	if (movil) {
+		// En el móvil, compacto: la carta en pequeño (al tocarla sale en grande), el porqué
+		// plegado y las tres respuestas en una fila. De lado va arriba, entre la barra de
+		// jugadores (7,5 rem) y la vida del fantasma (13,5 rem); de pie, a lo ancho bajo esa vida.
+		return (
+			<div
+				role="dialog"
+				aria-modal="false"
+				aria-label={t("Rival fantasma")}
+				className={cn(
+					"absolute z-[8500] flex flex-col gap-1.5 rounded-xl border border-primary/50 bg-card/95 p-2 text-xs shadow-2xl backdrop-blur-md animate-in fade-in",
+					horizontal
+						? "top-12 right-[13.5rem] left-[7.5rem] mx-auto max-w-[30rem]"
+						: "inset-x-2 top-[6.5rem]",
+				)}
+			>
+				<div className="flex items-start gap-2">
+					<CartaSenalable nombre={r.carta.nombre} pequena />
+					<div className="flex min-w-0 flex-1 flex-col gap-0.5">
+						<div className="flex items-center gap-1 text-[10px] font-semibold tracking-wide text-primary uppercase">
+							<Icono icon="game-icons:ghost" className="size-3.5" />
+							{t("Rival fantasma")}
+						</div>
+						<h3 className="line-clamp-2 font-semibold">{titulo(r, objetivo, t)}</h3>
+						<p className="truncate text-muted-foreground">
+							{r.carta.nombre}
+							{r.carta.coste && <span className="ml-1 font-mono text-[10px]">{r.carta.coste}</span>}
+						</p>
+						<button
+							type="button"
+							onClick={() => setVerBase((v) => !v)}
+							className="self-start py-1 text-[10px] font-semibold text-primary uppercase"
+						>
+							{verBase ? t("Ocultar el porqué") : t("¿Por qué ahora?")}
+						</button>
+					</div>
+				</div>
+				{verBase && (
+					<ScrollArea viewportClassName="max-h-24">
+						<div className="flex flex-col gap-1 p-0.5">
+							<p className="text-foreground/90">{porQue(r.porQue, t)}</p>
+							<ul className="flex list-disc flex-col gap-0.5 pl-4 text-muted-foreground">
+								{r.base.map((b) => (
+									<li key={b.clave}>{lineaBase(b, t)}</li>
+								))}
+							</ul>
+						</div>
+					</ScrollArea>
+				)}
+				{eligiendo ? (
+					eleccion
+				) : (
+					<div className="flex gap-1.5">
+						<Button
+							size="sm"
+							className="h-auto min-w-0 flex-1 px-1.5 py-1 leading-tight whitespace-normal"
+							onClick={resolver}
+						>
+							{t("Resolverla")}
+						</Button>
+						<Button
+							size="sm"
+							variant="outline"
+							className="h-auto min-w-0 flex-1 px-1.5 py-1 leading-tight whitespace-normal"
+							onClick={() => decidir("teniaRespuesta")}
+						>
+							{t("Tengo respuesta")}
+						</Button>
+						<Button
+							size="sm"
+							variant="ghost"
+							className="h-auto min-w-0 flex-1 px-1.5 py-1 leading-tight whitespace-normal"
+							onClick={() => decidir("noAplica")}
+						>
+							{t("No aplica")}
+						</Button>
+					</div>
+				)}
+			</div>
+		);
+	}
+
 	return (
 		<div
 			role="dialog"
@@ -146,27 +261,7 @@ export function ReaccionPendiente() {
 				</ul>
 			)}
 			{eligiendo ? (
-				<div className="flex flex-col gap-1.5">
-					<p className="font-medium">{t("Elige la criatura que sacrificas")}</p>
-					<ScrollArea viewportClassName="max-h-40">
-						<div className="flex flex-col gap-1 p-1">
-							{criaturas.map((c) => (
-								<Button
-									key={c}
-									size="sm"
-									variant="outline"
-									className="justify-start"
-									onClick={() => decidir("aceptar", c)}
-								>
-									{cartas[c]?.origen?.nombre ?? t("una carta")}
-								</Button>
-							))}
-						</div>
-					</ScrollArea>
-					<Button size="sm" variant="ghost" onClick={() => setEligiendo(false)}>
-						{t("Cancelar")} <Tecla>Esc</Tecla>
-					</Button>
-				</div>
+				eleccion
 			) : (
 				<div className="flex flex-col gap-1.5">
 					<Button size="sm" onClick={resolver}>

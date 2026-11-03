@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import type { IdCarta } from "@/bindings/IdCarta";
 import type { ModoMulligan } from "@/bindings/ModoMulligan";
 import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
+import { useFormato } from "@/lib/formato";
 import { cn } from "@/lib/utils";
 import { cartasDe, useMesa } from "@/stores/mesa-store";
 import { hacer, zonaDe } from "./acciones";
@@ -11,6 +12,7 @@ import { useEncuentro } from "./encuentro";
 import { useMesaMovil } from "./formato-mesa";
 import { caraVisible, ImagenCarta } from "./imagen-carta";
 import { manejadoresLeer } from "./leer-en-grande";
+import { cartaEnFila } from "./movil/cuentas-mano";
 
 /** Cuántas van al fondo al quedarse (lo mismo que el motor, `QuedarseCon`). */
 export function alFondo(modo: ModoMulligan, mulligans: number, enMano: number): number | null {
@@ -55,8 +57,26 @@ export function Mulligan() {
 	);
 	const encuentro = useEncuentro();
 	const movil = useMesaMovil();
+	const { horizontal } = useFormato();
+	// Un teléfono de lado (~390 dp de alto): las cartas en una sola fila que se ajusta
+	// al hueco que dejan el título y los botones, que se ven siempre.
+	const enFila = movil && horizontal;
+	const fila = useRef<HTMLDivElement>(null);
+	const [hueco, setHueco] = useState({ w: 0, h: 0 });
+	const abierto = hay && !decidido;
+	useLayoutEffect(() => {
+		const el = fila.current;
+		if (!enFila || !abierto || !el) return;
+		const medir = () => setHueco({ w: el.clientWidth, h: el.clientHeight });
+		medir();
+		const ro = new ResizeObserver(medir);
+		ro.observe(el);
+		return () => ro.disconnect();
+	}, [enFila, abierto]);
 	const [fondo, setFondo] = useState<IdCarta[]>([]);
-	if (!hay || decidido) return null;
+	if (!abierto) return null;
+	// Lo que baja la elegida (`translate-y-2`) también tiene que caber.
+	const carta = cartaEnFila(hueco.w, Math.max(0, hueco.h - 10), mano.length);
 	const toca = alFondo(modo, mulligans, mano.length);
 	const listo = toca === null || fondo.length === toca;
 	const alternar = (id: IdCarta) =>
@@ -65,12 +85,14 @@ export function Mulligan() {
 		<div
 			className={cn(
 				"absolute inset-0 z-[8500] flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm",
-				movil ? "gap-2 p-2" : "gap-4 p-6",
+				enFila ? "gap-1.5 px-2 py-1.5" : movil ? "gap-2 p-2" : "gap-4 p-6",
 			)}
 		>
-			<div className="text-center text-white">
-				<h2 className="text-lg font-semibold">{t("Tu mano inicial")}</h2>
-				<p className="text-xs text-white/70">{t(REGLAS[modo])}</p>
+			<div className="shrink-0 text-center text-white">
+				<h2 className={cn("font-semibold", enFila ? "text-sm" : "text-lg")}>
+					{t("Tu mano inicial")}
+				</h2>
+				<p className={cn("text-xs text-white/70", enFila && "line-clamp-1")}>{t(REGLAS[modo])}</p>
 				{variosJugadores && primero && (
 					<p className="mt-1 text-sm font-semibold text-primary">
 						{encuentro?.empieza?.porque === "perdio"
@@ -92,7 +114,13 @@ export function Mulligan() {
 					</p>
 				)}
 			</div>
-			<div className="flex max-w-full flex-wrap justify-center gap-2.5">
+			<div
+				ref={fila}
+				className={cn(
+					"flex max-w-full justify-center",
+					enFila ? "min-h-0 w-full flex-1 flex-nowrap items-center gap-1.5" : "flex-wrap gap-2.5",
+				)}
+			>
 				{mano.map((id) => {
 					const c = cartas[id];
 					if (!c) return null;
@@ -106,9 +134,11 @@ export function Mulligan() {
 							className={cn(
 								"relative overflow-hidden rounded-[5%] shadow-xl transition",
 								// En un móvil de lado (411 dp de alto) la mano entera tiene que caber con sus botones.
-								movil ? "h-36 w-[103px]" : "h-60 w-[172px]",
-								elegida && "translate-y-3 opacity-50 ring-4 ring-amber-400",
+								enFila ? "shrink-0" : movil ? "h-36 w-[103px]" : "h-60 w-[172px]",
+								elegida && "opacity-50 ring-4 ring-amber-400",
+								elegida && (enFila ? "translate-y-2" : "translate-y-3"),
 							)}
+							style={enFila ? { width: carta.w, height: carta.h } : undefined}
 						>
 							<ImagenCarta imagen={caraVisible(c)} ancho={244} nombre={c.origen?.nombre} />
 							{elegida && (
@@ -120,7 +150,7 @@ export function Mulligan() {
 					);
 				})}
 			</div>
-			<div className="flex gap-2.5">
+			<div className="flex shrink-0 gap-2.5">
 				<Button
 					variant="outline"
 					onClick={() => {

@@ -21,6 +21,7 @@ import { comandantesDe, deltaSeguro } from "./dano-comandante";
 import { useMesaMovil } from "./formato-mesa";
 import { elegirFantasma } from "./objetivo";
 import { pedirNumero, usePantalla } from "./pantalla";
+import { MAS_MENOS_MOVIL, MAS_MENOS_TACTIL } from "./vida-jugador";
 
 /** Lo que se espera a que paren los clics de vida para mandarlos juntos, en ms. */
 const JUNTAR_MS = 700;
@@ -48,7 +49,7 @@ export function VidaFantasma() {
 		() => Object.fromEntries(comandantesDe(cartas).map((c) => [c.id, c.nombre])),
 		[cartas],
 	);
-	// En el móvil baja un poco: arriba a la derecha está «Pasar turno».
+	// En el móvil baja un poco (arriba a la derecha está «Pasar turno») y es más pequeña.
 	const movil = useMesaMovil();
 	const [pendiente, setPendiente] = useState(0);
 	const temporizador = useRef<number | null>(null);
@@ -78,11 +79,12 @@ export function VidaFantasma() {
 			<div
 				{...{ [ATRIBUTO_FANTASMA]: "" }}
 				className={cn(
-					"absolute flex items-center gap-1 rounded-full border border-white/15 bg-black/60 px-2 py-1 text-white shadow-lg backdrop-blur-md",
+					"absolute flex items-center gap-1 rounded-full border border-white/15 bg-black/60 text-white shadow-lg backdrop-blur-md",
+					movil ? "px-1.5 py-0" : "px-2 py-1",
 					apuntando && "cursor-crosshair ring-2 ring-primary",
 					!apuntando && fuera && "ring-2 ring-rose-500",
 				)}
-				style={{ right: 12, top: movil ? 72 : 56, zIndex: 5500 }}
+				style={{ right: movil ? 8 : 12, top: movil ? 52 : 56, zIndex: 5500 }}
 				// Con una flecha en marcha, el clic es para apuntarle (no para − ni +).
 				onClickCapture={(e) => {
 					if (elegirFantasma(t)) {
@@ -97,7 +99,7 @@ export function VidaFantasma() {
 				<span className="text-[10px] opacity-70">{t("Fantasma")}</span>
 				<button
 					type="button"
-					className="px-1.5 text-lg leading-none [[data-tactil]_&]:min-h-11 [[data-tactil]_&]:min-w-11"
+					className={cn("px-1.5 text-lg leading-none", movil ? MAS_MENOS_MOVIL : MAS_MENOS_TACTIL)}
 					onClick={() => sumar(-1)}
 				>
 					−
@@ -112,7 +114,7 @@ export function VidaFantasma() {
 				</div>
 				<button
 					type="button"
-					className="px-1.5 text-lg leading-none [[data-tactil]_&]:min-h-11 [[data-tactil]_&]:min-w-11"
+					className={cn("px-1.5 text-lg leading-none", movil ? MAS_MENOS_MOVIL : MAS_MENOS_TACTIL)}
 					onClick={() => sumar(1)}
 				>
 					+

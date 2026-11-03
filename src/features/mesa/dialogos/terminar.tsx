@@ -14,6 +14,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useFormato } from "@/lib/formato";
 import { cn } from "@/lib/utils";
 import { useMesa } from "@/stores/mesa-store";
 import { hacer } from "../acciones";
@@ -53,6 +54,10 @@ export function TerminarDialog() {
 	);
 	const [como, setComo] = useState<ComoGano>("combate");
 	const [nota, setNota] = useState("");
+	// Un teléfono de lado (~390 dp de alto): «cómo» y la nota en una fila y los botones
+	// también, para que «Terminar» se vea sin desplazar.
+	const { tamano, horizontal } = useFormato();
+	const deLado = tamano === "movil" && horizontal;
 	const cerrar = () => usePantalla.getState().abrir(null);
 	const alternar = (j: IdJugador) =>
 		setGanadores((g) => (g.includes(j) ? g.filter((x) => x !== j) : [...g, j]));
@@ -109,20 +114,23 @@ export function TerminarDialog() {
 						</button>
 					)}
 				</div>
-				<Selector<ComoGano>
-					valor={como}
-					onChange={setComo}
-					opciones={COMO.map((c) => ({ valor: c.valor, etiqueta: t(c.nombre) }))}
-					ancho="w-full"
-				/>
-				<Input
-					value={nota}
-					onChange={(e) => setNota(e.target.value)}
-					maxLength={200}
-					placeholder={t("Una nota (opcional)")}
-					className="h-8 text-xs"
-				/>
-				<DialogFooter>
+				<div className={cn("flex gap-2.5", deLado ? "flex-row" : "flex-col")}>
+					<Selector<ComoGano>
+						valor={como}
+						onChange={setComo}
+						opciones={COMO.map((c) => ({ valor: c.valor, etiqueta: t(c.nombre) }))}
+						ancho={deLado ? "w-1/2" : "w-full"}
+					/>
+					<Input
+						value={nota}
+						onChange={(e) => setNota(e.target.value)}
+						maxLength={200}
+						placeholder={t("Una nota (opcional)")}
+						className={cn("h-8 text-xs", deLado && "w-1/2")}
+					/>
+				</div>
+				{/* Con `!`: `DialogoAdaptable` apila el pie en el móvil con una regla que pesa más. */}
+				<DialogFooter className={cn(deLado && "!flex-row [&>*]:flex-1")}>
 					<Button variant="outline" onClick={cerrar}>
 						{t("Cancelar")}
 					</Button>
