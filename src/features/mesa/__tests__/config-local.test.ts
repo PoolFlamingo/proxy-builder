@@ -203,3 +203,38 @@ describe("la mano de los compañeros", () => {
 		);
 	});
 });
+
+describe("subir y bajar un asiento con los botones", () => {
+	it("mueve un puesto y no se sale por los bordes", async () => {
+		const { ordenTrasPasar } = await import("../config-local");
+		expect(ordenTrasPasar(4, 2, -1)).toEqual([0, 2, 1, 3]);
+		expect(ordenTrasPasar(4, 1, 1)).toEqual([0, 2, 1, 3]);
+		expect(ordenTrasPasar(4, 0, -1)).toBeNull();
+		expect(ordenTrasPasar(4, 3, 1)).toBeNull();
+		expect(ordenTrasPasar(4, 9, -1)).toBeNull();
+	});
+
+	it("en una sala, el anfitrión se queda el primero", async () => {
+		const { ordenTrasPasar } = await import("../config-local");
+		// Subir al asiento 1 lo pondría antes que el anfitrión (asiento 0).
+		expect(ordenTrasPasar(4, 1, -1, 1)).toBeNull();
+		expect(ordenTrasPasar(4, 2, -1, 1)).toEqual([0, 2, 1, 3]);
+		// Y el anfitrión no se mueve.
+		expect(ordenTrasPasar(4, 0, 1, 1)).toBeNull();
+	});
+
+	it("los botones llaman a reordenar con el orden nuevo, o están apagados", async () => {
+		const { botonesDeAsiento } = await import("../asientos-botones");
+		const orden: number[][] = [];
+		const b = botonesDeAsiento(3, 1, (o) => orden.push(o));
+		b.subir?.();
+		b.bajar?.();
+		expect(orden).toEqual([
+			[1, 0, 2],
+			[0, 2, 1],
+		]);
+		const primero = botonesDeAsiento(3, 0, () => {});
+		expect(primero.subir).toBeNull();
+		expect(primero.bajar).not.toBeNull();
+	});
+});

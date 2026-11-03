@@ -8,7 +8,9 @@ import { cn } from "@/lib/utils";
 import { cartasDe, useMesa } from "@/stores/mesa-store";
 import { hacer, zonaDe } from "./acciones";
 import { useEncuentro } from "./encuentro";
+import { useMesaMovil } from "./formato-mesa";
 import { caraVisible, ImagenCarta } from "./imagen-carta";
+import { manejadoresLeer } from "./leer-en-grande";
 
 /** Cuántas van al fondo al quedarse (lo mismo que el motor, `QuedarseCon`). */
 export function alFondo(modo: ModoMulligan, mulligans: number, enMano: number): number | null {
@@ -52,6 +54,7 @@ export function Mulligan() {
 		s.general ? (s.jugadores[s.general.turno.primero]?.nombre ?? null) : null,
 	);
 	const encuentro = useEncuentro();
+	const movil = useMesaMovil();
 	const [fondo, setFondo] = useState<IdCarta[]>([]);
 	if (!hay || decidido) return null;
 	const toca = alFondo(modo, mulligans, mano.length);
@@ -59,7 +62,12 @@ export function Mulligan() {
 	const alternar = (id: IdCarta) =>
 		setFondo((f) => (f.includes(id) ? f.filter((x) => x !== id) : [...f, id]));
 	return (
-		<div className="absolute inset-0 z-[8500] flex flex-col items-center justify-center gap-4 bg-black/70 p-6 backdrop-blur-sm">
+		<div
+			className={cn(
+				"absolute inset-0 z-[8500] flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm",
+				movil ? "gap-2 p-2" : "gap-4 p-6",
+			)}
+		>
 			<div className="text-center text-white">
 				<h2 className="text-lg font-semibold">{t("Tu mano inicial")}</h2>
 				<p className="text-xs text-white/70">{t(REGLAS[modo])}</p>
@@ -94,10 +102,11 @@ export function Mulligan() {
 							key={id}
 							type="button"
 							onClick={() => toca !== 0 && alternar(id)}
-							onPointerEnter={() => useMesa.getState().setSobre(id)}
-							onPointerLeave={() => useMesa.getState().setSobre(null)}
+							{...manejadoresLeer(id)}
 							className={cn(
-								"relative h-60 w-[172px] overflow-hidden rounded-[5%] shadow-xl transition",
+								"relative overflow-hidden rounded-[5%] shadow-xl transition",
+								// En un móvil de lado (411 dp de alto) la mano entera tiene que caber con sus botones.
+								movil ? "h-36 w-[103px]" : "h-60 w-[172px]",
 								elegida && "translate-y-3 opacity-50 ring-4 ring-amber-400",
 							)}
 						>

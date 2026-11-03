@@ -4,12 +4,12 @@ import type { AvisoLista } from "@/bindings/AvisoLista";
 import type { CartaDeLista } from "@/bindings/CartaDeLista";
 import type { Formato } from "@/bindings/Formato";
 import type { ListaDeJuego } from "@/bindings/ListaDeJuego";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
@@ -20,9 +20,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { PORTADA } from "@/features/library/vista-cuadricula";
 import { useEstadoParaCerrar } from "@/lib/dialogos-abiertos";
+import { useFormato } from "@/lib/formato";
 import { urlMiniatura } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
+import { useMesaMovil } from "../formato-mesa";
 import {
 	alternarCarta,
 	alternarComandante,
@@ -100,6 +102,10 @@ export function ListaDialog({
 	onBorrada: (id: string) => void;
 }) {
 	const { t, mensaje } = useLang();
+	// En un móvil de pie, el comandante va encima de las cartas y no a su lado.
+	const movil = useMesaMovil();
+	const { horizontal } = useFormato();
+	const apilado = movil && !horizontal;
 	const [todas, setTodas] = useState<CartaDeLista[] | null>(null);
 	const [nombre, setNombre] = useState("");
 	const [eleccion, setEleccion] = useState<Eleccion>({ comandantes: [], cartas: [] });
@@ -241,7 +247,7 @@ export function ListaDialog({
 
 	return (
 		<Dialog open={abierto} onOpenChange={(o) => !o && !guardando && onCerrar()}>
-			<DialogContent
+			<DialogoAdaptable
 				className="flex h-[88vh] flex-col sm:max-w-6xl"
 				cambiosSinGuardar={sinGuardar}
 				ocupado={guardando}
@@ -314,9 +320,14 @@ export function ListaDialog({
 								{t("Ninguna")}
 							</Button>
 						</div>
-						<div className="flex min-h-0 flex-1 gap-2.5">
+						<div className={cn("flex min-h-0 flex-1 gap-2.5", apilado && "flex-col")}>
 							{commander && (
-								<section className="flex w-56 shrink-0 flex-col gap-1.5 rounded-lg border p-2">
+								<section
+									className={cn(
+										"flex shrink-0 flex-col gap-1.5 rounded-lg border p-2",
+										apilado ? "max-h-40 w-full" : "w-56",
+									)}
+								>
 									<h4 className="flex items-center gap-1.5 text-xs font-semibold">
 										<Icono icon="game-icons:crown" className="size-3.5 text-amber-500" />
 										{t("Comandante")}
@@ -457,7 +468,7 @@ export function ListaDialog({
 						{t("Guardar")}
 					</Button>
 				</DialogFooter>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }

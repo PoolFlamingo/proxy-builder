@@ -1,7 +1,9 @@
 import { Fragment, useMemo } from "react";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WithTooltip } from "@/components/ui/with-tooltip";
@@ -15,6 +17,8 @@ import { type CategoriaEvento, categoriaDeEvento } from "./categorias-eventos";
 import { ChatPanel } from "./chat";
 import { formatoDuracion } from "./cuentas-fin";
 import { cartaParaApilar, duracionDeTurno, visibleEnRegistro } from "./cuentas-registro";
+import { useMesaMovil } from "./formato-mesa";
+import { manejadoresLeer } from "./leer-en-grande";
 import { NotasPanel } from "./notas";
 import { ANCHO_PANEL, type PanelMesa, usePantalla } from "./pantalla";
 import { useSenalarFantasma } from "./sparring/vista-fantasma";
@@ -58,35 +62,66 @@ const COLORES: Record<CategoriaEvento, string> = {
  * los diálogos y la vista grande de las cartas se aparta de él.
  */
 export function PanelLateral() {
-	const { t } = useLang();
+	const movil = useMesaMovil();
 	const panel = usePantalla((s) => s.panel);
-	const setPanel = usePantalla((s) => s.setPanel);
-	const sinLeer = useChat((s) => s.sinLeer);
 	if (!panel) return null;
-	const cambiar = (p: string) => {
-		setPanel(p as PanelMesa);
-		if (p === "chat") useChat.getState().marcarLeido();
-	};
+	// En el móvil no cabe al lado de la mesa: va a pantalla completa, como un diálogo.
+	if (movil) return <PanelCompleto panel={panel} />;
 	return (
 		<aside
 			className="absolute top-14 right-2 bottom-2 z-[7500] flex flex-col gap-2 rounded-xl border border-white/10 bg-card p-2 shadow-2xl"
 			style={{ width: ANCHO_PANEL }}
 			data-tutorial="mesa-panel"
 		>
-			<Tabs value={panel} onValueChange={cambiar} className="flex min-h-0 flex-1 flex-col gap-2">
-				<div className="flex items-center gap-1.5">
-					<TabsList className="flex-1">
-						<TabsTrigger value="registro">{t("Registro")}</TabsTrigger>
-						<TabsTrigger value="notas">{t("Notas")}</TabsTrigger>
-						<TabsTrigger value="chat">
-							{t("Chat")}
-							{sinLeer > 0 && panel !== "chat" && (
-								<span className="rounded-full bg-primary px-1.5 text-[10px] text-primary-foreground tabular-nums">
-									{sinLeer}
-								</span>
-							)}
-						</TabsTrigger>
-					</TabsList>
+			<PestanasDelPanel panel={panel} conCerrar />
+		</aside>
+	);
+}
+
+/** El registro, las notas y el chat a pantalla completa (móvil). «Atrás» lo cierra como a cualquier diálogo. */
+function PanelCompleto({ panel }: { panel: PanelMesa }) {
+	const { t } = useLang();
+	return (
+		<Dialog open onOpenChange={(o) => !o && usePantalla.getState().setPanel(null)}>
+			<DialogoAdaptable
+				className="flex flex-col gap-2 sm:max-w-3xl"
+				cambiosSinGuardar={false}
+				data-tutorial="mesa-panel"
+			>
+				<DialogTitle className="sr-only">{t("Registro de la partida")}</DialogTitle>
+				<DialogDescription className="sr-only">
+					{t("El registro, las notas y el chat de la partida.")}
+				</DialogDescription>
+				<PestanasDelPanel panel={panel} conCerrar={false} />
+			</DialogoAdaptable>
+		</Dialog>
+	);
+}
+
+function PestanasDelPanel({ panel, conCerrar }: { panel: PanelMesa; conCerrar: boolean }) {
+	const { t } = useLang();
+	const setPanel = usePantalla((s) => s.setPanel);
+	const sinLeer = useChat((s) => s.sinLeer);
+	const cambiar = (p: string) => {
+		setPanel(p as PanelMesa);
+		if (p === "chat") useChat.getState().marcarLeido();
+	};
+	return (
+		<Tabs value={panel} onValueChange={cambiar} className="flex min-h-0 flex-1 flex-col gap-2">
+			<div className={cn("flex items-center gap-1.5", !conCerrar && "pr-10")}>
+				<TabsList className="flex-1">
+					<TabsTrigger value="registro">{t("Registro")}</TabsTrigger>
+					<TabsTrigger value="notas">{t("Notas")}</TabsTrigger>
+					<TabsTrigger value="chat">
+						{t("Chat")}
+						{sinLeer > 0 && panel !== "chat" && (
+							<span className="rounded-full bg-primary px-1.5 text-[10px] text-primary-foreground tabular-nums">
+								{sinLeer}
+							</span>
+						)}
+					</TabsTrigger>
+				</TabsList>
+				{conCerrar && (
 					<WithTooltip content={t("Cerrar")}>
 						<Button
 							size="icon-sm"
@@ -97,18 +132,18 @@ export function PanelLateral() {
 							<Icono icon="lucide:x" className="size-4" />
 						</Button>
 					</WithTooltip>
-				</div>
-				<TabsContent value="registro" className="flex min-h-0 flex-1 flex-col">
-					<RegistroLista />
-				</TabsContent>
-				<TabsContent value="notas" className="flex min-h-0 flex-1 flex-col">
-					<NotasPanel />
-				</TabsContent>
-				<TabsContent value="chat" className="flex min-h-0 flex-1 flex-col">
-					<ChatPanel />
-				</TabsContent>
-			</Tabs>
-		</aside>
+				)}
+			</div>
+			<TabsContent value="registro" className="flex min-h-0 flex-1 flex-col">
+				<RegistroLista />
+			</TabsContent>
+			<TabsContent value="notas" className="flex min-h-0 flex-1 flex-col">
+				<NotasPanel />
+			</TabsContent>
+			<TabsContent value="chat" className="flex min-h-0 flex-1 flex-col">
+				<ChatPanel />
+			</TabsContent>
+		</Tabs>
 	);
 }
 
@@ -189,7 +224,7 @@ function RegistroLista() {
 									<Button
 										size="xs"
 										variant="outline"
-										className="opacity-0 group-hover:opacity-100"
+										className="opacity-0 group-hover:opacity-100 [[data-tactil]_&]:opacity-100"
 										onClick={() => void hacer({ que: "apilarDespues", carta: apilar })}
 									>
 										<Icono icon="lucide:layers" className="size-3" />
@@ -201,7 +236,7 @@ function RegistroLista() {
 										<Button
 											size="icon-sm"
 											variant="ghost"
-											className="opacity-0 group-hover:opacity-100"
+											className="opacity-0 group-hover:opacity-100 [[data-tactil]_&]:opacity-100"
 											onClick={() => void hacer({ que: "deshacer", hasta: Number(ev.seq) })}
 											aria-label={t("Deshacer hasta aquí")}
 										>
@@ -241,10 +276,7 @@ function NombreDeCarta({ carta, nombre }: { carta: number; nombre: string }) {
 	return (
 		<span
 			className="cursor-help font-medium underline decoration-dotted underline-offset-2"
-			onPointerEnter={() => useMesa.getState().setSobre(carta)}
-			onPointerLeave={() => {
-				if (useMesa.getState().sobre === carta) useMesa.getState().setSobre(null);
-			}}
+			{...manejadoresLeer(carta)}
 		>
 			{nombre}
 		</span>

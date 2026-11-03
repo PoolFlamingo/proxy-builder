@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import type { IdJugador } from "@/bindings/IdJugador";
 import type { Senal } from "@/bindings/Senal";
+import { AyudaAlTocar } from "@/components/ayuda-al-tocar";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
@@ -244,7 +245,7 @@ export function InsigniaSenal({ jugador, className }: { jugador: IdJugador; clas
 	const icono = ICONOS_SENAL[senal];
 	const texto = SENALES.find((s) => s.senal === senal)?.texto ?? "";
 	return (
-		<WithTooltip content={t(texto)}>
+		<AyudaAlTocar ayuda={t(texto)}>
 			<span
 				className={cn(
 					"inline-flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground",
@@ -255,7 +256,7 @@ export function InsigniaSenal({ jugador, className }: { jugador: IdJugador; clas
 			>
 				<Icono icon={icono} className="size-2.5" />
 			</span>
-		</WithTooltip>
+		</AyudaAlTocar>
 	);
 }
 

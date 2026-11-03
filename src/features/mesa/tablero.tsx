@@ -3,11 +3,14 @@ import type { IdCarta } from "@/bindings/IdCarta";
 import type { Pos } from "@/bindings/Pos";
 import type { Tapete as TapeteGuardado } from "@/bindings/Tapete";
 import type { VistaCarta } from "@/bindings/VistaCarta";
+import type { Zona } from "@/bindings/Zona";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { WithTooltip } from "@/components/ui/with-tooltip";
+import { useFormato } from "@/lib/formato";
 import { urlArte, urlMesa } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
+import { crearDetector, MS_PULSACION, TOLERANCIA_PULSACION } from "@/lib/pulsacion-larga";
 import { cn } from "@/lib/utils";
 import { cartasDe, cuantasEn, NINGUNA, tableroDe, useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
@@ -24,7 +27,20 @@ import * as vivo from "./en-vivo/emitir";
 import { FantasmasVivos } from "./en-vivo/fantasmas";
 import { Flechas } from "./flechas";
 import { marcarArrastradas } from "./flip";
+import { useMesaMovil } from "./formato-mesa";
+import {
+	conVista,
+	crearDobleToque,
+	esVistaEntera,
+	limitarVista,
+	type Punto,
+	transformEntre,
+	VISTA_ENTERA,
+	type VistaCampo,
+	vistaDeDosDedos,
+} from "./gestos";
 import { caraVisible, DorsoGenerico, ImagenCarta } from "./imagen-carta";
+import { hayEncima, useLeerEnGrande } from "./leer-en-grande";
 import { MenuBiblioteca, MenuCampo, MenuManoAjena, MenuZona } from "./menus/menu-zonas";
 import { NotasSueltas } from "./notas-mesa";
 import { elegirCarta } from "./objetivo";
@@ -34,8 +50,10 @@ import { campoAjeno, manoOcultaPorTurno } from "./privacidad";
 import { acompanantes, conLasAjenas, puestosDelCampo } from "./puestos-campo";
 import { VidaFantasma } from "./vida-fantasma";
 
-/** Cuánto se mantiene pulsada una carta para abrir su menú (si está activado), en ms. */
+/** Cuánto se mantiene pulsada una carta con el ratón para abrir su menú (si está activado), en ms. */
 const MS_SOSTENIDO = 500;
+/** Las zonas que se abren con un doble clic (o doble toque). */
+const ZONAS_QUE_SE_ABREN: Zona[] = ["cementerio", "exilio", "mando", "banquillo"];
 /** Sin cartas conocidas en una zona oculta (una referencia estable para el store). */
 const SIN_VISIBLES: [number, IdCarta][] = [];
 
@@ -45,6 +63,13 @@ const SIN_VISIBLES: [number, IdCarta][] = [];
  * también el arrastre (eventos de puntero propios: la mesa es posición
  * libre con animación entre zonas, no listas ordenadas), el recuadro de
  * selección y los atajos de teclado.
+ *
+ * **Con el dedo** (plan del móvil, M3.9): un gesto por elemento. Sobre una
+ * carta, moverse más de 8 px la arrastra, mantenerla quieta 500 ms abre su
+ * menú, un toque la lee en grande y dos toques son el doble clic. En un hueco
+ * del campo, un dedo hace el recuadro. Dos dedos mueven el campo y lo
+ * acercan (`gestos.ts`): mientras se mueven solo se transforma la capa del
+ * campo y al soltar se recoloca todo con el zoom nuevo.
  */
 export function Tablero({ deckId }: { deckId: string | null }) {
 	const { t } = useLang();
@@ -55,7 +80,16 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 	const hayBanquillo = useMesa((s) => cuantasEn(s, zonaDe(yo, "banquillo")) > 0);
 	const tapete = useMesa((s) => s.jugadores[yo]?.tapete ?? null);
 	const modo = usePantalla((s) => s.modo);
+	const { tactil } = useFormato();
 	const [recuadro, setRecuadro] = useState<Rect | null>(null);
+	// El zoom y el corrimiento del campo (solo con dos dedos), y si hay un gesto en marcha.
+	const [vista, setVista] = useState<VistaCampo>(VISTA_ENTERA);
+	const [gestoVivo, setGestoVivo] = useState(false);
+	const capaCampo = useRef<HTMLDivElement>(null);
+	// Los dedos que tocan ahora (por id de puntero) y lo que cancela el gesto de uno solo.
+	const dedos = useRef(new Map<number, Punto>());
+	const cancelarGesto = useRef<(() => void) | null>(null);
+	const dobleToque = useRef(crearDobleToque());
 
 	// Medido antes del primer pintado: sin él, el primer fotograma reparte las
 	// cartas en un tablero de 0×0 y todas entran deslizándose desde la esquina.
@@ -79,12 +113,28 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 		};
 	}, []);
 
-	const disp = useMemo(
+	const base = useMemo(
 		() => disponer(tam.w, tam.h, tamano, hayBanquillo),
 		[tam.w, tam.h, tamano, hayBanquillo],
 	);
+	// Con zoom, `campo` es el campo ampliado y `visible` lo que se ve (`gestos.ts`).
+	const disp = useMemo(() => conVista(base, vista), [base, vista]);
 	const dispRef = useRef(disp);
 	dispRef.current = disp;
+	const baseRef = useRef(base);
+	baseRef.current = base;
+	const vistaRef = useRef(vista);
+	vistaRef.current = vista;
+
+	// Otro tablero, otro campo: se vuelve a verlo entero. Y si cambia de tamaño, no deja huecos.
+	useEffect(() => setVista(VISTA_ENTERA), [yo]);
+	useEffect(() => {
+		setVista((v) => (esVistaEntera(v) ? v : limitarVista(v, base.campo.w, base.campo.h)));
+	}, [base.campo.w, base.campo.h]);
+	// La vista nueva ya está pintada: fuera el transform provisional del gesto.
+	useLayoutEffect(() => {
+		if (capaCampo.current) capaCampo.current.style.transform = "";
+	}, [vista]);
 
 	/** El punto del puntero relativo al tablero. */
 	const punto = useCallback((e: { clientX: number; clientY: number }) => {
@@ -92,11 +142,90 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 		return { x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0) };
 	}, []);
 
+	// ── Dos dedos: mover y acercar el campo ──
+	useEffect(() => {
+		const el = caja.current;
+		if (!el) return;
+		let gesto: {
+			vista: VistaCampo;
+			ids: [number, number];
+			a: Punto;
+			b: Punto;
+			nueva: VistaCampo;
+		} | null = null;
+		const alBajar = (e: PointerEvent) => {
+			if (e.pointerType !== "touch") return;
+			const r = el.getBoundingClientRect();
+			dedos.current.set(e.pointerId, { x: e.clientX - r.left, y: e.clientY - r.top });
+			if (dedos.current.size !== 2 || gesto) return;
+			// El segundo dedo anula lo que hiciera el primero sobre una carta o el campo.
+			cancelarGesto.current?.();
+			const [[ia, a], [ib, b]] = [...dedos.current];
+			if (ia === undefined || ib === undefined || !a || !b) return;
+			gesto = { vista: vistaRef.current, ids: [ia, ib], a, b, nueva: vistaRef.current };
+			setGestoVivo(true);
+		};
+		const alMover = (e: PointerEvent) => {
+			if (!dedos.current.has(e.pointerId)) return;
+			const r = el.getBoundingClientRect();
+			dedos.current.set(e.pointerId, { x: e.clientX - r.left, y: e.clientY - r.top });
+			if (!gesto) return;
+			const a = dedos.current.get(gesto.ids[0]);
+			const b = dedos.current.get(gesto.ids[1]);
+			if (!a || !b) return;
+			const c = baseRef.current.campo;
+			gesto.nueva = vistaDeDosDedos(
+				{ vista: gesto.vista, a: gesto.a, b: gesto.b },
+				{ a, b },
+				c.w,
+				c.h,
+			);
+			if (capaCampo.current) {
+				capaCampo.current.style.transform = transformEntre(gesto.vista, gesto.nueva);
+			}
+		};
+		const alSoltar = (e: PointerEvent) => {
+			if (!dedos.current.delete(e.pointerId)) return;
+			if (!gesto?.ids.includes(e.pointerId)) return;
+			const nueva = gesto.nueva;
+			gesto = null;
+			// Las cartas se recolocan de golpe en su sitio nuevo, sin deslizarse.
+			const p = usePantalla.getState();
+			p.setRedimensionando(true);
+			window.setTimeout(() => usePantalla.getState().setRedimensionando(false), 200);
+			setVista(nueva);
+			setGestoVivo(false);
+		};
+		el.addEventListener("pointerdown", alBajar, true);
+		window.addEventListener("pointermove", alMover);
+		window.addEventListener("pointerup", alSoltar);
+		window.addEventListener("pointercancel", alSoltar);
+		return () => {
+			el.removeEventListener("pointerdown", alBajar, true);
+			window.removeEventListener("pointermove", alMover);
+			window.removeEventListener("pointerup", alSoltar);
+			window.removeEventListener("pointercancel", alSoltar);
+		};
+	}, []);
+
+	const alDobleClic = useCallback((c: VistaCarta) => {
+		if (campoAjeno(useMesa.getState(), c)) return;
+		if (c.zona.tipo === "de" && c.zona.zona === "campo") void op.girar(c.id);
+		else if (c.zona.tipo === "de" && c.zona.zona === "mano") {
+			void mover([c.id], destino("campo", sitio.arriba, c.dueno));
+		} else if (c.zona.tipo === "de" && ZONAS_QUE_SE_ABREN.includes(c.zona.zona)) {
+			// Con el dedo no hay doble clic en la zona: dos toques en su carta de arriba la abren.
+			usePantalla.getState().abrir({ tipo: "zona", jugador: c.zona.jugador, zona: c.zona.zona });
+		}
+	}, []);
+
 	// ── Pulsar y arrastrar una carta ──
 	const alPulsar: AlPulsar = useCallback(
 		(e, c) => {
 			if (e.button !== 0) return;
 			e.stopPropagation();
+			// Con dos dedos no se toca ninguna carta: es mover el campo.
+			if (e.pointerType === "touch" && dedos.current.size > 1) return;
 			const m = useMesa.getState();
 			// Alt + clic: un aro de aviso sobre la carta, en todas las pantallas (en red).
 			if (e.altKey) {
@@ -116,13 +245,40 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 			if (!m.seleccion.includes(c.id)) m.seleccionar([c.id]);
 			const enCampo = c.zona.tipo === "de" && c.zona.zona === "campo";
 			const p0 = punto(e);
+			const tipo = e.pointerType;
+			// El lápiz tiene «encima» y doble clic nativo (`carta-mesa.tsx`): va como el ratón.
+			const conDedo = !hayEncima(tipo);
 			let empezado = false;
 			// Lo adjunto a lo que se lleva (equipos, auras, montones) se lleva con ello.
 			let con: IdCarta[] = [];
-			// Mantener pulsado (Ajustes > Mesa) abre el menú de la carta.
+			const elemento = e.currentTarget;
+			const abrirMenu = (x: number, y: number) =>
+				elemento.dispatchEvent(
+					new MouseEvent("contextmenu", {
+						bubbles: true,
+						cancelable: true,
+						clientX: x,
+						clientY: y,
+					}),
+				);
+			// Con el dedo: quieto 500 ms (sin moverse más de 8 px) abre el menú.
+			let largo = false;
+			let ultimo = p0;
+			const detector = conDedo
+				? crearDetector(
+						(x, y) => {
+							if (empezado) return;
+							largo = true;
+							abrirMenu(x, y);
+						},
+						MS_PULSACION,
+						TOLERANCIA_PULSACION,
+					)
+				: null;
+			detector?.empezar(e.clientX, e.clientY);
+			// Con el ratón, mantener pulsado (Ajustes > Mesa) abre el menú de la carta.
 			let sostenido: number | undefined;
-			if (useUi.getState().mesa.clicSostenido) {
-				const elemento = e.currentTarget;
+			if (!conDedo && useUi.getState().mesa.clicSostenido) {
 				const { clientX, clientY } = e;
 				sostenido = window.setTimeout(() => {
 					window.removeEventListener("pointermove", mueve);
@@ -134,16 +290,36 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 					};
 					window.addEventListener("pointerup", tragar, { capture: true, once: true });
 					window.addEventListener("click", tragar, { capture: true, once: true });
-					elemento.dispatchEvent(
-						new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX, clientY }),
-					);
+					abrirMenu(clientX, clientY);
 				}, MS_SOSTENIDO);
 			}
+			const terminar = () => {
+				detector?.cancelar();
+				window.clearTimeout(sostenido);
+				window.removeEventListener("pointermove", mueve);
+				window.removeEventListener("pointerup", suelta);
+				window.removeEventListener("pointercancel", anular);
+				cancelarGesto.current = null;
+			};
+			// Un segundo dedo, o que el sistema se quede con el gesto: se deja todo como estaba.
+			const anular = () => {
+				terminar();
+				if (!empezado) return;
+				usePantalla.getState().setArrastre(null);
+				vivo.cursor(
+					tableroDe(useMesa.getState()),
+					pxAPos(dispRef.current.campo, ultimo.x, ultimo.y),
+					true,
+				);
+			};
+			cancelarGesto.current = anular;
 			const mueve = (ev: PointerEvent) => {
+				detector?.mover(ev.clientX, ev.clientY);
 				if (useRed.getState().papel === "espectador") return; // no se arrastra
 				if (campoAjeno(useMesa.getState(), c)) return; // ni lo que no controlo
 				const p = punto(ev);
-				if (!empezado && !pasaUmbral(p.x - p0.x, p.y - p0.y)) return;
+				ultimo = p;
+				if (!empezado && !pasaUmbral(p.x - p0.x, p.y - p0.y, tipo)) return;
 				if (!empezado && enCampo) {
 					const mesa = useMesa.getState();
 					const delCampo = cartasDe(mesa, zonaDe(tableroDe(mesa), "campo"));
@@ -151,6 +327,7 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 					con = acompanantes(ids, puestosDelCampo(todas, mesa.cartas, dispRef.current).hijas);
 				}
 				empezado = true;
+				detector?.cancelar();
 				window.clearTimeout(sostenido);
 				// En red, los demás ven la carta moverse (20 por segundo).
 				vivo.arrastre(tableroDe(useMesa.getState()), ids, pxAPos(dispRef.current.campo, p.x, p.y));
@@ -169,12 +346,20 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 				});
 			};
 			const suelta = (ev: PointerEvent) => {
-				window.clearTimeout(sostenido);
-				window.removeEventListener("pointermove", mueve);
-				window.removeEventListener("pointerup", suelta);
+				terminar();
 				const llevaba = usePantalla.getState().arrastre;
 				usePantalla.getState().setArrastre(null);
-				if (!empezado) return;
+				if (!empezado) {
+					// Un toque (no una pulsación larga, que ya abrió el menú): la lee en
+					// grande y, dos seguidos, es el doble clic.
+					if (conDedo && !largo) {
+						useMesa.getState().setSobre(c.id);
+						if (dobleToque.current.toque(c.id, performance.now(), ev.clientX, ev.clientY)) {
+							alDobleClic(c);
+						}
+					}
+					return;
+				}
 				// La carta deja de verse en vuelo; queda el cursor.
 				const f = punto(ev);
 				vivo.cursor(tableroDe(useMesa.getState()), pxAPos(dispRef.current.campo, f.x, f.y), true);
@@ -205,21 +390,15 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 			};
 			window.addEventListener("pointermove", mueve);
 			window.addEventListener("pointerup", suelta);
+			window.addEventListener("pointercancel", anular);
 		},
-		[punto],
+		[punto, t, alDobleClic],
 	);
-
-	const alDobleClic = useCallback((c: VistaCarta) => {
-		if (campoAjeno(useMesa.getState(), c)) return;
-		if (c.zona.tipo === "de" && c.zona.zona === "campo") void op.girar(c.id);
-		else if (c.zona.tipo === "de" && c.zona.zona === "mano") {
-			void mover([c.id], destino("campo", sitio.arriba, c.dueno));
-		}
-	}, []);
 
 	// ── Recuadro de selección en el campo vacío ──
 	const alPulsarCampo = (e: React.PointerEvent) => {
 		if (e.button !== 0) return;
+		if (e.pointerType === "touch" && dedos.current.size > 1) return;
 		if (usePantalla.getState().modo) {
 			usePantalla.getState().setModo(null);
 			return;
@@ -236,10 +415,18 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 				h: Math.abs(p.y - p0.y),
 			});
 		};
-		const suelta = (ev: PointerEvent) => {
+		const terminar = () => {
 			window.removeEventListener("pointermove", mueve);
 			window.removeEventListener("pointerup", suelta);
+			window.removeEventListener("pointercancel", anular);
+			cancelarGesto.current = null;
 			setRecuadro(null);
+		};
+		// Un segundo dedo (es mover el campo) o el sistema se queda con el gesto.
+		const anular = () => terminar();
+		cancelarGesto.current = anular;
+		const suelta = (ev: PointerEvent) => {
+			terminar();
 			const p = punto(ev);
 			const r = {
 				x: Math.min(p0.x, p.x),
@@ -259,6 +446,7 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 		};
 		window.addEventListener("pointermove", mueve);
 		window.addEventListener("pointerup", suelta);
+		window.addEventListener("pointercancel", anular);
 	};
 
 	// ── El cursor, para que los demás lo vean (en red) ──
@@ -289,6 +477,8 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 			if (useRed.getState().papel === "espectador") return; // quien mira no juega
 			if (usePantalla.getState().dialogo || document.querySelector('[role="dialog"]')) return;
 			if (document.querySelector('[role="menu"]')) return;
+			// Esc, además de soltar la selección, vuelve a ver el campo entero.
+			if (e.key === "Escape") setVista(VISTA_ENTERA);
 			const m = useMesa.getState();
 			const carta = m.sobre ?? (m.seleccion.length > 0 ? (m.seleccion[0] ?? null) : null);
 			const sobreLib = usePantalla.getState().zonaSobre === "biblioteca";
@@ -303,11 +493,15 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 	}, []);
 
 	const posMenu = useRef({ x: 5000, y: 5000 });
+	const visible = disp.visible ?? disp.campo;
+	// Con zoom (o moviéndolo) las cartas se recortan al hueco del campo.
+	const recortar = gestoVivo || !esVistaEntera(vista);
+	const recorte = recortar ? poligonoDe(visible) : undefined;
 
 	return (
 		<div
 			ref={caja}
-			className="relative size-full overflow-hidden select-none"
+			className="relative size-full touch-none overflow-hidden select-none"
 			data-tutorial="mesa-tablero"
 		>
 			{/* Hasta saber cuánto mide, nada que colocar (ni que deslizar desde 0×0). */}
@@ -318,12 +512,13 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 						<div
 							className="absolute"
 							style={{
-								left: disp.campo.x,
-								top: disp.campo.y,
-								width: disp.campo.w,
-								height: disp.campo.h,
+								left: visible.x,
+								top: visible.y,
+								width: visible.w,
+								height: visible.h,
 							}}
 							onPointerDown={alPulsarCampo}
+							// táctil: mantenerlo pulsado abre el menú (el sistema manda el mismo evento).
 							onContextMenu={(e) => {
 								const p = punto(e);
 								posMenu.current = pxAPos(disp.campo, p.x, p.y);
@@ -331,16 +526,45 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 							data-tutorial="mesa-campo"
 						/>
 					</MenuCampo>
-					<Bolitas campo={disp.campo} />
-					<Campo disp={disp} alPulsar={alPulsar} alDobleClic={alDobleClic} />
-					<Pila disp={disp} alPulsar={alPulsar} />
-					<Flechas disp={disp} />
+					<Recortado recorte={recorte} z={5000}>
+						<Bolitas campo={disp.campo} />
+					</Recortado>
+					{/* Las cartas del campo, en una capa sin tamaño que se recorta (con zoom) y
+					    se transforma (mientras se mueve con dos dedos). Sin zoom no hace nada. */}
+					<div
+						className="absolute top-0 left-0 z-[1] size-0"
+						style={recorte ? { clipPath: recorte } : undefined}
+					>
+						<div ref={capaCampo} className="absolute top-0 left-0 size-0 origin-top-left">
+							<Campo disp={disp} alPulsar={alPulsar} alDobleClic={alDobleClic} />
+						</div>
+					</div>
+					<Pila disp={base} alPulsar={alPulsar} />
+					{!gestoVivo && (
+						<Recortado recorte={recorte} z={6000}>
+							<Flechas disp={disp} />
+						</Recortado>
+					)}
 					<Mano disp={disp} alPulsar={alPulsar} alDobleClic={alDobleClic} />
 					<Zonas disp={disp} alPulsar={alPulsar} />
 					<VidaFantasma />
 					<NotasSueltas />
-					<FantasmasVivos disp={disp} />
+					<Recortado recorte={recorte} z={8500}>
+						<FantasmasVivos disp={disp} />
+					</Recortado>
 					<Arrastrado disp={disp} />
+					{!esVistaEntera(vista) && !gestoVivo && (
+						<button
+							type="button"
+							aria-label={t("Ver el campo entero")}
+							onPointerDown={(e) => e.stopPropagation()}
+							onClick={() => setVista(VISTA_ENTERA)}
+							className="absolute z-[6700] flex size-11 items-center justify-center rounded-full border border-white/20 bg-black/70 text-white shadow-lg"
+							style={{ left: visible.x + visible.w / 2 - 22, top: visible.y + visible.h - 52 }}
+						>
+							<Icono icon="lucide:minimize-2" className="size-5" />
+						</button>
+					)}
 					{recuadro && (
 						<div
 							className="pointer-events-none absolute border border-primary bg-primary/15"
@@ -350,10 +574,18 @@ export function Tablero({ deckId }: { deckId: string | null }) {
 					{modo && (
 						<div className="pointer-events-none absolute top-14 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-xs text-primary-foreground shadow">
 							{modo.tipo === "adjuntar"
-								? t("Elige la carta a la que se adjunta (Esc para cancelar)")
+								? tactil
+									? t("Elige la carta a la que se adjunta (toca el campo vacío para cancelar)")
+									: t("Elige la carta a la que se adjunta (Esc para cancelar)")
 								: modo.tipo === "nota"
-									? t("Elige la carta del campo a la que se ata la nota (Esc para cancelar)")
-									: t("Elige la carta o el jugador objetivo (Esc para cancelar)")}
+									? tactil
+										? t(
+												"Elige la carta del campo a la que se ata la nota (toca el campo vacío para cancelar)",
+											)
+										: t("Elige la carta del campo a la que se ata la nota (Esc para cancelar)")
+									: tactil
+										? t("Elige la carta o el jugador objetivo (toca el campo vacío para cancelar)")
+										: t("Elige la carta o el jugador objetivo (Esc para cancelar)")}
 						</div>
 					)}
 				</>
@@ -548,13 +780,18 @@ function Campo({
 /** La pila, a la izquierda: la de arriba, la primera de la lista. */
 function Pila({ disp, alPulsar }: { disp: Disposicion; alPulsar: AlPulsar }) {
 	const { t } = useLang();
+	const movil = useMesaMovil();
 	const ids = useMesa((s) => cartasDe(s, zonaComun("pila")));
 	if (ids.length === 0) return null;
 	const { w, h } = disp.cartaPequena;
 	const arriba = [...ids].reverse();
 	return (
 		<div
-			className="absolute top-14 left-2 rounded-lg border border-white/10 bg-black/50 p-2 backdrop-blur-sm"
+			className={cn(
+				"absolute top-14 left-2 rounded-lg border border-white/10 bg-black/50 p-2 backdrop-blur-sm",
+				// En el móvil, a la derecha de la barra de jugadores.
+				movil && "left-[7.5rem]",
+			)}
 			style={{
 				width: w + 16,
 				height: Math.min(disp.campo.h - 70, 24 + arriba.length * (h * 0.45) + h * 0.55),
@@ -726,15 +963,32 @@ function Zonas({ disp, alPulsar }: { disp: Disposicion; alPulsar: AlPulsar }) {
 	// Revelada a todos (no por jugar así): se puede dejar de revelar con el botón.
 	const arribaRevelada = cartaArriba?.revelada ?? false;
 	const z = disp.zonas;
-	const zona = (r: Rect, nombre: string, hijo: React.ReactNode, n: number) => (
+	// Leer en grande la de arriba revelada: con el ratón, al pasar; con el dedo, un toque
+	// en su botón de la lupa (tocar la biblioteca roba).
+	const leerArriba = useLeerEnGrande(arribaLib, false);
+	const { tactil } = useFormato();
+	const zona = (r: Rect, nombre: string, hijo: React.ReactNode, n: number, alVer?: () => void) => (
 		<div
 			className="absolute flex flex-col items-center"
 			style={{ left: r.x, top: r.y - 16, width: r.w, height: r.h + 16 }}
 		>
-			<span className="h-4 text-[10px] text-white/80">
-				{nombre}
-				{n > 0 ? ` · ${n}` : ""}
-			</span>
+			{alVer && tactil ? (
+				// Con el dedo no hay doble clic: tocar el nombre de la zona la abre (con el
+				// ratón, como siempre, el doble clic en la zona).
+				<button
+					type="button"
+					onClick={alVer}
+					className="relative h-4 text-[10px] text-white/80 underline decoration-dotted before:absolute before:-inset-x-2 before:-inset-y-3 before:content-['']"
+				>
+					{nombre}
+					{n > 0 ? ` · ${n}` : ""}
+				</button>
+			) : (
+				<span className="h-4 text-[10px] text-white/80">
+					{nombre}
+					{n > 0 ? ` · ${n}` : ""}
+				</span>
+			)}
 			<div className="relative w-full flex-1 rounded-[5%] border border-dashed border-white/25 bg-black/20">
 				{hijo}
 			</div>
@@ -744,16 +998,17 @@ function Zonas({ disp, alPulsar }: { disp: Disposicion; alPulsar: AlPulsar }) {
 		<>
 			<MenuBiblioteca jugador={yo}>
 				<div
-					onPointerEnter={() => {
+					// táctil: la zona bajo el ratón es solo de los atajos de teclado; la carta de
+					// arriba revelada se lee con la lupa de abajo.
+					onPointerEnter={(e) => {
 						usePantalla.getState().setZonaSobre("biblioteca");
 						// La revelada se lee en grande, como cualquier carta de la mesa.
-						if (arribaLib !== null) useMesa.getState().setSobre(arribaLib);
+						leerArriba?.onPointerEnter(e);
 					}}
-					onPointerLeave={() => {
+					// táctil: ídem.
+					onPointerLeave={(e) => {
 						usePantalla.getState().setZonaSobre(null);
-						if (arribaLib !== null && useMesa.getState().sobre === arribaLib) {
-							useMesa.getState().setSobre(null);
-						}
+						leerArriba?.onPointerLeave(e);
 					}}
 					// Pulsar la propia roba; la de otro no hace nada sin querer (va por el menú).
 					onClick={() => yo === useMesa.getState().yo && void op.robar()}
@@ -767,6 +1022,19 @@ function Zonas({ disp, alPulsar }: { disp: Disposicion; alPulsar: AlPulsar }) {
 							(arribaLib !== null ? (
 								<>
 									<CartaSuelta id={arribaLib} />
+									<button
+										type="button"
+										aria-label={t("Leer la de arriba en grande")}
+										onPointerDown={(e) => e.stopPropagation()}
+										onClick={(e) => {
+											e.stopPropagation();
+											useMesa.getState().setSobre(arribaLib);
+										}}
+										data-lee=""
+										className="absolute top-1 left-1 hidden size-6 items-center justify-center rounded-full bg-black/75 text-white ring-1 ring-white/40 before:absolute before:-inset-2 before:content-[''] [[data-tactil]_&]:flex"
+									>
+										<Icono icon="lucide:zoom-in" className="size-3.5" />
+									</button>
 									{arribaRevelada && (
 										<WithTooltip content={t("Dejar de revelar la de arriba")}>
 											<button
@@ -851,7 +1119,13 @@ function ZonaArriba({
 	nombre: string;
 	r: Rect;
 	alPulsar: AlPulsar;
-	hacerZona: (r: Rect, nombre: string, hijo: React.ReactNode, n: number) => React.ReactNode;
+	hacerZona: (
+		r: Rect,
+		nombre: string,
+		hijo: React.ReactNode,
+		n: number,
+		alVer?: () => void,
+	) => React.ReactNode;
 }) {
 	const yo = useMesa(tableroDe);
 	const v = useMesa((s) => s.zonas[`${yo}:${zona}`]);
@@ -861,6 +1135,7 @@ function ZonaArriba({
 	return (
 		<MenuZona zona={zona} jugador={yo}>
 			<div onDoubleClick={ver} data-tutorial={`mesa-${zona}`}>
+				{/* Con el dedo no hay doble clic: tocar el nombre de la zona la abre. */}
 				{hacerZona(
 					r,
 					nombre,
@@ -887,6 +1162,7 @@ function ZonaArriba({
 								/>
 							),
 					v?.cuantas ?? 0,
+					ver,
 				)}
 			</div>
 		</MenuZona>
@@ -894,6 +1170,34 @@ function ZonaArriba({
 }
 
 /** Las bolitas de colores del campo. */
+/** El `clip-path` que deja ver solo `r`. */
+function poligonoDe(r: Rect): string {
+	return `polygon(${r.x}px ${r.y}px, ${r.x + r.w}px ${r.y}px, ${r.x + r.w}px ${r.y + r.h}px, ${r.x}px ${r.y + r.h}px)`;
+}
+
+/**
+ * Lo que se pinta sobre el campo (bolitas, flechas, fantasmas) recortado, con
+ * zoom, al campo que se ve, como las cartas: así no queda encima de la mano ni
+ * de las zonas (ni recoge sus toques; `clip-path` también recorta dónde se
+ * toca). Sin zoom no envuelve nada: todo queda como siempre.
+ */
+function Recortado({
+	recorte,
+	z,
+	children,
+}: {
+	recorte: string | undefined;
+	z: number;
+	children: React.ReactNode;
+}) {
+	if (!recorte) return <>{children}</>;
+	return (
+		<div className="pointer-events-none absolute inset-0" style={{ clipPath: recorte, zIndex: z }}>
+			{children}
+		</div>
+	);
+}
+
 function Bolitas({ campo }: { campo: Rect }) {
 	const yo = useMesa(tableroDe);
 	const bolitas = useMesa((s) => s.general?.bolitas ?? NINGUNA);
@@ -910,7 +1214,8 @@ function Bolitas({ campo }: { campo: Rect }) {
 							key={b.id}
 							type="button"
 							onDoubleClick={() => void hacer({ que: "quitarBolita", id: b.id })}
-							className="absolute rounded-full shadow ring-2 ring-white/60"
+							// Con zoom van en una capa recortada que no recoge toques (`Recortado`).
+							className="pointer-events-auto absolute rounded-full shadow ring-2 ring-white/60"
 							style={{
 								left: p.x - d / 2,
 								top: p.y - d / 2,

@@ -4,7 +4,7 @@ import type { IdJugador } from "@/bindings/IdJugador";
 import { traduccionSuelta } from "@/components/language-provider";
 import { mensajeDeError } from "@/lib/errores";
 import { call } from "@/lib/ipc";
-import { useMesa } from "@/stores/mesa-store";
+import { tableroDe, useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
 import { useUi } from "@/stores/ui-store";
 import { olvidarSitios } from "./flip";
@@ -43,7 +43,10 @@ export async function mirarJugador(id: IdJugador): Promise<void> {
 	}
 }
 
-/** Con «Seguir al jugador del turno», cada turno pasa a mirar al que juega. */
+/**
+ * Con «Seguir al jugador del turno» (en el móvil, «Enfocar al jugador activo»,
+ * también en red), cada turno pasa a mirar al que juega.
+ */
 export function useSeguirTurno() {
 	const seguir = useUi((s) => s.mesa.seguirTurnoLocal);
 	const activo = useMesa((s) => s.general?.turno.activo ?? null);
@@ -51,13 +54,19 @@ export function useSeguirTurno() {
 	const { config } = useDisposicion();
 	// Quien solo mira, con un tablero grande y los demás en miniatura, ve el del turno.
 	const enFoco = espectador && config.modo === "foco";
+	// En el móvil se ve un tablero a la vez: seguir al del turno vale también en red.
+	const enMovil = config.modo === "movil";
 	useEffect(() => {
 		if (enFoco && activo !== null) useMesa.getState().mirar(activo);
 	}, [enFoco, activo]);
 	useEffect(() => {
-		if (!seguir || activo === null || !esLocalDeVarios()) return;
-		if (useMesa.getState().yo !== activo) void mirarJugador(activo);
-	}, [seguir, activo]);
+		if (!seguir || activo === null || !(esLocalDeVarios() || enMovil)) return;
+		if (esLocalDeVarios()) {
+			if (useMesa.getState().yo !== activo) void mirarJugador(activo);
+		} else if (tableroDe(useMesa.getState()) !== activo) {
+			void mirarJugador(activo);
+		}
+	}, [seguir, activo, enMovil]);
 }
 
 /**

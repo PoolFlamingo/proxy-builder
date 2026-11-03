@@ -188,7 +188,7 @@ export function BarraRepeticion() {
 					/>
 				))}
 			</div>
-			<div className="flex items-center gap-1">
+			<div className="flex flex-wrap items-center gap-1">
 				<Boton ayuda={t("Al principio")} onClick={() => void ir(0, como)}>
 					<Icono icon="lucide:skip-back" className="size-4" />
 				</Boton>
@@ -223,7 +223,7 @@ export function BarraRepeticion() {
 				<span className="mx-1 whitespace-nowrap text-[11px] text-white/60 tabular-nums">
 					{pos} / {total}
 				</span>
-				<span className="ml-auto flex items-center gap-1.5 whitespace-nowrap text-[11px]">
+				<span className="ml-auto flex flex-wrap items-center justify-end gap-1.5 whitespace-nowrap text-[11px]">
 					<span className="text-white/60">{t("Velocidad")}</span>
 					<Selector<string>
 						valor={String(velocidad)}

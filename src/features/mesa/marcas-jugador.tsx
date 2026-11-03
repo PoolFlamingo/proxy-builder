@@ -1,8 +1,9 @@
 import { useMemo } from "react";
 import type { IdJugador } from "@/bindings/IdJugador";
+import { AyudaAlTocar } from "@/components/ayuda-al-tocar";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
-import { WithTooltip } from "@/components/ui/with-tooltip";
+
 import { cn } from "@/lib/utils";
 import { useMesa } from "@/stores/mesa-store";
 import { comandantesDe } from "./dano-comandante";
@@ -48,44 +49,41 @@ export function MarcasJugador({
 	return (
 		<span className={cn("flex items-center gap-1", className)}>
 			{monarca && (
-				<WithTooltip content={t("Monarca")}>
+				<AyudaAlTocar ayuda={t("Monarca")}>
 					<span className={cn(marca, "text-amber-300")}>
 						<Icono icon="game-icons:crown" className={icono} />
 					</span>
-				</WithTooltip>
+				</AyudaAlTocar>
 			)}
 			{iniciativa && (
-				<WithTooltip content={t("Tiene la iniciativa")}>
+				<AyudaAlTocar ayuda={t("Tiene la iniciativa")}>
 					<span className={cn(marca, "text-sky-300")}>
 						<Icono icon="game-icons:dungeon-gate" className={icono} />
 					</span>
-				</WithTooltip>
+				</AyudaAlTocar>
 			)}
 			{bendicion && (
-				<WithTooltip content={t("Bendición de la ciudad")}>
+				<AyudaAlTocar ayuda={t("Bendición de la ciudad")}>
 					<span className={cn(marca, "text-yellow-200")}>
 						<Icono icon="game-icons:castle" className={icono} />
 					</span>
-				</WithTooltip>
+				</AyudaAlTocar>
 			)}
 			{j.veneno > 0 && (
-				<WithTooltip content={t("Veneno")}>
+				<AyudaAlTocar ayuda={t("Veneno")}>
 					<span className={cn(marca, j.veneno >= limiteVeneno ? "text-rose-400" : "text-lime-300")}>
 						<Icono icon="game-icons:poison-bottle" className={icono} />
 						{j.veneno}
 					</span>
-				</WithTooltip>
+				</AyudaAlTocar>
 			)}
 			{comandantes.map(([id, n]) => (
-				<WithTooltip
-					key={id}
-					content={t("Daño de {nombre}", { nombre: nombres[Number(id)] ?? "" })}
-				>
+				<AyudaAlTocar key={id} ayuda={t("Daño de {nombre}", { nombre: nombres[Number(id)] ?? "" })}>
 					<span className={cn(marca, n >= limiteComandante ? "text-rose-400" : "text-orange-200")}>
 						<Icono icon="game-icons:crowned-skull" className={icono} />
 						{n}
 					</span>
-				</WithTooltip>
+				</AyudaAlTocar>
 			))}
 		</span>
 	);

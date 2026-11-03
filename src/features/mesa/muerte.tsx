@@ -4,12 +4,12 @@ import { useShallow } from "zustand/react/shallow";
 import type { Causa } from "@/bindings/Causa";
 import type { IdJugador } from "@/bindings/IdJugador";
 import { Selector } from "@/components/campos";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
@@ -129,7 +129,7 @@ function ConfirmarMuerte() {
 				if (!o) setDescartados((d) => ({ ...d, [pendiente]: claveCausa(causa) }));
 			}}
 		>
-			<DialogContent className="sm:max-w-sm" cambiosSinGuardar={false}>
+			<DialogoAdaptable className="sm:max-w-sm" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-2">
 						<Icono icon="game-icons:death-skull" className="size-4 text-rose-400" />
@@ -173,7 +173,7 @@ function ConfirmarMuerte() {
 						{soyYo ? t("Estoy fuera") : t("Está fuera")}
 					</Button>
 				</DialogFooter>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }

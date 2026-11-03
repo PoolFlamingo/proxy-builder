@@ -29,7 +29,9 @@ import { PropiedadesDialog } from "@/features/library/propiedades-dialog";
 import { useBiblioteca } from "@/features/library/store";
 import { type Seleccion, SeleccionDecks } from "@/features/library/vista-cuadricula";
 import { useOrganizados, ZonaDecks } from "@/features/library/zona-decks";
+import { useFormato } from "@/lib/formato";
 import { call } from "@/lib/ipc";
+import { cn } from "@/lib/utils";
 import { abrirDeck } from "@/stores/deck-store";
 import { useRed } from "@/stores/red-store";
 import { useSalas } from "@/stores/salas-store";
@@ -38,6 +40,7 @@ import { useUi } from "@/stores/ui-store";
 import { SalasDialog } from "../salas/salas-dialog";
 import { COLORES_JUGADOR } from "./colores";
 import { empezar, retomar, salir } from "./conexion";
+import { useMesaMovil } from "./formato-mesa";
 import { HistorialGeneralDialog } from "./historial-general";
 import { ListaDialog } from "./listas/lista-dialog";
 import { MAX_NOMBRE, useNombre } from "./nombre";
@@ -68,6 +71,10 @@ const SIN_DECKS: never[] = [];
 
 function Entrada() {
 	const { t, mensaje } = useLang();
+	// En el móvil la entrada se apila de pie y el lado de las opciones se estrecha.
+	const movil = useMesaMovil();
+	const { horizontal } = useFormato();
+	const apilado = movil && !horizontal;
 	const decks = useBiblioteca((s) => s.decks) ?? SIN_DECKS;
 	const prefs = usePrefsJugar();
 	const org = useOrganizados();
@@ -250,8 +257,16 @@ function Entrada() {
 	return (
 		<AccionesDeck.Provider value={acciones}>
 			<SeleccionDecks.Provider value={sel}>
-				<div className="flex h-full min-h-0 gap-2.5 p-2.5" data-tutorial="mesa-entrada">
-					<section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border bg-card/40">
+				<div
+					className={cn("flex h-full min-h-0 gap-2.5 p-2.5", apilado && "flex-col")}
+					data-tutorial="mesa-entrada"
+				>
+					<section
+						className={cn(
+							"flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border bg-card/40",
+							apilado && "min-h-44",
+						)}
+					>
 						<BarraHerramientas
 							ref={buscar}
 							titulo={t("Elige un deck")}
@@ -274,7 +289,12 @@ function Entrada() {
 						</div>
 					</section>
 
-					<aside className="flex min-h-0 w-80 shrink-0 flex-col gap-2.5">
+					<aside
+						className={cn(
+							"flex min-h-0 shrink-0 flex-col gap-2.5",
+							apilado ? "max-h-[55%] w-full" : movil ? "w-72" : "w-80",
+						)}
+					>
 						<VolverARed />
 						{guardada && (
 							<section className="flex flex-col gap-2.5 rounded-lg border border-primary/40 bg-primary/5 p-2.5">
@@ -463,9 +483,9 @@ function Entrada() {
 								</section>
 							</div>
 						</ScrollArea>
-						<div className="flex shrink-0 flex-col gap-2.5">
+						<div className={cn("flex shrink-0 flex-col gap-2.5", movil && "grid grid-cols-2")}>
 							{trabajo && (
-								<div className="flex flex-col gap-1">
+								<div className="col-span-2 flex flex-col gap-1">
 									<span className="text-xs text-muted-foreground">{trabajo.fase}</span>
 									<Progress value={trabajo.total ? (trabajo.hechas / trabajo.total) * 100 : 0} />
 								</div>
@@ -496,6 +516,14 @@ function Entrada() {
 									</Button>
 								</span>
 							</WithTooltip>
+							{/* Con el dedo no hay tooltip: el porqué de «Solitario» desactivado se lee aquí. */}
+							{(!elegido || sinLista) && (
+								<p className="col-span-2 hidden text-[11px] text-muted-foreground [[data-tactil]_&]:block">
+									{!elegido
+										? t("Elige un deck.")
+										: t("Este deck tiene más cartas de las que se juegan: elige una lista.")}
+								</p>
+							)}
 							<Button
 								size="lg"
 								variant={enSalaServidor ? "default" : "outline"}

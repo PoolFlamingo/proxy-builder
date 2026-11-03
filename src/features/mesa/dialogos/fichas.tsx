@@ -4,16 +4,11 @@ import type { CardSummary } from "@/bindings/CardSummary";
 import type { IdJugador } from "@/bindings/IdJugador";
 import type { OrigenFicha } from "@/bindings/OrigenFicha";
 import { CampoNumero, Selector } from "@/components/campos";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
@@ -102,7 +97,7 @@ export function FichasDialog({ para: paraInicial }: { para?: IdJugador }) {
 
 	return (
 		<Dialog open onOpenChange={(o) => !o && cerrar()}>
-			<DialogContent className="sm:max-w-3xl" cambiosSinGuardar={false} ocupado={ocupado}>
+			<DialogoAdaptable className="sm:max-w-3xl" cambiosSinGuardar={false} ocupado={ocupado}>
 				<DialogHeader>
 					<DialogTitle>{t("Crear ficha")}</DialogTitle>
 					<DialogDescription>
@@ -280,7 +275,7 @@ export function FichasDialog({ para: paraInicial }: { para?: IdJugador }) {
 						</section>
 					</div>
 				</ScrollArea>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }

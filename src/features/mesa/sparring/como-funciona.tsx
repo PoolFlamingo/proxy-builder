@@ -1,9 +1,9 @@
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
@@ -27,7 +27,7 @@ export function ComoFunciona({
 	const { t } = useLang();
 	return (
 		<Dialog open={abierto} onOpenChange={(o) => !o && onCerrar()}>
-			<DialogContent className="sm:max-w-md" cambiosSinGuardar={false}>
+			<DialogoAdaptable className="sm:max-w-md" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-2">
 						<Icono icon="game-icons:ghost" className="size-4 text-primary" />
@@ -61,7 +61,7 @@ export function ComoFunciona({
 						{primeraVez ? t("Empezar el sparring") : t("Entendido")}
 					</Button>
 				</DialogFooter>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }

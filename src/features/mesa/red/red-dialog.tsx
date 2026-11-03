@@ -5,18 +5,19 @@ import type { ListasDeDeck } from "@/bindings/ListasDeDeck";
 import type { Opciones } from "@/bindings/Opciones";
 import type { RolEnSala } from "@/bindings/RolEnSala";
 import { FilaInterruptor, Selector } from "@/components/campos";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
+	DialogCuerpo,
 	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { limpiarCodigoDirecto } from "@/features/salas/codigo";
 import { useRed } from "@/stores/red-store";
 import { useTrabajo } from "@/stores/trabajo-store";
 import {
@@ -26,7 +27,9 @@ import {
 	FilaOrdenable,
 	SelectorDeEquipo,
 } from "../ajustes-partida";
+import { botonesDeAsiento } from "../asientos-botones";
 import { COLORES_JUGADOR } from "../colores";
+import { compartirTexto, copiarTexto, usePuedeCompartir } from "../compartir";
 import {
 	AJUSTES_LOCALES,
 	type AjustesLocal,
@@ -96,7 +99,7 @@ export function RedDialog({
 
 	return (
 		<Dialog open={abierto} onOpenChange={(v) => !v && onCerrar()}>
-			<DialogContent className="max-w-xl">
+			<DialogoAdaptable className="max-w-xl">
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-1.5">
 						<Icono icon="lucide:plug" className="size-4 text-primary" />
@@ -109,7 +112,7 @@ export function RedDialog({
 					</DialogDescription>
 				</DialogHeader>
 				{papel === null ? <Entrar preparar={preparar} /> : <SalaDeEspera preparar={preparar} />}
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }
@@ -127,7 +130,7 @@ function Entrar({ preparar }: { preparar: Preparacion }) {
 		await crearPartida(preparar.nombre, preparar.deckNombre);
 		setOcupado(false);
 	};
-	const limpio = limpiarCodigo(codigo);
+	const limpio = limpiarCodigoDirecto(codigo);
 	const codigoValido = limpio.startsWith("PB1-") && limpio.length > 8;
 	const puedeUnirse = codigoValido && !(rol === "jugador" && sinDeck) && !ocupado && !trabajo;
 	const unirse = async () => {
@@ -145,68 +148,72 @@ function Entrar({ preparar }: { preparar: Preparacion }) {
 	};
 
 	return (
-		<div className="grid grid-cols-2 gap-2.5">
-			<section className="flex flex-col gap-2.5 rounded-lg border bg-card/40 p-2.5">
-				<h3 className="flex items-center gap-1.5 text-xs font-semibold">
-					<Icono icon="game-icons:crown" className="size-3.5 text-primary" />
-					{t("Crear una partida")}
-				</h3>
-				<p className="text-xs text-muted-foreground">
-					{preparar.deckNombre
-						? t("Juegas con «{deck}». Pasa el código a los demás.", { deck: preparar.deckNombre })
-						: t("Elige antes un deck en la lista.")}
-				</p>
-				<Button className="mt-auto" disabled={sinDeck || ocupado || !!trabajo} onClick={crear}>
-					{ocupado && !trabajo ? (
-						<Icono icon="lucide:loader-2" className="size-4 animate-spin" />
-					) : (
-						<Icono icon="lucide:play" className="size-4" />
-					)}
-					{t("Crear partida")}
-				</Button>
-			</section>
-			<section className="flex flex-col gap-2.5 rounded-lg border bg-card/40 p-2.5">
-				<h3 className="flex items-center gap-1.5 text-xs font-semibold">
-					<Icono icon="lucide:users" className="size-3.5 text-primary" />
-					{t("Unirse con un código")}
-				</h3>
-				<Input
-					value={codigo}
-					onChange={(e) => setCodigo(e.target.value)}
-					onKeyDown={(e) => {
-						if (e.key === "Enter") {
-							e.preventDefault();
-							void unirse();
-						}
-					}}
-					placeholder="PB1-…"
-					aria-label={t("Código de la partida")}
-					className="h-7 font-mono text-xs"
-					spellCheck={false}
-				/>
-				{codigo.trim() !== "" && !codigoValido && (
-					<p className="text-[11px] text-amber-700 dark:text-amber-400">
-						{t("Un código empieza por «PB1-»: pégalo entero, tal como te lo pasaron.")}
+		<DialogCuerpo>
+			<div className="grid grid-cols-1 gap-2.5 min-[640px]:grid-cols-2">
+				<section className="flex flex-col gap-2.5 rounded-lg border bg-card/40 p-2.5">
+					<h3 className="flex items-center gap-1.5 text-xs font-semibold">
+						<Icono icon="game-icons:crown" className="size-3.5 text-primary" />
+						{t("Crear una partida")}
+					</h3>
+					<p className="text-xs text-muted-foreground">
+						{preparar.deckNombre
+							? t("Juegas con «{deck}». Pasa el código a los demás.", { deck: preparar.deckNombre })
+							: t("Elige antes un deck en la lista.")}
 					</p>
-				)}
-				<Selector<RolEnSala>
-					valor={rol}
-					onChange={setRol}
-					opciones={[
-						{ valor: "jugador", etiqueta: t("Jugar") },
-						{ valor: "espectador", etiqueta: t("Solo mirar") },
-					]}
-				/>
-				<Button className="mt-auto" disabled={!puedeUnirse} onClick={unirse}>
-					{trabajo || ocupado ? (
-						<Icono icon="lucide:loader-2" className="size-4 animate-spin" />
-					) : (
-						<Icono icon="lucide:plug" className="size-4" />
+					<Button className="mt-auto" disabled={sinDeck || ocupado || !!trabajo} onClick={crear}>
+						{ocupado && !trabajo ? (
+							<Icono icon="lucide:loader-2" className="size-4 animate-spin" />
+						) : (
+							<Icono icon="lucide:play" className="size-4" />
+						)}
+						{t("Crear partida")}
+					</Button>
+				</section>
+				<section className="flex flex-col gap-2.5 rounded-lg border bg-card/40 p-2.5">
+					<h3 className="flex items-center gap-1.5 text-xs font-semibold">
+						<Icono icon="lucide:users" className="size-3.5 text-primary" />
+						{t("Unirse con un código")}
+					</h3>
+					<Input
+						value={codigo}
+						onChange={(e) => setCodigo(e.target.value)}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") {
+								e.preventDefault();
+								void unirse();
+							}
+						}}
+						placeholder="PB1-…"
+						aria-label={t("Código de la partida")}
+						className="h-7 font-mono text-xs"
+						spellCheck={false}
+						autoCapitalize="none"
+						autoCorrect="off"
+					/>
+					{codigo.trim() !== "" && !codigoValido && (
+						<p className="text-[11px] text-amber-700 dark:text-amber-400">
+							{t("Un código empieza por «PB1-»: pégalo entero, tal como te lo pasaron.")}
+						</p>
 					)}
-					{t("Unirse")}
-				</Button>
-			</section>
-		</div>
+					<Selector<RolEnSala>
+						valor={rol}
+						onChange={setRol}
+						opciones={[
+							{ valor: "jugador", etiqueta: t("Jugar") },
+							{ valor: "espectador", etiqueta: t("Solo mirar") },
+						]}
+					/>
+					<Button className="mt-auto" disabled={!puedeUnirse} onClick={unirse}>
+						{trabajo || ocupado ? (
+							<Icono icon="lucide:loader-2" className="size-4 animate-spin" />
+						) : (
+							<Icono icon="lucide:plug" className="size-4" />
+						)}
+						{t("Unirse")}
+					</Button>
+				</section>
+			</div>
+		</DialogCuerpo>
 	);
 }
 
@@ -265,9 +272,10 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 		reordenar(ordenTrasMover(ids.length, de, a));
 	};
 
+	const puedeCompartir = usePuedeCompartir();
 	const copiar = async () => {
 		if (!codigo) return;
-		await navigator.clipboard.writeText(codigo);
+		if (!(await copiarTexto(codigo))) return;
 		setCopiado(true);
 		window.setTimeout(() => setCopiado(false), 1500);
 	};
@@ -303,7 +311,7 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 	const sentadosAhora = new Set(ids);
 	const aparte = sala.filter((j) => !sentadosAhora.has(j.id));
 	return (
-		<div className="flex flex-col gap-2.5">
+		<div className="flex min-h-0 flex-1 flex-col gap-2.5">
 			{anfitrion && codigo && (
 				<div className="flex flex-col gap-1.5">
 					<span className="text-xs font-medium">{t("Código de la partida")}</span>
@@ -319,10 +327,17 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 							)}
 							{copiado ? t("Copiado") : t("Copiar")}
 						</Button>
+						{puedeCompartir && (
+							// El selector de apps de Android: para mandarlo por mensajería.
+							<Button size="sm" onClick={() => void compartirTexto(codigo)}>
+								<Icono icon="lucide:share-2" className="size-3.5" />
+								{t("Compartir")}
+							</Button>
+						)}
 					</div>
 				</div>
 			)}
-			<ScrollArea className="max-h-[55vh]">
+			<DialogCuerpo>
 				<div className="flex flex-col gap-2.5 p-1">
 					<EleccionEnSala
 						preparar={preparar}
@@ -372,6 +387,7 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 												<FilaOrdenable
 													i={i}
 													etiqueta={t("Mover a {jugador}", { jugador: nombreDe(id) })}
+													alMover={botonesDeAsiento(ids.length, i, reordenar, 1)}
 												>
 													<div className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md border bg-card px-2.5 py-1.5">
 														{contenido}
@@ -471,7 +487,7 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 						</>
 					)}
 				</div>
-			</ScrollArea>
+			</DialogCuerpo>
 			{anfitrion ? (
 				<p className="text-[11px] text-muted-foreground">
 					{t(
@@ -484,7 +500,7 @@ function SalaDeEspera({ preparar }: { preparar: Preparacion }) {
 					{t("Esperando a que el anfitrión empiece…")}
 				</p>
 			)}
-			<div className="flex justify-end gap-2.5">
+			<div className="flex flex-wrap justify-end gap-2.5">
 				<Button variant="outline" onClick={() => void salirDeRed()}>
 					<Icono icon="lucide:log-out" className="size-4" />
 					{anfitrion ? t("Cerrar la partida") : t("Salir")}
@@ -529,14 +545,4 @@ function FilaSala({
 			<span className="ml-auto truncate text-[11px] text-muted-foreground">{detalle}</span>
 		</li>
 	);
-}
-
-/**
- * El código tal como se pega: sin espacios, sin el principio del enlace
- * (`proxybuilder://unirse/`) y con el prefijo en mayúsculas (el resto es
- * base64 y distingue mayúsculas: no se toca).
- */
-function limpiarCodigo(texto: string): string {
-	const sin = texto.replace(/\s+/g, "").replace(/^proxybuilder:\/\/unirse\//i, "");
-	return sin.replace(/^pb1-/i, "PB1-");
 }

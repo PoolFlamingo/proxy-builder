@@ -17,11 +17,13 @@ import { useUi } from "@/stores/ui-store";
 import {
 	type ConfigDisposicion,
 	claveDisposicion,
+	DISPOSICION_MOVIL,
 	disposicionDe,
 	type LadoTira,
 	type ModoDisposicion,
 	modosPara,
 } from "./disposicion";
+import { useMesaMovil } from "./formato-mesa";
 
 const ICONOS: Record<ModoDisposicion, string> = {
 	unico: "lucide:square",
@@ -29,6 +31,7 @@ const ICONOS: Record<ModoDisposicion, string> = {
 	foco: "lucide:panel-bottom",
 	rejilla: "lucide:layout-grid",
 	equipos: "lucide:users",
+	movil: "lucide:smartphone",
 };
 
 /** La disposición que vale ahora y cómo cambiarla (se recuerda por número de jugadores). */
@@ -38,11 +41,13 @@ export function useDisposicion(): {
 	config: ConfigDisposicion;
 	cambiar: (c: Partial<ConfigDisposicion>) => void;
 } {
+	const movil = useMesaMovil();
 	const n = useMesa((s) => s.asientos.length);
 	const guardadas = useUi((s) => s.mesa.disposicion);
 	const conEquipos = useMesa((s) => (s.general?.equipos.length ?? 0) > 0);
 	const espectador = useRed((s) => s.papel === "espectador");
-	const config = disposicionDe(guardadas, n, conEquipos, espectador);
+	// En el móvil, un tablero a la vez siempre; lo recordado es de escritorio y tableta.
+	const config = movil ? DISPOSICION_MOVIL : disposicionDe(guardadas, n, conEquipos, espectador);
 	const cambiar = (c: Partial<ConfigDisposicion>) =>
 		useUi.getState().setMesa({
 			disposicion: {
@@ -68,6 +73,7 @@ export function SelectorDisposicion({ className }: { className?: string }) {
 		foco: t("Uno grande y los demás en miniatura"),
 		rejilla: t("Todos iguales"),
 		equipos: t("Por equipos"),
+		movil: t("Un solo tablero"),
 	};
 	const icono = ICONOS[config.modo];
 	return (

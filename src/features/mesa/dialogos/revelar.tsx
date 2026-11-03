@@ -5,11 +5,11 @@ import type { FormaExcavar } from "@/bindings/FormaExcavar";
 import type { IdCarta } from "@/bindings/IdCarta";
 import type { RestoExcavar } from "@/bindings/RestoExcavar";
 import { CampoNumero, Fila, Selector } from "@/components/campos";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
@@ -196,7 +196,7 @@ export function RevelarDialog({ presetInicial }: { presetInicial?: Preset }) {
 
 	return (
 		<Dialog open onOpenChange={(o) => !o && reveladas === null && cerrar()}>
-			<DialogContent className="sm:max-w-3xl" cambiosSinGuardar={false}>
+			<DialogoAdaptable className="sm:max-w-3xl" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle>{t("Revelar y lanzar")}</DialogTitle>
 					<DialogDescription>
@@ -351,7 +351,7 @@ export function RevelarDialog({ presetInicial }: { presetInicial?: Preset }) {
 						</Button>
 					)}
 				</DialogFooter>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }

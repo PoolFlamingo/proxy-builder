@@ -4,12 +4,12 @@ import type { FilaPt } from "@/bindings/FilaPt";
 import type { IdCarta } from "@/bindings/IdCarta";
 import type { ReglasCarta } from "@/bindings/ReglasCarta";
 import { CampoNumero, FilaInterruptor } from "@/components/campos";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
@@ -45,7 +45,7 @@ export function NumeroDialog({ d }: { d: Extract<DialogoMesa, { tipo: "numero" }
 	};
 	return (
 		<Dialog open onOpenChange={(o) => !o && cerrar()}>
-			<DialogContent className="sm:max-w-xs" cambiosSinGuardar={false}>
+			<DialogoAdaptable className="sm:max-w-xs" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle>{d.titulo}</DialogTitle>
 				</DialogHeader>
@@ -66,7 +66,7 @@ export function NumeroDialog({ d }: { d: Extract<DialogoMesa, { tipo: "numero" }
 						{t("Aceptar")}
 					</Button>
 				</DialogFooter>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }
@@ -82,7 +82,7 @@ export function TextoDialog({ d }: { d: Extract<DialogoMesa, { tipo: "texto" }> 
 	};
 	return (
 		<Dialog open onOpenChange={(o) => !o && cerrar()}>
-			<DialogContent className="sm:max-w-md">
+			<DialogoAdaptable className="sm:max-w-md">
 				<DialogHeader>
 					<DialogTitle>{d.titulo}</DialogTitle>
 				</DialogHeader>
@@ -102,7 +102,7 @@ export function TextoDialog({ d }: { d: Extract<DialogoMesa, { tipo: "texto" }> 
 						{t("Aceptar")}
 					</Button>
 				</DialogFooter>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }
@@ -159,7 +159,7 @@ export function ContadorDialog({
 		.filter((sec) => sec.items.length > 0);
 	return (
 		<Dialog open onOpenChange={(o) => !o && cerrar()}>
-			<DialogContent className="sm:max-w-md" cambiosSinGuardar={false}>
+			<DialogoAdaptable className="sm:max-w-md" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle>{t("Añadir contador")}</DialogTitle>
 				</DialogHeader>
@@ -218,7 +218,7 @@ export function ContadorDialog({
 						{t("Añadir")}
 					</Button>
 				</DialogFooter>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }
@@ -265,7 +265,7 @@ export function EditarContadoresDialog({ carta }: { carta: IdCarta }) {
 	};
 	return (
 		<Dialog open onOpenChange={(o) => !o && cerrar()}>
-			<DialogContent className="sm:max-w-md" cambiosSinGuardar={false}>
+			<DialogoAdaptable className="sm:max-w-md" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle>{t("Editar contadores")}</DialogTitle>
 					<DialogDescription>{c.origen?.nombre}</DialogDescription>
@@ -350,7 +350,7 @@ export function EditarContadoresDialog({ carta }: { carta: IdCarta }) {
 				<DialogFooter>
 					<Button onClick={cerrar}>{t("Cerrar")}</Button>
 				</DialogFooter>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }
@@ -371,7 +371,7 @@ export function PtDialog({ carta }: { carta: IdCarta }) {
 	);
 	return (
 		<Dialog open onOpenChange={(o) => !o && cerrar()}>
-			<DialogContent className="sm:max-w-sm" cambiosSinGuardar={false}>
+			<DialogoAdaptable className="sm:max-w-sm" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle>{t("Fuerza y resistencia")}</DialogTitle>
 					<DialogDescription>
@@ -384,7 +384,7 @@ export function PtDialog({ carta }: { carta: IdCarta }) {
 				{fila(t("Otros bonos"), "otros", c.pt.otros, false)}
 				{fila(t("Hasta el final del turno"), "hastaFinDeTurno", c.pt.hastaFinDeTurno, false)}
 				{fila(t("Fija (tapa todo lo demás)"), "fijo", c.pt.fijo, true)}
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }
@@ -441,7 +441,7 @@ export function EtiquetaDialog({ carta }: { carta: IdCarta }) {
 	if (!c) return null;
 	return (
 		<Dialog open onOpenChange={(o) => !o && cerrar()}>
-			<DialogContent className="sm:max-w-sm" cambiosSinGuardar={false}>
+			<DialogoAdaptable className="sm:max-w-sm" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle>{t("Etiquetas")}</DialogTitle>
 					<DialogDescription>{t("Hasta 4 por carta, de 20 letras como mucho.")}</DialogDescription>
@@ -506,7 +506,7 @@ export function EtiquetaDialog({ carta }: { carta: IdCarta }) {
 						{t("Añadir")}
 					</Button>
 				</div>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }
@@ -527,7 +527,7 @@ export function InspeccionDialog() {
 	if (id === null || !c) return null;
 	return (
 		<Dialog open onOpenChange={(o) => !o && useMesa.getState().inspeccionar(null)}>
-			<DialogContent className="sm:max-w-3xl">
+			<DialogoAdaptable className="sm:max-w-3xl">
 				<DialogHeader>
 					<DialogTitle>{c.origen?.nombre ?? t("Carta boca abajo")}</DialogTitle>
 				</DialogHeader>
@@ -559,7 +559,7 @@ export function InspeccionDialog() {
 						</div>
 					</ScrollArea>
 				</div>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }
@@ -574,7 +574,7 @@ export function AtajosDialog() {
 	const { t } = useLang();
 	return (
 		<Dialog open onOpenChange={(o) => !o && cerrar()}>
-			<DialogContent className="sm:max-w-2xl">
+			<DialogoAdaptable className="sm:max-w-2xl">
 				<DialogHeader>
 					<DialogTitle>{t("Atajos de teclado")}</DialogTitle>
 					<DialogDescription>
@@ -601,7 +601,7 @@ export function AtajosDialog() {
 						))}
 					</div>
 				</ScrollArea>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }

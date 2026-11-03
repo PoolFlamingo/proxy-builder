@@ -189,6 +189,18 @@ export function ordenTrasMover(n: number, de: number, a: number): number[] {
 	return orden;
 }
 
+/**
+ * El orden tras subir (`-1`) o bajar (`+1`) el asiento `i` un puesto, para los
+ * botones de las filas (con el dedo no siempre se arrastra bien). `null` si no
+ * se puede: ya está en el borde o lo llevaría antes de `primero` (en red, el
+ * anfitrión se queda en el asiento 0 y `primero` vale 1).
+ */
+export function ordenTrasPasar(n: number, i: number, delta: -1 | 1, primero = 0): number[] | null {
+	const a = i + delta;
+	if (i < primero || i >= n || a < primero || a >= n) return null;
+	return ordenTrasMover(n, i, a);
+}
+
 /** Un orden cualquiera (Fisher–Yates; `azar` da un número de 0 a 1). */
 export function ordenAlAzar(n: number, azar: () => number = Math.random): number[] {
 	const orden = Array.from({ length: n }, (_, i) => i);

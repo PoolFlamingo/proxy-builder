@@ -37,7 +37,9 @@ export function Mesas({ deckIds }: { deckIds: string[] }) {
 	const asientos = useMesa(useShallow((s) => s.asientos));
 	const viendo = useMesa(tableroDe);
 	const deckId = deckDelTablero(deckIds, asientos, viendo);
-	if (n < 2 || config.modo === "unico") {
+	// Un solo tablero: con un jugador, en «un solo tablero» y en el móvil (donde los
+	// demás no se pintan ni como miniatura: los cambia la barra de asientos).
+	if (n < 2 || config.modo === "unico" || config.modo === "movil") {
 		return (
 			<div className="relative size-full">
 				<Tablero deckId={deckId} />

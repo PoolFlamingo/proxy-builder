@@ -4,16 +4,11 @@ import type { CardSummary } from "@/bindings/CardSummary";
 import type { OrigenTapete } from "@/bindings/OrigenTapete";
 import type { Tapete } from "@/bindings/Tapete";
 import { FilaDeslizador } from "@/components/campos";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
@@ -100,7 +95,7 @@ export function TapeteDialog({
 
 	return (
 		<Dialog open={abierto} onOpenChange={(o) => !o && onCerrar()}>
-			<DialogContent className="sm:max-w-2xl" cambiosSinGuardar={false} ocupado={ocupado}>
+			<DialogoAdaptable className="sm:max-w-2xl" cambiosSinGuardar={false} ocupado={ocupado}>
 				<DialogHeader>
 					<DialogTitle>{t("Tapete")}</DialogTitle>
 					<DialogDescription>
@@ -201,7 +196,7 @@ export function TapeteDialog({
 						</ScrollArea>
 					)}
 				</div>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }

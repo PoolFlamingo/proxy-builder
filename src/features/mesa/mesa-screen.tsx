@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Confirmar } from "@/components/confirmar";
 import { useLang } from "@/components/language-provider";
+import { registrarAtras } from "@/lib/atras";
 import { call } from "@/lib/ipc";
 import { abrirDeck } from "@/stores/deck-store";
 import { useMesa } from "@/stores/mesa-store";
@@ -17,18 +18,26 @@ import { DialogosMesa } from "./dialogos";
 import { usePurgarVivo } from "./en-vivo/fantasmas";
 import { EntradaMesa } from "./entrada";
 import { FinDePartida } from "./fin-partida";
+import { useMesaMovil } from "./formato-mesa";
 import { ContadorFps, VigiaFps } from "./fps";
+import { crearFiltroClicTrasMenu } from "./gestos";
+import { hayEncima } from "./leer-en-grande";
 import { Mesas } from "./mesas";
 import { useSeguirTurno } from "./mirar";
+import { BarraAsientos } from "./movil/barra-asientos";
+import { AvisoGirar, BotonPasarTurno } from "./movil/controles";
+import { ManoCompleta } from "./movil/mano-completa";
+import { PantallaVida } from "./movil/pantalla-vida";
 import { Muertes } from "./muerte";
 import { precargarMuestras } from "./muestras";
 import { Mulligan } from "./mulligan";
 import { useOriginalesAlDia } from "./originales";
+import { usePantalla } from "./pantalla";
 import { Ausentes } from "./red/ausentes";
-import { refrescarRed } from "./red/conexion-red";
+import { escucharVuelta, refrescarRed } from "./red/conexion-red";
 import { AvisoConexion, SelectorTablero } from "./red/estado-red";
 import { PanelLateral } from "./registro-panel";
-import { BarraRepeticion } from "./repeticion";
+import { BarraRepeticion, salirDeLaRepeticion } from "./repeticion";
 import { ReaccionPendiente } from "./sparring/reaccion";
 import { VistaFantasma } from "./sparring/vista-fantasma";
 import { VistaGrande } from "./vista-grande";
@@ -55,6 +64,7 @@ export function MesaScreen() {
 	useEffect(() => {
 		let vivo = true;
 		void refrescarRed();
+		void escucharVuelta();
 		call("mesa_estado")
 			.then(async (e) => {
 				setDeckIds(e.deckIds);
@@ -81,6 +91,7 @@ function Mesa({ deckIds }: { deckIds: string[] }) {
 	usePurgarVivo();
 	useSeguirTurno();
 	useAtajosComunicacion();
+	const enMovil = useMesaMovil();
 	const [preguntaSalir, setPreguntaSalir] = useState(false);
 	const [preguntaReiniciar, setPreguntaReiniciar] = useState(false);
 	const [preguntaEditar, setPreguntaEditar] = useState(false);
@@ -97,6 +108,77 @@ function Mesa({ deckIds }: { deckIds: string[] }) {
 	const yoReal = useMesa((s) => s.yo);
 	// En red solo se sabe el propio (el de los demás llega vacío): el de mi asiento.
 	const deckId2 = ids[Math.max(0, asientos.indexOf(yoReal ?? -1))] || ids[0] || null;
+
+	// El botón «atrás» de Android: lo de arriba (diálogos, menús, la mano, la vida, el
+	// registro) lo cierra `lib/atras.ts` solo, por ser capas de Radix; antes de salir se
+	// quita lo que se está leyendo o eligiendo, y por fin se pregunta si salir de la
+	// partida (queda guardada), como el botón de la barra.
+	const salirAlPulsarAtras = () => {
+		if (repitiendo) return void salirDeLaRepeticion();
+		if (papel === "anfitrion") {
+			call("red_estado")
+				.then((e) => setPuedeCeder(e.puedeCeder))
+				.catch(() => setPuedeCeder(false));
+		}
+		setPreguntaSalir(true);
+	};
+	const salirRef = useRef(salirAlPulsarAtras);
+	salirRef.current = salirAlPulsarAtras;
+	useEffect(
+		() =>
+			registrarAtras(() => {
+				const m = useMesa.getState();
+				if (m.sobre !== null) {
+					m.setSobre(null);
+					return true;
+				}
+				const p = usePantalla.getState();
+				if (p.fantasma !== null) {
+					p.setFantasma(null);
+					return true;
+				}
+				if (p.modo) {
+					p.setModo(null);
+					return true;
+				}
+				salirRef.current();
+				return true;
+			}),
+		[],
+	);
+
+	// Mantener el dedo sobre algo que también hace algo al tocarlo abre su menú; el clic que
+	// llega al soltar no se quiere (robaría una carta, cambiaría de tablero…).
+	useEffect(() => {
+		const filtro = crearFiltroClicTrasMenu();
+		// Con el ratón no hay clic tras el clic derecho: solo se filtra lo del dedo.
+		let conDedo = false;
+		const alMenu = () => {
+			if (!conDedo) return;
+			filtro.menu();
+			// La carta que se leía en grande taparía el menú.
+			useMesa.getState().setSobre(null);
+			usePantalla.getState().setFantasma(null);
+		};
+		const alBajar = (e: PointerEvent) => {
+			conDedo = !hayEncima(e.pointerType);
+			filtro.bajar();
+		};
+		const alClic = (e: MouseEvent) => {
+			if (!filtro.clic()) return;
+			e.stopPropagation();
+			e.preventDefault();
+		};
+		// táctil: solo se oye cuándo sale un menú (clic derecho o pulsación larga) para descartar el clic de al soltar.
+		window.addEventListener("contextmenu", alMenu, true);
+		window.addEventListener("pointerdown", alBajar, true);
+		window.addEventListener("click", alClic, true);
+		return () => {
+			window.removeEventListener("contextmenu", alMenu, true);
+			window.removeEventListener("pointerdown", alBajar, true);
+			window.removeEventListener("click", alClic, true);
+		};
+	}, []);
 
 	const editarDeck = async () => {
 		if (!deckId2) return;
@@ -125,6 +207,15 @@ function Mesa({ deckIds }: { deckIds: string[] }) {
 				/>
 			)}
 			<SelectorTablero />
+			{enMovil && !repitiendo && (
+				<>
+					<BarraAsientos />
+					<BotonPasarTurno />
+					<ManoCompleta />
+					<PantallaVida />
+				</>
+			)}
+			{enMovil && <AvisoGirar />}
 			<AvisoConexion />
 			{!repitiendo && <Ausentes />}
 			<CapaDados />

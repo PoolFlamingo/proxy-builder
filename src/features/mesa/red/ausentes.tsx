@@ -3,10 +3,12 @@ import { useShallow } from "zustand/react/shallow";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
 import { hacer } from "../acciones";
 import { ESPERA_SALTAR_MS, segundosAusente, siguienteVivo } from "../cuentas-muerte";
+import { useMesaMovil } from "../formato-mesa";
 
 /**
  * **Quien se ha ido de la partida** (G8, en red): un aviso con quién falta.
@@ -17,6 +19,7 @@ import { ESPERA_SALTAR_MS, segundosAusente, siguienteVivo } from "../cuentas-mue
  */
 export function Ausentes() {
 	const { t } = useLang();
+	const movil = useMesaMovil();
 	const ausentes = useRed((s) => s.ausentes);
 	const papel = useRed((s) => s.papel);
 	const asientos = useMesa(useShallow((s) => s.asientos));
@@ -42,7 +45,13 @@ export function Ausentes() {
 	);
 	const siguiente = siguienteVivo(asientos, vivos, activo);
 	return (
-		<div className="absolute top-14 right-3 z-[7500] flex max-w-72 flex-col gap-1.5">
+		<div
+			className={cn(
+				"absolute right-3 z-[7500] flex max-w-72 flex-col gap-1.5",
+				// En el móvil, «Pasar turno» ocupa la esquina de arriba a la derecha.
+				movil ? "top-[4.5rem]" : "top-14",
+			)}
+		>
 			{filas.map((a) => {
 				const quien = jugadores[a.jugador]?.nombre ?? "";
 				const seg = segundosAusente(a.haceMs, a.visto, ahora);

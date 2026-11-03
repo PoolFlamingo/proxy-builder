@@ -32,6 +32,7 @@ import { useDeslizar, useFlip } from "./flip";
 import { useSinAnimaciones } from "./fps";
 import { caraVisible, DorsoGenerico, ImagenCarta } from "./imagen-carta";
 import { Insignias } from "./insignias";
+import { manejadoresLeer } from "./leer-en-grande";
 import { igualesLista, MS_MINIATURA, useMesaLenta } from "./lento";
 import { MarcasJugador } from "./marcas-jugador";
 import { mirarJugador } from "./mirar";
@@ -340,10 +341,7 @@ export const TableroMini = memo(function TableroMini({
 										zIndex: c.z,
 										transform: c.girada ? "rotate(90deg)" : undefined,
 									}}
-									onPointerEnter={() => useMesa.getState().setSobre(c.id)}
-									onPointerLeave={() => {
-										if (useMesa.getState().sobre === c.id) useMesa.getState().setSobre(null);
-									}}
+									{...manejadoresLeer(c.id, false)}
 								>
 									<ImagenCarta imagen={caraVisible(c)} ancho={146} />
 								</Deslizante>
@@ -524,11 +522,7 @@ function ZonasMini({ d, w, h, ancho }: { d: DatosMini; w: number; h: number; anc
 						style={{ width: tw, height: th }}
 						aria-label={`${z.nombre}: ${z.n}`}
 						data-zona={z.clave}
-						onPointerEnter={() => z.carta && useMesa.getState().setSobre(z.carta.id)}
-						onPointerLeave={() => {
-							if (z.carta && useMesa.getState().sobre === z.carta.id)
-								useMesa.getState().setSobre(null);
-						}}
+						{...(z.carta ? manejadoresLeer(z.carta.id, false) : {})}
 					>
 						{z.dorso && z.n > 0 ? (
 							d.j?.dorso ? (
@@ -557,6 +551,11 @@ function ZonasMini({ d, w, h, ancho }: { d: DatosMini; w: number; h: number; anc
 			))}
 		</span>
 	);
+}
+
+/** ¿El clic viene de un dedo? */
+function esToque(e: React.MouseEvent): boolean {
+	return (e.nativeEvent as PointerEvent).pointerType === "touch";
 }
 
 /** Desde este ancho, las zonas de una miniatura van en fila (como en tu tablero). */
@@ -629,11 +628,10 @@ function LecturaGrande({ d, w, h }: { d: DatosMini; w: number; h: number }) {
 						onClick={(e) => {
 							// Con una flecha o un adjuntar en marcha, la carta es el objetivo.
 							if (elegirCarta(c, t)) e.stopPropagation();
+							// Con el dedo, tocar una carta de esta mesa grande la lee (no cambia de mesa).
+							else if (esToque(e)) e.stopPropagation();
 						}}
-						onPointerEnter={() => useMesa.getState().setSobre(c.id)}
-						onPointerLeave={() => {
-							if (useMesa.getState().sobre === c.id) useMesa.getState().setSobre(null);
-						}}
+						{...manejadoresLeer(c.id)}
 					>
 						<span
 							className={cn(
@@ -690,11 +688,8 @@ function LecturaGrande({ d, w, h }: { d: DatosMini; w: number; h: number }) {
 						key={z.clave}
 						className="pointer-events-auto absolute flex flex-col items-center"
 						style={{ left: r.x, top: r.y - 16, width: r.w, height: r.h + 16 }}
-						onPointerEnter={() => z.carta && useMesa.getState().setSobre(z.carta.id)}
-						onPointerLeave={() => {
-							if (z.carta && useMesa.getState().sobre === z.carta.id)
-								useMesa.getState().setSobre(null);
-						}}
+						onClick={(e) => z.carta && esToque(e) && e.stopPropagation()}
+						{...(z.carta ? manejadoresLeer(z.carta.id) : {})}
 					>
 						<span className="h-4 text-[10px] whitespace-nowrap text-white/80">
 							{z.nombre}

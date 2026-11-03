@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	type ConfigDisposicion,
 	DISPOSICION_DE_FABRICA,
+	DISPOSICION_MOVIL,
 	disposicionDe,
 	disposicionPorDefecto,
 	HUECO,
@@ -172,6 +173,38 @@ describe("repartir", () => {
 				expect(r.h).toBeGreaterThanOrEqual(0);
 			}
 		}
+	});
+});
+
+describe("el modo del móvil", () => {
+	// Un móvil en horizontal: 914 × 411 dp (menos la barra de arriba).
+	const MOVIL: Rect = { x: 0, y: 52, w: 914, h: 359 };
+
+	for (let n = 1; n <= 10; n++) {
+		it(`con ${n} jugadores: siempre un tablero, el elegido, y nada se sale`, () => {
+			for (let elegido = 0; elegido < n; elegido++) {
+				const rs = repartir(n, MOVIL, DISPOSICION_MOVIL, elegido);
+				expect(rs).toHaveLength(n);
+				expect(visibles(rs)).toEqual([MOVIL]);
+				expect(rs[elegido]).toEqual(MOVIL);
+				for (const r of rs) expect(dentro(r, MOVIL) || r === VACIO).toBe(true);
+			}
+		});
+	}
+
+	it("un elegido fuera de rango usa el último; sin nadie, nada", () => {
+		expect(repartir(3, MOVIL, DISPOSICION_MOVIL, 9)[2]).toEqual(MOVIL);
+		expect(repartir(3, MOVIL, DISPOSICION_MOVIL, -4)[0]).toEqual(MOVIL);
+		expect(repartir(0, MOVIL, DISPOSICION_MOVIL)).toEqual([]);
+	});
+
+	it("no hay que elegirlo: no entra en los modos de ningún número de jugadores", () => {
+		for (let n = 1; n <= 10; n++) expect(modosPara(n, true)).not.toContain("movil");
+	});
+
+	it("no cambia los modos de escritorio y tableta", () => {
+		const rs = repartir(3, PANTALLA, config({ modo: "rejilla" }));
+		expect(visibles(rs)).toHaveLength(3);
 	});
 });
 

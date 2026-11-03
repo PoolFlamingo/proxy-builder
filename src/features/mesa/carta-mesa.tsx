@@ -2,6 +2,7 @@ import { memo, useRef } from "react";
 import type { IdCarta } from "@/bindings/IdCarta";
 import type { VistaCarta } from "@/bindings/VistaCarta";
 import { Icono } from "@/components/icono";
+import { useLang } from "@/components/language-provider";
 import { cn } from "@/lib/utils";
 import { useMesa } from "@/stores/mesa-store";
 import { useRepeticion } from "@/stores/repeticion-store";
@@ -12,6 +13,7 @@ import { useFlip } from "./flip";
 import { useSinAnimaciones } from "./fps";
 import { caraVisible, ImagenCarta } from "./imagen-carta";
 import { Insignias } from "./insignias";
+import { hayEncima, useLeerEnGrande } from "./leer-en-grande";
 import { MenuCarta } from "./menus/menu-carta";
 import { usePantalla } from "./pantalla";
 
@@ -62,6 +64,11 @@ export const CartaMesa = memo(function CartaMesa({
 	const c = useMesa((s) => s.cartas[id]);
 	const yo = useMesa((s) => s.yo);
 	const elegida = useMesa((s) => s.seleccion.includes(id));
+	// La única elegida lleva el botón «⋯» del menú (con el dedo no hay clic derecho).
+	const unicaElegida = useMesa((s) => s.seleccion.length === 1 && s.seleccion[0] === id);
+	// Con el dedo, leer en grande es un toque (lo gestiona `tablero.tsx`); entrar y salir, del ratón.
+	const leer = useLeerEnGrande(id, false);
+	const tipoPuntero = useRef("mouse");
 	const calidad = useUi((s) => s.mesa.calidad);
 	const reducir = useSinAnimaciones();
 	// En una repetición, lo que dura deslizarse al punto nuevo (0: ahora mismo, sin animar).
@@ -103,12 +110,13 @@ export const CartaMesa = memo(function CartaMesa({
 			<div
 				ref={ref}
 				data-carta={id}
-				onPointerDown={(e) => alPulsar(e, c)}
-				onDoubleClick={() => alDobleClic?.(c)}
-				onPointerEnter={() => useMesa.getState().setSobre(id)}
-				onPointerLeave={() => {
-					if (useMesa.getState().sobre === id) useMesa.getState().setSobre(null);
+				onPointerDown={(e) => {
+					tipoPuntero.current = e.pointerType;
+					alPulsar(e, c);
 				}}
+				// El doble toque lo detecta `tablero.tsx`; el `dblclick` del dedo no es fiable.
+				onDoubleClick={() => hayEncima(tipoPuntero.current) && alDobleClic?.(c)}
+				{...leer}
 				className={cn(
 					"group absolute top-0 left-0 cursor-grab touch-none",
 					!reducir &&
@@ -181,7 +189,39 @@ export const CartaMesa = memo(function CartaMesa({
 						)}
 					</div>
 				</div>
+				{unicaElegida && <BotonMenu carta={ref} />}
 			</div>
 		</MenuCarta>
 	);
 });
+
+/**
+ * El botón «⋯» de la carta elegida: abre su menú, como el clic derecho o
+ * mantenerla pulsada. Solo se ve con el dedo (`[data-tactil]`). Es pequeño en
+ * la carta pero su zona táctil mide 44 px.
+ */
+function BotonMenu({ carta }: { carta: React.RefObject<HTMLDivElement | null> }) {
+	const { t } = useLang();
+	return (
+		<button
+			type="button"
+			aria-label={t("Menú de la carta")}
+			onPointerDown={(e) => e.stopPropagation()}
+			onClick={(e) => {
+				e.stopPropagation();
+				const r = e.currentTarget.getBoundingClientRect();
+				carta.current?.dispatchEvent(
+					new MouseEvent("contextmenu", {
+						bubbles: true,
+						cancelable: true,
+						clientX: r.left + r.width / 2,
+						clientY: r.top + r.height / 2,
+					}),
+				);
+			}}
+			className="absolute -top-3 -right-3 z-10 hidden size-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg before:absolute before:-inset-2 before:content-[''] [[data-tactil]_&]:flex"
+		>
+			<Icono icon="lucide:ellipsis" className="size-4" />
+		</button>
+	);
+}

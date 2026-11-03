@@ -7,12 +7,12 @@ import type { ListaDeJuego } from "@/bindings/ListaDeJuego";
 import type { ListasDeDeck } from "@/bindings/ListasDeDeck";
 import { Fila, Selector } from "@/components/campos";
 import { Confirmar } from "@/components/confirmar";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogCuerpo,
 	DialogDescription,
 	DialogFooter,
@@ -29,6 +29,7 @@ import {
 	FilaOrdenable,
 	SelectorDeEquipo,
 } from "./ajustes-partida";
+import { botonesDeAsiento } from "./asientos-botones";
 import { COLORES_JUGADOR } from "./colores";
 import { empezar } from "./conexion";
 import {
@@ -179,7 +180,7 @@ export function PartidaLocalDialog({
 
 	return (
 		<Dialog open={abierto} onOpenChange={(v) => !v && onCerrar()}>
-			<DialogContent className="flex max-w-3xl flex-col">
+			<DialogoAdaptable className="flex max-w-3xl flex-col">
 				<DialogHeader>
 					<DialogTitle>{t("Partida local")}</DialogTitle>
 					<DialogDescription>
@@ -220,6 +221,7 @@ export function PartidaLocalDialog({
 											etiqueta={t("Mover a {jugador}", {
 												jugador: a.nombre.trim() || `${t("Jugador")} ${i + 1}`,
 											})}
+											alMover={botonesDeAsiento(asientos.length, i, reordenar)}
 										>
 											<span
 												className="size-3 shrink-0 rounded-full"
@@ -234,7 +236,7 @@ export function PartidaLocalDialog({
 											<Selector<string>
 												valor={a.deckId}
 												onChange={(v) => cambiar(i, { deckId: v, lista: undefined })}
-												ancho="min-w-0 flex-1"
+												ancho="min-w-[8rem] flex-1"
 												opciones={decks.map((d) => ({ valor: d.id, etiqueta: d.name }))}
 											/>
 											{(listas[a.deckId]?.listas.length ?? 0) > 0 ||
@@ -372,6 +374,12 @@ export function PartidaLocalDialog({
 					</div>
 				</DialogCuerpo>
 				<DialogFooter>
+					{/* Con el dedo no hay tooltip: el porqué de «Empezar» desactivado se lee aquí. */}
+					{!completo && porQueNo && (
+						<p className="hidden text-xs text-muted-foreground [[data-tactil]_&]:block">
+							{porQueNo}
+						</p>
+					)}
 					<Button variant="outline" onClick={onCerrar}>
 						{t("Cancelar")}
 					</Button>
@@ -392,7 +400,7 @@ export function PartidaLocalDialog({
 						</span>
 					</WithTooltip>
 				</DialogFooter>
-			</DialogContent>
+			</DialogoAdaptable>
 			<Confirmar
 				abierto={reemplazar}
 				onCerrar={() => setReemplazar(false)}

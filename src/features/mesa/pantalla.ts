@@ -37,6 +37,9 @@ export const ANCHO_PANEL = 320;
 /** El panel de al lado de la mesa: el registro, el chat o las notas (`null`: cerrado). */
 export type PanelMesa = "registro" | "chat" | "notas";
 
+/** Las pantallas completas del móvil: la mano entera y la vida (`null`: ninguna). */
+export type CapaMovil = "mano" | "vida";
+
 /** Elegir con el siguiente clic la carta (o jugador) a la que se adjunta o apunta. */
 export type ModoObjetivo =
 	| { tipo: "adjuntar"; carta: IdCarta }
@@ -76,6 +79,8 @@ type Pantalla = {
 	tapeteCambiado: number;
 	/** El panel lateral abierto (registro, chat o notas). */
 	panel: PanelMesa | null;
+	/** En el móvil, la pantalla completa abierta (la mano o la vida). */
+	capa: CapaMovil | null;
 	/**
 	 * En una partida local, el jugador cuya mano se ha destapado con la cortina
 	 * (el que responde fuera de su turno). Cambiar de jugador la vuelve a tapar.
@@ -94,6 +99,7 @@ type Pantalla = {
 	setFantasma: (nombre: string | null) => void;
 	abrir: (d: DialogoMesa | null) => void;
 	setPanel: (p: PanelMesa | null) => void;
+	setCapa: (c: CapaMovil | null) => void;
 	mostrarMano: (j: IdJugador | null) => void;
 	setModo: (m: ModoObjetivo | null) => void;
 	setArrastre: (a: Arrastre | null) => void;
@@ -107,6 +113,7 @@ export const usePantalla = create<Pantalla>((set) => ({
 	zonaSobre: null,
 	tapeteCambiado: 0,
 	panel: null,
+	capa: null,
 	manoMostrada: null,
 	fantasma: null,
 	redimensionando: false,
@@ -115,6 +122,7 @@ export const usePantalla = create<Pantalla>((set) => ({
 	avisarTapete: () => set((s) => ({ tapeteCambiado: s.tapeteCambiado + 1 })),
 	abrir: (dialogo) => set({ dialogo }),
 	setPanel: (panel) => set({ panel }),
+	setCapa: (capa) => set({ capa }),
 	mostrarMano: (manoMostrada) => set({ manoMostrada }),
 	setModo: (modo) => set({ modo }),
 	setArrastre: (arrastre) => set({ arrastre }),

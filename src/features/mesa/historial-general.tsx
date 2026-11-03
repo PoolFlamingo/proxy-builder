@@ -5,17 +5,12 @@ import type { Formato } from "@/bindings/Formato";
 import type { JugadorHistorial } from "@/bindings/JugadorHistorial";
 import { Selector } from "@/components/campos";
 import { Confirmar } from "@/components/confirmar";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { EstadoCarga } from "@/components/estado-carga";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { WithTooltip } from "@/components/ui/with-tooltip";
@@ -93,7 +88,7 @@ export function HistorialGeneralDialog({
 
 	return (
 		<Dialog open={abierto} onOpenChange={(o) => !o && onCerrar()}>
-			<DialogContent className="max-w-3xl" data-tutorial="mesa-historial">
+			<DialogoAdaptable className="max-w-3xl" data-tutorial="mesa-historial">
 				<DialogHeader>
 					<DialogTitle>{t("Historial de partidas")}</DialogTitle>
 					<DialogDescription>
@@ -214,7 +209,7 @@ export function HistorialGeneralDialog({
 						}
 					}}
 				/>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }

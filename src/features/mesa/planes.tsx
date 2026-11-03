@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cartasDe, cuantasEn, useMesa } from "@/stores/mesa-store";
 import { hacer, zonaDe } from "./acciones";
 import { caraVisible, ImagenCarta } from "./imagen-carta";
+import { manejadoresLeer } from "./leer-en-grande";
 import { esArchienemigo } from "./planar";
 
 /**
@@ -73,10 +74,9 @@ function Plan({ id, mio }: { id: number; mio: boolean }) {
 			<button
 				type="button"
 				className="aspect-[88/63] w-20 shrink-0 overflow-hidden rounded border border-white/15"
-				onPointerEnter={() => useMesa.getState().setSobre(id)}
-				onPointerLeave={() => {
-					if (useMesa.getState().sobre === id) useMesa.getState().setSobre(null);
-				}}
+				// Con el dedo, el toque solo inspecciona (que ya la enseña): leer en grande es
+				// del ratón, al pasar por encima.
+				{...manejadoresLeer(id, false)}
 				onClick={() => useMesa.getState().inspeccionar(id)}
 				aria-label={c.origen?.nombre ?? t("Plan")}
 			>

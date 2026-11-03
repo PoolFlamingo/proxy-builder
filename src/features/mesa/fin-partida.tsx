@@ -4,6 +4,7 @@ import type { ResumenPartida } from "@/bindings/ResumenPartida";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { call } from "@/lib/ipc";
 import { useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
@@ -76,7 +77,7 @@ export function FinDePartida() {
 	const decide = estado?.terminado ?? false;
 	return (
 		<div className="absolute inset-0 z-[8800] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-			<div className="flex w-[34rem] max-w-[94%] flex-col items-center gap-2.5 rounded-xl border bg-card p-2.5 py-4 text-center shadow-2xl">
+			<div className="flex max-h-[96%] w-[34rem] max-w-[94%] flex-col items-center gap-2.5 rounded-xl border bg-card p-2.5 py-4 text-center shadow-2xl">
 				<Icono icon="game-icons:checkered-flag" className="size-6 text-primary" />
 				<h2 className="text-base font-semibold">
 					{ganadores.length === 0
@@ -86,72 +87,77 @@ export function FinDePartida() {
 						: t("Ganó {quien}", { quien: ganadores.join(", ") })}
 				</h2>
 				<p className="text-xs text-muted-foreground">{t(como)}</p>
-				{fin.nota && <p className="text-xs">{fin.nota}</p>}
-				{resumen && asientos.length > 1 && (
-					<div className="flex w-full flex-col gap-0.5 rounded-lg border bg-background/40 p-2 text-xs">
-						{resumen.puestos.map((p) => {
-							const j = jugadores[p.jugador];
-							return (
-								<div key={p.jugador} className="flex items-center justify-between gap-2">
-									<span className="flex min-w-0 items-center gap-1.5">
-										<span className="w-16 shrink-0 text-left whitespace-nowrap text-muted-foreground tabular-nums">
-											{t("Puesto {puesto}", { puesto: p.puesto })}
-										</span>
-										<span
-											className="size-2.5 shrink-0 rounded-full"
-											style={{ background: j?.color }}
-										/>
-										<span className="truncate">{nombre(p.jugador)}</span>
-									</span>
-									<span className="shrink-0 text-muted-foreground">
-										{p.ronda === null
-											? t("Sigue en pie")
-											: p.por === null
-												? t("Fuera en la ronda {r}", { r: p.ronda })
-												: t("Fuera en la ronda {r}, por {quien}", {
-														r: p.ronda,
-														quien: nombre(p.por),
-													})}
-									</span>
-								</div>
-							);
-						})}
-					</div>
-				)}
-				{resumen && (
-					<p className="text-[11px] text-muted-foreground tabular-nums">
-						{t("Rondas: {rondas} · Duración: {duracion}", {
-							rondas: resumen.rondas,
-							duracion: formatoDuracion(resumen.duracionMs),
-						})}
-					</p>
-				)}
-				{estado && (
-					<div className="flex w-full flex-col gap-1 rounded-lg border bg-background/40 p-2 text-xs">
-						<span className="text-muted-foreground">
-							{t("Al mejor de {total}: partida {actual}", {
-								total: estado.alMejorDe,
-								actual: estado.jugadas,
-							})}
-						</span>
-						<span className="flex flex-wrap justify-center gap-x-4 gap-y-0.5 tabular-nums">
-							{asientos.map((id) => (
-								<span key={id}>
-									{nombre(id)}: <b>{estado.marcador[id] ?? 0}</b>
+				{/* Con muchos jugadores y la pantalla baja (un móvil de lado), el resumen se desplaza. */}
+				<ScrollArea className="min-h-0 w-full" viewportClassName="max-h-[55dvh]">
+					<div className="flex flex-col items-center gap-2.5 p-0.5">
+						{fin.nota && <p className="text-xs">{fin.nota}</p>}
+						{resumen && asientos.length > 1 && (
+							<div className="flex w-full flex-col gap-0.5 rounded-lg border bg-background/40 p-2 text-xs">
+								{resumen.puestos.map((p) => {
+									const j = jugadores[p.jugador];
+									return (
+										<div key={p.jugador} className="flex items-center justify-between gap-2">
+											<span className="flex min-w-0 items-center gap-1.5">
+												<span className="w-16 shrink-0 text-left whitespace-nowrap text-muted-foreground tabular-nums">
+													{t("Puesto {puesto}", { puesto: p.puesto })}
+												</span>
+												<span
+													className="size-2.5 shrink-0 rounded-full"
+													style={{ background: j?.color }}
+												/>
+												<span className="truncate">{nombre(p.jugador)}</span>
+											</span>
+											<span className="shrink-0 text-muted-foreground">
+												{p.ronda === null
+													? t("Sigue en pie")
+													: p.por === null
+														? t("Fuera en la ronda {r}", { r: p.ronda })
+														: t("Fuera en la ronda {r}, por {quien}", {
+																r: p.ronda,
+																quien: nombre(p.por),
+															})}
+											</span>
+										</div>
+									);
+								})}
+							</div>
+						)}
+						{resumen && (
+							<p className="text-[11px] text-muted-foreground tabular-nums">
+								{t("Rondas: {rondas} · Duración: {duracion}", {
+									rondas: resumen.rondas,
+									duracion: formatoDuracion(resumen.duracionMs),
+								})}
+							</p>
+						)}
+						{estado && (
+							<div className="flex w-full flex-col gap-1 rounded-lg border bg-background/40 p-2 text-xs">
+								<span className="text-muted-foreground">
+									{t("Al mejor de {total}: partida {actual}", {
+										total: estado.alMejorDe,
+										actual: estado.jugadas,
+									})}
 								</span>
-							))}
-						</span>
-						{decide && (
-							<b className="text-primary">
-								{estado.ganadores.length === 0
-									? t("El encuentro acaba en tablas")
-									: t("Gana el encuentro {quien}", {
-											quien: estado.ganadores.map(nombre).join(", "),
-										})}
-							</b>
+								<span className="flex flex-wrap justify-center gap-x-4 gap-y-0.5 tabular-nums">
+									{asientos.map((id) => (
+										<span key={id}>
+											{nombre(id)}: <b>{estado.marcador[id] ?? 0}</b>
+										</span>
+									))}
+								</span>
+								{decide && (
+									<b className="text-primary">
+										{estado.ganadores.length === 0
+											? t("El encuentro acaba en tablas")
+											: t("Gana el encuentro {quien}", {
+													quien: estado.ganadores.map(nombre).join(", "),
+												})}
+									</b>
+								)}
+							</div>
 						)}
 					</div>
-				)}
+				</ScrollArea>
 				<div className="flex flex-wrap justify-center gap-2.5">
 					<Button variant="outline" autoFocus onClick={() => setOculto(true)}>
 						{t("Ver la mesa")}

@@ -27,6 +27,27 @@ export function escuchar(): Promise<UnlistenFn> {
 	return escucha;
 }
 
+/** Lo que dura «volviendo» tras volver de segundo plano, en ms. */
+export const VUELTA_MS = 20_000;
+
+/**
+ * Al volver de segundo plano (Android congela la app y corta sus conexiones),
+ * la partida en red se reconecta sola. Hasta que lo haga, la pantalla lo
+ * cuenta como «reconectando» y no como una conexión perdida, y se pone al día
+ * con lo que tenga Rust. Se escucha una vez, desde que se abre la pestaña.
+ */
+let escuchaVuelta: Promise<UnlistenFn> | null = null;
+
+export function escucharVuelta(): Promise<UnlistenFn> {
+	escuchaVuelta ??= listen("ciclo://vuelta", () => {
+		if (useRed.getState().papel !== null) {
+			useRed.getState().poner({ volviendoHasta: Date.now() + VUELTA_MS });
+			void refrescarRed();
+		}
+	});
+	return escuchaVuelta;
+}
+
 function alAviso(a: AvisoRed) {
 	const r = useRed.getState();
 	switch (a.tipo) {

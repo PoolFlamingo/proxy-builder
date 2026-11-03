@@ -1,6 +1,7 @@
 import type { Destino } from "@/bindings/Destino";
 import { destino, sitio } from "./acciones";
 import { type Disposicion, dentro, pxAPos, type ZonaPantalla } from "./disposicion";
+import { esArrastre } from "./gestos";
 
 /**
  * **A dónde va lo que se suelta.** Con la geometría de la mesa y el punto
@@ -31,13 +32,15 @@ export function destinoDeSoltar(
 	}
 	for (const [n, dest] of zonas) if (dentro(d.zonas[n], x, y)) return dest;
 	if (dentro(d.mano, x, y)) return destino("mano");
-	if (dentro(d.campo, x, y)) return destino("campo", sitio.campo(pxAPos(d.campo, x, y)));
+	if (dentro(d.visible ?? d.campo, x, y))
+		return destino("campo", sitio.campo(pxAPos(d.campo, x, y)));
 	return null;
 }
 
-/** Un arrastre se empieza a partir de esta distancia, en px. */
-export const UMBRAL_ARRASTRE = 5;
-
-export function pasaUmbral(dx: number, dy: number): boolean {
-	return Math.hypot(dx, dy) >= UMBRAL_ARRASTRE;
+/**
+ * Un arrastre se empieza a partir de esta distancia: 5 px con el ratón y 8 con
+ * el dedo (`gestos.ts`). `tipo`: el `pointerType` del evento.
+ */
+export function pasaUmbral(dx: number, dy: number, tipo = "mouse"): boolean {
+	return esArrastre(tipo, dx, dy);
 }

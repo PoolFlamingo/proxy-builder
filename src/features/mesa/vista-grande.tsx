@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
-import { useMesa } from "@/stores/mesa-store";
+import { Button } from "@/components/ui/button";
+import { useFormato } from "@/lib/formato";
+import { NINGUNA, useMesa } from "@/stores/mesa-store";
 import { useUi } from "@/stores/ui-store";
 import { CapaAlta } from "./capa-alta";
 import { esTemporal, nombreContador } from "./contadores";
+import { useMesaMovil } from "./formato-mesa";
 import { caraVisible, ImagenCarta } from "./imagen-carta";
+import { anchoDeLectura, cerrarLectura, useCerrarAlTocarFuera } from "./leer-en-grande";
 import { ANCHO_PANEL, usePantalla } from "./pantalla";
 import { ptDe } from "./pt";
 
@@ -22,10 +26,14 @@ export function VistaGrande() {
 	const id = useMesa((s) => s.sobre);
 	const c = useMesa((s) => (s.sobre !== null ? s.cartas[s.sobre] : undefined));
 	const jugadores = useMesa((s) => s.jugadores);
+	const todasLasNotas = useMesa((s) => s.general?.notas ?? NINGUNA);
 	const arrastrando = usePantalla((s) => s.arrastre !== null);
-	const ancho = useUi((s) => s.mesa.vistaGrande);
+	const anchoAjustes = useUi((s) => s.mesa.vistaGrande);
+	const { tactil } = useFormato();
+	const movil = useMesaMovil();
 	const panel = useUi((s) => s.mesa.panelEstado);
-	const panelLateral = usePantalla((s) => s.panel !== null);
+	useCerrarAlTocarFuera(tactil && id !== null, cerrarLectura);
+	const panelLateral = usePantalla((s) => s.panel !== null) && !movil;
 	// Dónde está el puntero: el lado se decide con la última posición conocida
 	// al señalar una carta nueva (no en cada movimiento, para que no salte).
 	const ultimaX = useRef(0);
@@ -34,7 +42,12 @@ export function VistaGrande() {
 			ultimaX.current = e.clientX;
 		};
 		window.addEventListener("pointermove", mover, { passive: true });
-		return () => window.removeEventListener("pointermove", mover);
+		// Con el dedo no hay movimiento sin tocar: la última posición es donde se tocó.
+		window.addEventListener("pointerdown", mover, { passive: true, capture: true });
+		return () => {
+			window.removeEventListener("pointermove", mover);
+			window.removeEventListener("pointerdown", mover, true);
+		};
 	}, []);
 	const aLaIzquierda = useMemo(() => id !== null && ultimaX.current > window.innerWidth / 2, [id]);
 	if (id === null || !c || arrastrando) return null;
@@ -43,6 +56,27 @@ export function VistaGrande() {
 	const pt = ptDe(c);
 	const contadores = Object.entries(c.contadores);
 	const dosCaras = caras.length > 1 && !c.bocaAbajo;
+	// Lo que el ratón lee en los avisos de la carta (no se endereza, fuera de fase, notas): con
+	// el dedo no hay tooltip, así que también se lee aquí. Con el ratón, como siempre.
+	const notas = tactil ? todasLasNotas.filter((n) => n.carta === c.id) : NINGUNA;
+	const noEndereza = tactil && c.noEndereza;
+	const faseFuera = tactil && c.faseFuera;
+	const hayPanel =
+		panel &&
+		(noEndereza ||
+			faseFuera ||
+			notas.length > 0 ||
+			contadores.length > 0 ||
+			pt?.cambiada ||
+			c.palabrasClave.length > 0 ||
+			c.etiquetas.length > 0 ||
+			c.controlador !== c.dueno ||
+			c.devolverA !== null ||
+			c.habilidad);
+	// Con el dedo, en una pantalla baja la carta tiene que caber de arriba abajo.
+	const ancho = tactil
+		? anchoDeLectura(anchoAjustes, window.innerHeight, hayPanel ? 120 : 0)
+		: anchoAjustes;
 	const alto = (ancho * 88) / 63;
 	return (
 		<CapaAlta>
@@ -54,7 +88,20 @@ export function VistaGrande() {
 					...(panelLateral && !aLaIzquierda ? { right: ANCHO_PANEL + 20 } : {}),
 				}}
 			>
-				<div className="flex gap-2">
+				<div className="relative flex gap-2">
+					{tactil && (
+						<Button
+							size="icon-sm"
+							variant="secondary"
+							onPointerDown={(e) => e.stopPropagation()}
+							onClick={cerrarLectura}
+							aria-label={t("Cerrar")}
+							data-lee-cierra=""
+							className="pointer-events-auto absolute -top-2 -left-2 z-10 rounded-full shadow-lg"
+						>
+							<Icono icon="lucide:x" className="size-4" />
+						</Button>
+					)}
 					{(dosCaras ? caras : [caraVisible(c, true)]).map((imagen, i) => (
 						<div
 							key={i}
@@ -65,86 +112,90 @@ export function VistaGrande() {
 						</div>
 					))}
 				</div>
-				{panel &&
-					(contadores.length > 0 ||
-						pt?.cambiada ||
-						c.palabrasClave.length > 0 ||
-						c.etiquetas.length > 0 ||
-						c.controlador !== c.dueno ||
-						c.devolverA !== null ||
-						c.habilidad) && (
-						<div className="flex flex-col gap-1 rounded-lg border border-white/10 bg-black/75 p-2 text-[11px] text-white backdrop-blur">
-							{c.habilidad && <p className="italic">{c.habilidad}</p>}
-							{contadores.map(([tipo, n]) => (
-								<div key={tipo} className="flex justify-between">
-									<span className="flex items-center gap-1">
-										{esTemporal(tipo) && (
+				{hayPanel && (
+					<div className="flex flex-col gap-1 rounded-lg border border-white/10 bg-black/75 p-2 text-[11px] text-white backdrop-blur">
+						{c.habilidad && <p className="italic">{c.habilidad}</p>}
+						{contadores.map(([tipo, n]) => (
+							<div key={tipo} className="flex justify-between">
+								<span className="flex items-center gap-1">
+									{esTemporal(tipo) && (
+										<Icono icon="lucide:clock" className="size-3 text-amber-300" />
+									)}
+									{nombreContador(tipo, t)}
+								</span>
+								<b className="tabular-nums">{n}</b>
+							</div>
+						))}
+						{pt?.cambiada && (
+							<div className="flex flex-col gap-0.5 border-t border-white/10 pt-1">
+								<div className="flex justify-between">
+									<span>{t("Fuerza / resistencia")}</span>
+									<b className="tabular-nums">
+										{pt.f}/{pt.r}
+									</b>
+								</div>
+								{c.pt.fijo && (
+									<span className="text-white/70">
+										{t("Fijada en {f}/{r}", { f: c.pt.fijo[0], r: c.pt.fijo[1] })}
+									</span>
+								)}
+								{(c.pt.otros[0] !== 0 || c.pt.otros[1] !== 0) && (
+									<span className="text-white/70">
+										{t("Otros bonos: {f}/{r}", { f: c.pt.otros[0], r: c.pt.otros[1] })}
+									</span>
+								)}
+								{(c.pt.hastaFinDeTurno[0] !== 0 || c.pt.hastaFinDeTurno[1] !== 0) && (
+									<span className="text-white/70">
+										{t("Hasta el final del turno: {f}/{r}", {
+											f: c.pt.hastaFinDeTurno[0],
+											r: c.pt.hastaFinDeTurno[1],
+										})}
+									</span>
+								)}
+							</div>
+						)}
+						{c.palabrasClave.length > 0 && (
+							<span className="flex flex-wrap items-center gap-x-1.5">
+								{c.palabrasClave.map((p) => (
+									<span key={p} className="flex items-center gap-0.5">
+										{esTemporal(p) && (
 											<Icono icon="lucide:clock" className="size-3 text-amber-300" />
 										)}
-										{nombreContador(tipo, t)}
+										{nombreContador(p, t)}
 									</span>
-									<b className="tabular-nums">{n}</b>
-								</div>
-							))}
-							{pt?.cambiada && (
-								<div className="flex flex-col gap-0.5 border-t border-white/10 pt-1">
-									<div className="flex justify-between">
-										<span>{t("Fuerza / resistencia")}</span>
-										<b className="tabular-nums">
-											{pt.f}/{pt.r}
-										</b>
-									</div>
-									{c.pt.fijo && (
-										<span className="text-white/70">
-											{t("Fijada en {f}/{r}", { f: c.pt.fijo[0], r: c.pt.fijo[1] })}
-										</span>
-									)}
-									{(c.pt.otros[0] !== 0 || c.pt.otros[1] !== 0) && (
-										<span className="text-white/70">
-											{t("Otros bonos: {f}/{r}", { f: c.pt.otros[0], r: c.pt.otros[1] })}
-										</span>
-									)}
-									{(c.pt.hastaFinDeTurno[0] !== 0 || c.pt.hastaFinDeTurno[1] !== 0) && (
-										<span className="text-white/70">
-											{t("Hasta el final del turno: {f}/{r}", {
-												f: c.pt.hastaFinDeTurno[0],
-												r: c.pt.hastaFinDeTurno[1],
-											})}
-										</span>
-									)}
-								</div>
-							)}
-							{c.palabrasClave.length > 0 && (
-								<span className="flex flex-wrap items-center gap-x-1.5">
-									{c.palabrasClave.map((p) => (
-										<span key={p} className="flex items-center gap-0.5">
-											{esTemporal(p) && (
-												<Icono icon="lucide:clock" className="size-3 text-amber-300" />
-											)}
-											{nombreContador(p, t)}
-										</span>
-									))}
-								</span>
-							)}
-							{c.etiquetas.length > 0 && <span>{c.etiquetas.map((e) => e.texto).join(" · ")}</span>}
-							{c.devolverA !== null && (
-								<span className="flex items-center gap-1 text-amber-300">
-									<Icono icon="lucide:clock" className="size-3" />
-									{t("Vuelve a {quien} al final del turno", {
-										quien: jugadores[c.devolverA]?.nombre ?? "",
-									})}
-								</span>
-							)}
-							{c.controlador !== c.dueno && (
-								<span className="text-rose-300">
-									{t("La controla {quien}; es de {dueno}", {
-										quien: jugadores[c.controlador]?.nombre ?? "",
-										dueno: jugadores[c.dueno]?.nombre ?? "",
-									})}
-								</span>
-							)}
-						</div>
-					)}
+								))}
+							</span>
+						)}
+						{c.etiquetas.length > 0 && <span>{c.etiquetas.map((e) => e.texto).join(" · ")}</span>}
+						{noEndereza && <span>{t("No se endereza")}</span>}
+						{faseFuera && <span>{t("Fuera de fase")}</span>}
+						{notas.map((n) => (
+							<p key={n.id} className="break-words whitespace-pre-wrap">
+								<span
+									className="mr-1 inline-block size-2 rounded-full align-middle"
+									style={{ background: jugadores[n.autor]?.color }}
+								/>
+								{n.texto}
+							</p>
+						))}
+						{c.devolverA !== null && (
+							<span className="flex items-center gap-1 text-amber-300">
+								<Icono icon="lucide:clock" className="size-3" />
+								{t("Vuelve a {quien} al final del turno", {
+									quien: jugadores[c.devolverA]?.nombre ?? "",
+								})}
+							</span>
+						)}
+						{c.controlador !== c.dueno && (
+							<span className="text-rose-300">
+								{t("La controla {quien}; es de {dueno}", {
+									quien: jugadores[c.controlador]?.nombre ?? "",
+									dueno: jugadores[c.dueno]?.nombre ?? "",
+								})}
+							</span>
+						)}
+					</div>
+				)}
 			</div>
 		</CapaAlta>
 	);

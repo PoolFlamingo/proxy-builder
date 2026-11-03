@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
 import type { IdCarta } from "@/bindings/IdCarta";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useMesa } from "@/stores/mesa-store";
 import { hacer } from "../acciones";
 import { caraVisible, ImagenCarta } from "../imagen-carta";
+import { manejadoresLeer } from "../leer-en-grande";
 import { type DialogoMesa, usePantalla } from "../pantalla";
 
 type Pila = "arriba" | "abajo" | "cementerio" | "exilio";
@@ -98,7 +99,7 @@ export function MirarDialog({ d }: { d: Extract<DialogoMesa, { tipo: "mirar" }> 
 				: opciones;
 	return (
 		<Dialog open onOpenChange={(o) => !o && cerrar()}>
-			<DialogContent className="sm:max-w-3xl" cambiosSinGuardar={false}>
+			<DialogoAdaptable className="sm:max-w-3xl" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle>{titulo}</DialogTitle>
 					<DialogDescription>
@@ -117,8 +118,7 @@ export function MirarDialog({ d }: { d: Extract<DialogoMesa, { tipo: "mirar" }> 
 											"h-[200px] overflow-hidden rounded-[5%]",
 											donde(id) !== "arriba" && "opacity-60",
 										)}
-										onPointerEnter={() => useMesa.getState().setSobre(id)}
-										onPointerLeave={() => useMesa.getState().setSobre(null)}
+										{...manejadoresLeer(id)}
 									>
 										<ImagenCarta
 											imagen={caraVisible(c, true)}
@@ -176,7 +176,7 @@ export function MirarDialog({ d }: { d: Extract<DialogoMesa, { tipo: "mirar" }> 
 						{t("Confirmar")}
 					</Button>
 				</DialogFooter>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }

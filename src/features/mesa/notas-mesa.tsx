@@ -3,6 +3,7 @@ import { useShallow } from "zustand/react/shallow";
 import type { IdCarta } from "@/bindings/IdCarta";
 import type { Nota } from "@/bindings/Nota";
 import { ContenidoContextual } from "@/components/contenido-contextual";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
@@ -12,13 +13,7 @@ import {
 	ContextMenuSeparator,
 	ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import {
-	Dialog,
-	DialogContent,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { cn } from "@/lib/utils";
@@ -76,7 +71,7 @@ export function NotaDialog({ carta, nota }: { carta: IdCarta | null; nota?: Nota
 	};
 	return (
 		<Dialog open onOpenChange={(o) => !o && cerrar()}>
-			<DialogContent className="sm:max-w-sm" cambiosSinGuardar={limpio !== (nota?.texto ?? "")}>
+			<DialogoAdaptable className="sm:max-w-sm" cambiosSinGuardar={limpio !== (nota?.texto ?? "")}>
 				<DialogHeader>
 					<DialogTitle>
 						{nota
@@ -127,7 +122,7 @@ export function NotaDialog({ carta, nota }: { carta: IdCarta | null; nota?: Nota
 						{nota ? t("Guardar") : t("Añadir nota")}
 					</Button>
 				</DialogFooter>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }

@@ -3,6 +3,7 @@ import type { Formato } from "@/bindings/Formato";
 import { Fila, FilaInterruptor, Selector } from "@/components/campos";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { COLORES_EQUIPO } from "./colores";
 import {
@@ -217,17 +218,22 @@ export function SelectorDeEquipo({
 
 /**
  * Una fila de asiento que se arrastra por su asa y acepta que otra caiga
- * encima: la que se suelta ocupa su sitio y las demás se corren.
+ * encima: la que se suelta ocupa su sitio y las demás se corren. Con el dedo
+ * lleva además los botones de subir y bajar (`alMover` dice si se puede; los
+ * da `ordenTrasPasar`).
  */
 export function FilaOrdenable({
 	i,
 	etiqueta,
 	children,
+	alMover,
 }: {
 	i: number;
 	etiqueta: string;
 	children: React.ReactNode;
+	alMover?: { subir: (() => void) | null; bajar: (() => void) | null };
 }) {
+	const { t } = useLang();
 	const origen = useDraggable({ id: i });
 	const destino = useDroppable({ id: i });
 	const m = origen.transform;
@@ -247,11 +253,34 @@ export function FilaOrdenable({
 				{...origen.listeners}
 				{...origen.attributes}
 				aria-label={etiqueta}
-				className="flex size-6 shrink-0 cursor-grab touch-none items-center justify-center rounded text-muted-foreground hover:bg-accent active:cursor-grabbing"
+				className="flex size-6 shrink-0 cursor-grab touch-none items-center justify-center rounded text-muted-foreground hover:bg-accent active:cursor-grabbing [[data-tactil]_&]:size-11"
 			>
 				<Icono icon="lucide:grip-vertical" className="size-3.5" />
 			</button>
-			{children}
+			{/* Con muchas cosas en la fila (en un móvil), lo que no cabe pasa a la línea de abajo. */}
+			<div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">{children}</div>
+			{alMover && (
+				<span className="hidden shrink-0 [[data-tactil]_&]:flex">
+					<Button
+						size="icon-sm"
+						variant="ghost"
+						aria-label={t("Subir")}
+						disabled={!alMover.subir}
+						onClick={() => alMover.subir?.()}
+					>
+						<Icono icon="lucide:chevron-up" className="size-4" />
+					</Button>
+					<Button
+						size="icon-sm"
+						variant="ghost"
+						aria-label={t("Bajar")}
+						disabled={!alMover.bajar}
+						onClick={() => alMover.bajar?.()}
+					>
+						<Icono icon="lucide:chevron-down" className="size-4" />
+					</Button>
+				</span>
+			)}
 		</div>
 	);
 }

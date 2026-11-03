@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { cartasDe, cuantasEn, useMesa } from "@/stores/mesa-store";
 import { hacer, zonaComun } from "./acciones";
 import { caraVisible, ImagenCarta } from "./imagen-carta";
+import { useLeerEnGrande } from "./leer-en-grande";
 import { planeswalkPendiente } from "./planar";
 
 /**
@@ -27,6 +28,7 @@ function PlanoActivo() {
 	const tiradas = useMesa((s) => s.general?.turno.tiradasPlanar ?? 0);
 	const pendiente = useMesa((s) => planeswalkPendiente(s.registro));
 	const quieta = useMesa((s) => s.general?.mulligan != null);
+	const leer = useLeerEnGrande(carta?.id ?? null);
 	return (
 		<div
 			className="flex w-48 flex-col gap-1.5 rounded-lg border border-white/10 bg-black/60 p-2 text-white shadow-lg backdrop-blur-md"
@@ -38,10 +40,7 @@ function PlanoActivo() {
 			</div>
 			<div
 				className="aspect-[88/63] w-full overflow-hidden rounded-md border border-white/15 bg-black/40"
-				onPointerEnter={() => carta && useMesa.getState().setSobre(carta.id)}
-				onPointerLeave={() => {
-					if (carta && useMesa.getState().sobre === carta.id) useMesa.getState().setSobre(null);
-				}}
+				{...leer}
 			>
 				{carta ? (
 					<ImagenCarta imagen={caraVisible(carta)} ancho={244} nombre={carta.origen?.nombre} />

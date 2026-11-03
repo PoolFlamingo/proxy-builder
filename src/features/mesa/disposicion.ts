@@ -19,7 +19,13 @@ export type ZonaPantalla = "biblioteca" | "cementerio" | "exilio" | "mando" | "b
 
 export type Disposicion = {
 	tablero: Rect;
+	/**
+	 * Donde se convierten las posiciones del motor en píxeles. Sin zoom es el
+	 * hueco del campo; con él (`gestos.ts::conVista`) es el campo ampliado.
+	 */
 	campo: Rect;
+	/** Con zoom, el hueco del campo que se ve de verdad. */
+	visible?: Rect;
 	mano: Rect;
 	zonas: Record<ZonaPantalla, Rect>;
 	/** Medida de una carta del campo (sin girar). */
@@ -118,8 +124,11 @@ export function abanico(
  * - `foco`: uno grande y los demás en miniatura en una tira.
  * - `rejilla`: todos iguales.
  * - `equipos`: rejilla con los compañeros juntos.
+ * - `movil`: un tablero a la vez, el del asiento que se mira, y los demás no
+ *   se pintan (ni miniaturas); se cambia desde la barra de asientos. No se
+ *   elige ni se recuerda: en un móvil se fuerza (`useDisposicion`).
  */
-export type ModoDisposicion = "unico" | "dividido" | "foco" | "rejilla" | "equipos";
+export type ModoDisposicion = "unico" | "dividido" | "foco" | "rejilla" | "equipos" | "movil";
 
 export type LadoTira = "arriba" | "derecha" | "abajo";
 
@@ -131,6 +140,14 @@ export type ConfigDisposicion = {
 	proporcion: number;
 	/** En «dividido», uno al lado del otro (vertical) o uno encima del otro. */
 	vertical: boolean;
+};
+
+/** La disposición que se fuerza en el móvil: no depende de los ajustes ni de cuántos juegan. */
+export const DISPOSICION_MOVIL: ConfigDisposicion = {
+	modo: "movil",
+	tira: "abajo",
+	proporcion: 0.7,
+	vertical: true,
 };
 
 export const DISPOSICION_DE_FABRICA: ConfigDisposicion = {
@@ -212,6 +229,7 @@ export function repartir(
 	equipos: (number | null)[] = [],
 ): Rect[] {
 	if (n <= 0) return [];
+	if (c.modo === "movil") return repartirMovil(n, r, grande);
 	if (n === 1 || c.modo === "unico") return [r, ...Array.from({ length: n - 1 }, () => VACIO)];
 	const modo = c.modo === "dividido" && n !== 2 ? "rejilla" : c.modo;
 	switch (modo) {
@@ -293,6 +311,15 @@ export function repartir(
 		default:
 			return rejilla(n, r);
 	}
+}
+
+/**
+ * El modo del móvil: el tablero `grande` (el que se mira) ocupa toda la
+ * pantalla y los demás no tienen área, así que no se pintan. Nunca se sale de `r`.
+ */
+export function repartirMovil(n: number, r: Rect, grande: number): Rect[] {
+	const g = Math.max(0, Math.min(n - 1, grande));
+	return Array.from({ length: n }, (_, i) => (i === g ? r : VACIO));
 }
 
 /** Un rectángulo sin área, para los tableros que no se ven. */

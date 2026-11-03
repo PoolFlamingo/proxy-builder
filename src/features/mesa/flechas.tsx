@@ -80,7 +80,13 @@ export function Flechas({ disp }: { disp: Disposicion }) {
 		[flechas, jugadores],
 	);
 	if (flechas.length === 0) return null;
-	const desde = (j: IdJugador) => entradaDesde(disp.campo.w, disp.campo.h, alrededor[j]);
+	// Lo que entra de fuera, por el borde del campo que se ve (con zoom, `campo`
+	// es el ampliado y sus bordes quedan fuera de la pantalla). Sin zoom es `campo`.
+	const marco = disp.visible ?? disp.campo;
+	const desde = (j: IdJugador) => {
+		const p = entradaDesde(marco.w, marco.h, alrededor[j]);
+		return { x: marco.x + p.x, y: marco.y + p.y };
+	};
 	/** El punto de un extremo y si está en este tablero (o es mi vida) o fuera. */
 	const punto = (
 		e: (typeof flechas)[number]["de"],
@@ -96,13 +102,13 @@ export function Flechas({ disp }: { disp: Disposicion }) {
 		if (e.tipo === "fantasma")
 			return fantasma
 				? { ...fantasma, aqui: true }
-				: { x: disp.campo.w - 80, y: Math.min(30, disp.campo.h / 2), aqui: true };
+				: { x: marco.x + marco.w - 80, y: marco.y + Math.min(30, marco.h / 2), aqui: true };
 		// Yo: mi marcador de vida. El de este tablero (si miro el de otro): su
 		// marcador o, sin él, arriba en el centro. Otro: por el lado de su mesa.
 		if (e.id === yo && vida) return { ...vida, aqui: true };
 		if (e.id === viendo && vidaViendo) return { ...vidaViendo, aqui: true };
 		if (e.id === viendo)
-			return { x: disp.campo.w / 2, y: Math.min(30, disp.campo.h / 2), aqui: true };
+			return { x: marco.x + marco.w / 2, y: marco.y + Math.min(30, marco.h / 2), aqui: true };
 		return { ...desde(e.id), aqui: false };
 	};
 	const dibujadas = flechas.flatMap((f, i) => {

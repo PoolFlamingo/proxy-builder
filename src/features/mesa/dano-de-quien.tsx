@@ -154,7 +154,7 @@ export function DanoDeQuien() {
 				<button
 					type="button"
 					aria-label={t("Cerrar")}
-					className="ml-auto rounded p-0.5 text-white/60 hover:bg-white/10"
+					className="ml-auto rounded p-0.5 text-white/60 hover:bg-white/10 [[data-tactil]_&]:flex [[data-tactil]_&]:size-11 [[data-tactil]_&]:items-center [[data-tactil]_&]:justify-center"
 					onClick={() => useDanoDe.getState().preguntar(null)}
 				>
 					<Icono icon="lucide:x" className="size-3.5" />

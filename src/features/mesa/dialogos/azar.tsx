@@ -1,15 +1,10 @@
 import { useState } from "react";
 import { CampoNumero, Selector } from "@/components/campos";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { useMesa } from "@/stores/mesa-store";
 import { hacer } from "../acciones";
@@ -41,7 +36,7 @@ export function AzarDialog() {
 	const tirar = (dados: [number, number][]) => lanzar({ que: "tirarDados", dados });
 	return (
 		<Dialog open onOpenChange={(o) => !o && usePantalla.getState().abrir(null)}>
-			<DialogContent className="sm:max-w-md" cambiosSinGuardar={false}>
+			<DialogoAdaptable className="sm:max-w-md" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle>{t("Dados y monedas")}</DialogTitle>
 					<DialogDescription>
@@ -114,7 +109,7 @@ export function AzarDialog() {
 						{t("Tirar")}
 					</Button>
 				</section>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }

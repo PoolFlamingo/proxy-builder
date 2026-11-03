@@ -3,12 +3,12 @@ import type { IdCarta } from "@/bindings/IdCarta";
 import type { IdJugador } from "@/bindings/IdJugador";
 import type { VistaCarta } from "@/bindings/VistaCarta";
 import type { Zona } from "@/bindings/Zona";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
@@ -20,6 +20,7 @@ import { WithTooltip } from "@/components/ui/with-tooltip";
 import { useMesa } from "@/stores/mesa-store";
 import { destino, hacer, mover, sitio } from "../acciones";
 import { caraVisible, ImagenCarta } from "../imagen-carta";
+import { manejadoresLeer } from "../leer-en-grande";
 import { hacerPor } from "../operaciones";
 import { usePantalla } from "../pantalla";
 
@@ -114,11 +115,7 @@ function Rejilla({
 	const pinta = (lista: VistaCarta[]) =>
 		lista.map((c) => (
 			<div key={c.id} className="flex w-32 flex-col gap-1">
-				<div
-					className="h-[178px] overflow-hidden rounded-[5%]"
-					onPointerEnter={() => useMesa.getState().setSobre(c.id)}
-					onPointerLeave={() => useMesa.getState().setSobre(null)}
-				>
+				<div className="h-[178px] overflow-hidden rounded-[5%]" {...manejadoresLeer(c.id)}>
 					<ImagenCarta imagen={caraVisible(c, true)} ancho={244} nombre={c.origen?.nombre} />
 				</div>
 				<div className="flex flex-wrap justify-center gap-1">{acciones(c)}</div>
@@ -238,7 +235,7 @@ export function BuscarDialog({ de, filtro }: { de: IdJugador; filtro: "todo" | "
 	};
 	return (
 		<Dialog open onOpenChange={(o) => !o && cerrar(false)}>
-			<DialogContent className="sm:max-w-5xl" cambiosSinGuardar={false}>
+			<DialogoAdaptable className="sm:max-w-5xl" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle>{t("Biblioteca")}</DialogTitle>
 					<DialogDescription>{t("{n} cartas", { n: cartas.length })}</DialogDescription>
@@ -279,7 +276,7 @@ export function BuscarDialog({ de, filtro }: { de: IdJugador; filtro: "todo" | "
 						{t("Barajar y cerrar")}
 					</Button>
 				</DialogFooter>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }
@@ -322,7 +319,7 @@ export function VerZonaDialog({ jugador, zona }: { jugador: IdJugador; zona: Zon
 	const a = (id: IdCarta, z: Zona, s = sitio.arriba) => void mover([id], destino(z, s, null));
 	return (
 		<Dialog open onOpenChange={(o) => !o && usePantalla.getState().abrir(null)}>
-			<DialogContent className="sm:max-w-5xl" cambiosSinGuardar={false}>
+			<DialogoAdaptable className="sm:max-w-5xl" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle>
 						{NOMBRES_ZONA[cual] ? t(NOMBRES_ZONA[cual]) : t("Zona")}
@@ -390,7 +387,7 @@ export function VerZonaDialog({ jugador, zona }: { jugador: IdJugador; zona: Zon
 						</>
 					)}
 				/>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }

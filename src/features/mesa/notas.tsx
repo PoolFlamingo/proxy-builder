@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import type { Nota } from "@/bindings/Nota";
+import { AyudaAlTocar } from "@/components/ayuda-al-tocar";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
@@ -157,11 +158,11 @@ function Cabecera({ children }: { children: React.ReactNode }) {
 /** Un icono sin acción, con su explicación. */
 function Marca({ icono, ayuda }: { icono: string; ayuda: string }) {
 	return (
-		<WithTooltip content={ayuda}>
+		<AyudaAlTocar ayuda={ayuda}>
 			<span className="mt-0.5 shrink-0 text-muted-foreground">
 				<Icono icon={icono} className="size-3.5" />
 			</span>
-		</WithTooltip>
+		</AyudaAlTocar>
 	);
 }
 

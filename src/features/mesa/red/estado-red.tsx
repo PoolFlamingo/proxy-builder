@@ -1,12 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { AyudaAlTocar } from "@/components/ayuda-al-tocar";
 import { Confirmar } from "@/components/confirmar";
 import { ContenidoContextual } from "@/components/contenido-contextual";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { WithTooltip } from "@/components/ui/with-tooltip";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { NINGUNA, tableroDe, useMesa } from "@/stores/mesa-store";
@@ -20,6 +20,7 @@ import { mirarJugador } from "../mirar";
 import { alternarOriginales } from "../originales";
 import { useDisposicion } from "../selector-disposicion";
 import { volverARed } from "./conexion-red";
+import { aspectoDeConexion } from "./cuentas-conexion";
 
 /** Verde, ámbar o rojo según lo que tarda el ida y vuelta. */
 export function colorDeLatencia(rttMs: number): string {
@@ -37,7 +38,7 @@ export function Latencia({ id }: { id: number }) {
 		? t("{ms} ms · directo", { ms: e.rttMs })
 		: t("{ms} ms · por relé", { ms: e.rttMs });
 	return (
-		<WithTooltip content={ayuda}>
+		<AyudaAlTocar ayuda={ayuda}>
 			<span
 				className={cn(
 					"flex items-center gap-0.5 text-[10px] tabular-nums",
@@ -47,7 +48,7 @@ export function Latencia({ id }: { id: number }) {
 				<Icono icon="lucide:wifi" className={cn("size-3", !e.directo && "opacity-60")} />
 				{e.rttMs}
 			</span>
-		</WithTooltip>
+		</AyudaAlTocar>
 	);
 }
 
@@ -174,22 +175,39 @@ export function AvisoConexion() {
 	const candidato = useRed((s) => s.candidato);
 	const mayoria = useRed((s) => s.mayoria);
 	const papel = useRed((s) => s.papel);
+	const volviendoHasta = useRed((s) => s.volviendoHasta);
 	const nombre = useMesa((s) => (candidato !== null ? s.jugadores[candidato]?.nombre : undefined));
 	const sinMayoria = papel === "anfitrion" && mayoria !== null && !mayoria.activa;
-	if (conexion === "conectada" && !sinMayoria) return null;
+	// Tras volver de segundo plano, una conexión cortada es «volviendo», no un error:
+	// se repinta al acabarse el plazo para que, si no vuelve, salga el aviso de verdad.
+	const [ahora, setAhora] = useState(() => Date.now());
+	useEffect(() => {
+		const falta = volviendoHasta - Date.now();
+		if (falta <= 0) return;
+		setAhora(Date.now());
+		const id = window.setTimeout(() => setAhora(Date.now()), falta + 50);
+		return () => window.clearTimeout(id);
+	}, [volviendoHasta]);
+	const aspecto = aspectoDeConexion(conexion, volviendoHasta, ahora);
+	if (aspecto === "conectada" && !sinMayoria) return null;
 	return (
-		<div className="absolute top-14 left-1/2 z-[7500] flex -translate-x-1/2 items-center gap-2.5 rounded-xl border border-amber-500/40 bg-black/80 px-2.5 py-1.5 text-xs text-white shadow-lg backdrop-blur-md">
-			{conexion === "reconectando" ? (
+		<div className="absolute top-14 left-1/2 z-[7500] flex max-w-[94%] -translate-x-1/2 flex-wrap items-center justify-center gap-2.5 rounded-xl border border-amber-500/40 bg-black/80 px-2.5 py-1.5 text-xs text-white shadow-lg backdrop-blur-md">
+			{aspecto === "volviendo" ? (
+				<>
+					<Icono icon="lucide:loader-2" className="size-3.5 animate-spin text-amber-400" />
+					{t("Volviendo a la partida…")}
+				</>
+			) : aspecto === "reconectando" ? (
 				<>
 					<Icono icon="lucide:loader-2" className="size-3.5 animate-spin text-amber-400" />
 					{t("Reconectando con el anfitrión… (intento {intento})", { intento })}
 				</>
-			) : conexion === "buscando" ? (
+			) : aspecto === "buscando" ? (
 				<>
 					<Icono icon="lucide:loader-2" className="size-3.5 animate-spin text-amber-400" />
 					{t("El anfitrión no vuelve: probando con {nombre}…", { nombre: nombre ?? "?" })}
 				</>
-			) : conexion === "perdida" ? (
+			) : aspecto === "perdida" ? (
 				<>
 					<Icono icon="lucide:wifi-off" className="size-3.5 text-red-400" />
 					{t("Se ha perdido la conexión con la partida.")}

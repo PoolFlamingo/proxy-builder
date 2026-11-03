@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { IdJugador } from "@/bindings/IdJugador";
 import type { VistaBanquillo } from "@/bindings/VistaBanquillo";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
@@ -119,7 +119,7 @@ export function BanquilloDialog({ onCerrar }: { onCerrar: () => void }) {
 
 	return (
 		<Dialog open onOpenChange={(o) => !o && onCerrar()}>
-			<DialogContent className="sm:max-w-2xl" cambiosSinGuardar={false}>
+			<DialogoAdaptable className="sm:max-w-2xl" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle>{t("Banquillo")}</DialogTitle>
 					<DialogDescription>
@@ -207,7 +207,7 @@ export function BanquilloDialog({ onCerrar }: { onCerrar: () => void }) {
 						{invitado ? t("Guardar") : t("Empezar la partida {siguiente}", { siguiente })}
 					</Button>
 				</DialogFooter>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }

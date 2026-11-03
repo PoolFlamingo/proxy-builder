@@ -2,12 +2,12 @@ import { useState } from "react";
 import type { ComoGano } from "@/bindings/ComoGano";
 import type { IdJugador } from "@/bindings/IdJugador";
 import { Selector } from "@/components/campos";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
@@ -58,7 +58,7 @@ export function TerminarDialog() {
 		setGanadores((g) => (g.includes(j) ? g.filter((x) => x !== j) : [...g, j]));
 	return (
 		<Dialog open onOpenChange={(o) => !o && cerrar()}>
-			<DialogContent className="sm:max-w-md" cambiosSinGuardar={false}>
+			<DialogoAdaptable className="sm:max-w-md" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle>{t("¿Quién ganó?")}</DialogTitle>
 					<DialogDescription>
@@ -136,7 +136,7 @@ export function TerminarDialog() {
 						{t("Terminar")}
 					</Button>
 				</DialogFooter>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }

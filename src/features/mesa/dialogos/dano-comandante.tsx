@@ -2,15 +2,10 @@ import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import type { IdCarta } from "@/bindings/IdCarta";
 import type { IdJugador } from "@/bindings/IdJugador";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useMesa } from "@/stores/mesa-store";
@@ -35,7 +30,7 @@ export function DanoComandanteDialog() {
 	const limite = useMesa((s) => s.opciones?.limiteComandante ?? 21);
 	return (
 		<Dialog open onOpenChange={(o) => !o && cerrar()}>
-			<DialogContent className="sm:max-w-4xl" cambiosSinGuardar={false}>
+			<DialogoAdaptable className="sm:max-w-4xl" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle>{t("Daño de comandante")}</DialogTitle>
 					<DialogDescription>
@@ -73,7 +68,7 @@ export function DanoComandanteDialog() {
 						</table>
 					</ScrollArea>
 				)}
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }

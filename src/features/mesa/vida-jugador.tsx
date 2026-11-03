@@ -22,6 +22,7 @@ import { useUi } from "@/stores/ui-store";
 import { hacer } from "./acciones";
 import { CONTADORES_JUGADOR } from "./colores";
 import { deltaSeguro } from "./dano-comandante";
+import { useMesaMovil } from "./formato-mesa";
 import { MarcasJugador } from "./marcas-jugador";
 import * as op from "./operaciones";
 import { alternarOriginales } from "./originales";
@@ -59,6 +60,8 @@ export function VidaJugador({
 		j?.equipo != null ? s.general?.equipos.find((e) => e.id === j.equipo) : undefined,
 	);
 	const trackers = useUi((s) => s.mesa.trackers);
+	// En el móvil, «Pasar turno» es el botón redondo de arriba (`movil/controles.tsx`).
+	const movil = useMesaMovil();
 	const [pendiente, setPendiente] = useState(0);
 	const temporizador = useRef<number | null>(null);
 	const acumulado = useRef(0);
@@ -97,7 +100,7 @@ export function VidaJugador({
 							{t(c.nombre)}
 							<button
 								type="button"
-								className="px-0.5"
+								className="px-0.5 [[data-tactil]_&]:min-h-11 [[data-tactil]_&]:min-w-11"
 								onClick={() =>
 									void hacer({ que: "contadorJugador", jugador, tipo: c.tipo, delta: -1 })
 								}
@@ -107,7 +110,7 @@ export function VidaJugador({
 							<b className="tabular-nums">{j.contadores[c.tipo] ?? 0}</b>
 							<button
 								type="button"
-								className="px-0.5"
+								className="px-0.5 [[data-tactil]_&]:min-h-11 [[data-tactil]_&]:min-w-11"
 								onClick={() =>
 									void hacer({ que: "contadorJugador", jugador, tipo: c.tipo, delta: 1 })
 								}
@@ -127,7 +130,7 @@ export function VidaJugador({
 						{j.nombre}
 					</span>
 				)}
-				{activo && !mulligan && !ajena && (
+				{activo && !mulligan && !ajena && !movil && (
 					<Button
 						size="sm"
 						onClick={() => void op.pasarTurno()}
@@ -147,10 +150,18 @@ export function VidaJugador({
 						)}
 						onWheel={(e) => sumar(e.deltaY < 0 ? 1 : -1)}
 					>
-						<button type="button" className="px-1.5 text-lg leading-none" onClick={() => sumar(-1)}>
+						<button
+							type="button"
+							className="px-1.5 text-lg leading-none [[data-tactil]_&]:min-h-11 [[data-tactil]_&]:min-w-11"
+							onClick={() => sumar(-1)}
+						>
 							−
 						</button>
-						<div className="flex min-w-12 flex-col items-center leading-none">
+						<div
+							className="flex min-w-12 flex-col items-center leading-none"
+							// En el móvil, tocar el número abre la pantalla de vida (con veneno y comandante).
+							onClick={() => movil && usePantalla.getState().setCapa("vida")}
+						>
 							<span className="text-2xl font-bold tabular-nums">{vida + pendiente}</span>
 							{pendiente !== 0 && (
 								<span className="text-[10px] text-white/70 tabular-nums">
@@ -158,7 +169,11 @@ export function VidaJugador({
 								</span>
 							)}
 						</div>
-						<button type="button" className="px-1.5 text-lg leading-none" onClick={() => sumar(1)}>
+						<button
+							type="button"
+							className="px-1.5 text-lg leading-none [[data-tactil]_&]:min-h-11 [[data-tactil]_&]:min-w-11"
+							onClick={() => sumar(1)}
+						>
 							+
 						</button>
 					</div>

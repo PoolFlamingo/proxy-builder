@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { AyudaAlTocar } from "@/components/ayuda-al-tocar";
 import { ContenidoContextual } from "@/components/contenido-contextual";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
@@ -11,12 +12,13 @@ import {
 	ContextMenuSubTrigger,
 	ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { WithTooltip } from "@/components/ui/with-tooltip";
+
 import { cn } from "@/lib/utils";
 import { NINGUNA, useMesa } from "@/stores/mesa-store";
 import { useUi } from "@/stores/ui-store";
 import { hacer } from "./acciones";
 import { comandantesDe, deltaSeguro } from "./dano-comandante";
+import { useMesaMovil } from "./formato-mesa";
 import { elegirFantasma } from "./objetivo";
 import { pedirNumero, usePantalla } from "./pantalla";
 
@@ -46,6 +48,8 @@ export function VidaFantasma() {
 		() => Object.fromEntries(comandantesDe(cartas).map((c) => [c.id, c.nombre])),
 		[cartas],
 	);
+	// En el móvil baja un poco: arriba a la derecha está «Pasar turno».
+	const movil = useMesaMovil();
 	const [pendiente, setPendiente] = useState(0);
 	const temporizador = useRef<number | null>(null);
 	const acumulado = useRef(0);
@@ -78,7 +82,7 @@ export function VidaFantasma() {
 					apuntando && "cursor-crosshair ring-2 ring-primary",
 					!apuntando && fuera && "ring-2 ring-rose-500",
 				)}
-				style={{ right: 12, top: 56, zIndex: 5500 }}
+				style={{ right: 12, top: movil ? 72 : 56, zIndex: 5500 }}
 				// Con una flecha en marcha, el clic es para apuntarle (no para − ni +).
 				onClickCapture={(e) => {
 					if (elegirFantasma(t)) {
@@ -91,7 +95,11 @@ export function VidaFantasma() {
 			>
 				<Icono icon="game-icons:ghost" className="size-4 opacity-80" />
 				<span className="text-[10px] opacity-70">{t("Fantasma")}</span>
-				<button type="button" className="px-1.5 text-lg leading-none" onClick={() => sumar(-1)}>
+				<button
+					type="button"
+					className="px-1.5 text-lg leading-none [[data-tactil]_&]:min-h-11 [[data-tactil]_&]:min-w-11"
+					onClick={() => sumar(-1)}
+				>
 					−
 				</button>
 				<div className="flex min-w-9 flex-col items-center leading-none">
@@ -102,11 +110,15 @@ export function VidaFantasma() {
 						</span>
 					)}
 				</div>
-				<button type="button" className="px-1.5 text-lg leading-none" onClick={() => sumar(1)}>
+				<button
+					type="button"
+					className="px-1.5 text-lg leading-none [[data-tactil]_&]:min-h-11 [[data-tactil]_&]:min-w-11"
+					onClick={() => sumar(1)}
+				>
 					+
 				</button>
 				{veneno > 0 && (
-					<WithTooltip content={t("Veneno")}>
+					<AyudaAlTocar ayuda={t("Veneno")}>
 						<span
 							className={cn(
 								"ml-0.5 flex items-center gap-0.5 text-xs tabular-nums",
@@ -116,12 +128,12 @@ export function VidaFantasma() {
 							<Icono icon="game-icons:poison-bottle" className="size-3.5" />
 							{veneno}
 						</span>
-					</WithTooltip>
+					</AyudaAlTocar>
 				)}
 				{comandantes.map(([id, n]) => (
-					<WithTooltip
+					<AyudaAlTocar
 						key={id}
-						content={t("Daño de {nombre}", { nombre: nombres[Number(id)] ?? "" })}
+						ayuda={t("Daño de {nombre}", { nombre: nombres[Number(id)] ?? "" })}
 					>
 						<span
 							className={cn(
@@ -132,15 +144,15 @@ export function VidaFantasma() {
 							<Icono icon="game-icons:crowned-skull" className="size-3.5" />
 							{n}
 						</span>
-					</WithTooltip>
+					</AyudaAlTocar>
 				))}
 				{atacado > 0 && (
-					<WithTooltip content={t("Atacantes")}>
+					<AyudaAlTocar ayuda={t("Atacantes")}>
 						<span className="ml-0.5 flex items-center gap-0.5 text-xs text-rose-300 tabular-nums">
 							<Icono icon="game-icons:crossed-swords" className="size-3.5" />
 							{atacado}
 						</span>
-					</WithTooltip>
+					</AyudaAlTocar>
 				)}
 			</div>
 		</MenuFantasma>

@@ -58,7 +58,7 @@ export function BotonSparring() {
 					<button
 						type="button"
 						className={cn(
-							"flex h-7 items-center gap-1.5 rounded-lg border px-2 text-left uppercase",
+							"flex h-7 items-center gap-1.5 rounded-lg border px-2 text-left uppercase [[data-tactil]_&]:h-11",
 							encendido
 								? "border-primary/60 bg-primary/15 text-primary"
 								: "border-white/15 text-white/80 hover:bg-white/10",
