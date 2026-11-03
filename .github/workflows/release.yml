@@ -28,12 +28,19 @@ name: release
 
 on:
   workflow_dispatch:
+    inputs:
+      solo_android:
+        description: "Solo el APK de Android (el borrador ya tiene los instaladores de escritorio)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
 
 jobs:
   build:
+    # Con «solo_android» no se recompila el escritorio: el borrador ya lo trae.
+    if: ${{ !inputs.solo_android }}
     strategy:
       fail-fast: false
       matrix:
@@ -87,8 +94,10 @@ jobs:
           args: ${{ matrix.args }}
 
   android:
-    # El borrador de la release lo crea `tauri-action` en `build`.
+    # El borrador de la release lo crea `tauri-action` en `build` (o ya existe,
+    # con «solo_android»: entonces `build` sale saltado).
     needs: build
+    if: ${{ !cancelled() && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
     runs-on: ubuntu-24.04
     env:
       NDK_VERSION: 28.2.13676358
@@ -101,6 +110,10 @@ jobs:
           java-version: "21"
 
       - uses: android-actions/setup-android@v3
+        with:
+          # Por defecto instala `tools`, que Google ya no publica y hace fallar
+          # el paso («Failed to find package 'tools'»). Lo demás va en el paso siguiente.
+          packages: platform-tools
 
       - name: SDK y NDK de Android
         run: |
