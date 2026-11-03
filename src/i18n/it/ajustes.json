@@ -96,5 +96,6 @@
 	"Buscar versiones nuevas al abrir la app y bajarlas sin molestar. Android te pedirá confirmar cada instalación.": "Cerca nuove versioni all'apertura dell'app e scaricale senza disturbare. Android ti chiederà di confermare ogni installazione.",
 	"La {version} está lista. Android te pedirá confirmar la instalación.": "La {version} è pronta. Android ti chiederà di confermare l'installazione.",
 	"Instalar la {version}": "Installa la {version}",
-	"Android necesita tu permiso para instalar la actualización: se ha abierto su ajuste. Permite instalar apps desde Proxy Builder, vuelve y pulsa «Instalar» otra vez.": "Android ha bisogno del tuo permesso per installare l'aggiornamento: la sua impostazione è stata aperta. Consenti l'installazione di app da Proxy Builder, torna indietro e tocca di nuovo «Installa»."
+	"Android necesita tu permiso para instalar la actualización: se ha abierto su ajuste. Permite instalar apps desde Proxy Builder, vuelve y pulsa «Instalar» otra vez.": "Android ha bisogno del tuo permesso per installare l'aggiornamento: la sua impostazione è stata aperta. Consenti l'installazione di app da Proxy Builder, torna indietro e tocca di nuovo «Installa».",
+	"Descargado": "Scaricato"
 }

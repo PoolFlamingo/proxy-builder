@@ -92,5 +92,6 @@
 	"Buscar versiones nuevas al abrir la app y bajarlas sin molestar. Android te pedirá confirmar cada instalación.": "앱을 열 때 새 버전을 확인하고 조용히 다운로드해요. 설치할 때마다 Android에서 확인을 요청해요.",
 	"La {version} está lista. Android te pedirá confirmar la instalación.": "{version}이(가) 준비됐어요. 설치를 확인하라는 메시지가 Android에서 표시돼요.",
 	"Instalar la {version}": "{version} 설치",
-	"Android necesita tu permiso para instalar la actualización: se ha abierto su ajuste. Permite instalar apps desde Proxy Builder, vuelve y pulsa «Instalar» otra vez.": "업데이트를 설치하려면 Android의 허용이 필요해요. 설정을 열어 두었어요. Proxy Builder의 앱 설치를 허용하고 돌아와서 '설치'를 다시 누르세요."
+	"Android necesita tu permiso para instalar la actualización: se ha abierto su ajuste. Permite instalar apps desde Proxy Builder, vuelve y pulsa «Instalar» otra vez.": "업데이트를 설치하려면 Android의 허용이 필요해요. 설정을 열어 두었어요. Proxy Builder의 앱 설치를 허용하고 돌아와서 '설치'를 다시 누르세요.",
+	"Descargado": "다운로드됨"
 }

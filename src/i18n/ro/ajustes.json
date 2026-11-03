@@ -96,5 +96,6 @@
 	"Buscar versiones nuevas al abrir la app y bajarlas sin molestar. Android te pedirá confirmar cada instalación.": "Caută versiuni noi la deschiderea aplicației și descarcă-le discret. Android îți va cere să confirmi fiecare instalare.",
 	"La {version} está lista. Android te pedirá confirmar la instalación.": "{version} este gata. Android îți va cere să confirmi instalarea.",
 	"Instalar la {version}": "Instalează {version}",
-	"Android necesita tu permiso para instalar la actualización: se ha abierto su ajuste. Permite instalar apps desde Proxy Builder, vuelve y pulsa «Instalar» otra vez.": "Android are nevoie de permisiunea ta ca să instaleze actualizarea: setarea a fost deschisă. Permite instalarea de aplicații din Proxy Builder, revino și apasă din nou «Instalează»."
+	"Android necesita tu permiso para instalar la actualización: se ha abierto su ajuste. Permite instalar apps desde Proxy Builder, vuelve y pulsa «Instalar» otra vez.": "Android are nevoie de permisiunea ta ca să instaleze actualizarea: setarea a fost deschisă. Permite instalarea de aplicații din Proxy Builder, revino și apasă din nou «Instalează».",
+	"Descargado": "Descărcat"
 }

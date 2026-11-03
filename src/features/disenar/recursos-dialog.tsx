@@ -380,7 +380,7 @@ function Contenido() {
 }
 
 /** Los marcos «Original» sin descargar: qué son y el botón para bajarlos. */
-function FilaOriginales({ alTerminar }: { alTerminar: () => void }) {
+export function FilaOriginales({ alTerminar }: { alTerminar: () => void }) {
 	const { t, mensaje } = useLang();
 	const { info, progreso, cargar, descargar } = useMarcosOriginales();
 	useEffect(() => {
@@ -421,7 +421,7 @@ function FilaOriginales({ alTerminar }: { alTerminar: () => void }) {
 }
 
 /** Los packs descargables (Balatro): bajarlos y, ya bajados, su contenido extra. */
-function FilasDescargables({ alTerminar }: { alTerminar: () => void }) {
+export function FilasDescargables({ alTerminar }: { alTerminar: () => void }) {
 	const { t, mensaje } = useLang();
 	const { lista, progreso, cargar, descargar } = usePacksDescargables();
 	const [abierto, setAbierto] = useState<string | null>(null);

@@ -92,5 +92,6 @@
 	"Buscar versiones nuevas al abrir la app y bajarlas sin molestar. Android te pedirá confirmar cada instalación.": "打开应用时检查新版本并在后台下载。每次安装前，Android 都会请你确认。",
 	"La {version} está lista. Android te pedirá confirmar la instalación.": "{version} 已就绪。Android 会请你确认安装。",
 	"Instalar la {version}": "安装 {version}",
-	"Android necesita tu permiso para instalar la actualización: se ha abierto su ajuste. Permite instalar apps desde Proxy Builder, vuelve y pulsa «Instalar» otra vez.": "Android 需要你的许可才能安装更新：已打开相应设置。请允许 Proxy Builder 安装应用，然后返回并再次点按“安装”。"
+	"Android necesita tu permiso para instalar la actualización: se ha abierto su ajuste. Permite instalar apps desde Proxy Builder, vuelve y pulsa «Instalar» otra vez.": "Android 需要你的许可才能安装更新：已打开相应设置。请允许 Proxy Builder 安装应用，然后返回并再次点按“安装”。",
+	"Descargado": "已下载"
 }

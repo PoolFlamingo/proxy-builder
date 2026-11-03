@@ -17,6 +17,7 @@ import { volverConEscape } from "@/lib/seccion-movil";
 import { Actualizaciones, ReiniciarParaActualizar } from "./actualizaciones";
 import { Almacenamiento } from "./almacenamiento";
 import { Appearance } from "./appearance";
+import { AjustesMarcos } from "./marcos";
 import { AjustesMesa } from "./mesa";
 import { NombresIdiomas } from "./nombres-idiomas";
 
@@ -75,6 +76,12 @@ export function SettingsDialog({
 			titulo: t("Mesa de juego"),
 			icono: "lucide:swords",
 			cuerpo: <AjustesMesa fija={movil} />,
+		},
+		{
+			id: "marcos",
+			titulo: t("Packs de marcos"),
+			icono: "lucide:frame",
+			cuerpo: <AjustesMarcos />,
 		},
 		{
 			id: "almacenamiento",
