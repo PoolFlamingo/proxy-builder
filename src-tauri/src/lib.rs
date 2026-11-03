@@ -7,13 +7,17 @@
 
 #![cfg_attr(not(test), deny(clippy::unwrap_used, clippy::expect_used))]
 
+pub mod abrir;
 pub mod actualizar;
+pub mod android;
 pub mod archidekt;
 pub mod biblioteca;
+pub mod ciclo;
 pub mod commands;
 pub mod diseno;
 pub mod enlace;
 pub mod error;
+pub mod fichero;
 pub mod fuentes;
 pub mod iconos;
 pub mod jobs;
@@ -21,6 +25,7 @@ pub mod mesa;
 pub mod ocr;
 pub mod originales;
 pub mod package;
+pub mod pasar;
 pub mod protocol;
 pub mod red;
 pub mod registro;
@@ -29,6 +34,7 @@ pub mod scryfall;
 pub mod state;
 pub mod store;
 pub mod temas;
+pub mod tls;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -50,11 +56,23 @@ pub fn run() {
     let constructor = constructor
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        // Solo lo usa Rust (`fichero.rs`, para leer y escribir un `content://`
+        // de Android): sin permisos `fs:` en las capacidades.
+        .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(actualizar::Actualizador::default());
 
+    // Lo que solo hace Android (compartir, instalar un APK, pantalla encendida y
+    // completa, MulticastLock, abrir ficheros): el plugin propio, solo en móvil.
+    #[cfg(mobile)]
+    let constructor = constructor.plugin(tauri_plugin_android_extra::init());
+
+    // Leer el QR de «Recibir un deck» con la cámara (`src/lib/escaner.ts`),
+    // solo en móvil.
+    #[cfg(mobile)]
+    let constructor = constructor.plugin(tauri_plugin_barcode_scanner::init());
+
     // Los enlaces `proxybuilder://unirse/<código>` (`enlace.rs`).
-    #[cfg(desktop)]
     let constructor = constructor.plugin(tauri_plugin_deep_link::init());
 
     // La ventana arranca oculta (sin el destello blanco del primer
@@ -91,6 +109,7 @@ pub fn run() {
         .register_asynchronous_uri_scheme_protocol(protocol::ESQUEMA, protocol::manejador);
 
     let resultado = constructor
+        .on_window_event(ciclo::evento)
         .setup(move |app| {
             use tauri::Manager;
             let rutas = app.path();
@@ -99,7 +118,6 @@ pub fn run() {
                 data: red::perfil::carpeta(&rutas.app_data_dir()?, p),
                 cache: red::perfil::carpeta(&rutas.app_cache_dir()?, p),
             };
-            #[cfg(desktop)]
             {
                 use tauri_plugin_deep_link::DeepLinkExt;
                 let h = app.handle().clone();
@@ -111,13 +129,17 @@ pub fn run() {
                     enlace::recibir(app.handle(), urls.iter().map(|u| u.as_str().to_owned()));
                 }
                 // AppImage y las pruebas (`pnpm tauri dev`) no pasan por un
-                // instalador que registre el esquema: se registra aquí.
+                // instalador que registre el esquema: se registra aquí. En
+                // Android lo declara el `AndroidManifest.xml`.
                 #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
                 if let Err(e) = app.deep_link().register_all() {
                     tracing::warn!("no se pudo registrar proxybuilder://: {e}");
                 }
             }
             registro::iniciar(&red::perfil::carpeta(&rutas.app_log_dir()?, p));
+            // Los `.pbdeck` que otras apps abren con esta (solo Android).
+            #[cfg(target_os = "android")]
+            abrir::escuchar(app.handle());
             crear_ventana(app, p, &paths.cache)?;
             let estado = state::AppState::open(paths).map_err(|e| e.to_string())?;
             app.manage(estado);
@@ -161,10 +183,15 @@ pub fn run() {
             commands::carpetas::carpeta_recordar,
             commands::carpetas::carpeta_inicial,
             commands::sistema::ping_error,
+            commands::sistema::app_plataforma,
+            commands::sistema::app_salir,
+            commands::sistema::app_pantalla_completa,
+            commands::sistema::app_compartir_texto,
             commands::actualizar::update_status,
             commands::actualizar::update_check,
             commands::actualizar::update_download,
             commands::actualizar::update_install,
+            commands::actualizar::update_open_release,
             commands::decklist::parse_decklist,
             commands::decklist::deck_list_text,
             commands::decklist::deck_list_save,
@@ -214,6 +241,25 @@ pub fn run() {
             commands::library::cache_clear,
             commands::library::deck_export_package,
             commands::library::deck_import_package,
+            commands::pasar::pasar_recibir_abrir,
+            commands::pasar::pasar_recibir_estado,
+            commands::pasar::pasar_recibir_cerrar,
+            commands::pasar::pasar_peticion,
+            commands::pasar::pasar_responder,
+            commands::pasar::pasar_recibir_cancelar,
+            commands::pasar::pasar_cerca_buscar,
+            commands::pasar::pasar_cerca_parar,
+            commands::pasar::pasar_codigo_comprobar,
+            commands::pasar::pasar_enviar,
+            commands::pasar::pasar_enviar_cancelar,
+            commands::pasar::pasar_emisor_estado,
+            commands::pasar::pasar_emisor_olvidar,
+            commands::pasar::pasar_completar,
+            commands::pasar::deck_paquete_info,
+            commands::pasar::deck_paquete_guardar,
+            commands::pasar::deck_paquete_compartir,
+            commands::pasar::paquete_leer,
+            commands::pasar::paquete_importar,
             commands::library::preset_list,
             commands::library::preset_save,
             commands::library::preset_delete,
@@ -298,6 +344,9 @@ pub fn run() {
             commands::mesa::mesa_origen_scryfall,
             commands::mesa::mesa_originales,
             enlace::enlace_pendiente,
+            abrir::pbdeck_pendiente,
+            commands::fichero::compartir_fichero,
+            commands::fichero::fichero_temporal,
             enlace::enlace_invitacion,
             commands::mesa::mesa_sparring_carta,
             commands::mesa::mesa_tapete_get,

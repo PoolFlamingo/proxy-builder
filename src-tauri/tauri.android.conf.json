@@ -1,0 +1,19 @@
+{
+	"$schema": "https://schema.tauri.app/config/2",
+	"app": {
+		"windows": [
+			{
+				"label": "main",
+				"create": false,
+				"title": "Proxy Builder",
+				"visible": false,
+				"backgroundColor": "#1d1b19"
+			}
+		]
+	},
+	"bundle": {
+		"android": {
+			"minSdkVersion": 26
+		}
+	}
+}

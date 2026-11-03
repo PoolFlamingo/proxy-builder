@@ -17,7 +17,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 # segundos con `cargo test -p proxy-core`. Mismo patrón que `crates/ai` en
 # judlex. Los perfiles van aquí, en la raíz: en un workspace solo cuentan éstos.
 [workspace]
-members = [".", "crates/proxy-core", "crates/mesa"]
+members = [".", "crates/proxy-core", "crates/mesa", "plugins/android-extra"]
 resolver = "2"
 
 [build-dependencies]
@@ -51,7 +51,7 @@ reqwest = { version = "0.13", default-features = false, features = ["json", "que
 tokio-tungstenite = { version = "0.30", default-features = false, features = ["connect", "__rustls-tls"] }
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
 rustls-platform-verifier = "0.7"
-tokio = { version = "1", features = ["rt", "sync", "time", "macros", "io-util"] }
+tokio = { version = "1", features = ["rt", "sync", "time", "macros", "io-util", "fs"] }
 # La mesa de juego en red (`red/`): conexiones QUIC entre jugadores por clave
 # pública, con camino directo y relé de respaldo. Sin `metrics`; TLS con ring
 # como reqwest. 🛑 `cargo tree -i openssl` sigue vacío con ella.
@@ -92,6 +92,26 @@ imagesize = "0.14"
 # (minisign, clave pública en `tauri.conf.json`) y lo instala. Usa el mismo
 # reqwest 0.13 con rustls que el resto (nada de OpenSSL).
 tauri-plugin-updater = "2"
+# Los enlaces `proxybuilder://` (`enlace.rs`): en escritorio y en Android.
+tauri-plugin-deep-link = "2"
+# Pasar decks entre equipos (`pasar/`): encontrar los equipos de la misma red
+# local por mDNS (el crate de n0; iroh no lo trae dentro) y dibujar el QR del
+# código en SVG (sin red, sin imágenes).
+iroh-mdns-address-lookup = "0.6"
+qrcode = { version = "0.14", default-features = false, features = ["svg"] }
+# Leer y escribir un `content://` de Android (`fichero.rs`): solo lo usa Rust,
+# sin permisos `fs:` en las capacidades.
+tauri-plugin-fs = "2"
+# Lo que solo hace Android (compartir, instalar un APK, pantalla encendida y
+# completa, MulticastLock, abrir ficheros): `plugins/android-extra`, en
+# Kotlin. Se registra solo en móvil; en escritorio no hace nada.
+tauri-plugin-android-extra = { path = "plugins/android-extra" }
+
+[features]
+# 🛑 Solo para probar el actualizador en un emulador (`actualizar.rs`): las
+# actualizaciones leen el `latest.json` de `PB_ACTUALIZAR_URL`. El CI y las
+# releases no la activan nunca (un test de `actualizar.rs` lo vigila).
+actualizar-local = []
 
 [dev-dependencies]
 tempfile = "3"
@@ -99,19 +119,27 @@ lopdf = "0.45"
 tokio = { version = "1", features = ["rt", "macros", "time", "test-util"] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-deep-link = "2"
 tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
 # Recuerda tamaño, posición y si estaba maximizada.
 tauri-plugin-window-state = "2"
 
 # «Pegar» en el editor de cartas: la imagen del portapapeles la lee Rust
 # (`diseno/portapapeles.rs`), porque WebKitGTK no deja leerla a la vista web.
-# En Linux, el GTK que ya trae Tauri; en Windows y macOS, arboard.
+# En Linux, el GTK que ya trae Tauri; en Windows y macOS, arboard; en móvil no
+# hay imagen del portapapeles.
 [target.'cfg(target_os = "linux")'.dependencies]
 gtk = "0.18"
 
-[target.'cfg(not(target_os = "linux"))'.dependencies]
+[target.'cfg(any(target_os = "windows", target_os = "macos"))'.dependencies]
 arboard = { version = "3", default-features = false, features = ["image-data"] }
+
+# El TLS en móvil (`tls.rs`): los certificados raíz de Mozilla incrustados, porque
+# el verificador del sistema entra en pánico en Android sin su parte de Kotlin.
+[target.'cfg(any(target_os = "android", target_os = "ios"))'.dependencies]
+webpki-root-certs = "1"
+webpki-roots = "1"
+# Leer el QR de pasar decks con la cámara (`src/lib/escaner.ts`): solo móvil.
+tauri-plugin-barcode-scanner = "2"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Perfiles (copiados de judlex con su motivo)

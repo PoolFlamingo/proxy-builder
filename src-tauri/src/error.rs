@@ -129,6 +129,28 @@ pub fn red(e: reqwest::Error) -> AppError {
         .with("detalle", detalle)
 }
 
+/// Un fallo de red que no es de HTTP (iroh, mDNS) con su `motivo`. Como
+/// [`red`], apunta en el registro la cadena entera de causas (y la lleva en
+/// `detalle`); sin error de fondo (un plazo, un rechazo del otro lado), solo
+/// el motivo.
+pub fn red_sin_http(motivo: &str, e: Option<&(dyn std::error::Error + 'static)>) -> AppError {
+    let mut err = AppError::new(ErrorCode::Network).with("motivo", motivo);
+    if let Some(e) = e {
+        let mut detalle = e.to_string();
+        let mut causa = e.source();
+        while let Some(c) = causa {
+            detalle.push_str(": ");
+            detalle.push_str(&c.to_string());
+            causa = c.source();
+        }
+        tracing::warn!(motivo, %detalle, "red: fallo");
+        err = err.with("detalle", detalle);
+    } else {
+        tracing::warn!(motivo, "red: fallo");
+    }
+    err
+}
+
 /// El servidor contestó con un estado de error que no se reintenta.
 /// `motivo`: `rechazo` si es 401/403 (lo típico de Cloudflare con una IP que
 /// no le gusta, una VPN o un proxy: el navegador pasa el reto y la app no) o

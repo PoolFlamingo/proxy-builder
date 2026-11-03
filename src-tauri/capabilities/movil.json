@@ -1,0 +1,8 @@
+{
+	"$schema": "../gen/schemas/mobile-schema.json",
+	"identifier": "movil",
+	"description": "Permisos que solo existen en el móvil: la cámara para leer el QR de pasar decks (`src/lib/escaner.ts`).",
+	"windows": ["main"],
+	"platforms": ["android", "iOS"],
+	"permissions": ["barcode-scanner:default"]
+}

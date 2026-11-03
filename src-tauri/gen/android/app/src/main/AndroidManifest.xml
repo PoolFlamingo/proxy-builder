@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- AndroidTV support -->
+    <uses-feature android:name="android.software.leanback" android:required="false" />
+
+    <application
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.proxy_builder"
+        android:usesCleartextTraffic="${usesCleartextTraffic}">
+        <activity
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:launchMode="singleTask"
+            android:label="@string/main_activity_title"
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <!-- AndroidTV support -->
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+            <!-- Abrir un .pbdeck desde otra app (Archivos, Drive, un mensaje…). No tiene
+                 tipo MIME propio: se acepta zip y binario genérico con la ruta acabada en
+                 .pbdeck (el plugin propio `android-extra` recoge la URI y Rust comprueba
+                 que sea un paquete al leerlo). Con un esquema, `pathPattern` solo vale si
+                 hay `host`. El `\\.` se escribe doble por el escape del XML. El
+                 `PatternMatcher` de Android no reintenta: `.*` se come hasta el primer
+                 punto y un nombre con otro punto antes («mi.deck.pbdeck») ya no casa;
+                 por eso van también los patrones con uno, dos y tres puntos más. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:host="*" />
+                <data android:mimeType="application/zip" />
+                <data android:mimeType="application/x-zip-compressed" />
+                <data android:mimeType="application/octet-stream" />
+                <data android:pathPattern=".*\\.pbdeck" />
+                <data android:pathPattern=".*\\..*\\.pbdeck" />
+                <data android:pathPattern=".*\\..*\\..*\\.pbdeck" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.pbdeck" />
+            </intent-filter>
+            <!-- Lo mismo desde «Descargas»: su proveedor da URI numéricas
+                 (`.../document/msf:1234`) sin el nombre del fichero, y ahí el patrón de
+                 ruta no sirve. Solo ese proveedor (si no, la app saldría en «Abrir con»
+                 de cualquier binario de cualquier app); Rust comprueba que sea un
+                 paquete al leerlo. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:host="com.android.providers.downloads.documents" />
+                <data android:mimeType="application/zip" />
+                <data android:mimeType="application/x-zip-compressed" />
+                <data android:mimeType="application/octet-stream" />
+            </intent-filter>
+            <!-- DEEP LINK PLUGIN. AUTO-GENERATED. DO NOT REMOVE. -->
+            <intent-filter >
+                <action android:name="android.intent.action.VIEW" />
+                <!-- ChromeOS ARC++ uses a different action for deep links -->
+                <action android:name="org.chromium.arc.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="proxybuilder" />
+                
+                
+                
+                
+                
+            </intent-filter>
+            <!-- DEEP LINK PLUGIN. AUTO-GENERATED. DO NOT REMOVE. -->
+        </activity>
+
+        <provider
+          android:name="androidx.core.content.FileProvider"
+          android:authorities="${applicationId}.fileprovider"
+          android:exported="false"
+          android:grantUriPermissions="true">
+          <meta-data
+            android:name="android.support.FILE_PROVIDER_PATHS"
+            android:resource="@xml/file_paths" />
+        </provider>
+    </application>
+</manifest>

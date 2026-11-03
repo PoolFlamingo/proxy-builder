@@ -11,6 +11,7 @@
 
 #![cfg_attr(not(test), deny(clippy::unwrap_used, clippy::expect_used))]
 
+pub mod compartir;
 pub mod decklist;
 pub mod diseno;
 pub mod imaging;

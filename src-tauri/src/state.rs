@@ -49,6 +49,8 @@ pub struct AppState {
     pub red: crate::red::Red,
     /// Lo que ve esta app si mira una partida en red como espectador.
     pub mirada: Mutex<Option<crate::red::mirada::Mirada>>,
+    /// Pasar decks a otro equipo: lo que hay en marcha (`pasar/`).
+    pub pasar: crate::pasar::Pasar,
     /// Trabajos de resolución/exportación en marcha (la limpieza de imágenes
     /// no corre mientras haya alguno).
     trabajos: AtomicUsize,
@@ -83,6 +85,7 @@ impl AppState {
             ),
             mesa: Mutex::new(None),
             mirada: Mutex::new(None),
+            pasar: Default::default(),
             red,
             trabajos: AtomicUsize::new(0),
         })
