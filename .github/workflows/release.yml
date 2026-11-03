@@ -150,8 +150,11 @@ jobs:
           echo "$ANDROID_KEY_BASE64" | base64 -d > "$RUNNER_TEMP/android.jks"
           # Se comprueba ya, en segundos, que el secreto abre el almacén (si no, el
           # fallo llega tras 17 minutos de compilación: «keystore password was incorrect»).
-          if ! keytool -list -keystore "$RUNNER_TEMP/android.jks" -storepass:env ANDROID_KEY_PASSWORD -alias "$ANDROID_KEY_ALIAS" > /dev/null 2>&1; then
-            echo "::error::ANDROID_KEY_PASSWORD no abre el almacén de ANDROID_KEY_BASE64 con el alias ANDROID_KEY_ALIAS (¿contraseña distinta, otro alias, o un .jks que no es el de la clave?)."
+          if ! salida=$(keytool -list -keystore "$RUNNER_TEMP/android.jks" -storepass:env ANDROID_KEY_PASSWORD -alias "$ANDROID_KEY_ALIAS" 2>&1); then
+            # Lo que dice keytool no lleva la contraseña (GitHub enmascara los secretos).
+            echo "keytool: $salida"
+            echo "Tamaño del .jks: $(wc -c < "$RUNNER_TEMP/android.jks") bytes"
+            echo "::error::ANDROID_KEY_PASSWORD, ANDROID_KEY_ALIAS y ANDROID_KEY_BASE64 no encajan (el mensaje de keytool está arriba: contraseña incorrecta, alias que no existe o fichero que no es un .jks)."
             exit 1
           fi
           # `keystore.properties` es un fichero de propiedades de Java: una `\` de la
