@@ -26,6 +26,28 @@ export const AVISOS: readonly { tipo: AvisoRapido; texto: string; tecla: string 
 	{ tipo: "pienso", texto: paraTraducir("Pienso"), tecla: "Alt+6" },
 ];
 
+/**
+ * Las frases amigables de un clic (v5), para saludar, animar y dar las gracias.
+ * Van como avisos del motor, no como texto libre: cada jugador las lee en su
+ * idioma (`t()`), aunque quien las mande use otro.
+ */
+export const AVISOS_AMIGABLES: readonly { tipo: AvisoRapido; texto: string }[] = [
+	{ tipo: "holaATodos", texto: paraTraducir("¡Hola a todos!") },
+	{ tipo: "buenaPartida", texto: paraTraducir("¡Buena partida!") },
+	{ tipo: "buenaJugada", texto: paraTraducir("¡Buena jugada!") },
+	{ tipo: "jugadon", texto: paraTraducir("¡Vaya jugadón!") },
+	{ tipo: "quePasada", texto: paraTraducir("¡Qué pasada!") },
+	{ tipo: "gracias", texto: paraTraducir("¡Gracias!") },
+	{ tipo: "suerte", texto: paraTraducir("¡Mucha suerte!") },
+	{ tipo: "animo", texto: paraTraducir("¡Ánimo, tú puedes!") },
+	{ tipo: "buenMazo", texto: paraTraducir("¡Qué mazo más chulo!") },
+	{ tipo: "malaSuerte", texto: paraTraducir("¡Ay, qué mala suerte!") },
+	{ tipo: "meHasPillado", texto: paraTraducir("¡Me has pillado!") },
+	{ tipo: "perdon", texto: paraTraducir("¡Perdón, sin querer!") },
+	{ tipo: "vuelvoEnseguida", texto: paraTraducir("Vuelvo enseguida") },
+	{ tipo: "otraMas", texto: paraTraducir("¡Echamos otra!") },
+];
+
 /** Las señales de prioridad con su texto y su tecla (Ctrl+Mayús+1…4). */
 export const SENALES: readonly { senal: Senal; texto: string; atajo: string; tecla: string }[] = [
 	{
@@ -55,7 +77,11 @@ export const SENALES: readonly { senal: Senal; texto: string; atajo: string; tec
 ];
 
 export function textoDeAviso(tipo: AvisoRapido): string {
-	return AVISOS.find((a) => a.tipo === tipo)?.texto ?? "";
+	return (
+		AVISOS.find((a) => a.tipo === tipo)?.texto ??
+		AVISOS_AMIGABLES.find((a) => a.tipo === tipo)?.texto ??
+		""
+	);
 }
 
 /** Un mensaje del chat o un aviso, tal como sale en la lista. */

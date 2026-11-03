@@ -3,11 +3,13 @@ import type { Evento } from "@/bindings/Evento";
 import { ATAJOS } from "../atajos";
 import {
 	AVISOS,
+	AVISOS_AMIGABLES,
 	mensajeDeEvento,
 	mensajesDeChat,
 	SENALES,
 	senalTrasElegir,
 	teclaDeComunicacion,
+	textoDeAviso,
 } from "../cuentas-chat";
 
 const ev = (seq: number, id: number, cambio: Evento["cambio"]): Evento => ({
@@ -66,6 +68,18 @@ describe("teclas de avisos y señales", () => {
 		for (const a of AVISOS) expect(teclas).toContain(a.tecla);
 		for (const s of SENALES) expect(teclas).toContain(s.tecla);
 		expect(new Set(teclas).size).toBe(teclas.length);
+	});
+});
+
+describe("frases amigables", () => {
+	it("cada una es un aviso distinto, con texto, y se lee igual que los de siempre", () => {
+		const tipos = AVISOS_AMIGABLES.map((a) => a.tipo);
+		expect(new Set(tipos).size).toBe(tipos.length);
+		for (const a of AVISOS_AMIGABLES) {
+			expect(a.texto).not.toBe("");
+			expect(textoDeAviso(a.tipo)).toBe(a.texto);
+			expect(AVISOS.some((x) => x.tipo === a.tipo)).toBe(false);
+		}
 	});
 });
 

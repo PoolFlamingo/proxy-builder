@@ -7,6 +7,7 @@ import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { localeDe } from "@/lib/idiomas";
@@ -18,6 +19,7 @@ import { hacer } from "./acciones";
 import { ATAJOS } from "./atajos";
 import {
 	AVISOS,
+	AVISOS_AMIGABLES,
 	MAX_CHAT,
 	mensajesDeChat,
 	SENALES,
@@ -144,6 +146,31 @@ export function ChatPanel() {
 								</Button>
 							</WithTooltip>
 						))}
+						<Popover>
+							<PopoverTrigger asChild>
+								<Button size="xs" variant="outline" aria-label={t("Frases amigables")}>
+									<Icono icon="lucide:smile" />
+									{t("Frases")}
+								</Button>
+							</PopoverTrigger>
+							<PopoverContent align="end" className="flex w-72 flex-col gap-2 p-2.5 text-xs">
+								<h4 className="text-[11px] font-semibold text-muted-foreground uppercase">
+									{t("Frases amigables")}
+								</h4>
+								<div className="flex flex-wrap gap-1.5">
+									{AVISOS_AMIGABLES.map((a) => (
+										<Button
+											key={a.tipo}
+											size="xs"
+											variant="secondary"
+											onClick={() => void hacer({ que: "aviso", tipo: a.tipo })}
+										>
+											{t(a.texto)}
+										</Button>
+									))}
+								</div>
+							</PopoverContent>
+						</Popover>
 					</div>
 					<div className="flex gap-1.5">
 						<Input
