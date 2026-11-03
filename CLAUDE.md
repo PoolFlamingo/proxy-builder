@@ -318,7 +318,7 @@ le falta una cadena le sale la inglesa.
   a propósito (`Anfitrion::irse`, también al cerrar la ventana) con código
   directo y algún jugador conectado, **cede la partida** (`DelHost::Traspaso`,
   sucesor = asiento más bajo conectado; el que se fue no cuenta para la
-  mayoría, `ido`) en vez de cerrarla. `PROTOCOLO` = 5 (catálogo v4: veneno y flechas al fantasma, notas atadas a cartas, `Colocar` para soltar varias cartas en un solo evento; Pablo, 29/10/2026), antes 4 (notas y 16 colores de etiqueta; catálogo v3) y 3 (Pablo, 29/10/2026: `AlHost::Apodo`; en la sala de espera cada uno cambia su nombre y su deck/lista en caliente, `features/mesa/red/eleccion-en-sala.tsx`, comandos `red_apodo`, `red_deck`, `red_anfitrion_deck`; el nombre se recuerda en `features/mesa/nombre.ts`). Prueba con procesos
+  mayoría, `ido`) en vez de cerrarla. `PROTOCOLO` = 6 (catálogo v5: 14 frases amigables del chat como variantes de `AvisoRapido`, que cada pantalla escribe en su idioma con `t()` y `AVISOS_AMIGABLES`; Pablo, 03/11/2026), antes 5 (catálogo v4: veneno y flechas al fantasma, notas atadas a cartas, `Colocar` para soltar varias cartas en un solo evento; Pablo, 29/10/2026), antes 4 (notas y 16 colores de etiqueta; catálogo v3) y 3 (Pablo, 29/10/2026: `AlHost::Apodo`; en la sala de espera cada uno cambia su nombre y su deck/lista en caliente, `features/mesa/red/eleccion-en-sala.tsx`, comandos `red_apodo`, `red_deck`, `red_anfitrion_deck`; el nombre se recuerda en `features/mesa/nombre.ts`). Prueba con procesos
   reales: `red/pruebas_procesos.rs` (`#[ignore]`, `--ignored`); un host
   matado con `SIGKILL` se nota a los ~30 s (tiempo de inactividad de QUIC).
   **Tiempo real y enlaces** (Fase E cerrada): `red/latencia.rs` manda por
@@ -578,7 +578,9 @@ le falta una cadena le sale la inglesa.
     bajado con los ficheros del manifiesto de esta versión (uno nunca bajado no
     se toca). Si un deck pide marcos conocidos que no están (Original, Balatro: un deck
     que llegó de otro equipo), `packs_missing` + `AvisoPacksFaltan` lo avisan con un
-    botón «Descargar» (en Diseñar y en la entrada de la mesa); nada se baja sin él. El primero es **Balatro** (pixel art, 7 plantillas como estilos
+    botón «Descargar» (en Diseñar y en la entrada de la mesa); nada se baja sin él. A mano se bajan en «Letras,
+    marcos y símbolos» (no en el móvil), en el selector del pack y en Ajustes > Packs de
+    marcos (`settings/marcos.tsx`, el sitio fijo del móvil). El primero es **Balatro** (pixel art, 7 plantillas como estilos
     propios del pack, con sus variantes). Una carta con marco propio de otro pack
     que su colección no usa las letras de la colección si el pack trae las suyas
     (`DisenoEfectivo::otro_pack`). El formato de pack versión 2

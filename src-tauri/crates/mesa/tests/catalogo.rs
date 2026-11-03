@@ -79,6 +79,13 @@ fn eventos_de_ejemplo() -> Vec<Evento> {
             carta: Some(mesa::IdCarta(1)),
         },
         Accion::AtarNota { id: 2, carta: None },
+        // v5: las frases amigables del chat.
+        Accion::Aviso {
+            tipo: mesa::accion::AvisoRapido::BuenaPartida,
+        },
+        Accion::Aviso {
+            tipo: mesa::accion::AvisoRapido::VuelvoEnseguida,
+        },
     ]
     .into_iter()
     .enumerate()

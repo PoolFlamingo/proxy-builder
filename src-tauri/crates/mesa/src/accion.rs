@@ -48,7 +48,7 @@
 //! | `Agrupar` | exilio agrupado (§2.6) |
 //! | `AlAzarDe`, `TodoAlFondoAlAzar`, `BarajarTodoDentro`, `ExiliarTodo` | cementerio y exilio (§4) |
 //! | `IntensidadSparring`, `DecidirSparring` | sparring (Fase D) |
-//! | `Chat`, `Aviso` | Fase H |
+//! | `Chat`, `Aviso` | Fase H; los avisos amigables («¡Buena partida!», «¡Gracias!»…), v5 |
 //! | `PonerNota`, `EditarNota`, `QuitarNota` | notas de cada jugador, públicas o privadas, fijas o temporales (v3) |
 //! | `Colocar` | soltar varias cartas del campo a la vez, cada una en su sitio: un solo evento y un solo «deshacer» (v4) |
 //! | `NotaEnCarta`, `AtarNota` | una nota atada a una carta del campo, y atarla o soltarla (v4) |
@@ -65,7 +65,7 @@ use crate::modelo::{
 use crate::sparring::{Decision, Intensidad, ReaccionSparring};
 
 /// Sube con cada variante nueva o cambiada de `Accion` o `Cambio`.
-pub const VERSION_CATALOGO: u32 = 4;
+pub const VERSION_CATALOGO: u32 = 5;
 
 impl Accion {
     /// Lo que se puede hacer por otro jugador (`PorJugador`): lo que afecta a
@@ -443,6 +443,21 @@ pub enum AvisoRapido {
     Paso,
     TuTurno,
     Pienso,
+    // ── Frases amigables (v5): cada pantalla las escribe en su idioma. ──
+    HolaATodos,
+    BuenaPartida,
+    BuenaJugada,
+    Jugadon,
+    QuePasada,
+    Gracias,
+    Suerte,
+    Animo,
+    BuenMazo,
+    MalaSuerte,
+    MeHasPillado,
+    Perdon,
+    VuelvoEnseguida,
+    OtraMas,
 }
 
 // Son mensajes que se crean, se mandan y se aplican una vez: no vale la
