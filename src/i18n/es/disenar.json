@@ -361,5 +361,6 @@
 	"Elige la carta que quieres diseñar.": "Elige la carta que quieres diseñar.",
 	"Copias, variantes y estado de la carta que estás diseñando.": "Copias, variantes y estado de la carta que estás diseñando.",
 	"Cartas del deck": "Cartas del deck",
-	"Elegir dónde guardar el ZIP y exportar": "Elegir dónde guardar el ZIP y exportar"
+	"Elegir dónde guardar el ZIP y exportar": "Elegir dónde guardar el ZIP y exportar",
+	"Faltan los marcos {packs}: estas cartas se pintan con los de la casa.": "Faltan los marcos {packs}: estas cartas se pintan con los de la casa."
 }

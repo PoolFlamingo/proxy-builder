@@ -411,5 +411,6 @@
 	"Elige la carta que quieres diseñar.": "Wybierz kartę, którą chcesz zaprojektować.",
 	"Copias, variantes y estado de la carta que estás diseñando.": "Kopie, warianty i stan karty, którą projektujesz.",
 	"Cartas del deck": "Karty w talii",
-	"Elegir dónde guardar el ZIP y exportar": "Wybierz miejsce zapisu ZIP i eksportuj"
+	"Elegir dónde guardar el ZIP y exportar": "Wybierz miejsce zapisu ZIP i eksportuj",
+	"Faltan los marcos {packs}: estas cartas se pintan con los de la casa.": "Brakuje ramek {packs}: te karty są rysowane z ramkami domyślnymi."
 }

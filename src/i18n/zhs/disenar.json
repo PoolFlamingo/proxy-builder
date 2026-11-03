@@ -361,5 +361,6 @@
 	"Elige la carta que quieres diseñar.": "选择要设计的牌。",
 	"Copias, variantes y estado de la carta que estás diseñando.": "正在设计的牌的副本、变体和状态。",
 	"Cartas del deck": "牌组中的牌",
-	"Elegir dónde guardar el ZIP y exportar": "选择 ZIP 的保存位置并导出"
+	"Elegir dónde guardar el ZIP y exportar": "选择 ZIP 的保存位置并导出",
+	"Faltan los marcos {packs}: estas cartas se pintan con los de la casa.": "缺少 {packs} 框：这些卡牌会用默认的框绘制。"
 }

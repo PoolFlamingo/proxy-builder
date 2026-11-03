@@ -401,5 +401,6 @@
 	"Elige la carta que quieres diseñar.": "Scegli la carta che vuoi disegnare.",
 	"Copias, variantes y estado de la carta que estás diseñando.": "Copie, varianti e stato della carta che stai disegnando.",
 	"Cartas del deck": "Carte del mazzo",
-	"Elegir dónde guardar el ZIP y exportar": "Scegli dove salvare lo ZIP ed esporta"
+	"Elegir dónde guardar el ZIP y exportar": "Scegli dove salvare lo ZIP ed esporta",
+	"Faltan los marcos {packs}: estas cartas se pintan con los de la casa.": "Mancano le cornici {packs}: queste carte vengono disegnate con quelle predefinite."
 }

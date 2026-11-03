@@ -361,5 +361,6 @@
 	"Elige la carta que quieres diseñar.": "デザインするカードを選んでください。",
 	"Copias, variantes y estado de la carta que estás diseñando.": "デザイン中のカードのコピー、デザイン違い、状態です。",
 	"Cartas del deck": "デッキのカード",
-	"Elegir dónde guardar el ZIP y exportar": "ZIP の保存先を選んで書き出し"
+	"Elegir dónde guardar el ZIP y exportar": "ZIP の保存先を選んで書き出し",
+	"Faltan los marcos {packs}: estas cartas se pintan con los de la casa.": "枠「{packs}」がありません：これらのカードは標準の枠で描かれます。"
 }

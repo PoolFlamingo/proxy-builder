@@ -391,5 +391,6 @@
 	"Elige la carta que quieres diseñar.": "Choose the card you want to design.",
 	"Copias, variantes y estado de la carta que estás diseñando.": "Copies, variants and status of the card you are designing.",
 	"Cartas del deck": "Deck cards",
-	"Elegir dónde guardar el ZIP y exportar": "Choose where to save the ZIP and export"
+	"Elegir dónde guardar el ZIP y exportar": "Choose where to save the ZIP and export",
+	"Faltan los marcos {packs}: estas cartas se pintan con los de la casa.": "The {packs} frames are missing: these cards are drawn with the house frames."
 }

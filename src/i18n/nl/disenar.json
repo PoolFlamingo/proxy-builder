@@ -391,5 +391,6 @@
 	"Elige la carta que quieres diseñar.": "Kies de kaart die je wilt ontwerpen.",
 	"Copias, variantes y estado de la carta que estás diseñando.": "Kopieën, varianten en status van de kaart die je ontwerpt.",
 	"Cartas del deck": "Kaarten in het deck",
-	"Elegir dónde guardar el ZIP y exportar": "Kies waar je de ZIP bewaart en exporteer"
+	"Elegir dónde guardar el ZIP y exportar": "Kies waar je de ZIP bewaart en exporteer",
+	"Faltan los marcos {packs}: estas cartas se pintan con los de la casa.": "De kaders {packs} ontbreken: deze kaarten worden met de standaardkaders getekend."
 }

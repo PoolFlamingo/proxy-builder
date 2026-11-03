@@ -361,5 +361,6 @@
 	"Elige la carta que quieres diseñar.": "디자인할 카드를 고르세요.",
 	"Copias, variantes y estado de la carta que estás diseñando.": "디자인 중인 카드의 사본, 변형, 상태예요.",
 	"Cartas del deck": "덱의 카드",
-	"Elegir dónde guardar el ZIP y exportar": "ZIP 저장 위치를 고르고 내보내기"
+	"Elegir dónde guardar el ZIP y exportar": "ZIP 저장 위치를 고르고 내보내기",
+	"Faltan los marcos {packs}: estas cartas se pintan con los de la casa.": "{packs} 프레임이 없습니다: 이 카드들은 기본 프레임으로 그려집니다."
 }

@@ -411,5 +411,6 @@
 	"Elige la carta que quieres diseñar.": "Виберіть карту, яку хочете оформити.",
 	"Copias, variantes y estado de la carta que estás diseñando.": "Копії, варіанти й стан карти, яку ви оформлюєте.",
 	"Cartas del deck": "Карти колоди",
-	"Elegir dónde guardar el ZIP y exportar": "Вибрати, де зберегти ZIP, і експортувати"
+	"Elegir dónde guardar el ZIP y exportar": "Вибрати, де зберегти ZIP, і експортувати",
+	"Faltan los marcos {packs}: estas cartas se pintan con los de la casa.": "Бракує рамок {packs}: ці карти малюються зі стандартними рамками."
 }
