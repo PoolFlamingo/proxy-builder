@@ -350,5 +350,16 @@
 	"Ir a la parte 1": "Go to part 1",
 	"Estilo y ajustes propios de esta cara": "Own style and settings for this face",
 	"Apagado, esta cara usa lo mismo que la cara 1: el estilo, el marco, el emblema y los ajustes. Encendido, lo que cambies solo vale para ella.": "Off, this face uses the same as face 1: style, frame, emblem and settings. On, what you change only applies to it.",
-	"Símbolos de maná": "Mana symbols"
+	"Símbolos de maná": "Mana symbols",
+	"Ilustración": "Illustration",
+	"Esto se hace en una tableta o en el ordenador": "This is done on a tablet or on the computer",
+	"En el móvil el editor solo trae lo básico: textos, ilustración, marco y colores.": "On the phone the editor only has the basics: texts, illustration, frame and colours.",
+	"Arrastra con un dedo para mover la ilustración; con dos dedos la acercas o la alejas.": "Drag with one finger to move the illustration; with two fingers you zoom in or out.",
+	"Vincúlala primero con su carta de Scryfall (mantén pulsada la carta en el deck → «Vincular con una carta…»).": "Link it first to its Scryfall card (press and hold the card in the deck → “Link to a card…”).",
+	"Opciones de la carta": "Card options",
+	"Esta carta": "This card",
+	"Elige la carta que quieres diseñar.": "Choose the card you want to design.",
+	"Copias, variantes y estado de la carta que estás diseñando.": "Copies, variants and status of the card you are designing.",
+	"Cartas del deck": "Deck cards",
+	"Elegir dónde guardar el ZIP y exportar": "Choose where to save the ZIP and export"
 }

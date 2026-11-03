@@ -64,5 +64,7 @@
 	"Cambiar carta…": "카드 변경…",
 	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "디자인 변형, 선택, 사이드보드 또는 복사본으로 표시한 카드: 인쇄는 되지만 덱 수에는 세지 않아요.",
 	"Cartas quitadas": "카드를 뺐습니다",
-	"Rehacer (Ctrl+Mayús+Z)": "다시 실행(Ctrl+Shift+Z)"
+	"Rehacer (Ctrl+Mayús+Z)": "다시 실행(Ctrl+Shift+Z)",
+	"Opciones de la vista": "보기 옵션",
+	"Arrastrar para mover": "끌어서 이동"
 }

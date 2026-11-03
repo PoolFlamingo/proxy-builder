@@ -31,5 +31,12 @@
 	"No se ha podido cerrar la ventana.": "No se ha podido cerrar la ventana.",
 	"Se instalará al salir de la mesa.": "Se instalará al salir de la mesa.",
 	"Beta": "Beta",
-	"Pulsa para reintentar.": "Pulsa para reintentar."
+	"Pulsa para reintentar.": "Pulsa para reintentar.",
+	"Instalar": "Instalar",
+	"Android te pedirá confirmar la instalación.": "Android te pedirá confirmar la instalación.",
+	"Abre el instalador de Android con la versión nueva.": "Abre el instalador de Android con la versión nueva.",
+	"Pulsa otra vez para salir": "Pulsa otra vez para salir",
+	"Más": "Más",
+	"Pantallas": "Pantallas",
+	"Hojas": "Hojas"
 }

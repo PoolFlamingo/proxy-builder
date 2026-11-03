@@ -31,5 +31,12 @@
 	"No se ha podido cerrar la ventana.": "Das Fenster konnte nicht geschlossen werden.",
 	"Se instalará al salir de la mesa.": "Wird installiert, sobald du den Tisch verlässt.",
 	"Beta": "Beta",
-	"Pulsa para reintentar.": "Klicken, um es erneut zu versuchen."
+	"Pulsa para reintentar.": "Klicken, um es erneut zu versuchen.",
+	"Instalar": "Installieren",
+	"Android te pedirá confirmar la instalación.": "Android bittet dich, die Installation zu bestätigen.",
+	"Abre el instalador de Android con la versión nueva.": "Öffnet den Android-Installer mit der neuen Version.",
+	"Pulsa otra vez para salir": "Zum Beenden erneut drücken",
+	"Más": "Mehr",
+	"Pantallas": "Ansichten",
+	"Hojas": "Blätter"
 }

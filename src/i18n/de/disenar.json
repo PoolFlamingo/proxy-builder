@@ -380,5 +380,16 @@
 	"Ir a la parte 1": "Zu Teil 1",
 	"Estilo y ajustes propios de esta cara": "Eigener Stil und eigene Einstellungen für diese Seite",
 	"Apagado, esta cara usa lo mismo que la cara 1: el estilo, el marco, el emblema y los ajustes. Encendido, lo que cambies solo vale para ella.": "Aus: Diese Seite verwendet dasselbe wie Seite 1: Stil, Rahmen, Emblem und Einstellungen. An: Was du änderst, gilt nur für sie.",
-	"Símbolos de maná": "Mana-Symbole"
+	"Símbolos de maná": "Mana-Symbole",
+	"Ilustración": "Illustration",
+	"Esto se hace en una tableta o en el ordenador": "Das geht auf einem Tablet oder am Computer",
+	"En el móvil el editor solo trae lo básico: textos, ilustración, marco y colores.": "Auf dem Handy bietet der Editor nur das Wichtigste: Texte, Illustration, Rahmen und Farben.",
+	"Arrastra con un dedo para mover la ilustración; con dos dedos la acercas o la alejas.": "Mit einem Finger ziehen verschiebt die Illustration; mit zwei Fingern zoomst du hinein oder heraus.",
+	"Vincúlala primero con su carta de Scryfall (mantén pulsada la carta en el deck → «Vincular con una carta…»).": "Verknüpfe sie zuerst mit ihrer Scryfall-Karte (Karte im Deck gedrückt halten → „Mit einer Karte verknüpfen …“).",
+	"Opciones de la carta": "Kartenoptionen",
+	"Esta carta": "Diese Karte",
+	"Elige la carta que quieres diseñar.": "Wähle die Karte, die du gestalten willst.",
+	"Copias, variantes y estado de la carta que estás diseñando.": "Kopien, Varianten und Status der Karte, die du gerade gestaltest.",
+	"Cartas del deck": "Karten im Deck",
+	"Elegir dónde guardar el ZIP y exportar": "Speicherort für das ZIP wählen und exportieren"
 }

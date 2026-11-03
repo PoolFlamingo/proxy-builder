@@ -31,5 +31,12 @@
 	"No se ha podido cerrar la ventana.": "Не вдалося закрити вікно.",
 	"Se instalará al salir de la mesa.": "Встановлення почнеться, коли ви вийдете з-за столу.",
 	"Beta": "Бета",
-	"Pulsa para reintentar.": "Натисніть, щоб повторити."
+	"Pulsa para reintentar.": "Натисніть, щоб повторити.",
+	"Instalar": "Встановити",
+	"Android te pedirá confirmar la instalación.": "Android попросить підтвердити встановлення.",
+	"Abre el instalador de Android con la versión nueva.": "Відкриває інсталятор Android із новою версією.",
+	"Pulsa otra vez para salir": "Натисніть ще раз, щоб вийти",
+	"Más": "Ще",
+	"Pantallas": "Екрани",
+	"Hojas": "Аркуші"
 }

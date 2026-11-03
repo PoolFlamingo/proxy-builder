@@ -90,5 +90,11 @@
 	"Idioma, aspecto, mesa de juego, actualizaciones y almacenamiento.": "Limbă, aspect, masa de joc, actualizări și stocare.",
 	"Imágenes que ya no usa ningún deck.": "Imagini pe care nu le mai folosește niciun pachet.",
 	"Para volver a tenerlos hay que descargarlos otra vez ({mb} MB).": "Ca să le ai din nou, trebuie descărcate iar ({mb} MB).",
-	"¿Quitar los nombres en otros idiomas?": "Elimini numele în alte limbi?"
+	"¿Quitar los nombres en otros idiomas?": "Elimini numele în alte limbi?",
+	"Bajar desde GitHub": "Descarcă de pe GitHub",
+	"La {version} está lista: instálala desde Ajustes.": "{version} este gata: instaleaz-o din Setări.",
+	"Buscar versiones nuevas al abrir la app y bajarlas sin molestar. Android te pedirá confirmar cada instalación.": "Caută versiuni noi la deschiderea aplicației și descarcă-le discret. Android îți va cere să confirmi fiecare instalare.",
+	"La {version} está lista. Android te pedirá confirmar la instalación.": "{version} este gata. Android îți va cere să confirmi instalarea.",
+	"Instalar la {version}": "Instalează {version}",
+	"Android necesita tu permiso para instalar la actualización: se ha abierto su ajuste. Permite instalar apps desde Proxy Builder, vuelve y pulsa «Instalar» otra vez.": "Android are nevoie de permisiunea ta ca să instaleze actualizarea: setarea a fost deschisă. Permite instalarea de aplicații din Proxy Builder, revino și apasă din nou «Instalează»."
 }

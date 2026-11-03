@@ -64,5 +64,7 @@
 	"Cambiar carta…": "更換牌…",
 	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "標記為設計變體、可選、備牌或複製品的牌：會列印，但不計入牌組。",
 	"Cartas quitadas": "已移除卡牌",
-	"Rehacer (Ctrl+Mayús+Z)": "重做（Ctrl+Shift+Z）"
+	"Rehacer (Ctrl+Mayús+Z)": "重做（Ctrl+Shift+Z）",
+	"Opciones de la vista": "檢視選項",
+	"Arrastrar para mover": "拖曳以移動"
 }

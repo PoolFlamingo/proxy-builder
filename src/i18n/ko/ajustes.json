@@ -86,5 +86,11 @@
 	"Idioma, aspecto, mesa de juego, actualizaciones y almacenamiento.": "언어, 모양, 게임 테이블, 업데이트, 저장 공간.",
 	"Imágenes que ya no usa ningún deck.": "더 이상 어떤 덱도 쓰지 않는 이미지.",
 	"Para volver a tenerlos hay que descargarlos otra vez ({mb} MB).": "다시 쓰려면 새로 내려받아야 합니다({mb}MB).",
-	"¿Quitar los nombres en otros idiomas?": "다른 언어의 이름을 지울까요?"
+	"¿Quitar los nombres en otros idiomas?": "다른 언어의 이름을 지울까요?",
+	"Bajar desde GitHub": "GitHub에서 다운로드",
+	"La {version} está lista: instálala desde Ajustes.": "{version}이(가) 준비됐어요. 설정에서 설치하세요.",
+	"Buscar versiones nuevas al abrir la app y bajarlas sin molestar. Android te pedirá confirmar cada instalación.": "앱을 열 때 새 버전을 확인하고 조용히 다운로드해요. 설치할 때마다 Android에서 확인을 요청해요.",
+	"La {version} está lista. Android te pedirá confirmar la instalación.": "{version}이(가) 준비됐어요. 설치를 확인하라는 메시지가 Android에서 표시돼요.",
+	"Instalar la {version}": "{version} 설치",
+	"Android necesita tu permiso para instalar la actualización: se ha abierto su ajuste. Permite instalar apps desde Proxy Builder, vuelve y pulsa «Instalar» otra vez.": "업데이트를 설치하려면 Android의 허용이 필요해요. 설정을 열어 두었어요. Proxy Builder의 앱 설치를 허용하고 돌아와서 '설치'를 다시 누르세요."
 }

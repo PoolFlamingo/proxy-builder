@@ -31,5 +31,12 @@
 	"No se ha podido cerrar la ventana.": "창을 닫지 못했어요.",
 	"Se instalará al salir de la mesa.": "테이블에서 나가면 설치돼요.",
 	"Beta": "베타",
-	"Pulsa para reintentar.": "클릭하면 다시 시도합니다."
+	"Pulsa para reintentar.": "클릭하면 다시 시도합니다.",
+	"Instalar": "설치",
+	"Android te pedirá confirmar la instalación.": "설치를 확인하라는 메시지가 Android에서 표시돼요.",
+	"Abre el instalador de Android con la versión nueva.": "새 버전으로 Android 설치 프로그램을 열어요.",
+	"Pulsa otra vez para salir": "한 번 더 누르면 종료돼요",
+	"Más": "더보기",
+	"Pantallas": "화면",
+	"Hojas": "용지"
 }

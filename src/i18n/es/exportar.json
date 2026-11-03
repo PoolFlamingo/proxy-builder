@@ -106,5 +106,10 @@
 	"Para MTGO": "Para MTGO",
 	"En texto plano": "En texto plano",
 	"65 × 90 mm llena justa una funda: es como 1 mm de sangrado, pero con la imagen entera a ese tamaño en vez del borde repetido.": "65 × 90 mm llena justa una funda: es como 1 mm de sangrado, pero con la imagen entera a ese tamaño en vez del borde repetido.",
-	"¿Borrar el preset «{n}»?": "¿Borrar el preset «{n}»?"
+	"¿Borrar el preset «{n}»?": "¿Borrar el preset «{n}»?",
+	"Compartir": "Compartir",
+	"Compartir el PDF": "Compartir el PDF",
+	"Compartir la lista (texto)": "Compartir la lista (texto)",
+	"Compartir el deck (.pbdeck)": "Compartir el deck (.pbdeck)",
+	"A tu equipo le queda poca memoria libre para esto: la app podría cerrarse.": "A tu equipo le queda poca memoria libre para esto: la app podría cerrarse."
 }

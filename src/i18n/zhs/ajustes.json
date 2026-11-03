@@ -86,5 +86,11 @@
 	"Idioma, aspecto, mesa de juego, actualizaciones y almacenamiento.": "语言、外观、游戏桌、更新和存储。",
 	"Imágenes que ya no usa ningún deck.": "不再被任何套牌使用的图片。",
 	"Para volver a tenerlos hay que descargarlos otra vez ({mb} MB).": "要再用就得重新下载（{mb} MB）。",
-	"¿Quitar los nombres en otros idiomas?": "移除其他语言的名称？"
+	"¿Quitar los nombres en otros idiomas?": "移除其他语言的名称？",
+	"Bajar desde GitHub": "从 GitHub 下载",
+	"La {version} está lista: instálala desde Ajustes.": "{version} 已就绪：请在“设置”中安装。",
+	"Buscar versiones nuevas al abrir la app y bajarlas sin molestar. Android te pedirá confirmar cada instalación.": "打开应用时检查新版本并在后台下载。每次安装前，Android 都会请你确认。",
+	"La {version} está lista. Android te pedirá confirmar la instalación.": "{version} 已就绪。Android 会请你确认安装。",
+	"Instalar la {version}": "安装 {version}",
+	"Android necesita tu permiso para instalar la actualización: se ha abierto su ajuste. Permite instalar apps desde Proxy Builder, vuelve y pulsa «Instalar» otra vez.": "Android 需要你的许可才能安装更新：已打开相应设置。请允许 Proxy Builder 安装应用，然后返回并再次点按“安装”。"
 }

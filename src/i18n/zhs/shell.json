@@ -31,5 +31,12 @@
 	"No se ha podido cerrar la ventana.": "无法关闭窗口。",
 	"Se instalará al salir de la mesa.": "离开牌桌后会自动安装。",
 	"Beta": "测试版",
-	"Pulsa para reintentar.": "点击重试。"
+	"Pulsa para reintentar.": "点击重试。",
+	"Instalar": "安装",
+	"Android te pedirá confirmar la instalación.": "Android 会请你确认安装。",
+	"Abre el instalador de Android con la versión nueva.": "用新版本打开 Android 安装程序。",
+	"Pulsa otra vez para salir": "再按一次即可退出",
+	"Más": "更多",
+	"Pantallas": "页面",
+	"Hojas": "纸张"
 }

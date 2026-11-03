@@ -121,5 +121,10 @@
 	"Para MTGO": "Dla MTGO",
 	"En texto plano": "Zwykły tekst",
 	"65 × 90 mm llena justa una funda: es como 1 mm de sangrado, pero con la imagen entera a ese tamaño en vez del borde repetido.": "65 × 90 mm wypełnia koszulkę dokładnie: jak 1 mm spadu, ale z całym obrazem w tym rozmiarze zamiast powtórzonej krawędzi.",
-	"¿Borrar el preset «{n}»?": "Usunąć ustawienie „{n}”?"
+	"¿Borrar el preset «{n}»?": "Usunąć ustawienie „{n}”?",
+	"Compartir": "Udostępnij",
+	"Compartir el PDF": "Udostępnij PDF",
+	"Compartir la lista (texto)": "Udostępnij listę (tekst)",
+	"Compartir el deck (.pbdeck)": "Udostępnij talię (.pbdeck)",
+	"A tu equipo le queda poca memoria libre para esto: la app podría cerrarse.": "Na tym urządzeniu zostało mało wolnej pamięci: aplikacja może się zamknąć."
 }

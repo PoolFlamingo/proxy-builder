@@ -31,5 +31,12 @@
 	"No se ha podido cerrar la ventana.": "Het venster kon niet worden gesloten.",
 	"Se instalará al salir de la mesa.": "Wordt geïnstalleerd zodra je de tafel verlaat.",
 	"Beta": "Beta",
-	"Pulsa para reintentar.": "Klik om het opnieuw te proberen."
+	"Pulsa para reintentar.": "Klik om het opnieuw te proberen.",
+	"Instalar": "Installeren",
+	"Android te pedirá confirmar la instalación.": "Android vraagt je de installatie te bevestigen.",
+	"Abre el instalador de Android con la versión nueva.": "Opent het Android-installatieprogramma met de nieuwe versie.",
+	"Pulsa otra vez para salir": "Druk nogmaals om af te sluiten",
+	"Más": "Meer",
+	"Pantallas": "Schermen",
+	"Hojas": "Vellen"
 }

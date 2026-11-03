@@ -44,5 +44,20 @@
 	"Etiquetas y favoritos": "標籤與我的最愛",
 	"Ordena tus decks con etiquetas propias (formato, idioma, estado…) y con favoritos. Ctrl + clic para elegir varias etiquetas a la vez.": "用你自己的標籤（賽制、語言、狀態……）和我的最愛來整理套牌。Ctrl + 點擊可一次選擇多個標籤。",
 	"Tus decks": "你的套牌",
-	"Cada deck enseña sus colores, cartas, precio e idiomas. Con clic derecho o los tres puntos: abrir, renombrar, duplicar, etiquetas, idioma, propiedades (notas y portada), exportar .pbdeck o eliminar. Con Ctrl o Mayús eliges varios y actúas sobre todos.": "每副套牌都顯示顏色、牌、價格和語言。按右鍵或三個點的選單：開啟、重新命名、複製、標籤、語言、內容（備註和封面）、匯出 .pbdeck 或刪除。按住 Ctrl 或 Shift 可多選並一起操作。"
+	"Cada deck enseña sus colores, cartas, precio e idiomas. Con clic derecho o los tres puntos: abrir, renombrar, duplicar, etiquetas, idioma, propiedades (notas y portada), exportar .pbdeck o eliminar. Con Ctrl o Mayús eliges varios y actúas sobre todos.": "每副套牌都顯示顏色、牌、價格和語言。按右鍵或三個點的選單：開啟、重新命名、複製、標籤、語言、內容（備註和封面）、匯出 .pbdeck 或刪除。按住 Ctrl 或 Shift 可多選並一起操作。",
+	"Añade cartas o páginas, ordena el deck solo, oculta las cartas de doble cara, mira los reversos o la información de cada carta, abre las estadísticas (curva, maná, robo, precios y legalidad) y cambia el zoom.": "加入牌或頁面，自動整理套牌，隱藏雙面牌，查看牌背或每張牌的資訊，開啟統計（曲線、法術力、抽牌機率、價格和合法性），以及調整縮放。",
+	"Así saldrá el papel. Arrastra las cartas para cambiar su orden. Mantén pulsada una carta para ver todo lo que se le puede hacer: cambiar la variante, editarla, vincularla, diseñarla, marcarla como opcional o banquillo, fijarla…": "這就是列印出來的樣子。拖曳牌可以調整順序。長按一張牌可查看所有可用操作：更換版本、編輯、關聯、設計、標記為可選或備牌、固定……",
+	"Papel y orientación, tamaño de carta (63 × 88, 63,5 × 88,9 o 65 × 90 mm, que llena justa una funda), separación y sangrado, guías de corte, doble cara, oscurecer bordes, alinear filas para el dúplex y presets de impresión. Todo se guarda con el deck.": "紙張和方向、卡牌尺寸（63 × 88、63.5 × 88.9 或正好裝滿卡套的 65 × 90 mm）、間距和出血、裁切線、雙面列印、加深邊框、雙面列印的對齊列以及列印預設集。所有設定都隨套牌儲存。",
+	"Busca por nombre, carta o nota; filtra por colores, formato, idioma, favoritos o cartas diseñadas; ordena, agrupa y cambia entre cuadrícula y lista.": "依名稱、牌或備註搜尋；依顏色、賽制、語言、我的最愛或設計過的牌篩選；排序、分組，並在格線和清單之間切換。",
+	"Ordena tus decks con etiquetas propias (formato, idioma, estado…) y con favoritos.": "用你自己的標籤（賽制、語言、狀態……）和我的最愛來整理套牌。",
+	"Elige la carta que quieres diseñar; cada una dice si está sin diseño, en borrador o lista. Arriba se busca por nombre.": "選擇要設計的牌；每張牌都會顯示未設計、草稿或完成。可以在上方依名稱搜尋。",
+	"La carta tal como se imprimirá. Elige el idioma del diseño, pasa de una parte o cara a otra (las partidas, las Secuelas y las de doble cara tienen dos, cada una con su ilustración) y enciende el margen de seguridad. Arrastra la ilustración para moverla.": "牌列印出來的樣子。選擇設計語言，在部分或面之間切換（分割牌、續效牌和雙面牌有兩個，各有自己的畫作），並開啟安全區域。拖曳畫作可移動它。",
+	"Arrastra las cartas a donde quieras. Mantén pulsada una carta para ver todo lo que se le puede hacer; en el campo vacío, enderezar todo, organizar o crear fichas.": "把牌拖到任意位置。長按一張牌可查看所有可用操作；在戰場空白處長按可全部重置、整理或派出衍生物。",
+	"Arrastra una carta al campo para jugarla, o a otra zona. Toca una carta para verla en grande.": "把牌拖到戰場上即可使用，或拖到其他區域。點按任意牌可查看大圖。",
+	"Un toque roba una carta. Mantén pulsada la biblioteca: moler, escrutar, vigilar, buscar, revelar y lanzar, barajar…": "點按抓一張牌。長按牌庫：磨牌、占卜、刺探、搜尋、展示並施放、洗牌……",
+	"− y + cambian la vida; los toques seguidos se juntan. Mantén pulsada la vida: daño, veneno, daño de comandante, contadores y designaciones.": "− 和 + 可改變生命；連續點按會合併計算。長按生命：傷害、中毒、指揮官傷害、指示物和稱號。",
+	"Los menús": "選單",
+	"Mantén pulsada una carta, una zona o el campo vacío para abrir su menú: ahí está todo lo que en un teclado tiene su tecla. Deshacer y rehacer están en la barra de arriba.": "長按一張牌、一個區域或戰場空白處即可開啟它的選單：鍵盤上有快速鍵的操作都在那裡。復原和重做在頂部的列裡。",
+	"El turno y su reloj, pausa, deshacer y rehacer, dados y monedas, fichas, el registro, el tapete y terminar o reiniciar la partida.": "回合及其計時、暫停、復原和重做、骰子與硬幣、衍生物、紀錄、遊戲墊、快速鍵，以及結束或重新開始對局。",
+	"Cada deck enseña sus colores, cartas, precio e idiomas. Mantén pulsado uno para elegirlo y toca otros para sumar; en sus tres puntos: abrir, renombrar, duplicar, etiquetas, idioma, propiedades (notas y portada), exportar .pbdeck o eliminar.": "每個牌組都會顯示它的顏色、卡牌、價格與語言。長按其中一個即可選取，再點按其他牌組即可加入；在它的三點選單中：開啟、重新命名、複製、標籤、語言、內容（備註與封面）、匯出 .pbdeck 或刪除。"
 }

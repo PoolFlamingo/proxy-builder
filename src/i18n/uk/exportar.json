@@ -121,5 +121,10 @@
 	"Para MTGO": "Для MTGO",
 	"En texto plano": "Звичайним текстом",
 	"65 × 90 mm llena justa una funda: es como 1 mm de sangrado, pero con la imagen entera a ese tamaño en vez del borde repetido.": "65 × 90 мм рівно заповнює протектор: як виліт 1 мм, але все зображення цього розміру, а не повторений край.",
-	"¿Borrar el preset «{n}»?": "Видалити пресет «{n}»?"
+	"¿Borrar el preset «{n}»?": "Видалити пресет «{n}»?",
+	"Compartir": "Поділитися",
+	"Compartir el PDF": "Поділитися PDF",
+	"Compartir la lista (texto)": "Поділитися списком (текст)",
+	"Compartir el deck (.pbdeck)": "Поділитися колодою (.pbdeck)",
+	"A tu equipo le queda poca memoria libre para esto: la app podría cerrarse.": "На вашому пристрої мало вільної пам'яті для цього: застосунок може закритися."
 }

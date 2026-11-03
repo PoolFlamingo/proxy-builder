@@ -400,5 +400,16 @@
 	"Ir a la parte 1": "Перейти к части 1",
 	"Estilo y ajustes propios de esta cara": "Свой стиль и настройки для этой стороны",
 	"Apagado, esta cara usa lo mismo que la cara 1: el estilo, el marco, el emblema y los ajustes. Encendido, lo que cambies solo vale para ella.": "Выключено: эта сторона использует то же, что сторона 1 — стиль, рамку, эмблему и настройки. Включено: изменения касаются только её.",
-	"Símbolos de maná": "Символы маны"
+	"Símbolos de maná": "Символы маны",
+	"Ilustración": "Иллюстрация",
+	"Esto se hace en una tableta o en el ordenador": "Это делается на планшете или на компьютере",
+	"En el móvil el editor solo trae lo básico: textos, ilustración, marco y colores.": "На телефоне редактор содержит только основное: тексты, иллюстрацию, рамку и цвета.",
+	"Arrastra con un dedo para mover la ilustración; con dos dedos la acercas o la alejas.": "Проведите одним пальцем, чтобы сдвинуть иллюстрацию; двумя пальцами её можно приблизить или отдалить.",
+	"Vincúlala primero con su carta de Scryfall (mantén pulsada la carta en el deck → «Vincular con una carta…»).": "Сначала свяжите её с картой Scryfall (удерживайте карту в колоде → «Связать с картой…»).",
+	"Opciones de la carta": "Параметры карты",
+	"Esta carta": "Эта карта",
+	"Elige la carta que quieres diseñar.": "Выберите карту, которую хотите оформить.",
+	"Copias, variantes y estado de la carta que estás diseñando.": "Копии, варианты и состояние карты, которую вы оформляете.",
+	"Cartas del deck": "Карты колоды",
+	"Elegir dónde guardar el ZIP y exportar": "Выбрать, где сохранить ZIP, и экспортировать"
 }

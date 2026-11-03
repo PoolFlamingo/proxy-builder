@@ -76,5 +76,7 @@
 	"Cambiar carta…": "Changer de carte…",
 	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "Marquées comme variante de design, optionnelle, réserve ou copie : elles s'impriment, mais ne comptent pas pour le deck.",
 	"Cartas quitadas": "Cartes retirées",
-	"Rehacer (Ctrl+Mayús+Z)": "Rétablir (Ctrl+Maj+Z)"
+	"Rehacer (Ctrl+Mayús+Z)": "Rétablir (Ctrl+Maj+Z)",
+	"Opciones de la vista": "Options d’affichage",
+	"Arrastrar para mover": "Faire glisser pour déplacer"
 }

@@ -390,5 +390,16 @@
 	"Ir a la parte 1": "Ir para a parte 1",
 	"Estilo y ajustes propios de esta cara": "Estilo e ajustes próprios desta face",
 	"Apagado, esta cara usa lo mismo que la cara 1: el estilo, el marco, el emblema y los ajustes. Encendido, lo que cambies solo vale para ella.": "Desligado, esta face usa o mesmo da face 1: estilo, moldura, emblema e ajustes. Ligado, o que você mudar vale só para ela.",
-	"Símbolos de maná": "Símbolos de mana"
+	"Símbolos de maná": "Símbolos de mana",
+	"Ilustración": "Ilustração",
+	"Esto se hace en una tableta o en el ordenador": "Isto faz-se num tablet ou no computador",
+	"En el móvil el editor solo trae lo básico: textos, ilustración, marco y colores.": "No telemóvel o editor só traz o básico: textos, ilustração, moldura e cores.",
+	"Arrastra con un dedo para mover la ilustración; con dos dedos la acercas o la alejas.": "Arraste com um dedo para mover a ilustração; com dois dedos amplia ou reduz.",
+	"Vincúlala primero con su carta de Scryfall (mantén pulsada la carta en el deck → «Vincular con una carta…»).": "Vincule-a primeiro ao seu card do Scryfall (mantenha o card premido no deck → «Vincular a um card…»).",
+	"Opciones de la carta": "Opções do card",
+	"Esta carta": "Este card",
+	"Elige la carta que quieres diseñar.": "Escolha o card que quer desenhar.",
+	"Copias, variantes y estado de la carta que estás diseñando.": "Cópias, variantes e estado do card que está a desenhar.",
+	"Cartas del deck": "Cards do deck",
+	"Elegir dónde guardar el ZIP y exportar": "Escolher onde salvar o ZIP e exportar"
 }

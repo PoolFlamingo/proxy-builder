@@ -79,5 +79,7 @@
 	"Cambiar carta…": "Сменить карту…",
 	"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.": "Помечены как вариант дизайна, необязательные, сайдборд или копия: они печатаются, но не считаются в колоде.",
 	"Cartas quitadas": "Карты убраны",
-	"Rehacer (Ctrl+Mayús+Z)": "Повторить (Ctrl+Shift+Z)"
+	"Rehacer (Ctrl+Mayús+Z)": "Повторить (Ctrl+Shift+Z)",
+	"Opciones de la vista": "Параметры вида",
+	"Arrastrar para mover": "Перетащите, чтобы переместить"
 }

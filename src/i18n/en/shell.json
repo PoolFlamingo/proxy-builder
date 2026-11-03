@@ -31,5 +31,12 @@
 	"No se ha podido cerrar la ventana.": "The window could not be closed.",
 	"Se instalará al salir de la mesa.": "It will be installed when you leave the table.",
 	"Beta": "Beta",
-	"Pulsa para reintentar.": "Click to retry."
+	"Pulsa para reintentar.": "Click to retry.",
+	"Instalar": "Install",
+	"Android te pedirá confirmar la instalación.": "Android will ask you to confirm the installation.",
+	"Abre el instalador de Android con la versión nueva.": "Opens the Android installer with the new version.",
+	"Pulsa otra vez para salir": "Press again to exit",
+	"Más": "More",
+	"Pantallas": "Screens",
+	"Hojas": "Sheets"
 }

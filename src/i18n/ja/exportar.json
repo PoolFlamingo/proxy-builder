@@ -106,5 +106,10 @@
 	"Para MTGO": "MTGO 用",
 	"En texto plano": "プレーンテキスト",
 	"65 × 90 mm llena justa una funda: es como 1 mm de sangrado, pero con la imagen entera a ese tamaño en vez del borde repetido.": "65 × 90 mm はスリーブにぴったり収まります。1 mm の塗り足しと同じですが、端を繰り返す代わりに画像全体をその大きさにします。",
-	"¿Borrar el preset «{n}»?": "プリセット「{n}」を削除しますか？"
+	"¿Borrar el preset «{n}»?": "プリセット「{n}」を削除しますか？",
+	"Compartir": "共有",
+	"Compartir el PDF": "PDF を共有",
+	"Compartir la lista (texto)": "リストを共有（テキスト）",
+	"Compartir el deck (.pbdeck)": "デッキを共有（.pbdeck）",
+	"A tu equipo le queda poca memoria libre para esto: la app podría cerrarse.": "この処理に使える空きメモリが少ないため、アプリが終了する場合があります。"
 }

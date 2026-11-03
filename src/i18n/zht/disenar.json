@@ -350,5 +350,16 @@
 	"Ir a la parte 1": "前往第 1 部分",
 	"Estilo y ajustes propios de esta cara": "此面使用獨立的樣式和設定",
 	"Apagado, esta cara usa lo mismo que la cara 1: el estilo, el marco, el emblema y los ajustes. Encendido, lo que cambies solo vale para ella.": "關閉時，此面與第 1 面相同：樣式、框、徽記和設定。開啟後，你的更改只對這一面生效。",
-	"Símbolos de maná": "法術力符號"
+	"Símbolos de maná": "法術力符號",
+	"Ilustración": "畫作",
+	"Esto se hace en una tableta o en el ordenador": "這需要在平板或電腦上完成",
+	"En el móvil el editor solo trae lo básico: textos, ilustración, marco y colores.": "手機上的編輯器只有基本功能：文字、畫作、邊框和顏色。",
+	"Arrastra con un dedo para mover la ilustración; con dos dedos la acercas o la alejas.": "單指拖曳可移動畫作，雙指捏合可放大或縮小。",
+	"Vincúlala primero con su carta de Scryfall (mantén pulsada la carta en el deck → «Vincular con una carta…»).": "請先將它與 Scryfall 上的牌關聯（在牌組中長按這張牌 →「關聯到一張牌…」）。",
+	"Opciones de la carta": "牌的選項",
+	"Esta carta": "這張牌",
+	"Elige la carta que quieres diseñar.": "選擇要設計的牌。",
+	"Copias, variantes y estado de la carta que estás diseñando.": "正在設計的牌的副本、變體和狀態。",
+	"Cartas del deck": "牌組中的牌",
+	"Elegir dónde guardar el ZIP y exportar": "選擇 ZIP 的儲存位置並匯出"
 }

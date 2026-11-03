@@ -89,5 +89,11 @@
 	"Idioma, aspecto, mesa de juego, actualizaciones y almacenamiento.": "Sprache, Aussehen, Spieltisch, Updates und Speicher.",
 	"Imágenes que ya no usa ningún deck.": "Bilder, die kein Deck mehr verwendet.",
 	"Para volver a tenerlos hay que descargarlos otra vez ({mb} MB).": "Um sie wiederzubekommen, musst du sie erneut herunterladen ({mb} MB).",
-	"¿Quitar los nombres en otros idiomas?": "Die Namen in anderen Sprachen entfernen?"
+	"¿Quitar los nombres en otros idiomas?": "Die Namen in anderen Sprachen entfernen?",
+	"Bajar desde GitHub": "Von GitHub herunterladen",
+	"La {version} está lista: instálala desde Ajustes.": "{version} ist bereit: Installiere sie in den Einstellungen.",
+	"Buscar versiones nuevas al abrir la app y bajarlas sin molestar. Android te pedirá confirmar cada instalación.": "Beim Öffnen der App nach neuen Versionen suchen und sie im Hintergrund herunterladen. Android fragt bei jeder Installation nach deiner Bestätigung.",
+	"La {version} está lista. Android te pedirá confirmar la instalación.": "{version} ist bereit. Android bittet dich, die Installation zu bestätigen.",
+	"Instalar la {version}": "{version} installieren",
+	"Android necesita tu permiso para instalar la actualización: se ha abierto su ajuste. Permite instalar apps desde Proxy Builder, vuelve y pulsa «Instalar» otra vez.": "Android braucht deine Erlaubnis, um das Update zu installieren: Die Einstellung wurde geöffnet. Erlaube Proxy Builder, Apps zu installieren, komm zurück und tippe erneut auf „Installieren“."
 }

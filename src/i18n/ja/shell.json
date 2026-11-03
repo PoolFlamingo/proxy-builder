@@ -31,5 +31,12 @@
 	"No se ha podido cerrar la ventana.": "ウィンドウを閉じられませんでした。",
 	"Se instalará al salir de la mesa.": "テーブルを離れたらインストールされます。",
 	"Beta": "ベータ",
-	"Pulsa para reintentar.": "クリックして再試行。"
+	"Pulsa para reintentar.": "クリックして再試行。",
+	"Instalar": "インストール",
+	"Android te pedirá confirmar la instalación.": "インストールの確認が Android から求められます。",
+	"Abre el instalador de Android con la versión nueva.": "新しいバージョンで Android のインストーラーを開きます。",
+	"Pulsa otra vez para salir": "もう一度押すと終了します",
+	"Más": "その他",
+	"Pantallas": "画面",
+	"Hojas": "用紙"
 }
