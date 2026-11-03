@@ -41,6 +41,10 @@ const MOTIVOS: Partial<Record<ErrorCode, Record<string, string>>> = {
 		lista: paraTraducir("La lista para jugar no vale para este formato: revísala."),
 		lista_sin_nombre: paraTraducir("Ponle un nombre a la lista."),
 		codigo: paraTraducir("Ese código no es válido: cópialo entero, empieza por PB1-."),
+		// El de pasar un deck (`PBD1-…`) pegado donde va el de una partida.
+		codigo_de_deck: paraTraducir(
+			"Ese es el código de «Recibir un deck» (empieza por PBD1-), no el de una partida.",
+		),
 		deck: paraTraducir("Elige un deck para jugar."),
 		identidad: paraTraducir("Ese fichero no es una identidad de Proxy Builder."),
 	},
@@ -104,6 +108,11 @@ const MOTIVOS: Partial<Record<ErrorCode, Record<string, string>>> = {
 	Unsupported: {
 		version: paraTraducir(
 			"Esta partida es de una versión más nueva de la app: actualiza para verla.",
+		),
+		// Android: se ha abierto su ajuste de «instalar apps desconocidas»
+		// (`android::instalar_apk`).
+		instalar_permiso: paraTraducir(
+			"Android necesita tu permiso para instalar la actualización: se ha abierto su ajuste. Permite instalar apps desde Proxy Builder, vuelve y pulsa «Instalar» otra vez.",
 		),
 	},
 	// Los códigos del servidor de salas (`params.code`; `server/docs/protocolo.md`).

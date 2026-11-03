@@ -121,6 +121,19 @@ describe("store de pantalla", () => {
 		expect(guardado.mesa.tamanoCartas).toBe(150);
 	});
 
+	it("con el dedo, de fábrica las sombras van apagadas y los dados en CSS 3D, salvo lo que la persona eligió", async () => {
+		const { mesaDeFabricaPara, MESA_DE_FABRICA } = await store();
+		expect(mesaDeFabricaPara(false)).toBe(MESA_DE_FABRICA);
+		const dedo = mesaDeFabricaPara(true);
+		expect(dedo.sombras).toBe(false);
+		expect(dedo.dados).toBe("css");
+		expect(dedo.calidad).toBe(244);
+		expect({ ...dedo, sombras: true, dados: "auto" }).toEqual(MESA_DE_FABRICA);
+		// En el equipo de las pruebas (sin pantalla) no se toca con el dedo.
+		const { useUi } = await store(almacen());
+		expect(useUi.getState().mesa.sombras).toBe(true);
+	});
+
 	it("la info de carta se recuerda", async () => {
 		const ls = almacen();
 		const { useUi } = await store(ls);

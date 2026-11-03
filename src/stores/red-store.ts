@@ -41,6 +41,12 @@ type RedStore = {
 	candidato: IdJugador | null;
 	/** Si esta app es el anfitrión: cuántos hay conectados y si se juega. */
 	mayoria: MayoriaRed | null;
+	/**
+	 * Hasta cuándo (`Date.now()`) cuenta como «volviendo» la app tras volver de
+	 * segundo plano: una conexión que se cortó mientras dormía se enseña como
+	 * «reconectando», no como un error (0: no se vuelve).
+	 */
+	volviendoHasta: number;
 	poner: (cambios: Partial<Omit<RedStore, "poner" | "olvidar">>) => void;
 	olvidar: () => void;
 };
@@ -57,6 +63,7 @@ const VACIA = {
 	ausentes: [] as AusenteVisto[],
 	candidato: null as IdJugador | null,
 	mayoria: null as MayoriaRed | null,
+	volviendoHasta: 0,
 };
 
 export const useRed = create<RedStore>((set) => ({

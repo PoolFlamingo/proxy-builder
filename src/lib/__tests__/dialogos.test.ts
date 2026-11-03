@@ -16,6 +16,9 @@ vi.mock("@/lib/ipc", () => ({
 	}),
 }));
 
+let movil = false;
+vi.mock("@/lib/plataforma", () => ({ esMovil: async () => movil }));
+
 let respuestaOpen: string | string[] | null = null;
 let respuestaSave: string | null = null;
 const open = vi.fn(async (_o: unknown) => respuestaOpen);
@@ -28,6 +31,9 @@ vi.mock("@tauri-apps/plugin-dialog", () => ({
 import {
 	abrirParaImportar,
 	elegirCarpetaParaExportar,
+	elegirDestinoDeImagenes,
+	filtrosParaAbrirEnMovil,
+	filtrosParaGuardarEnMovil,
 	guardarParaExportar,
 	recordar,
 } from "@/lib/dialogos";
@@ -40,6 +46,7 @@ describe("diálogos de ficheros", () => {
 		carpeta = "/inicio";
 		fallaInicial = false;
 		fallaRecordar = false;
+		movil = false;
 		respuestaOpen = null;
 		respuestaSave = null;
 		open.mockClear();
@@ -119,5 +126,93 @@ describe("diálogos de ficheros", () => {
 		expect(() => recordar("importar", "/a")).not.toThrow();
 		await Promise.resolve();
 		expect(recordadas()).toEqual([{ tipo: "importar", ruta: "/a" }]);
+	});
+
+	describe("en Android", () => {
+		beforeEach(() => {
+			movil = true;
+		});
+
+		it("importar no pregunta ni recuerda carpetas y devuelve los content://", async () => {
+			respuestaOpen = ["content://docs/1", "content://docs/2"];
+			const r = await abrirParaImportar({
+				multiple: true,
+				filters: [{ name: "Imágenes", extensions: ["png", "jpg"] }],
+			});
+			expect(r).toEqual(["content://docs/1", "content://docs/2"]);
+			expect(llamadas).toEqual([]);
+			expect(open).toHaveBeenCalledWith({
+				multiple: true,
+				filters: [{ name: "Imágenes", extensions: ["image/png", "image/jpeg"] }],
+			});
+		});
+
+		it("exportar propone solo el nombre, con el tipo del formato, y no recuerda nada", async () => {
+			respuestaSave = "content://docs/9";
+			const r = await guardarParaExportar(
+				{ title: "x", filters: [{ name: "PDF", extensions: ["pdf"] }] },
+				"deck.pdf",
+			);
+			expect(r).toBe("content://docs/9");
+			expect(llamadas).toEqual([]);
+			expect(save).toHaveBeenCalledWith({
+				title: "x",
+				filters: [{ name: "PDF", extensions: ["application/pdf"] }],
+				defaultPath: "deck.pdf",
+			});
+		});
+
+		it("elegir carpeta no existe", async () => {
+			await expect(elegirCarpetaParaExportar()).rejects.toMatchObject({ code: "Unsupported" });
+			expect(open).not.toHaveBeenCalled();
+		});
+
+		it("las imágenes con carpetas por idioma salen en un ZIP", async () => {
+			respuestaSave = "content://docs/zip";
+			const r = await elegirDestinoDeImagenes({ titulo: "PNG", nombre: "deck.zip" });
+			expect(r).toBe("content://docs/zip");
+			expect(save).toHaveBeenCalledWith({
+				title: "PNG",
+				filters: [{ name: "ZIP", extensions: ["application/zip"] }],
+				defaultPath: "deck.zip",
+			});
+		});
+	});
+
+	it("en escritorio las imágenes salen en una carpeta", async () => {
+		respuestaOpen = ["/png"];
+		expect(await elegirDestinoDeImagenes({ titulo: "PNG", nombre: "deck.zip" })).toBe("/png");
+		expect(save).not.toHaveBeenCalled();
+	});
+});
+
+describe("filtros de Android", () => {
+	it("para abrir: con un formato sin tipo conocido no se filtra nada", () => {
+		expect(filtrosParaAbrirEnMovil([{ name: "Proxy Builder", extensions: ["pbdeck"] }])).toEqual(
+			[],
+		);
+		expect(filtrosParaAbrirEnMovil([{ name: "Letras", extensions: ["ttf", "otf"] }])).toEqual([]);
+		expect(filtrosParaAbrirEnMovil(undefined)).toEqual([]);
+	});
+
+	it("para abrir: los conocidos pasan a tipo, sin repetir, y un zip admite sus dos tipos", () => {
+		expect(
+			filtrosParaAbrirEnMovil([{ name: "Imágenes", extensions: ["jpg", "JPEG", "png", "webp"] }]),
+		).toEqual([{ name: "Imágenes", extensions: ["image/jpeg", "image/png", "image/webp"] }]);
+		expect(filtrosParaAbrirEnMovil([{ name: "Pack", extensions: ["zip"] }])).toEqual([
+			{ name: "Pack", extensions: ["application/zip", "application/x-zip-compressed"] },
+		]);
+	});
+
+	it("para guardar: un solo tipo y, si no se conoce, el binario genérico", () => {
+		expect(filtrosParaGuardarEnMovil([{ name: "ZIP", extensions: ["zip"] }])).toEqual([
+			{ name: "ZIP", extensions: ["application/zip"] },
+		]);
+		expect(filtrosParaGuardarEnMovil([{ name: "Proxy Builder", extensions: ["pbdeck"] }])).toEqual([
+			{ name: "Proxy Builder", extensions: ["application/octet-stream"] },
+		]);
+		expect(filtrosParaGuardarEnMovil(undefined)).toEqual([
+			{ name: "", extensions: ["application/octet-stream"] },
+		]);
 	});
 });

@@ -150,8 +150,19 @@ export function iniciarAutoguardado(retardoMs = 800): () => void {
 			pendiente = true;
 			return;
 		}
+		// Rust está reescribiendo este deck: se espera a que lo devuelva (y
+		// si al volver se recargó, ya no hay nada que guardar).
+		if (prestamo?.id === deck.id) {
+			programar();
+			return;
+		}
+		if (useDeck.getState().guardado === "saved") return;
 		enVuelo = true;
 		_marcarGuardado("saving");
+		let fin = () => {};
+		guardadoEnVuelo = new Promise<void>((r) => {
+			fin = r;
+		});
 		try {
 			await call("deck_save", { deck });
 			// Si hubo cambios mientras guardaba, sigue sucio.
@@ -160,6 +171,8 @@ export function iniciarAutoguardado(retardoMs = 800): () => void {
 			_marcarGuardado("error", e);
 		} finally {
 			enVuelo = false;
+			fin();
+			guardadoEnVuelo = null;
 			if (pendiente || useDeck.getState().guardado === "dirty") {
 				pendiente = false;
 				programar();
@@ -208,8 +221,110 @@ export async function abrirDeckInicial(nombreNuevo: string): Promise<Deck> {
 export async function guardarAhora(): Promise<void> {
 	const { deck, guardado, version, _marcarGuardado } = useDeck.getState();
 	if (!deck || guardado === "saved") return;
+	if (prestamo?.id === deck.id) {
+		// Mientras Rust lo reemplaza, lo de la pantalla ya no vale; mientras
+		// le completa las imágenes, se guarda mezclado con lo que ya bajó.
+		if (!prestamo.conservar) return;
+		const enRust = await call("deck_open", { id: deck.id });
+		const actual = useDeck.getState().deck ?? deck;
+		await call("deck_save", {
+			deck: { ...actual, cards: mezclarCartas(prestamo.cartas, actual.cards, enRust.cards) },
+		});
+		return;
+	}
 	await call("deck_save", { deck });
 	if (useDeck.getState().version === version) _marcarGuardado("saved");
+}
+
+/**
+ * **Prestar el deck abierto a Rust.** Cuando Rust escribe en la base un deck
+ * con su id (reemplazarlo al importar o recibir otra versión, completar las
+ * imágenes que faltan), el autoguardado de la pantalla lo pisaría con la
+ * copia vieja. Mientras dura el préstamo no se guarda nada de la pantalla.
+ */
+type Prestamo = {
+	id: string;
+	/** Completar: lo que la persona cambie entretanto se conserva. */
+	conservar: boolean;
+	/** Las cartas al empezar: las que siguen siendo el mismo objeto no se han tocado. */
+	cartas: DeckCard[];
+	version: number;
+	veces: number;
+};
+let prestamo: Prestamo | null = null;
+let guardadoEnVuelo: Promise<void> | null = null;
+/** La vuelta del último préstamo (volver a leer el deck), mientras dura. */
+let devolviendo: Promise<void> | null = null;
+
+/** Lo que devuelve el préstamo: vuelve a leer el deck de Rust. */
+export type Devolver = () => Promise<void>;
+
+/**
+ * Las cartas tras el préstamo con `conservar`: la de Rust para las que la
+ * persona no tocó (siguen siendo el mismo objeto que `antes`), la suya para
+ * las demás.
+ */
+export function mezclarCartas(
+	antes: DeckCard[],
+	actuales: DeckCard[],
+	deRust: DeckCard[],
+): DeckCard[] {
+	const previas = new Map(antes.map((c) => [c.id, c]));
+	const porId = new Map(deRust.map((c) => [c.id, c]));
+	return actuales.map((c) => {
+		const r = porId.get(c.id);
+		return r && previas.get(c.id) === c ? r : c;
+	});
+}
+
+/**
+ * Antes de que Rust escriba el deck `id`: si es el abierto, guarda lo
+ * pendiente, para el autoguardado y devuelve la función que, al terminar
+ * (bien o mal), lo vuelve a leer de Rust. Si no es el abierto, `null`.
+ * `conservar: false` (reemplazar) tira lo de la pantalla y carga lo de Rust
+ * sin historial; `true` (completar) mezcla con `mezclarCartas`.
+ */
+export async function prestarDeck(
+	id: string,
+	{ conservar }: { conservar: boolean },
+): Promise<Devolver | null> {
+	while (devolviendo) await devolviendo;
+	if (useDeck.getState().deck?.id !== id) return null;
+	if (guardadoEnVuelo) await guardadoEnVuelo;
+	if (prestamo?.id === id && prestamo.veces > 0) {
+		prestamo.veces += 1;
+		prestamo.conservar &&= conservar;
+	} else {
+		await guardarAhora();
+		const s = useDeck.getState();
+		if (s.deck?.id !== id) return null;
+		prestamo = { id, conservar, cartas: s.deck.cards, version: s.version, veces: 1 };
+	}
+	const p = prestamo;
+	let devuelto = false;
+	return async () => {
+		if (devuelto || prestamo !== p) return;
+		devuelto = true;
+		p.veces -= 1;
+		if (p.veces > 0) return;
+		const vuelta = (async () => {
+			try {
+				if (useDeck.getState().deck?.id !== id) return;
+				const enRust = await call("deck_open", { id });
+				const ahora = useDeck.getState();
+				if (ahora.deck?.id !== id) return;
+				if (!p.conservar || ahora.version === p.version) ahora.cargar(enRust);
+				else ahora.refrescarCartas(p.cartas, enRust.cards);
+			} catch {
+				// Si ya no existe o no se puede leer, se queda lo de la pantalla.
+			} finally {
+				prestamo = null;
+			}
+		})();
+		devolviendo = vuelta;
+		await vuelta;
+		if (devolviendo === vuelta) devolviendo = null;
+	};
 }
 
 /** Abre otro deck de la biblioteca (guardando antes el actual). */

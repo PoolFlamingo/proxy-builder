@@ -29,7 +29,15 @@ vi.mock("@/lib/ipc", () => ({
 }));
 
 import { huecos } from "@/lib/deck-ops";
-import { abrirDeck, abrirDeckInicial, guardarAhora, useDeck } from "@/stores/deck-store";
+import {
+	abrirDeck,
+	abrirDeckInicial,
+	guardarAhora,
+	iniciarAutoguardado,
+	mezclarCartas,
+	prestarDeck,
+	useDeck,
+} from "@/stores/deck-store";
 
 function deck(id: string, name = "Deck"): Deck {
 	return {
@@ -192,5 +200,90 @@ describe("historial", () => {
 		useDeck.getState().deshacer();
 		expect(useDeck.getState().deck?.settings).toBe(ajustes);
 		expect(useDeck.getState().deck?.defaultBack).toBeNull();
+	});
+});
+
+describe("prestar el deck abierto a Rust", () => {
+	const carta = (id: string, extra: Partial<DeckCard> = {}) =>
+		({ ...huecos(1)[0], id, ...extra }) as DeckCard;
+
+	beforeEach(() => {
+		llamadas.length = 0;
+		existentes.clear();
+		vi.useRealTimers();
+	});
+
+	it("si no es el deck abierto, no hace nada", async () => {
+		useDeck.getState().cargar(deck("d1"));
+		expect(await prestarDeck("d2", { conservar: false })).toBeNull();
+		expect(ordenes()).toEqual([]);
+	});
+
+	it("reemplazar: guarda lo pendiente, no guarda durante y recarga lo de Rust sin historial", async () => {
+		useDeck.getState().cargar(deck("d1"));
+		useDeck.getState().setCartas((c) => [...c, carta("vieja")]);
+		const devolver = await prestarDeck("d1", { conservar: false });
+		expect(ordenes()).toEqual(["deck_save"]);
+		// Mientras Rust lo reemplaza, ni guardarAhora ni el autoguardado lo pisan.
+		useDeck.getState().setCartas((c) => [...c, carta("otra")]);
+		await guardarAhora();
+		expect(ordenes()).toEqual(["deck_save"]);
+		existentes.set("d1", { ...deck("d1"), cards: [carta("nueva")] });
+		await devolver?.();
+		const s = useDeck.getState();
+		expect(s.deck?.cards.map((c) => c.id)).toEqual(["nueva"]);
+		expect(s.pasado).toHaveLength(0);
+		expect(s.guardado).toBe("saved");
+		// Devolver dos veces no hace nada más.
+		await devolver?.();
+		expect(ordenes()).toEqual(["deck_save", "deck_open"]);
+	});
+
+	it("el autoguardado espera mientras está prestado", async () => {
+		vi.useFakeTimers();
+		const parar = iniciarAutoguardado(10);
+		useDeck.getState().cargar(deck("d1"));
+		const devolver = await prestarDeck("d1", { conservar: false });
+		useDeck.getState().setCartas((c) => [...c, carta("x")]);
+		await vi.advanceTimersByTimeAsync(50);
+		expect(ordenes()).not.toContain("deck_save");
+		existentes.set("d1", deck("d1"));
+		await devolver?.();
+		await vi.advanceTimersByTimeAsync(50);
+		expect(ordenes()).toEqual(["deck_open"]);
+		parar();
+		vi.useRealTimers();
+	});
+
+	it("completar: conserva lo que la persona cambió y toma lo de Rust para lo demás", async () => {
+		useDeck.getState().cargar({ ...deck("d1"), cards: [carta("a"), carta("b")] });
+		const devolver = await prestarDeck("d1", { conservar: true });
+		useDeck
+			.getState()
+			.setCartas((cs) => cs.map((c) => (c.id === "b" ? { ...c, locked: true } : c)));
+		existentes.set("d1", {
+			...deck("d1"),
+			cards: [carta("a", { meta: { lang: "fr" } as DeckCard["meta"] }), carta("b")],
+		});
+		// Guardar entretanto mezcla con lo que ya está en Rust.
+		await guardarAhora();
+		const guardado = llamadas.find((l) => l.cmd === "deck_save")?.args.deck as Deck;
+		expect(guardado.cards[0].meta).toEqual({ lang: "fr" });
+		expect(guardado.cards[1].locked).toBe(true);
+		await devolver?.();
+		const cs = useDeck.getState().deck?.cards ?? [];
+		expect(cs[0].meta).toEqual({ lang: "fr" });
+		expect(cs[1].locked).toBe(true);
+	});
+
+	it("mezclarCartas", () => {
+		const a = carta("a");
+		const b = carta("b");
+		const b2 = { ...b, locked: true };
+		const deRust = [carta("a", { locked: true }), carta("b")];
+		const r = mezclarCartas([a, b], [a, b2, carta("c")], deRust);
+		expect(r[0]).toBe(deRust[0]);
+		expect(r[1]).toBe(b2);
+		expect(r[2].id).toBe("c");
 	});
 });

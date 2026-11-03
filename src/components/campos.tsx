@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useId, useState } from "react";
+import { ConAyuda } from "@/components/con-ayuda";
 import { Icono } from "@/components/icono";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,7 +13,6 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { WithTooltip } from "@/components/ui/with-tooltip";
 import { cn } from "@/lib/utils";
 
 /**
@@ -29,6 +29,7 @@ export function Seccion({
 	children,
 	abiertaAlPrincipio = true,
 	extra,
+	fija = false,
 }: {
 	id: string;
 	titulo: string;
@@ -36,6 +37,9 @@ export function Seccion({
 	children: ReactNode;
 	abiertaAlPrincipio?: boolean;
 	extra?: ReactNode;
+	/** Siempre abierta y sin botón de plegar (ya está dentro de su propia
+	 *  pantalla: la sección de Ajustes en móvil). */
+	fija?: boolean;
 }) {
 	const clave = `proxybuilder.seccion.${id}`;
 	const [abierta, setAbierta] = useState(() => {
@@ -57,47 +61,82 @@ export function Seccion({
 	return (
 		<section className="rounded-lg border bg-card/40">
 			<div className="flex items-center gap-1.5 px-2.5 py-2">
-				<button
-					type="button"
-					onClick={cambiar}
-					aria-expanded={abierta}
-					className="flex flex-1 items-center gap-1.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground"
-				>
-					<Icono
-						icon="lucide:chevron-right"
-						className={cn("size-3.5 transition-transform", abierta && "rotate-90")}
-					/>
-					{icono}
-					{titulo}
-				</button>
+				{fija ? (
+					<span className="flex flex-1 items-center gap-1.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+						{icono}
+						{titulo}
+					</span>
+				) : (
+					<button
+						type="button"
+						onClick={cambiar}
+						aria-expanded={abierta}
+						className="flex flex-1 items-center gap-1.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground"
+					>
+						<Icono
+							icon="lucide:chevron-right"
+							className={cn("size-3.5 transition-transform", abierta && "rotate-90")}
+						/>
+						{icono}
+						{titulo}
+					</button>
+				)}
 				{extra}
 			</div>
-			{abierta && <div className="flex flex-col gap-2.5 px-2.5 pb-2.5">{children}</div>}
+			{(abierta || fija) && <div className="flex flex-col gap-2.5 px-2.5 pb-2.5">{children}</div>}
 		</section>
 	);
 }
 
+/**
+ * Una etiqueta con su control a la derecha. `ayuda` va en un tooltip (en
+ * táctil, en el «ⓘ» de al lado: `ConAyuda`). `apilarEnMovil`: en el móvil la
+ * etiqueta va encima del control (en 411 px no caben los dos en una línea) y,
+ * con el dedo, la etiqueta larga baja de línea en vez de cortarse. En
+ * escritorio no cambia nada.
+ */
 export function Fila({
 	etiqueta,
 	ayuda,
 	children,
 	htmlFor,
 	className,
+	apilarEnMovil = false,
 }: {
 	etiqueta: string;
 	ayuda?: string;
 	children: ReactNode;
 	htmlFor?: string;
 	className?: string;
+	apilarEnMovil?: boolean;
 }) {
 	const texto = (
-		<label htmlFor={htmlFor} className="min-w-0 flex-1 truncate text-xs text-foreground/90">
+		<label
+			htmlFor={htmlFor}
+			className={cn(
+				"min-w-0 flex-1 truncate text-xs text-foreground/90",
+				apilarEnMovil && "[[data-tactil]_&]:whitespace-normal",
+			)}
+		>
 			{etiqueta}
 		</label>
 	);
 	return (
-		<div className={cn("flex min-h-7 items-center gap-2.5", className)}>
-			{ayuda ? <WithTooltip content={ayuda}>{texto}</WithTooltip> : texto}
+		<div
+			className={cn(
+				"flex min-h-7 items-center gap-2.5",
+				apilarEnMovil &&
+					"[[data-formato=movil]_&]:flex-col [[data-formato=movil]_&]:items-stretch [[data-formato=movil]_&]:gap-1.5",
+				className,
+			)}
+		>
+			{ayuda ? (
+				<ConAyuda content={ayuda} className="[[data-tactil]_&]:min-w-0 [[data-tactil]_&]:flex-1">
+					{texto}
+				</ConAyuda>
+			) : (
+				texto
+			)}
 			<div className="flex shrink-0 items-center gap-1.5">{children}</div>
 		</div>
 	);

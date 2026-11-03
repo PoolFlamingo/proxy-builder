@@ -5,6 +5,7 @@ const llamadas: { cmd: string; args: Record<string, unknown> }[] = [];
 let nueva: ActualizacionInfo | null = null;
 let falla: string | null = null;
 let ocupadaPorPartida = false;
+let enAndroid = false;
 let alProgreso: ((p: { hecho: number; total: number }) => void) | null = null;
 vi.mock("@/lib/ipc", () => ({
 	call: vi.fn(async (cmd: string, args: Record<string, unknown>) => {
@@ -14,7 +15,7 @@ vi.mock("@/lib/ipc", () => ({
 			throw { code: "Busy", params: { motivo: "partida" } };
 		switch (cmd) {
 			case "update_status":
-				return { soportada: true, actual: "2.3.0" };
+				return { soportada: true, actual: "2.3.0", instalaElSistema: enAndroid };
 			case "update_check":
 				return nueva;
 			case "update_download":
@@ -56,9 +57,11 @@ describe("actualización de la app", () => {
 		nueva = null;
 		falla = null;
 		ocupadaPorPartida = false;
+		enAndroid = false;
 		useMesa.setState({ activa: false });
 		useActualizacion.setState({
 			alSalirDeLaMesa: false,
+			instalaElSistema: false,
 			soportada: null,
 			actual: null,
 			paso: "inactiva",
@@ -73,6 +76,25 @@ describe("actualización de la app", () => {
 		expect(await useActualizacion.getState().iniciar()).toBe(true);
 		expect(ordenes()).toEqual(["update_status"]);
 		expect(useActualizacion.getState().actual).toBe("2.3.0");
+	});
+
+	it("en Android sabe que lo instala el sistema", async () => {
+		enAndroid = true;
+		await useActualizacion.getState().iniciar();
+		expect(useActualizacion.getState().instalaElSistema).toBe(true);
+	});
+
+	it("en Android, tras abrir el instalador vuelve a «lista» (por si se cancela)", async () => {
+		useActualizacion.setState({ paso: "lista", info: info("2.4.0"), instalaElSistema: true });
+		await useActualizacion.getState().instalar();
+		expect(ordenes()).toEqual(["guardarAhora", "update_install"]);
+		expect(useActualizacion.getState().paso).toBe("lista");
+	});
+
+	it("sin sistema de por medio (escritorio) sigue «instalando» hasta que reinicia", async () => {
+		useActualizacion.setState({ paso: "lista", info: info("2.4.0") });
+		await useActualizacion.getState().instalar();
+		expect(useActualizacion.getState().paso).toBe("instalando");
 	});
 
 	it("sin versión nueva queda al día", async () => {

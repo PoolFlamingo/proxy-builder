@@ -15,6 +15,11 @@ type ActualizacionStore = {
 	/** `null` hasta preguntarlo a Rust; `false` en desarrollo. */
 	soportada: boolean | null;
 	actual: string | null;
+	/**
+	 * Android: la instala el instalador del sistema, que pide confirmar y
+	 * relanza la app (no hay «reiniciar»): cambian los textos.
+	 */
+	instalaElSistema: boolean;
 	paso: Paso;
 	info: ActualizacionInfo | null;
 	/** 0–100 mientras se baja; `null` si no se sabe el tamaño. */
@@ -34,8 +39,9 @@ type ActualizacionStore = {
 	/** Baja la encontrada; `true` si queda lista para instalar. */
 	bajar: () => Promise<boolean>;
 	/**
-	 * Guarda el deck, instala y reinicia. Lanza el error si falla. Con la
-	 * mesa abierta no instala: lo deja para cuando se salga de ella.
+	 * Guarda el deck, instala y reinicia (en Android, abre el instalador del
+	 * sistema y el paso vuelve a «lista» por si se cancela). Lanza el error si
+	 * falla. Con la mesa abierta no instala: lo deja para cuando se salga de ella.
 	 */
 	instalar: () => Promise<void>;
 };
@@ -45,6 +51,7 @@ const OCUPADA: Paso[] = ["buscando", "bajando", "instalando"];
 export const useActualizacion = create<ActualizacionStore>((set, get) => ({
 	soportada: null,
 	actual: null,
+	instalaElSistema: false,
 	paso: "inactiva",
 	info: null,
 	progreso: null,
@@ -56,7 +63,11 @@ export const useActualizacion = create<ActualizacionStore>((set, get) => ({
 		if (soportada !== null) return soportada;
 		try {
 			const e = await call("update_status", {});
-			set({ soportada: e.soportada, actual: e.actual });
+			set({
+				soportada: e.soportada,
+				actual: e.actual,
+				instalaElSistema: e.instalaElSistema,
+			});
 			return e.soportada;
 		} catch {
 			set({ soportada: false });
@@ -112,6 +123,9 @@ export const useActualizacion = create<ActualizacionStore>((set, get) => ({
 			await guardarAhora();
 			// Si va bien, la app se reinicia y esto no vuelve.
 			await call("update_install", { version: info.version });
+			// Android: el instalador del sistema está abierto; si la persona lo
+			// cancela, se puede volver a pulsar.
+			if (get().instalaElSistema) set({ paso: "lista" });
 		} catch (e) {
 			// Rust también lo vigila: una partida que la pantalla no conocía.
 			if (esperaALaPartida(e)) {

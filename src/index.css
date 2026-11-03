@@ -704,3 +704,67 @@ input[type="range"].macup-range:disabled {
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
+
+
+/* ── Móvil y tableta (Pablo, 02/11/2026; plan del móvil, M2) ───────────────
+   `lib/formato.ts` pone en <html> `data-formato` (escritorio | tableta | movil)
+   y, si se toca con el dedo, `data-tactil`. Lo de escritorio no cambia. */
+html[data-tactil] {
+  /* Un punto más de texto (`text-xs` pasa de 12 a ~14 px) y todo lo que va en
+     rem crece con él. */
+  font-size: 116%;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+/* Objetivos táctiles de al menos 44 × 44 px. Un botón dentro de un
+   `WithTooltip` pierde su `data-slot="button"` (el disparador del tooltip pone
+   el suyo): sin la segunda regla quedaba de 24 px. */
+html[data-tactil] [data-slot="button"],
+html[data-tactil] button[data-slot="tooltip-trigger"] {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+}
+/* Las zonas seguras: la barra de estado, la muesca y la barra de gestos.
+   Con `viewport-fit=cover` la app dibuja de borde a borde. Fuera de Android
+   estos valores son 0. */
+html[data-tactil] #root {
+  /* Un mínimo arriba y abajo por si el WebView es viejo: hasta Chromium 144 los
+     `env()` solo cuentan la muesca, no la barra de estado ni la de gestos. Con
+     uno nuevo manda el valor real si es mayor. */
+  padding-top: max(env(safe-area-inset-top), 24px);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: max(env(safe-area-inset-bottom), 14px);
+  padding-left: env(safe-area-inset-left);
+}
+
+/* Móvil: los avisos (sonner) quedan encima de la barra de pestañas de abajo
+   (`features/shell/barra-movil.tsx`, 3,5 rem) y de la zona segura. Sonner pone
+   sus márgenes en línea, de ahí el `!important`. */
+html[data-formato="movil"] [data-sonner-toaster] {
+  --offset-bottom: calc(4.5rem + env(safe-area-inset-bottom)) !important;
+  --mobile-offset-bottom: calc(4.5rem + env(safe-area-inset-bottom)) !important;
+}
+
+/* Atajos de teclado: con el dedo no hay teclado, así que no se enseñan en los
+   menús (`ContextMenuShortcut`, `DropdownMenuShortcut`). */
+html[data-tactil] [data-slot="context-menu-shortcut"],
+html[data-tactil] [data-slot="dropdown-menu-shortcut"] {
+  display: none;
+}
+
+/* Campos, listas desplegables y filas de menú de 44 px con el dedo (la mesa y las
+   salas: plan del móvil, M3.9 y M3.11). */
+html[data-tactil] [data-slot="input"],
+html[data-tactil] [data-slot="select-trigger"],
+html[data-tactil] [data-slot="select-item"],
+html[data-tactil] [data-slot="context-menu-item"],
+html[data-tactil] [data-slot="context-menu-sub-trigger"],
+html[data-tactil] [data-slot="context-menu-checkbox-item"],
+html[data-tactil] [data-slot="context-menu-radio-item"],
+html[data-tactil] [data-slot="dropdown-menu-item"],
+html[data-tactil] [data-slot="dropdown-menu-sub-trigger"],
+html[data-tactil] [data-slot="dropdown-menu-checkbox-item"],
+html[data-tactil] [data-slot="dropdown-menu-radio-item"] {
+  min-height: 2.75rem;
+}

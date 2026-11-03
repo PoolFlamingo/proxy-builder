@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { ImagePolicy } from "@/bindings/ImagePolicy";
 import type { Intensidad } from "@/bindings/Intensidad";
 import type { ConfigDisposicion } from "@/features/mesa/disposicion";
+import { formatoActual } from "@/lib/formato";
 import type { AnchoMiniatura } from "@/lib/image-url";
 
 /**
@@ -107,6 +108,17 @@ export const MESA_DE_FABRICA: PreferenciasMesa = {
 	disposicion: {},
 };
 
+/**
+ * Lo de fábrica de la mesa, según se juegue con el dedo o no. Con el dedo
+ * (tableta y móvil) van las sombras apagadas y los dados en CSS 3D, que
+ * aguantan en equipos más modestos que el 3D con física; la calidad de
+ * imagen sigue en 244 (plan del móvil, M3.9). Solo son el punto de partida:
+ * lo que la persona haya guardado manda.
+ */
+export function mesaDeFabricaPara(tactil: boolean): PreferenciasMesa {
+	return tactil ? { ...MESA_DE_FABRICA, sombras: false, dados: "css" } : MESA_DE_FABRICA;
+}
+
 /** Los diálogos que se abren desde las cartas o las barras. */
 export type Dialogo =
 	| { tipo: "editar"; id: string }
@@ -177,18 +189,33 @@ const PREDETERMINADAS: Preferencias = {
 	mesa: MESA_DE_FABRICA,
 };
 
+/**
+ * La miniatura de la vista previa de fábrica: en un móvil o una tableta, la
+ * pequeña (un teléfono modesto no aguanta decenas de imágenes de 488 px); si
+ * la persona ya eligió una, manda la suya.
+ */
+export function calidadVistaDeFabrica(tactil: boolean, escritorio: boolean): AnchoMiniatura {
+	return tactil && !escritorio ? 244 : PREDETERMINADAS.calidadVista;
+}
+
 function leer(): Preferencias {
+	const formato = formatoActual();
+	const fabrica = mesaDeFabricaPara(formato.tactil);
+	const predeterminadas: Preferencias = {
+		...PREDETERMINADAS,
+		calidadVista: calidadVistaDeFabrica(formato.tactil, formato.tamano === "escritorio"),
+	};
 	try {
 		const crudo = localStorage.getItem(CLAVE);
-		if (!crudo) return PREDETERMINADAS;
+		if (!crudo) return { ...predeterminadas, mesa: fabrica };
 		const leidas = JSON.parse(crudo) as Partial<Preferencias>;
 		return {
-			...PREDETERMINADAS,
+			...predeterminadas,
 			...leidas,
-			mesa: { ...MESA_DE_FABRICA, ...(leidas.mesa ?? {}) },
+			mesa: { ...fabrica, ...(leidas.mesa ?? {}) },
 		};
 	} catch {
-		return PREDETERMINADAS;
+		return { ...predeterminadas, mesa: fabrica };
 	}
 }
 

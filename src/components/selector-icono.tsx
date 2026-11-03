@@ -229,6 +229,7 @@ export function SelectorIcono({
 											id === valor && "bg-primary/15 ring-2 ring-primary",
 										)}
 										onClick={() => elegir(id)}
+										aria-label={id}
 									>
 										<Icono icon={id} className="size-5" />
 									</button>

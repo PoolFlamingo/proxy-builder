@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { EtiquetasTactiles } from "@/components/etiquetas-tactiles";
 import { LanguageProvider, leerIdioma } from "@/components/language-provider";
 import { LimiteError } from "@/components/limite-error";
 import { SmoothScrollClient } from "@/components/smooth-scroll-client";
@@ -8,6 +9,10 @@ import { TooltipsNativos } from "@/components/tooltips-nativos";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cargarDiccionario } from "@/i18n/cargar";
+import { enlazarAtras } from "@/lib/atras";
+import { engancharCicloDeVida } from "@/lib/ciclo-de-vida";
+import { formatoActual } from "@/lib/formato";
+import { call } from "@/lib/ipc";
 import { ponerTemaAntesDeMontar } from "@/lib/tema-inicial";
 import { prepararTemasInstalados } from "@/lib/temas-instalados";
 import App from "./App";
@@ -17,6 +22,7 @@ import "./index.css";
 // donde la app no pone uno propio. Va en burbuja y mirando `defaultPrevented`:
 // si una carta abrió nuestro menú (Radix ya canceló el evento), no se toca.
 if (!import.meta.env.DEV) {
+	// táctil: no abre nada por sí mismo; el menú de cada sitio sale con la pulsación larga (`lib/pulsacion-larga.ts`)
 	window.addEventListener("contextmenu", (e) => {
 		if (!e.defaultPrevented) e.preventDefault();
 	});
@@ -42,6 +48,17 @@ function ensenarVentana() {
 		.catch(() => {});
 }
 
+// El formato en <html> (`data-formato`, `data-tactil`) antes del primer pintado,
+// y el botón «atrás» de Android, que solo existe allí.
+formatoActual();
+call("app_plataforma")
+	.then((p) => {
+		if (p !== "android" && p !== "ios") return;
+		engancharCicloDeVida();
+		if (p === "android") return enlazarAtras();
+	})
+	.catch(() => {});
+
 function montar(raiz: HTMLElement) {
 	ReactDOM.createRoot(raiz).render(
 		<React.StrictMode>
@@ -55,6 +72,8 @@ function montar(raiz: HTMLElement) {
 							<Toaster position="bottom-right" />
 							{/* Ningún `title` nativo llega a pintarse: se convierte en el Tooltip de la casa. */}
 							<TooltipsNativos />
+							{/* En táctil, mantener pulsado un botón de icono enseña su nombre. */}
+							<EtiquetasTactiles />
 						</TooltipProvider>
 					</ThemeProvider>
 				</LanguageProvider>
