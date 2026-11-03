@@ -1,6 +1,16 @@
-import { type ComponentType, createContext, type ReactNode, useContext } from "react";
+import { Slot } from "radix-ui";
+import { type ComponentType, createContext, type ReactNode, useContext, useState } from "react";
 import type { DeckSummary } from "@/bindings/DeckSummary";
 import { ContenidoContextual } from "@/components/contenido-contextual";
+import {
+	CasillaHoja,
+	HojaMenu,
+	ItemHoja,
+	SeparadorHoja,
+	SubHoja,
+	SubHojaContenido,
+	SubHojaFila,
+} from "@/components/hoja-menu";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import {
@@ -14,6 +24,7 @@ import {
 	ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import {
+	DropdownMenu,
 	DropdownMenuCheckboxItem,
 	DropdownMenuContent,
 	DropdownMenuItem,
@@ -21,8 +32,11 @@ import {
 	DropdownMenuSub,
 	DropdownMenuSubContent,
 	DropdownMenuSubTrigger,
+	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { usePasarUi } from "@/features/pasar/store";
+import { useFormato } from "@/lib/formato";
+import { useNombreDeck } from "@/lib/use-nombre-deck";
 import { IDIOMAS, PuntoEtiqueta } from "./piezas";
 import { useBiblioteca } from "./store";
 
@@ -85,6 +99,16 @@ const CONTEXTUAL: Primitivas = {
 	SubTrigger: ContextMenuSubTrigger,
 	SubContent: ContextMenuSubContent,
 	CheckboxItem: ContextMenuCheckboxItem,
+};
+
+/** En el móvil el menú es una hoja de abajo (`HojaMenu`), como todos. */
+const HOJA: Primitivas = {
+	Item: ItemHoja,
+	Separator: SeparadorHoja,
+	Sub: SubHoja,
+	SubTrigger: SubHojaFila,
+	SubContent: SubHojaContenido,
+	CheckboxItem: CasillaHoja,
 };
 
 /** Lo que hay en el menú de un deck (o de la selección, si es parte de ella). */
@@ -219,11 +243,52 @@ function Items({ deck, M }: { deck: DeckSummary; M: Primitivas }) {
 }
 
 /** El contenido del desplegable «⋯» de un deck. */
-export function MenuDeck({ deck }: { deck: DeckSummary }) {
+function MenuDeck({ deck }: { deck: DeckSummary }) {
 	return (
 		<DropdownMenuContent align="end" className="text-xs">
 			<Items deck={deck} M={DESPLEGABLE} />
 		</DropdownMenuContent>
+	);
+}
+
+/**
+ * El botón «⋯» de un deck con su menú: un desplegable con ratón y, en el
+ * móvil, una hoja de abajo con el nombre del deck de título.
+ */
+export function BotonMenuDeck({
+	deck,
+	children,
+	titulo,
+}: {
+	deck: DeckSummary;
+	/** El botón (un `Button`); con `asChild` se usa tal cual de disparador. */
+	children: ReactNode;
+	titulo?: string;
+}) {
+	const movil = useFormato().tamano === "movil";
+	const nombreDeck = useNombreDeck();
+	const [abierta, setAbierta] = useState(false);
+	if (movil)
+		return (
+			<>
+				<Slot.Root onClick={() => setAbierta(true)} aria-haspopup="dialog">
+					{children}
+				</Slot.Root>
+				<HojaMenu
+					abierta={abierta}
+					onCerrar={() => setAbierta(false)}
+					titulo={titulo ?? nombreDeck(deck.name)}
+					sinRelleno
+				>
+					<Items deck={deck} M={HOJA} />
+				</HojaMenu>
+			</>
+		);
+	return (
+		<DropdownMenu>
+			<DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
+			<MenuDeck deck={deck} />
+		</DropdownMenu>
 	);
 }
 

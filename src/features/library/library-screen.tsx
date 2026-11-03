@@ -3,11 +3,11 @@ import { toast } from "sonner";
 import type { DeckSummary } from "@/bindings/DeckSummary";
 import { Confirmar } from "@/components/confirmar";
 import { DialogoAdaptable } from "@/components/dialogo-adaptable";
+import { FilaMenu } from "@/components/hoja-menu";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { megas, nombreSeguro } from "@/features/export/acciones";
 import { usePasarUi } from "@/features/pasar/store";
@@ -15,13 +15,14 @@ import { abrirParaImportar, guardarParaExportar } from "@/lib/dialogos";
 import { useFormato } from "@/lib/formato";
 import { call } from "@/lib/ipc";
 import { esMovil } from "@/lib/plataforma";
+import { useNombreDeck } from "@/lib/use-nombre-deck";
 import { cn } from "@/lib/utils";
 import { abrirDeck, guardarAhora, useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
 import { BarraHerramientas } from "./barra-herramientas";
 import { BarraLateral } from "./barra-lateral";
 import { useEtiquetasUi } from "./etiquetas-ui";
-import { type Acciones, AccionesDeck, MenuDeck } from "./menu-deck";
+import { type Acciones, AccionesDeck, BotonMenuDeck } from "./menu-deck";
 import { alPulsarDeck, entrarEnSeleccion, seleccionar } from "./organizar";
 import { useFiltros, usePrefs } from "./preferencias";
 import { PropiedadesDialog } from "./propiedades-dialog";
@@ -46,6 +47,7 @@ export function LibraryScreen() {
 	const org = useOrganizados();
 	const { enPantalla } = org;
 	const etiquetasUi = useEtiquetasUi();
+	const nombreDeck = useNombreDeck();
 
 	const [seleccion, setSeleccion] = useState<string[]>([]);
 	const ancla = useRef<string | null>(null);
@@ -96,7 +98,7 @@ export function LibraryScreen() {
 
 	const duplicar = intentar(async (d: DeckSummary) => {
 		await guardarAhora();
-		await call("deck_duplicate", { id: d.id, name: t("{n} (copia)", { n: d.name }) });
+		await call("deck_duplicate", { id: d.id, name: t("{n} (copia)", { n: nombreDeck(d.name) }) });
 		await recargar();
 	});
 
@@ -232,30 +234,40 @@ export function LibraryScreen() {
 						ref={buscar}
 						titulo={t("Biblioteca")}
 						acciones={
-							<>
-								{/* Móvil: solo el icono (su nombre sale al mantenerlo pulsado). */}
-								<Button
-									size={movil ? "icon-sm" : "sm"}
-									variant="ghost"
-									onClick={liberar}
-									aria-label={t("Liberar espacio")}
-								>
-									<Icono icon="lucide:hard-drive-download" />
-									{!movil && t("Liberar espacio")}
-								</Button>
-								<Button
-									size={movil ? "icon-sm" : "sm"}
-									variant="outline"
-									onClick={importarPaquete}
-									aria-label={t("Importar .pbdeck")}
-								>
-									<Icono icon="lucide:import" />
-									{!movil && t("Importar .pbdeck")}
-								</Button>
+							movil ? (
 								<Button size="sm" onClick={nuevo}>
 									<Icono icon="lucide:plus" />
 									{t("Nuevo deck")}
 								</Button>
+							) : (
+								<>
+									<Button size="sm" variant="ghost" onClick={liberar}>
+										<Icono icon="lucide:hard-drive-download" />
+										{t("Liberar espacio")}
+									</Button>
+									<Button size="sm" variant="outline" onClick={importarPaquete}>
+										<Icono icon="lucide:import" />
+										{t("Importar .pbdeck")}
+									</Button>
+									<Button size="sm" onClick={nuevo}>
+										<Icono icon="lucide:plus" />
+										{t("Nuevo deck")}
+									</Button>
+								</>
+							)
+						}
+						menu={
+							<>
+								<FilaMenu
+									icono="lucide:import"
+									texto={t("Importar .pbdeck")}
+									onClick={importarPaquete}
+								/>
+								<FilaMenu
+									icono="lucide:hard-drive-download"
+									texto={t("Liberar espacio")}
+									onClick={liberar}
+								/>
 							</>
 						}
 					/>
@@ -378,15 +390,12 @@ function BarraSeleccion({
 					{!movil && favorito}
 				</Button>
 				{primero && (
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button size={movil ? "icon-xs" : "xs"} variant="outline" aria-label={t("Acciones")}>
-								<Icono icon="lucide:more-horizontal" />
-								{!movil && t("Acciones")}
-							</Button>
-						</DropdownMenuTrigger>
-						<MenuDeck deck={primero} />
-					</DropdownMenu>
+					<BotonMenuDeck deck={primero}>
+						<Button size={movil ? "icon-xs" : "xs"} variant="outline" aria-label={t("Acciones")}>
+							<Icono icon="lucide:more-horizontal" />
+							{!movil && t("Acciones")}
+						</Button>
+					</BotonMenuDeck>
 				)}
 				<Button
 					size={movil ? "icon-xs" : "xs"}
@@ -422,6 +431,7 @@ function ConfirmarBorrar({
 }) {
 	const { t } = useLang();
 	const decks = useBiblioteca((s) => s.decks) ?? [];
+	const nombreDeck = useNombreDeck();
 	const uno = ids?.length === 1 ? decks.find((d) => d.id === ids[0]) : undefined;
 	return (
 		<Confirmar
@@ -429,7 +439,7 @@ function ConfirmarBorrar({
 			onCerrar={onCerrar}
 			titulo={
 				uno
-					? t("¿Eliminar «{n}»?", { n: uno.name })
+					? t("¿Eliminar «{n}»?", { n: nombreDeck(uno.name) })
 					: t("¿Eliminar {n} decks?", { n: ids?.length ?? 0 })
 			}
 			descripcion={
@@ -454,8 +464,9 @@ function DialogoRenombrar({
 	onHecho: (id: string, nombre: string) => void;
 }) {
 	const { t } = useLang();
+	const nombreDeck = useNombreDeck();
 	const [nombre, setNombre] = useState("");
-	useEffect(() => setNombre(deck?.name ?? ""), [deck]);
+	useEffect(() => setNombre(nombreDeck(deck?.name ?? "")), [deck, nombreDeck]);
 	const hecho = () => {
 		if (!deck || !nombre.trim()) return;
 		onHecho(deck.id, nombre.trim());

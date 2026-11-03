@@ -9,11 +9,12 @@ import { FilaInterruptor } from "@/components/campos";
 import { ConAyuda } from "@/components/con-ayuda";
 import { Confirmar } from "@/components/confirmar";
 import { Hoja } from "@/components/hoja";
+import { CabeceraHoja, CLASES_HOJA_MENU } from "@/components/hoja-menu";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog } from "@/components/ui/dialog";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { WithTooltip } from "@/components/ui/with-tooltip";
@@ -394,15 +395,13 @@ export function DisenarScreen() {
 				{listaAbierta && (
 					<Hoja
 						lado={movil ? "abajo" : "derecha"}
-						className={cn("gap-2.5 px-3", movil && "h-[85dvh] pt-3")}
+						className={cn(CLASES_HOJA_MENU, movil && "h-[85dvh]")}
 					>
-						<DialogHeader className="pr-8">
-							<DialogTitle className="text-sm">{t("Cartas del deck")}</DialogTitle>
-							<DialogDescription className="sr-only">
-								{t("Elige la carta que quieres diseñar.")}
-							</DialogDescription>
-						</DialogHeader>
-						<div className="min-h-0 flex-1">
+						<CabeceraHoja
+							titulo={t("Cartas del deck")}
+							descripcion={t("Elige la carta que quieres diseñar.")}
+						/>
+						<div className="min-h-0 flex-1 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
 							<ListaCartas
 								grupos={grupos}
 								elegido={grupo?.clave ?? null}
@@ -417,15 +416,13 @@ export function DisenarScreen() {
 			</Dialog>
 			<Dialog open={masAbierto} onOpenChange={setMasAbierto}>
 				{masAbierto && b.design && (
-					<Hoja className="gap-2.5 px-3 pt-3">
-						<DialogHeader className="pr-8">
-							<DialogTitle className="text-sm">{t("Esta carta")}</DialogTitle>
-							<DialogDescription className="sr-only">
-								{t("Copias, variantes y estado de la carta que estás diseñando.")}
-							</DialogDescription>
-						</DialogHeader>
-						<ScrollArea className="min-h-0 flex-1">
-							<div className="flex flex-col gap-3 p-1">
+					<Hoja className={CLASES_HOJA_MENU}>
+						<CabeceraHoja
+							titulo={t("Esta carta")}
+							descripcion={t("Copias, variantes y estado de la carta que estás diseñando.")}
+						/>
+						<ScrollArea className="grid min-h-0 flex-1 overflow-hidden">
+							<div className="flex flex-col gap-3 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
 								<FilaInterruptor
 									etiqueta={t("Lista para imprimir")}
 									ayuda={t(

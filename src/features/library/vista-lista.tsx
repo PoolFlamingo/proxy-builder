@@ -5,12 +5,12 @@ import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { useVisible } from "@/features/preview/visibilidad";
 import { useFormato } from "@/lib/formato";
 import { urlMiniatura } from "@/lib/image-url";
 import { usePulsacionLarga } from "@/lib/pulsacion-larga";
+import { useNombreDeck } from "@/lib/use-nombre-deck";
 import { cn } from "@/lib/utils";
 import {
 	type ColumnaLista,
@@ -18,7 +18,7 @@ import {
 	type OpcionesLista,
 	plantillaLista,
 } from "./disposicion";
-import { MenuContextualDeck, MenuDeck } from "./menu-deck";
+import { BotonMenuDeck, MenuContextualDeck } from "./menu-deck";
 import type { Orden } from "./organizar";
 import {
 	ChipsEtiquetas,
@@ -165,6 +165,7 @@ function Cabecera({ decks, cols, o }: { decks: DeckSummary[]; cols: Columna[]; o
 
 function Fila({ deck: d, cols, o }: { deck: DeckSummary; cols: Columna[]; o: OpcionesLista }) {
 	const { t } = useLang();
+	const nombreDeck = useNombreDeck();
 	const sel = useSeleccion();
 	const det = useBiblioteca((s) => s.detalles[d.id]);
 	const etiquetas = useBiblioteca((s) => s.etiquetas);
@@ -193,7 +194,7 @@ function Fila({ deck: d, cols, o }: { deck: DeckSummary; cols: Columna[]; o: Opc
 								onClick={(e) => sel.pulsar(d.id, e)}
 								className="truncate text-left font-semibold hover:underline"
 							>
-								{d.name}
+								{nombreDeck(d.name)}
 							</button>
 							{d.notes && (
 								<WithTooltip content={<span className="whitespace-pre-line">{d.notes}</span>}>
@@ -310,14 +311,11 @@ function Fila({ deck: d, cols, o }: { deck: DeckSummary; cols: Columna[]; o: Opc
 						{celda(c.id)}
 					</div>
 				))}
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button size="icon-xs" variant="ghost" aria-label={t("Más acciones")}>
-							<Icono icon="lucide:more-horizontal" />
-						</Button>
-					</DropdownMenuTrigger>
-					<MenuDeck deck={d} />
-				</DropdownMenu>
+				<BotonMenuDeck deck={d}>
+					<Button size="icon-xs" variant="ghost" aria-label={t("Más acciones")}>
+						<Icono icon="lucide:more-horizontal" />
+					</Button>
+				</BotonMenuDeck>
 			</div>
 		</MenuContextualDeck>
 	);

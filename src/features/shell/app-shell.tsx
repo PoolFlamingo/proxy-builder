@@ -20,6 +20,7 @@ import { fijarAtrasPorDefecto, registrarAtras } from "@/lib/atras";
 import { pendientes } from "@/lib/cierre";
 import { useFormato } from "@/lib/formato";
 import { engancharTeclado } from "@/lib/teclado";
+import { useNombreDeck } from "@/lib/use-nombre-deck";
 import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
 import { useEdicion } from "@/stores/edicion-store";
@@ -176,20 +177,27 @@ export function AppShell({
 	// lo que se ve (`--alto-visible`, `lib/teclado.ts`).
 	const clasesRaiz = cn(
 		"flex h-svh flex-col bg-background text-foreground",
-		"[[data-tactil]_&]:h-[min(100%,calc(var(--alto-visible,100dvh)-max(env(safe-area-inset-top),24px)))]",
+		"[[data-tactil]_&]:h-[min(100%,calc(var(--alto-visible,100dvh)-env(safe-area-inset-top)))]",
 	);
 
 	if (movil) {
 		return (
-			<div className={clasesRaiz}>
+			// `overflow-clip`: nada de lo de dentro (una barra que no cabe, una
+			// rejilla) puede ensanchar el documento y crear scroll horizontal de
+			// toda la pantalla. Es `clip` y no `hidden` para que no sea un
+			// contenedor de scroll al que el navegador pueda mover al enfocar algo.
+			<div className={cn(clasesRaiz, "w-full overflow-clip")}>
 				{!mesaCompleta && (vista === "deck" || vista === "disenar") && (
-					<header className="flex h-14 shrink-0 items-center gap-2 border-b px-3">
-						<Icono icon="lucide:layers" className="size-5 shrink-0 text-primary" />
-						<NombreDeck className="h-9 min-w-0 flex-1 text-sm" />
-						<SaveIndicator />
+					// La barra de arriba del móvil (`BarraSuperior`): 3 rem, como las demás.
+					<header className="flex h-12 min-w-0 shrink-0 items-center gap-1 border-b px-2">
+						<Icono icon="lucide:layers" className="mx-1 size-5 shrink-0 text-primary" />
+						<NombreDeck className="ml-0 h-10 w-auto min-w-0 flex-1 px-1.5 text-sm font-semibold dark:bg-transparent" />
+						<span className="flex size-10 shrink-0 items-center justify-center">
+							<SaveIndicator compacto />
+						</span>
 					</header>
 				)}
-				<main ref={principal} className="min-h-0 flex-1">
+				<main ref={principal} className="min-h-0 min-w-0 flex-1">
 					{vista === "deck" ? (
 						<div className="flex h-full min-h-0 flex-col">
 							<PestanasDeck valor={subpestana} onCambiar={setSubpestana} />
@@ -399,7 +407,10 @@ export function AppShell({
 /** El nombre del deck abierto, editable en la barra (se guarda con el deck). */
 function NombreDeck({ className }: { className?: string }) {
 	const { t } = useLang();
-	const nombre = useDeck((s) => s.deck?.name ?? "");
+	const guardado = useDeck((s) => s.deck?.name ?? "");
+	// El de fábrica, en el idioma de ahora (`lib/nombre-deck.ts`): si no se
+	// toca, lo guardado no cambia.
+	const nombre = useNombreDeck()(guardado);
 	const [texto, setTexto] = useState(nombre);
 	useEffect(() => setTexto(nombre), [nombre]);
 	const confirmar = () => {

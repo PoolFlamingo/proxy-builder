@@ -4,15 +4,15 @@ import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { useVisible } from "@/features/preview/visibilidad";
 import { useFormato } from "@/lib/formato";
 import { EDICION_NEUTRA, urlMiniatura } from "@/lib/image-url";
 import { usePulsacionLarga } from "@/lib/pulsacion-larga";
+import { useNombreDeck } from "@/lib/use-nombre-deck";
 import { cn } from "@/lib/utils";
 import { clasesCuadricula } from "./disposicion";
-import { MenuContextualDeck, MenuDeck } from "./menu-deck";
+import { BotonMenuDeck, MenuContextualDeck } from "./menu-deck";
 import { ChipsEtiquetas, CLASES, Identidad, useHace } from "./piezas";
 import { usePrefsSel } from "./preferencias";
 import { useBiblioteca } from "./store";
@@ -82,6 +82,7 @@ export function VistaCuadricula({ decks }: { decks: DeckSummary[] }) {
 
 function TarjetaDeck({ deck: d }: { deck: DeckSummary }) {
 	const { t } = useLang();
+	const nombreDeck = useNombreDeck();
 	const hace = useHace();
 	const sel = useSeleccion();
 	const det = useBiblioteca((s) => s.detalles[d.id]);
@@ -176,7 +177,7 @@ function TarjetaDeck({ deck: d }: { deck: DeckSummary }) {
 								onClick={(e) => sel.pulsar(d.id, e)}
 								className="truncate text-left text-xs font-semibold hover:underline"
 							>
-								{d.name}
+								{nombreDeck(d.name)}
 							</button>
 							{d.notes && (
 								<WithTooltip content={<span className="whitespace-pre-line">{d.notes}</span>}>
@@ -191,14 +192,11 @@ function TarjetaDeck({ deck: d }: { deck: DeckSummary }) {
 							{t("{n} cartas", { n: d.cardCount })} · {hace(d.updatedAt)}
 						</div>
 					</div>
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button size="icon-xs" variant="ghost" aria-label={t("Más acciones")}>
-								<Icono icon="lucide:more-horizontal" />
-							</Button>
-						</DropdownMenuTrigger>
-						<MenuDeck deck={d} />
-					</DropdownMenu>
+					<BotonMenuDeck deck={d}>
+						<Button size="icon-xs" variant="ghost" aria-label={t("Más acciones")}>
+							<Icono icon="lucide:more-horizontal" />
+						</Button>
+					</BotonMenuDeck>
 				</div>
 				{((det && det.deckSize > 0) || d.tags.length > 0) && (
 					<div className="flex min-w-0 flex-wrap items-center gap-1.5">

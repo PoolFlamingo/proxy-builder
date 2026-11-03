@@ -1,7 +1,6 @@
-import { Hoja } from "@/components/hoja";
+import { FilaMenu, HojaMenu } from "@/components/hoja-menu";
 import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
-import { Dialog, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useUi, type Vista } from "@/stores/ui-store";
 import { BotonActualizar, PuntoActualizacion, useAvisoAjustes } from "./actualizacion-automatica";
@@ -98,60 +97,23 @@ export function HojaMas({
 	const { t } = useLang();
 	const aviso = useAvisoAjustes();
 	return (
-		<Dialog open={abierta} onOpenChange={(o) => !o && onCerrar()}>
-			<Hoja cambiosSinGuardar={false} aria-describedby={undefined} className="gap-2 px-2 pt-3">
-				<DialogTitle className="px-2 text-sm">{t("Más")}</DialogTitle>
-				<div className="flex flex-col gap-1">
-					<FilaMas
-						icono="lucide:settings"
-						texto={t("Ajustes")}
-						onClick={() => {
-							onCerrar();
-							onAjustes();
-						}}
-						punto
-					/>
-					<FilaMas
-						icono="lucide:circle-help"
-						texto={t("Tutorial de esta pantalla")}
-						onClick={() => {
-							onCerrar();
-							useUi.getState().abrirTutorial(vista);
-						}}
-					/>
-				</div>
-				{aviso && <p className="px-3 text-xs text-muted-foreground">{aviso}</p>}
-				<div className="flex px-2 empty:hidden">
-					<BotonActualizar />
-				</div>
-			</Hoja>
-		</Dialog>
-	);
-}
-
-function FilaMas({
-	icono,
-	texto,
-	onClick,
-	punto,
-}: {
-	icono: string;
-	texto: string;
-	onClick: () => void;
-	punto?: boolean;
-}) {
-	return (
-		<button
-			type="button"
-			onClick={onClick}
-			className="relative flex min-h-12 items-center gap-3 rounded-lg px-3 text-left text-sm active:bg-accent"
-		>
-			<span className="relative">
-				<Icono icon={icono} className="size-5 text-muted-foreground" />
-				{punto && <PuntoActualizacion />}
-			</span>
-			{texto}
-		</button>
+		<HojaMenu abierta={abierta} onCerrar={onCerrar} titulo={t("Más")} sinRelleno>
+			<FilaMenu
+				icono="lucide:settings"
+				texto={t("Ajustes")}
+				onClick={onAjustes}
+				marca={<PuntoActualizacion />}
+			/>
+			<FilaMenu
+				icono="lucide:circle-help"
+				texto={t("Tutorial de esta pantalla")}
+				onClick={() => useUi.getState().abrirTutorial(vista)}
+			/>
+			{aviso && <p className="px-4 py-2 text-xs text-muted-foreground">{aviso}</p>}
+			<div className="flex px-4 py-2 empty:hidden">
+				<BotonActualizar />
+			</div>
+		</HojaMenu>
 	);
 }
 

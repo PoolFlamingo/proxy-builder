@@ -28,6 +28,8 @@ describe("clasesCuadricula", () => {
 			const c = clasesCuadricula("movil", t);
 			expect(c).toContain("grid-cols-1");
 			expect(c).toContain("min-[360px]:grid-cols-2");
+			// En horizontal, más columnas.
+			expect(c).toContain("min-[600px]:grid-cols-[repeat(auto-fill,minmax(170px,1fr))]");
 		}
 	});
 

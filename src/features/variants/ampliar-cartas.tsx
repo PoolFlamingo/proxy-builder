@@ -26,7 +26,7 @@ export function AmpliarCartas({
 		<Dialog open={blob !== null} onOpenChange={(o) => !o && onCerrar()}>
 			{blob !== null && (
 				<DialogoAdaptable
-					className="flex max-h-[94vh] flex-col sm:max-w-5xl"
+					className="flex max-h-[94dvh] flex-col sm:max-w-5xl"
 					cambiosSinGuardar={false}
 				>
 					<DialogHeader>
@@ -71,7 +71,7 @@ function Lado({ titulo, children }: { titulo: string; children: React.ReactNode 
 			<span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
 				{titulo}
 			</span>
-			<div className="flex h-[min(76vh,880px)] w-full items-center justify-center">{children}</div>
+			<div className="flex h-[min(70dvh,880px)] w-full items-center justify-center">{children}</div>
 		</div>
 	);
 }

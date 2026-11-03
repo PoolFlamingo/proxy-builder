@@ -17,11 +17,10 @@ import type { PrintSettings } from "@/bindings/PrintSettings";
 import type { RectMm } from "@/bindings/RectMm";
 import { CampoNumero } from "@/components/campos";
 import { Confirmar } from "@/components/confirmar";
-import { Hoja } from "@/components/hoja";
+import { HojaMenu } from "@/components/hoja-menu";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogTitle } from "@/components/ui/dialog";
 import {
 	Empty,
 	EmptyDescription,
@@ -35,6 +34,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { useFormato } from "@/lib/formato";
 import { ANCHOS, type AnchoMiniatura, parametros, urlMiniatura } from "@/lib/image-url";
+import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
 import { usePlan } from "@/stores/plan-store";
 import { useUi, ZOOM_MAX, ZOOM_MIN } from "@/stores/ui-store";
@@ -141,7 +141,7 @@ export function PreviewPane() {
 	useEffect(() => {
 		if (!movil || !viewport || !anchoHoja || zoomAjustadoAlAncho) return;
 		zoomAjustadoAlAncho = true;
-		const libre = viewport.clientWidth - 24;
+		const libre = viewport.clientWidth - 32;
 		if (libre > 0) setZoom(Math.min(1, libre / (anchoHoja * PX_POR_MM)));
 	}, [movil, viewport, anchoHoja, setZoom]);
 
@@ -257,13 +257,69 @@ export function PreviewPane() {
 		</>
 	);
 
+	const zoomControles = (
+		<>
+			<WithTooltip content={t("Alejar")}>
+				<Button
+					size="icon-xs"
+					variant="ghost"
+					onClick={() => setZoom(zoom - PASO_ZOOM)}
+					disabled={zoom <= ZOOM_MIN}
+					aria-label={t("Alejar")}
+				>
+					<Icono icon="lucide:minus" />
+				</Button>
+			</WithTooltip>
+			<WithTooltip content={t("Ctrl + rueda del ratón para acercar o alejar")}>
+				<div>
+					<CampoNumero
+						valor={Math.round(zoom * 100)}
+						onChange={(v) => setZoom((v ?? 100) / 100)}
+						min={ZOOM_MIN * 100}
+						max={ZOOM_MAX * 100}
+						paso={5}
+						sufijo="%"
+						ancho="w-[4.5rem]"
+						ariaLabel={t("Zoom de la vista previa")}
+					/>
+				</div>
+			</WithTooltip>
+			<WithTooltip content={t("Acercar")}>
+				<Button
+					size="icon-xs"
+					variant="ghost"
+					onClick={() => setZoom(zoom + PASO_ZOOM)}
+					disabled={zoom >= ZOOM_MAX}
+					aria-label={t("Acercar")}
+				>
+					<Icono icon="lucide:plus" />
+				</Button>
+			</WithTooltip>
+			<WithTooltip content={t("Volver al 100 %")}>
+				<Button
+					size="icon-xs"
+					variant="ghost"
+					onClick={() => setZoom(1)}
+					disabled={zoom === 1}
+					aria-label={t("Volver al 100 %")}
+				>
+					<Icono icon="lucide:rotate-ccw" />
+				</Button>
+			</WithTooltip>
+		</>
+	);
+
 	const avisos = plan?.warnings ?? [];
 	const papel = ajustes.landscape ? t("{papel} apaisado", { papel: ajustes.paper }) : ajustes.paper;
 
 	return (
 		<section className="flex h-full min-h-0 flex-col bg-muted/30 [&_[data-slot=button]]:text-xs [&_button[data-slot=tooltip-trigger]]:text-xs">
 			<div
-				className="flex flex-wrap items-center gap-1.5 border-b bg-background px-2.5 py-1.5"
+				className={cn(
+					"flex items-center gap-1.5 border-b bg-background",
+					// Móvil: la barra de arriba de siempre (`BarraSuperior`), en una fila.
+					movil ? "h-12 shrink-0 px-2" : "flex-wrap px-2.5 py-1.5",
+				)}
 				data-tutorial="vista-barra"
 			>
 				<WithTooltip content={t("La vista es aproximada; el resultado exacto es el del PDF.")}>
@@ -274,8 +330,8 @@ export function PreviewPane() {
 				</WithTooltip>
 				<WithTooltip content={t("Deshacer (Ctrl+Z)")}>
 					<Button
-						size="icon-xs"
-						variant="outline"
+						size={movil ? "icon-sm" : "icon-xs"}
+						variant={movil ? "ghost" : "outline"}
 						disabled={!puedeDeshacer}
 						aria-label={t("Deshacer")}
 						onClick={() => useDeck.getState().deshacer()}
@@ -285,8 +341,8 @@ export function PreviewPane() {
 				</WithTooltip>
 				<WithTooltip content={t("Rehacer (Ctrl+Mayús+Z)")}>
 					<Button
-						size="icon-xs"
-						variant="outline"
+						size={movil ? "icon-sm" : "icon-xs"}
+						variant={movil ? "ghost" : "outline"}
 						disabled={!puedeRehacer}
 						aria-label={t("Rehacer")}
 						onClick={() => useDeck.getState().rehacer()}
@@ -296,8 +352,8 @@ export function PreviewPane() {
 				</WithTooltip>
 				{movil ? (
 					<Button
-						size="icon-xs"
-						variant="outline"
+						size="icon-sm"
+						variant="ghost"
 						onClick={() => setOpciones(true)}
 						aria-label={t("Opciones de la vista")}
 					>
@@ -306,59 +362,22 @@ export function PreviewPane() {
 				) : (
 					controles
 				)}
-				<div className="ml-auto flex items-center gap-1">
-					<WithTooltip content={t("Alejar")}>
-						<Button
-							size="icon-xs"
-							variant="ghost"
-							onClick={() => setZoom(zoom - PASO_ZOOM)}
-							disabled={zoom <= ZOOM_MIN}
-							aria-label={t("Alejar")}
-						>
-							<Icono icon="lucide:minus" />
-						</Button>
-					</WithTooltip>
-					<WithTooltip content={t("Ctrl + rueda del ratón para acercar o alejar")}>
-						<div>
-							<CampoNumero
-								valor={Math.round(zoom * 100)}
-								onChange={(v) => setZoom((v ?? 100) / 100)}
-								min={ZOOM_MIN * 100}
-								max={ZOOM_MAX * 100}
-								paso={5}
-								sufijo="%"
-								ancho="w-[4.5rem]"
-								ariaLabel={t("Zoom de la vista previa")}
-							/>
-						</div>
-					</WithTooltip>
-					<WithTooltip content={t("Acercar")}>
-						<Button
-							size="icon-xs"
-							variant="ghost"
-							onClick={() => setZoom(zoom + PASO_ZOOM)}
-							disabled={zoom >= ZOOM_MAX}
-							aria-label={t("Acercar")}
-						>
+				{movil ? (
+					<div className="ml-auto flex items-center gap-1">
+						<Button size="sm" onClick={() => useUi.getState().abrir({ tipo: "anadir" })}>
 							<Icono icon="lucide:plus" />
+							{t("Añadir carta")}
 						</Button>
-					</WithTooltip>
-					<WithTooltip content={t("Volver al 100 %")}>
-						<Button
-							size="icon-xs"
-							variant="ghost"
-							onClick={() => setZoom(1)}
-							disabled={zoom === 1}
-							aria-label={t("Volver al 100 %")}
-						>
-							<Icono icon="lucide:rotate-ccw" />
+					</div>
+				) : (
+					<div className="ml-auto flex items-center gap-1">
+						{zoomControles}
+						<Button size="xs" onClick={() => useUi.getState().abrir({ tipo: "anadir" })}>
+							<Icono icon="lucide:plus" />
+							{t("Añadir carta")}
 						</Button>
-					</WithTooltip>
-					<Button size="xs" onClick={() => useUi.getState().abrir({ tipo: "anadir" })}>
-						<Icono icon="lucide:plus" />
-						{t("Añadir carta")}
-					</Button>
-				</div>
+					</div>
+				)}
 			</div>
 
 			{(avisos.length > 0 || errorPlan !== null) && (
@@ -404,9 +423,13 @@ export function PreviewPane() {
 										</EmptyMedia>
 										<EmptyTitle>{t("El deck está vacío")}</EmptyTitle>
 										<EmptyDescription>
-											{t(
-												"Pega una lista a la izquierda y pulsa «Cargar lista», o añade cartas una a una.",
-											)}
+											{movil
+												? t(
+														"Pega una lista en la pestaña «Lista» y pulsa «Cargar lista», o añade cartas una a una.",
+													)
+												: t(
+														"Pega una lista a la izquierda y pulsa «Cargar lista», o añade cartas una a una.",
+													)}
 										</EmptyDescription>
 									</EmptyHeader>
 									<Button size="sm" onClick={() => useUi.getState().abrir({ tipo: "anadir" })}>
@@ -461,18 +484,19 @@ export function PreviewPane() {
 
 			{/* Móvil: lo de la barra que no cabe (auto ordenar, reversos, DFC, estadísticas). */}
 			{movil && (
-				<Dialog open={opciones} onOpenChange={setOpciones}>
-					<Hoja
-						cambiosSinGuardar={false}
-						aria-describedby={undefined}
-						// Sin foco al abrir: el primer botón enseñaría su tooltip al recibirlo.
-						onOpenAutoFocus={(e) => e.preventDefault()}
-						className="gap-3 px-4"
-					>
-						<DialogTitle className="text-sm">{t("Opciones de la vista")}</DialogTitle>
-						<div className="flex flex-wrap items-center gap-2">{controles}</div>
-					</Hoja>
-				</Dialog>
+				<HojaMenu
+					abierta={opciones}
+					onCerrar={() => setOpciones(false)}
+					titulo={t("Opciones de la vista")}
+				>
+					<div className="flex flex-col gap-1.5">
+						<span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+							{t("Zoom")}
+						</span>
+						<div className="flex items-center gap-1">{zoomControles}</div>
+					</div>
+					<div className="flex flex-wrap items-center gap-2">{controles}</div>
+				</HojaMenu>
 			)}
 
 			<Confirmar

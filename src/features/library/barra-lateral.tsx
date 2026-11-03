@@ -1,10 +1,9 @@
 import { type ReactNode, useState } from "react";
 import type { Tag } from "@/bindings/Tag";
-import { Hoja } from "@/components/hoja";
+import { HojaMenu } from "@/components/hoja-menu";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogTitle } from "@/components/ui/dialog";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -58,14 +57,9 @@ function HojaLateral(acciones: Acciones) {
 	const abierto = useLateralMovil((s) => s.abierto);
 	const poner = useLateralMovil((s) => s.poner);
 	return (
-		<Dialog open={abierto} onOpenChange={poner}>
-			<Hoja cambiosSinGuardar={false} aria-describedby={undefined} className="gap-0 p-0">
-				<DialogTitle className="px-4 pt-4 pb-2 text-sm">{t("Etiquetas")}</DialogTitle>
-				<div className="flex min-h-0 flex-1 flex-col">
-					<ContenidoLateral {...acciones} alElegir={() => poner(false)} />
-				</div>
-			</Hoja>
-		</Dialog>
+		<HojaMenu abierta={abierto} onCerrar={() => poner(false)} titulo={t("Etiquetas")} sinRelleno>
+			<ContenidoLateral {...acciones} alElegir={() => poner(false)} />
+		</HojaMenu>
 	);
 }
 
@@ -98,111 +92,111 @@ function ContenidoLateral({
 					: [id],
 		});
 	};
-	return (
-		<ScrollArea className="min-h-0 flex-1">
-			<div className="flex flex-col gap-0.5 p-2">
-				<Entrada
-					activa={ninguno}
-					icono={<Icono icon="lucide:layers" className="size-3.5" />}
-					texto={t("Todos los decks")}
-					cuenta={decks.length}
-					onClick={() => {
-						ponerFiltros({ favoritos: false, sinEtiqueta: false, etiquetas: [] });
-						alElegir?.();
-					}}
-				/>
-				<Entrada
-					activa={f.favoritos}
-					icono={<Icono icon="lucide:star" className="size-3.5" />}
-					texto={t("Favoritos")}
-					cuenta={n.favoritos}
-					onClick={() => {
-						ponerFiltros({ favoritos: !f.favoritos });
-						alElegir?.();
-					}}
-				/>
+	const cuerpo = (
+		<div className="flex flex-col gap-0.5 p-2">
+			<Entrada
+				activa={ninguno}
+				icono={<Icono icon="lucide:layers" className="size-3.5" />}
+				texto={t("Todos los decks")}
+				cuenta={decks.length}
+				onClick={() => {
+					ponerFiltros({ favoritos: false, sinEtiqueta: false, etiquetas: [] });
+					alElegir?.();
+				}}
+			/>
+			<Entrada
+				activa={f.favoritos}
+				icono={<Icono icon="lucide:star" className="size-3.5" />}
+				texto={t("Favoritos")}
+				cuenta={n.favoritos}
+				onClick={() => {
+					ponerFiltros({ favoritos: !f.favoritos });
+					alElegir?.();
+				}}
+			/>
 
-				<div className="mt-3 flex items-center gap-1 px-2 pb-1">
-					<span className="flex-1 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-						{t("Etiquetas")}
-					</span>
-					<WithTooltip content={t("Nueva etiqueta")}>
-						<Button
-							size="icon-xs"
-							variant="ghost"
-							onClick={onNuevaEtiqueta}
-							aria-label={t("Nueva etiqueta")}
-						>
-							<Icono icon="lucide:plus" />
-						</Button>
-					</WithTooltip>
-				</div>
-				{etiquetas.length === 0 ? (
-					<button
-						type="button"
+			<div className="mt-3 flex items-center gap-1 px-2 pb-1">
+				<span className="flex-1 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+					{t("Etiquetas")}
+				</span>
+				<WithTooltip content={t("Nueva etiqueta")}>
+					<Button
+						size="icon-xs"
+						variant="ghost"
 						onClick={onNuevaEtiqueta}
-						className="mx-1 flex flex-col items-center gap-1.5 rounded-lg border border-dashed p-3 text-center text-[11px] text-muted-foreground hover:bg-accent/50"
+						aria-label={t("Nueva etiqueta")}
 					>
-						<Icono icon="lucide:tags" className="size-4" />
-						{t("Crea etiquetas para ordenar tus decks por formato, idioma, estado…")}
-					</button>
-				) : (
-					etiquetas.map((tag) => (
-						<FilaEtiqueta
-							key={tag.id}
-							tag={tag}
-							activa={f.etiquetas.includes(tag.id)}
-							cuenta={n.porEtiqueta.get(tag.id) ?? 0}
-							onClick={(e) => elegirEtiqueta(tag.id, e)}
-							onEditar={() => onEditarEtiqueta(tag)}
-							onBorrar={() => onBorrarEtiqueta(tag)}
-						/>
-					))
-				)}
-				{etiquetas.length > 0 && (
-					<Entrada
-						activa={f.sinEtiqueta}
-						icono={<Icono icon="lucide:tag" className="size-3.5 opacity-50" />}
-						texto={t("Sin etiqueta")}
-						cuenta={n.sinEtiqueta}
-						onClick={() => {
-							ponerFiltros({ sinEtiqueta: !f.sinEtiqueta, etiquetas: [] });
-							alElegir?.();
-						}}
-					/>
-				)}
-				{f.etiquetas.length > 1 && (
-					<div className="mt-2 flex flex-col gap-1.5 rounded-lg border bg-card p-2">
-						<span className="text-[10px] text-muted-foreground">
-							{t("Con {n} etiquetas elegidas, enseñar los que tengan:", {
-								n: f.etiquetas.length,
-							})}
-						</span>
-						<ToggleGroup
-							type="single"
-							size="sm"
-							variant="outline"
-							value={f.todasLasEtiquetas ? "todas" : "alguna"}
-							onValueChange={(v) => v && ponerFiltros({ todasLasEtiquetas: v === "todas" })}
-							className="w-full"
-						>
-							<ToggleGroupItem value="alguna" className="flex-1 text-[11px]">
-								{t("Alguna")}
-							</ToggleGroupItem>
-							<ToggleGroupItem value="todas" className="flex-1 text-[11px]">
-								{t("Todas")}
-							</ToggleGroupItem>
-						</ToggleGroup>
-					</div>
-				)}
-				{etiquetas.length > 0 && f.etiquetas.length <= 1 && (
-					<p className="px-2 pt-2 text-[10px] leading-snug text-muted-foreground">
-						{tactil ? t("Toca varias para combinarlas.") : t("Ctrl + clic para elegir varias.")}
-					</p>
-				)}
+						<Icono icon="lucide:plus" />
+					</Button>
+				</WithTooltip>
 			</div>
-		</ScrollArea>
+			{etiquetas.length === 0 ? (
+				<button
+					type="button"
+					onClick={onNuevaEtiqueta}
+					className="mx-1 flex flex-col items-center gap-1.5 rounded-lg border border-dashed p-3 text-center text-[11px] text-muted-foreground hover:bg-accent/50"
+				>
+					<Icono icon="lucide:tags" className="size-4" />
+					{t("Crea etiquetas para ordenar tus decks por formato, idioma, estado…")}
+				</button>
+			) : (
+				etiquetas.map((tag) => (
+					<FilaEtiqueta
+						key={tag.id}
+						tag={tag}
+						activa={f.etiquetas.includes(tag.id)}
+						cuenta={n.porEtiqueta.get(tag.id) ?? 0}
+						onClick={(e) => elegirEtiqueta(tag.id, e)}
+						onEditar={() => onEditarEtiqueta(tag)}
+						onBorrar={() => onBorrarEtiqueta(tag)}
+					/>
+				))
+			)}
+			{etiquetas.length > 0 && (
+				<Entrada
+					activa={f.sinEtiqueta}
+					icono={<Icono icon="lucide:tag" className="size-3.5 opacity-50" />}
+					texto={t("Sin etiqueta")}
+					cuenta={n.sinEtiqueta}
+					onClick={() => {
+						ponerFiltros({ sinEtiqueta: !f.sinEtiqueta, etiquetas: [] });
+						alElegir?.();
+					}}
+				/>
+			)}
+			{f.etiquetas.length > 1 && (
+				<div className="mt-2 flex flex-col gap-1.5 rounded-lg border bg-card p-2">
+					<span className="text-[10px] text-muted-foreground">
+						{t("Con {n} etiquetas elegidas, enseñar los que tengan:", {
+							n: f.etiquetas.length,
+						})}
+					</span>
+					<ToggleGroup
+						type="single"
+						size="sm"
+						variant="outline"
+						value={f.todasLasEtiquetas ? "todas" : "alguna"}
+						onValueChange={(v) => v && ponerFiltros({ todasLasEtiquetas: v === "todas" })}
+						className="w-full"
+					>
+						<ToggleGroupItem value="alguna" className="flex-1 text-[11px]">
+							{t("Alguna")}
+						</ToggleGroupItem>
+						<ToggleGroupItem value="todas" className="flex-1 text-[11px]">
+							{t("Todas")}
+						</ToggleGroupItem>
+					</ToggleGroup>
+				</div>
+			)}
+			{etiquetas.length > 0 && f.etiquetas.length <= 1 && (
+				<p className="px-2 pt-2 text-[10px] leading-snug text-muted-foreground">
+					{tactil ? t("Toca varias para combinarlas.") : t("Ctrl + clic para elegir varias.")}
+				</p>
+			)}
+		</div>
 	);
+	// En la hoja del móvil el scroll ya es el de la hoja (`HojaMenu`).
+	return alElegir ? cuerpo : <ScrollArea className="min-h-0 flex-1">{cuerpo}</ScrollArea>;
 }
 
 function Entrada({

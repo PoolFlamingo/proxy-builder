@@ -3,10 +3,11 @@ import type { Deck } from "@/bindings/Deck";
 import type { ExportEstimate } from "@/bindings/ExportEstimate";
 import type { ExportPhase } from "@/bindings/ExportPhase";
 import type { ExportResult } from "@/bindings/ExportResult";
-import { paraTraducir } from "@/components/language-provider";
+import { paraTraducir, traduccionSuelta } from "@/components/language-provider";
 import type { T } from "@/features/decklist/acciones";
 import { guardarParaExportar } from "@/lib/dialogos";
 import { call } from "@/lib/ipc";
+import { nombreVisible } from "@/lib/nombre-deck";
 import { esMovil } from "@/lib/plataforma";
 import { lanzarTrabajo } from "@/lib/trabajos";
 import { guardarAhora, useDeck } from "@/stores/deck-store";
@@ -35,9 +36,15 @@ export function megas(b: number) {
 	return `${Math.round(b / 1024 / 1024)} MB`;
 }
 
-/** Un nombre de fichero sin caracteres que los sistemas no admiten. */
+/**
+ * Un nombre de fichero sin caracteres que los sistemas no admiten. El de
+ * fábrica («Untitled deck») sale en el idioma de ahora, como en pantalla.
+ */
 export function nombreSeguro(nombre: string, ext: string) {
-	const base = nombre.replace(/[\\/:*?"<>|]+/g, " ").trim() || "deck";
+	const base =
+		nombreVisible(nombre, traduccionSuelta("Deck sin título"))
+			.replace(/[\\/:*?"<>|]+/g, " ")
+			.trim() || "deck";
 	return `${base}.${ext}`;
 }
 

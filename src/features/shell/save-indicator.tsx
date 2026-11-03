@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { guardarAhora, useDeck } from "@/stores/deck-store";
 
-/** «Guardado / Guardando… / Sin guardar / Error al guardar», en la barra superior. */
-export function SaveIndicator() {
+/**
+ * «Guardado / Guardando… / Sin guardar / Error al guardar», en la barra superior.
+ * `compacto` (móvil): solo el icono; el texto queda para el lector de pantalla.
+ */
+export function SaveIndicator({ compacto = false }: { compacto?: boolean }) {
 	const { t, mensaje } = useLang();
 	const guardado = useDeck((s) => s.guardado);
 	const error = useDeck((s) => s.errorGuardado);
@@ -17,20 +20,27 @@ export function SaveIndicator() {
 		saved: (
 			<>
 				<Icono icon="lucide:check" className="size-3.5 text-primary" />
-				{t("Guardado")}
+				<Texto compacto={compacto}>{t("Guardado")}</Texto>
 			</>
 		),
 		saving: (
 			<>
 				<Icono icon="lucide:loader-2" className="size-3.5 animate-spin" />
-				{t("Guardando…")}
+				<Texto compacto={compacto}>{t("Guardando…")}</Texto>
 			</>
 		),
-		dirty: <>{t("Sin guardar")}</>,
+		dirty: compacto ? (
+			<>
+				<Icono icon="lucide:circle-dot" className="size-3.5" />
+				<Texto compacto>{t("Sin guardar")}</Texto>
+			</>
+		) : (
+			t("Sin guardar")
+		),
 		error: (
 			<>
 				<Icono icon="lucide:alert-triangle" className="size-3.5 text-destructive" />
-				{t("Error al guardar")}
+				<Texto compacto={compacto}>{t("Error al guardar")}</Texto>
 			</>
 		),
 	}[guardado];
@@ -58,4 +68,8 @@ export function SaveIndicator() {
 	) : (
 		etiqueta
 	);
+}
+
+function Texto({ compacto, children }: { compacto: boolean; children: string }) {
+	return compacto ? <span className="sr-only">{children}</span> : children;
 }

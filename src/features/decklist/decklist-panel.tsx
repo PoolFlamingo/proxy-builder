@@ -4,9 +4,11 @@ import { toast } from "sonner";
 import type { CacheStats } from "@/bindings/CacheStats";
 import type { ImagePolicy } from "@/bindings/ImagePolicy";
 import type { ParsedDecklist } from "@/bindings/ParsedDecklist";
+import { BarraSuperior } from "@/components/barra-superior";
 import { Fila, FilaInterruptor, type Opcion, Seccion, Selector } from "@/components/campos";
 import { ConAyuda } from "@/components/con-ayuda";
 import { Confirmar } from "@/components/confirmar";
+import { BotonMenu, FilaMenu } from "@/components/hoja-menu";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { ManijaRedimensionar } from "@/components/manija-redimensionar";
@@ -17,6 +19,7 @@ import { Progress } from "@/components/ui/progress";
 import { ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { WithTooltip } from "@/components/ui/with-tooltip";
+import { useFormato } from "@/lib/formato";
 import { IDIOMAS_SCRYFALL } from "@/lib/idiomas";
 import type { AnchoMiniatura } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
@@ -57,6 +60,7 @@ export function DecklistPanel() {
 	const trabajo = useTrabajo((s) => s.actual);
 	const ocupado = trabajo !== null;
 	const ui = useUi();
+	const movil = useFormato().tamano === "movil";
 	const [leida, setLeida] = useState<ParsedDecklist | null>(null);
 	const [confirmarCarga, setConfirmarCarga] = useState(false);
 	const [noPreguntar, setNoPreguntar] = useState(false);
@@ -111,292 +115,8 @@ export function DecklistPanel() {
 		{ valor: "745", etiqueta: t("Máxima (745 px)") },
 	];
 
-	return (
-		<section className="flex h-full min-h-0 flex-col [&_[data-slot=button]]:text-xs [&_button[data-slot=tooltip-trigger]]:text-xs">
-			<div className="flex items-center gap-1.5 px-2.5 pt-2.5">
-				<h2 className="flex-1 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-					{t("Lista de cartas")}
-				</h2>
-				<WithTooltip content={t("Ver un set entero y elegir cartas")}>
-					<Button
-						size="xs"
-						variant="ghost"
-						onClick={() => useUi.getState().abrir({ tipo: "sets" })}
-						disabled={ocupado}
-					>
-						<Icono icon="lucide:grid-3x3" />
-						{t("Sets")}
-					</Button>
-				</WithTooltip>
-				<WithTooltip content={t("Poner una lista de ejemplo")}>
-					<Button
-						size="xs"
-						variant="ghost"
-						onClick={() => setSinHistorial({ decklistText: EJEMPLO })}
-						disabled={ocupado}
-					>
-						<Icono icon="lucide:file-text" />
-						{t("Ejemplo")}
-					</Button>
-				</WithTooltip>
-				<WithTooltip content={t("Vaciar el cuadro (las cartas del deck no se tocan)")}>
-					<Button
-						size="xs"
-						variant="ghost"
-						onClick={() => setSinHistorial({ decklistText: "" })}
-						disabled={ocupado || texto === ""}
-					>
-						<Icono icon="lucide:eraser" />
-						{t("Limpiar")}
-					</Button>
-				</WithTooltip>
-			</div>
-
-			{/* El cuadro de la lista y lo de debajo, con un asa entre medias para
-			    darle al cuadro el alto que se quiera (se recuerda). */}
-			<ResizablePanelGroup
-				orientation="vertical"
-				className="min-h-0 flex-1"
-				defaultLayout={layout.defaultLayout}
-				onLayoutChanged={layout.onLayoutChanged}
-			>
-				<ResizablePanel id="lista" defaultSize="45" minSize={72}>
-					<div className="flex h-full min-h-0 flex-col p-2.5 pb-1.5" data-tutorial="lista-cuadro">
-						<EditorLista
-							valor={texto}
-							onChange={(v) => setSinHistorial({ decklistText: v })}
-							onLeida={setLeida}
-							deshabilitado={ocupado}
-						/>
-					</div>
-				</ResizablePanel>
-				<ManijaRedimensionar withHandle />
-				<ResizablePanel id="opciones" minSize={160}>
-					<div className="flex h-full min-h-0 flex-col" data-tutorial="lista-opciones">
-						<div className="flex shrink-0 flex-col gap-2.5 p-2.5">
-							<div className="flex items-center justify-between text-[11px] text-muted-foreground">
-								<span>{leida ? t("{n} cartas en la lista", { n: leida.cardCount }) : " "}</span>
-								{leida && leida.invalidCount > 0 && (
-									<span className="text-destructive">
-										{t("{n} líneas sin entender", { n: leida.invalidCount })}
-									</span>
-								)}
-							</div>
-							<div className="grid grid-cols-[1fr_auto] gap-1.5">
-								<Button size="sm" onClick={pulsarCargar} disabled={ocupado || !leida?.cardCount}>
-									<Icono icon="lucide:download" />
-									{t("Cargar lista")}
-								</Button>
-								<WithTooltip content={t("Añadir estas cartas al final del deck")}>
-									<Button
-										size="sm"
-										variant="outline"
-										onClick={intentar(() => cargarLista(texto, "anadir", t))}
-										disabled={ocupado || !leida?.cardCount}
-									>
-										<Icono icon="lucide:plus" />
-										{t("Añadir")}
-									</Button>
-								</WithTooltip>
-							</div>
-							<div className="flex items-center justify-between gap-2">
-								<label className="flex items-center gap-2 text-xs">
-									<Checkbox
-										checked={ui.addTokens}
-										onCheckedChange={(v) => ui.setPreferencia("addTokens", v === true)}
-									/>
-									{t("Añadir tokens automáticamente")}
-								</label>
-								<ConAyuda
-									content={t(
-										"Busca las fichas que crean las cartas del deck ya cargado (también las propias vinculadas) y te deja elegir cuáles añadir.",
-									)}
-								>
-									<Button
-										size="xs"
-										variant="ghost"
-										onClick={() => useUi.getState().abrir({ tipo: "fichas" })}
-										disabled={ocupado || !hayCartas}
-									>
-										<Icono icon="lucide:coins" />
-										{t("Detectar fichas")}
-									</Button>
-								</ConAyuda>
-							</div>
-						</div>
-
-						<ScrollArea className="min-h-0 flex-1 border-t">
-							<div className="flex flex-col gap-2.5 p-2.5">
-								<Seccion
-									id="importar"
-									titulo={t("Importar desde URL")}
-									icono={<Icono icon="lucide:link" className="size-3.5" />}
-								>
-									<div className="flex gap-1.5">
-										<Input
-											value={url}
-											onChange={(e) => setUrl(e.target.value)}
-											placeholder="https://archidekt.com/decks/…"
-											className="h-7 text-xs [[data-tactil]_&]:h-11"
-											data-filtro=""
-											onKeyDown={(e) => e.key === "Enter" && url.trim() && void importar()}
-										/>
-										<Button
-											size="sm"
-											variant="outline"
-											className="h-7 [[data-tactil]_&]:h-11"
-											disabled={!url.trim() || importando}
-											onClick={importar}
-										>
-											{importando ? (
-												<Icono icon="lucide:loader-2" className="animate-spin" />
-											) : (
-												<Icono icon="lucide:list-plus" />
-											)}
-											{t("Importar")}
-										</Button>
-									</div>
-									<label className="flex items-center gap-2 text-xs">
-										<Checkbox
-											checked={conBanquillo}
-											onCheckedChange={(v) => setConBanquillo(v === true)}
-										/>
-										{t("Incluir el banquillo")}
-									</label>
-									<p className="text-[11px] text-muted-foreground">
-										{t("Archidekt. De Moxfield no se puede: copia la lista y pégala arriba.")}
-									</p>
-								</Seccion>
-
-								<Seccion
-									id="propias"
-									titulo={t("Imágenes propias")}
-									icono={<Icono icon="lucide:image-plus" className="size-3.5" />}
-								>
-									<div className="grid grid-cols-2 gap-1.5">
-										<Button
-											size="sm"
-											variant="outline"
-											onClick={intentar(() => subirCartasPropias(t))}
-										>
-											<Icono icon="lucide:upload" />
-											{t("Subir cartas")}
-										</Button>
-										<Button size="sm" variant="outline" onClick={intentar(() => subirReverso(t))}>
-											<Icono icon="lucide:square-stack" />
-											{t("Subir reverso")}
-										</Button>
-									</div>
-									<Button size="xs" variant="ghost" onClick={intentar(() => reversoGenerico(t))}>
-										<Icono icon="lucide:refresh-cw" />
-										{t("Volver al reverso genérico")}
-									</Button>
-									<div className="flex flex-col gap-1.5">
-										<ConAyuda
-											className="[[data-tactil]_&]:[&>button]:flex-1"
-											content={t(
-												"Busca en Scryfall la carta real de cada imagen propia (por el nombre del fichero o leyendo la carta: el título, el nombre original del pie o cualquier línea) y te enseña lo que ha encontrado para que lo revises antes de vincular. Con varias cartas seleccionadas, de partida solo esas.",
-											)}
-										>
-											<Button
-												size="sm"
-												variant="outline"
-												onClick={() => {
-													const sel = useUi.getState().seleccion;
-													// Una sola carta seleccionada suele ser de un clic
-													// anterior (duplicar, el menú…): de partida, todo el
-													// deck; el diálogo deja elegir.
-													useUi.getState().abrir({
-														tipo: "vincularLote",
-														ids: sel.length > 0 ? sel : undefined,
-														soloSeleccion: sel.length > 1,
-													});
-												}}
-												disabled={ocupado}
-											>
-												<Icono icon="lucide:link-2" />
-												{t("Vincular con una carta")}
-											</Button>
-										</ConAyuda>
-									</div>
-									<p className="text-[11px] text-muted-foreground">
-										{t(
-											"También puedes arrastrar imágenes a la vista previa: sobre una carta la reemplazan; fuera, se añaden.",
-										)}
-									</p>
-								</Seccion>
-
-								<Seccion
-									id="opciones"
-									titulo={t("Opciones")}
-									icono={<Icono icon="lucide:languages" className="size-3.5" />}
-								>
-									<Fila etiqueta={t("Idioma de las cartas")}>
-										<Selector
-											valor={ui.lang}
-											opciones={IDIOMAS}
-											onChange={(v) => ui.setPreferencia("lang", v)}
-											ariaLabel={t("Idioma de las cartas")}
-										/>
-									</Fila>
-									<Fila
-										etiqueta={t("Imágenes")}
-										ayuda={t("Qué impresión se elige cuando la lista no dice el set")}
-									>
-										<Selector
-											valor={ui.imagePolicy}
-											opciones={politicas}
-											onChange={(v) => ui.setPreferencia("imagePolicy", v)}
-											ariaLabel={t("Imágenes")}
-										/>
-									</Fila>
-									<Fila
-										etiqueta={t("Calidad de la vista previa")}
-										ayuda={t(
-											"Solo la pantalla. El PDF siempre sale a la resolución de exportación.",
-										)}
-									>
-										<Selector
-											valor={String(ui.calidadVista)}
-											opciones={calidades}
-											onChange={(v) =>
-												ui.setPreferencia("calidadVista", Number(v) as AnchoMiniatura)
-											}
-											ariaLabel={t("Calidad de la vista previa")}
-										/>
-									</Fila>
-									<FilaInterruptor
-										etiqueta={t("Preguntar antes de reemplazar las cartas")}
-										valor={ui.pedirConfirmacionAlCargar}
-										onChange={(v) => ui.setPreferencia("pedirConfirmacionAlCargar", v)}
-									/>
-									<ConAyuda
-										className="[[data-tactil]_&]:[&>button]:flex-1"
-										content={t("Vuelve a pedir las cartas no fijadas en el idioma elegido")}
-									>
-										<Button
-											size="sm"
-											variant="outline"
-											onClick={intentar(() => reaplicarIdioma(t))}
-											disabled={ocupado || !hayCartas}
-										>
-											<Icono icon="lucide:languages" />
-											{t("Reaplicar idioma")}
-										</Button>
-									</ConAyuda>
-									<Button size="xs" variant="ghost" onClick={pedirLimpiarCache}>
-										<Icono icon="lucide:trash-2" />
-										{t("Limpiar caché de miniaturas")}
-									</Button>
-								</Seccion>
-							</div>
-						</ScrollArea>
-					</div>
-				</ResizablePanel>
-			</ResizablePanelGroup>
-
-			<PiePanel />
-
+	const dialogos = (
+		<>
 			<Confirmar
 				abierto={confirmarCarga}
 				onCerrar={() => setConfirmarCarga(false)}
@@ -430,6 +150,345 @@ export function DecklistPanel() {
 					useUi.getState().anunciar(t("Caché limpiada ({mb})", { mb: megas(r.bytes) }));
 				})}
 			/>
+		</>
+	);
+
+	const botonesLista = (
+		<>
+			<WithTooltip content={t("Ver un set entero y elegir cartas")}>
+				<Button
+					size="xs"
+					variant="ghost"
+					onClick={() => useUi.getState().abrir({ tipo: "sets" })}
+					disabled={ocupado}
+				>
+					<Icono icon="lucide:grid-3x3" />
+					{t("Sets")}
+				</Button>
+			</WithTooltip>
+			<WithTooltip content={t("Poner una lista de ejemplo")}>
+				<Button
+					size="xs"
+					variant="ghost"
+					onClick={() => setSinHistorial({ decklistText: EJEMPLO })}
+					disabled={ocupado}
+				>
+					<Icono icon="lucide:file-text" />
+					{t("Ejemplo")}
+				</Button>
+			</WithTooltip>
+			<WithTooltip content={t("Vaciar el cuadro (las cartas del deck no se tocan)")}>
+				<Button
+					size="xs"
+					variant="ghost"
+					onClick={() => setSinHistorial({ decklistText: "" })}
+					disabled={ocupado || texto === ""}
+				>
+					<Icono icon="lucide:eraser" />
+					{t("Limpiar")}
+				</Button>
+			</WithTooltip>
+		</>
+	);
+	const editor = (
+		<EditorLista
+			valor={texto}
+			onChange={(v) => setSinHistorial({ decklistText: v })}
+			onLeida={setLeida}
+			deshabilitado={ocupado}
+		/>
+	);
+	const bloqueCargar = (
+		<>
+			<div className="flex items-center justify-between text-[11px] text-muted-foreground">
+				<span>{leida ? t("{n} cartas en la lista", { n: leida.cardCount }) : " "}</span>
+				{leida && leida.invalidCount > 0 && (
+					<span className="text-destructive">
+						{t("{n} líneas sin entender", { n: leida.invalidCount })}
+					</span>
+				)}
+			</div>
+			<div className="grid grid-cols-[1fr_auto] gap-1.5">
+				<Button size="sm" onClick={pulsarCargar} disabled={ocupado || !leida?.cardCount}>
+					<Icono icon="lucide:download" />
+					{t("Cargar lista")}
+				</Button>
+				<WithTooltip content={t("Añadir estas cartas al final del deck")}>
+					<Button
+						size="sm"
+						variant="outline"
+						onClick={intentar(() => cargarLista(texto, "anadir", t))}
+						disabled={ocupado || !leida?.cardCount}
+					>
+						<Icono icon="lucide:plus" />
+						{t("Añadir")}
+					</Button>
+				</WithTooltip>
+			</div>
+			<div className="flex items-center justify-between gap-2">
+				<label className="flex items-center gap-2 text-xs">
+					<Checkbox
+						checked={ui.addTokens}
+						onCheckedChange={(v) => ui.setPreferencia("addTokens", v === true)}
+					/>
+					{t("Añadir tokens automáticamente")}
+				</label>
+				<ConAyuda
+					content={t(
+						"Busca las fichas que crean las cartas del deck ya cargado (también las propias vinculadas) y te deja elegir cuáles añadir.",
+					)}
+				>
+					<Button
+						size="xs"
+						variant="ghost"
+						onClick={() => useUi.getState().abrir({ tipo: "fichas" })}
+						disabled={ocupado || !hayCartas}
+					>
+						<Icono icon="lucide:coins" />
+						{t("Detectar fichas")}
+					</Button>
+				</ConAyuda>
+			</div>
+		</>
+	);
+	const secciones = (
+		<>
+			<Seccion
+				id="importar"
+				titulo={t("Importar desde URL")}
+				icono={<Icono icon="lucide:link" className="size-3.5" />}
+			>
+				<div className="flex gap-1.5">
+					<Input
+						value={url}
+						onChange={(e) => setUrl(e.target.value)}
+						placeholder="https://archidekt.com/decks/…"
+						className="h-7 text-xs [[data-tactil]_&]:h-11"
+						data-filtro=""
+						onKeyDown={(e) => e.key === "Enter" && url.trim() && void importar()}
+					/>
+					<Button
+						size="sm"
+						variant="outline"
+						className="h-7 [[data-tactil]_&]:h-11"
+						disabled={!url.trim() || importando}
+						onClick={importar}
+					>
+						{importando ? (
+							<Icono icon="lucide:loader-2" className="animate-spin" />
+						) : (
+							<Icono icon="lucide:list-plus" />
+						)}
+						{t("Importar")}
+					</Button>
+				</div>
+				<label className="flex items-center gap-2 text-xs">
+					<Checkbox checked={conBanquillo} onCheckedChange={(v) => setConBanquillo(v === true)} />
+					{t("Incluir el banquillo")}
+				</label>
+				<p className="text-[11px] text-muted-foreground">
+					{t("Archidekt. De Moxfield no se puede: copia la lista y pégala arriba.")}
+				</p>
+			</Seccion>
+
+			<Seccion
+				id="propias"
+				titulo={t("Imágenes propias")}
+				icono={<Icono icon="lucide:image-plus" className="size-3.5" />}
+			>
+				<div className="grid grid-cols-2 gap-1.5">
+					<Button size="sm" variant="outline" onClick={intentar(() => subirCartasPropias(t))}>
+						<Icono icon="lucide:upload" />
+						{t("Subir cartas")}
+					</Button>
+					<Button size="sm" variant="outline" onClick={intentar(() => subirReverso(t))}>
+						<Icono icon="lucide:square-stack" />
+						{t("Subir reverso")}
+					</Button>
+				</div>
+				<Button size="xs" variant="ghost" onClick={intentar(() => reversoGenerico(t))}>
+					<Icono icon="lucide:refresh-cw" />
+					{t("Volver al reverso genérico")}
+				</Button>
+				<div className="flex flex-col gap-1.5">
+					<ConAyuda
+						className="[[data-tactil]_&]:[&>button:first-child]:flex-1"
+						content={t(
+							"Busca en Scryfall la carta real de cada imagen propia (por el nombre del fichero o leyendo la carta: el título, el nombre original del pie o cualquier línea) y te enseña lo que ha encontrado para que lo revises antes de vincular. Con varias cartas seleccionadas, de partida solo esas.",
+						)}
+					>
+						<Button
+							size="sm"
+							variant="outline"
+							onClick={() => {
+								const sel = useUi.getState().seleccion;
+								// Una sola carta seleccionada suele ser de un clic
+								// anterior (duplicar, el menú…): de partida, todo el
+								// deck; el diálogo deja elegir.
+								useUi.getState().abrir({
+									tipo: "vincularLote",
+									ids: sel.length > 0 ? sel : undefined,
+									soloSeleccion: sel.length > 1,
+								});
+							}}
+							disabled={ocupado}
+						>
+							<Icono icon="lucide:link-2" />
+							{t("Vincular con una carta")}
+						</Button>
+					</ConAyuda>
+				</div>
+				<p className="text-[11px] text-muted-foreground">
+					{t(
+						"También puedes arrastrar imágenes a la vista previa: sobre una carta la reemplazan; fuera, se añaden.",
+					)}
+				</p>
+			</Seccion>
+
+			<Seccion
+				id="opciones"
+				titulo={t("Opciones")}
+				icono={<Icono icon="lucide:languages" className="size-3.5" />}
+			>
+				<Fila etiqueta={t("Idioma de las cartas")}>
+					<Selector
+						valor={ui.lang}
+						opciones={IDIOMAS}
+						onChange={(v) => ui.setPreferencia("lang", v)}
+						ariaLabel={t("Idioma de las cartas")}
+					/>
+				</Fila>
+				<Fila
+					etiqueta={t("Imágenes")}
+					ayuda={t("Qué impresión se elige cuando la lista no dice el set")}
+				>
+					<Selector
+						valor={ui.imagePolicy}
+						opciones={politicas}
+						onChange={(v) => ui.setPreferencia("imagePolicy", v)}
+						ariaLabel={t("Imágenes")}
+					/>
+				</Fila>
+				<Fila
+					etiqueta={t("Calidad de la vista previa")}
+					ayuda={t("Solo la pantalla. El PDF siempre sale a la resolución de exportación.")}
+				>
+					<Selector
+						valor={String(ui.calidadVista)}
+						opciones={calidades}
+						onChange={(v) => ui.setPreferencia("calidadVista", Number(v) as AnchoMiniatura)}
+						ariaLabel={t("Calidad de la vista previa")}
+					/>
+				</Fila>
+				<FilaInterruptor
+					etiqueta={t("Preguntar antes de reemplazar las cartas")}
+					valor={ui.pedirConfirmacionAlCargar}
+					onChange={(v) => ui.setPreferencia("pedirConfirmacionAlCargar", v)}
+				/>
+				<ConAyuda
+					className="[[data-tactil]_&]:[&>button:first-child]:flex-1"
+					content={t("Vuelve a pedir las cartas no fijadas en el idioma elegido")}
+				>
+					<Button
+						size="sm"
+						variant="outline"
+						onClick={intentar(() => reaplicarIdioma(t))}
+						disabled={ocupado || !hayCartas}
+					>
+						<Icono icon="lucide:languages" />
+						{t("Reaplicar idioma")}
+					</Button>
+				</ConAyuda>
+				<Button size="xs" variant="ghost" onClick={pedirLimpiarCache}>
+					<Icono icon="lucide:trash-2" />
+					{t("Limpiar caché de miniaturas")}
+				</Button>
+			</Seccion>
+		</>
+	);
+
+	if (movil)
+		return (
+			<section className="flex h-full min-h-0 flex-col [&_[data-slot=button]]:text-xs [&_button[data-slot=tooltip-trigger]]:text-xs">
+				{/* Móvil: la barra de arriba de siempre y debajo todo en una sola
+				    columna que se desplaza (sin el asa: con el dedo no se reparte el alto). */}
+				<BarraSuperior titulo={t("Lista de cartas")}>
+					<Button
+						size="icon-sm"
+						variant="ghost"
+						onClick={() => useUi.getState().abrir({ tipo: "sets" })}
+						disabled={ocupado}
+						aria-label={t("Ver un set entero y elegir cartas")}
+					>
+						<Icono icon="lucide:grid-3x3" />
+					</Button>
+					<BotonMenu etiqueta={t("Más acciones")} titulo={t("Lista de cartas")}>
+						<FilaMenu
+							icono="lucide:file-text"
+							texto={t("Poner una lista de ejemplo")}
+							onClick={() => setSinHistorial({ decklistText: EJEMPLO })}
+							disabled={ocupado}
+						/>
+						<FilaMenu
+							icono="lucide:eraser"
+							texto={t("Vaciar el cuadro (las cartas del deck no se tocan)")}
+							onClick={() => setSinHistorial({ decklistText: "" })}
+							disabled={ocupado || texto === ""}
+						/>
+					</BotonMenu>
+				</BarraSuperior>
+				<ScrollArea className="min-h-0 flex-1">
+					<div className="flex flex-col gap-2.5 p-2.5">
+						<div className="flex h-[38dvh] min-h-40 flex-col" data-tutorial="lista-cuadro">
+							{editor}
+						</div>
+						<div className="flex flex-col gap-2.5" data-tutorial="lista-opciones">
+							{bloqueCargar}
+						</div>
+						{secciones}
+					</div>
+				</ScrollArea>
+				<PiePanel />
+				{dialogos}
+			</section>
+		);
+
+	return (
+		<section className="flex h-full min-h-0 flex-col [&_[data-slot=button]]:text-xs [&_button[data-slot=tooltip-trigger]]:text-xs">
+			<div className="flex items-center gap-1.5 px-2.5 pt-2.5">
+				<h2 className="flex-1 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+					{t("Lista de cartas")}
+				</h2>
+				{botonesLista}
+			</div>
+
+			{/* El cuadro de la lista y lo de debajo, con un asa entre medias para
+			    darle al cuadro el alto que se quiera (se recuerda). */}
+			<ResizablePanelGroup
+				orientation="vertical"
+				className="min-h-0 flex-1"
+				defaultLayout={layout.defaultLayout}
+				onLayoutChanged={layout.onLayoutChanged}
+			>
+				<ResizablePanel id="lista" defaultSize="45" minSize={72}>
+					<div className="flex h-full min-h-0 flex-col p-2.5 pb-1.5" data-tutorial="lista-cuadro">
+						{editor}
+					</div>
+				</ResizablePanel>
+				<ManijaRedimensionar withHandle />
+				<ResizablePanel id="opciones" minSize={160}>
+					<div className="flex h-full min-h-0 flex-col" data-tutorial="lista-opciones">
+						<div className="flex shrink-0 flex-col gap-2.5 p-2.5">{bloqueCargar}</div>
+
+						<ScrollArea className="min-h-0 flex-1 border-t">
+							<div className="flex flex-col gap-2.5 p-2.5">{secciones}</div>
+						</ScrollArea>
+					</div>
+				</ResizablePanel>
+			</ResizablePanelGroup>
+
+			<PiePanel />
+			{dialogos}
 		</section>
 	);
 }

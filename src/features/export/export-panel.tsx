@@ -34,6 +34,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cancelarTrabajo } from "@/features/decklist/acciones";
 import { ponerIdiomaDiseno } from "@/features/disenar/renumerar";
+import { useFormato } from "@/lib/formato";
 import { call } from "@/lib/ipc";
 import { useDeck } from "@/stores/deck-store";
 import { usePlan } from "@/stores/plan-store";
@@ -55,6 +56,7 @@ const TAMANOS = {
  */
 export function ExportPanel() {
 	const { t, mensaje } = useLang();
+	const movil = useFormato().tamano === "movil";
 	const s = useDeck((st) => st.deck?.settings);
 	// Sin cartas no hay nada que imprimir (los huecos no cuentan).
 	const vacio = useDeck((st) => !st.deck?.cards.some((c) => c.source.kind !== "blank"));
@@ -118,9 +120,12 @@ export function ExportPanel() {
 	return (
 		<section className="flex h-full min-h-0 flex-col [&_[data-slot=button]]:text-xs [&_button[data-slot=tooltip-trigger]]:text-xs">
 			<div className="flex flex-col gap-2 border-b p-2.5" data-tutorial="exportar-boton">
-				<h2 className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
-					{t("Exportar")}
-				</h2>
+				{/* Móvil: el título ya es la pestaña «Exportar» de arriba. */}
+				{!movil && (
+					<h2 className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
+						{t("Exportar")}
+					</h2>
+				)}
 				{exportando ? (
 					<div className="flex flex-col gap-1.5">
 						<div className="flex items-center gap-2 text-xs">

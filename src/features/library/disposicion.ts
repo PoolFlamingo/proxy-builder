@@ -17,11 +17,13 @@ const COLUMNAS: Record<TamanoTarjeta, string> = {
 /**
  * Las clases de la rejilla de tarjetas. En el móvil, dos columnas (una por
  * debajo de 360 px de ancho) sea cual sea el tamaño elegido: con el dedo no
- * se elige el tamaño; en el resto, lo de siempre.
+ * se elige el tamaño. Con el teléfono en horizontal (600 px o más) caben
+ * más: tarjetas de unos 170 px, para que no salgan dos portadas enormes que
+ * no caben de alto. En el resto, lo de siempre.
  */
 export function clasesCuadricula(tamano: Tamano, tarjeta: TamanoTarjeta): string {
 	return tamano === "movil"
-		? "grid-cols-1 gap-2.5 min-[360px]:grid-cols-2"
+		? "grid-cols-1 gap-2.5 min-[360px]:grid-cols-2 min-[600px]:grid-cols-[repeat(auto-fill,minmax(170px,1fr))]"
 		: `${COLUMNAS[tarjeta]} gap-4`;
 }
 

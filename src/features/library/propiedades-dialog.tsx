@@ -19,6 +19,7 @@ import { verRepeticionDelHistorial } from "@/features/mesa/repeticion";
 import { RaizScroll, useVisible } from "@/features/preview/visibilidad";
 import { urlMiniatura } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
+import { useNombreDeck } from "@/lib/use-nombre-deck";
 import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
 import { PartidasDeDeck } from "./partidas-deck";
@@ -53,6 +54,7 @@ export function PropiedadesDialog({
 	const etiquetas = useBiblioteca((s) => s.etiquetas);
 	const fecha = useFecha();
 	const dinero = useDinero();
+	const nombreDeck = useNombreDeck();
 	const [nombre, setNombre] = useState("");
 	const [notas, setNotas] = useState("");
 	const [portada, setPortada] = useState<string | null>(null);
@@ -63,14 +65,14 @@ export function PropiedadesDialog({
 	useEffect(() => {
 		if (!id) return;
 		const d = useBiblioteca.getState().decks?.find((x) => x.id === id);
-		setNombre(d?.name ?? "");
+		setNombre(nombreDeck(d?.name ?? ""));
 		setNotas(d?.notes ?? "");
 		setPortada(d?.coverCardId ?? null);
 		setCartas(null);
 		call("deck_peek", { id })
 			.then((x) => setCartas(x.cards))
 			.catch((e) => toast.error(mensaje(e)));
-	}, [id, mensaje]);
+	}, [id, mensaje, nombreDeck]);
 
 	// Una carta por imagen (las copias tienen la misma).
 	const opciones = useMemo(() => {

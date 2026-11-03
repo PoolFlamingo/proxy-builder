@@ -265,7 +265,7 @@ function Contenido({ carta }: { carta: DeckCard }) {
 				</Button>
 				<div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
 					<ConAyuda
-						className="[[data-tactil]_&]:flex [[data-tactil]_&]:[&>button]:flex-1"
+						className="[[data-tactil]_&]:flex [[data-tactil]_&]:[&>button:first-child]:flex-1"
 						content={t(
 							"Solo los retoques de color; el giro y el encuadre se quedan en esta carta.",
 						)}
@@ -276,7 +276,7 @@ function Contenido({ carta }: { carta: DeckCard }) {
 					</ConAyuda>
 					{copias > 0 && (
 						<ConAyuda
-							className="[[data-tactil]_&]:flex [[data-tactil]_&]:[&>button]:flex-1"
+							className="[[data-tactil]_&]:flex [[data-tactil]_&]:[&>button:first-child]:flex-1"
 							content={t("Las que llevan la misma imagen: giro, encuadre y retoques, todo igual.")}
 						>
 							<Button size="sm" variant="outline" onClick={() => guardar("copias")}>

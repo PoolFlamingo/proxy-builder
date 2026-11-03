@@ -1,10 +1,10 @@
 import { forwardRef, type ReactNode, useState } from "react";
 import type { DeckKind } from "@/bindings/DeckKind";
-import { Hoja } from "@/components/hoja";
+import { BarraSuperior } from "@/components/barra-superior";
+import { BotonMenu, FilaMenu, HojaMenu } from "@/components/hoja-menu";
 import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogTitle } from "@/components/ui/dialog";
 import {
 	DropdownMenu,
 	DropdownMenuCheckboxItem,
@@ -17,11 +17,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { BotonPasar } from "@/features/pasar/boton-pasar";
+import { usePasarUi } from "@/features/pasar/store";
 import { COLORES } from "@/features/stats/textos";
 import { useFormato } from "@/lib/formato";
 import { cn } from "@/lib/utils";
@@ -53,8 +53,13 @@ const AGRUPAR: [Agrupar, string][] = [
 /** La búsqueda, los filtros, el orden, los grupos y la vista. */
 export const BarraHerramientas = forwardRef<
 	HTMLInputElement,
-	{ acciones: ReactNode; titulo: string }
->(function BarraHerramientas({ acciones, titulo }, buscar) {
+	{
+		acciones: ReactNode;
+		titulo: string;
+		/** Móvil: las filas (`FilaMenu`) del «⋯», tras «Enviar / Recibir». */
+		menu?: ReactNode;
+	}
+>(function BarraHerramientas({ acciones, titulo, menu }, buscar) {
 	const { t } = useLang();
 	const anclaBarra = useAncla("barra");
 	const anclaAcciones = useAncla("acciones");
@@ -63,13 +68,25 @@ export const BarraHerramientas = forwardRef<
 	const { tamano } = useFormato();
 	const [hoja, setHoja] = useState(false);
 	if (tamano === "movil") {
-		// Móvil: el buscador y dos botones (Etiquetas y «Filtros y orden», que
-		// abren hojas); el título y las acciones, debajo.
+		// Móvil: la barra de arriba de siempre (título, la acción principal y el
+		// «⋯» con lo secundario) y debajo el buscador con Etiquetas y «Filtros y
+		// orden», que abren hojas.
 		const n = filtrosDelPanel(f);
 		const etiquetasPuestas = f.etiquetas.length > 0 || f.favoritos || f.sinEtiqueta;
 		return (
-			<div className="flex flex-col gap-2 border-b p-2.5" data-tutorial={anclaBarra}>
-				<div className="flex items-center gap-2">
+			<div className="flex min-w-0 shrink-0 flex-col" data-tutorial={anclaBarra}>
+				<BarraSuperior titulo={titulo} data-tutorial={anclaAcciones}>
+					{acciones}
+					<BotonMenu etiqueta={t("Más acciones")} titulo={titulo}>
+						<FilaMenu
+							icono="lucide:arrow-left-right"
+							texto={t("Enviar / Recibir")}
+							onClick={() => usePasarUi.getState().abrirPasar()}
+						/>
+						{menu}
+					</BotonMenu>
+				</BarraSuperior>
+				<div className="flex min-w-0 items-center gap-1 border-b px-2 py-1.5">
 					<Button
 						size="icon-sm"
 						variant={etiquetasPuestas ? "secondary" : "ghost"}
@@ -81,7 +98,7 @@ export const BarraHerramientas = forwardRef<
 					<div className="relative min-w-0 flex-1">
 						<Icono
 							icon="lucide:search"
-							className="pointer-events-none absolute top-3 left-2.5 size-3.5 text-muted-foreground"
+							className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
 						/>
 						<Input
 							ref={buscar}
@@ -101,18 +118,11 @@ export const BarraHerramientas = forwardRef<
 					>
 						<Icono icon="lucide:sliders-horizontal" />
 						{n > 0 && (
-							<span className="absolute -top-0.5 -right-0.5 rounded-full bg-primary px-1 text-[10px] leading-4 text-primary-foreground">
+							<span className="absolute top-0.5 right-0.5 rounded-full bg-primary px-1 text-[10px] leading-4 text-primary-foreground">
 								{n}
 							</span>
 						)}
 					</Button>
-				</div>
-				<div className="flex items-center gap-2">
-					<h2 className="text-sm font-semibold">{titulo}</h2>
-					<div className="ml-auto flex items-center gap-1.5" data-tutorial={anclaAcciones}>
-						<BotonPasar />
-						{acciones}
-					</div>
 				</div>
 				<HojaFiltrosYOrden abierta={hoja} onCerrar={() => setHoja(false)} />
 			</div>
@@ -446,87 +456,82 @@ function HojaFiltrosYOrden({ abierta, onCerrar }: { abierta: boolean; onCerrar: 
 	const { t } = useLang();
 	const p = usePrefs();
 	return (
-		<Dialog open={abierta} onOpenChange={(o) => !o && onCerrar()}>
-			<Hoja cambiosSinGuardar={false} aria-describedby={undefined} className="gap-0 p-0">
-				<DialogTitle className="px-4 pt-4 pb-2 text-sm">{t("Filtros y orden")}</DialogTitle>
-				<ScrollArea className="min-h-0 flex-1">
-					<div className="flex flex-col gap-4 p-4 pt-2 text-sm">
-						<Bloque titulo={t("Ordenar por")}>
-							<div className="flex flex-wrap gap-1.5">
-								{ORDENES.map(([o, nombre]) => (
-									<Button
-										key={o}
-										size="sm"
-										variant={p.orden === o ? "default" : "outline"}
-										onClick={() => p.poner({ orden: o, ascendente: ascendentePorDefecto(o) })}
-									>
-										{t(nombre)}
-									</Button>
-								))}
-							</div>
-							<label className="flex items-center justify-between gap-2">
-								{t("Ascendente")}
-								<Switch
-									checked={p.ascendente}
-									onCheckedChange={(v) => p.poner({ ascendente: v })}
-								/>
-							</label>
-							<label className="flex items-center justify-between gap-2">
-								{t("Favoritos primero")}
-								<Switch
-									checked={p.favoritosArriba}
-									onCheckedChange={(v) => p.poner({ favoritosArriba: v })}
-								/>
-							</label>
-						</Bloque>
-						<Bloque titulo={t("Agrupar")}>
-							<div className="flex flex-wrap gap-1.5">
-								{AGRUPAR.map(([a, nombre]) => (
-									<Button
-										key={a}
-										size="sm"
-										variant={p.agrupar === a ? "default" : "outline"}
-										onClick={() => p.poner({ agrupar: a })}
-									>
-										{t(nombre)}
-									</Button>
-								))}
-							</div>
-							{p.agrupar === "etiqueta" && (
-								<p className="text-xs leading-snug text-muted-foreground">
-									{t("Un deck con varias etiquetas sale en cada una.")}
-								</p>
-							)}
-						</Bloque>
-						<Bloque titulo={t("Vista")}>
-							<ToggleGroup
-								type="single"
-								size="sm"
-								variant="outline"
-								value={p.vista}
-								onValueChange={(v) => v && p.poner({ vista: v as "cuadricula" | "lista" })}
-								className="w-full"
-							>
-								<ToggleGroupItem value="cuadricula" className="flex-1 gap-1.5">
-									<Icono icon="lucide:layout-grid" />
-									{t("Cuadrícula")}
-								</ToggleGroupItem>
-								<ToggleGroupItem value="lista" className="flex-1 gap-1.5">
-									<Icono icon="lucide:list" />
-									{t("Lista")}
-								</ToggleGroupItem>
-							</ToggleGroup>
-						</Bloque>
-						<div className="flex flex-col gap-3 border-t pt-4">
-							<span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-								{t("Filtros")}
-							</span>
-							<ContenidoFiltros />
-						</div>
-					</div>
-				</ScrollArea>
-			</Hoja>
-		</Dialog>
+		<HojaMenu
+			abierta={abierta}
+			onCerrar={onCerrar}
+			titulo={t("Filtros y orden")}
+			cuerpoClassName="text-sm"
+		>
+			<Bloque titulo={t("Ordenar por")}>
+				<div className="flex flex-wrap gap-1.5">
+					{ORDENES.map(([o, nombre]) => (
+						<Button
+							key={o}
+							size="sm"
+							variant={p.orden === o ? "default" : "outline"}
+							onClick={() => p.poner({ orden: o, ascendente: ascendentePorDefecto(o) })}
+						>
+							{t(nombre)}
+						</Button>
+					))}
+				</div>
+				<label className="flex items-center justify-between gap-2">
+					{t("Ascendente")}
+					<Switch checked={p.ascendente} onCheckedChange={(v) => p.poner({ ascendente: v })} />
+				</label>
+				<label className="flex items-center justify-between gap-2">
+					{t("Favoritos primero")}
+					<Switch
+						checked={p.favoritosArriba}
+						onCheckedChange={(v) => p.poner({ favoritosArriba: v })}
+					/>
+				</label>
+			</Bloque>
+			<Bloque titulo={t("Agrupar")}>
+				<div className="flex flex-wrap gap-1.5">
+					{AGRUPAR.map(([a, nombre]) => (
+						<Button
+							key={a}
+							size="sm"
+							variant={p.agrupar === a ? "default" : "outline"}
+							onClick={() => p.poner({ agrupar: a })}
+						>
+							{t(nombre)}
+						</Button>
+					))}
+				</div>
+				{p.agrupar === "etiqueta" && (
+					<p className="text-xs leading-snug text-muted-foreground">
+						{t("Un deck con varias etiquetas sale en cada una.")}
+					</p>
+				)}
+			</Bloque>
+			<Bloque titulo={t("Vista")}>
+				<ToggleGroup
+					type="single"
+					size="sm"
+					variant="outline"
+					value={p.vista}
+					onValueChange={(v) => v && p.poner({ vista: v as "cuadricula" | "lista" })}
+					className="w-full"
+				>
+					<ToggleGroupItem value="cuadricula" className="flex-1 gap-1.5">
+						<Icono icon="lucide:layout-grid" />
+						{t("Cuadrícula")}
+					</ToggleGroupItem>
+					<ToggleGroupItem value="lista" className="flex-1 gap-1.5">
+						<Icono icon="lucide:list" />
+						{t("Lista")}
+					</ToggleGroupItem>
+				</ToggleGroup>
+			</Bloque>
+			<div className="flex flex-col gap-3 border-t pt-4">
+				<span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+					{t("Filtros")}
+				</span>
+				<ContenidoFiltros />
+			</div>
+		</HojaMenu>
 	);
 }
 
