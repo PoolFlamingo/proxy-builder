@@ -79,10 +79,22 @@ sola interfaz que cambia por formato, nunca pantallas aparte; el escritorio no c
   tableta; con dedo y lado corto < 600 dp es móvil, como `sw600dp`), `tactil`, `horizontal`;
   pone `data-formato` y `data-tactil` en `<html>`. `VITE_PB_FORMATO=movil|tableta` lo fuerza
   en desarrollo (con `minWidth: 960` en escritorio no se vería el móvil). En táctil el texto
-  sube un punto (`html[data-tactil]` en `index.css`), los botones miden ≥ 44 px y el shell
-  respeta las zonas seguras (`env(safe-area-inset-*)`, `dvh`, y `lib/teclado.ts` para el
-  teclado). Un botón con `WithTooltip` no lleva `data-slot="button"` (el CSS cubre
-  `tooltip-trigger`).
+  va al 108 % (`html[data-tactil]` en `index.css`; al 116 % todo salía enorme, Pablo,
+  03/11/2026), los botones, campos y filas de menú miden ≥ 2,5 rem y el shell respeta las
+  zonas seguras (`env(safe-area-inset-*)`, `dvh`, y `lib/teclado.ts` para el teclado). Un
+  botón con `WithTooltip` no lleva `data-slot="button"` (el CSS cubre `tooltip-trigger`).
+- 🛑 **En Android la app va siempre a pantalla completa** (Pablo, 03/11/2026):
+  `MainActivity.kt` esconde las barras del sistema (y lo repite al recuperar el foco) y deja
+  fuera la muesca con un margen en la vista del WebView, al que le llegan las zonas seguras a
+  0 (el teclado sí le llega). No hay botón de pantalla completa en el móvil. Ningún documento
+  del móvil se desplaza en horizontal (`scrollWidth === innerWidth` en cada pantalla).
+- Piezas comunes del móvil, para que todo se vea igual: la barra de arriba es
+  `components/barra-superior.tsx`; un menú o panel que sube, `HojaMenu`
+  (`components/hoja-menu.tsx`: cabecera de 3 rem con título y X, cuerpo que se desplaza;
+  `FilaMenu`, `BotonMenu` «⋯» para lo secundario); el menú de un deck, `BotonMenuDeck`; el
+  nombre de un deck, `useNombreDeck()` (el de fábrica, en el idioma de ahora; también en el
+  nombre de fichero, `nombreSeguro`). En táctil, todo `ScrollArea` de un diálogo es rejilla y
+  el diálogo tiene `overflow-y: auto` (`index.css`): una hoja o diálogo nunca corta lo que no cabe.
 - **Nada solo con el ratón** (`pnpm check:tactil`): todo `onPointerEnter`/`onMouseEnter`/
   `onPointerLeave`/`onContextMenu`… lleva `// táctil: …` (en su línea o las tres anteriores)
   que dice cómo se hace con el dedo: pulsación larga (500 ms, ≤ 8 px: `usePulsacionLarga`/
@@ -109,7 +121,11 @@ sola interfaz que cambia por formato, nunca pantallas aparte; el escritorio no c
 - La mesa en móvil se decide con `useMesaMovil()`: un tablero a la vez (modo `movil` de
   `disposicion.ts`, que no se elige ni se recuerda), barra de asientos, «Mano» y pantalla de
   vida. Leer una carta en grande, siempre por `useLeerEnGrande`/`manejadoresLeer`
-  (`mesa/leer-en-grande.ts`), nunca `onPointerEnter` suelto. Las cartas del campo van en una
+  (`mesa/leer-en-grande.ts`), nunca `onPointerEnter` suelto; en el móvil se pinta con
+  `LecturaMovil` (`mesa/lectura-movil.tsx`: entera, `object-contain`, la X fuera de la carta).
+  La barra de la mesa en el móvil usa `BOTON_MOVIL` (36 px, compacta a propósito); el mulligan
+  en horizontal va en una fila (`cartaEnFila`); «Jugar» en el móvil deja a la vista nombre,
+  formato y lista y lo demás va a la hoja «Opciones de la partida» (`mesa/entrada-movil.tsx`). Las cartas del campo van en una
   capa con zoom (`mesa/gestos.ts::conVista`): nunca convertir posiciones con `disp.campo` a
   mano; `touch-action: none` solo en el tablero. Un tooltip con información usa
   `AyudaAlTocar` o texto visible.
@@ -127,7 +143,9 @@ en **los 15 diccionarios** `src/i18n/<código>/<área>.json` (`es`, la fuente, q
 21/10/2026), con los términos de `src/i18n/GLOSARIO.md`. Una cadena con
 `{n}` que cuenta va como plural (`{ one, few, many, other }`, las categorías
 de `Intl.PluralRules` de cada idioma) y `n` se pasa como número, sin
-formatear. `pnpm idiomas` falla si falta alguna en cualquier idioma, si un
+formatear; el español también: su plural va en `src/i18n/plurales-es.json`
+(lo único del español que carga la app; `i18n-anadir.py` lo escribe si se le
+da `"es": { one, many, other }`). `pnpm idiomas` falla si falta alguna en cualquier idioma, si un
 `{x}` se pierde o si a un plural le falta una forma. La tabla de idiomas
 (código, nombre propio, bandera, locale, si hay cartas impresas) es
 `src/lib/idiomas.ts`; fechas y números, con `localeDe(lang)`. Al idioma que
@@ -555,9 +573,13 @@ le falta una cadena le sale la inglesa.
   - **Packs descargables** (Pablo, 19/10/2026): `diseno/descargables.rs` con
     el manifiesto `assets/packs-descargables.json` (commit fijo y SHA-256 por
     fichero) del repo `PoolFlamingo/proxy-builder-packs` (lo sube Pablo; al
-    cambiar un pack, `python -I source/manifest.py .. <commit>`, desde la carpeta del pack, da su
-    entrada nueva). El primero es **Balatro** (pixel art, 7 plantillas como estilos
-    propios del pack, con sus variantes). El formato de pack versión 2
+    cambiar un pack, `python -I source/manifest.py . <commit>`, desde la carpeta del pack, da su
+    entrada nueva). Al arrancar, `descargables::completar` pone al día un pack ya
+    bajado con los ficheros del manifiesto de esta versión (uno nunca bajado no
+    se toca). El primero es **Balatro** (pixel art, 7 plantillas como estilos
+    propios del pack, con sus variantes). Una carta con marco propio de otro pack
+    que su colección no usa las letras de la colección si el pack trae las suyas
+    (`DisenoEfectivo::otro_pack`). El formato de pack versión 2
     (estilos propios, condiciones por tipo/colores, escalado pixel,
     símbolos y etiquetas propios…) está en `docs/packs-de-marcos.md`. El
     trabajo del pack (PSD → capas, `source/convert.py` y `source/build.py`) es

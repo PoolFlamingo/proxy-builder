@@ -207,8 +207,12 @@ export function comprobar({
  * El español es la fuente: su diccionario repite cada cadena como su propia
  * traducción. Así `src/i18n/es/` tiene los mismos ficheros y claves que el
  * inglés, y una cadena nueva de `t()` no se escapa sin entrada en español.
+ *
+ * Sus plurales van aparte, en `src/i18n/plurales-es.json` (lo único del
+ * español que carga la app): cada uno es de una cadena que existe, lleva `{n}`,
+ * todas las categorías del español y su `other` es la propia fuente.
  */
-export function comprobarFuente({ areas, repetidas = [], pedidas, areasEn }) {
+export function comprobarFuente({ areas, repetidas = [], pedidas, areasEn, plurales = {} }) {
 	const errores = [...repetidas];
 	const avisos = [];
 	const vistas = new Set();
@@ -227,6 +231,22 @@ export function comprobarFuente({ areas, repetidas = [], pedidas, areasEn }) {
 	}
 	for (const k of vistas) {
 		if (!pedidas.has(k)) avisos.push(`sobra "${k}"`);
+	}
+	const categorias = new Intl.PluralRules("es-ES").resolvedOptions().pluralCategories;
+	for (const [k, v] of Object.entries(plurales)) {
+		const donde = `en plurales-es.json, "${k}"`;
+		if (!vistas.has(k)) errores.push(`${donde}: no es ninguna cadena`);
+		if (!marcadores(k).includes("n")) errores.push(`${donde}: no lleva {n}`);
+		if (!v || typeof v !== "object" || v.other !== k) {
+			errores.push(`${donde}: su «other» tiene que ser la fuente`);
+			continue;
+		}
+		for (const [cat, forma] of Object.entries(v)) {
+			if (!categorias.includes(cat)) errores.push(`${donde}: categoría «${cat}» que es no tiene`);
+			else if (!mismos(marcadores(forma), marcadores(k)))
+				errores.push(`${donde}: marcadores distintos (${cat})`);
+		}
+		for (const cat of categorias) if (!(cat in v)) errores.push(`${donde}: le falta «${cat}»`);
 	}
 	return { errores, avisos, total: pedidas.size };
 }
@@ -248,7 +268,12 @@ async function main() {
 		}
 		const { errores, avisos, total } =
 			codigo === "es"
-				? comprobarFuente({ ...d, pedidas, areasEn })
+				? comprobarFuente({
+						...d,
+						pedidas,
+						areasEn,
+						plurales: JSON.parse(readFileSync(join(I18N, "plurales-es.json"), "utf8")),
+					})
 				: comprobar({
 						codigo,
 						locale,

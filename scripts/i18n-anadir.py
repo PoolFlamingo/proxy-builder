@@ -9,7 +9,9 @@ Uso:
         "ko": "…", "zhs": "…", "zht": "…" } }
     JSON
 
-`es` (la fuente) repite la cadena sola. Un plural (`{n}` que cuenta) lleva en
+`es` (la fuente) repite la cadena sola. Si además lleva `"es": { "one": …,
+"many": …, "other": … }` (su `other` es la propia cadena), ese plural va a
+`src/i18n/plurales-es.json`, lo único del español que carga la app. Un plural (`{n}` que cuenta) lleva en
 cada idioma un objeto `{ "one": …, "few": …, "many": …, "other": … }` con las
 categorías de `Intl.PluralRules` de ese idioma. Si la clave ya existe se deja
 como está. Luego, `pnpm idiomas` comprueba que no falta nada.
@@ -44,6 +46,14 @@ def main():
             for clave, tr in nuevas.items():
                 if clave not in d:
                     d[clave] = clave if lang == "es" else tr[lang]
+            ruta.write_text(json.dumps(d, ensure_ascii=False, indent="\t") + "\n", encoding="utf-8")
+        plurales = {c: tr["es"] for c, tr in nuevas.items() if isinstance(tr.get("es"), dict)}
+        if plurales:
+            ruta = RAIZ / "plurales-es.json"
+            d = json.loads(ruta.read_text(encoding="utf-8"), object_pairs_hook=collections.OrderedDict)
+            for clave, forma in plurales.items():
+                d.setdefault(clave, forma)
+            d = collections.OrderedDict(sorted(d.items()))
             ruta.write_text(json.dumps(d, ensure_ascii=False, indent="\t") + "\n", encoding="utf-8")
         fcntl.flock(cerrojo, fcntl.LOCK_UN)
 

@@ -80,7 +80,9 @@ números de las insignias), `pie` y `cinta`.
 texto se mide por la altura de sus mayúsculas, que es lo que se ve. La
 familia tiene que estar cargada (las de la casa son Spectral y Montserrat; las
 demás se importan en **Letras**). Una colección puede pedir otra letra para el
-título y las reglas.
+título y las reglas. Esa letra (y sus grosores) se eligió para el pack de la
+colección: una carta con marco propio de **otro** pack cuya letra de ese papel
+no es la de la casa (Balatro) pinta con la del pack.
 
 Una letra no tiene por qué traer todos los idiomas: lo que le falte del latín
 («ș», «ł»…) o del cirílico sale con Spectral o Montserrat, que lo tienen
@@ -460,7 +462,9 @@ y `zht` (chino tradicional). Se puede traer los que se quiera:
   columnas (separadas por tabulador) van seguidas y, si la línea no cabe, se
   estrecha; con `tabs`, cada columna se estrecha hasta el tabulador
   siguiente. Lo que va tras `{>}` en una línea se pega a la derecha del
-  hueco (y lo demás llega hasta ahí). Si la plantilla no pone `{universe}`,
+  hueco (y lo demás llega hasta ahí): si no caben juntos, se estrechan a la
+  vez con la misma escala (con `tabs`, la derecha y la última columna) y, si
+  ni a la mitad caben, lo de la derecha no va. Si la plantilla no pone `{universe}`,
   `{year}` ni `{credit}`, salen solos tras `{>}` en la última línea
   («Monster Hunter · © 2026 Capcom»).
 
