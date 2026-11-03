@@ -4,12 +4,14 @@ import type { Aviso } from "@/bindings/Aviso";
 import type { CapaInfo } from "@/bindings/CapaInfo";
 import type { CardDesign } from "@/bindings/CardDesign";
 import type { DesignLang } from "@/bindings/DesignLang";
+import { AyudaTactil } from "@/components/ayuda-tactil";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { SelectorIdioma } from "@/components/selector-idioma";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { WithTooltip } from "@/components/ui/with-tooltip";
+import { useFormato } from "@/lib/formato";
 import { type AnchoMiniatura, urlArte, urlCapa, urlDiseno } from "@/lib/image-url";
 import { useImagenViva, useRafaga } from "@/lib/imagen-viva";
 import { call } from "@/lib/ipc";
@@ -22,6 +24,7 @@ import {
 	huecoSinGirar,
 	moverEncuadre,
 } from "./encuadre";
+import { cambioDeGesto, crearGestos } from "./gestos";
 import { Incidencias } from "./incidencias";
 
 /** Cada cuánto se pasa al diseño el encuadre mientras se arrastra. */
@@ -36,7 +39,8 @@ const CAPA_ANTES_MS = 500;
 
 /**
  * La carta tal como saldrá, pintada por Rust (el mismo motor que el PDF).
- * Arrastrar sobre ella mueve la ilustración; la rueda la acerca o aleja.
+ * Arrastrar sobre ella mueve la ilustración; la rueda la acerca o aleja. Con
+ * el dedo, uno la mueve y dos (pellizco) la acercan o alejan (`gestos.ts`).
  *
  * Mientras solo cambia el encuadre, la ilustración se mueve en la pantalla
  * (`ArteEnVivo`, por debajo de la carta sin ilustración) y Rust no pinta
@@ -78,9 +82,12 @@ export function VistaPrevia({
 	carasImpresas: number;
 }) {
 	const { t } = useLang();
+	const { tactil, tamano } = useFormato();
+	const movil = tamano === "movil";
 	const [seguro, setSeguro] = useState(false);
 	const marco = useRef<HTMLDivElement>(null);
-	const arrastre = useRef<{ x: number; y: number } | null>(null);
+	// Los punteros que tocan la carta: uno arrastra, dos arrastran y pellizcan.
+	const [gestos] = useState(crearGestos);
 	const [ancho, setAncho] = useState<AnchoMiniatura>(745);
 
 	// La resolución de la vista según el tamaño en pantalla.
@@ -208,24 +215,45 @@ export function VistaPrevia({
 	const { mostrada, cargando: pintando } = useImagenViva(congelada.current);
 	const componer = enVivo && (vivo !== null || mostrada !== exacta);
 
+	// Lo que han movido los dedos desde el último fotograma, a la carta. Se
+	// cuenta una vez por fotograma, no a cada `pointermove`: con dos dedos llega
+	// uno por dedo (ver `gestos.tomar`).
+	const cuadro = useRef<number | null>(null);
+	const aplicarGestos = () => {
+		if (cuadro.current !== null) cancelAnimationFrame(cuadro.current);
+		cuadro.current = null;
+		const m = marco.current;
+		const g = m && gestos.tomar();
+		if (!m || !g) return;
+		const r = m.getBoundingClientRect();
+		const zoom = vivoRef.current?.zoom ?? arte?.framing.zoom ?? 1;
+		mover(cambioDeGesto(g, { w: r.width, h: r.height }, zoom));
+	};
+	useEffect(
+		() => () => {
+			if (cuadro.current !== null) cancelAnimationFrame(cuadro.current);
+		},
+		[],
+	);
 	const alBajar = (e: React.PointerEvent) => {
-		if (!tieneArte) return;
+		if (!tieneArte || (e.pointerType === "mouse" && e.button !== 0)) return;
+		// Sin «entrar» con el dedo, la capa se pide al tocar: antes de que
+		// empiece el arrastre (los primeros pasos ya van en directo).
 		pedirCapa();
-		(e.target as HTMLElement).setPointerCapture(e.pointerId);
-		arrastre.current = { x: e.clientX, y: e.clientY };
+		e.currentTarget.setPointerCapture(e.pointerId);
+		aplicarGestos();
+		gestos.bajar(e.pointerId, e.clientX, e.clientY);
 	};
 	const alMover = (e: React.PointerEvent) => {
-		const a = arrastre.current;
-		const m = marco.current;
-		if (!a || !m) return;
-		const r = m.getBoundingClientRect();
-		mover({ dx: (e.clientX - a.x) / r.width, dy: (e.clientY - a.y) / r.height });
-		arrastre.current = { x: e.clientX, y: e.clientY };
+		if (gestos.cantidad() === 0) return;
+		gestos.mover(e.pointerId, e.clientX, e.clientY);
+		if (cuadro.current === null) cuadro.current = requestAnimationFrame(aplicarGestos);
 	};
-	const alSoltar = () => {
-		if (!arrastre.current) return;
-		arrastre.current = null;
-		acabar();
+	const alSoltar = (e: React.PointerEvent) => {
+		if (gestos.cantidad() === 0) return;
+		aplicarGestos();
+		gestos.subir(e.pointerId);
+		if (gestos.cantidad() === 0) acabar();
 	};
 	const alRodar = (e: React.WheelEvent) => {
 		if (!tieneArte || e.ctrlKey) return;
@@ -234,14 +262,19 @@ export function VistaPrevia({
 		if (finRueda.current) clearTimeout(finRueda.current);
 		finRueda.current = setTimeout(() => {
 			finRueda.current = null;
-			if (!arrastre.current) acabar();
+			if (gestos.cantidad() === 0) acabar();
 		}, FIN_RUEDA_MS);
 	};
 
 	const caras = design?.faces.length ?? 0;
 	return (
 		<div className="flex h-full flex-col" data-tutorial="disenar-vista">
-			<div className="flex shrink-0 items-center gap-2.5 border-b px-3 py-2">
+			<div
+				className={cn(
+					"flex shrink-0 items-center gap-2.5 border-b px-3 py-2",
+					movil && "flex-wrap gap-y-1 py-1",
+				)}
+			>
 				<SelectorIdioma
 					valor={lang}
 					onCambio={setLang}
@@ -267,13 +300,20 @@ export function VistaPrevia({
 					{t("Margen de seguridad")}
 				</label>
 			</div>
-			<div className="flex min-h-0 flex-1 items-center justify-center p-4">
+			<div
+				className={cn(
+					"relative flex min-h-0 flex-1 items-center justify-center p-4",
+					movil && "p-2",
+				)}
+			>
 				<div
 					ref={marco}
 					className={cn(
 						"relative aspect-[63/88] h-full max-h-full max-w-full touch-none select-none",
 						tieneArte && "cursor-grab active:cursor-grabbing",
 					)}
+					// táctil: sin «entrar» con el dedo, la capa se pide en `alBajar` (el toque que
+					// empieza el arrastre) y, por adelantado, al quedarse quieta la carta.
 					onPointerEnter={pedirCapa}
 					onPointerDown={alBajar}
 					onPointerMove={alMover}
@@ -324,7 +364,7 @@ export function VistaPrevia({
 							className="absolute top-2 right-2 size-4 animate-spin text-white drop-shadow"
 						/>
 					)}
-					{tieneArte && mostrada && (
+					{tieneArte && mostrada && !tactil && (
 						<WithTooltip
 							content={t("Arrastra para mover la ilustración; la rueda la acerca o aleja.")}
 						>
@@ -334,6 +374,14 @@ export function VistaPrevia({
 						</WithTooltip>
 					)}
 				</div>
+				{/* Fuera de la carta: dentro, el toque empezaría un arrastre. */}
+				{tieneArte && mostrada && tactil && (
+					<AyudaTactil className="absolute right-2 bottom-2 [[data-tactil]_&]:size-10 bg-background/80">
+						{t(
+							"Arrastra con un dedo para mover la ilustración; con dos dedos la acercas o la alejas.",
+						)}
+					</AyudaTactil>
+				)}
 			</div>
 			<Incidencias avisos={avisos} setLang={setLang} />
 		</div>

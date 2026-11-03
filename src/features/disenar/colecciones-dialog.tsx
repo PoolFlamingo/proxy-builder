@@ -5,16 +5,11 @@ import type { LetraInfo } from "@/bindings/LetraInfo";
 import type { PackInfo } from "@/bindings/PackInfo";
 import { Fila, FilaDeslizador, Selector } from "@/components/campos";
 import { Confirmar } from "@/components/confirmar";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -26,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { abrirParaImportar } from "@/lib/dialogos";
 import { useEstadoParaCerrar } from "@/lib/dialogos-abiertos";
+import { useFormato } from "@/lib/formato";
 import { idioma } from "@/lib/idiomas";
 import { EDICION_NEUTRA, parametros, urlMiniatura } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
@@ -34,6 +30,7 @@ import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
 import { AJUSTES_CERO, AjustesFinos, hayAjustes } from "./ajustes-finos";
+import { AvisoSoloTableta } from "./aviso-tableta";
 import { elegirEstilo, opcionesEstilo, propiosDe, valorEstilo } from "./estilos";
 import { EditorMarco } from "./formulario";
 import { useMarcosOriginales } from "./marcos-originales";
@@ -67,9 +64,11 @@ function nueva(nombre: string): Collection {
  */
 export function ColeccionesDialog() {
 	const abierto = useUi((s) => s.dialogo?.tipo === "colecciones");
+	// Lo que no entra en el móvil: un aviso en vez del diálogo.
+	const movil = useFormato().tamano === "movil";
 	return (
 		<Dialog open={abierto} onOpenChange={(o) => !o && useUi.getState().abrir(null)}>
-			{abierto && <Contenido />}
+			{abierto && (movil ? <AvisoSoloTableta /> : <Contenido />)}
 		</Dialog>
 	);
 }
@@ -194,7 +193,7 @@ function Contenido() {
 
 	useEstadoParaCerrar({ enCurso: false, sinGuardar: cambiada });
 	return (
-		<DialogContent
+		<DialogoAdaptable
 			className="flex h-[min(86vh,760px)] flex-col sm:max-w-4xl"
 			cambiosSinGuardar={cambiada}
 		>
@@ -309,7 +308,7 @@ function Contenido() {
 				destructiva
 				onConfirmar={() => borrar && quitar(borrar)}
 			/>
-		</DialogContent>
+		</DialogoAdaptable>
 	);
 }
 
@@ -390,7 +389,7 @@ function CampoOpcional({
 	ancho?: string;
 }) {
 	return (
-		<Fila etiqueta={etiqueta}>
+		<Fila apilarEnMovil etiqueta={etiqueta}>
 			<Input
 				value={valor ?? ""}
 				placeholder={placeholder}
@@ -452,7 +451,7 @@ function Editor({
 	return (
 		<div className="flex flex-col gap-2.5 p-3 pr-4">
 			<Titulo>{t("General")}</Titulo>
-			<Fila etiqueta={t("Nombre")}>
+			<Fila apilarEnMovil etiqueta={t("Nombre")}>
 				<Input
 					value={c.name}
 					onChange={(e) => poner({ name: e.target.value })}
@@ -460,7 +459,7 @@ function Editor({
 					className="h-7 w-52 text-xs"
 				/>
 			</Fila>
-			<Fila etiqueta={t("Estilo de las cartas nuevas")}>
+			<Fila apilarEnMovil etiqueta={t("Estilo de las cartas nuevas")}>
 				<Selector
 					valor={valorEstilo(
 						c.defaultStyle,
@@ -490,6 +489,7 @@ function Editor({
 
 			<Titulo>{t("Emblema")}</Titulo>
 			<Fila
+				apilarEnMovil
 				etiqueta={t("Emblema de la colección")}
 				ayuda={t("El adorno a la derecha de la línea de tipo, igual en todas sus cartas.")}
 			>
@@ -517,7 +517,7 @@ function Editor({
 			</Fila>
 
 			<Titulo>{t("Letras")}</Titulo>
-			<Fila etiqueta={t("Letra del título")}>
+			<Fila apilarEnMovil etiqueta={t("Letra del título")}>
 				<Selector
 					valor={c.fontTitle ?? "__pack"}
 					opciones={opcionesLetra}
@@ -525,7 +525,7 @@ function Editor({
 					ancho="w-52"
 				/>
 			</Fila>
-			<Fila etiqueta={t("Letra de las reglas")}>
+			<Fila apilarEnMovil etiqueta={t("Letra de las reglas")}>
 				<Selector
 					valor={c.fontRules ?? "__pack"}
 					opciones={opcionesLetra}
@@ -534,6 +534,7 @@ function Editor({
 				/>
 			</Fila>
 			<Fila
+				apilarEnMovil
 				etiqueta={t("Grosor del título")}
 				ayuda={t(
 					"Una letra que ya es gruesa puede ir sin negrita. Si la letra no tiene ese grosor, sale el más parecido.",
@@ -541,10 +542,10 @@ function Editor({
 			>
 				<SelectorGrosor valor={c.weightTitle} onChange={(weightTitle) => poner({ weightTitle })} />
 			</Fila>
-			<Fila etiqueta={t("Grosor de la línea de tipo")}>
+			<Fila apilarEnMovil etiqueta={t("Grosor de la línea de tipo")}>
 				<SelectorGrosor valor={c.weightType} onChange={(weightType) => poner({ weightType })} />
 			</Fila>
-			<Fila etiqueta={t("Grosor de las reglas")}>
+			<Fila apilarEnMovil etiqueta={t("Grosor de las reglas")}>
 				<SelectorGrosor valor={c.weightRules} onChange={(weightRules) => poner({ weightRules })} />
 			</Fila>
 			<FilaDeslizador
@@ -576,7 +577,7 @@ function Editor({
 			</p>
 
 			<Titulo>{t("Pie")}</Titulo>
-			<Fila etiqueta={t("Nombre original")}>
+			<Fila apilarEnMovil etiqueta={t("Nombre original")}>
 				<Selector
 					valor={c.originalName}
 					opciones={NOMBRE_ORIGINAL.map((o) => ({

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import type { CartaCuenta } from "@/bindings/CartaCuenta";
+import { AyudaTactil } from "@/components/ayuda-tactil";
+import { ConAyuda } from "@/components/con-ayuda";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
@@ -36,7 +38,11 @@ export function Cifra({
 	className?: string;
 }) {
 	const tarjeta = (
-		<div className={cn("rounded-lg border bg-card p-2.5", ayuda && "cursor-help", className)}>
+		<div
+			className={cn("rounded-lg border bg-card p-2.5", ayuda && "relative cursor-help", className)}
+		>
+			{/* En táctil el tooltip no sale: el «ⓘ» en la esquina abre la misma explicación. */}
+			{ayuda && <AyudaTactil className="absolute top-0 right-0">{ayuda}</AyudaTactil>}
 			<div className="truncate text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
 				{titulo}
 			</div>
@@ -98,7 +104,10 @@ export function Lista({
 						className="grid items-center gap-2 text-xs"
 						style={{ gridTemplateColumns: `${ancho} 1fr 3.5rem` }}
 					>
-						<span className="truncate">{f.txt}</span>
+						<span className="flex min-w-0 items-center gap-1">
+							<span className="truncate">{f.txt}</span>
+							{f.detalle && <AyudaTactil>{f.detalle}</AyudaTactil>}
+						</span>
 						<div className="h-2 overflow-hidden rounded-full bg-muted">
 							<div
 								className={cn("h-full rounded-full", f.clase ?? "bg-primary")}
@@ -159,12 +168,19 @@ export function ListaCartas({
 	return (
 		<div className="flex flex-col">
 			<div className="flex items-center gap-1">
-				{ayuda ? <WithTooltip content={ayuda}>{cabecera}</WithTooltip> : cabecera}
+				{ayuda ? (
+					<ConAyuda content={ayuda} className="[[data-tactil]_&]:min-w-0 [[data-tactil]_&]:flex-1">
+						{cabecera}
+					</ConAyuda>
+				) : (
+					cabecera
+				)}
 				<WithTooltip content={t("Seleccionar estas cartas en el deck")}>
 					<Button
 						size="icon-xs"
 						variant="ghost"
 						disabled={ids.length === 0}
+						aria-label={t("Seleccionar estas cartas en el deck")}
 						onClick={() =>
 							seleccionarEnDeck(
 								ids,

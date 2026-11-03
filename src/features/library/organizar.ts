@@ -339,3 +339,26 @@ export function seleccionar(
 	const tramo = visibles.slice(Math.min(a, b), Math.max(a, b) + 1);
 	return [...new Set([...actual, ...tramo])];
 }
+
+/**
+ * Qué hace pulsar un deck: con Mayús, elegir el tramo; con Ctrl (o Cmd), o con
+ * algo ya elegido (el modo selección del dedo), sumar o quitar ese deck; si no,
+ * abrirlo.
+ */
+export function alPulsarDeck(
+	elegidos: number,
+	teclas: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean },
+): "tramo" | "alternar" | "abrir" {
+	if (teclas.shiftKey) return "tramo";
+	if (teclas.ctrlKey || teclas.metaKey || elegidos > 0) return "alternar";
+	return "abrir";
+}
+
+/**
+ * Mantener pulsado un deck con el dedo: entra en el modo selección con él
+ * elegido. Si ya estaba entre los elegidos, queda como está (no lo quita:
+ * quitar es un toque).
+ */
+export function entrarEnSeleccion(actual: string[], id: string): string[] {
+	return actual.includes(id) ? actual : [...actual, id];
+}

@@ -16,13 +16,14 @@ import {
 	Seccion,
 	Selector,
 } from "@/components/campos";
+import { ConAyuda } from "@/components/con-ayuda";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { SelectorIdioma } from "@/components/selector-idioma";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
@@ -31,14 +32,13 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { WithTooltip } from "@/components/ui/with-tooltip";
 import { cancelarTrabajo } from "@/features/decklist/acciones";
 import { ponerIdiomaDiseno } from "@/features/disenar/renumerar";
 import { call } from "@/lib/ipc";
 import { useDeck } from "@/stores/deck-store";
 import { usePlan } from "@/stores/plan-store";
 import { useTrabajo } from "@/stores/trabajo-store";
-import { AVISO_BYTES, exportarA, exportarCalibracion, megas, pedirDestino } from "./acciones";
+import { exportarA, exportarCalibracion, megas, pedirDestino, pideAviso } from "./acciones";
 import { AlinearFilas } from "./alinear-filas";
 import { MenuExportar } from "./menu-exportar";
 import { PresetsImpresion } from "./presets";
@@ -78,7 +78,7 @@ export function ExportPanel() {
 		const deck = useDeck.getState().deck;
 		if (!deck) return;
 		const estimacion = await call("export_estimate", { deck });
-		if (estimacion.bytes > AVISO_BYTES) {
+		if (pideAviso(estimacion)) {
 			setAviso({ destino, estimacion });
 			return;
 		}
@@ -144,7 +144,10 @@ export function ExportPanel() {
 				) : (
 					// El botón partido: el PDF y, en los tres puntos, las demás formas.
 					<div className="flex">
-						<WithTooltip content={vacio ? t("El deck está vacío.") : null}>
+						<ConAyuda
+							content={vacio ? t("El deck está vacío.") : null}
+							className="[[data-tactil]_&]:min-w-0 [[data-tactil]_&]:flex-1"
+						>
 							<span className="flex min-w-0 flex-1">
 								<Button
 									onClick={exportar}
@@ -155,7 +158,7 @@ export function ExportPanel() {
 									{t("Exportar PDF")}
 								</Button>
 							</span>
-						</WithTooltip>
+						</ConAyuda>
 						<MenuExportar deshabilitado={trabajo !== null} />
 					</div>
 				)}
@@ -177,7 +180,11 @@ export function ExportPanel() {
 								onValueChange={(v) => v && poner("quality", v as Quality)}
 							>
 								{(["dpi300", "dpi600", "dpi900"] as const).map((q) => (
-									<ToggleGroupItem key={q} value={q} className="h-7 px-2 text-[11px]">
+									<ToggleGroupItem
+										key={q}
+										value={q}
+										className="h-7 px-2 text-[11px] [[data-tactil]_&]:h-11"
+									>
 										{q.slice(3)}
 									</ToggleGroupItem>
 								))}
@@ -193,10 +200,16 @@ export function ExportPanel() {
 									(v === "jpeg" || v === "png") && poner("encoding", { ...s.encoding, format: v })
 								}
 							>
-								<ToggleGroupItem value="jpeg" className="h-7 px-2 text-[11px]">
+								<ToggleGroupItem
+									value="jpeg"
+									className="h-7 px-2 text-[11px] [[data-tactil]_&]:h-11"
+								>
 									JPEG
 								</ToggleGroupItem>
-								<ToggleGroupItem value="png" className="h-7 px-2 text-[11px]">
+								<ToggleGroupItem
+									value="png"
+									className="h-7 px-2 text-[11px] [[data-tactil]_&]:h-11"
+								>
 									PNG
 								</ToggleGroupItem>
 							</ToggleGroup>
@@ -390,7 +403,7 @@ export function ExportPanel() {
 										value={guias.color}
 										onChange={(e) => poner("cutGuides", { ...guias, color: e.target.value })}
 										aria-label={t("Color")}
-										className="h-7 w-12 cursor-pointer rounded-md border bg-transparent p-0.5"
+										className="h-7 w-12 cursor-pointer rounded-md border bg-transparent p-0.5 [[data-tactil]_&]:h-11"
 									/>
 								</Fila>
 								<Fila etiqueta={t("Grosor")}>
@@ -518,7 +531,7 @@ export function ExportPanel() {
 			</ScrollArea>
 
 			<Dialog open={aviso !== null} onOpenChange={(o) => !o && setAviso(null)}>
-				<DialogContent className="sm:max-w-md" cambiosSinGuardar={false}>
+				<DialogoAdaptable compacto className="sm:max-w-md" cambiosSinGuardar={false}>
 					<DialogHeader>
 						<DialogTitle>{t("El PDF va a ser muy grande")}</DialogTitle>
 						<DialogDescription>
@@ -526,6 +539,8 @@ export function ExportPanel() {
 								mb: megas(aviso?.estimacion.bytes ?? 0),
 								n: aviso?.estimacion.images ?? 0,
 							})}
+							{aviso?.estimacion.lowMemory &&
+								` ${t("A tu equipo le queda poca memoria libre para esto: la app podría cerrarse.")}`}
 						</DialogDescription>
 					</DialogHeader>
 					<DialogFooter className="sm:flex-wrap">
@@ -564,7 +579,7 @@ export function ExportPanel() {
 							{t("Exportar igualmente")}
 						</Button>
 					</DialogFooter>
-				</DialogContent>
+				</DialogoAdaptable>
 			</Dialog>
 		</section>
 	);

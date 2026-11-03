@@ -23,6 +23,8 @@ vi.mock("@/lib/ipc", () => ({
 	}),
 }));
 vi.mock("@/lib/dialogos", () => ({ guardarParaExportar: vi.fn() }));
+const plataformaMovil = vi.hoisted(() => ({ movil: false }));
+vi.mock("@/lib/plataforma", () => ({ esMovil: async () => plataformaMovil.movil }));
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
 import { toast } from "sonner";
@@ -34,11 +36,15 @@ import { useTrabajo } from "@/stores/trabajo-store";
 import { useUi } from "@/stores/ui-store";
 import {
 	AVISO_BYTES,
+	compartirLista,
+	compartirPaquete,
+	compartirPdf,
 	exportarA,
 	exportarCalibracion,
 	megas,
 	nombreSeguro,
 	pedirDestino,
+	pideAviso,
 } from "../acciones";
 
 const t = (es: string, p?: Record<string, string | number>) =>
@@ -90,6 +96,7 @@ function ultimoToast() {
 }
 
 beforeEach(() => {
+	plataformaMovil.movil = false;
 	bus.oyentes.clear();
 	useTrabajo.getState().terminar();
 	cargar();
@@ -255,5 +262,123 @@ describe("exportarCalibracion", () => {
 		useDeck.setState({ deck: null });
 		await exportarCalibracion(t);
 		expect(guardarParaExportar).not.toHaveBeenCalled();
+	});
+});
+
+describe("en Android", () => {
+	beforeEach(() => {
+		plataformaMovil.movil = true;
+	});
+
+	const estimacion = (files: number) => ({
+		bytes: 1,
+		images: 1,
+		pages: 1,
+		files,
+		memory: 1,
+		lowMemory: false,
+	});
+
+	it("un PDF en un solo fichero se guarda como PDF", async () => {
+		rust(null, { export_estimate: estimacion(1) });
+		vi.mocked(guardarParaExportar).mockResolvedValueOnce("content://docs/1");
+		await pedirDestino(t);
+		const [opciones, nombre] = vi.mocked(guardarParaExportar).mock.calls[0];
+		expect(nombre).toBe("Mi deck.pdf");
+		expect(opciones.filters).toEqual([{ name: "PDF", extensions: ["pdf"] }]);
+	});
+
+	it("un PDF partido en trozos se guarda en un ZIP", async () => {
+		rust(null, { export_estimate: estimacion(3) });
+		vi.mocked(guardarParaExportar).mockResolvedValueOnce("content://docs/1");
+		await pedirDestino(t);
+		const [opciones, nombre] = vi.mocked(guardarParaExportar).mock.calls[0];
+		expect(nombre).toBe("Mi deck.zip");
+		expect(opciones.filters).toEqual([{ name: "ZIP", extensions: ["zip"] }]);
+	});
+
+	it("al terminar ofrece compartir, sin ruta ni carpeta", async () => {
+		rust({ result: hecho(["content://docs/1"]), error: null });
+		await exportarA("content://docs/1", t);
+		const { opciones } = ultimoToast();
+		expect(opciones?.description).toBe("12 MB");
+		expect(opciones?.cancel).toBeUndefined();
+		const accion = opciones?.action as { label: string; onClick: () => void };
+		expect(accion.label).toBe("Compartir");
+		accion.onClick();
+		expect(call).toHaveBeenLastCalledWith("compartir_fichero", { ruta: "content://docs/1" });
+	});
+
+	it("compartir el PDF exporta a la caché sin avisar de «guardado» y abre el selector", async () => {
+		rust(
+			{ result: hecho(["/cache/fichero/x/Mi deck.pdf"]), error: null },
+			{
+				export_estimate: estimacion(1),
+				fichero_temporal: "/cache/fichero/x/Mi deck.pdf",
+			},
+		);
+		await compartirPdf(t);
+		const llamadas = vi.mocked(call).mock.calls.map((c) => c[0]);
+		expect(llamadas).toEqual([
+			"export_estimate",
+			"fichero_temporal",
+			"export_pdf",
+			"compartir_fichero",
+		]);
+		expect(vi.mocked(call).mock.calls[1][1]).toEqual({ nombre: "Mi deck.pdf" });
+		expect(toast.success).not.toHaveBeenCalled();
+		expect(call).toHaveBeenLastCalledWith("compartir_fichero", {
+			ruta: "/cache/fichero/x/Mi deck.pdf",
+		});
+	});
+
+	it("compartir un PDF partido lo pide en ZIP", async () => {
+		rust(
+			{ result: hecho(["/cache/fichero/x/Mi deck.zip"]), error: null },
+			{
+				export_estimate: estimacion(2),
+				fichero_temporal: "/cache/fichero/x/Mi deck.zip",
+			},
+		);
+		await compartirPdf(t);
+		const pdf = vi.mocked(call).mock.calls.find((c) => c[0] === "export_pdf");
+		expect(pdf?.[1]).toMatchObject({ path: "/cache/fichero/x/Mi deck.zip", zip: true });
+	});
+
+	it("compartir la lista escribe un .txt en la caché y lo comparte", async () => {
+		rust(null, { fichero_temporal: "/cache/fichero/y/Mi deck.txt" });
+		await compartirLista();
+		const [, escribir, compartir] = vi.mocked(call).mock.calls;
+		expect(escribir[0]).toBe("deck_list_save");
+		expect(escribir[1]).toMatchObject({ format: "texto", path: "/cache/fichero/y/Mi deck.txt" });
+		expect(compartir).toEqual(["compartir_fichero", { ruta: "/cache/fichero/y/Mi deck.txt" }]);
+	});
+
+	it("compartir el deck exporta un .pbdeck a la caché y lo comparte", async () => {
+		rust(null, { fichero_temporal: "/cache/fichero/z/Mi deck.pbdeck" });
+		await compartirPaquete();
+		const ordenes = vi.mocked(call).mock.calls.map((c) => c[0]);
+		expect(ordenes.slice(-3)).toEqual([
+			"fichero_temporal",
+			"deck_export_package",
+			"compartir_fichero",
+		]);
+	});
+
+	it("la hoja de calibración también se comparte", async () => {
+		vi.mocked(guardarParaExportar).mockResolvedValueOnce("content://docs/cal");
+		rust(null, { export_calibration: "content://docs/cal" });
+		await exportarCalibracion(t);
+		const { opciones } = ultimoToast();
+		(opciones?.action as { onClick: () => void }).onClick();
+		expect(call).toHaveBeenLastCalledWith("compartir_fichero", { ruta: "content://docs/cal" });
+	});
+});
+
+describe("pideAviso", () => {
+	it("avisa si pesa mucho o si no hay memoria libre", () => {
+		expect(pideAviso({ bytes: AVISO_BYTES, lowMemory: false })).toBe(false);
+		expect(pideAviso({ bytes: AVISO_BYTES + 1, lowMemory: false })).toBe(true);
+		expect(pideAviso({ bytes: 10, lowMemory: true })).toBe(true);
 	});
 });

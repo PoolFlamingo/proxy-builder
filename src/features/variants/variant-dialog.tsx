@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { CardSummary } from "@/bindings/CardSummary";
 import type { DeckCard } from "@/bindings/DeckCard";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogCuerpo,
 	DialogDescription,
 	DialogFooter,
@@ -107,7 +107,7 @@ function Contenido({ carta }: { carta: DeckCard }) {
 	};
 
 	return (
-		<DialogContent className="flex max-h-[88vh] flex-col sm:max-w-5xl" ocupado={aplicando}>
+		<DialogoAdaptable className="flex max-h-[88vh] flex-col sm:max-w-5xl" ocupado={aplicando}>
 			<DialogHeader>
 				<DialogTitle>{t("Cambiar variante de {carta}", { carta: nombre })}</DialogTitle>
 				<DialogDescription>
@@ -187,6 +187,6 @@ function Contenido({ carta }: { carta: DeckCard }) {
 					{t("Reemplazar solo esta")}
 				</Button>
 			</DialogFooter>
-		</DialogContent>
+		</DialogoAdaptable>
 	);
 }

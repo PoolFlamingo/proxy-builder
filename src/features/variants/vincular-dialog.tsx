@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { CardSummary } from "@/bindings/CardSummary";
 import type { DeckCard } from "@/bindings/DeckCard";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogCuerpo,
 	DialogDescription,
 	DialogFooter,
@@ -111,7 +111,10 @@ function Contenido({ carta }: { carta: DeckCard }) {
 			: null;
 
 	return (
-		<DialogContent className="flex max-h-[88vh] flex-col sm:max-w-5xl" ocupado={ocupado !== null}>
+		<DialogoAdaptable
+			className="flex max-h-[88vh] flex-col sm:max-w-5xl"
+			ocupado={ocupado !== null}
+		>
 			<DialogHeader>
 				<DialogTitle>{t("Vincular con una carta")}</DialogTitle>
 				<DialogDescription>
@@ -120,49 +123,52 @@ function Contenido({ carta }: { carta: DeckCard }) {
 					)}
 				</DialogDescription>
 			</DialogHeader>
-			<div className="flex min-h-0 flex-1 gap-4">
-				<div className="flex w-52 shrink-0 flex-col gap-2">
-					<div className="aspect-[63/88] w-full overflow-hidden rounded-[4.5%] bg-muted">
+			<div className="flex min-h-0 flex-1 flex-col gap-4 sm:flex-row">
+				{/* En móvil la imagen propia y el OCR van en una fila arriba; desde tableta, en columna. */}
+				<div className="flex shrink-0 gap-2.5 sm:w-52 sm:flex-col sm:gap-2">
+					<div className="aspect-[63/88] w-20 shrink-0 overflow-hidden rounded-[4.5%] bg-muted sm:w-full">
 						{imagen && <img src={imagen} alt="" className="size-full object-cover" />}
 					</div>
-					<Button
-						size="sm"
-						variant="outline"
-						onClick={() => identificar(q, true)}
-						disabled={ocupado !== null || !carta.front}
-					>
-						{ocupado === "ocr" ? (
-							<Icono icon="lucide:loader-2" className="animate-spin" />
-						) : (
-							<Icono icon="lucide:scan-text" />
-						)}
-						{t("Detectar con OCR")}
-					</Button>
-					{!ocrListo && (
-						<p className="text-[10px] leading-snug text-muted-foreground">
-							{t(
-								"La primera vez se descargan los modelos del OCR (unos 12 MB). Después funciona sin red.",
+					<div className="flex min-w-0 flex-1 flex-col gap-2">
+						<Button
+							size="sm"
+							variant="outline"
+							onClick={() => identificar(q, true)}
+							disabled={ocupado !== null || !carta.front}
+						>
+							{ocupado === "ocr" ? (
+								<Icono icon="lucide:loader-2" className="animate-spin" />
+							) : (
+								<Icono icon="lucide:scan-text" />
 							)}
-						</p>
-					)}
-					{leido.length > 0 && (
-						<div className="text-[11px]">
-							<div className="font-medium">{t("Leído en la carta:")}</div>
-							{leido.map((l) => (
-								<button
-									key={l}
-									type="button"
-									className="block w-full truncate text-left text-muted-foreground hover:text-foreground"
-									onClick={() => {
-										setQ(l);
-										void identificar(l, false);
-									}}
-								>
-									«{l}»
-								</button>
-							))}
-						</div>
-					)}
+							{t("Detectar con OCR")}
+						</Button>
+						{!ocrListo && (
+							<p className="text-[10px] leading-snug text-muted-foreground">
+								{t(
+									"La primera vez se descargan los modelos del OCR (unos 12 MB). Después funciona sin red.",
+								)}
+							</p>
+						)}
+						{leido.length > 0 && (
+							<div className="text-[11px]">
+								<div className="font-medium">{t("Leído en la carta:")}</div>
+								{leido.map((l) => (
+									<button
+										key={l}
+										type="button"
+										className="block w-full truncate text-left text-muted-foreground hover:text-foreground"
+										onClick={() => {
+											setQ(l);
+											void identificar(l, false);
+										}}
+									>
+										«{l}»
+									</button>
+								))}
+							</div>
+						)}
+					</div>
 				</div>
 				<div className="flex min-w-0 flex-1 flex-col gap-2.5">
 					<div className="flex gap-1.5" data-filtro="">
@@ -232,7 +238,7 @@ function Contenido({ carta }: { carta: DeckCard }) {
 						{t("Quitar el vínculo")}
 					</Button>
 				) : (
-					<span />
+					<span className="hidden sm:block" />
 				)}
 				<Button size="sm" onClick={() => aceptar()} disabled={!elegida || ocupado !== null}>
 					{ocupado === "vincular" ? (
@@ -240,11 +246,13 @@ function Contenido({ carta }: { carta: DeckCard }) {
 					) : (
 						<Icono icon="lucide:link-2" />
 					)}
-					{elegida
-						? t("Vincular con {carta}", { carta: elegida.printedName ?? elegida.name })
-						: t("Vincular")}
+					<span className="truncate">
+						{elegida
+							? t("Vincular con {carta}", { carta: elegida.printedName ?? elegida.name })
+							: t("Vincular")}
+					</span>
 				</Button>
 			</DialogFooter>
-		</DialogContent>
+		</DialogoAdaptable>
 	);
 }

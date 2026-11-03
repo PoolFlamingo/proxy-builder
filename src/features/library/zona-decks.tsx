@@ -146,7 +146,7 @@ export function ZonaDecks({ org, flotante }: { org: Organizados; flotante?: Reac
 										<button
 											type="button"
 											onClick={() => org.plegar(g.id)}
-											className="flex items-center gap-2 self-start rounded-md px-1 py-0.5 text-xs font-semibold hover:bg-accent"
+											className="flex items-center gap-2 self-start rounded-md px-1 py-0.5 text-xs font-semibold hover:bg-accent [[data-tactil]_&]:min-h-11"
 										>
 											<Icono
 												icon="lucide:chevron-right"

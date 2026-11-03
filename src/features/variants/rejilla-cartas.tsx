@@ -18,7 +18,7 @@ export function RejillaCartas({
 	elegidas,
 	onElegir,
 	onDoble,
-	columnas = "grid-cols-[repeat(auto-fill,minmax(120px,1fr))]",
+	columnas = "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(120px,1fr))]",
 }: {
 	cartas: CardSummary[];
 	elegidas: Set<string>;

@@ -3,7 +3,9 @@ import {
 	type DragEndEvent,
 	DragOverlay,
 	type DragStartEvent,
+	MouseSensor,
 	PointerSensor,
+	TouchSensor,
 	useSensor,
 	useSensors,
 } from "@dnd-kit/core";
@@ -15,9 +17,11 @@ import type { PrintSettings } from "@/bindings/PrintSettings";
 import type { RectMm } from "@/bindings/RectMm";
 import { CampoNumero } from "@/components/campos";
 import { Confirmar } from "@/components/confirmar";
+import { Hoja } from "@/components/hoja";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogTitle } from "@/components/ui/dialog";
 import {
 	Empty,
 	EmptyDescription,
@@ -29,6 +33,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Toggle } from "@/components/ui/toggle";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { WithTooltip } from "@/components/ui/with-tooltip";
+import { useFormato } from "@/lib/formato";
 import { ANCHOS, type AnchoMiniatura, parametros, urlMiniatura } from "@/lib/image-url";
 import { useDeck } from "@/stores/deck-store";
 import { usePlan } from "@/stores/plan-store";
@@ -44,6 +49,7 @@ import {
 import { useArrastrarFicheros } from "./arrastrar-ficheros";
 import { PageView } from "./page-view";
 import { RaizScroll } from "./visibilidad";
+import { useZoomConDedos } from "./zoom-gestos";
 
 /** Lo que sube o baja el zoom con cada paso (botones y rueda): 5 %. */
 const PASO_ZOOM = 0.05;
@@ -86,6 +92,9 @@ function useZoomConRueda(viewport: HTMLDivElement | null) {
 	}, [viewport]);
 }
 
+/** Si ya se ajustó el zoom al ancho en móvil (una vez por sesión). */
+let zoomAjustadoAlAncho = false;
+
 /** Píxeles CSS por milímetro a zoom 100 %. */
 const PX_POR_MM = 96 / 25.4;
 
@@ -115,9 +124,26 @@ export function PreviewPane() {
 	const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
 	const [borrar, setBorrar] = useState<Page | null>(null);
 	const [arrastrando, setArrastrando] = useState<string[] | null>(null);
+	const { tamano, tactil } = useFormato();
+	const movil = tamano === "movil";
+	const [opciones, setOpciones] = useState(false);
+	// Soltar ficheros sobre la vista: el propio hook no se registra en el móvil.
 	useArrastrarFicheros();
 	useTeclado();
 	useZoomConRueda(viewport);
+	useZoomConDedos(viewport, tactil);
+
+	// En móvil, la primera vez que hay hojas, el zoom ajusta la hoja al ancho
+	// de la pantalla (a 80 % se sale por la derecha); luego manda la persona.
+	// Una vez por sesión de la app: la pestaña Hojas se desmonta al cambiar a
+	// Lista o Exportar y volver no debe pisar el zoom del pellizco.
+	const anchoHoja = plan?.pages[0]?.widthMm;
+	useEffect(() => {
+		if (!movil || !viewport || !anchoHoja || zoomAjustadoAlAncho) return;
+		zoomAjustadoAlAncho = true;
+		const libre = viewport.clientWidth - 24;
+		if (libre > 0) setZoom(Math.min(1, libre / (anchoHoja * PX_POR_MM)));
+	}, [movil, viewport, anchoHoja, setZoom]);
 
 	const escala = zoom * PX_POR_MM;
 	const ajustes = deck?.settings;
@@ -134,7 +160,17 @@ export function PreviewPane() {
 		return (ultima.big ? plan.bigCells : plan.cells).filter((_, i) => !ocupadas.has(i));
 	}, [plan, frentes]);
 
-	const sensores = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+	// Con ratón, arrastrar la casilla entera a partir de 6 px. Con el dedo eso
+	// pelearía con el scroll: se arrastra por el asa de la casilla seleccionada
+	// (`slot-view.tsx`), con una espera corta que no se confunde con deslizar.
+	const puntero = useSensor(PointerSensor, { activationConstraint: { distance: 6 } });
+	const raton = useSensor(MouseSensor, { activationConstraint: { distance: 6 } });
+	const dedo = useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } });
+	const sensores = useSensors(
+		tactil ? undefined : puntero,
+		tactil ? raton : undefined,
+		tactil ? dedo : undefined,
+	);
 	const alEmpezar = useCallback((e: DragStartEvent) => {
 		setArrastrando(objetivo(String(e.active.id)));
 	}, []);
@@ -153,6 +189,74 @@ export function PreviewPane() {
 
 	if (!deck || !ajustes) return <section className="h-full" />;
 
+	const controles = (
+		<>
+			<WithTooltip content={t("Junta las copias, quita los huecos y deja las fijadas en su sitio")}>
+				<Button
+					size="xs"
+					variant="outline"
+					disabled={deck.cards.length < 2}
+					onClick={() => autoOrdenar(t).catch((e) => toast.error(mensaje(e)))}
+				>
+					<Icono icon="lucide:wand-2" />
+					{t("Auto ordenar")}
+				</Button>
+			</WithTooltip>
+			<Toggle
+				size="sm"
+				variant="outline"
+				className="h-6 gap-1 px-2 text-xs [[data-tactil]_&]:h-11"
+				pressed={infoCarta}
+				onPressedChange={(v) => useUi.getState().setInfoCarta(v)}
+			>
+				<Icono icon="lucide:info" className="size-3" />
+				{t("Info de carta")}
+			</Toggle>
+			<Toggle
+				size="sm"
+				variant="outline"
+				className="h-6 gap-1 px-2 text-xs [[data-tactil]_&]:h-11"
+				pressed={verReversos}
+				onPressedChange={(v) => useUi.getState().setVerReversos(v)}
+			>
+				<Icono icon="lucide:square-stack" className="size-3" />
+				{t("Ver reversos")}
+			</Toggle>
+			<ToggleGroup
+				type="single"
+				variant="outline"
+				size="sm"
+				value={ajustes.dfcFilter}
+				onValueChange={(v) =>
+					(v === "all" || v === "hideDfc") &&
+					useDeck.getState().setAjustes((s) => ({ ...s, dfcFilter: v }))
+				}
+			>
+				<ToggleGroupItem value="all" className="h-6 px-2 text-xs [[data-tactil]_&]:h-11">
+					{t("Todas")}
+				</ToggleGroupItem>
+				<WithTooltip content={t("Quita las cartas de doble cara de las hojas y del PDF")}>
+					<ToggleGroupItem value="hideDfc" className="h-6 px-2 text-xs [[data-tactil]_&]:h-11">
+						{t("Ocultar DFC")}
+					</ToggleGroupItem>
+				</WithTooltip>
+			</ToggleGroup>
+			<WithTooltip
+				content={t("Curva, maná, funciones, probabilidades de robo, precios y legalidad")}
+			>
+				<Button
+					size="xs"
+					variant="outline"
+					disabled={deck.cards.length === 0}
+					onClick={() => useUi.getState().abrir({ tipo: "estadisticas" })}
+				>
+					<Icono icon="lucide:bar-chart-3" />
+					{t("Estadísticas")}
+				</Button>
+			</WithTooltip>
+		</>
+	);
+
 	const avisos = plan?.warnings ?? [];
 	const papel = ajustes.landscape ? t("{papel} apaisado", { papel: ajustes.paper }) : ajustes.paper;
 
@@ -163,7 +267,7 @@ export function PreviewPane() {
 				data-tutorial="vista-barra"
 			>
 				<WithTooltip content={t("La vista es aproximada; el resultado exacto es el del PDF.")}>
-					<span className="mr-1 flex items-center gap-1.5 text-xs font-medium">
+					<span className="mr-1 flex items-center gap-1.5 text-xs font-medium max-[639px]:hidden">
 						<Icono icon="lucide:eye" className="size-3.5 text-muted-foreground" />
 						{t("Vista {papel}", { papel })}
 					</span>
@@ -190,71 +294,18 @@ export function PreviewPane() {
 						<Icono icon="lucide:redo-2" />
 					</Button>
 				</WithTooltip>
-				<WithTooltip
-					content={t("Junta las copias, quita los huecos y deja las fijadas en su sitio")}
-				>
+				{movil ? (
 					<Button
-						size="xs"
+						size="icon-xs"
 						variant="outline"
-						disabled={deck.cards.length < 2}
-						onClick={() => autoOrdenar(t).catch((e) => toast.error(mensaje(e)))}
+						onClick={() => setOpciones(true)}
+						aria-label={t("Opciones de la vista")}
 					>
-						<Icono icon="lucide:wand-2" />
-						{t("Auto ordenar")}
+						<Icono icon="lucide:sliders-horizontal" />
 					</Button>
-				</WithTooltip>
-				<Toggle
-					size="sm"
-					variant="outline"
-					className="h-6 gap-1 px-2 text-xs"
-					pressed={infoCarta}
-					onPressedChange={(v) => useUi.getState().setInfoCarta(v)}
-				>
-					<Icono icon="lucide:info" className="size-3" />
-					{t("Info de carta")}
-				</Toggle>
-				<Toggle
-					size="sm"
-					variant="outline"
-					className="h-6 gap-1 px-2 text-xs"
-					pressed={verReversos}
-					onPressedChange={(v) => useUi.getState().setVerReversos(v)}
-				>
-					<Icono icon="lucide:square-stack" className="size-3" />
-					{t("Ver reversos")}
-				</Toggle>
-				<ToggleGroup
-					type="single"
-					variant="outline"
-					size="sm"
-					value={ajustes.dfcFilter}
-					onValueChange={(v) =>
-						(v === "all" || v === "hideDfc") &&
-						useDeck.getState().setAjustes((s) => ({ ...s, dfcFilter: v }))
-					}
-				>
-					<ToggleGroupItem value="all" className="h-6 px-2 text-xs">
-						{t("Todas")}
-					</ToggleGroupItem>
-					<WithTooltip content={t("Quita las cartas de doble cara de las hojas y del PDF")}>
-						<ToggleGroupItem value="hideDfc" className="h-6 px-2 text-xs">
-							{t("Ocultar DFC")}
-						</ToggleGroupItem>
-					</WithTooltip>
-				</ToggleGroup>
-				<WithTooltip
-					content={t("Curva, maná, funciones, probabilidades de robo, precios y legalidad")}
-				>
-					<Button
-						size="xs"
-						variant="outline"
-						disabled={deck.cards.length === 0}
-						onClick={() => useUi.getState().abrir({ tipo: "estadisticas" })}
-					>
-						<Icono icon="lucide:bar-chart-3" />
-						{t("Estadísticas")}
-					</Button>
-				</WithTooltip>
+				) : (
+					controles
+				)}
 				<div className="ml-auto flex items-center gap-1">
 					<WithTooltip content={t("Alejar")}>
 						<Button
@@ -378,6 +429,7 @@ export function PreviewPane() {
 											ancho={ancho}
 											celdas={i === frentes.length - 1 ? vacias : []}
 											huecosLibres={verReversos === false}
+											tactil={tactil}
 											onBorrar={onBorrar}
 										/>
 									))}
@@ -407,6 +459,22 @@ export function PreviewPane() {
 				</Button>
 			</div>
 
+			{/* Móvil: lo de la barra que no cabe (auto ordenar, reversos, DFC, estadísticas). */}
+			{movil && (
+				<Dialog open={opciones} onOpenChange={setOpciones}>
+					<Hoja
+						cambiosSinGuardar={false}
+						aria-describedby={undefined}
+						// Sin foco al abrir: el primer botón enseñaría su tooltip al recibirlo.
+						onOpenAutoFocus={(e) => e.preventDefault()}
+						className="gap-3 px-4"
+					>
+						<DialogTitle className="text-sm">{t("Opciones de la vista")}</DialogTitle>
+						<div className="flex flex-wrap items-center gap-2">{controles}</div>
+					</Hoja>
+				</Dialog>
+			)}
+
 			<Confirmar
 				abierto={borrar !== null}
 				onCerrar={() => setBorrar(null)}
@@ -427,7 +495,8 @@ export function PreviewPane() {
 function useTeclado() {
 	useEffect(() => {
 		const alTeclear = (e: KeyboardEvent) => {
-			const el = e.target as HTMLElement | null;
+			// El «atrás» de Android manda un Escape al `document` (`lib/atras.ts`): no es un elemento.
+			const el = e.target instanceof Element ? e.target : null;
 			if (
 				el?.closest(
 					"input, textarea, select, [contenteditable='true'], [role='dialog'], [role='menu']",

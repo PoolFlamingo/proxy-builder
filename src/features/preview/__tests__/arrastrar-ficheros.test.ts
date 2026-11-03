@@ -23,6 +23,10 @@ vi.mock("@tauri-apps/api/webview", () => ({
 	}),
 }));
 
+/** La plataforma, de mentira: escritorio salvo que el test diga lo contrario. */
+const plataforma = vi.hoisted(() => ({ movil: false }));
+vi.mock("@/lib/plataforma", () => ({ esMovil: async () => plataforma.movil }));
+
 /** `useEffect` de mentira: lo ejecuta ya y guarda su limpieza. */
 const efecto = vi.hoisted(() => ({ limpiar: null as (() => void) | null }));
 vi.mock("react", async (original) => ({
@@ -124,6 +128,7 @@ describe("useArrastrarFicheros", () => {
 		tauri.soltarPromesa = null;
 		tauri.fallar = false;
 		tauri.esperar = false;
+		plataforma.movil = false;
 		efecto.limpiar = null;
 		vi.stubGlobal("window", { devicePixelRatio: 2 });
 		vi.stubGlobal("document", {
@@ -186,9 +191,24 @@ describe("useArrastrarFicheros", () => {
 		expect(tauri.dejar).toHaveBeenCalledTimes(1);
 	});
 
+	it("en móvil no escucha nada: no se sueltan ficheros sobre la app", async () => {
+		plataforma.movil = true;
+		useArrastrarFicheros();
+		await esperarVuelta();
+		expect(tauri.manejador).toBeNull();
+	});
+
+	it("si se desmonta antes de saber la plataforma, no llega a escuchar", async () => {
+		useArrastrarFicheros();
+		efecto.limpiar?.();
+		await esperarVuelta();
+		expect(tauri.manejador).toBeNull();
+	});
+
 	it("si se desmonta antes de que Tauri conteste, deja de escuchar al contestar", async () => {
 		tauri.esperar = true;
 		useArrastrarFicheros();
+		await esperarVuelta();
 		efecto.limpiar?.();
 		expect(tauri.dejar).not.toHaveBeenCalled();
 		tauri.soltarPromesa?.();

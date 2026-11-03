@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { DeckStats } from "@/bindings/DeckStats";
+import { AyudaTactil } from "@/components/ayuda-tactil";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { GraficoApilado, LeyendaApilado } from "@/components/ui/grafico-apilado";
@@ -232,6 +233,19 @@ export function Resumen({ s, moneda }: { s: DeckStats; moneda: Moneda }) {
 								</span>
 							</WithTooltip>
 						))}
+						<AyudaTactil>
+							<span className="flex flex-col gap-0.5">
+								{s.colors.map((c) => (
+									<span key={c.color}>
+										{t("{c}: {n} cartas, {p} símbolos de maná", {
+											c: t(COLORES[c.color]?.nombre ?? c.color),
+											n: c.cards,
+											p: c.pips,
+										})}
+									</span>
+								))}
+							</span>
+						</AyudaTactil>
 					</div>
 					<p className="text-[11px] text-muted-foreground">
 						{t("Identidad de color: {c}", {

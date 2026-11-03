@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { DesignLang } from "@/bindings/DesignLang";
 import { Fila } from "@/components/campos";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Bandera } from "@/components/emoji";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
@@ -9,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Dialog,
-	DialogContent,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
@@ -17,13 +17,17 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { elegirCarpetaParaExportar } from "@/lib/dialogos";
+import { nombreSeguro } from "@/features/export/acciones";
+import { elegirDestinoDeImagenes } from "@/lib/dialogos";
 import { useEstadoParaCerrar } from "@/lib/dialogos-abiertos";
+import { useFormato } from "@/lib/formato";
 import { IDIOMAS } from "@/lib/idiomas";
 import { call } from "@/lib/ipc";
+import { useEsMovil } from "@/lib/plataforma";
 import { lanzarTrabajo } from "@/lib/trabajos";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
+import { AvisoSoloTableta } from "./aviso-tableta";
 import { completarIdioma, rehacerMiniaturas } from "./renumerar";
 
 /**
@@ -34,15 +38,19 @@ import { completarIdioma, rehacerMiniaturas } from "./renumerar";
  */
 export function PngDialog() {
 	const abierto = useUi((s) => s.dialogo?.tipo === "exportarPng");
+	// Lo que no entra en el móvil: un aviso en vez del diálogo.
+	const movil = useFormato().tamano === "movil";
 	return (
 		<Dialog open={abierto} onOpenChange={(o) => !o && useUi.getState().abrir(null)}>
-			{abierto && <Contenido />}
+			{abierto && (movil ? <AvisoSoloTableta /> : <Contenido />)}
 		</Dialog>
 	);
 }
 
 function Contenido() {
 	const { t, mensaje } = useLang();
+	// En Android no hay carpetas que elegir: sale un ZIP.
+	const movil = useEsMovil();
 	const cartas = useDeck((s) => s.deck?.cards ?? []);
 	const langDeck = useDeck((s) => s.deck?.settings.designLang ?? "es");
 	const seleccion = useUi((s) => s.seleccion);
@@ -60,7 +68,12 @@ function Contenido() {
 	}, [cartas, seleccion, alcance]);
 
 	const exportar = async () => {
-		const carpeta = await elegirCarpetaParaExportar();
+		// En Android no hay selector de carpetas: sale un ZIP con las mismas
+		// carpetas por idioma, que se guarda o se comparte.
+		const carpeta = await elegirDestinoDeImagenes({
+			titulo: t("Exportar imágenes"),
+			nombre: nombreSeguro(useDeck.getState().deck?.name ?? "deck", "zip"),
+		});
 		if (!carpeta) return;
 		// En el orden de la tabla, no en el de los clics.
 		const langs = IDIOMAS.map((i) => i.codigo).filter((l) => idiomas.includes(l));
@@ -94,6 +107,14 @@ function Contenido() {
 				return;
 			}
 			useUi.getState().anunciar(t("{n} imágenes exportadas", { n: final.files }));
+			if (carpeta.startsWith("content://")) {
+				toast.success(t("{n} imágenes exportadas", { n: final.files }), {
+					action: {
+						label: t("Compartir"),
+						onClick: () => void call("compartir_fichero", { ruta: carpeta }),
+					},
+				});
+			}
 			if (useUi.getState().dialogo?.tipo === "exportarPng") useUi.getState().abrir(null);
 		} catch (e) {
 			toast.error(mensaje(e));
@@ -108,7 +129,7 @@ function Contenido() {
 	const enMarcha = progreso !== null;
 	useEstadoParaCerrar({ enCurso: enMarcha, sinGuardar: false });
 	return (
-		<DialogContent className="sm:max-w-md" ocupado={enMarcha} alInterrumpir={cancelar}>
+		<DialogoAdaptable className="sm:max-w-md" ocupado={enMarcha} alInterrumpir={cancelar}>
 			<DialogHeader>
 				<DialogTitle>{t("Exportar imágenes")}</DialogTitle>
 				<DialogDescription className="text-xs">
@@ -186,10 +207,10 @@ function Contenido() {
 						disabled={elegidas.length === 0 || idiomas.length === 0}
 					>
 						<Icono icon="lucide:folder-open" />
-						{t("Elegir carpeta y exportar")}
+						{movil ? t("Elegir dónde guardar el ZIP y exportar") : t("Elegir carpeta y exportar")}
 					</Button>
 				)}
 			</DialogFooter>
-		</DialogContent>
+		</DialogoAdaptable>
 	);
 }

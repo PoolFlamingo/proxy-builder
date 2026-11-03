@@ -1,8 +1,10 @@
-import { forwardRef, type ReactNode } from "react";
+import { forwardRef, type ReactNode, useState } from "react";
 import type { DeckKind } from "@/bindings/DeckKind";
+import { Hoja } from "@/components/hoja";
 import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogTitle } from "@/components/ui/dialog";
 import {
 	DropdownMenu,
 	DropdownMenuCheckboxItem,
@@ -15,11 +17,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { WithTooltip } from "@/components/ui/with-tooltip";
+import { BotonPasar } from "@/features/pasar/boton-pasar";
 import { COLORES } from "@/features/stats/textos";
+import { useFormato } from "@/lib/formato";
 import { cn } from "@/lib/utils";
+import { useLateralMovil } from "./lateral-movil";
 import { type Agrupar, filtrosDelPanel, idiomasDe, type ModoColor, type Orden } from "./organizar";
 import { ChipEtiqueta, CLASES, FORMATOS, IDIOMAS, Pip } from "./piezas";
 import { ascendentePorDefecto, useAncla, useFiltros, usePrefs } from "./preferencias";
@@ -54,6 +60,64 @@ export const BarraHerramientas = forwardRef<
 	const anclaAcciones = useAncla("acciones");
 	const p = usePrefs();
 	const { filtros: f, ponerFiltros } = useFiltros();
+	const { tamano } = useFormato();
+	const [hoja, setHoja] = useState(false);
+	if (tamano === "movil") {
+		// Móvil: el buscador y dos botones (Etiquetas y «Filtros y orden», que
+		// abren hojas); el título y las acciones, debajo.
+		const n = filtrosDelPanel(f);
+		const etiquetasPuestas = f.etiquetas.length > 0 || f.favoritos || f.sinEtiqueta;
+		return (
+			<div className="flex flex-col gap-2 border-b p-2.5" data-tutorial={anclaBarra}>
+				<div className="flex items-center gap-2">
+					<Button
+						size="icon-sm"
+						variant={etiquetasPuestas ? "secondary" : "ghost"}
+						onClick={() => useLateralMovil.getState().poner(true)}
+						aria-label={t("Etiquetas")}
+					>
+						<Icono icon="lucide:tags" />
+					</Button>
+					<div className="relative min-w-0 flex-1">
+						<Icono
+							icon="lucide:search"
+							className="pointer-events-none absolute top-3 left-2.5 size-3.5 text-muted-foreground"
+						/>
+						<Input
+							ref={buscar}
+							value={f.texto}
+							onChange={(e) => ponerFiltros({ texto: e.target.value })}
+							placeholder={t("Buscar decks, cartas, notas…")}
+							className="h-10 pl-8 text-sm"
+							type="search"
+						/>
+					</div>
+					<Button
+						size="icon-sm"
+						variant={n > 0 ? "secondary" : "ghost"}
+						onClick={() => setHoja(true)}
+						aria-label={t("Filtros y orden")}
+						className="relative"
+					>
+						<Icono icon="lucide:sliders-horizontal" />
+						{n > 0 && (
+							<span className="absolute -top-0.5 -right-0.5 rounded-full bg-primary px-1 text-[10px] leading-4 text-primary-foreground">
+								{n}
+							</span>
+						)}
+					</Button>
+				</div>
+				<div className="flex items-center gap-2">
+					<h2 className="text-sm font-semibold">{titulo}</h2>
+					<div className="ml-auto flex items-center gap-1.5" data-tutorial={anclaAcciones}>
+						<BotonPasar />
+						{acciones}
+					</div>
+				</div>
+				<HojaFiltrosYOrden abierta={hoja} onCerrar={() => setHoja(false)} />
+			</div>
+		);
+	}
 	return (
 		<div
 			className="flex flex-wrap items-center gap-2 border-b px-3 py-2"
@@ -194,7 +258,11 @@ export const BarraHerramientas = forwardRef<
 							key={x}
 							content={x === "s" ? t("Pequeñas") : x === "m" ? t("Medianas") : t("Grandes")}
 						>
-							<ToggleGroupItem value={x} className="h-7 w-7 font-mono text-[10px] uppercase">
+							<ToggleGroupItem
+								value={x}
+								aria-label={x === "s" ? t("Pequeñas") : x === "m" ? t("Medianas") : t("Grandes")}
+								className="h-7 w-7 font-mono text-[10px] uppercase"
+							>
 								{x}
 							</ToggleGroupItem>
 						</WithTooltip>
@@ -202,6 +270,7 @@ export const BarraHerramientas = forwardRef<
 				</ToggleGroup>
 			)}
 			<div className="ml-auto flex items-center gap-1.5" data-tutorial={anclaAcciones}>
+				<BotonPasar />
 				{acciones}
 			</div>
 		</div>
@@ -211,14 +280,8 @@ export const BarraHerramientas = forwardRef<
 /** El desplegable de filtros: colores, clase, formato, idioma… */
 function PanelFiltros() {
 	const { t } = useLang();
-	const { filtros: f, ponerFiltros } = useFiltros();
-	const detalles = useBiblioteca((s) => s.detalles);
+	const { filtros: f } = useFiltros();
 	const n = filtrosDelPanel(f);
-	// Los idiomas que hay en la biblioteca.
-	const decks = useBiblioteca((s) => s.decks);
-	const idiomas = [...new Set((decks ?? []).flatMap((d) => idiomasDe(d, detalles[d.id])))].sort();
-	const alternar = <T,>(lista: T[], x: T) =>
-		lista.includes(x) ? lista.filter((y) => y !== x) : [...lista, x];
 	return (
 		<Popover>
 			<PopoverTrigger asChild>
@@ -233,126 +296,237 @@ function PanelFiltros() {
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent align="start" className="flex w-80 flex-col gap-3 text-xs">
-				<Bloque titulo={t("Colores")}>
-					<div className="flex items-center gap-1.5">
-						{["W", "U", "B", "R", "G", "C"].map((c) => (
-							<button
-								type="button"
-								key={c}
-								onClick={() => ponerFiltros({ colores: alternar(f.colores, c) })}
-								className={cn(
-									"rounded-full transition-opacity",
-									f.colores.includes(c)
-										? "ring-2 ring-primary ring-offset-1 ring-offset-background"
-										: "opacity-40 hover:opacity-80",
-								)}
-								aria-pressed={f.colores.includes(c)}
-								aria-label={t(COLORES[c]?.nombre ?? c)}
-							>
-								<Pip color={c} className="size-6 text-[11px]" />
-							</button>
-						))}
-					</div>
-					<ToggleGroup
-						type="single"
-						size="sm"
-						variant="outline"
-						value={f.modoColor}
-						onValueChange={(v) => v && ponerFiltros({ modoColor: v as ModoColor })}
-						className="w-full"
-					>
-						<ToggleGroupItem value="incluye" className="flex-1 text-[11px]">
-							{t("Los incluye")}
-						</ToggleGroupItem>
-						<ToggleGroupItem value="exacto" className="flex-1 text-[11px]">
-							{t("Exactos")}
-						</ToggleGroupItem>
-						<ToggleGroupItem value="dentro" className="flex-1 text-[11px]">
-							{t("Como mucho")}
-						</ToggleGroupItem>
-					</ToggleGroup>
-					<p className="text-[10px] leading-snug text-muted-foreground">
-						{f.modoColor === "incluye"
-							? t("Decks que usan al menos esos colores.")
-							: f.modoColor === "exacto"
-								? t("Decks con justo esa identidad de color.")
-								: t("Decks que no usan otros colores (caben en esa identidad).")}
-					</p>
-				</Bloque>
-				<Bloque titulo={t("Clase")}>
-					<div className="flex flex-wrap gap-1.5">
-						{(Object.keys(CLASES) as DeckKind[]).map((k) => (
-							<Button
-								key={k}
-								size="xs"
-								variant={f.clases.includes(k) ? "default" : "outline"}
-								onClick={() => ponerFiltros({ clases: alternar(f.clases, k) })}
-							>
-								{t(CLASES[k])}
-							</Button>
-						))}
-					</div>
-				</Bloque>
-				<Bloque titulo={t("Legal en")}>
-					<div className="flex flex-wrap gap-1">
-						{Object.entries(FORMATOS).map(([k, nombre]) => (
-							<Button
-								key={k}
-								size="xs"
-								variant={f.formato === k ? "default" : "outline"}
-								onClick={() => ponerFiltros({ formato: f.formato === k ? null : k })}
-							>
-								{nombre}
-							</Button>
-						))}
-					</div>
-				</Bloque>
-				{idiomas.length > 0 && (
-					<Bloque titulo={t("Idioma de las cartas")}>
-						<div className="flex flex-wrap gap-1">
-							{idiomas.map((l) => (
-								<Button
-									key={l}
-									size="xs"
-									variant={f.idioma === l ? "default" : "outline"}
-									onClick={() => ponerFiltros({ idioma: f.idioma === l ? null : l })}
-								>
-									{t(IDIOMAS[l] ?? l.toUpperCase())}
-								</Button>
-							))}
-						</div>
-					</Bloque>
-				)}
-				<label className="flex items-center justify-between gap-2">
-					{t("Con cartas diseñadas en la app")}
-					<Switch checked={f.conDisenos} onCheckedChange={(v) => ponerFiltros({ conDisenos: v })} />
-				</label>
-				<label className="flex items-center justify-between gap-2">
-					{t("Con imágenes propias")}
-					<Switch checked={f.conPropias} onCheckedChange={(v) => ponerFiltros({ conPropias: v })} />
-				</label>
-				{n > 0 && (
-					<Button
-						size="sm"
-						variant="ghost"
-						className="self-start"
-						onClick={() =>
-							ponerFiltros({
-								colores: [],
-								clases: [],
-								formato: null,
-								idioma: null,
-								conDisenos: false,
-								conPropias: false,
-							})
-						}
-					>
-						<Icono icon="lucide:x" />
-						{t("Quitar estos filtros")}
-					</Button>
-				)}
+				<ContenidoFiltros />
 			</PopoverContent>
 		</Popover>
+	);
+}
+
+/** Lo que filtra el panel: colores, clase, formato, idioma… (en el desplegable y en la hoja del móvil). */
+function ContenidoFiltros() {
+	const { t } = useLang();
+	const { filtros: f, ponerFiltros } = useFiltros();
+	const detalles = useBiblioteca((s) => s.detalles);
+	const n = filtrosDelPanel(f);
+	// Los idiomas que hay en la biblioteca.
+	const decks = useBiblioteca((s) => s.decks);
+	const idiomas = [...new Set((decks ?? []).flatMap((d) => idiomasDe(d, detalles[d.id])))].sort();
+	const alternar = <T,>(lista: T[], x: T) =>
+		lista.includes(x) ? lista.filter((y) => y !== x) : [...lista, x];
+	return (
+		<>
+			<Bloque titulo={t("Colores")}>
+				<div className="flex items-center gap-1.5">
+					{["W", "U", "B", "R", "G", "C"].map((c) => (
+						<button
+							type="button"
+							key={c}
+							onClick={() => ponerFiltros({ colores: alternar(f.colores, c) })}
+							className={cn(
+								"rounded-full transition-opacity",
+								f.colores.includes(c)
+									? "ring-2 ring-primary ring-offset-1 ring-offset-background"
+									: "opacity-40 hover:opacity-80",
+							)}
+							aria-pressed={f.colores.includes(c)}
+							aria-label={t(COLORES[c]?.nombre ?? c)}
+						>
+							<Pip color={c} className="size-6 text-[11px]" />
+						</button>
+					))}
+				</div>
+				<ToggleGroup
+					type="single"
+					size="sm"
+					variant="outline"
+					value={f.modoColor}
+					onValueChange={(v) => v && ponerFiltros({ modoColor: v as ModoColor })}
+					className="w-full"
+				>
+					<ToggleGroupItem value="incluye" className="flex-1 text-[11px]">
+						{t("Los incluye")}
+					</ToggleGroupItem>
+					<ToggleGroupItem value="exacto" className="flex-1 text-[11px]">
+						{t("Exactos")}
+					</ToggleGroupItem>
+					<ToggleGroupItem value="dentro" className="flex-1 text-[11px]">
+						{t("Como mucho")}
+					</ToggleGroupItem>
+				</ToggleGroup>
+				<p className="text-[10px] leading-snug text-muted-foreground">
+					{f.modoColor === "incluye"
+						? t("Decks que usan al menos esos colores.")
+						: f.modoColor === "exacto"
+							? t("Decks con justo esa identidad de color.")
+							: t("Decks que no usan otros colores (caben en esa identidad).")}
+				</p>
+			</Bloque>
+			<Bloque titulo={t("Clase")}>
+				<div className="flex flex-wrap gap-1.5">
+					{(Object.keys(CLASES) as DeckKind[]).map((k) => (
+						<Button
+							key={k}
+							size="xs"
+							variant={f.clases.includes(k) ? "default" : "outline"}
+							onClick={() => ponerFiltros({ clases: alternar(f.clases, k) })}
+						>
+							{t(CLASES[k])}
+						</Button>
+					))}
+				</div>
+			</Bloque>
+			<Bloque titulo={t("Legal en")}>
+				<div className="flex flex-wrap gap-1">
+					{Object.entries(FORMATOS).map(([k, nombre]) => (
+						<Button
+							key={k}
+							size="xs"
+							variant={f.formato === k ? "default" : "outline"}
+							onClick={() => ponerFiltros({ formato: f.formato === k ? null : k })}
+						>
+							{nombre}
+						</Button>
+					))}
+				</div>
+			</Bloque>
+			{idiomas.length > 0 && (
+				<Bloque titulo={t("Idioma de las cartas")}>
+					<div className="flex flex-wrap gap-1">
+						{idiomas.map((l) => (
+							<Button
+								key={l}
+								size="xs"
+								variant={f.idioma === l ? "default" : "outline"}
+								onClick={() => ponerFiltros({ idioma: f.idioma === l ? null : l })}
+							>
+								{t(IDIOMAS[l] ?? l.toUpperCase())}
+							</Button>
+						))}
+					</div>
+				</Bloque>
+			)}
+			<label className="flex items-center justify-between gap-2">
+				{t("Con cartas diseñadas en la app")}
+				<Switch checked={f.conDisenos} onCheckedChange={(v) => ponerFiltros({ conDisenos: v })} />
+			</label>
+			<label className="flex items-center justify-between gap-2">
+				{t("Con imágenes propias")}
+				<Switch checked={f.conPropias} onCheckedChange={(v) => ponerFiltros({ conPropias: v })} />
+			</label>
+			{n > 0 && (
+				<Button
+					size="sm"
+					variant="ghost"
+					className="self-start"
+					onClick={() =>
+						ponerFiltros({
+							colores: [],
+							clases: [],
+							formato: null,
+							idioma: null,
+							conDisenos: false,
+							conPropias: false,
+						})
+					}
+				>
+					<Icono icon="lucide:x" />
+					{t("Quitar estos filtros")}
+				</Button>
+			)}
+		</>
+	);
+}
+
+/**
+ * **«Filtros y orden» del móvil**: una hoja con todo lo que en escritorio
+ * está repartido en desplegables — ordenar, agrupar, la vista y los filtros —
+ * con las mismas preferencias y los mismos filtros.
+ */
+function HojaFiltrosYOrden({ abierta, onCerrar }: { abierta: boolean; onCerrar: () => void }) {
+	const { t } = useLang();
+	const p = usePrefs();
+	return (
+		<Dialog open={abierta} onOpenChange={(o) => !o && onCerrar()}>
+			<Hoja cambiosSinGuardar={false} aria-describedby={undefined} className="gap-0 p-0">
+				<DialogTitle className="px-4 pt-4 pb-2 text-sm">{t("Filtros y orden")}</DialogTitle>
+				<ScrollArea className="min-h-0 flex-1">
+					<div className="flex flex-col gap-4 p-4 pt-2 text-sm">
+						<Bloque titulo={t("Ordenar por")}>
+							<div className="flex flex-wrap gap-1.5">
+								{ORDENES.map(([o, nombre]) => (
+									<Button
+										key={o}
+										size="sm"
+										variant={p.orden === o ? "default" : "outline"}
+										onClick={() => p.poner({ orden: o, ascendente: ascendentePorDefecto(o) })}
+									>
+										{t(nombre)}
+									</Button>
+								))}
+							</div>
+							<label className="flex items-center justify-between gap-2">
+								{t("Ascendente")}
+								<Switch
+									checked={p.ascendente}
+									onCheckedChange={(v) => p.poner({ ascendente: v })}
+								/>
+							</label>
+							<label className="flex items-center justify-between gap-2">
+								{t("Favoritos primero")}
+								<Switch
+									checked={p.favoritosArriba}
+									onCheckedChange={(v) => p.poner({ favoritosArriba: v })}
+								/>
+							</label>
+						</Bloque>
+						<Bloque titulo={t("Agrupar")}>
+							<div className="flex flex-wrap gap-1.5">
+								{AGRUPAR.map(([a, nombre]) => (
+									<Button
+										key={a}
+										size="sm"
+										variant={p.agrupar === a ? "default" : "outline"}
+										onClick={() => p.poner({ agrupar: a })}
+									>
+										{t(nombre)}
+									</Button>
+								))}
+							</div>
+							{p.agrupar === "etiqueta" && (
+								<p className="text-xs leading-snug text-muted-foreground">
+									{t("Un deck con varias etiquetas sale en cada una.")}
+								</p>
+							)}
+						</Bloque>
+						<Bloque titulo={t("Vista")}>
+							<ToggleGroup
+								type="single"
+								size="sm"
+								variant="outline"
+								value={p.vista}
+								onValueChange={(v) => v && p.poner({ vista: v as "cuadricula" | "lista" })}
+								className="w-full"
+							>
+								<ToggleGroupItem value="cuadricula" className="flex-1 gap-1.5">
+									<Icono icon="lucide:layout-grid" />
+									{t("Cuadrícula")}
+								</ToggleGroupItem>
+								<ToggleGroupItem value="lista" className="flex-1 gap-1.5">
+									<Icono icon="lucide:list" />
+									{t("Lista")}
+								</ToggleGroupItem>
+							</ToggleGroup>
+						</Bloque>
+						<div className="flex flex-col gap-3 border-t pt-4">
+							<span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+								{t("Filtros")}
+							</span>
+							<ContenidoFiltros />
+						</div>
+					</div>
+				</ScrollArea>
+			</Hoja>
+		</Dialog>
 	);
 }
 
@@ -455,7 +629,7 @@ export function FiltrosActivos() {
 					<button
 						type="button"
 						onClick={x.quitar}
-						className="rounded-full p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+						className="rounded-full p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground [[data-tactil]_&]:p-2.5"
 						aria-label={t("Quitar")}
 					>
 						<Icono icon="lucide:x" className="size-3" />
@@ -466,7 +640,7 @@ export function FiltrosActivos() {
 				<button
 					type="button"
 					onClick={() => limpiar()}
-					className="text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+					className="text-muted-foreground underline-offset-2 hover:text-foreground hover:underline [[data-tactil]_&]:min-h-11 [[data-tactil]_&]:px-2"
 				>
 					{t("Quitar todos")}
 				</button>

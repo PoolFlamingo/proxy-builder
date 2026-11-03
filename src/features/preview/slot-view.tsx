@@ -12,6 +12,7 @@ import { type AnchoMiniatura, parametros, urlMiniatura } from "@/lib/image-url";
 import { cn } from "@/lib/utils";
 import { useUi } from "@/stores/ui-store";
 import { anadirEnHueco, seleccionarConClic } from "./acciones-carta";
+import { abrirMenuContextual, tocarAbreElMenu } from "./menu-tactil";
 import { SlotMenu } from "./slot-menu";
 
 const TONOS = {
@@ -35,6 +36,7 @@ export const SlotView = memo(function SlotView({
 	dorsoDeck,
 	conImagen,
 	ancho,
+	tactil,
 }: {
 	slot: Slot;
 	carta: DeckCard | undefined;
@@ -43,6 +45,8 @@ export const SlotView = memo(function SlotView({
 	dorsoDeck: FaceImage | null;
 	conImagen: boolean;
 	ancho: AnchoMiniatura;
+	/** Se toca con el dedo: arrastra el asa y un toque en la seleccionada abre el menú. */
+	tactil: boolean;
 }) {
 	const { t } = useLang();
 	const id = slot.cardId;
@@ -93,15 +97,32 @@ export const SlotView = memo(function SlotView({
 			<div
 				ref={setRef}
 				data-carta={id}
-				{...drag.listeners}
+				// Con ratón, la casilla entera arrastra. Con el dedo, solo el asa: deslizar
+				// por la casilla es hacer scroll y mantenerla pulsada abre el menú.
+				{...(tactil ? {} : drag.listeners)}
 				{...drag.attributes}
 				role="button"
 				aria-label={carta?.meta.name || t("Hueco")}
 				aria-pressed={seleccionada}
 				onClick={(ev) => {
+					const estabaSeleccionada = useUi.getState().seleccion.includes(id);
 					seleccionarConClic(id, ev);
+					const modificador = ev.ctrlKey || ev.metaKey || ev.shiftKey;
 					// Un clic suelto en un hueco abre «Añadir carta» para llenarlo.
-					if (hueco && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey) anadirEnHueco(id);
+					if (hueco && !modificador) anadirEnHueco(id);
+					// Con el dedo, un toque en la ya seleccionada abre su menú (mantenerla
+					// pulsada lo abre también, por el `ContextMenu` de Radix).
+					if (
+						tocarAbreElMenu({
+							tactil,
+							estabaSeleccionada,
+							hueco,
+							modificador,
+							toques: ev.detail,
+						})
+					) {
+						abrirMenuContextual(ev.currentTarget, ev.clientX, ev.clientY);
+					}
 				}}
 				onDoubleClick={() => carta?.front && useUi.getState().abrir({ tipo: "editar", id })}
 				className={cn(
@@ -174,6 +195,22 @@ export const SlotView = memo(function SlotView({
 							</WithTooltip>
 						))}
 					</div>
+				)}
+				{/* Con el dedo, el asa para arrastrar: solo en la casilla seleccionada. */}
+				{tactil && seleccionada && !hueco && (
+					<button
+						type="button"
+						ref={drag.setActivatorNodeRef}
+						{...drag.listeners}
+						aria-label={t("Arrastrar para mover")}
+						// El asa no es un toque en la casilla (no la selecciona ni abre su menú).
+						onPointerDown={(ev) => ev.stopPropagation()}
+						onClick={(ev) => ev.stopPropagation()}
+						style={{ touchAction: "none" }}
+						className="absolute bottom-1 left-1/2 flex size-11 -translate-x-1/2 items-center justify-center rounded-full bg-background/90 text-foreground shadow-md ring-1 ring-black/20"
+					>
+						<Icono icon="lucide:grip" className="size-5" />
+					</button>
 				)}
 				{carta?.locked && (
 					<span className="absolute top-1 right-1 rounded-full bg-background/85 p-0.5 shadow-sm">

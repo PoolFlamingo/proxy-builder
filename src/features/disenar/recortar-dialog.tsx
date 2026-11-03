@@ -2,12 +2,12 @@ import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { ArtRef } from "@/bindings/ArtRef";
 import type { DeckCard } from "@/bindings/DeckCard";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
@@ -18,15 +18,28 @@ import { EDICION_NEUTRA, parametros, urlMiniatura } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
+import { type Agarre, agarreEn, arrastrar, type Rect } from "./rectangulo";
 
-type Rect = { x: number; y: number; w: number; h: number };
+/** Hasta dónde se agarra una esquina de la zona con el dedo, en px. */
+const RADIO_DEDO = 30;
+
+/** Dónde va cada tirador: centrado en su esquina de la zona. */
+const ESQUINAS = [
+	"top-0 left-0 -translate-x-1/2 -translate-y-1/2",
+	"top-0 right-0 translate-x-1/2 -translate-y-1/2",
+	"bottom-0 left-0 -translate-x-1/2 translate-y-1/2",
+	"right-0 bottom-0 translate-x-1/2 translate-y-1/2",
+];
 
 /** La zona de la ilustración en una carta normal (más o menos): para empezar. */
 const ZONA_INICIAL: Rect = { x: 0.08, y: 0.11, w: 0.84, h: 0.45 };
 
 /**
  * «Recortar de una carta ya hecha»: se elige una carta del deck (sin diseño,
- * con su imagen) y se marca la zona de la ilustración arrastrando.
+ * con su imagen) y se marca la zona de la ilustración arrastrando. Con el
+ * ratón, cada arrastre marca otra. Con el dedo se agarra una esquina para
+ * cambiarla de tamaño, el interior para moverla, o se arrastra por fuera para
+ * marcar otra (`rectangulo.ts`).
  */
 export function RecortarDialog({
 	abierto,
@@ -44,7 +57,13 @@ export function RecortarDialog({
 	const [zona, setZona] = useState<Rect>(ZONA_INICIAL);
 	const [ocupado, setOcupado] = useState(false);
 	const marco = useRef<HTMLDivElement>(null);
-	const inicio = useRef<{ x: number; y: number } | null>(null);
+	// Lo que se agarró al tocar: qué, desde dónde y cómo estaba la zona.
+	const toque = useRef<{
+		agarre: Agarre;
+		desde: { x: number; y: number };
+		base: Rect;
+		id: number;
+	} | null>(null);
 
 	// Una por imagen: sin repetir copias ni cartas sin imagen.
 	const conImagen = useMemo(() => {
@@ -65,23 +84,27 @@ export function RecortarDialog({
 		};
 	};
 	const alBajar = (e: React.PointerEvent) => {
-		(e.target as HTMLElement).setPointerCapture(e.pointerId);
-		inicio.current = punto(e);
-		setZona({ ...inicio.current, w: 0, h: 0 });
+		const raton = e.pointerType === "mouse";
+		// Un solo dedo a la vez: el segundo no cambia lo que ya se agarró.
+		if (toque.current && !raton) return;
+		const r = marco.current?.getBoundingClientRect();
+		if (!r) return;
+		e.currentTarget.setPointerCapture(e.pointerId);
+		const desde = punto(e);
+		// Con el ratón, como siempre: pulsar en cualquier sitio marca otra zona. Las
+		// asas y mover por dentro son del dedo (marcarla de nuevo es difícil a ojo).
+		const agarre = raton ? "nuevo" : agarreEn(zona, desde, { w: r.width, h: r.height }, RADIO_DEDO);
+		toque.current = { agarre, desde, base: zona, id: e.pointerId };
+		// Marcar otra desde cero: empieza vacía en el punto tocado.
+		if (agarre === "nuevo") setZona({ ...desde, w: 0, h: 0 });
 	};
 	const alMover = (e: React.PointerEvent) => {
-		const a = inicio.current;
-		if (!a) return;
-		const p = punto(e);
-		setZona({
-			x: Math.min(a.x, p.x),
-			y: Math.min(a.y, p.y),
-			w: Math.abs(p.x - a.x),
-			h: Math.abs(p.y - a.y),
-		});
+		const a = toque.current;
+		if (!a || a.id !== e.pointerId) return;
+		setZona(arrastrar(a.agarre, a.base, a.desde, punto(e)));
 	};
-	const alSoltar = () => {
-		inicio.current = null;
+	const alSoltar = (e: React.PointerEvent) => {
+		if (toque.current?.id === e.pointerId) toque.current = null;
 	};
 
 	const recortar = async () => {
@@ -101,7 +124,7 @@ export function RecortarDialog({
 	return (
 		<Dialog open={abierto} onOpenChange={(o) => !o && onCerrar()}>
 			{abierto && (
-				<DialogContent className="flex max-h-[92vh] flex-col sm:max-w-3xl">
+				<DialogoAdaptable className="flex max-h-[92vh] flex-col sm:max-w-3xl">
 					<DialogHeader>
 						<DialogTitle>{t("Recortar la ilustración de una carta")}</DialogTitle>
 						<DialogDescription className="text-xs">
@@ -114,7 +137,7 @@ export function RecortarDialog({
 						<div className="flex min-h-0 flex-1 items-center justify-center">
 							<div
 								ref={marco}
-								className="relative aspect-[63/88] h-[min(68vh,720px)] touch-none select-none"
+								className="relative aspect-[63/88] w-[min(100%,calc(min(68dvh,720px)*63/88))] touch-none select-none"
 								onPointerDown={alBajar}
 								onPointerMove={alMover}
 								onPointerUp={alSoltar}
@@ -138,12 +161,23 @@ export function RecortarDialog({
 										width: `${zona.w * 100}%`,
 										height: `${zona.h * 100}%`,
 									}}
-								/>
+								>
+									{/* Las esquinas que se agarran con el dedo para cambiar el tamaño. */}
+									{ESQUINAS.map((pos) => (
+										<span
+											key={pos}
+											className={cn(
+												"absolute hidden size-5 rounded-[2px] border-2 border-cyan-400 bg-background [[data-tactil]_&]:block",
+												pos,
+											)}
+										/>
+									))}
+								</div>
 							</div>
 						</div>
 					) : (
 						<ScrollArea className="min-h-0 flex-1">
-							<div className="grid grid-cols-5 gap-2 p-1 pr-2.5">
+							<div className="grid grid-cols-3 gap-2 p-1 pr-2.5 sm:grid-cols-5">
 								{conImagen.map((c) =>
 									c.front && ajustes ? (
 										<button
@@ -166,7 +200,7 @@ export function RecortarDialog({
 									) : null,
 								)}
 								{conImagen.length === 0 && (
-									<p className="col-span-5 text-xs text-muted-foreground">
+									<p className="col-span-3 text-xs text-muted-foreground sm:col-span-5">
 										{t("No hay cartas con imagen en el deck.")}
 									</p>
 								)}
@@ -191,7 +225,7 @@ export function RecortarDialog({
 							{t("Usar esta zona")}
 						</Button>
 					</DialogFooter>
-				</DialogContent>
+				</DialogoAdaptable>
 			)}
 		</Dialog>
 	);

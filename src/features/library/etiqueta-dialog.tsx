@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Tag } from "@/bindings/Tag";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { SelectorIcono } from "@/components/selector-icono";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
@@ -82,7 +82,7 @@ export function EtiquetaDialog({
 	const vista: Tag = { id: "", name: limpio || t("Etiqueta"), color, icon: icono };
 	return (
 		<Dialog open={editando !== null} onOpenChange={(o) => !o && onCerrar()}>
-			<DialogContent className="sm:max-w-sm" cambiosSinGuardar={false}>
+			<DialogoAdaptable className="sm:max-w-sm" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle>
 						{editando?.tipo === "editar" ? t("Editar etiqueta") : t("Nueva etiqueta")}
@@ -115,7 +115,7 @@ export function EtiquetaDialog({
 									type="button"
 									onClick={() => setColor(c)}
 									className={cn(
-										"flex size-6 items-center justify-center rounded-full ring-offset-2 ring-offset-background",
+										"flex size-6 items-center justify-center rounded-full ring-offset-2 ring-offset-background [[data-tactil]_&]:size-9",
 										COLORES_ETIQUETA[c].punto,
 										color === c && "ring-2 ring-foreground/60",
 									)}
@@ -147,7 +147,7 @@ export function EtiquetaDialog({
 						{editando?.tipo === "editar" ? t("Guardar") : t("Crear")}
 					</Button>
 				</DialogFooter>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }

@@ -5,14 +5,16 @@ import type { CacheStats } from "@/bindings/CacheStats";
 import type { ImagePolicy } from "@/bindings/ImagePolicy";
 import type { ParsedDecklist } from "@/bindings/ParsedDecklist";
 import { Fila, FilaInterruptor, type Opcion, Seccion, Selector } from "@/components/campos";
+import { ConAyuda } from "@/components/con-ayuda";
 import { Confirmar } from "@/components/confirmar";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
+import { ManijaRedimensionar } from "@/components/manija-redimensionar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { IDIOMAS_SCRYFALL } from "@/lib/idiomas";
@@ -168,7 +170,7 @@ export function DecklistPanel() {
 						/>
 					</div>
 				</ResizablePanel>
-				<ResizableHandle withHandle />
+				<ManijaRedimensionar withHandle />
 				<ResizablePanel id="opciones" minSize={160}>
 					<div className="flex h-full min-h-0 flex-col" data-tutorial="lista-opciones">
 						<div className="flex shrink-0 flex-col gap-2.5 p-2.5">
@@ -205,7 +207,7 @@ export function DecklistPanel() {
 									/>
 									{t("Añadir tokens automáticamente")}
 								</label>
-								<WithTooltip
+								<ConAyuda
 									content={t(
 										"Busca las fichas que crean las cartas del deck ya cargado (también las propias vinculadas) y te deja elegir cuáles añadir.",
 									)}
@@ -219,7 +221,7 @@ export function DecklistPanel() {
 										<Icono icon="lucide:coins" />
 										{t("Detectar fichas")}
 									</Button>
-								</WithTooltip>
+								</ConAyuda>
 							</div>
 						</div>
 
@@ -235,14 +237,14 @@ export function DecklistPanel() {
 											value={url}
 											onChange={(e) => setUrl(e.target.value)}
 											placeholder="https://archidekt.com/decks/…"
-											className="h-7 text-xs"
+											className="h-7 text-xs [[data-tactil]_&]:h-11"
 											data-filtro=""
 											onKeyDown={(e) => e.key === "Enter" && url.trim() && void importar()}
 										/>
 										<Button
 											size="sm"
 											variant="outline"
-											className="h-7"
+											className="h-7 [[data-tactil]_&]:h-11"
 											disabled={!url.trim() || importando}
 											onClick={importar}
 										>
@@ -290,7 +292,8 @@ export function DecklistPanel() {
 										{t("Volver al reverso genérico")}
 									</Button>
 									<div className="flex flex-col gap-1.5">
-										<WithTooltip
+										<ConAyuda
+											className="[[data-tactil]_&]:[&>button]:flex-1"
 											content={t(
 												"Busca en Scryfall la carta real de cada imagen propia (por el nombre del fichero o leyendo la carta: el título, el nombre original del pie o cualquier línea) y te enseña lo que ha encontrado para que lo revises antes de vincular. Con varias cartas seleccionadas, de partida solo esas.",
 											)}
@@ -314,7 +317,7 @@ export function DecklistPanel() {
 												<Icono icon="lucide:link-2" />
 												{t("Vincular con una carta")}
 											</Button>
-										</WithTooltip>
+										</ConAyuda>
 									</div>
 									<p className="text-[11px] text-muted-foreground">
 										{t(
@@ -367,7 +370,8 @@ export function DecklistPanel() {
 										valor={ui.pedirConfirmacionAlCargar}
 										onChange={(v) => ui.setPreferencia("pedirConfirmacionAlCargar", v)}
 									/>
-									<WithTooltip
+									<ConAyuda
+										className="[[data-tactil]_&]:[&>button]:flex-1"
 										content={t("Vuelve a pedir las cartas no fijadas en el idioma elegido")}
 									>
 										<Button
@@ -379,7 +383,7 @@ export function DecklistPanel() {
 											<Icono icon="lucide:languages" />
 											{t("Reaplicar idioma")}
 										</Button>
-									</WithTooltip>
+									</ConAyuda>
 									<Button size="xs" variant="ghost" onClick={pedirLimpiarCache}>
 										<Icono icon="lucide:trash-2" />
 										{t("Limpiar caché de miniaturas")}
@@ -474,7 +478,7 @@ function PiePanel() {
 					<span className="font-medium">
 						{t("{n} cartas · {p} hojas", { n: cartas, p: hojas })}
 						{marcadas > 0 && (
-							<WithTooltip
+							<ConAyuda
 								content={t(
 									"Marcadas como variante de diseño, opcional, banquillo o copia: se imprimen, pero no cuentan para el mazo.",
 								)}
@@ -483,7 +487,7 @@ function PiePanel() {
 									{" "}
 									· {t("{n} marcadas", { n: marcadas })}
 								</span>
-							</WithTooltip>
+							</ConAyuda>
 						)}
 					</span>
 					{visible && (

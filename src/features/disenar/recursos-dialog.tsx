@@ -6,16 +6,12 @@ import type { LetraLibre } from "@/bindings/LetraLibre";
 import type { PackInfo } from "@/bindings/PackInfo";
 import type { SimbolosInfo } from "@/bindings/SimbolosInfo";
 import type { TipoExtra } from "@/bindings/TipoExtra";
+import { AyudaTactil } from "@/components/ayuda-tactil";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,12 +19,15 @@ import { WithTooltip } from "@/components/ui/with-tooltip";
 import { cartaPropia } from "@/lib/cartas";
 import { insertar } from "@/lib/deck-ops";
 import { abrirParaImportar } from "@/lib/dialogos";
+import { useFormato } from "@/lib/formato";
 import { localeDe } from "@/lib/idiomas";
 import { urlExtra } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
+import { esMovil, useEsMovil } from "@/lib/plataforma";
 import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
+import { AvisoSoloTableta } from "./aviso-tableta";
 import { ID_ORIGINAL, useMarcosOriginales } from "./marcos-originales";
 import { usePacksDescargables } from "./packs-descargables";
 import { rehacerMiniaturas } from "./renumerar";
@@ -40,9 +39,11 @@ import { ESTILOS } from "./textos";
  */
 export function RecursosDialog() {
 	const abierto = useUi((s) => s.dialogo?.tipo === "recursosDiseno");
+	// Lo que no entra en el móvil: un aviso en vez del diálogo.
+	const movil = useFormato().tamano === "movil";
 	return (
 		<Dialog open={abierto} onOpenChange={(o) => !o && useUi.getState().abrir(null)}>
-			{abierto && <Contenido />}
+			{abierto && (movil ? <AvisoSoloTableta /> : <Contenido />)}
 		</Dialog>
 	);
 }
@@ -52,6 +53,7 @@ function kb(bytes: bigint | number): string {
 }
 
 function Contenido() {
+	const movil = useEsMovil();
 	const { t, lang, mensaje } = useLang();
 	const [letras, setLetras] = useState<LetraInfo[] | null>(null);
 	const [packs, setPacks] = useState<PackInfo[] | null>(null);
@@ -106,8 +108,10 @@ function Contenido() {
 
 	const importarPack = (carpeta: boolean) =>
 		con("pack", async () => {
+			// Android no tiene selector de carpetas: el pack se importa en ZIP.
+			const pideCarpeta = carpeta && !(await esMovil());
 			const rutas = await abrirParaImportar(
-				carpeta
+				pideCarpeta
 					? { directory: true, multiple: false }
 					: { multiple: false, filters: [{ name: t("Pack de marcos"), extensions: ["zip"] }] },
 			);
@@ -138,7 +142,7 @@ function Contenido() {
 		: null;
 
 	return (
-		<DialogContent className="flex h-[min(80vh,620px)] flex-col sm:max-w-2xl">
+		<DialogoAdaptable className="flex h-[min(80vh,620px)] flex-col sm:max-w-2xl">
 			<DialogHeader>
 				<DialogTitle>{t("Letras, marcos y símbolos")}</DialogTitle>
 				<DialogDescription className="text-xs">
@@ -229,6 +233,10 @@ function Contenido() {
 											<Icono icon="lucide:trash-2" />
 										</Button>
 									</WithTooltip>
+									{/* Con el dedo no hay tooltip: el «ⓘ» dice lo mismo. */}
+									<AyudaTactil>
+										{t("Las cartas que la usen pasarán a la letra del pack.")}
+									</AyudaTactil>
 								</li>
 							))}
 						</ul>
@@ -240,19 +248,22 @@ function Contenido() {
 						<p className="flex-1 text-xs text-muted-foreground">
 							{t("Un pack es una carpeta (o un .zip) con su pack.json y sus capas en SVG.")}
 						</p>
-						<Button
-							size="sm"
-							variant="outline"
-							onClick={() => importarPack(true)}
-							disabled={ocupado !== null}
-						>
-							{ocupado === "pack" ? (
-								<Icono icon="lucide:loader-2" className="animate-spin" />
-							) : (
-								<Icono icon="lucide:folder-open" />
-							)}
-							{t("Carpeta…")}
-						</Button>
+						{/* En Android no hay selector de carpetas: se importa el ZIP. */}
+						{!movil && (
+							<Button
+								size="sm"
+								variant="outline"
+								onClick={() => importarPack(true)}
+								disabled={ocupado !== null}
+							>
+								{ocupado === "pack" ? (
+									<Icono icon="lucide:loader-2" className="animate-spin" />
+								) : (
+									<Icono icon="lucide:folder-open" />
+								)}
+								{t("Carpeta…")}
+							</Button>
+						)}
 						<Button
 							size="sm"
 							variant="outline"
@@ -311,6 +322,11 @@ function Contenido() {
 											</Button>
 										</WithTooltip>
 									)}
+									{p.importado && (
+										<AyudaTactil>
+											{t("Las cartas que lo usen pasarán al pack de la casa.")}
+										</AyudaTactil>
+									)}
 								</li>
 							))}
 						</ul>
@@ -359,7 +375,7 @@ function Contenido() {
 					</div>
 				</TabsContent>
 			</Tabs>
-		</DialogContent>
+		</DialogoAdaptable>
 	);
 }
 
@@ -538,6 +554,13 @@ function ContenidoPack({ pack }: { pack: DescargableInfo }) {
 					</WithTooltip>
 				))}
 			</div>
+			{/* El nombre de la imagen va en un tooltip, que con el dedo no sale: la
+			    elegida lo dice aquí. */}
+			{actual && (
+				<p className="hidden truncate text-[11px] text-muted-foreground [[data-tactil]_&]:block">
+					{actual.nombre}
+				</p>
+			)}
 			<div className="flex flex-wrap items-center justify-end gap-1.5">
 				{!hayDeck && (
 					<span className="mr-auto text-[11px] text-muted-foreground">

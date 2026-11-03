@@ -112,7 +112,9 @@ export function Precios({ s, moneda }: { s: DeckStats; moneda: Moneda }) {
 											<Button
 												size="icon-xs"
 												variant="ghost"
-												className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+												aria-label={t("Seleccionar en el deck")}
+												// táctil: sin ratón no hay «hover» de fila; el botón se ve siempre.
+												className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [[data-tactil]_&]:opacity-100"
 												onClick={() =>
 													seleccionarEnDeck(
 														c.ids,

@@ -157,6 +157,7 @@ export function AjustesFinos({
 				)}
 			</p>
 			<Fila
+				apilarEnMovil
 				etiqueta={t("Altura según el texto")}
 				ayuda={t(
 					"Dinámica: la caja crece o se encoge según el texto y las fichas con poco texto quedan despejadas. Fija: siempre del alto máximo del marco. Según el marco: lo que decida cada marco (en Clásico y Extendido de la casa es fija).",

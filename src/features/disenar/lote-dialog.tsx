@@ -3,12 +3,12 @@ import { toast } from "sonner";
 import type { Collection } from "@/bindings/Collection";
 import type { DeckCard } from "@/bindings/DeckCard";
 import { Fila, Selector } from "@/components/campos";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
@@ -17,10 +17,12 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useEstadoParaCerrar } from "@/lib/dialogos-abiertos";
+import { useFormato } from "@/lib/formato";
 import { call } from "@/lib/ipc";
 import { lanzarTrabajo } from "@/lib/trabajos";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
+import { AvisoSoloTableta } from "./aviso-tableta";
 import { numerosUsados, scryfallDe } from "./grupos";
 import { coleccionRecordada, recordarColeccion } from "./use-borrador";
 
@@ -32,9 +34,11 @@ import { coleccionRecordada, recordarColeccion } from "./use-borrador";
  */
 export function LoteDialog() {
 	const abierto = useUi((s) => s.dialogo?.tipo === "disenarDeck");
+	// Lo que no entra en el móvil: un aviso en vez del diálogo.
+	const movil = useFormato().tamano === "movil";
 	return (
 		<Dialog open={abierto} onOpenChange={(o) => !o && useUi.getState().abrir(null)}>
-			{abierto && <Contenido />}
+			{abierto && (movil ? <AvisoSoloTableta /> : <Contenido />)}
 		</Dialog>
 	);
 }
@@ -117,7 +121,7 @@ function Contenido() {
 	useEstadoParaCerrar({ enCurso: enMarcha, sinGuardar: false });
 	const ninguna = "__ninguna";
 	return (
-		<DialogContent className="sm:max-w-md" ocupado={enMarcha} alInterrumpir={cancelar}>
+		<DialogoAdaptable className="sm:max-w-md" ocupado={enMarcha} alInterrumpir={cancelar}>
 			<DialogHeader>
 				<DialogTitle>{t("Diseñar el deck")}</DialogTitle>
 				<DialogDescription className="text-xs">
@@ -184,6 +188,6 @@ function Contenido() {
 					</Button>
 				)}
 			</DialogFooter>
-		</DialogContent>
+		</DialogoAdaptable>
 	);
 }

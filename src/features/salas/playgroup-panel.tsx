@@ -17,7 +17,9 @@ import { call } from "@/lib/ipc";
 import { useOcupado } from "@/lib/use-ocupado";
 import { cn } from "@/lib/utils";
 import { useSalas } from "@/stores/salas-store";
+import { compartirTexto, copiarTexto, usePuedeCompartir } from "../mesa/compartir";
 import type { Preparacion } from "../mesa/red/red-dialog";
+import { codigoBonito, textoParaCompartir } from "./codigo";
 import {
 	cambiarRol,
 	crearSala,
@@ -32,7 +34,7 @@ export function CodigoInvitacion({ codigo }: { codigo: string }) {
 	const { t } = useLang();
 	const [copiado, setCopiado] = useState<"codigo" | "enlace" | null>(null);
 	const [enlace, setEnlace] = useState<string | null>(null);
-	const bonito = `${codigo.slice(0, 5)}-${codigo.slice(5)}`;
+	const bonito = codigoBonito(codigo);
 	// El enlace lo escribe Rust (su formato vive en `enlace.rs`); se pide al
 	// mostrar el código para que copiarlo sea un clic sin esperas.
 	useEffect(() => {
@@ -45,13 +47,14 @@ export function CodigoInvitacion({ codigo }: { codigo: string }) {
 			vivo = false;
 		};
 	}, [codigo]);
-	const copiar = (texto: string, que: "codigo" | "enlace") => {
-		void navigator.clipboard.writeText(texto);
+	const copiar = async (texto: string, que: "codigo" | "enlace") => {
+		if (!(await copiarTexto(texto))) return;
 		setCopiado(que);
 		window.setTimeout(() => setCopiado(null), 1500);
 	};
+	const puedeCompartir = usePuedeCompartir();
 	return (
-		<div className="flex items-center gap-1.5">
+		<div className="flex flex-wrap items-center gap-1.5">
 			<code className="rounded-md border bg-muted/40 px-2 py-1 font-mono text-sm tracking-widest select-text">
 				{bonito}
 			</code>
@@ -71,6 +74,13 @@ export function CodigoInvitacion({ codigo }: { codigo: string }) {
 						<Icono icon="lucide:link-2" className="size-3.5" />
 					)}
 					{copiado === "enlace" ? t("Copiado") : t("Copiar enlace")}
+				</Button>
+			)}
+			{puedeCompartir && (
+				// El selector de apps de Android: para mandarlo por mensajería.
+				<Button size="sm" onClick={() => void compartirTexto(textoParaCompartir(enlace, bonito))}>
+					<Icono icon="lucide:share-2" className="size-3.5" />
+					{t("Compartir")}
 				</Button>
 			)}
 		</div>
@@ -109,7 +119,7 @@ export function PanelPlaygroup({ pg, preparar }: { pg: Playgroup; preparar: Prep
 				</Button>
 			</div>
 			{manda && (
-				<div className="flex items-center gap-2.5">
+				<div className="flex flex-wrap items-center gap-2.5">
 					{codigo ? (
 						<CodigoInvitacion codigo={codigo} />
 					) : (
@@ -127,7 +137,7 @@ export function PanelPlaygroup({ pg, preparar }: { pg: Playgroup; preparar: Prep
 					</span>
 				</div>
 			)}
-			<div className="grid min-h-0 flex-1 grid-cols-2 gap-2.5">
+			<div className="grid min-h-0 flex-1 grid-cols-1 gap-2.5 min-[640px]:grid-cols-2">
 				<div className="flex min-h-0 flex-col gap-1.5">
 					<span className="text-xs font-medium">{t("Miembros")}</span>
 					<ScrollArea className="min-h-0 flex-1">

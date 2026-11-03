@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 import { useLang } from "@/components/language-provider";
 import { anadirPropias, EXTENSIONES_IMAGEN, type T } from "@/features/decklist/acciones";
+import { esMovil } from "@/lib/plataforma";
 import { reemplazarConFichero } from "./acciones-carta";
 
 /** De lo que se arrastra, solo las imágenes que la app sabe leer. */
@@ -37,32 +38,37 @@ function cartaEnPantalla(x: number, y: number): string | undefined {
 /**
  * Arrastrar imágenes desde el gestor de ficheros: sobre una carta, la
  * reemplaza (la primera imagen); fuera de las cartas, se añaden todas como
- * cartas propias. Tauri da la posición en píxeles físicos.
+ * cartas propias. Tauri da la posición en píxeles físicos. Solo en
+ * escritorio: en móvil no se sueltan ficheros sobre la app («Añadir
+ * imágenes» abre el selector del sistema).
  */
 export function useArrastrarFicheros() {
 	const { t, mensaje } = useLang();
 	useEffect(() => {
 		let dejar: (() => void) | null = null;
 		let vivo = true;
-		getCurrentWebview()
-			.onDragDropEvent((ev) => {
-				if (ev.payload.type !== "drop") return;
-				const hecho = soltarFicheros(
-					ev.payload.paths,
-					ev.payload.position,
-					window.devicePixelRatio || 1,
-					cartaEnPantalla,
-					t,
-				);
-				hecho?.catch((e) => toast.error(mensaje(e)));
-			})
-			.then((f) => {
-				if (vivo) dejar = f;
-				else f();
-			})
-			.catch(() => {
-				/* fuera de Tauri (tests): no hay arrastre de ficheros */
-			});
+		void esMovil().then((movil) => {
+			if (movil || !vivo) return;
+			getCurrentWebview()
+				.onDragDropEvent((ev) => {
+					if (ev.payload.type !== "drop") return;
+					const hecho = soltarFicheros(
+						ev.payload.paths,
+						ev.payload.position,
+						window.devicePixelRatio || 1,
+						cartaEnPantalla,
+						t,
+					);
+					hecho?.catch((e) => toast.error(mensaje(e)));
+				})
+				.then((f) => {
+					if (vivo) dejar = f;
+					else f();
+				})
+				.catch(() => {
+					/* fuera de Tauri (tests): no hay arrastre de ficheros */
+				});
+		});
 		return () => {
 			vivo = false;
 			dejar?.();

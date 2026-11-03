@@ -14,8 +14,9 @@ import {
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { guardarParaExportar } from "@/lib/dialogos";
 import { call } from "@/lib/ipc";
+import { useEsMovil } from "@/lib/plataforma";
 import { guardarAhora, useDeck } from "@/stores/deck-store";
-import { megas, nombreSeguro } from "./acciones";
+import { compartirLista, compartirPaquete, compartirPdf, megas, nombreSeguro } from "./acciones";
 
 /** Los formatos para copiar, como en «Export» de Moxfield. */
 const COPIAR: [FormatoLista, string][] = [
@@ -33,6 +34,24 @@ const COPIAR: [FormatoLista, string][] = [
  */
 export function MenuExportar({ deshabilitado }: { deshabilitado: boolean }) {
 	const { t, mensaje } = useLang();
+	// Compartir existe solo en móvil; «Mostrar en carpeta», solo fuera de él.
+	const movil = useEsMovil();
+
+	const compartir = (f: () => Promise<void>) => {
+		f().catch((e) => toast.error(mensaje(e)));
+	};
+
+	/** El botón del aviso de «guardado»: enseñar el fichero (escritorio) o compartirlo (móvil). */
+	const accionDeFichero = (destino: string) =>
+		movil
+			? {
+					label: t("Compartir"),
+					onClick: () => void call("compartir_fichero", { ruta: destino }),
+				}
+			: {
+					label: t("Mostrar en carpeta"),
+					onClick: () => void call("export_reveal", { path: destino }),
+				};
 
 	const copiar = async (formato: FormatoLista, nombre: string) => {
 		const deck = useDeck.getState().deck;
@@ -60,12 +79,7 @@ export function MenuExportar({ deshabilitado }: { deshabilitado: boolean }) {
 			);
 			if (!destino) return;
 			await call("deck_list_save", { deck, format: "mtgo", path: destino });
-			toast.success(t("Lista guardada para MTGO"), {
-				action: {
-					label: t("Mostrar en carpeta"),
-					onClick: () => void call("export_reveal", { path: destino }),
-				},
-			});
+			toast.success(t("Lista guardada para MTGO"), { action: accionDeFichero(destino) });
 		} catch (e) {
 			toast.error(mensaje(e));
 		}
@@ -86,10 +100,7 @@ export function MenuExportar({ deshabilitado }: { deshabilitado: boolean }) {
 			if (!destino) return;
 			const bytes = await call("deck_export_package", { id: deck.id, path: destino });
 			toast.success(t("Deck exportado ({mb})", { mb: megas(bytes) }), {
-				action: {
-					label: t("Mostrar en carpeta"),
-					onClick: () => void call("export_reveal", { path: destino }),
-				},
+				action: accionDeFichero(destino),
 			});
 		} catch (e) {
 			toast.error(mensaje(e));
@@ -129,6 +140,26 @@ export function MenuExportar({ deshabilitado }: { deshabilitado: boolean }) {
 					<Icono icon="lucide:package" />
 					{t("Deck con sus imágenes (.pbdeck)")}
 				</DropdownMenuItem>
+				{movil && (
+					<>
+						<DropdownMenuSeparator />
+						<DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase">
+							{t("Compartir")}
+						</DropdownMenuLabel>
+						<DropdownMenuItem onSelect={() => compartir(() => compartirPdf(t))}>
+							<Icono icon="lucide:share-2" />
+							{t("Compartir el PDF")}
+						</DropdownMenuItem>
+						<DropdownMenuItem onSelect={() => compartir(compartirLista)}>
+							<Icono icon="lucide:share-2" />
+							{t("Compartir la lista (texto)")}
+						</DropdownMenuItem>
+						<DropdownMenuItem onSelect={() => compartir(compartirPaquete)}>
+							<Icono icon="lucide:share-2" />
+							{t("Compartir el deck (.pbdeck)")}
+						</DropdownMenuItem>
+					</>
+				)}
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);

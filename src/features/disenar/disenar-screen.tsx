@@ -5,33 +5,56 @@ import type { ArtFraming } from "@/bindings/ArtFraming";
 import type { Collection } from "@/bindings/Collection";
 import type { DesignLang } from "@/bindings/DesignLang";
 import type { PackInfo } from "@/bindings/PackInfo";
+import { FilaInterruptor } from "@/components/campos";
+import { ConAyuda } from "@/components/con-ayuda";
 import { Confirmar } from "@/components/confirmar";
+import { Hoja } from "@/components/hoja";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { nuevoId } from "@/lib/deck-ops";
+import { useFormato } from "@/lib/formato";
 import { call } from "@/lib/ipc";
+import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
 import { useEdicion } from "@/stores/edicion-store";
 import { useUi } from "@/stores/ui-store";
+import { altoCarta } from "./altura";
 import { Formulario } from "./formulario";
+import { FormularioMovil } from "./formulario-movil";
 import { agrupar, conVariante, vecina } from "./grupos";
-import { ListaCartas } from "./lista-cartas";
+import { ListaCartas, nombreDe } from "./lista-cartas";
 import { useMarcosOriginales } from "./marcos-originales";
 import { usePacksDescargables } from "./packs-descargables";
 import { ponerIdiomaDiseno, renumerar } from "./renumerar";
+import { useAltoVisible } from "./use-alto-visible";
 import { useBorrador } from "./use-borrador";
 import { useResumen } from "./use-resumen";
 import { VistaPrevia } from "./vista-previa";
+
+/** El «ⓘ» junto a un botón, del alto del botón con el dedo. */
+const AYUDA_GRANDE = "[[data-tactil]_&]:size-10";
+
+/** Las asas de los paneles: más gruesas con el dedo (el borde de 1 px no se agarra). */
+const ASA_TACTIL =
+	"[[data-tactil]_&]:w-2 [[data-tactil]_&>div]:h-8 [[data-tactil]_&>div]:w-5 [[data-tactil]_&_svg]:size-4";
 
 /**
  * **Diseñar**: la tercera vista. A la izquierda las cartas del deck y su
  * estado; en el centro la carta tal como saldrá (pintada por Rust); a la
  * derecha el formulario. `Alt+←/→` pasa de carta (y, si se elige, de copia:
  * cada copia de una carta puede llevar su propio diseño).
+ *
+ * Una sola pantalla que cambia con el formato. En una tableta estrecha la
+ * lista de cartas pasa a una hoja (no caben tres paneles). En el móvil es
+ * otra disposición con las mismas piezas: la carta arriba y debajo las
+ * pestañas Textos, Ilustración, Marco y Colores (`formulario-movil.tsx`); lo
+ * demás (ajustes finos, colecciones, recursos, lote, PNG…) no se enseña.
  */
 export function DisenarScreen() {
 	const { t, mensaje } = useLang();
@@ -45,7 +68,19 @@ export function DisenarScreen() {
 	const setLang = (l: DesignLang) =>
 		void ponerIdiomaDiseno(l, t, mensaje).then(() => setVersionLetras((v) => v + 1));
 	const disenando = useUi((s) => s.disenando);
-	const layout = useDefaultLayout({ id: "proxybuilder.paneles.disenar", storage: localStorage });
+	const { tamano, tactil } = useFormato();
+	const movil = tamano === "movil";
+	// Tres paneles solo caben en escritorio; en la tableta la lista sube en una hoja.
+	// Tableta solo con el dedo (como `app-shell`): una ventana de escritorio de
+	// 960–1023 px con ratón da «tableta» por el ancho y no debe cambiar.
+	const listaEnHoja = movil || (tamano === "tableta" && tactil);
+	const [listaAbierta, setListaAbierta] = useState(false);
+	const [masAbierto, setMasAbierto] = useState(false);
+	const layout = useDefaultLayout({
+		id: listaEnHoja ? "proxybuilder.paneles.disenar2" : "proxybuilder.paneles.disenar",
+		storage: localStorage,
+	});
+	const { ref: refMovil, alto, escribiendo } = useAltoVisible(movil);
 	const grupos = useMemo(() => agrupar(cartas ?? []), [cartas]);
 	const grupo = useMemo(
 		() => grupos.find((g) => g.cartas.some((c) => c.id === disenando)) ?? null,
@@ -201,13 +236,324 @@ export function DisenarScreen() {
 
 	const copias = grupo?.cartas.length ?? 0;
 	const tieneDiseno = !!grupo?.cartas[copia]?.design;
+	const nombreActual = grupo ? nombreDe(grupo, lang, t("Carta sin nombre")) : t("Cartas del deck");
+
+	// Las piezas que en escritorio van en el pie del formulario y en el móvil
+	// en la hoja «Esta carta».
+	const filaCopias = grupo && (
+		<div className="flex flex-wrap items-center gap-1.5">
+			{copias > 1 && (
+				<>
+					<span className="text-xs text-muted-foreground">{t("Copia:")}</span>
+					{grupo.cartas.map((c, i) => (
+						<Button
+							key={c.id}
+							size="sm"
+							variant={i === copia ? "secondary" : "ghost"}
+							className="h-6 min-w-6 px-1.5"
+							onClick={() => {
+								if (i === copia) return;
+								setMasAbierto(false);
+								saltar(c.id);
+							}}
+							aria-label={t("Copia {n}", { n: i + 1 })}
+							aria-pressed={i === copia}
+						>
+							{i + 1}
+						</Button>
+					))}
+				</>
+			)}
+			<ConAyuda
+				className={cn(!movil && "[[data-tactil]_&]:ml-auto")}
+				claseAyuda={AYUDA_GRANDE}
+				content={t(
+					"Añade otra copia de esta carta con una copia de este diseño, marcada como variante de diseño: se imprime pero no cuenta para el mazo. Antes se guarda lo que llevas hecho.",
+				)}
+			>
+				<Button
+					size="sm"
+					variant="outline"
+					className={cn(!movil && "ml-auto")}
+					onClick={() => {
+						setMasAbierto(false);
+						void crearVariante();
+					}}
+					disabled={b.guardando}
+				>
+					<Icono icon="lucide:copy-plus" />
+					{t("Crear variante")}
+				</Button>
+			</ConAyuda>
+		</div>
+	);
+	const opcionesCopias = copias > 1 && (
+		<>
+			<label className="flex items-center gap-2 text-xs">
+				<Checkbox checked={soloEsta} onCheckedChange={(v) => setSoloEsta(v === true)} />
+				{t("Solo esta copia (hay {n})", { n: copias })}
+			</label>
+			<label className="flex items-center gap-2 text-xs">
+				<Checkbox
+					checked={porCopias}
+					onCheckedChange={(v) => {
+						useUi.getState().setPreferencia("disenarCopias", v === true);
+						setSoloEsta(v === true);
+					}}
+				/>
+				{t("Recorrer también las copias con las flechas")}
+			</label>
+		</>
+	);
+	const botonQuitar = tieneDiseno && (
+		<ConAyuda claseAyuda={AYUDA_GRANDE} content={t("Quita el diseño y deja la carta como estaba.")}>
+			<Button
+				size="sm"
+				variant="ghost"
+				onClick={() => {
+					setMasAbierto(false);
+					b.quitar(!soloEsta);
+				}}
+			>
+				<Icono icon="lucide:trash-2" />
+				{t("Quitar diseño")}
+			</Button>
+		</ConAyuda>
+	);
+	const botonDescartar = (
+		<WithTooltip content={t("Descartar los cambios")}>
+			<Button
+				size="sm"
+				variant="ghost"
+				onClick={b.descartar}
+				disabled={!b.cambiado}
+				aria-label={t("Descartar los cambios")}
+			>
+				<Icono icon="lucide:undo-2" />
+			</Button>
+		</WithTooltip>
+	);
+	const botonesGuardar = (
+		<>
+			<Button
+				size="sm"
+				variant="outline"
+				className={cn(movil && "flex-1")}
+				onClick={() => guardar(false)}
+				disabled={b.guardando}
+			>
+				{b.guardando ? (
+					<Icono icon="lucide:loader-2" className="animate-spin" />
+				) : (
+					<Icono icon="lucide:save" />
+				)}
+				{t("Guardar")}
+			</Button>
+			<Button
+				size="sm"
+				className={cn(movil && "flex-1")}
+				onClick={() => guardar(true)}
+				disabled={b.guardando}
+			>
+				{t("Guardar y siguiente")}
+			</Button>
+		</>
+	);
+
+	const vistaPrevia = (
+		<VistaPrevia
+			design={b.design}
+			huella={b.huella}
+			alDia={b.alDia}
+			recursos={recursos}
+			avisos={b.avisos}
+			lang={lang}
+			setLang={setLang}
+			cara={cara}
+			setCara={setCara}
+			caraArte={caraArte}
+			onEncuadre={encuadre}
+			cargando={b.cargando}
+			carasImpresas={resumen?.carasImpresas ?? 1}
+		/>
+	);
+	const sinCarta = (
+		<div className="flex h-full items-center justify-center p-6 text-center text-xs text-muted-foreground">
+			{b.cargando ? (
+				<Icono icon="lucide:loader-2" className="size-5 animate-spin" />
+			) : (
+				t("Elige una carta de la lista para diseñarla.")
+			)}
+		</div>
+	);
+
+	// Lo que se abre encima: la pregunta de salir con cambios y las hojas.
+	const encima = (
+		<>
+			<Dialog open={listaAbierta} onOpenChange={setListaAbierta}>
+				{listaAbierta && (
+					<Hoja
+						lado={movil ? "abajo" : "derecha"}
+						className={cn("gap-2.5 px-3", movil && "h-[85dvh] pt-3")}
+					>
+						<DialogHeader className="pr-8">
+							<DialogTitle className="text-sm">{t("Cartas del deck")}</DialogTitle>
+							<DialogDescription className="sr-only">
+								{t("Elige la carta que quieres diseñar.")}
+							</DialogDescription>
+						</DialogHeader>
+						<div className="min-h-0 flex-1">
+							<ListaCartas
+								grupos={grupos}
+								elegido={grupo?.clave ?? null}
+								onElegir={(g) => {
+									setListaAbierta(false);
+									if (g.cartas[0]) saltar(g.cartas[0].id);
+								}}
+							/>
+						</div>
+					</Hoja>
+				)}
+			</Dialog>
+			<Dialog open={masAbierto} onOpenChange={setMasAbierto}>
+				{masAbierto && b.design && (
+					<Hoja className="gap-2.5 px-3 pt-3">
+						<DialogHeader className="pr-8">
+							<DialogTitle className="text-sm">{t("Esta carta")}</DialogTitle>
+							<DialogDescription className="sr-only">
+								{t("Copias, variantes y estado de la carta que estás diseñando.")}
+							</DialogDescription>
+						</DialogHeader>
+						<ScrollArea className="min-h-0 flex-1">
+							<div className="flex flex-col gap-3 p-1">
+								<FilaInterruptor
+									etiqueta={t("Lista para imprimir")}
+									ayuda={t(
+										"Las cartas en borrador se ven en el deck, pero así sabes cuáles has revisado.",
+									)}
+									valor={b.design.status === "ready"}
+									onChange={(v) => b.cambiar((d) => ({ ...d, status: v ? "ready" : "draft" }))}
+								/>
+								{filaCopias}
+								{opcionesCopias}
+								<div className="flex items-center gap-1">{botonQuitar}</div>
+							</div>
+						</ScrollArea>
+					</Hoja>
+				)}
+			</Dialog>
+			<Confirmar
+				abierto={!!pendiente}
+				onCerrar={() => setPendiente(null)}
+				titulo={t("¿Descartar los cambios?")}
+				descripcion={t("Hay cambios sin guardar en esta carta.")}
+				accion={t("Descartar")}
+				destructiva
+				onConfirmar={() => {
+					pendiente?.();
+				}}
+				accionAlternativa={{
+					texto: t("Guardar y continuar"),
+					onClick: async () => {
+						const ok = await guardarAhora.current();
+						if (ok) pendiente?.();
+						return ok;
+					},
+				}}
+			/>
+		</>
+	);
+
+	// ── El móvil: la carta arriba y, debajo, las pestañas de lo básico.
+	if (movil) {
+		return (
+			<div ref={refMovil} className="relative h-full">
+				<div className="absolute inset-x-0 top-0 flex flex-col" style={{ height: alto ?? "100%" }}>
+					<div
+						className="flex shrink-0 items-center gap-1 border-b px-1.5 py-1"
+						data-tutorial="disenar-barra"
+					>
+						<Button
+							size="sm"
+							variant="ghost"
+							onClick={() => pasarConAviso(-1)}
+							aria-label={t("Carta anterior")}
+						>
+							<Icono icon="lucide:chevron-left" />
+						</Button>
+						<button
+							type="button"
+							onClick={() => setListaAbierta(true)}
+							aria-label={t("Cartas del deck")}
+							className="flex h-11 min-w-0 flex-1 items-center gap-1.5 rounded-md px-2 text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+						>
+							<Icono icon="lucide:layers" className="size-4 shrink-0 text-muted-foreground" />
+							<span className="min-w-0 flex-1 truncate text-xs font-medium">{nombreActual}</span>
+							<Icono icon="lucide:chevron-down" className="size-4 shrink-0 text-muted-foreground" />
+						</button>
+						<Button
+							size="sm"
+							variant="ghost"
+							onClick={() => pasarConAviso(1)}
+							aria-label={t("Carta siguiente")}
+						>
+							<Icono icon="lucide:chevron-right" />
+						</Button>
+						<Button
+							size="sm"
+							variant="ghost"
+							onClick={() => setMasAbierto(true)}
+							disabled={!b.design}
+							aria-label={t("Opciones de la carta")}
+						>
+							<Icono icon="lucide:ellipsis" />
+						</Button>
+					</div>
+					<div className="shrink-0" style={{ height: alto ? altoCarta(alto, escribiendo) : "40%" }}>
+						{vistaPrevia}
+					</div>
+					<div className="min-h-0 flex-1 border-t">
+						{b.design ? (
+							<FormularioMovil
+								design={b.design}
+								cambiar={b.cambiar}
+								cara={cara}
+								setCara={setCara}
+								colecciones={colecciones}
+								packs={packs}
+								resumen={resumen}
+							/>
+						) : (
+							sinCarta
+						)}
+					</div>
+					{b.design && (
+						<div
+							className="flex shrink-0 items-center gap-1.5 border-t p-2"
+							data-tutorial="disenar-pie"
+						>
+							{botonDescartar}
+							{botonesGuardar}
+						</div>
+					)}
+				</div>
+				{encima}
+			</div>
+		);
+	}
 
 	return (
 		<div className="flex h-full flex-col">
 			<div
-				className="flex shrink-0 items-center gap-2 border-b px-3 py-1.5"
+				className="flex shrink-0 items-center gap-2 border-b px-3 py-1.5 [[data-tactil]_&]:flex-wrap"
 				data-tutorial="disenar-barra"
 			>
+				{listaEnHoja && (
+					<Button size="sm" variant="outline" onClick={() => setListaAbierta(true)}>
+						<Icono icon="lucide:layers" />
+						{t("Cartas del deck")}
+					</Button>
+				)}
 				<Button
 					size="sm"
 					variant="ghost"
@@ -224,9 +570,11 @@ export function DisenarScreen() {
 				>
 					<Icono icon="lucide:chevron-right" />
 				</Button>
-				<span className="text-[11px] text-muted-foreground">Alt+← / Alt+→</span>
-				<div className="ml-auto flex items-center gap-1.5">
-					<WithTooltip
+				{/* Las flechas del teclado no existen con el dedo. */}
+				{!tactil && <span className="text-[11px] text-muted-foreground">Alt+← / Alt+→</span>}
+				<div className="ml-auto flex items-center gap-1.5 [[data-tactil]_&]:flex-wrap">
+					<ConAyuda
+						claseAyuda={AYUDA_GRANDE}
 						content={t(
 							"Vuelve a numerar las cartas por el orden del deck (las escritas a mano no cambian).",
 						)}
@@ -240,7 +588,7 @@ export function DisenarScreen() {
 							<Icono icon="lucide:hash" />
 							{t("Renumerar")}
 						</Button>
-					</WithTooltip>
+					</ConAyuda>
 					<Button
 						size="sm"
 						variant="ghost"
@@ -276,38 +624,30 @@ export function DisenarScreen() {
 				</div>
 			</div>
 			<ResizablePanelGroup
+				key={listaEnHoja ? "dos" : "tres"}
 				orientation="horizontal"
 				defaultLayout={layout.defaultLayout}
 				onLayoutChanged={layout.onLayoutChanged}
+				resizeTargetMinimumSize={{ coarse: 44, fine: 10 }}
 				className="min-h-0 flex-1"
 			>
-				<ResizablePanel id="lista" defaultSize="22" minSize={220}>
-					<ListaCartas
-						grupos={grupos}
-						elegido={grupo?.clave ?? null}
-						onElegir={(g) => g.cartas[0] && saltar(g.cartas[0].id)}
-					/>
-				</ResizablePanel>
-				<ResizableHandle withHandle />
+				{!listaEnHoja && (
+					<>
+						<ResizablePanel id="lista" defaultSize="22" minSize={220}>
+							<ListaCartas
+								grupos={grupos}
+								elegido={grupo?.clave ?? null}
+								onElegir={(g) => g.cartas[0] && saltar(g.cartas[0].id)}
+							/>
+						</ResizablePanel>
+						<ResizableHandle withHandle className={ASA_TACTIL} />
+					</>
+				)}
 				<ResizablePanel id="vista" minSize={320}>
-					<VistaPrevia
-						design={b.design}
-						huella={b.huella}
-						alDia={b.alDia}
-						recursos={recursos}
-						avisos={b.avisos}
-						lang={lang}
-						setLang={setLang}
-						cara={cara}
-						setCara={setCara}
-						caraArte={caraArte}
-						onEncuadre={encuadre}
-						cargando={b.cargando}
-						carasImpresas={resumen?.carasImpresas ?? 1}
-					/>
+					{vistaPrevia}
 				</ResizablePanel>
-				<ResizableHandle withHandle />
-				<ResizablePanel id="formulario" defaultSize="30" minSize={300}>
+				<ResizableHandle withHandle className={ASA_TACTIL} />
+				<ResizablePanel id="formulario" defaultSize={listaEnHoja ? "40" : "30"} minSize={300}>
 					{b.design ? (
 						<div className="flex h-full flex-col">
 							<div className="min-h-0 flex-1">
@@ -328,136 +668,21 @@ export function DisenarScreen() {
 								className="flex shrink-0 flex-col gap-2 border-t p-2.5"
 								data-tutorial="disenar-pie"
 							>
-								{grupo && (
-									<div className="flex flex-wrap items-center gap-1.5">
-										{copias > 1 && (
-											<>
-												<span className="text-xs text-muted-foreground">{t("Copia:")}</span>
-												{grupo.cartas.map((c, i) => (
-													<Button
-														key={c.id}
-														size="sm"
-														variant={i === copia ? "secondary" : "ghost"}
-														className="h-6 min-w-6 px-1.5"
-														onClick={() => i !== copia && saltar(c.id)}
-														aria-label={t("Copia {n}", { n: i + 1 })}
-														aria-pressed={i === copia}
-													>
-														{i + 1}
-													</Button>
-												))}
-											</>
-										)}
-										<WithTooltip
-											content={t(
-												"Añade otra copia de esta carta con una copia de este diseño, marcada como variante de diseño: se imprime pero no cuenta para el mazo. Antes se guarda lo que llevas hecho.",
-											)}
-										>
-											<Button
-												size="sm"
-												variant="outline"
-												className="ml-auto"
-												onClick={() => void crearVariante()}
-												disabled={b.guardando}
-											>
-												<Icono icon="lucide:copy-plus" />
-												{t("Crear variante")}
-											</Button>
-										</WithTooltip>
-									</div>
-								)}
-								{copias > 1 && (
-									<>
-										<label className="flex items-center gap-2 text-xs">
-											<Checkbox
-												checked={soloEsta}
-												onCheckedChange={(v) => setSoloEsta(v === true)}
-											/>
-											{t("Solo esta copia (hay {n})", { n: copias })}
-										</label>
-										<label className="flex items-center gap-2 text-xs">
-											<Checkbox
-												checked={porCopias}
-												onCheckedChange={(v) => {
-													useUi.getState().setPreferencia("disenarCopias", v === true);
-													setSoloEsta(v === true);
-												}}
-											/>
-											{t("Recorrer también las copias con las flechas")}
-										</label>
-									</>
-								)}
-								<div className="flex items-center gap-1.5">
-									{tieneDiseno && (
-										<WithTooltip content={t("Quita el diseño y deja la carta como estaba.")}>
-											<Button size="sm" variant="ghost" onClick={() => b.quitar(!soloEsta)}>
-												<Icono icon="lucide:trash-2" />
-												{t("Quitar diseño")}
-											</Button>
-										</WithTooltip>
-									)}
-									<WithTooltip content={t("Descartar los cambios")}>
-										<Button
-											size="sm"
-											variant="ghost"
-											onClick={b.descartar}
-											disabled={!b.cambiado}
-											aria-label={t("Descartar los cambios")}
-										>
-											<Icono icon="lucide:undo-2" />
-										</Button>
-									</WithTooltip>
-									<div className="ml-auto flex gap-1.5">
-										<Button
-											size="sm"
-											variant="outline"
-											onClick={() => guardar(false)}
-											disabled={b.guardando}
-										>
-											{b.guardando ? (
-												<Icono icon="lucide:loader-2" className="animate-spin" />
-											) : (
-												<Icono icon="lucide:save" />
-											)}
-											{t("Guardar")}
-										</Button>
-										<Button size="sm" onClick={() => guardar(true)} disabled={b.guardando}>
-											{t("Guardar y siguiente")}
-										</Button>
-									</div>
+								{filaCopias}
+								{opcionesCopias}
+								<div className="flex items-center gap-1.5 [[data-tactil]_&]:flex-wrap">
+									{botonQuitar}
+									{botonDescartar}
+									<div className="ml-auto flex gap-1.5">{botonesGuardar}</div>
 								</div>
 							</div>
 						</div>
 					) : (
-						<div className="flex h-full items-center justify-center p-6 text-center text-xs text-muted-foreground">
-							{b.cargando ? (
-								<Icono icon="lucide:loader-2" className="size-5 animate-spin" />
-							) : (
-								t("Elige una carta de la lista para diseñarla.")
-							)}
-						</div>
+						sinCarta
 					)}
 				</ResizablePanel>
 			</ResizablePanelGroup>
-			<Confirmar
-				abierto={!!pendiente}
-				onCerrar={() => setPendiente(null)}
-				titulo={t("¿Descartar los cambios?")}
-				descripcion={t("Hay cambios sin guardar en esta carta.")}
-				accion={t("Descartar")}
-				destructiva
-				onConfirmar={() => {
-					pendiente?.();
-				}}
-				accionAlternativa={{
-					texto: t("Guardar y continuar"),
-					onClick: async () => {
-						const ok = await guardarAhora.current();
-						if (ok) pendiente?.();
-						return ok;
-					},
-				}}
-			/>
+			{encima}
 		</div>
 	);
 }

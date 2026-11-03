@@ -1,8 +1,10 @@
 import { type ReactNode, useState } from "react";
 import type { Tag } from "@/bindings/Tag";
+import { Hoja } from "@/components/hoja";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogTitle } from "@/components/ui/dialog";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -16,34 +18,74 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { WithTooltip } from "@/components/ui/with-tooltip";
+import { useFormato } from "@/lib/formato";
 import { cn } from "@/lib/utils";
+import { useLateralMovil } from "./lateral-movil";
 import { contar } from "./organizar";
 import { COLORES_DE_ETIQUETA, COLORES_ETIQUETA, PuntoEtiqueta } from "./piezas";
 import { useAncla, useFiltros } from "./preferencias";
 import { useBiblioteca } from "./store";
 
-/**
- * La columna de la izquierda: todos, favoritos y cada etiqueta con cuántos
- * decks tiene. Pulsar filtra; con Ctrl se eligen varias etiquetas.
- */
-export function BarraLateral({
-	onNuevaEtiqueta,
-	onEditarEtiqueta,
-	onBorrarEtiqueta,
-}: {
+type Acciones = {
 	onNuevaEtiqueta: () => void;
 	onEditarEtiqueta: (t: Tag) => void;
 	onBorrarEtiqueta: (t: Tag) => void;
-}) {
+};
+
+/**
+ * La columna de la izquierda: todos, favoritos y cada etiqueta con cuántos
+ * decks tiene. Pulsar filtra; con Ctrl se eligen varias etiquetas.
+ *
+ * En el móvil no ocupa un lado: es una hoja que sale de abajo con el botón
+ * «Etiquetas» de la barra de herramientas (`lateral-movil.ts`).
+ */
+export function BarraLateral(acciones: Acciones) {
+	const { tamano } = useFormato();
+	const ancla = useAncla("lateral");
+	if (tamano === "movil") return <HojaLateral {...acciones} />;
+	return (
+		<aside
+			className="flex h-full w-56 shrink-0 flex-col border-r bg-sidebar/40"
+			data-tutorial={ancla}
+		>
+			<ContenidoLateral {...acciones} />
+		</aside>
+	);
+}
+
+function HojaLateral(acciones: Acciones) {
 	const { t } = useLang();
+	const abierto = useLateralMovil((s) => s.abierto);
+	const poner = useLateralMovil((s) => s.poner);
+	return (
+		<Dialog open={abierto} onOpenChange={poner}>
+			<Hoja cambiosSinGuardar={false} aria-describedby={undefined} className="gap-0 p-0">
+				<DialogTitle className="px-4 pt-4 pb-2 text-sm">{t("Etiquetas")}</DialogTitle>
+				<div className="flex min-h-0 flex-1 flex-col">
+					<ContenidoLateral {...acciones} alElegir={() => poner(false)} />
+				</div>
+			</Hoja>
+		</Dialog>
+	);
+}
+
+/** Lo que va dentro de la columna (o de la hoja). `alElegir`: cierra la hoja al pulsar una entrada suelta. */
+function ContenidoLateral({
+	onNuevaEtiqueta,
+	onEditarEtiqueta,
+	onBorrarEtiqueta,
+	alElegir,
+}: Acciones & { alElegir?: () => void }) {
+	const { t } = useLang();
+	const { tactil } = useFormato();
 	const decks = useBiblioteca((s) => s.decks) ?? [];
 	const etiquetas = useBiblioteca((s) => s.etiquetas);
 	const { filtros: f, ponerFiltros } = useFiltros();
-	const ancla = useAncla("lateral");
 	const n = contar(decks);
 	const ninguno = !f.favoritos && !f.sinEtiqueta && f.etiquetas.length === 0;
 	const elegirEtiqueta = (id: string, e: React.MouseEvent) => {
-		const varias = e.ctrlKey || e.metaKey;
+		// Con el dedo no hay Ctrl: tocar suma o quita, y la hoja sigue abierta.
+		const varias = e.ctrlKey || e.metaKey || tactil;
 		const ya = f.etiquetas.includes(id);
 		ponerFiltros({
 			sinEtiqueta: false,
@@ -57,105 +99,109 @@ export function BarraLateral({
 		});
 	};
 	return (
-		<aside
-			className="flex h-full w-56 shrink-0 flex-col border-r bg-sidebar/40"
-			data-tutorial={ancla}
-		>
-			<ScrollArea className="min-h-0 flex-1">
-				<div className="flex flex-col gap-0.5 p-2">
-					<Entrada
-						activa={ninguno}
-						icono={<Icono icon="lucide:layers" className="size-3.5" />}
-						texto={t("Todos los decks")}
-						cuenta={decks.length}
-						onClick={() => ponerFiltros({ favoritos: false, sinEtiqueta: false, etiquetas: [] })}
-					/>
-					<Entrada
-						activa={f.favoritos}
-						icono={<Icono icon="lucide:star" className="size-3.5" />}
-						texto={t("Favoritos")}
-						cuenta={n.favoritos}
-						onClick={() => ponerFiltros({ favoritos: !f.favoritos })}
-					/>
+		<ScrollArea className="min-h-0 flex-1">
+			<div className="flex flex-col gap-0.5 p-2">
+				<Entrada
+					activa={ninguno}
+					icono={<Icono icon="lucide:layers" className="size-3.5" />}
+					texto={t("Todos los decks")}
+					cuenta={decks.length}
+					onClick={() => {
+						ponerFiltros({ favoritos: false, sinEtiqueta: false, etiquetas: [] });
+						alElegir?.();
+					}}
+				/>
+				<Entrada
+					activa={f.favoritos}
+					icono={<Icono icon="lucide:star" className="size-3.5" />}
+					texto={t("Favoritos")}
+					cuenta={n.favoritos}
+					onClick={() => {
+						ponerFiltros({ favoritos: !f.favoritos });
+						alElegir?.();
+					}}
+				/>
 
-					<div className="mt-3 flex items-center gap-1 px-2 pb-1">
-						<span className="flex-1 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-							{t("Etiquetas")}
-						</span>
-						<WithTooltip content={t("Nueva etiqueta")}>
-							<Button
-								size="icon-xs"
-								variant="ghost"
-								onClick={onNuevaEtiqueta}
-								aria-label={t("Nueva etiqueta")}
-							>
-								<Icono icon="lucide:plus" />
-							</Button>
-						</WithTooltip>
-					</div>
-					{etiquetas.length === 0 ? (
-						<button
-							type="button"
+				<div className="mt-3 flex items-center gap-1 px-2 pb-1">
+					<span className="flex-1 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+						{t("Etiquetas")}
+					</span>
+					<WithTooltip content={t("Nueva etiqueta")}>
+						<Button
+							size="icon-xs"
+							variant="ghost"
 							onClick={onNuevaEtiqueta}
-							className="mx-1 flex flex-col items-center gap-1.5 rounded-lg border border-dashed p-3 text-center text-[11px] text-muted-foreground hover:bg-accent/50"
+							aria-label={t("Nueva etiqueta")}
 						>
-							<Icono icon="lucide:tags" className="size-4" />
-							{t("Crea etiquetas para ordenar tus decks por formato, idioma, estado…")}
-						</button>
-					) : (
-						etiquetas.map((tag) => (
-							<FilaEtiqueta
-								key={tag.id}
-								tag={tag}
-								activa={f.etiquetas.includes(tag.id)}
-								cuenta={n.porEtiqueta.get(tag.id) ?? 0}
-								onClick={(e) => elegirEtiqueta(tag.id, e)}
-								onEditar={() => onEditarEtiqueta(tag)}
-								onBorrar={() => onBorrarEtiqueta(tag)}
-							/>
-						))
-					)}
-					{etiquetas.length > 0 && (
-						<Entrada
-							activa={f.sinEtiqueta}
-							icono={<Icono icon="lucide:tag" className="size-3.5 opacity-50" />}
-							texto={t("Sin etiqueta")}
-							cuenta={n.sinEtiqueta}
-							onClick={() => ponerFiltros({ sinEtiqueta: !f.sinEtiqueta, etiquetas: [] })}
-						/>
-					)}
-					{f.etiquetas.length > 1 && (
-						<div className="mt-2 flex flex-col gap-1.5 rounded-lg border bg-card p-2">
-							<span className="text-[10px] text-muted-foreground">
-								{t("Con {n} etiquetas elegidas, enseñar los que tengan:", {
-									n: f.etiquetas.length,
-								})}
-							</span>
-							<ToggleGroup
-								type="single"
-								size="sm"
-								variant="outline"
-								value={f.todasLasEtiquetas ? "todas" : "alguna"}
-								onValueChange={(v) => v && ponerFiltros({ todasLasEtiquetas: v === "todas" })}
-								className="w-full"
-							>
-								<ToggleGroupItem value="alguna" className="flex-1 text-[11px]">
-									{t("Alguna")}
-								</ToggleGroupItem>
-								<ToggleGroupItem value="todas" className="flex-1 text-[11px]">
-									{t("Todas")}
-								</ToggleGroupItem>
-							</ToggleGroup>
-						</div>
-					)}
-					{etiquetas.length > 0 && f.etiquetas.length <= 1 && (
-						<p className="px-2 pt-2 text-[10px] leading-snug text-muted-foreground">
-							{t("Ctrl + clic para elegir varias.")}
-						</p>
-					)}
+							<Icono icon="lucide:plus" />
+						</Button>
+					</WithTooltip>
 				</div>
-			</ScrollArea>
-		</aside>
+				{etiquetas.length === 0 ? (
+					<button
+						type="button"
+						onClick={onNuevaEtiqueta}
+						className="mx-1 flex flex-col items-center gap-1.5 rounded-lg border border-dashed p-3 text-center text-[11px] text-muted-foreground hover:bg-accent/50"
+					>
+						<Icono icon="lucide:tags" className="size-4" />
+						{t("Crea etiquetas para ordenar tus decks por formato, idioma, estado…")}
+					</button>
+				) : (
+					etiquetas.map((tag) => (
+						<FilaEtiqueta
+							key={tag.id}
+							tag={tag}
+							activa={f.etiquetas.includes(tag.id)}
+							cuenta={n.porEtiqueta.get(tag.id) ?? 0}
+							onClick={(e) => elegirEtiqueta(tag.id, e)}
+							onEditar={() => onEditarEtiqueta(tag)}
+							onBorrar={() => onBorrarEtiqueta(tag)}
+						/>
+					))
+				)}
+				{etiquetas.length > 0 && (
+					<Entrada
+						activa={f.sinEtiqueta}
+						icono={<Icono icon="lucide:tag" className="size-3.5 opacity-50" />}
+						texto={t("Sin etiqueta")}
+						cuenta={n.sinEtiqueta}
+						onClick={() => {
+							ponerFiltros({ sinEtiqueta: !f.sinEtiqueta, etiquetas: [] });
+							alElegir?.();
+						}}
+					/>
+				)}
+				{f.etiquetas.length > 1 && (
+					<div className="mt-2 flex flex-col gap-1.5 rounded-lg border bg-card p-2">
+						<span className="text-[10px] text-muted-foreground">
+							{t("Con {n} etiquetas elegidas, enseñar los que tengan:", {
+								n: f.etiquetas.length,
+							})}
+						</span>
+						<ToggleGroup
+							type="single"
+							size="sm"
+							variant="outline"
+							value={f.todasLasEtiquetas ? "todas" : "alguna"}
+							onValueChange={(v) => v && ponerFiltros({ todasLasEtiquetas: v === "todas" })}
+							className="w-full"
+						>
+							<ToggleGroupItem value="alguna" className="flex-1 text-[11px]">
+								{t("Alguna")}
+							</ToggleGroupItem>
+							<ToggleGroupItem value="todas" className="flex-1 text-[11px]">
+								{t("Todas")}
+							</ToggleGroupItem>
+						</ToggleGroup>
+					</div>
+				)}
+				{etiquetas.length > 0 && f.etiquetas.length <= 1 && (
+					<p className="px-2 pt-2 text-[10px] leading-snug text-muted-foreground">
+						{tactil ? t("Toca varias para combinarlas.") : t("Ctrl + clic para elegir varias.")}
+					</p>
+				)}
+			</div>
+		</ScrollArea>
 	);
 }
 
@@ -177,7 +223,7 @@ function Entrada({
 			type="button"
 			onClick={onClick}
 			className={cn(
-				"flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-accent",
+				"flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-accent [[data-tactil]_&]:min-h-11",
 				activa && "bg-accent font-medium text-accent-foreground",
 			)}
 		>
@@ -216,14 +262,14 @@ function FilaEtiqueta({
 			<button
 				type="button"
 				onClick={onClick}
-				className="flex min-w-0 flex-1 items-center gap-2 py-1.5 pl-2 text-left"
+				className="flex min-w-0 flex-1 items-center gap-2 py-1.5 pl-2 text-left [[data-tactil]_&]:min-h-11"
 			>
 				<PuntoEtiqueta color={tag.color} icono={tag.icon} className="mx-[3px]" />
 				<span className="min-w-0 flex-1 truncate">{tag.name}</span>
 			</button>
 			<span
 				className={cn(
-					"px-1 font-mono text-[10px] text-muted-foreground tabular-nums group-hover:hidden",
+					"px-1 font-mono text-[10px] text-muted-foreground tabular-nums group-hover:hidden [[data-tactil]_&]:block",
 					menu && "hidden",
 				)}
 			>
@@ -234,7 +280,7 @@ function FilaEtiqueta({
 					<Button
 						size="icon-xs"
 						variant="ghost"
-						className="mr-0.5 hidden group-hover:inline-flex data-[state=open]:inline-flex"
+						className="mr-0.5 hidden group-hover:inline-flex data-[state=open]:inline-flex [[data-tactil]_&]:inline-flex"
 						aria-label={t("Más acciones")}
 					>
 						<Icono icon="lucide:more-horizontal" />

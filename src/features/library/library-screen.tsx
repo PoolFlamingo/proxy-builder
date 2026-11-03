@@ -2,21 +2,19 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { DeckSummary } from "@/bindings/DeckSummary";
 import { Confirmar } from "@/components/confirmar";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { megas, nombreSeguro } from "@/features/export/acciones";
+import { usePasarUi } from "@/features/pasar/store";
 import { abrirParaImportar, guardarParaExportar } from "@/lib/dialogos";
+import { useFormato } from "@/lib/formato";
 import { call } from "@/lib/ipc";
+import { esMovil } from "@/lib/plataforma";
 import { cn } from "@/lib/utils";
 import { abrirDeck, guardarAhora, useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
@@ -24,7 +22,7 @@ import { BarraHerramientas } from "./barra-herramientas";
 import { BarraLateral } from "./barra-lateral";
 import { useEtiquetasUi } from "./etiquetas-ui";
 import { type Acciones, AccionesDeck, MenuDeck } from "./menu-deck";
-import { seleccionar } from "./organizar";
+import { alPulsarDeck, entrarEnSeleccion, seleccionar } from "./organizar";
 import { useFiltros, usePrefs } from "./preferencias";
 import { PropiedadesDialog } from "./propiedades-dialog";
 import { useBiblioteca } from "./store";
@@ -40,6 +38,7 @@ import { useOrganizados, ZonaDecks } from "./zona-decks";
  */
 export function LibraryScreen() {
 	const { t, mensaje } = useLang();
+	const movil = useFormato().tamano === "movil";
 	const actual = useDeck((s) => s.deck?.id ?? null);
 	const decks = useBiblioteca((s) => s.decks);
 	const prefs = usePrefs();
@@ -77,7 +76,6 @@ export function LibraryScreen() {
 		setSeleccion((s) => (s.every((id) => hay.has(id)) ? s : s.filter((id) => hay.has(id))));
 	}, [decks]);
 
-	const [importando, setImportando] = useState(false);
 	const refrescar = () => useBiblioteca.getState().refrescar();
 	const recargar = () => useBiblioteca.getState().cargar();
 
@@ -114,10 +112,16 @@ export function LibraryScreen() {
 		if (!destino) return;
 		const bytes = await call("deck_export_package", { id: d.id, path: destino });
 		toast.success(t("Deck exportado ({mb})", { mb: megas(bytes) }), {
-			action: {
-				label: t("Mostrar en carpeta"),
-				onClick: () => void call("export_reveal", { path: destino }),
-			},
+			// En móvil no hay carpeta que enseñar (es un `content://`): se comparte.
+			action: (await esMovil())
+				? {
+						label: t("Compartir"),
+						onClick: () => void call("compartir_fichero", { ruta: destino }),
+					}
+				: {
+						label: t("Mostrar en carpeta"),
+						onClick: () => void call("export_reveal", { path: destino }),
+					},
 		});
 	});
 
@@ -131,16 +135,9 @@ export function LibraryScreen() {
 			})
 		)?.[0];
 		if (!ruta) return;
-		setImportando(true);
-		try {
-			const d = await call("deck_import_package", { path: ruta });
-			toast.success(t("«{n}» importado", { n: d.name }), {
-				action: { label: t("Abrir"), onClick: () => abrir(d.id) },
-			});
-			await recargar();
-		} finally {
-			setImportando(false);
-		}
+		// Enseña lo que trae y pregunta (con proxies o solo originales, y si ya
+		// lo tienes): el mismo diálogo que al recibir de otro equipo.
+		usePasarUi.getState().abrirImportar(ruta);
 	});
 
 	const liberar = intentar(async () => {
@@ -168,9 +165,10 @@ export function LibraryScreen() {
 		casillas: true,
 		abierto: actual,
 		pulsar: (id, e) => {
-			if (e.shiftKey) {
+			const que = alPulsarDeck(seleccion.length, e);
+			if (que === "tramo") {
 				setSeleccion((s) => seleccionar(s, enPantalla, id, ancla.current, "tramo"));
-			} else if (e.ctrlKey || e.metaKey || seleccion.length > 0) {
+			} else if (que === "alternar") {
 				// Con algo elegido, pulsar sigue eligiendo (abrir: doble clic o el menú).
 				setSeleccion((s) => seleccionar(s, enPantalla, id, null, "alternar"));
 				ancla.current = id;
@@ -186,6 +184,12 @@ export function LibraryScreen() {
 			setSeleccion((s) => seleccionar(s, enPantalla, id, null, "alternar"));
 			ancla.current = id;
 		},
+		// Con el dedo: mantener pulsado un deck entra en el modo selección con él
+		// elegido; después los toques suman o quitan (`pulsar`, con algo elegido).
+		entrarSeleccion: (id) => {
+			setSeleccion((s) => entrarEnSeleccion(s, id));
+			ancla.current = id;
+		},
 		marcar: (ids, si) =>
 			setSeleccion((s) => (si ? [...new Set([...s, ...ids])] : s.filter((x) => !ids.includes(x)))),
 		abrir,
@@ -194,7 +198,8 @@ export function LibraryScreen() {
 	// Teclado: Ctrl+F busca, Ctrl+A elige todo lo visible, Esc suelta, Supr borra.
 	useEffect(() => {
 		const tecla = (e: KeyboardEvent) => {
-			const el = e.target as HTMLElement | null;
+			// El «atrás» de Android manda un Escape al `document` (`lib/atras.ts`): no es un elemento.
+			const el = e.target instanceof Element ? e.target : null;
 			if (el?.closest('[role="dialog"],[role="menu"],[role="alertdialog"]')) return;
 			const escribiendo = !!el?.closest("input,textarea,[contenteditable=true]");
 			const ctrl = e.ctrlKey || e.metaKey;
@@ -228,16 +233,24 @@ export function LibraryScreen() {
 						titulo={t("Biblioteca")}
 						acciones={
 							<>
-								<Button size="sm" variant="ghost" onClick={liberar}>
+								{/* Móvil: solo el icono (su nombre sale al mantenerlo pulsado). */}
+								<Button
+									size={movil ? "icon-sm" : "sm"}
+									variant="ghost"
+									onClick={liberar}
+									aria-label={t("Liberar espacio")}
+								>
 									<Icono icon="lucide:hard-drive-download" />
-									{t("Liberar espacio")}
+									{!movil && t("Liberar espacio")}
 								</Button>
-								<Button size="sm" variant="outline" onClick={importarPaquete} disabled={importando}>
-									<Icono
-										icon={importando ? "lucide:loader-2" : "lucide:import"}
-										className={cn(importando && "animate-spin")}
-									/>
-									{t("Importar .pbdeck")}
+								<Button
+									size={movil ? "icon-sm" : "sm"}
+									variant="outline"
+									onClick={importarPaquete}
+									aria-label={t("Importar .pbdeck")}
+								>
+									<Icono icon="lucide:import" />
+									{!movil && t("Importar .pbdeck")}
 								</Button>
 								<Button size="sm" onClick={nuevo}>
 									<Icono icon="lucide:plus" />
@@ -247,7 +260,8 @@ export function LibraryScreen() {
 						}
 					/>
 					<div className="flex min-h-0 flex-1">
-						{prefs.lateral && (
+						{/* Móvil: la barra lateral es una hoja (se abre con «Etiquetas»). */}
+						{(prefs.lateral || movil) && (
 							<BarraLateral
 								onNuevaEtiqueta={() => etiquetasUi.editar({ tipo: "nueva", para: seleccion })}
 								onEditarEtiqueta={(tag) => etiquetasUi.editar({ tipo: "editar", tag })}
@@ -327,44 +341,62 @@ function BarraSeleccion({
 	const primero = elegidos[0];
 	const todosFavoritos = elegidos.length > 0 && elegidos.every((d) => d.pinned);
 	const faltan = visibles.some((id) => !seleccion.includes(id));
+	const movil = useFormato().tamano === "movil";
+	const favorito = todosFavoritos ? t("Quitar de favoritos") : t("Añadir a favoritos");
 	return (
-		<div className="absolute bottom-9 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-xl border bg-popover py-1.5 pr-1.5 pl-3 text-xs whitespace-nowrap shadow-lg">
-			<span className="font-medium">
-				{seleccion.length === 1
-					? t("1 deck elegido")
-					: t("{n} decks elegidos", { n: seleccion.length })}
-			</span>
-			{faltan && (
-				<Button size="xs" variant="ghost" onClick={onTodos}>
-					{t("Elegir todos")}
-				</Button>
+		<div
+			className={cn(
+				"absolute z-10 flex rounded-xl border bg-popover text-xs shadow-lg",
+				movil
+					? "inset-x-2 bottom-9 flex-col gap-1 p-1.5 pl-3"
+					: "bottom-9 left-1/2 -translate-x-1/2 items-center gap-1.5 py-1.5 pr-1.5 pl-3 whitespace-nowrap",
 			)}
-			<div className="ml-2 flex items-center gap-1.5">
+		>
+			<div className="flex items-center gap-1.5">
+				<span className="font-medium">
+					{seleccion.length === 1
+						? t("1 deck elegido")
+						: t("{n} decks elegidos", { n: seleccion.length })}
+				</span>
+				{faltan && (
+					<Button size="xs" variant="ghost" className={cn(movil && "ml-auto")} onClick={onTodos}>
+						{t("Elegir todos")}
+					</Button>
+				)}
+			</div>
+			<div className={cn("flex items-center gap-1.5", movil ? "justify-around" : "ml-2")}>
 				<Button
-					size="xs"
+					size={movil ? "icon-xs" : "xs"}
 					variant="ghost"
+					aria-label={favorito}
 					onClick={() => void useBiblioteca.getState().favorito(seleccion, !todosFavoritos)}
 				>
 					<Icono
 						icon="lucide:star"
 						className={cn(todosFavoritos && "fill-amber-400 text-amber-500")}
 					/>
-					{todosFavoritos ? t("Quitar de favoritos") : t("Añadir a favoritos")}
+					{!movil && favorito}
 				</Button>
 				{primero && (
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
-							<Button size="xs" variant="outline">
+							<Button size={movil ? "icon-xs" : "xs"} variant="outline" aria-label={t("Acciones")}>
 								<Icono icon="lucide:more-horizontal" />
-								{t("Acciones")}
+								{!movil && t("Acciones")}
 							</Button>
 						</DropdownMenuTrigger>
 						<MenuDeck deck={primero} />
 					</DropdownMenu>
 				)}
-				<Button size="xs" variant="ghost" className="text-destructive" onClick={onBorrar}>
+				<Button
+					size={movil ? "icon-xs" : "xs"}
+					variant="ghost"
+					className="text-destructive"
+					aria-label={t("Eliminar")}
+					onClick={onBorrar}
+				>
 					<Icono icon="lucide:trash-2" />
-					{t("Eliminar")}
+					{!movil && t("Eliminar")}
 				</Button>
 				<Button
 					size="icon-xs"
@@ -431,7 +463,7 @@ function DialogoRenombrar({
 	};
 	return (
 		<Dialog open={deck !== null} onOpenChange={(o) => !o && onCerrar()}>
-			<DialogContent className="sm:max-w-sm" cambiosSinGuardar={false}>
+			<DialogoAdaptable compacto className="sm:max-w-sm" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle>{t("Renombrar deck")}</DialogTitle>
 				</DialogHeader>
@@ -450,7 +482,7 @@ function DialogoRenombrar({
 						{t("Guardar")}
 					</Button>
 				</DialogFooter>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }

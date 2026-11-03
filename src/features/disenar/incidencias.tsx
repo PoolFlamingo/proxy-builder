@@ -43,11 +43,15 @@ const NIVELES: {
 /** Lo que tarda en cerrarse al salir el ratón (para poder pasar al globo). */
 const CIERRE_MS = 150;
 
+/** Con el dedo o el lápiz no hay «encima»: el globo se abre y se cierra con un toque. */
+const conRaton = (e: { pointerType?: string }) => e.pointerType === "mouse";
+
 /**
  * La franja de incidencias de la carta, siempre en su sitio: un contador por
  * nivel (errores, avisos, información), aunque sea 0, para que la vista
  * previa no salte cuando aparece o desaparece uno. Al pasar el ratón sobre un
- * contador sale el globo con lo que hay (o que no hay nada).
+ * contador sale el globo con lo que hay (o que no hay nada); con el dedo, un
+ * toque lo abre y otro (o tocar fuera) lo cierra.
  */
 export function Incidencias({
 	avisos,
@@ -58,7 +62,7 @@ export function Incidencias({
 }) {
 	return (
 		<div
-			className="flex h-8 shrink-0 items-center gap-1 border-t px-2"
+			className="flex h-8 shrink-0 items-center gap-1 border-t px-2 [[data-tactil]_&]:h-11"
 			data-tutorial="disenar-incidencias"
 		>
 			{NIVELES.map((n) => (
@@ -84,6 +88,10 @@ function Contador({
 	const { t } = useLang();
 	const [abierto, setAbierto] = useState(false);
 	const cierre = useRef<number | undefined>(undefined);
+	const boton = useRef<HTMLButtonElement>(null);
+	// Cómo se toca de verdad (no lo que diga la plataforma): un portátil con
+	// pantalla táctil tiene las dos cosas.
+	const conDedo = useRef(false);
 	const abrir = () => {
 		window.clearTimeout(cierre.current);
 		setAbierto(true);
@@ -98,16 +106,33 @@ function Contador({
 		<Popover open={abierto} onOpenChange={setAbierto}>
 			<PopoverAnchor asChild>
 				<button
+					ref={boton}
 					type="button"
 					className={cn(
-						"flex h-6 items-center gap-1 rounded-md px-1.5 text-[11px] font-medium tabular-nums outline-none hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50",
+						"flex h-6 items-center gap-1 rounded-md px-1.5 text-[11px] font-medium tabular-nums outline-none hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50 [[data-tactil]_&]:h-11 [[data-tactil]_&]:min-w-11 [[data-tactil]_&]:justify-center",
 						avisos.length > 0 ? color : "text-muted-foreground/60",
 					)}
 					aria-label={`${t(titulo)}: ${avisos.length}`}
-					onPointerEnter={abrir}
-					onPointerLeave={cerrar}
-					onFocus={abrir}
-					onBlur={cerrar}
+					onPointerDown={(e) => {
+						conDedo.current = !conRaton(e);
+					}}
+					onKeyDown={() => {
+						conDedo.current = false;
+					}}
+					// táctil: con el dedo no hay «encima»: un toque (`onClick`) abre y cierra el
+					// globo, y tocar fuera lo cierra; el entrar y salir solo valen con el ratón.
+					onPointerEnter={(e) => conRaton(e) && abrir()}
+					onPointerLeave={(e) => conRaton(e) && cerrar()}
+					onClick={() => {
+						if (conDedo.current) setAbierto((a) => !a);
+					}}
+					onFocus={(e) => {
+						// El foco que deja un toque no abre nada: solo el del teclado.
+						if (!conDedo.current && e.currentTarget.matches(":focus-visible")) abrir();
+					}}
+					onBlur={() => {
+						if (!conDedo.current) cerrar();
+					}}
 				>
 					<Icono icon={icono} className="size-3.5" />
 					{avisos.length}
@@ -117,8 +142,13 @@ function Contador({
 				side="top"
 				align="start"
 				className="w-80 p-0"
-				onPointerEnter={abrir}
-				onPointerLeave={cerrar}
+				// táctil: lo mismo que el botón: el globo se queda abierto mientras se lee y
+				// se cierra tocando fuera (salvo en el propio botón, que ya lo alterna).
+				onPointerEnter={(e) => conRaton(e) && abrir()}
+				onPointerLeave={(e) => conRaton(e) && cerrar()}
+				onInteractOutside={(e) => {
+					if (e.target instanceof Node && boton.current?.contains(e.target)) e.preventDefault();
+				}}
 				onOpenAutoFocus={(e) => e.preventDefault()}
 				onCloseAutoFocus={(e) => e.preventDefault()}
 			>

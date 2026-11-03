@@ -4,18 +4,18 @@ import type { CardEdits } from "@/bindings/CardEdits";
 import type { DeckCard } from "@/bindings/DeckCard";
 import type { Rotation } from "@/bindings/Rotation";
 import { FilaDeslizador } from "@/components/campos";
+import { ConAyuda } from "@/components/con-ayuda";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogCuerpo,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { WithTooltip } from "@/components/ui/with-tooltip";
 import { cartaPorId } from "@/features/preview/acciones-carta";
 import { EDICION_NEUTRA, parametros, urlMiniatura } from "@/lib/image-url";
 import { useAlRitmo, useImagenViva, useRafaga } from "@/lib/imagen-viva";
@@ -151,15 +151,16 @@ function Contenido({ carta }: { carta: DeckCard }) {
 	const cambiado = JSON.stringify(borrador) !== JSON.stringify(carta.edits);
 
 	return (
-		<DialogContent className="flex max-h-[92vh] flex-col sm:max-w-4xl">
+		<DialogoAdaptable className="flex max-h-[92vh] flex-col sm:max-w-4xl">
 			<DialogHeader>
 				<DialogTitle>{t("Editar {carta}", { carta: carta.meta.name || t("carta") })}</DialogTitle>
 			</DialogHeader>
-			<div className="flex min-h-0 flex-1 gap-4">
-				<div className="flex w-[46%] shrink-0 flex-col items-center gap-2">
+			<div className="flex min-h-0 flex-1 flex-col gap-4 sm:flex-row">
+				{/* En móvil la carta queda arriba, pequeña, y los deslizadores se desplazan debajo. */}
+				<div className="flex shrink-0 flex-col items-center gap-2 sm:w-[46%]">
 					<div
 						ref={marco}
-						className="relative aspect-[63/88] w-full max-w-sm touch-none overflow-hidden rounded-[4.5%] bg-muted shadow-md"
+						className="relative aspect-[63/88] w-full max-w-[12rem] touch-none sm:max-w-sm overflow-hidden rounded-[4.5%] bg-muted shadow-md"
 						style={{ cursor: borrador.crop.zoom > 1 ? "grab" : "default" }}
 						onPointerDown={alBajar}
 						onPointerMove={alMover}
@@ -262,8 +263,9 @@ function Contenido({ carta }: { carta: DeckCard }) {
 					<Icono icon="lucide:undo-2" />
 					{t("Restablecer todo")}
 				</Button>
-				<div className="flex flex-wrap justify-end gap-2">
-					<WithTooltip
+				<div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+					<ConAyuda
+						className="[[data-tactil]_&]:flex [[data-tactil]_&]:[&>button]:flex-1"
 						content={t(
 							"Solo los retoques de color; el giro y el encuadre se quedan en esta carta.",
 						)}
@@ -271,21 +273,22 @@ function Contenido({ carta }: { carta: DeckCard }) {
 						<Button size="sm" variant="outline" onClick={() => guardar("todas")}>
 							{t("Aplicar a todas las cartas")}
 						</Button>
-					</WithTooltip>
+					</ConAyuda>
 					{copias > 0 && (
-						<WithTooltip
+						<ConAyuda
+							className="[[data-tactil]_&]:flex [[data-tactil]_&]:[&>button]:flex-1"
 							content={t("Las que llevan la misma imagen: giro, encuadre y retoques, todo igual.")}
 						>
 							<Button size="sm" variant="outline" onClick={() => guardar("copias")}>
 								{t("Aplicar también a sus copias ({n})", { n: copias })}
 							</Button>
-						</WithTooltip>
+						</ConAyuda>
 					)}
 					<Button size="sm" onClick={() => guardar("carta")} disabled={!cambiado}>
 						{t("Aplicar")}
 					</Button>
 				</div>
 			</DialogFooter>
-		</DialogContent>
+		</DialogoAdaptable>
 	);
 }

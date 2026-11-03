@@ -7,8 +7,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { useVisible } from "@/features/preview/visibilidad";
+import { useFormato } from "@/lib/formato";
 import { EDICION_NEUTRA, urlMiniatura } from "@/lib/image-url";
+import { usePulsacionLarga } from "@/lib/pulsacion-larga";
 import { cn } from "@/lib/utils";
+import { clasesCuadricula } from "./disposicion";
 import { MenuContextualDeck, MenuDeck } from "./menu-deck";
 import { ChipsEtiquetas, CLASES, Identidad, useHace } from "./piezas";
 import { usePrefsSel } from "./preferencias";
@@ -46,6 +49,11 @@ export type Seleccion = {
 	/** Marca (o desmarca) varios a la vez. */
 	marcar: (ids: string[], si: boolean) => void;
 	abrir: (id: string) => void;
+	/**
+	 * Con el dedo, mantener pulsado un deck entra en el modo selección con él
+	 * elegido (los toques siguientes suman o quitan). Sin esto, no hay.
+	 */
+	entrarSeleccion?: (id: string) => void;
 	/** Con casillas se pueden elegir varios; sin ellas (Jugar) solo se elige uno. */
 	casillas: boolean;
 	/** El doble clic, si hace algo distinto de `abrir` (en la lista, `abrir`). */
@@ -60,16 +68,11 @@ export function useSeleccion(): Seleccion {
 	return s;
 }
 
-const COLUMNAS = {
-	s: "grid-cols-[repeat(auto-fill,minmax(140px,1fr))]",
-	m: "grid-cols-[repeat(auto-fill,minmax(180px,1fr))]",
-	l: "grid-cols-[repeat(auto-fill,minmax(240px,1fr))]",
-};
-
 export function VistaCuadricula({ decks }: { decks: DeckSummary[] }) {
 	const tamano = usePrefsSel((s) => s.tamano);
+	const { tamano: formato } = useFormato();
 	return (
-		<div className={cn("grid gap-4", COLUMNAS[tamano])}>
+		<div className={cn("grid", clasesCuadricula(formato, tamano))}>
 			{decks.map((d) => (
 				<TarjetaDeck key={d.id} deck={d} />
 			))}
@@ -88,10 +91,17 @@ function TarjetaDeck({ deck: d }: { deck: DeckSummary }) {
 	const visible = useVisible(ref);
 	const marcado = sel.seleccion.includes(d.id);
 	const conSeleccion = sel.seleccion.length > 0;
+	const { tactil } = useFormato();
+	// Con el dedo y casillas: mantener pulsado elige (un gesto por elemento; el
+	// menú es el «⋯»). Sin casillas (Jugar) sigue el menú del clic derecho.
+	const eligeAlMantener = tactil && sel.casillas && !!sel.entrarSeleccion;
+	const larga = usePulsacionLarga(() => sel.entrarSeleccion?.(d.id));
 	return (
-		<MenuContextualDeck deck={d}>
+		<MenuContextualDeck deck={d} deshabilitado={eligeAlMantener}>
 			<div
 				ref={setRef}
+				{...(eligeAlMantener ? larga : {})}
+				data-pulsacion-larga={eligeAlMantener ? "" : undefined}
 				className={cn(
 					"group relative flex flex-col gap-2 rounded-xl border bg-card p-2.5 transition-shadow hover:shadow-md",
 					d.id === sel.abierto && "ring-2 ring-primary",
@@ -143,7 +153,9 @@ function TarjetaDeck({ deck: d }: { deck: DeckSummary }) {
 						onClick={() => void useBiblioteca.getState().favorito([d.id], !d.pinned)}
 						className={cn(
 							"absolute top-3.5 right-3.5 rounded-full bg-background/80 p-1 shadow transition-opacity",
-							d.pinned ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+							d.pinned
+								? "opacity-100"
+								: "opacity-0 group-hover:opacity-100 [[data-tactil]_&]:opacity-100",
 						)}
 						aria-label={d.pinned ? t("Quitar de favoritos") : t("Añadir a favoritos")}
 					>

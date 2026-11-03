@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { DeckCard } from "@/bindings/DeckCard";
 import type { FichaPropuesta } from "@/bindings/FichaPropuesta";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogCuerpo,
 	DialogDescription,
 	DialogFooter,
@@ -78,7 +78,7 @@ export function FichasDialog() {
 
 	return (
 		<Dialog open={abierto} onOpenChange={(o) => !o && !anadiendo && cerrar()}>
-			<DialogContent className="sm:max-w-3xl" cambiosSinGuardar={false}>
+			<DialogoAdaptable className="sm:max-w-3xl" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle>{t("Detectar fichas")}</DialogTitle>
 					<DialogDescription>
@@ -132,7 +132,7 @@ export function FichasDialog() {
 						{t("Añadir {n} fichas", { n: elegidas.size })}
 					</Button>
 				</DialogFooter>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }

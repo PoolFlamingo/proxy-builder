@@ -67,7 +67,7 @@ export function Probabilidades({ s }: { s: DeckStats }) {
 				</p>
 				<div className="flex flex-wrap items-center gap-2">
 					<Select value={actual?.valor} onValueChange={setElegida}>
-						<SelectTrigger size="sm" className="h-7 w-72 text-xs">
+						<SelectTrigger size="sm" className="h-7 w-72 max-w-full text-xs">
 							<SelectValue />
 						</SelectTrigger>
 						<SelectContent>

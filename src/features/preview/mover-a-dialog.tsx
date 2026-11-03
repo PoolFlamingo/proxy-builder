@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { CampoNumero } from "@/components/campos";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
@@ -24,7 +24,7 @@ export function MoverADialog() {
 	const cerrar = () => useUi.getState().abrir(null);
 	return (
 		<Dialog open={!!ids} onOpenChange={(o) => !o && cerrar()}>
-			<DialogContent className="sm:max-w-xs" cambiosSinGuardar={false}>
+			<DialogoAdaptable compacto className="sm:max-w-xs" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle>{t("Mover a posición")}</DialogTitle>
 					<DialogDescription>
@@ -54,7 +54,7 @@ export function MoverADialog() {
 						{t("Mover")}
 					</Button>
 				</DialogFooter>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }

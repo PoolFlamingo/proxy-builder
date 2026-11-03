@@ -1,21 +1,19 @@
 import { useEffect, useState } from "react";
 import type { ComoEnSala } from "@/bindings/ComoEnSala";
 import { Selector } from "@/components/campos";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useMesaMovil } from "@/features/mesa/formato-mesa";
+import { useFormato } from "@/lib/formato";
 import { cn } from "@/lib/utils";
 import { useSalas } from "@/stores/salas-store";
 import type { Preparacion } from "../mesa/red/red-dialog";
+import { codigoBonito, codigoDeSala, codigoDeSalaCompleto } from "./codigo";
 import { conectar, crearPlaygroup, usarCodigo } from "./conexion-salas";
 import { PanelPlaygroup } from "./playgroup-panel";
 import { SalaEspera } from "./sala-espera";
@@ -65,9 +63,19 @@ export function SalasDialog({
 	}, [playgroups, elegido]);
 
 	const pg = playgroups.find((p) => p.id === elegido) ?? null;
+	const movil = useMesaMovil();
+	const { horizontal } = useFormato();
+	const apilado = movil && !horizontal;
+	const lateral = (
+		<>
+			<ListaPlaygroups elegido={elegido} onElegir={setElegido} corta={movil} />
+			<CrearPlaygroup />
+			<UnirseConCodigo apodo={preparar.nombre} />
+		</>
+	);
 	return (
 		<Dialog open={abierto} onOpenChange={(v) => !v && onCerrar()}>
-			<DialogContent className="max-w-4xl">
+			<DialogoAdaptable className="max-w-4xl">
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-1.5">
 						<Icono icon="lucide:users" className="size-4 text-primary" />
@@ -130,12 +138,24 @@ export function SalasDialog({
 						)}
 					</div>
 				) : (
-					<div className="flex h-[min(560px,70vh)] min-h-0 gap-2.5">
-						<aside className="flex w-64 shrink-0 flex-col gap-2.5">
-							<ListaPlaygroups elegido={elegido} onElegir={setElegido} />
-							<CrearPlaygroup />
-							<UnirseConCodigo apodo={preparar.nombre} />
-						</aside>
+					<div
+						className={cn(
+							"flex min-h-0 gap-2.5",
+							// A pantalla completa (un móvil) el cuerpo ocupa lo que queda; de pie, uno encima del otro.
+							movil ? "flex-1" : "h-[min(560px,70vh)]",
+							apilado && "flex-col",
+						)}
+					>
+						{movil ? (
+							<ScrollArea
+								className={cn("shrink-0", apilado ? "max-h-[40%]" : "w-64")}
+								viewportClassName="h-full"
+							>
+								<aside className="flex flex-col gap-2.5">{lateral}</aside>
+							</ScrollArea>
+						) : (
+							<aside className="flex w-64 shrink-0 flex-col gap-2.5">{lateral}</aside>
+						)}
 						<section className="flex min-h-0 flex-1 flex-col rounded-lg border bg-card/40 p-2.5">
 							{sala ? (
 								<SalaEspera preparar={preparar} />
@@ -151,7 +171,7 @@ export function SalasDialog({
 						</section>
 					</div>
 				)}
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }
@@ -159,15 +179,21 @@ export function SalasDialog({
 function ListaPlaygroups({
 	elegido,
 	onElegir,
+	corta = false,
 }: {
 	elegido: string | null;
 	onElegir: (id: string) => void;
+	/** Con poco alto (un móvil), la lista no pasa de unas filas y se desplaza. */
+	corta?: boolean;
 }) {
 	const { t } = useLang();
 	const playgroups = useSalas((s) => s.playgroups);
 	const sala = useSalas((s) => s.sala);
 	return (
-		<ScrollArea className="min-h-0 flex-1 rounded-lg border bg-card/40">
+		<ScrollArea
+			className={cn("rounded-lg border bg-card/40", !corta && "min-h-0 flex-1")}
+			viewportClassName={corta ? "max-h-40" : undefined}
+		>
 			<ul className="flex flex-col gap-1 p-1">
 				{playgroups.map((p) => {
 					const enLinea = p.miembros.filter((m) => m.enLinea).length;
@@ -241,12 +267,12 @@ function UnirseConCodigo({ apodo }: { apodo: string }) {
 	// El código de un enlace de invitación entra aquí; unirse lo decide la persona.
 	useEffect(() => {
 		if (!entrante) return;
-		setCodigo(`${entrante.slice(0, 5)}-${entrante.slice(5)}`);
+		setCodigo(codigoBonito(entrante));
 		useSalas.getState().poner({ enlaceEntrante: null });
 	}, [entrante]);
 	const usar = async () => {
 		setOcupado(true);
-		if (await usarCodigo(codigo.trim(), como, apodo)) setCodigo("");
+		if (await usarCodigo(codigoDeSala(codigo), como, apodo)) setCodigo("");
 		setOcupado(false);
 	};
 	return (
@@ -254,8 +280,10 @@ function UnirseConCodigo({ apodo }: { apodo: string }) {
 			<span className="text-xs font-medium">{t("Unirse con un código")}</span>
 			<Input
 				value={codigo}
-				onChange={(e) => setCodigo(e.target.value)}
+				// Vale el código solo o el enlace entero que se comparte: se queda el código.
+				onChange={(e) => setCodigo(codigoDeSala(e.target.value))}
 				placeholder="XXXXX-XXXXX"
+				aria-label={t("Código de la sala o del playgroup")}
 				className="h-7 font-mono text-xs uppercase"
 				spellCheck={false}
 			/>
@@ -271,7 +299,7 @@ function UnirseConCodigo({ apodo }: { apodo: string }) {
 				<Button
 					size="sm"
 					className="ml-auto"
-					disabled={codigo.replace(/[\s-]/g, "").length !== 10 || ocupado || !!sala}
+					disabled={!codigoDeSalaCompleto(codigo) || ocupado || !!sala}
 					onClick={usar}
 				>
 					<Icono icon="lucide:log-in" className="size-3.5" />

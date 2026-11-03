@@ -46,7 +46,7 @@ export function SalaEspera({ preparar }: { preparar: Preparacion }) {
 
 	return (
 		<div className="flex min-h-0 flex-1 flex-col gap-2.5">
-			<div className="flex items-center gap-2.5">
+			<div className="flex flex-wrap items-center gap-2.5">
 				<h3 className="text-sm font-semibold">{t("Sala de espera")}</h3>
 				<span className="text-[11px] text-muted-foreground">
 					{t("Jugadores: {cuantos} de {maximo}", {
@@ -54,7 +54,7 @@ export function SalaEspera({ preparar }: { preparar: Preparacion }) {
 						maximo: sala.sala.maxJugadores,
 					})}
 				</span>
-				<div className="ml-auto">
+				<div className="ml-auto flex flex-wrap justify-end">
 					{codigo ? (
 						<CodigoInvitacion codigo={codigo} />
 					) : (
@@ -76,7 +76,7 @@ export function SalaEspera({ preparar }: { preparar: Preparacion }) {
 						return (
 							<li
 								key={m.clave}
-								className="flex items-center gap-2.5 rounded-md border bg-card px-2.5 py-1.5 text-xs"
+								className="flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-md border bg-card px-2.5 py-1.5 text-xs"
 							>
 								<span
 									className={
@@ -183,7 +183,7 @@ export function SalaEspera({ preparar }: { preparar: Preparacion }) {
 					</Button>
 				</div>
 			)}
-			<div className="flex items-center justify-end gap-2.5">
+			<div className="flex flex-wrap items-center justify-end gap-2.5">
 				{empezada ? (
 					<p className="mr-auto flex items-center gap-1.5 text-xs text-muted-foreground">
 						<Icono icon="lucide:loader-2" className="size-3.5 animate-spin" />
@@ -201,6 +201,14 @@ export function SalaEspera({ preparar }: { preparar: Preparacion }) {
 					<Icono icon="lucide:log-out" className="size-4" />
 					{t("Salir de la sala")}
 				</Button>
+				{soyCreador && !empezada && !puedeEmpezar && (
+					// Con el dedo no hay tooltip: el porqué de «Empezar» desactivado se lee aquí.
+					<p className="hidden basis-full text-right text-[11px] text-muted-foreground [[data-tactil]_&]:block">
+						{jugadores.length < 2
+							? t("Hacen falta al menos 2 jugadores.")
+							: t("Falta que todos elijan su deck.")}
+					</p>
+				)}
 				{soyCreador && !empezada && (
 					<WithTooltip
 						content={

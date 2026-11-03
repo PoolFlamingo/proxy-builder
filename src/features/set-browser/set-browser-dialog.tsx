@@ -3,12 +3,13 @@ import { toast } from "sonner";
 import type { CardSummary } from "@/bindings/CardSummary";
 import type { SetInfo } from "@/bindings/SetInfo";
 import { type Opcion, Selector } from "@/components/campos";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
+import { BarraSeccion } from "@/components/lista-secciones";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
@@ -19,7 +20,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cargarLista } from "@/features/decklist/acciones";
 import { RaizScroll } from "@/features/preview/visibilidad";
 import { RejillaCartas } from "@/features/variants/rejilla-cartas";
+import { useFormato } from "@/lib/formato";
 import { call } from "@/lib/ipc";
+import { volverConEscape } from "@/lib/seccion-movil";
 import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
@@ -52,6 +55,16 @@ function Contenido() {
 	const [elegidas, setElegidas] = useState<Set<string>>(new Set());
 	const [cargando, setCargando] = useState(false);
 	const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
+	// En móvil no caben las dos columnas: primero la lista de sets y, al elegir
+	// uno, sus cartas con un botón para volver a la lista.
+	const movil = useFormato().tamano === "movil";
+	const verCartas = !movil || set !== null;
+	const verSets = !movil || set === null;
+	const volverALosSets = () => {
+		setSet(null);
+		setCartas(null);
+		setElegidas(new Set());
+	};
 
 	useEffect(() => {
 		call("sets_list", {})
@@ -120,7 +133,11 @@ function Contenido() {
 	};
 
 	return (
-		<DialogContent className="flex h-[88vh] flex-col sm:max-w-6xl" cambiosSinGuardar={false}>
+		<DialogoAdaptable
+			className="flex h-[88vh] flex-col sm:max-w-6xl"
+			cambiosSinGuardar={false}
+			onEscapeKeyDown={volverConEscape(movil && set !== null, volverALosSets)}
+		>
 			<DialogHeader>
 				<DialogTitle>{t("Explorar sets")}</DialogTitle>
 				<DialogDescription>
@@ -130,7 +147,13 @@ function Contenido() {
 				</DialogDescription>
 			</DialogHeader>
 			<div className="flex min-h-0 flex-1 gap-4">
-				<div className="flex w-64 shrink-0 flex-col gap-2" data-filtro="">
+				<div
+					className={cn(
+						"flex w-full min-w-0 flex-col gap-2 sm:w-64 sm:shrink-0",
+						!verSets && "hidden",
+					)}
+					data-filtro=""
+				>
 					<div className="relative">
 						<Icono
 							icon="lucide:search"
@@ -175,8 +198,9 @@ function Contenido() {
 						)}
 					</ScrollArea>
 				</div>
-				<div className="flex min-w-0 flex-1 flex-col gap-2">
-					<div className="flex items-center gap-2.5" data-filtro="">
+				<div className={cn("flex min-w-0 flex-1 flex-col gap-2", !verCartas && "hidden")}>
+					{movil && set && <BarraSeccion titulo={t("Sets")} onVolver={volverALosSets} />}
+					<div className="flex flex-wrap items-center gap-2.5" data-filtro="">
 						<Selector valor={tipo} opciones={tipos} onChange={setTipo} ancho="w-44" />
 						{cartas && cartas.length > 0 && (
 							<>
@@ -225,33 +249,35 @@ function Contenido() {
 					</ScrollArea>
 				</div>
 			</div>
-			<DialogFooter className="items-center">
-				<span className="mr-auto text-xs text-muted-foreground">
-					{t("{n} elegidas", { n: seleccion.length })}
-				</span>
-				<Button
-					size="sm"
-					variant="outline"
-					disabled={!seleccion.length}
-					onClick={() => alLista(true)}
-				>
-					<Icono icon="lucide:replace" />
-					{t("Reemplazar lista")}
-				</Button>
-				<Button
-					size="sm"
-					variant="outline"
-					disabled={!seleccion.length}
-					onClick={() => alLista(false)}
-				>
-					<Icono icon="lucide:list-plus" />
-					{t("Añadir a la lista")}
-				</Button>
-				<Button size="sm" disabled={!seleccion.length} onClick={cargar}>
-					<Icono icon="lucide:plus" />
-					{t("Cargar cartas")}
-				</Button>
-			</DialogFooter>
-		</DialogContent>
+			{verCartas && (
+				<DialogFooter className="items-center">
+					<span className="mr-auto text-xs text-muted-foreground">
+						{t("{n} elegidas", { n: seleccion.length })}
+					</span>
+					<Button
+						size="sm"
+						variant="outline"
+						disabled={!seleccion.length}
+						onClick={() => alLista(true)}
+					>
+						<Icono icon="lucide:replace" />
+						{t("Reemplazar lista")}
+					</Button>
+					<Button
+						size="sm"
+						variant="outline"
+						disabled={!seleccion.length}
+						onClick={() => alLista(false)}
+					>
+						<Icono icon="lucide:list-plus" />
+						{t("Añadir a la lista")}
+					</Button>
+					<Button size="sm" disabled={!seleccion.length} onClick={cargar}>
+						<Icono icon="lucide:plus" />
+						{t("Cargar cartas")}
+					</Button>
+				</DialogFooter>
+			)}
+		</DialogoAdaptable>
 	);
 }

@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import type { DeckKind } from "@/bindings/DeckKind";
 import type { DeckStats } from "@/bindings/DeckStats";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
+import { BarraSeccion, ListaSecciones } from "@/components/lista-secciones";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogCuerpo,
 	DialogDescription,
 	DialogHeader,
@@ -21,7 +22,9 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useFormato } from "@/lib/formato";
 import { call } from "@/lib/ipc";
+import { volverConEscape } from "@/lib/seccion-movil";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
 import { Funciones } from "./funciones";
@@ -64,6 +67,10 @@ function Contenido() {
 	const [cargando, setCargando] = useState(true);
 	const [error, setError] = useState<unknown>(null);
 	const [pestana, setPestana] = useState<Pestana>("resumen");
+	// En móvil las pestañas son una lista que entra en cada sección (`null` = la lista).
+	const movil = useFormato().tamano === "movil";
+	const [entrada, setEntrada] = useState<Pestana | null>(null);
+	const enSeccion = movil && entrada !== null;
 	const [moneda, setMoneda] = useState<Moneda>("eur");
 	const [intento, setIntento] = useState(0);
 
@@ -81,20 +88,21 @@ function Contenido() {
 		};
 	}, [cartas, kind, intento]);
 
-	const pestanas: { valor: Pestana; texto: string }[] = [
-		{ valor: "resumen", texto: t("Resumen") },
-		{ valor: "mana", texto: t("Maná") },
-		{ valor: "tipos", texto: t("Tipos") },
-		{ valor: "funciones", texto: t("Funciones") },
-		{ valor: "probabilidades", texto: t("Probabilidades") },
-		{ valor: "precios", texto: t("Precios") },
-		{ valor: "legalidad", texto: t("Legalidad") },
+	const pestanas: { valor: Pestana; texto: string; icono: string }[] = [
+		{ valor: "resumen", texto: t("Resumen"), icono: "lucide:layout-dashboard" },
+		{ valor: "mana", texto: t("Maná"), icono: "lucide:droplet" },
+		{ valor: "tipos", texto: t("Tipos"), icono: "lucide:shapes" },
+		{ valor: "funciones", texto: t("Funciones"), icono: "lucide:wrench" },
+		{ valor: "probabilidades", texto: t("Probabilidades"), icono: "lucide:dices" },
+		{ valor: "precios", texto: t("Precios"), icono: "lucide:coins" },
+		{ valor: "legalidad", texto: t("Legalidad"), icono: "lucide:scale" },
 	];
 
 	return (
-		<DialogContent
+		<DialogoAdaptable
 			className="flex h-[88vh] flex-col sm:max-w-5xl [&_button[data-slot=tooltip-trigger]]:text-xs"
 			cambiosSinGuardar={false}
+			onEscapeKeyDown={volverConEscape(enSeccion, () => setEntrada(null))}
 		>
 			<DialogHeader className="pr-6">
 				<DialogTitle className="flex items-center gap-2">
@@ -129,19 +137,24 @@ function Contenido() {
 					className="min-h-0 flex-1"
 				>
 					<div className="flex flex-wrap items-center justify-between gap-2">
-						<TabsList>
-							{pestanas.map((p) => (
-								<TabsTrigger key={p.valor} value={p.valor}>
-									{p.texto}
-								</TabsTrigger>
-							))}
-						</TabsList>
-						<div className="flex items-center gap-1.5">
+						{!movil && (
+							<TabsList>
+								{pestanas.map((p) => (
+									<TabsTrigger key={p.valor} value={p.valor}>
+										{p.texto}
+									</TabsTrigger>
+								))}
+							</TabsList>
+						)}
+						<div className="flex w-full items-center gap-1.5 sm:w-auto">
 							<Select
 								value={kind ?? "auto"}
 								onValueChange={(v) => setKind(v === "auto" ? null : (v as DeckKind))}
 							>
-								<SelectTrigger size="sm" className="h-7 w-60 text-xs">
+								<SelectTrigger
+									size="sm"
+									className="h-7 min-w-0 flex-1 text-xs sm:w-60 sm:flex-none"
+								>
 									<SelectValue />
 								</SelectTrigger>
 								<SelectContent>
@@ -172,30 +185,51 @@ function Contenido() {
 						</div>
 					</div>
 					<DialogCuerpo>
-						<TabsContent value="resumen">
-							<Resumen s={s} moneda={moneda} />
-						</TabsContent>
-						<TabsContent value="mana">
-							<Mana s={s} />
-						</TabsContent>
-						<TabsContent value="tipos">
-							<Tipos s={s} />
-						</TabsContent>
-						<TabsContent value="funciones">
-							<Funciones s={s} />
-						</TabsContent>
-						<TabsContent value="probabilidades">
-							<Probabilidades s={s} />
-						</TabsContent>
-						<TabsContent value="precios">
-							<Precios s={s} moneda={moneda} />
-						</TabsContent>
-						<TabsContent value="legalidad">
-							<Legalidad s={s} />
-						</TabsContent>
+						{movil && entrada === null && (
+							<ListaSecciones
+								secciones={pestanas.map((p) => ({ id: p.valor, titulo: p.texto, icono: p.icono }))}
+								onElegir={(id) => {
+									setPestana(id as Pestana);
+									setEntrada(id as Pestana);
+								}}
+							/>
+						)}
+						{enSeccion && (
+							<div className="pb-2.5">
+								<BarraSeccion
+									titulo={pestanas.find((p) => p.valor === entrada)?.texto ?? ""}
+									onVolver={() => setEntrada(null)}
+								/>
+							</div>
+						)}
+						{!(movil && entrada === null) && (
+							<>
+								<TabsContent value="resumen">
+									<Resumen s={s} moneda={moneda} />
+								</TabsContent>
+								<TabsContent value="mana">
+									<Mana s={s} />
+								</TabsContent>
+								<TabsContent value="tipos">
+									<Tipos s={s} />
+								</TabsContent>
+								<TabsContent value="funciones">
+									<Funciones s={s} />
+								</TabsContent>
+								<TabsContent value="probabilidades">
+									<Probabilidades s={s} />
+								</TabsContent>
+								<TabsContent value="precios">
+									<Precios s={s} moneda={moneda} />
+								</TabsContent>
+								<TabsContent value="legalidad">
+									<Legalidad s={s} />
+								</TabsContent>
+							</>
+						)}
 					</DialogCuerpo>
 				</Tabs>
 			)}
-		</DialogContent>
+		</DialogoAdaptable>
 	);
 }

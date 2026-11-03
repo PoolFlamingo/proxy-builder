@@ -22,6 +22,7 @@ import {
 	DropdownMenuSubContent,
 	DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
+import { usePasarUi } from "@/features/pasar/store";
 import { IDIOMAS, PuntoEtiqueta } from "./piezas";
 import { useBiblioteca } from "./store";
 
@@ -200,6 +201,10 @@ function Items({ deck, M }: { deck: DeckSummary; M: Primitivas }) {
 					)}
 				</>
 			)}
+			<M.Item onSelect={() => usePasarUi.getState().abrirCompartir(ids)}>
+				<Icono icon="lucide:share-2" />
+				{t("Compartir…")}
+			</M.Item>
 			{borrar && (
 				<>
 					<M.Separator />
@@ -222,11 +227,25 @@ export function MenuDeck({ deck }: { deck: DeckSummary }) {
 	);
 }
 
-/** El menú del botón derecho alrededor de un deck. */
-export function MenuContextualDeck({ deck, children }: { deck: DeckSummary; children: ReactNode }) {
+/**
+ * El menú del botón derecho alrededor de un deck. `deshabilitado`: sin él
+ * (en la biblioteca con el dedo, mantener pulsado elige el deck —`vista-cuadricula.tsx`—
+ * y el menú es el «⋯» de cada deck y el de la barra de la selección).
+ */
+export function MenuContextualDeck({
+	deck,
+	children,
+	deshabilitado,
+}: {
+	deck: DeckSummary;
+	children: ReactNode;
+	deshabilitado?: boolean;
+}) {
 	return (
 		<ContextMenu>
-			<ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
+			<ContextMenuTrigger asChild disabled={deshabilitado}>
+				{children}
+			</ContextMenuTrigger>
 			<ContenidoContextual className="text-xs">
 				<Items deck={deck} M={CONTEXTUAL} />
 			</ContenidoContextual>

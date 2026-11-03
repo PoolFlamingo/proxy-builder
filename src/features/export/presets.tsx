@@ -90,7 +90,7 @@ function Presets({
 			<Select value={elegido} onValueChange={cargar}>
 				<SelectTrigger
 					size="sm"
-					className="h-7 min-w-0 flex-1 text-xs"
+					className="h-7 min-w-0 flex-1 text-xs [[data-tactil]_&]:h-11"
 					disabled={lista.length === 0}
 				>
 					<SelectValue placeholder={lista.length ? t("Cargar preset…") : t("Sin presets")} />
@@ -124,7 +124,7 @@ function Presets({
 						onChange={(e) => setNombre(e.target.value)}
 						onKeyDown={(e) => e.key === "Enter" && nombre.trim() && void guardar()}
 						placeholder={t("p. ej. Brother HL-L2350")}
-						className="h-7 text-xs"
+						className="h-7 text-xs [[data-tactil]_&]:h-11"
 					/>
 					<Button size="sm" disabled={!nombre.trim()} onClick={guardar}>
 						{t("Guardar")}

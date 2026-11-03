@@ -35,6 +35,7 @@ export const PageView = memo(function PageView({
 	ancho,
 	celdas,
 	huecosLibres,
+	tactil,
 	onBorrar,
 }: {
 	pagina: Page;
@@ -48,6 +49,7 @@ export const PageView = memo(function PageView({
 	/** Casillas vacías de esta hoja (solo la última tiene). */
 	celdas: RectMm[];
 	huecosLibres: boolean;
+	tactil: boolean;
 	onBorrar: (pagina: Page) => void;
 }) {
 	const { t } = useLang();
@@ -89,6 +91,7 @@ export const PageView = memo(function PageView({
 						dorsoDeck={dorsoDeck}
 						conImagen={visible}
 						ancho={ancho}
+						tactil={tactil}
 					/>
 				))}
 				{celdas.map((c, i) => (

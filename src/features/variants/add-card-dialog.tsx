@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { CardSummary } from "@/bindings/CardSummary";
 import { CampoNumero } from "@/components/campos";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogCuerpo,
 	DialogDescription,
 	DialogFooter,
@@ -164,7 +164,7 @@ function Contenido({ en, hueco, cambiar }: { en?: number; hueco?: string; cambia
 	};
 
 	return (
-		<DialogContent className="flex max-h-[85vh] flex-col sm:max-w-4xl" ocupado={anadiendo}>
+		<DialogoAdaptable className="flex max-h-[85vh] flex-col sm:max-w-4xl" ocupado={anadiendo}>
 			<DialogHeader>
 				<DialogTitle>{vieja ? t("Cambiar carta") : t("Añadir carta")}</DialogTitle>
 				<DialogDescription>
@@ -273,15 +273,18 @@ function Contenido({ en, hueco, cambiar }: { en?: number; hueco?: string; cambia
 					</>
 				) : (
 					<>
-						<span className="text-xs">{t("Copias")}</span>
-						<CampoNumero
-							valor={cantidad}
-							onChange={(v) => setCantidad(Math.max(1, Math.round(v ?? 1)))}
-							min={1}
-							max={99}
-							paso={1}
-							ancho="w-16"
-						/>
+						{/* En móvil el pie va apilado: «Copias» y su campo, en una fila. */}
+						<div className="flex items-center justify-between gap-2 sm:contents">
+							<span className="text-xs">{t("Copias")}</span>
+							<CampoNumero
+								valor={cantidad}
+								onChange={(v) => setCantidad(Math.max(1, Math.round(v ?? 1)))}
+								min={1}
+								max={99}
+								paso={1}
+								ancho="w-16"
+							/>
+						</div>
 						<Button size="sm" onClick={() => anadir()} disabled={!elegida || anadiendo}>
 							{anadiendo ? (
 								<Icono icon="lucide:loader-2" className="animate-spin" />
@@ -293,6 +296,6 @@ function Contenido({ en, hueco, cambiar }: { en?: number; hueco?: string; cambia
 					</>
 				)}
 			</DialogFooter>
-		</DialogContent>
+		</DialogoAdaptable>
 	);
 }

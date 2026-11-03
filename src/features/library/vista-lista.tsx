@@ -8,8 +8,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { useVisible } from "@/features/preview/visibilidad";
+import { useFormato } from "@/lib/formato";
 import { urlMiniatura } from "@/lib/image-url";
+import { usePulsacionLarga } from "@/lib/pulsacion-larga";
 import { cn } from "@/lib/utils";
+import {
+	type ColumnaLista,
+	columnasQueCaben,
+	type OpcionesLista,
+	plantillaLista,
+} from "./disposicion";
 import { MenuContextualDeck, MenuDeck } from "./menu-deck";
 import type { Orden } from "./organizar";
 import {
@@ -25,23 +33,25 @@ import { ascendentePorDefecto, usePrefs } from "./preferencias";
 import { useBiblioteca } from "./store";
 import { PORTADA, useSeleccion } from "./vista-cuadricula";
 
-type Columna = {
-	id: string;
+type Columna = ColumnaLista & {
 	titulo: string;
-	/** Ancho en px (el nombre: el mínimo; se lleva lo que sobre). */
-	px: number;
 	orden?: Orden;
 	derecha?: boolean;
-	/** Si no cabe todo, se quitan antes las de número más bajo. */
-	quitar?: number;
 };
 
 /** Las columnas de la lista. `orden`: por dónde ordena pulsar su cabecera. */
 const COLUMNAS: Columna[] = [
-	{ id: "nombre", titulo: paraTraducir("Nombre"), px: 240, orden: "nombre" },
+	{ id: "nombre", titulo: paraTraducir("Nombre"), px: 240, orden: "nombre", movil: true },
 	{ id: "colores", titulo: paraTraducir("Colores"), px: 96, orden: "colores" },
 	{ id: "clase", titulo: paraTraducir("Clase"), px: 104, quitar: 5 },
-	{ id: "cartas", titulo: paraTraducir("Cartas"), px: 64, orden: "cartas", derecha: true },
+	{
+		id: "cartas",
+		titulo: paraTraducir("Cartas"),
+		px: 64,
+		orden: "cartas",
+		derecha: true,
+		movil: true,
+	},
 	{
 		id: "coste",
 		titulo: paraTraducir("Coste medio"),
@@ -64,32 +74,6 @@ const COLUMNAS: Columna[] = [
 	{ id: "abierto", titulo: paraTraducir("Abierto"), px: 112, orden: "abierto", quitar: 3 },
 ];
 
-/** Casilla (si hay), portada y menú; el hueco entre columnas y el relleno de la fila. */
-const CASILLA = 28;
-const FIJO = 40 + 32;
-const HUECO = 12;
-const RELLENO = 16 + 2;
-
-/** Las columnas que caben en `ancho`: quita las prescindibles hasta que entren. */
-function queCaben(ancho: number, casillas: boolean): Columna[] {
-	let cols = COLUMNAS;
-	const mide = (c: Columna[]) =>
-		FIJO +
-		(casillas ? CASILLA : 0) +
-		RELLENO +
-		c.reduce((a, x) => a + x.px, 0) +
-		HUECO * (c.length + 2);
-	const turno = COLUMNAS.filter((c) => c.quitar).sort((a, b) => (a.quitar ?? 0) - (b.quitar ?? 0));
-	for (const c of turno) {
-		if (mide(cols) <= ancho) break;
-		cols = cols.filter((x) => x !== c);
-	}
-	return cols;
-}
-
-const plantilla = (cols: Columna[], casillas: boolean) =>
-	`${casillas ? "28px " : ""}40px ${cols.map((c) => (c.id === "nombre" ? `minmax(${c.px}px,1fr)` : `${c.px}px`)).join(" ")} 32px`;
-
 export function VistaLista({ decks }: { decks: DeckSummary[] }) {
 	// Las columnas que caben: según el ancho de la lista.
 	const [ancho, setAncho] = useState(1200);
@@ -102,20 +86,23 @@ export function VistaLista({ decks }: { decks: DeckSummary[] }) {
 		return () => ro.disconnect();
 	}, [el]);
 	const { casillas } = useSeleccion();
-	const cols = useMemo(() => queCaben(ancho, casillas), [ancho, casillas]);
+	const { tamano, tactil } = useFormato();
+	const movil = tamano === "movil";
+	const o = useMemo<OpcionesLista>(() => ({ casillas, movil, tactil }), [casillas, movil, tactil]);
+	const cols = useMemo(() => columnasQueCaben(COLUMNAS, ancho, o), [ancho, o]);
 	return (
 		<div ref={setEl} className="min-w-0 rounded-lg border bg-card/40">
-			<Cabecera decks={decks} cols={cols} />
+			<Cabecera decks={decks} cols={cols} o={o} />
 			<div className="divide-y">
 				{decks.map((d) => (
-					<Fila key={d.id} deck={d} cols={cols} />
+					<Fila key={d.id} deck={d} cols={cols} o={o} />
 				))}
 			</div>
 		</div>
 	);
 }
 
-function Cabecera({ decks, cols }: { decks: DeckSummary[]; cols: Columna[] }) {
+function Cabecera({ decks, cols, o }: { decks: DeckSummary[]; cols: Columna[]; o: OpcionesLista }) {
 	const { t } = useLang();
 	const sel = useSeleccion();
 	const { orden, ascendente, poner } = usePrefs();
@@ -124,7 +111,7 @@ function Cabecera({ decks, cols }: { decks: DeckSummary[]; cols: Columna[] }) {
 	return (
 		<div
 			className="grid items-center gap-3 rounded-t-lg border-b bg-card px-2 py-1.5 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase [&>*]:min-w-0"
-			style={{ gridTemplateColumns: plantilla(cols, sel.casillas) }}
+			style={{ gridTemplateColumns: plantillaLista(cols, o) }}
 		>
 			{sel.casillas && (
 				<Checkbox
@@ -176,7 +163,7 @@ function Cabecera({ decks, cols }: { decks: DeckSummary[]; cols: Columna[] }) {
 	);
 }
 
-function Fila({ deck: d, cols }: { deck: DeckSummary; cols: Columna[] }) {
+function Fila({ deck: d, cols, o }: { deck: DeckSummary; cols: Columna[]; o: OpcionesLista }) {
 	const { t } = useLang();
 	const sel = useSeleccion();
 	const det = useBiblioteca((s) => s.detalles[d.id]);
@@ -186,6 +173,9 @@ function Fila({ deck: d, cols }: { deck: DeckSummary; cols: Columna[] }) {
 	const [ref, setRef] = useState<HTMLDivElement | null>(null);
 	const visible = useVisible(ref);
 	const marcado = sel.seleccion.includes(d.id);
+	// Con el dedo y casillas, mantener pulsado elige la fila (el menú es el «⋯»).
+	const eligeAlMantener = o.tactil && sel.casillas && !!sel.entrarSeleccion;
+	const larga = usePulsacionLarga(() => sel.entrarSeleccion?.(d.id));
 	const celda = (id: string) => {
 		switch (id) {
 			case "nombre":
@@ -215,6 +205,7 @@ function Fila({ deck: d, cols }: { deck: DeckSummary; cols: Columna[] }) {
 							)}
 						</div>
 						<div className="flex min-w-0 items-center gap-1.5">
+							{o.movil && det && det.deckSize > 0 && <Identidad colores={det.colorIdentity} />}
 							{d.coverName && (
 								<span className="truncate text-[10px] text-muted-foreground">{d.coverName}</span>
 							)}
@@ -274,16 +265,18 @@ function Fila({ deck: d, cols }: { deck: DeckSummary; cols: Columna[] }) {
 		return null;
 	};
 	return (
-		<MenuContextualDeck deck={d}>
+		<MenuContextualDeck deck={d} deshabilitado={eligeAlMantener}>
 			<div
 				ref={setRef}
+				{...(eligeAlMantener ? larga : {})}
+				data-pulsacion-larga={eligeAlMantener ? "" : undefined}
 				onDoubleClick={() => (sel.alDobleClic ?? sel.abrir)(d.id)}
 				className={cn(
 					"group grid items-center gap-3 px-2 py-1.5 text-xs hover:bg-accent/50 [&>*]:min-w-0",
 					marcado && "bg-primary/10 hover:bg-primary/15",
 					d.id === sel.abierto && "shadow-[inset_3px_0_0_var(--primary)]",
 				)}
-				style={{ gridTemplateColumns: plantilla(cols, sel.casillas) }}
+				style={{ gridTemplateColumns: plantillaLista(cols, o) }}
 			>
 				{sel.casillas && (
 					<Checkbox

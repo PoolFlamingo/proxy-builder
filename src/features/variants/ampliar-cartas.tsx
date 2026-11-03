@@ -1,12 +1,7 @@
 import type { CardSummary } from "@/bindings/CardSummary";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { useLang } from "@/components/language-provider";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EDICION_NEUTRA, parametros, urlBusqueda, urlMiniatura } from "@/lib/image-url";
 import { useDeck } from "@/stores/deck-store";
 
@@ -30,7 +25,7 @@ export function AmpliarCartas({
 	return (
 		<Dialog open={blob !== null} onOpenChange={(o) => !o && onCerrar()}>
 			{blob !== null && (
-				<DialogContent
+				<DialogoAdaptable
 					className="flex max-h-[94vh] flex-col sm:max-w-5xl"
 					cambiosSinGuardar={false}
 				>
@@ -64,7 +59,7 @@ export function AmpliarCartas({
 							)}
 						</Lado>
 					</div>
-				</DialogContent>
+				</DialogoAdaptable>
 			)}
 		</Dialog>
 	);

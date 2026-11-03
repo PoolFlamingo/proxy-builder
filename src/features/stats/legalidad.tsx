@@ -1,4 +1,5 @@
 import type { DeckStats } from "@/bindings/DeckStats";
+import { AyudaTactil } from "@/components/ayuda-tactil";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { WithTooltip } from "@/components/ui/with-tooltip";
@@ -44,6 +45,11 @@ export function Legalidad({ s }: { s: DeckStats }) {
 								{l.format}
 								{!l.legal && l.offenders.length > 0 && (
 									<span className="ml-auto font-mono text-[10px]">{l.offenders.length}</span>
+								)}
+								{l.offenders.length > 0 && (
+									<AyudaTactil className="size-5">
+										{t("No legales: {c}", { c: l.offenders.slice(0, 12).join(", ") })}
+									</AyudaTactil>
 								)}
 							</span>
 						</WithTooltip>

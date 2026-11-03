@@ -1,9 +1,12 @@
 import { useMemo, useState } from "react";
+import type { DesignLang } from "@/bindings/DesignLang";
+import { AyudaTactil } from "@/components/ayuda-tactil";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { WithTooltip } from "@/components/ui/with-tooltip";
+import { useFormato } from "@/lib/formato";
 import { parametros, urlMiniatura } from "@/lib/image-url";
 import { textosDe } from "@/lib/por-idioma";
 import { cn } from "@/lib/utils";
@@ -17,6 +20,14 @@ const ESTADOS: Record<EstadoDiseno, { clase: string }> = {
 	listo: { clase: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" },
 };
 
+/** El nombre con que se enseña una carta: el del diseño en el idioma del deck
+ *  y, sin él, el español o el original. */
+export function nombreDe(g: Grupo, lang: DesignLang, sinNombre: string): string {
+	const c = g.cartas[0];
+	const textos = c?.design?.faces[0]?.texts;
+	return (textos && textosDe(textos, lang).name) || textos?.es.name || c?.meta.name || sinNombre;
+}
+
 /** Las cartas del deck, una fila por carta (con sus copias), y su estado. */
 export function ListaCartas({
 	grupos,
@@ -28,6 +39,7 @@ export function ListaCartas({
 	onElegir: (g: Grupo) => void;
 }) {
 	const { t } = useLang();
+	const { tactil } = useFormato();
 	const ajustes = useDeck((s) => s.deck?.settings);
 	const lang = ajustes?.designLang ?? "es";
 	const [filtro, setFiltro] = useState("");
@@ -73,12 +85,7 @@ export function ListaCartas({
 						const c = g.cartas[0];
 						if (!c) return null;
 						const estado = estadoDe(g);
-						const textos = c.design?.faces[0]?.texts;
-						const nombre =
-							(textos && textosDe(textos, lang).name) ||
-							textos?.es.name ||
-							c.meta.name ||
-							t("Carta sin nombre");
+						const nombre = nombreDe(g, lang, t("Carta sin nombre"));
 						const fila = (
 							<button
 								type="button"
@@ -123,16 +130,23 @@ export function ListaCartas({
 								)}
 							</button>
 						);
+						const sinVincular = tactil
+							? t(
+									"Vincúlala primero con su carta de Scryfall (mantén pulsada la carta en el deck → «Vincular con una carta…»).",
+								)
+							: t(
+									"Vincúlala primero con su carta de Scryfall (clic derecho en el deck → «Vincular con una carta…»).",
+								);
 						return (
 							<li key={g.clave}>
 								{estado === "sinVincular" ? (
-									<WithTooltip
-										content={t(
-											"Vincúlala primero con su carta de Scryfall (clic derecho en el deck → «Vincular con una carta…»).",
-										)}
-									>
-										<span className="block">{fila}</span>
-									</WithTooltip>
+									<div className="flex items-center gap-1">
+										<WithTooltip content={sinVincular}>
+											<span className="block min-w-0 flex-1">{fila}</span>
+										</WithTooltip>
+										{/* Con el dedo no hay tooltip: el «ⓘ» de al lado dice lo mismo. */}
+										<AyudaTactil>{sinVincular}</AyudaTactil>
+									</div>
 								) : (
 									fila
 								)}

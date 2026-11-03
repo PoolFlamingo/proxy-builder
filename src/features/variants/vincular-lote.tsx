@@ -5,13 +5,13 @@ import type { CardSummary } from "@/bindings/CardSummary";
 import type { Confidence } from "@/bindings/Confidence";
 import type { DeckCard } from "@/bindings/DeckCard";
 import { type Opcion, Selector } from "@/components/campos";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Dialog,
-	DialogContent,
 	DialogCuerpo,
 	DialogDescription,
 	DialogFooter,
@@ -195,7 +195,7 @@ function Contenido({ ids, soloSeleccion }: { ids?: string[]; soloSeleccion: bool
 	useEstadoParaCerrar({ enCurso: trabajando, sinGuardar: fase === "revisar" && filas.length > 0 });
 
 	return (
-		<DialogContent
+		<DialogoAdaptable
 			className="flex max-h-[90vh] flex-col sm:max-w-4xl"
 			ocupado={trabajando}
 			alInterrumpir={() => {
@@ -368,7 +368,7 @@ function Contenido({ ids, soloSeleccion }: { ids?: string[]; soloSeleccion: bool
 				original={ampliada?.original ?? null}
 				onCerrar={() => setAmpliada(null)}
 			/>
-		</DialogContent>
+		</DialogoAdaptable>
 	);
 }
 

@@ -4,8 +4,10 @@ import type { DeckSummary } from "@/bindings/DeckSummary";
 import type { Tag } from "@/bindings/Tag";
 import {
 	agrupar,
+	alPulsarDeck,
 	contar,
 	type Detalles,
+	entrarEnSeleccion,
 	FILTROS_VACIOS,
 	filtrar,
 	hayFiltros,
@@ -217,3 +219,43 @@ describe("ayudas", () => {
 		expect(seleccionar([], v, "a", "c", "tramo")).toEqual(["a", "b", "c"]);
 	});
 });
+
+describe("el modo selección del dedo", () => {
+	const sin = { shiftKey: false, ctrlKey: false, metaKey: false };
+
+	it("tocar un deck sin nada elegido lo abre", () => {
+		expect(alPulsarDeck(0, sin)).toBe("abrir");
+	});
+
+	it("con algo elegido, los toques suman o quitan en vez de abrir", () => {
+		expect(alPulsarDeck(1, sin)).toBe("alternar");
+		expect(alPulsarDeck(5, sin)).toBe("alternar");
+	});
+
+	it("Ctrl y Cmd suman aunque no haya nada elegido; Mayús elige el tramo", () => {
+		expect(alPulsarDeck(0, { ...sin, ctrlKey: true })).toBe("alternar");
+		expect(alPulsarDeck(0, { ...sin, metaKey: true })).toBe("alternar");
+		expect(alPulsarDeck(3, { ...sin, shiftKey: true })).toBe("tramo");
+	});
+
+	it("mantener pulsado elige el deck y entra en el modo selección", () => {
+		expect(entrarEnSeleccion([], "a")).toEqual(["a"]);
+		expect(entrarEnSeleccion(["a"], "b")).toEqual(["a", "b"]);
+	});
+
+	it("mantener pulsado uno ya elegido no lo quita", () => {
+		expect(entrarEnSeleccion(["a", "b"], "a")).toEqual(["a", "b"]);
+	});
+
+	it("tocar el único elegido lo quita y se sale del modo selección", () => {
+		const v = ["a", "b", "c"];
+		const antes = entrarEnSeleccion([], "b");
+		expect(alPulsarDeck(antes.length, sinTeclas())).toBe("alternar");
+		expect(seleccionar(antes, v, "b", null, "alternar")).toEqual([]);
+		expect(alPulsarDeck(0, sinTeclas())).toBe("abrir");
+	});
+});
+
+function sinTeclas() {
+	return { shiftKey: false, ctrlKey: false, metaKey: false };
+}

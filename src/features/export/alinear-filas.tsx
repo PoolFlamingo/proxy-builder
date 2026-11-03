@@ -2,12 +2,12 @@ import { useState } from "react";
 import type { Offset } from "@/bindings/Offset";
 import type { RowOffsets } from "@/bindings/RowOffsets";
 import { CampoNumero } from "@/components/campos";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogCuerpo,
 	DialogDescription,
 	DialogFooter,
@@ -143,7 +143,7 @@ function CorregirConLoMedido({
 	};
 	return (
 		<Dialog open={abierto} onOpenChange={(o) => !o && onCerrar()}>
-			<DialogContent className="sm:max-w-sm">
+			<DialogoAdaptable className="sm:max-w-sm">
 				<DialogHeader>
 					<DialogTitle>{t("Corregir con lo medido")}</DialogTitle>
 					<DialogDescription>
@@ -190,7 +190,7 @@ function CorregirConLoMedido({
 						{t("Corregir el reverso")}
 					</Button>
 				</DialogFooter>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }
