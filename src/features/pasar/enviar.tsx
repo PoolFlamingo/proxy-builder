@@ -57,7 +57,10 @@ export function PanelEnviar({
 	const [hayEscaner, setHayEscaner] = useState(false);
 	const [sinBusqueda, setSinBusqueda] = useState<string | null>(null);
 	const evento = useEmisor();
-	const emisor = evento ?? primero;
+	// El último evento se queda en el hook: «Enviar más» lo aparta para volver
+	// a elegir, y el siguiente envío trae uno nuevo.
+	const [apartado, setApartado] = useState<EstadoEmisor | null>(null);
+	const emisor = (evento !== apartado ? evento : null) ?? primero;
 	const cerca = useCerca();
 
 	useEffect(() => {
@@ -158,6 +161,7 @@ export function PanelEnviar({
 				onCerrar={onCerrar}
 				onOtro={() => {
 					void call("pasar_emisor_olvidar").catch(() => {});
+					setApartado(evento);
 					setPrimero(null);
 				}}
 			/>

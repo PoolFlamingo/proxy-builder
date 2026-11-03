@@ -46,7 +46,10 @@ export function PanelRecibir({ onCerrar }: { onCerrar: () => void }) {
 	// evento (que puede perderse si se emite antes de empezar a escuchar).
 	const [primero, setPrimero] = useState<EstadoReceptor | null>(null);
 	const evento = useReceptor();
-	const estado = evento ?? primero;
+	// «Recibir otro» aparta el último evento (el de «terminado»): si no, seguiría
+	// mandando sobre lo que contesta `pasar_recibir_abrir`.
+	const [apartado, setApartado] = useState<EstadoReceptor | null>(null);
+	const estado = (evento !== apartado ? evento : null) ?? primero;
 	// El deck abierto que se va a reemplazar, prestado a Rust hasta que acabe.
 	const prestados = useRef<Devolver[]>([]);
 	const devolver = useCallback(() => {
@@ -60,10 +63,12 @@ export function PanelRecibir({ onCerrar }: { onCerrar: () => void }) {
 
 	const abrir = useCallback(() => {
 		setFallo(null);
+		setApartado(evento);
+		setPrimero(null);
 		call("pasar_recibir_abrir")
 			.then(setPrimero)
 			.catch((e) => setFallo(textoDeError(e, t, mensaje)));
-	}, [t, mensaje]);
+	}, [t, mensaje, evento]);
 
 	// Al entrar, se abre; al salir, se cierra (y se corta lo que hubiera).
 	useEffect(() => {
