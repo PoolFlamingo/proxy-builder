@@ -16,12 +16,21 @@
 	"Renombrar deck": "Rename deck",
 	"Renombrar": "Rename",
 	"{n} (copia)": "{n} (copy)",
-	"{n} cartas": "{n} cards",
-	"{n} imágenes sin usar borradas ({mb})": "{n} unused images deleted ({mb})",
+	"{n} cartas": {
+		"one": "{n} card",
+		"other": "{n} cards"
+	},
+	"{n} imágenes sin usar borradas ({mb})": {
+		"one": "{n} unused image deleted ({mb})",
+		"other": "{n} unused images deleted ({mb})"
+	},
 	"«{n}» importado": "“{n}” imported",
 	"¿Eliminar «{n}»?": "Delete “{n}”?",
 	"Nombre del deck": "Deck name",
-	"+{n} fichas": "+{n} tokens",
+	"+{n} fichas": {
+		"one": "+{n} token",
+		"other": "+{n} tokens"
+	},
 	"1 deck elegido": "1 deck selected",
 	"Abierto": "Opened",
 	"Acciones": "Actions",
@@ -43,7 +52,10 @@
 	"Con diseñadas": "With designed",
 	"Con imágenes propias": "With custom images",
 	"Con propias": "With custom",
-	"Con {n} etiquetas elegidas, enseñar los que tengan:": "With {n} tags selected, show decks that have:",
+	"Con {n} etiquetas elegidas, enseñar los que tengan:": {
+		"one": "With {n} tag selected, show decks that have:",
+		"other": "With {n} tags selected, show decks that have:"
+	},
 	"Construido": "Constructed",
 	"Crea etiquetas para ordenar tus decks por formato, idioma, estado…": "Create tags to sort your decks by format, language, status…",
 	"Creado": "Created",
@@ -107,13 +119,19 @@
 	"Quitar todos": "Clear all",
 	"Quitar": "Remove",
 	"Rosa": "Pink",
-	"Se pondrá a los {n} decks elegidos.": "It will be added to the {n} selected decks.",
+	"Se pondrá a los {n} decks elegidos.": {
+		"one": "It will be added to the {n} selected deck.",
+		"other": "It will be added to the {n} selected decks."
+	},
 	"Se pondrá al deck elegido.": "It will be added to the selected deck.",
 	"Se quita de los decks que la llevan; los decks no se borran.": "It's removed from the decks that have it; the decks aren't deleted.",
 	"Seleccionar todos": "Select all",
 	"Seleccionar": "Select",
 	"Sin agrupar": "No grouping",
-	"Sin contar {n} cartas sin datos de Scryfall": "Not counting {n} cards without Scryfall data",
+	"Sin contar {n} cartas sin datos de Scryfall": {
+		"one": "Not counting {n} card without Scryfall data",
+		"other": "Not counting {n} cards without Scryfall data"
+	},
 	"Sin datos": "No data",
 	"Sin etiqueta": "Untagged",
 	"Sin idioma": "No language",
@@ -128,10 +146,19 @@
 	"Ya hay una etiqueta «{n}».": "There's already a tag “{n}”.",
 	"listas": "ready",
 	"vinculadas": "linked",
-	"{n} decks elegidos": "{n} decks selected",
-	"{n} decks": "{n} decks",
+	"{n} decks elegidos": {
+		"one": "{n} deck selected",
+		"other": "{n} decks selected"
+	},
+	"{n} decks": {
+		"one": "{n} deck",
+		"other": "{n} decks"
+	},
 	"¿Eliminar la etiqueta «{n}»?": "Delete the tag “{n}”?",
-	"¿Eliminar {n} decks?": "Delete {n} decks?",
+	"¿Eliminar {n} decks?": {
+		"one": "Delete {n} deck?",
+		"other": "Delete {n} decks?"
+	},
 	"Ámbar": "Amber",
 	"Idioma: {i}": "Language: {i}",
 	"Idioma de los {n}": "Language of the {n}",

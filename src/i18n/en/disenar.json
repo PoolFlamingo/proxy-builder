@@ -27,25 +27,43 @@
 	"Marcos de imagen para Despejado, Extendido y Clásico (unos 37 MB). Se descargan de GitHub la primera vez.": "Image frames for Borderless, Extended and Classic (about 37 MB). They're downloaded from GitHub the first time.",
 	"Descargar": "Download",
 	"El marco de este estilo no tiene cinta: el nombre original va en el pie.": "This style's frame has no ribbon: the original name goes in the footer.",
-	"{n} cartas no se pudieron preparar.": "{n} cards couldn't be prepared.",
-	"{n} cartas grandes no caben en este papel y no se imprimen.": "{n} large cards don't fit on this paper and won't be printed.",
+	"{n} cartas no se pudieron preparar.": {
+		"one": "{n} card couldn't be prepared.",
+		"other": "{n} cards couldn't be prepared."
+	},
+	"{n} cartas grandes no caben en este papel y no se imprimen.": {
+		"one": "{n} large card doesn't fit on this paper and won't be printed.",
+		"other": "{n} large cards don't fit on this paper and won't be printed."
+	},
 	"Traducción sugerida (experimental)": "Suggested translation (experimental)",
 	"Buscar frases oficiales": "Look up official phrases",
 	"Usar": "Use",
 	"{n} de {total} frases encontradas; lo marcado se queda en inglés.": "{n} of {total} phrases found; the highlighted ones stay in English.",
 	"Diseñar el deck": "Design the deck",
 	"Exportar imágenes": "Export images",
-	"{n} borradores hechos": "{n} drafts made",
+	"{n} borradores hechos": {
+		"one": "{n} draft made",
+		"other": "{n} drafts made"
+	},
 	"Un borrador para cada carta sin diseño: textos de la carta real, el arte de Scryfall de momento y su número por el orden del deck. Luego se revisan una a una.": "A draft for every card without a design: the real card's texts, Scryfall's art for now and its number in deck order. Then you review them one by one.",
 	"Todo el deck": "The whole deck",
 	"Solo las seleccionadas": "Only the selected ones",
 	"No hay cartas sin diseño que se puedan diseñar.": "There are no cards without a design that can be designed.",
-	"{n} cartas sin diseño": "{n} cards without a design",
+	"{n} cartas sin diseño": {
+		"one": "{n} card without a design",
+		"other": "{n} cards without a design"
+	},
 	"{hechas} de {total}": "{hechas} of {total}",
 	"Hacer los borradores": "Make the drafts",
-	"{n} imágenes exportadas": "{n} images exported",
+	"{n} imágenes exportadas": {
+		"one": "{n} image exported",
+		"other": "{n} images exported"
+	},
 	"No hay cartas diseñadas.": "There are no designed cards.",
-	"{n} cartas diseñadas": "{n} designed cards",
+	"{n} cartas diseñadas": {
+		"one": "{n} designed card",
+		"other": "{n} designed cards"
+	},
 	"Elegir carpeta y exportar": "Choose folder and export",
 	"Cómo se reparte el texto en la carta": "How the text is laid out on the card",
 	"Maquetación": "Layout",
@@ -234,7 +252,10 @@
 	"No hay cartas con imagen en el deck.": "There are no cards with an image in the deck.",
 	"Elegir otra carta": "Pick another card",
 	"Usar esta zona": "Use this area",
-	"{n} letras importadas": "{n} fonts imported",
+	"{n} letras importadas": {
+		"one": "{n} font imported",
+		"other": "{n} fonts imported"
+	},
 	"Pack «{nombre}» importado": "Pack “{nombre}” imported",
 	"Lo que usa el editor para pintar las cartas. Lo de la casa siempre está; aquí se añade lo tuyo.": "What the editor uses to draw cards. The built-in ones are always there; add your own here.",
 	"Packs de marcos": "Frame packs",
@@ -252,10 +273,16 @@
 	"Quitar pack": "Remove pack",
 	"Los símbolos de maná y de reglas vienen de Scryfall: se descargan la primera vez y se renuevan cada mes.": "Mana and rules symbols come from Scryfall: they're downloaded the first time and refreshed every month.",
 	"No hay símbolos: hace falta conexión para descargarlos.": "No symbols: an internet connection is needed to download them.",
-	"{n} símbolos": "{n} symbols",
+	"{n} símbolos": {
+		"one": "{n} symbol",
+		"other": "{n} symbols"
+	},
 	"Descargados el {fecha}": "Downloaded on {fecha}",
 	"Descargar de nuevo": "Download again",
-	"{n} cartas renumeradas": "{n} cards renumbered",
+	"{n} cartas renumeradas": {
+		"one": "{n} card renumbered",
+		"other": "{n} cards renumbered"
+	},
 	"La numeración ya estaba al día": "Numbering was already up to date",
 	"El texto de reglas no cabe ni con la letra más pequeña: sobran {mm} mm.": "The rules text doesn't fit even at the smallest size: {mm} mm too long.",
 	"La línea de tipo no cabía ni estrechada y se ha reducido la letra.": "The type line didn't fit even squeezed, so the font was made smaller.",
@@ -306,7 +333,10 @@
 	"Variante": "Variant",
 	"Según la carta": "From the card",
 	"[[así]] resalta unas palabras con el color del pack (si lo trae, como el de Balatro); sin él, salen normales.": "[[like this]] highlights words with the pack's colour (if it has one, like Balatro's); without it, they look normal.",
-	"Descargado: {n} imágenes extra (reversos, fichas, tierras y cartas hechas).": "Downloaded: {n} extra images (backs, tokens, lands and finished cards).",
+	"Descargado: {n} imágenes extra (reversos, fichas, tierras y cartas hechas).": {
+		"one": "Downloaded: {n} extra image (backs, tokens, lands and finished cards).",
+		"other": "Downloaded: {n} extra images (backs, tokens, lands and finished cards)."
+	},
 	"Pack descargable (unos 45 MB con sus extras). Se descarga de GitHub.": "Downloadable pack (about 45 MB with its extras). It's downloaded from GitHub.",
 	"Contenido": "Contents",
 	"Reversos": "Backs",

@@ -4,10 +4,13 @@
 // que se carga al elegirlo, para no meter los 14 en el arranque.
 
 import type { Lang } from "@/lib/idiomas";
+import PLURALES_ES from "./plurales-es.json";
 import type { Diccionario } from "./tipos";
 
 const AREAS_EN = import.meta.glob<Diccionario>("./en/*.json", { eager: true, import: "default" });
 // El español (`es/`) no se carga: es la fuente, y `pnpm idiomas` la comprueba.
+// Solo sus plurales (`plurales-es.json`: «1 carta» frente a «2 cartas»), que la
+// cadena fuente no puede decir sola.
 const AREAS_PEREZOSAS = import.meta.glob<Diccionario>(
 	["./*/*.json", "!./en/*.json", "!./es/*.json", "!./*/identicas.json"],
 	{ import: "default" },
@@ -20,11 +23,14 @@ function fundir(areas: Diccionario[]): Diccionario {
 
 const EN = fundir(Object.values(AREAS_EN));
 
-const cargados = new Map<Lang, Diccionario>([["en", EN]]);
+const cargados = new Map<Lang, Diccionario>([
+	["en", EN],
+	["es", PLURALES_ES as Diccionario],
+]);
 
 export { EN };
 
-/** El diccionario de `lang`, si ya está cargado (el español no tiene: es la fuente). */
+/** El diccionario de `lang`, si ya está cargado (el del español solo lleva sus plurales). */
 export function diccionarioCargado(lang: Lang): Diccionario | undefined {
 	return cargados.get(lang);
 }

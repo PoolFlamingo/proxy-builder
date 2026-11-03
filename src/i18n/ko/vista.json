@@ -66,5 +66,6 @@
 	"Cartas quitadas": "카드를 뺐습니다",
 	"Rehacer (Ctrl+Mayús+Z)": "다시 실행(Ctrl+Shift+Z)",
 	"Opciones de la vista": "보기 옵션",
-	"Arrastrar para mover": "끌어서 이동"
+	"Arrastrar para mover": "끌어서 이동",
+	"Pega una lista en la pestaña «Lista» y pulsa «Cargar lista», o añade cartas una a una.": "「목록」 탭에 목록을 붙여 넣고 「목록 불러오기」를 누르거나 카드를 한 장씩 추가하세요."
 }

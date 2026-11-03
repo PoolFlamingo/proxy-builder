@@ -45,9 +45,14 @@ describe("traducir", () => {
 });
 
 describe("cargarDiccionario", () => {
-	it("el inglés ya está, el español no tiene y uno sin diccionario no rompe", async () => {
+	it("el inglés ya está, el español solo trae plurales y uno sin diccionario no rompe", async () => {
 		expect(diccionarioCargado("en")?.Ajustes).toBe("Settings");
-		expect(await cargarDiccionario("es")).toBeUndefined();
+		const es = await cargarDiccionario("es");
+		expect(es?.Ajustes).toBeUndefined();
+		expect(traducir("{n} decks", "es", { n: 1 }, es, EN)).toBe("1 deck");
+		expect(traducir("{n} decks", "es", { n: 3 }, es, EN)).toBe("3 decks");
+		const en = diccionarioCargado("en") ?? {};
+		expect(traducir("{n} decks", "en", { n: 1 }, en, en)).toBe("1 deck");
 		// Mientras no haya diccionario de rumano, se queda sin él (cae al inglés).
 		const ro = await cargarDiccionario("ro");
 		expect(ro === undefined || typeof ro.Ajustes === "string").toBe(true);

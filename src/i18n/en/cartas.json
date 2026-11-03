@@ -1,7 +1,10 @@
 {
 	"Aplicar a todas las cartas": "Apply to all cards",
 	"Aplicar también a sus copias ({n})": "Also apply to its copies ({n})",
-	"Carta y sus {n} copias retocadas": "Card and its {n} copies edited",
+	"Carta y sus {n} copias retocadas": {
+		"one": "Card and {n} copy edited",
+		"other": "Card and its {n} copies edited"
+	},
 	"Solo los retoques de color; el giro y el encuadre se quedan en esta carta.": "Only the colour adjustments; rotation and framing stay on this card.",
 	"Las que llevan la misma imagen: giro, encuadre y retoques, todo igual.": "The ones with the same image: rotation, framing and adjustments, all the same.",
 	"Aplicar": "Apply",
@@ -34,14 +37,20 @@
 	"Escribe un nombre y pulsa Enter.": "Type a name and press Enter.",
 	"Nombre de la carta…": "Card name…",
 	"Sin resultados.": "No results.",
-	"{n} resultados": "{n} results",
+	"{n} resultados": {
+		"one": "{n} result",
+		"other": "{n} results"
+	},
 	"{n} × {carta} añadida": "{n} × {carta} added",
 	"Cualquier idioma": "Any language",
 	"Escaneo de baja resolución": "Low-resolution scan",
 	"Ahora: {set} {num}": "Current: {set} {num}",
 	"Cambiar variante de {carta}": "Change printing of {carta}",
 	"No hay impresiones con esos filtros.": "No printings match those filters.",
-	"Reemplazar las {n} copias": "Replace all {n} copies",
+	"Reemplazar las {n} copias": {
+		"one": "Replace {n} copy",
+		"other": "Replace all {n} copies"
+	},
 	"Reemplazar solo esta": "Replace only this one",
 	"Variante cambiada en todas las copias de {carta}": "Printing changed on every copy of {carta}",
 	"Variante cambiada": "Printing changed",

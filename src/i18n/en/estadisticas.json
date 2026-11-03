@@ -22,7 +22,10 @@
 	"Probabilidad de 2-4 tierras": "Chance of 2-4 lands",
 	"en la mano inicial": "in the opening hand",
 	"Sin datos de Scryfall (propias sin vincular): no cuentan": "No Scryfall data (unlinked custom cards): not counted",
-	"Más de {n} copias": "More than {n} copies",
+	"Más de {n} copias": {
+		"one": "More than {n} copy",
+		"other": "More than {n} copies"
+	},
 	"El mazo tiene {a} cartas y se esperan {e}.": "The deck has {a} cards and {e} are expected.",
 	"Por tipo": "By type",
 	"Permanentes y hechizos": "Permanents and spells",
@@ -30,7 +33,10 @@
 	"instantáneos y conjuros": "instants and sorceries",
 	"Permanentes": "Permanents",
 	"Instantáneos y conjuros": "Instants and sorceries",
-	"{c}: {n} cartas, {p} símbolos de maná": "{c}: {n} cards, {p} mana symbols",
+	"{c}: {n} cartas, {p} símbolos de maná": {
+		"one": "{c}: {n} card, {p} mana symbols",
+		"other": "{c}: {n} cards, {p} mana symbols"
+	},
 	"{n} con X en el coste": "{n} with X in the cost",
 	"Tokens que usa el deck": "Tokens the deck uses",
 	"Ninguno en el deck.": "None in the deck.",
@@ -38,9 +44,18 @@
 	"Qué parte de los símbolos de color de los costes es de cada color, y qué parte de las tierras lo produce. Si un color pide mucho más de lo que dan las tierras, costará lanzarlo a tiempo.": "How much of the coloured symbols in the costs belongs to each colour, and how much of the lands produce it. If a colour asks for much more than the lands give, it will be hard to cast on time.",
 	"Sin datos de maná.": "No mana data.",
 	"Costes": "Costs",
-	"{n} símbolos · {p} %": "{n} symbols · {p} %",
-	"{n} tierras · {p} %": "{n} lands · {p} %",
-	"+ {n} fuentes que no son tierra": "+ {n} non-land sources",
+	"{n} símbolos · {p} %": {
+		"one": "{n} symbol · {p} %",
+		"other": "{n} symbols · {p} %"
+	},
+	"{n} tierras · {p} %": {
+		"one": "{n} land · {p} %",
+		"other": "{n} lands · {p} %"
+	},
+	"+ {n} fuentes que no son tierra": {
+		"one": "+ {n} non-land source",
+		"other": "+ {n} non-land sources"
+	},
 	"Pocas fuentes para lo que piden los costes: {c}": "Few sources for what the costs need: {c}",
 	"Cartas por número de colores": "Cards by number of colours",
 	"Cartas de cada color": "Cards of each colour",
@@ -57,18 +72,27 @@
 	"En curso": "Ongoing",
 	"Fuerza media": "Average power",
 	"Resistencia media": "Average toughness",
-	"{n} criaturas de fuerza {f}": "{n} creatures with power {f}",
+	"{n} criaturas de fuerza {f}": {
+		"one": "{n} creature with power {f}",
+		"other": "{n} creatures with power {f}"
+	},
 	"Subtipos": "Subtypes",
 	"Ninguno.": "None.",
 	"Habilidades": "Keywords",
 	"Ninguna.": "None.",
-	"{n} sets · de {a} a {b}": "{n} sets · from {a} to {b}",
+	"{n} sets · de {a} a {b}": {
+		"one": "{n} set · from {a} to {b}",
+		"other": "{n} sets · from {a} to {b}"
+	},
 	"Se deduce del texto de reglas de cada carta: es orientativo. Una carta puede tener varias funciones. El botón de la derecha selecciona esas cartas en el deck.": "Worked out from each card's rules text, so take it as a guide. A card can have several roles. The button on the right selects those cards in the deck.",
 	"No se ha detectado ninguna.": "None detected.",
 	"Cartas de cada función": "Cards for each role",
 	"Sin cartas: {f}": "No cards: {f}",
 	"Seleccionar estas cartas en el deck": "Select these cards in the deck",
-	"{n} cartas seleccionadas: {f}": "{n} cards selected: {f}",
+	"{n} cartas seleccionadas: {f}": {
+		"one": "{n} card selected: {f}",
+		"other": "{n} cards selected: {f}"
+	},
 	"Rampa": "Ramp",
 	"Da maná o pone tierras en juego (piedras, criaturas de maná, Tesoros…).": "Makes mana or puts lands onto the battlefield (rocks, mana creatures, Treasures…).",
 	"Robo": "Card draw",
@@ -97,7 +121,10 @@
 	"Da un turno adicional.": "Gives an extra turn.",
 	"Destrucción de tierras": "Land destruction",
 	"Destruye o hace sacrificar tierras en masa, o no las deja enderezar.": "Destroys or sacrifices lands en masse, or stops them untapping.",
-	"{f} ({n} cartas)": "{f} ({n} cards)",
+	"{f} ({n} cartas)": {
+		"one": "{f} ({n} card)",
+		"other": "{f} ({n} cards)"
+	},
 	"Mano inicial": "Opening hand",
 	"Turno {n}": "Turn {n}",
 	"El deck está vacío.": "The deck is empty.",

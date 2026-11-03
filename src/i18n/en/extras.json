@@ -11,7 +11,10 @@
 	"Encantamientos": "Enchantments",
 	"Planeswalkers": "Planeswalkers",
 	"Tierras": "Lands",
-	"{n} cartas llevadas a la lista": "{n} cards sent to the list",
+	"{n} cartas llevadas a la lista": {
+		"one": "{n} card sent to the list",
+		"other": "{n} cards sent to the list"
+	},
 	"Explorar sets": "Browse sets",
 	"Elige un set de la lista.": "Pick a set from the list.",
 	"Buscar set…": "Search set…",
@@ -26,7 +29,10 @@
 	"Precio estimado": "Estimated price",
 	"{n} sin precio": "{n} without a price",
 	"Curva de maná (sin tierras)": "Mana curve (without lands)",
-	"{n} cartas de coste {c}": "{n} cards costing {c}",
+	"{n} cartas de coste {c}": {
+		"one": "{n} card costing {c}",
+		"other": "{n} cards costing {c}"
+	},
 	"Colores": "Colours",
 	"Identidad de color: {c}": "Colour identity: {c}",
 	"incolora": "colourless",

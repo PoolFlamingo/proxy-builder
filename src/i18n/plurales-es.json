@@ -1,0 +1,377 @@
+{
+	"+ {n} fuentes que no son tierra": {
+		"one": "+ {n} fuente que no es tierra",
+		"many": "+ {n} fuentes que no son tierra",
+		"other": "+ {n} fuentes que no son tierra"
+	},
+	"+{n} fichas": {
+		"one": "+{n} ficha",
+		"many": "+{n} fichas",
+		"other": "+{n} fichas"
+	},
+	"Añadir {n} fichas": {
+		"one": "Añadir {n} ficha",
+		"many": "Añadir {n} fichas",
+		"other": "Añadir {n} fichas"
+	},
+	"Carta y sus {n} copias retocadas": {
+		"one": "Carta y {n} copia retocadas",
+		"many": "Carta y sus {n} copias retocadas",
+		"other": "Carta y sus {n} copias retocadas"
+	},
+	"Con {n} etiquetas elegidas, enseñar los que tengan:": {
+		"one": "Con {n} etiqueta elegida, enseñar los que tengan:",
+		"many": "Con {n} etiquetas elegidas, enseñar los que tengan:",
+		"other": "Con {n} etiquetas elegidas, enseñar los que tengan:"
+	},
+	"Descargado: {n} imágenes extra (reversos, fichas, tierras y cartas hechas).": {
+		"one": "Descargado: {n} imagen extra (reversos, fichas, tierras y cartas hechas).",
+		"many": "Descargado: {n} imágenes extra (reversos, fichas, tierras y cartas hechas).",
+		"other": "Descargado: {n} imágenes extra (reversos, fichas, tierras y cartas hechas)."
+	},
+	"Destruye tus {n} criaturas": {
+		"one": "Destruye tu {n} criatura",
+		"many": "Destruye tus {n} criaturas",
+		"other": "Destruye tus {n} criaturas"
+	},
+	"Elige {n} para poner al fondo ({hechas} elegidas).": {
+		"one": "Elige {n} para poner al fondo ({hechas} elegidas).",
+		"many": "Elige {n} para poner al fondo ({hechas} elegidas).",
+		"other": "Elige {n} para poner al fondo ({hechas} elegidas)."
+	},
+	"Empezar ({n} jugadores)": {
+		"one": "Empezar ({n} jugador)",
+		"many": "Empezar ({n} jugadores)",
+		"other": "Empezar ({n} jugadores)"
+	},
+	"Este deck tiene {n} cartas y en Commander se juega con 100: haz una lista con el comandante y 99 más.": {
+		"one": "Este deck tiene {n} carta y en Commander se juega con 100: haz una lista con el comandante y 99 más.",
+		"many": "Este deck tiene {n} cartas y en Commander se juega con 100: haz una lista con el comandante y 99 más.",
+		"other": "Este deck tiene {n} cartas y en Commander se juega con 100: haz una lista con el comandante y 99 más."
+	},
+	"Exilia tus {n} criaturas": {
+		"one": "Exilia tu {n} criatura",
+		"many": "Exilia tus {n} criaturas",
+		"other": "Exilia tus {n} criaturas"
+	},
+	"Idioma reaplicado a {n} cartas": {
+		"one": "Idioma reaplicado a {n} carta",
+		"many": "Idioma reaplicado a {n} cartas",
+		"other": "Idioma reaplicado a {n} cartas"
+	},
+	"La ronda {ronda} está en el {ritmo} % del pico de los barridos, y tienes {n} criaturas en el campo.": {
+		"one": "La ronda {ronda} está en el {ritmo} % del pico de los barridos, y tienes {n} criatura en el campo.",
+		"many": "La ronda {ronda} está en el {ritmo} % del pico de los barridos, y tienes {n} criaturas en el campo.",
+		"other": "La ronda {ronda} está en el {ritmo} % del pico de los barridos, y tienes {n} criaturas en el campo."
+	},
+	"Lista importada de Archidekt ({n} cartas)": {
+		"one": "Lista importada de Archidekt ({n} carta)",
+		"many": "Lista importada de Archidekt ({n} cartas)",
+		"other": "Lista importada de Archidekt ({n} cartas)"
+	},
+	"Lleva {n} cartas y el formato pide al menos {desde}.": {
+		"one": "Lleva {n} carta y el formato pide al menos {desde}.",
+		"many": "Lleva {n} cartas y el formato pide al menos {desde}.",
+		"other": "Lleva {n} cartas y el formato pide al menos {desde}."
+	},
+	"Lleva {n} cartas y el formato pide de {desde} a {hasta}.": {
+		"one": "Lleva {n} carta y el formato pide de {desde} a {hasta}.",
+		"many": "Lleva {n} cartas y el formato pide de {desde} a {hasta}.",
+		"other": "Lleva {n} cartas y el formato pide de {desde} a {hasta}."
+	},
+	"Lleva {n} cartas y el formato pide {desde}.": {
+		"one": "Lleva {n} carta y el formato pide {desde}.",
+		"many": "Lleva {n} cartas y el formato pide {desde}.",
+		"other": "Lleva {n} cartas y el formato pide {desde}."
+	},
+	"Más de {n} copias": {
+		"one": "Más de {n} copia",
+		"many": "Más de {n} copias",
+		"other": "Más de {n} copias"
+	},
+	"No se han podido bajar {n} imágenes: se quedan en blanco hasta que las busques.": {
+		"one": "No se ha podido bajar {n} imagen: se queda en blanco hasta que la busques.",
+		"many": "No se han podido bajar {n} imágenes: se quedan en blanco hasta que las busques.",
+		"other": "No se han podido bajar {n} imágenes: se quedan en blanco hasta que las busques."
+	},
+	"Ocupa {mb} en {n} ficheros. Se vuelven a generar al verlas. Las imágenes de tus decks no se tocan.": {
+		"one": "Ocupa {mb} en {n} fichero. Se vuelven a generar al verlas. Las imágenes de tus decks no se tocan.",
+		"many": "Ocupa {mb} en {n} ficheros. Se vuelven a generar al verlas. Las imágenes de tus decks no se tocan.",
+		"other": "Ocupa {mb} en {n} ficheros. Se vuelven a generar al verlas. Las imágenes de tus decks no se tocan."
+	},
+	"PDF guardado ({n} páginas)": {
+		"one": "PDF guardado ({n} página)",
+		"many": "PDF guardado ({n} páginas)",
+		"other": "PDF guardado ({n} páginas)"
+	},
+	"PDF guardado en {f} ficheros ({n} páginas)": {
+		"one": "PDF guardado en {f} ficheros ({n} página)",
+		"many": "PDF guardado en {f} ficheros ({n} páginas)",
+		"other": "PDF guardado en {f} ficheros ({n} páginas)"
+	},
+	"Reemplazar las {n} copias": {
+		"one": "Reemplazar {n} copia",
+		"many": "Reemplazar las {n} copias",
+		"other": "Reemplazar las {n} copias"
+	},
+	"Se pondrá a los {n} decks elegidos.": {
+		"one": "Se pondrá al {n} deck elegido.",
+		"many": "Se pondrá a los {n} decks elegidos.",
+		"other": "Se pondrá a los {n} decks elegidos."
+	},
+	"Sin contar {n} cartas sin datos de Scryfall": {
+		"one": "Sin contar {n} carta sin datos de Scryfall",
+		"many": "Sin contar {n} cartas sin datos de Scryfall",
+		"other": "Sin contar {n} cartas sin datos de Scryfall"
+	},
+	"Unos {mb} con {n} imágenes. Puedes bajar la calidad o exportar igualmente.": {
+		"one": "Unos {mb} con {n} imagen. Puedes bajar la calidad o exportar igualmente.",
+		"many": "Unos {mb} con {n} imágenes. Puedes bajar la calidad o exportar igualmente.",
+		"other": "Unos {mb} con {n} imágenes. Puedes bajar la calidad o exportar igualmente."
+	},
+	"{c}: {n} cartas, {p} símbolos de maná": {
+		"one": "{c}: {n} carta, {p} símbolos de maná",
+		"many": "{c}: {n} cartas, {p} símbolos de maná",
+		"other": "{c}: {n} cartas, {p} símbolos de maná"
+	},
+	"{f} ({n} cartas)": {
+		"one": "{f} ({n} carta)",
+		"many": "{f} ({n} cartas)",
+		"other": "{f} ({n} cartas)"
+	},
+	"{n} borradores hechos": {
+		"one": "{n} borrador hecho",
+		"many": "{n} borradores hechos",
+		"other": "{n} borradores hechos"
+	},
+	"{n} cartas": {
+		"one": "{n} carta",
+		"many": "{n} cartas",
+		"other": "{n} cartas"
+	},
+	"{n} cartas añadidas": {
+		"one": "{n} carta añadida",
+		"many": "{n} cartas añadidas",
+		"other": "{n} cartas añadidas"
+	},
+	"{n} cartas cargadas": {
+		"one": "{n} carta cargada",
+		"many": "{n} cartas cargadas",
+		"other": "{n} cartas cargadas"
+	},
+	"{n} cartas de coste {c}": {
+		"one": "{n} carta de coste {c}",
+		"many": "{n} cartas de coste {c}",
+		"other": "{n} cartas de coste {c}"
+	},
+	"{n} cartas de doble cara sin dúplex: su otra cara no se imprime (activa «Pares DFC intercalados» o el dúplex).": {
+		"one": "{n} carta de doble cara sin dúplex: su otra cara no se imprime (activa «Pares DFC intercalados» o el dúplex).",
+		"many": "{n} cartas de doble cara sin dúplex: su otra cara no se imprime (activa «Pares DFC intercalados» o el dúplex).",
+		"other": "{n} cartas de doble cara sin dúplex: su otra cara no se imprime (activa «Pares DFC intercalados» o el dúplex)."
+	},
+	"{n} cartas de la lista ya no están en el deck.": {
+		"one": "{n} carta de la lista ya no está en el deck.",
+		"many": "{n} cartas de la lista ya no están en el deck.",
+		"other": "{n} cartas de la lista ya no están en el deck."
+	},
+	"{n} cartas diseñadas": {
+		"one": "{n} carta diseñada",
+		"many": "{n} cartas diseñadas",
+		"other": "{n} cartas diseñadas"
+	},
+	"{n} cartas en la lista": {
+		"one": "{n} carta en la lista",
+		"many": "{n} cartas en la lista",
+		"other": "{n} cartas en la lista"
+	},
+	"{n} cartas en la mano": {
+		"one": "{n} carta en la mano",
+		"many": "{n} cartas en la mano",
+		"other": "{n} cartas en la mano"
+	},
+	"{n} cartas grandes no caben en este papel y no se imprimen.": {
+		"one": "{n} carta grande no cabe en este papel y no se imprime.",
+		"many": "{n} cartas grandes no caben en este papel y no se imprimen.",
+		"other": "{n} cartas grandes no caben en este papel y no se imprimen."
+	},
+	"{n} cartas llevadas a la lista": {
+		"one": "{n} carta llevada a la lista",
+		"many": "{n} cartas llevadas a la lista",
+		"other": "{n} cartas llevadas a la lista"
+	},
+	"{n} cartas no se pudieron preparar.": {
+		"one": "{n} carta no se pudo preparar.",
+		"many": "{n} cartas no se pudieron preparar.",
+		"other": "{n} cartas no se pudieron preparar."
+	},
+	"{n} cartas propias vinculadas": {
+		"one": "{n} carta propia vinculada",
+		"many": "{n} cartas propias vinculadas",
+		"other": "{n} cartas propias vinculadas"
+	},
+	"{n} cartas renumeradas": {
+		"one": "{n} carta renumerada",
+		"many": "{n} cartas renumeradas",
+		"other": "{n} cartas renumeradas"
+	},
+	"{n} cartas seleccionadas: {f}": {
+		"one": "{n} carta seleccionada: {f}",
+		"many": "{n} cartas seleccionadas: {f}",
+		"other": "{n} cartas seleccionadas: {f}"
+	},
+	"{n} cartas sin diseño": {
+		"one": "{n} carta sin diseño",
+		"many": "{n} cartas sin diseño",
+		"other": "{n} cartas sin diseño"
+	},
+	"{n} cartas sin reverso: el deck no tiene reverso por defecto.": {
+		"one": "{n} carta sin reverso: el deck no tiene reverso por defecto.",
+		"many": "{n} cartas sin reverso: el deck no tiene reverso por defecto.",
+		"other": "{n} cartas sin reverso: el deck no tiene reverso por defecto."
+	},
+	"{n} cartas · {p} hojas": {
+		"one": "{n} carta · {p} hojas",
+		"many": "{n} cartas · {p} hojas",
+		"other": "{n} cartas · {p} hojas"
+	},
+	"{n} criaturas de fuerza {f}": {
+		"one": "{n} criatura de fuerza {f}",
+		"many": "{n} criaturas de fuerza {f}",
+		"other": "{n} criaturas de fuerza {f}"
+	},
+	"{n} decks": {
+		"one": "{n} deck",
+		"many": "{n} decks",
+		"other": "{n} decks"
+	},
+	"{n} decks elegidos": {
+		"one": "{n} deck elegido",
+		"many": "{n} decks elegidos",
+		"other": "{n} decks elegidos"
+	},
+	"{n} fichas añadidas": {
+		"one": "{n} ficha añadida",
+		"many": "{n} fichas añadidas",
+		"other": "{n} fichas añadidas"
+	},
+	"{n} imágenes exportadas": {
+		"one": "{n} imagen exportada",
+		"many": "{n} imágenes exportadas",
+		"other": "{n} imágenes exportadas"
+	},
+	"{n} imágenes propias añadidas": {
+		"one": "{n} imagen propia añadida",
+		"many": "{n} imágenes propias añadidas",
+		"other": "{n} imágenes propias añadidas"
+	},
+	"{n} imágenes propias distintas en el deck.": {
+		"one": "{n} imagen propia distinta en el deck.",
+		"many": "{n} imágenes propias distintas en el deck.",
+		"other": "{n} imágenes propias distintas en el deck."
+	},
+	"{n} imágenes propias distintas entre las cartas seleccionadas.": {
+		"one": "{n} imagen propia distinta entre las cartas seleccionadas.",
+		"many": "{n} imágenes propias distintas entre las cartas seleccionadas.",
+		"other": "{n} imágenes propias distintas entre las cartas seleccionadas."
+	},
+	"{n} imágenes sin usar borradas ({mb})": {
+		"one": "{n} imagen sin usar borrada ({mb})",
+		"many": "{n} imágenes sin usar borradas ({mb})",
+		"other": "{n} imágenes sin usar borradas ({mb})"
+	},
+	"{n} imágenes, también las ya vinculadas": {
+		"one": "{n} imagen, también las ya vinculadas",
+		"many": "{n} imágenes, también las ya vinculadas",
+		"other": "{n} imágenes, también las ya vinculadas"
+	},
+	"{n} jugadores elegidos": {
+		"one": "{n} jugador elegido",
+		"many": "{n} jugadores elegidos",
+		"other": "{n} jugadores elegidos"
+	},
+	"{n} letras importadas": {
+		"one": "{n} letra importada",
+		"many": "{n} letras importadas",
+		"other": "{n} letras importadas"
+	},
+	"{n} líneas sin entender": {
+		"one": "{n} línea sin entender",
+		"many": "{n} líneas sin entender",
+		"other": "{n} líneas sin entender"
+	},
+	"{n} miembros": {
+		"one": "{n} miembro",
+		"many": "{n} miembros",
+		"other": "{n} miembros"
+	},
+	"{n} nombres descargados.": {
+		"one": "{n} nombre descargado.",
+		"many": "{n} nombres descargados.",
+		"other": "{n} nombres descargados."
+	},
+	"{n} resultados": {
+		"one": "{n} resultado",
+		"many": "{n} resultados",
+		"other": "{n} resultados"
+	},
+	"{n} sets · de {a} a {b}": {
+		"one": "{n} set · de {a} a {b}",
+		"many": "{n} sets · de {a} a {b}",
+		"other": "{n} sets · de {a} a {b}"
+	},
+	"{n} símbolos": {
+		"one": "{n} símbolo",
+		"many": "{n} símbolos",
+		"other": "{n} símbolos"
+	},
+	"{n} símbolos · {p} %": {
+		"one": "{n} símbolo · {p} %",
+		"many": "{n} símbolos · {p} %",
+		"other": "{n} símbolos · {p} %"
+	},
+	"{n} tierras · {p} %": {
+		"one": "{n} tierra · {p} %",
+		"many": "{n} tierras · {p} %",
+		"other": "{n} tierras · {p} %"
+	},
+	"{quien} crea {n} fichas": {
+		"one": "{quien} crea {n} ficha",
+		"many": "{quien} crea {n} fichas",
+		"other": "{quien} crea {n} fichas"
+	},
+	"{quien} exilia {n} cartas de su biblioteca": {
+		"one": "{quien} exilia {n} carta de su biblioteca",
+		"many": "{quien} exilia {n} cartas de su biblioteca",
+		"other": "{quien} exilia {n} cartas de su biblioteca"
+	},
+	"{quien} manifiesta {n} cartas": {
+		"one": "{quien} manifiesta {n} carta",
+		"many": "{quien} manifiesta {n} cartas",
+		"other": "{quien} manifiesta {n} cartas"
+	},
+	"{quien} mira {n} cartas de una biblioteca": {
+		"one": "{quien} mira {n} carta de una biblioteca",
+		"many": "{quien} mira {n} cartas de una biblioteca",
+		"other": "{quien} mira {n} cartas de una biblioteca"
+	},
+	"{quien} muele {n} cartas": {
+		"one": "{quien} muele {n} carta",
+		"many": "{quien} muele {n} cartas",
+		"other": "{quien} muele {n} cartas"
+	},
+	"{quien} revela {n} cartas de su biblioteca": {
+		"one": "{quien} revela {n} carta de su biblioteca",
+		"many": "{quien} revela {n} cartas de su biblioteca",
+		"other": "{quien} revela {n} cartas de su biblioteca"
+	},
+	"{quien} roba {n} cartas": {
+		"one": "{quien} roba {n} carta",
+		"many": "{quien} roba {n} cartas",
+		"other": "{quien} roba {n} cartas"
+	},
+	"¿Eliminar {n} decks?": {
+		"one": "¿Eliminar {n} deck?",
+		"many": "¿Eliminar {n} decks?",
+		"other": "¿Eliminar {n} decks?"
+	}
+}

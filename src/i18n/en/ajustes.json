@@ -42,7 +42,10 @@
 	"Descargar (unos {mb} MB)": "Download (about {mb} MB)",
 	"Para encontrar las cartas escritas por su nombre en español u otro idioma que Scryfall no tiene impresas así (las antiguas, sobre todo), en la lista y al vincular. Sin descargarlo se pregunta en línea, más despacio.": "To find cards written by their Spanish (or other language) name that Scryfall doesn't have printed that way (mostly old ones), in the list and when linking. Without it, an online service is asked, more slowly.",
 	"Preparando el índice…": "Preparing the index…",
-	"{n} nombres descargados.": "{n} names downloaded.",
+	"{n} nombres descargados.": {
+		"one": "{n} name downloaded.",
+		"other": "{n} names downloaded."
+	},
 	"Más temas…": "More themes…",
 	"Letra: {letra}": "Font: {letra}",
 	"Con las letras de la app": "With the app's fonts",

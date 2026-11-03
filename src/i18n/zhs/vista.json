@@ -66,5 +66,6 @@
 	"Cartas quitadas": "已移除卡牌",
 	"Rehacer (Ctrl+Mayús+Z)": "重做（Ctrl+Shift+Z）",
 	"Opciones de la vista": "视图选项",
-	"Arrastrar para mover": "拖动以移动"
+	"Arrastrar para mover": "拖动以移动",
+	"Pega una lista en la pestaña «Lista» y pulsa «Cargar lista», o añade cartas una a una.": "在「列表」标签页粘贴列表并点按「载入列表」，或逐张添加卡牌。"
 }

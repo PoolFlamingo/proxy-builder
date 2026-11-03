@@ -25,8 +25,14 @@
 	"Todas": "All",
 	"Ver reversos": "Show backs",
 	"Vista {papel}": "{papel} preview",
-	"{n} cartas de doble cara sin dúplex: su otra cara no se imprime (activa «Pares DFC intercalados» o el dúplex).": "{n} double-faced cards without duplex: their other face isn't printed (turn on “Interleaved DFC pairs” or duplex).",
-	"{n} cartas sin reverso: el deck no tiene reverso por defecto.": "{n} cards without a back: the deck has no default back.",
+	"{n} cartas de doble cara sin dúplex: su otra cara no se imprime (activa «Pares DFC intercalados» o el dúplex).": {
+		"one": "{n} double-faced card without duplex: its other face isn't printed (turn on “Interleaved DFC pairs” or duplex).",
+		"other": "{n} double-faced cards without duplex: their other face isn't printed (turn on “Interleaved DFC pairs” or duplex)."
+	},
+	"{n} cartas sin reverso: el deck no tiene reverso por defecto.": {
+		"one": "{n} card without a back: the deck has no default back.",
+		"other": "{n} cards without a back: the deck has no default back."
+	},
 	"{papel} apaisado": "{papel} landscape",
 	"¿Eliminar las cartas de esta página?": "Delete the cards on this page?",
 	"Cambiar reverso": "Change back",
@@ -66,5 +72,6 @@
 	"Cartas quitadas": "Cards removed",
 	"Rehacer (Ctrl+Mayús+Z)": "Redo (Ctrl+Shift+Z)",
 	"Opciones de la vista": "View options",
-	"Arrastrar para mover": "Drag to move"
+	"Arrastrar para mover": "Drag to move",
+	"Pega una lista en la pestaña «Lista» y pulsa «Cargar lista», o añade cartas una a una.": "Paste a list in the “List” tab and tap “Load list”, or add cards one by one."
 }

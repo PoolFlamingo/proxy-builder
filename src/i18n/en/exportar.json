@@ -15,8 +15,14 @@
 	"Hoja de calibración guardada": "Calibration sheet saved",
 	"Hoja de calibración": "Calibration sheet",
 	"Mostrar en carpeta": "Show in folder",
-	"PDF guardado ({n} páginas)": "PDF saved ({n} pages)",
-	"PDF guardado en {f} ficheros ({n} páginas)": "PDF saved in {f} files ({n} pages)",
+	"PDF guardado ({n} páginas)": {
+		"one": "PDF saved ({n} page)",
+		"other": "PDF saved ({n} pages)"
+	},
+	"PDF guardado en {f} ficheros ({n} páginas)": {
+		"one": "PDF saved in {f} files ({n} page)",
+		"other": "PDF saved in {f} files ({n} pages)"
+	},
 	"calibracion-duplex": "duplex-calibration",
 	"Corregir con lo medido": "Correct with measurements",
 	"Corregir el reverso": "Correct the back",
@@ -81,7 +87,10 @@
 	"Umbral": "Threshold",
 	"Un PDF por cada N hojas. Vacío: un solo fichero.": "One PDF every N sheets. Empty: a single file.",
 	"Una cara": "Single-sided",
-	"Unos {mb} con {n} imágenes. Puedes bajar la calidad o exportar igualmente.": "About {mb} with {n} images. You can lower the quality or export anyway.",
+	"Unos {mb} con {n} imágenes. Puedes bajar la calidad o exportar igualmente.": {
+		"one": "About {mb} with {n} image. You can lower the quality or export anyway.",
+		"other": "About {mb} with {n} images. You can lower the quality or export anyway."
+	},
 	"hojas": "sheets",
 	"Borrar el preset elegido": "Delete the selected preset",
 	"Cargar preset…": "Load preset…",

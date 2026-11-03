@@ -66,5 +66,6 @@
 	"Cartas quitadas": "カードを削除しました",
 	"Rehacer (Ctrl+Mayús+Z)": "やり直す（Ctrl+Shift+Z）",
 	"Opciones de la vista": "表示オプション",
-	"Arrastrar para mover": "ドラッグして移動"
+	"Arrastrar para mover": "ドラッグして移動",
+	"Pega una lista en la pestaña «Lista» y pulsa «Cargar lista», o añade cartas una a una.": "「リスト」タブにリストを貼り付けて「リストを読み込む」をタップするか、カードを1枚ずつ追加してください。"
 }

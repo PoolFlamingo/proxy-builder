@@ -29,15 +29,27 @@
 	"Vincular las seleccionadas…": "Link selected…",
 	"quedan ~{n} s": "~{n} s left",
 	"quedan ~{n} min": "~{n} min left",
-	"{n} cartas propias vinculadas": "{n} custom cards linked",
+	"{n} cartas propias vinculadas": {
+		"one": "{n} custom card linked",
+		"other": "{n} custom cards linked"
+	},
 	"Vincular en bloque": "Bulk link",
-	"{n} imágenes propias distintas entre las cartas seleccionadas.": "{n} distinct custom images among the selected cards.",
-	"{n} imágenes propias distintas en el deck.": "{n} distinct custom images in the deck.",
+	"{n} imágenes propias distintas entre las cartas seleccionadas.": {
+		"one": "{n} distinct custom image among the selected cards.",
+		"other": "{n} distinct custom images among the selected cards."
+	},
+	"{n} imágenes propias distintas en el deck.": {
+		"one": "{n} distinct custom image in the deck.",
+		"other": "{n} distinct custom images in the deck."
+	},
 	"¿Qué cartas quieres leer?": "Which cards do you want to read?",
 	"Solo las que faltan": "Only the missing ones",
 	"{n} sin vincular": "{n} not linked",
 	"Todas otra vez": "All of them again",
-	"{n} imágenes, también las ya vinculadas": "{n} images, including the ones already linked",
+	"{n} imágenes, también las ya vinculadas": {
+		"one": "{n} image, including the ones already linked",
+		"other": "{n} images, including the ones already linked"
+	},
 	"Leer la carta entera con OCR (más fiable, unos 2 s por carta)": "Read the whole card with OCR (more reliable, about 2 s per card)",
 	"Sin OCR solo se usa el nombre del fichero. La primera vez, el OCR descarga sus modelos (unos 12 MB).": "Without OCR only the file name is used. The first time, OCR downloads its models (about 12 MB).",
 	"Sin OCR solo se usa el nombre del fichero: va rápido, pero acierta menos.": "Without OCR only the file name is used: it's fast, but less accurate.",

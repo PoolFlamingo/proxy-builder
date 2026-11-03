@@ -56,7 +56,8 @@ export function traducir(
 ): string {
 	let valor: Traduccion | undefined;
 	let locale = localeDe(lang);
-	if (lang === "es") valor = es;
+	// En español vale la fuente; el diccionario solo trae sus plurales.
+	if (lang === "es") valor = dic?.[es] ?? es;
 	else {
 		valor = dic?.[es];
 		if (valor === undefined) {
