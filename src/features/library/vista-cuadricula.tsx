@@ -153,20 +153,24 @@ function TarjetaDeck({ deck: d }: { deck: DeckSummary }) {
 						type="button"
 						onClick={() => void useBiblioteca.getState().favorito([d.id], !d.pinned)}
 						className={cn(
-							"absolute top-3.5 right-3.5 rounded-full bg-background/80 p-1 shadow transition-opacity",
+							"absolute top-1.5 right-1.5 flex size-9 items-center justify-center transition-opacity",
 							d.pinned
 								? "opacity-100"
 								: "opacity-0 group-hover:opacity-100 [[data-tactil]_&]:opacity-100",
 						)}
 						aria-label={d.pinned ? t("Quitar de favoritos") : t("Añadir a favoritos")}
 					>
-						<Icono
-							icon="lucide:star"
-							className={cn(
-								"size-3.5",
-								d.pinned ? "fill-amber-400 text-amber-500" : "text-muted-foreground",
-							)}
-						/>
+						{/* La zona de toque es el botón (≥ 2,5 rem con el dedo); el círculo que se
+								ve es solo este span, para que no crezca con ella. */}
+						<span className="flex size-6 items-center justify-center rounded-full bg-background/80 shadow">
+							<Icono
+								icon="lucide:star"
+								className={cn(
+									"size-3.5",
+									d.pinned ? "fill-amber-400 text-amber-500" : "text-muted-foreground",
+								)}
+							/>
+						</span>
 					</button>
 				</WithTooltip>
 				<div className="flex items-start gap-1">
