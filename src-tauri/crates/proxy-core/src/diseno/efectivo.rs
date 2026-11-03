@@ -54,6 +54,12 @@ pub struct DisenoEfectivo {
     pub retoques: FineTuning,
     /// La colección pedida no existe (se borró): se usa la fábrica y se avisa.
     pub coleccion_perdida: bool,
+    /// La carta lleva un pack de marcos distinto del de su colección: las
+    /// letras y grosores de la colección se eligieron para el otro, y un pack
+    /// con letras propias (Balatro) pinta con las suyas. Sin escribirse si no,
+    /// por la huella de los diseños de antes.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub otro_pack: bool,
     /// El diseño efectivo de las caras con ajustes propios (una entrada por
     /// cara; vacío si ninguna los tiene). Sin escribirse si está vacío, por la
     /// huella de los diseños de antes.
@@ -221,6 +227,10 @@ fn efectivo_de_carta(d: &CardDesign, coleccion: Option<&Collection>) -> DisenoEf
             .unwrap_or_default()
             .limitado(),
         coleccion_perdida: perdida,
+        otro_pack: match (&d.frame, c) {
+            (Some(f), Some(c)) => f.pack != c.frame.pack,
+            _ => false,
+        },
         caras: Vec::new(),
     }
 }
@@ -417,6 +427,25 @@ mod tests {
         assert_eq!(e.pie.set_code, "AKH");
         assert_eq!(e.pie.rarity, "R");
         assert_eq!(e.original_name, OriginalName::Footer);
+    }
+
+    #[test]
+    fn otro_pack_que_el_de_la_coleccion_se_apunta_y_si_no_no_se_escribe() {
+        let mut d = diseno_de_prueba();
+        let c = coleccion();
+        let e = efectivo(&d, Some(&c));
+        assert!(!e.otro_pack);
+        // Sin escribirse: la huella de los diseños de antes no cambia.
+        assert!(!serde_json::to_string(&e).unwrap().contains("otro_pack"));
+        // Marco propio con el mismo pack: tampoco.
+        d.frame = Some(c.frame.clone());
+        assert!(!efectivo(&d, Some(&c)).otro_pack);
+        // Con otro pack, sí (las letras de la colección eran para el suyo).
+        d.frame = Some(FrameOptions {
+            pack: format!("{}-otro", c.frame.pack),
+            ..c.frame.clone()
+        });
+        assert!(efectivo(&d, Some(&c)).otro_pack);
     }
 
     /// 🛑 Las huellas de la 2.5.9 (calculadas antes de los idiomas nuevos):

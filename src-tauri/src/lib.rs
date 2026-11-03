@@ -164,6 +164,8 @@ pub fn run() {
             let app1 = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 diseno::original::completar(&app1.state::<state::AppState>()).await;
+                // Y los packs descargables ya bajados, a la versión de esta app.
+                diseno::descargables::completar(&app1.state::<state::AppState>()).await;
             });
             // Por si la página no llega a cargar: a los 3 segundos, se enseña
             // igual.

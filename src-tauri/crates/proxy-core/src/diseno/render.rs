@@ -1176,6 +1176,20 @@ pub(super) struct Carta<'a> {
     pub(super) retoques: super::modelo::FineTuning,
     letra_titulo: Option<String>,
     letra_reglas: Option<String>,
+    /// La carta usa otro pack que su colección (`DisenoEfectivo::otro_pack`).
+    otro_pack: bool,
+}
+
+/// Si la letra de un papel en un pack es suya y no la de la casa (Spectral en
+/// los textos, Montserrat en el pie; las del pack de la casa y de los marcos
+/// «Original»).
+fn letra_propia(rol: &str, familia: &str) -> bool {
+    let de_la_casa = if rol == "pie" {
+        "Montserrat"
+    } else {
+        "Spectral"
+    };
+    familia != de_la_casa
 }
 
 /// Un hueco ya evaluado (mm).
@@ -1232,18 +1246,23 @@ impl Carta<'_> {
                 peso: 400.0,
                 mayuscula: 0.66,
             });
+        // Lo que pide la colección es para su pack: con otro que trae sus
+        // propias letras (no las de la casa), mandan las del pack.
+        let de_la_coleccion = !(self.otro_pack && letra_propia(rol, &base.familia));
         let pedida = match rol {
             "titulo" | "tipo" | "fr" => self.letra_titulo.clone(),
             "reglas" | "cinta" => self.letra_reglas.clone(),
             _ => None,
-        };
+        }
+        .filter(|_| de_la_coleccion);
         // El grosor pedido por la colección pisa al del pack.
         let peso = match rol {
             "titulo" => self.pesos.titulo,
             "tipo" => self.pesos.tipo,
             "reglas" => self.pesos.reglas,
             _ => None,
-        };
+        }
+        .filter(|_| de_la_coleccion);
         let mut l = self.letra_sin_peso(base, pedida);
         if let Some(p) = peso {
             l.peso = p as f32;
@@ -1933,17 +1952,52 @@ impl Carta<'_> {
             let cy = c.y + (i as f32 + 0.5) * paso;
             let y0 = |b: &texto::Bloque, l: &Lienzo| l.y(cy) - b.base + e.tam * cap / 2.0;
             let (linea, derecha) = linea.split_once("{>}").unwrap_or((linea, ""));
-            // Lo de la derecha, al final del hueco (si no cabe en la mitad, se
-            // estrecha); lo demás llega hasta donde empieza.
+            let columnas: Vec<(usize, texto::Bloque)> = linea
+                .split('\t')
+                .enumerate()
+                .filter(|(_, col)| !col.trim().is_empty())
+                .map(|(j, col)| (j, maquetar(self.motor, col)))
+                .collect();
+            // Seguidas: si no caben, se estrecha la línea entera (hasta la mitad).
+            let seguidas = h.tabs.is_empty();
+            let total: f32 = columnas.iter().map(|(_, b)| b.ancho).sum::<f32>()
+                + self.l.x(HUECO) * columnas.len().saturating_sub(1) as f32;
+            // Lo de la derecha, al final del hueco; lo demás llega hasta donde
+            // empieza. Si no caben juntas, se estrechan a la vez (la misma
+            // escala, nunca una encima de la otra); si ni a la mitad caben, la
+            // derecha no va.
             let mut ancho = c.w;
-            if !derecha.trim().is_empty() {
-                let b = maquetar(self.motor, derecha);
-                let cabe = self.l.x(c.w * 0.5);
-                let escala = if b.ancho > cabe {
-                    (cabe / b.ancho).max(0.5)
-                } else {
-                    1.0
-                };
+            let derecha = if derecha.trim().is_empty() {
+                None
+            } else {
+                Some(maquetar(self.motor, derecha))
+            };
+            let derecha = match derecha {
+                Some(b) if seguidas => {
+                    let junto = total + self.l.x(HUECO) + b.ancho;
+                    let escala = (self.l.x(c.w) / junto).min(1.0);
+                    (escala >= 0.5).then_some((b, escala))
+                }
+                // Con tabuladores, la derecha comparte sitio con la última
+                // columna (la que llega hasta ella): las dos a la vez.
+                Some(b) => {
+                    let ultima = columnas.last().map(|(j, col)| {
+                        let x = limites_de_columnas(&h.tabs, c.x, c.w, &[*j])[0].0;
+                        (x, col.ancho)
+                    });
+                    let (desde, ocupado) = ultima.unwrap_or((c.x, 0.0));
+                    let hueco = if ultima.is_some() {
+                        self.l.x(HUECO)
+                    } else {
+                        0.0
+                    };
+                    let junto = ocupado + hueco + b.ancho;
+                    let escala = (self.l.x(c.x + c.w - desde) / junto).min(1.0);
+                    (escala >= 0.5).then_some((b, escala))
+                }
+                None => None,
+            };
+            if let Some((b, escala)) = derecha {
                 let x0 = self.l.x(c.x + c.w) - b.ancho * escala;
                 ancho = (x0 / self.l.kx - c.x - HUECO).max(0.0);
                 let y = y0(&b, &self.l);
@@ -1959,16 +2013,6 @@ impl Carta<'_> {
                     self.rec.simbolos,
                 ));
             }
-            let columnas: Vec<(usize, texto::Bloque)> = linea
-                .split('\t')
-                .enumerate()
-                .filter(|(_, col)| !col.trim().is_empty())
-                .map(|(j, col)| (j, maquetar(self.motor, col)))
-                .collect();
-            // Seguidas: si no caben, se estrecha la línea entera (hasta la mitad).
-            let seguidas = h.tabs.is_empty();
-            let total: f32 = columnas.iter().map(|(_, b)| b.ancho).sum::<f32>()
-                + self.l.x(HUECO) * columnas.len().saturating_sub(1) as f32;
             let escala_linea = if seguidas && total > self.l.x(ancho) {
                 (self.l.x(ancho) / total).max(0.5)
             } else {
@@ -2569,6 +2613,7 @@ pub(super) fn pintar_cara(
         retoques: e.retoques,
         letra_titulo: e.font_title.clone(),
         letra_reglas: e.font_rules.clone(),
+        otro_pack: e.otro_pack,
     };
     c.avisos.append(&mut avisos);
     // Con un tinte pedido sobre la caja pintada en la imagen, el texto de las

@@ -329,6 +329,36 @@ pub async fn descargar(
     state.diseno.recargar_pack(id)
 }
 
+/// Al arrancar: un pack ya bajado cuya versión del manifiesto (la de esta
+/// app) trae ficheros nuevos o cambiados se pone al día solo, como los marcos
+/// «Original». Uno que nunca se bajó no se toca (eso lo pide la persona).
+pub async fn completar(state: &AppState) {
+    let Ok(m) = manifiesto() else {
+        return;
+    };
+    let datos = state.diseno.dir().to_path_buf();
+    for d in m.packs.iter().filter(|d| disponible(d)) {
+        let dir = dir_pack(&datos, &d.id);
+        if !dir.join("pack.json").exists() {
+            continue;
+        }
+        // Los del pack, por su huella (pocos y pequeños); los extras, que
+        // pesan, basta con que estén (la descarga comprueba la huella).
+        let extras = dir_extras(&datos, &d.id);
+        let al_dia = d.ficheros.iter().all(|(r, sha)| bueno(&dir.join(r), sha))
+            && d.extras.iter().all(|e| extras.join(&e.ruta).exists());
+        if al_dia {
+            continue;
+        }
+        match descargar(state, &d.id, &|_, _| {}).await {
+            Ok(_) => tracing::info!(pack = d.id, "pack descargable puesto al día"),
+            Err(e) => {
+                tracing::warn!(pack = d.id, codigo = ?e.code, "pack descargable sin poner al día")
+            }
+        }
+    }
+}
+
 /// Los bytes del extra número `indice` del pack (para enseñarlo), si está
 /// bajado y su huella cuadra.
 pub fn extra_por_indice(state: &AppState, id: &str, indice: usize) -> AppResult<Vec<u8>> {
