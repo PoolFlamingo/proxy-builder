@@ -26,6 +26,7 @@ import { useDeck } from "@/stores/deck-store";
 import { useEdicion } from "@/stores/edicion-store";
 import { useUi } from "@/stores/ui-store";
 import { altoCarta } from "./altura";
+import { AvisoPacksFaltan } from "./aviso-packs-faltan";
 import { Formulario } from "./formulario";
 import { FormularioMovil } from "./formulario-movil";
 import { agrupar, conVariante, vecina } from "./grupos";
@@ -61,6 +62,7 @@ export function DisenarScreen() {
 	const { t, mensaje } = useLang();
 	const cartas = useDeck((s) => s.deck?.cards);
 	const lang = useDeck((s) => s.deck?.settings.designLang ?? "es");
+	const deckId = useDeck((s) => s.deck?.id);
 	// El idioma de la vista es el del deck: lo que se ve aquí es lo que sale
 	// en el PDF.
 	// Sube al acabar de cambiar de idioma: si se bajaron letras (japonés,
@@ -362,21 +364,26 @@ export function DisenarScreen() {
 	);
 
 	const vistaPrevia = (
-		<VistaPrevia
-			design={b.design}
-			huella={b.huella}
-			alDia={b.alDia}
-			recursos={recursos}
-			avisos={b.avisos}
-			lang={lang}
-			setLang={setLang}
-			cara={cara}
-			setCara={setCara}
-			caraArte={caraArte}
-			onEncuadre={encuadre}
-			cargando={b.cargando}
-			carasImpresas={resumen?.carasImpresas ?? 1}
-		/>
+		<div className="flex h-full min-h-0 flex-col">
+			<AvisoPacksFaltan deckId={deckId} className="m-2.5 mb-0 shrink-0" />
+			<div className="min-h-0 flex-1">
+				<VistaPrevia
+					design={b.design}
+					huella={b.huella}
+					alDia={b.alDia}
+					recursos={recursos}
+					avisos={b.avisos}
+					lang={lang}
+					setLang={setLang}
+					cara={cara}
+					setCara={setCara}
+					caraArte={caraArte}
+					onEncuadre={encuadre}
+					cargando={b.cargando}
+					carasImpresas={resumen?.carasImpresas ?? 1}
+				/>
+			</div>
+		</div>
 	);
 	const sinCarta = (
 		<div className="flex h-full items-center justify-center p-6 text-center text-xs text-muted-foreground">

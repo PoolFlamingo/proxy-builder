@@ -576,7 +576,9 @@ le falta una cadena le sale la inglesa.
     cambiar un pack, `python -I source/manifest.py . <commit>`, desde la carpeta del pack, da su
     entrada nueva). Al arrancar, `descargables::completar` pone al día un pack ya
     bajado con los ficheros del manifiesto de esta versión (uno nunca bajado no
-    se toca). El primero es **Balatro** (pixel art, 7 plantillas como estilos
+    se toca). Si un deck pide marcos conocidos que no están (Original, Balatro: un deck
+    que llegó de otro equipo), `packs_missing` + `AvisoPacksFaltan` lo avisan con un
+    botón «Descargar» (en Diseñar y en la entrada de la mesa); nada se baja sin él. El primero es **Balatro** (pixel art, 7 plantillas como estilos
     propios del pack, con sus variantes). Una carta con marco propio de otro pack
     que su colección no usa las letras de la colección si el pack trae las suyas
     (`DisenoEfectivo::otro_pack`). El formato de pack versión 2

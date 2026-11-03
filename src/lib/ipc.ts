@@ -64,6 +64,7 @@ import type { NombresIdiomasInfo } from "@/bindings/NombresIdiomasInfo";
 import type { OrigenCarta } from "@/bindings/OrigenCarta";
 import type { OrigenTapete } from "@/bindings/OrigenTapete";
 import type { OriginalInfo } from "@/bindings/OriginalInfo";
+import type { PackFaltante } from "@/bindings/PackFaltante";
 import type { PackInfo } from "@/bindings/PackInfo";
 import type { PagePlan } from "@/bindings/PagePlan";
 import type { PaqueteImportado } from "@/bindings/PaqueteImportado";
@@ -203,6 +204,7 @@ export interface Commands {
 	original_info: { args: Record<string, never>; result: OriginalInfo };
 	original_download: { args: Record<string, never>; result: PackInfo };
 	packs_downloadable_list: { args: Record<string, never>; result: DescargableInfo[] };
+	packs_missing: { args: { deckId: string }; result: PackFaltante[] };
 	pack_downloadable_download: { args: { id: string }; result: PackInfo };
 	pack_extra_use: { args: { id: string; ruta: string }; result: FaceImage };
 	names_index_info: { args: Record<string, never>; result: NombresIdiomasInfo };

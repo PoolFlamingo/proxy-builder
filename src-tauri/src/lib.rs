@@ -301,6 +301,7 @@ pub fn run() {
             commands::diseno::original_info,
             commands::diseno::original_download,
             commands::diseno::packs_downloadable_list,
+            commands::diseno::packs_missing,
             commands::diseno::pack_downloadable_download,
             commands::diseno::pack_extra_use,
             commands::diseno::symbols_status,

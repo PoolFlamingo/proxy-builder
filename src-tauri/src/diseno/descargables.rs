@@ -329,9 +329,69 @@ pub async fn descargar(
     state.diseno.recargar_pack(id)
 }
 
+/// Los packs con los que se pintan las cartas de un deck (el de cada carta y
+/// el de cada cara con marco propio, tras la colección).
+pub fn packs_del_deck(
+    deck: &proxy_core::model::Deck,
+    colecciones: &std::collections::HashMap<String, proxy_core::diseno::modelo::Collection>,
+) -> std::collections::BTreeSet<String> {
+    let mut v = std::collections::BTreeSet::new();
+    for d in deck.cards.iter().filter_map(|c| c.design.as_ref()) {
+        let e = super::pintar::efectivo_de(d, colecciones);
+        v.insert(e.frame.pack.clone());
+        v.extend(e.caras.iter().flatten().map(|c| c.frame.pack.clone()));
+    }
+    v
+}
+
+/// Un pack que piden las cartas, no está y se sabe bajar.
+#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct PackFaltante {
+    pub id: String,
+    pub nombre: String,
+    /// Los marcos «Original» (se bajan con `original_download`); si no, uno
+    /// del repositorio de packs (`pack_downloadable_download`).
+    pub original: bool,
+}
+
+/// De `packs`, los que no están cargados y se saben bajar (los marcos
+/// «Original» y los del manifiesto). Sin ellos, las cartas se pintan con los
+/// de la casa: la pantalla lo avisa con un botón para bajarlos. Uno importado
+/// a mano en otro equipo no sale (no se sabe de dónde bajarlo).
+pub fn faltan(
+    state: &AppState,
+    packs: impl IntoIterator<Item = String>,
+) -> AppResult<Vec<PackFaltante>> {
+    let cargados: Vec<String> = state.diseno.packs()?.into_iter().map(|p| p.id).collect();
+    let m = manifiesto()?;
+    let mut v: Vec<PackFaltante> = Vec::new();
+    for id in packs {
+        if id == "builtin" || cargados.contains(&id) || v.iter().any(|f| f.id == id) {
+            continue;
+        }
+        if id == super::original::ID {
+            v.push(PackFaltante {
+                nombre: "Original".into(),
+                id,
+                original: true,
+            });
+        } else if let Some(d) = m.packs.iter().find(|d| d.id == id && disponible(d)) {
+            v.push(PackFaltante {
+                id,
+                nombre: d.nombre.clone(),
+                original: false,
+            });
+        }
+    }
+    Ok(v)
+}
+
 /// Al arrancar: un pack ya bajado cuya versión del manifiesto (la de esta
 /// app) trae ficheros nuevos o cambiados se pone al día solo, como los marcos
-/// «Original». Uno que nunca se bajó no se toca (eso lo pide la persona).
+/// «Original». Uno que nunca se bajó no se toca (si una carta lo pide, la
+/// pantalla lo avisa con un botón: [`faltan`]).
 pub async fn completar(state: &AppState) {
     let Ok(m) = manifiesto() else {
         return;
@@ -420,6 +480,31 @@ mod tests {
             let url = format!("{}/{}/{}pack.json", m.repo, d.commit, d.carpeta);
             assert!(crate::fuentes::url_permitida(&url).is_ok(), "{url}");
         }
+    }
+
+    #[test]
+    fn faltan_los_conocidos_que_no_estan_y_nada_mas() {
+        let dir = tempfile::tempdir().unwrap();
+        let s = AppState::open(crate::state::Paths {
+            data: dir.path().join("data"),
+            cache: dir.path().join("cache"),
+        })
+        .unwrap();
+        let f = faltan(
+            &s,
+            [
+                "builtin",
+                "original",
+                "balatro",
+                "balatro",
+                "importado-a-mano",
+            ]
+            .map(String::from),
+        )
+        .unwrap();
+        let ids: Vec<_> = f.iter().map(|p| (p.id.as_str(), p.original)).collect();
+        assert_eq!(ids, [("original", true), ("balatro", false)]);
+        assert_eq!(f[1].nombre, "Balatro");
     }
 
     #[test]

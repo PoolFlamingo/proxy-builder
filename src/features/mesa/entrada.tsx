@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { WithTooltip } from "@/components/ui/with-tooltip";
+import { AvisoPacksFaltan } from "@/features/disenar/aviso-packs-faltan";
 import { BarraHerramientas } from "@/features/library/barra-herramientas";
 import { BarraLateral } from "@/features/library/barra-lateral";
 import { useEtiquetasUi } from "@/features/library/etiquetas-ui";
@@ -360,6 +361,8 @@ function Entrada() {
 					</Button>
 				</span>
 			</WithTooltip>
+			{/* Un deck con marcos que aquí no están (Original, Balatro): se avisa y se bajan. */}
+			<AvisoPacksFaltan deckId={elegido} className="col-span-2" />
 			{/* Con el dedo no hay tooltip: el porqué de «Solitario» desactivado se lee aquí. */}
 			{(!elegido || sinLista) && (
 				<p className="col-span-2 hidden text-[11px] text-muted-foreground [[data-tactil]_&]:block">

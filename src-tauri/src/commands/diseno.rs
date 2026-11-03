@@ -141,6 +141,19 @@ pub fn packs_downloadable_list(
     crate::diseno::descargables::lista(&state)
 }
 
+/// Los marcos que pide el deck guardado (con las colecciones de ahora), no están y se
+/// saben bajar: la pantalla avisa con un botón para descargarlos.
+#[tauri::command]
+pub fn packs_missing(
+    state: State<'_, AppState>,
+    deck_id: String,
+) -> AppResult<Vec<crate::diseno::descargables::PackFaltante>> {
+    use crate::diseno::descargables as d;
+    let deck = crate::store::decks::open(&state.db, &deck_id)?;
+    let cols = crate::diseno::pintar::colecciones_por_id(&state)?;
+    d::faltan(&state, d::packs_del_deck(&deck, &cols))
+}
+
 /// Descarga un pack de marcos del repositorio de packs; avisa por
 /// `packs://progress`.
 #[tauri::command]
