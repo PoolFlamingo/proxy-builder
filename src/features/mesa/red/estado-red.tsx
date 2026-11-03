@@ -7,6 +7,7 @@ import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
+import { WithTooltip } from "@/components/ui/with-tooltip";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { NINGUNA, tableroDe, useMesa } from "@/stores/mesa-store";
@@ -15,9 +16,12 @@ import { useRed } from "@/stores/red-store";
 import { useSalas } from "@/stores/salas-store";
 import { useVivo } from "@/stores/vivo-store";
 import { salir } from "../conexion";
+import { atacantesDe } from "../cuentas-flechas";
 import { senalar } from "../en-vivo/emitir";
 import { mirarJugador } from "../mirar";
+import { elegirJugador } from "../objetivo";
 import { alternarOriginales } from "../originales";
+import { usePantalla } from "../pantalla";
 import { useDisposicion } from "../selector-disposicion";
 import { volverARed } from "./conexion-red";
 import { aspectoDeConexion } from "./cuentas-conexion";
@@ -56,6 +60,11 @@ export function Latencia({ id }: { id: number }) {
  * **Los jugadores de la mesa** (con más de uno): su color, su nombre y su
  * vida; pulsar uno enseña su tablero. Con todos a la vez (Fase G) las
  * miniaturas ocupan su lugar.
+ *
+ * Sin miniaturas, con una flecha en marcha esta lista es donde se elige al
+ * jugador objetivo: pulsar a uno lo marca y el ojo de al lado enseña su tablero,
+ * para apuntar a una de sus cartas. Adjuntar y atar una nota solo admiten cartas:
+ * pulsar sigue cambiando de tablero.
  */
 export function SelectorTablero() {
 	const { t } = useLang();
@@ -69,6 +78,9 @@ export function SelectorTablero() {
 	const originales = useOriginales((s) => s.modos);
 	const equipos = useMesa((s) => s.general?.equipos ?? NINGUNA);
 	const { config } = useDisposicion();
+	const flechas = useMesa((s) => s.general?.flechas ?? NINGUNA);
+	const cartas = useMesa((s) => s.cartas);
+	const apuntando = usePantalla((s) => s.modo?.tipo === "flecha");
 	const creador = useSalas((s) => s.sala?.sala.creador ?? null);
 	const claveYo = useSalas((s) => s.yo);
 	const [porExpulsar, setPorExpulsar] = useState<number | null>(null);
@@ -87,61 +99,91 @@ export function SelectorTablero() {
 			{asientos.map((id) => {
 				const j = jugadores[id];
 				if (!j) return null;
+				const atacantes = atacantesDe(flechas, cartas, id);
 				return (
-					<ContextMenu key={id}>
-						<ContextMenuTrigger asChild>
-							<button
-								type="button"
-								onClick={(e) => {
-									// Alt + clic: un aro de aviso sobre el jugador, en todas las pantallas.
-									if (e.altKey && papel !== null) senalar(null, id);
-									else void mirarJugador(id);
-								}}
-								className={cn(
-									"flex items-center gap-1.5 rounded-lg px-1.5 py-1 text-left text-xs transition hover:bg-white/10",
-									viendo === id && "bg-white/15",
-									j.eliminado && "opacity-50",
-									senales.some((s) => s.a === id) && "animate-pulse ring-2 ring-primary",
-								)}
-							>
-								<span
-									className="size-2.5 shrink-0 rounded-full"
-									style={{
-										background: j.color,
-										// El aro es el color de su equipo, si juega por equipos.
-										boxShadow:
-											j.equipo !== null
-												? `0 0 0 2px ${equipos.find((e) => e.id === j.equipo)?.color ?? "transparent"}`
-												: undefined,
+					<div key={id} className="flex items-stretch gap-1">
+						<ContextMenu>
+							<ContextMenuTrigger asChild>
+								<button
+									type="button"
+									onClick={(e) => {
+										if (elegirJugador(id, t)) return;
+										// Alt + clic: un aro de aviso sobre el jugador, en todas las pantallas.
+										if (e.altKey && papel !== null) senalar(null, id);
+										else void mirarJugador(id);
 									}}
-								/>
-								<span className="max-w-32 truncate font-medium">
-									{id === yo ? t("{nombre} (tú)", { nombre: j.nombre }) : j.nombre}
-								</span>
-								{papel !== null && <Latencia id={id} />}
-								{originales[id] && (
-									<Icono icon="lucide:languages" className="size-3 text-white/60" />
-								)}
-								<span className="ml-auto flex items-center gap-0.5 pl-1.5 text-white/70 tabular-nums">
-									<Icono icon="game-icons:hearts" className="size-3" />
-									{j.vida}
-								</span>
-							</button>
-						</ContextMenuTrigger>
-						<ContenidoContextual className="w-64 text-xs">
-							<ContextMenuItem onSelect={() => alternarOriginales(id)}>
-								<Icono icon="lucide:languages" />
-								{originales[id] ? "✓ " : ""}
-								{t("Cartas originales en mi idioma")}
-							</ContextMenuItem>
-							{puedeExpulsar && id !== yo && !j.eliminado && (
-								<ContextMenuItem variant="destructive" onSelect={() => setPorExpulsar(id)}>
-									<Icono icon="lucide:user-x" />
-									{t("Expulsar de la partida")}
+									className={cn(
+										"flex min-w-0 flex-1 items-center gap-1.5 rounded-lg px-1.5 py-1 text-left text-xs transition hover:bg-white/10",
+										viendo === id && "bg-white/15",
+										j.eliminado && "opacity-50",
+										senales.some((s) => s.a === id) && "animate-pulse ring-2 ring-primary",
+										apuntando && "cursor-crosshair bg-primary/30 hover:bg-primary/50",
+									)}
+								>
+									<span
+										className="size-2.5 shrink-0 rounded-full"
+										style={{
+											background: j.color,
+											// El aro es el color de su equipo, si juega por equipos.
+											boxShadow:
+												j.equipo !== null
+													? `0 0 0 2px ${equipos.find((e) => e.id === j.equipo)?.color ?? "transparent"}`
+													: undefined,
+										}}
+									/>
+									<span className="max-w-32 truncate font-medium">
+										{id === yo ? t("{nombre} (tú)", { nombre: j.nombre }) : j.nombre}
+									</span>
+									{papel !== null && <Latencia id={id} />}
+									{originales[id] && (
+										<Icono icon="lucide:languages" className="size-3 text-white/60" />
+									)}
+									{atacantes > 0 && (
+										<span
+											role="img"
+											className="flex shrink-0 items-center gap-0.5 rounded-sm bg-rose-600 px-1 font-semibold tabular-nums"
+											aria-label={t("Ataques contra {nombre}: {cuantos}", {
+												nombre: j.nombre,
+												cuantos: atacantes,
+											})}
+										>
+											<Icono icon="game-icons:crossed-swords" className="size-3" />
+											{atacantes}
+										</span>
+									)}
+									<span className="ml-auto flex items-center gap-0.5 pl-1.5 text-white/70 tabular-nums">
+										<Icono icon="game-icons:hearts" className="size-3" />
+										{j.vida}
+									</span>
+								</button>
+							</ContextMenuTrigger>
+							<ContenidoContextual className="w-64 text-xs">
+								<ContextMenuItem onSelect={() => alternarOriginales(id)}>
+									<Icono icon="lucide:languages" />
+									{originales[id] ? "✓ " : ""}
+									{t("Cartas originales en mi idioma")}
 								</ContextMenuItem>
-							)}
-						</ContenidoContextual>
-					</ContextMenu>
+								{puedeExpulsar && id !== yo && !j.eliminado && (
+									<ContextMenuItem variant="destructive" onSelect={() => setPorExpulsar(id)}>
+										<Icono icon="lucide:user-x" />
+										{t("Expulsar de la partida")}
+									</ContextMenuItem>
+								)}
+							</ContenidoContextual>
+						</ContextMenu>
+						{apuntando && viendo !== id && (
+							<WithTooltip content={t("Ver el tablero de {nombre}", { nombre: j.nombre })}>
+								<button
+									type="button"
+									aria-label={t("Ver el tablero de {nombre}", { nombre: j.nombre })}
+									onClick={() => void mirarJugador(id)}
+									className="flex w-7 shrink-0 items-center justify-center rounded-lg bg-white/10 hover:bg-white/20"
+								>
+									<Icono icon="lucide:eye" className="size-3.5" />
+								</button>
+							</WithTooltip>
+						)}
+					</div>
 				);
 			})}
 			<Confirmar
