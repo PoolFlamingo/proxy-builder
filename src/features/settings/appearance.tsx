@@ -32,7 +32,7 @@ function SettingCard({
 			<CardHeader className="px-4">
 				<CardTitle className="text-sm">{title}</CardTitle>
 				{(desc || headerRight) && (
-					<div className="entra flex items-center justify-between gap-2">
+					<div className="entra flex flex-wrap items-center justify-between gap-2">
 						<CardDescription className="text-xs">{desc}</CardDescription>
 						{headerRight}
 					</div>
@@ -309,7 +309,7 @@ export function Appearance() {
 						/>
 					}
 				>
-					<div className="grid grid-cols-3 gap-3">
+					<div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
 						<LabeledRange
 							label={t("Desenfoque")}
 							value={blur}

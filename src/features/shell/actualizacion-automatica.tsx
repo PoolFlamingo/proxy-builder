@@ -5,6 +5,7 @@ import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { WithTooltip } from "@/components/ui/with-tooltip";
+import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { useActualizacion } from "@/stores/actualizacion-store";
 import { useMesa } from "@/stores/mesa-store";
@@ -68,11 +69,15 @@ export function useAvisosActualizacion() {
 				});
 			} else if (s.paso === "lista" && antes.paso === "bajando" && avisada !== info.version) {
 				avisada = info.version;
-				avisar(info, textos.current);
+				avisar(info, s.instalaElSistema, textos.current);
 			} else if (s.paso === "disponible" && antes.paso === "bajando") {
 				toast.error(t("No se ha podido descargar la actualización."), {
 					id: ID_AVISO,
 					description: s.error ? mensaje(s.error) : undefined,
+					action: {
+						label: t("Bajar desde GitHub"),
+						onClick: () => void call("update_open_release", {}),
+					},
 				});
 			}
 			if (s.alSalirDeLaMesa && !antes.alSalirDeLaMesa) {
@@ -95,15 +100,21 @@ export function useAvisosActualizacion() {
 
 const ID_AVISO = "actualizacion";
 
-function avisar(info: ActualizacionInfo, { t, mensaje }: ReturnType<typeof useLang>) {
+function avisar(
+	info: ActualizacionInfo,
+	instalaElSistema: boolean,
+	{ t, mensaje }: ReturnType<typeof useLang>,
+) {
 	toast.success(t("Proxy Builder {version} está lista", { version: info.version }), {
 		id: ID_AVISO,
 		duration: Number.POSITIVE_INFINITY,
-		description: info.pidePermiso
-			? t("Se instala al reiniciar; el sistema pedirá tu contraseña.")
-			: t("Se instala al reiniciar la app."),
+		description: instalaElSistema
+			? t("Android te pedirá confirmar la instalación.")
+			: info.pidePermiso
+				? t("Se instala al reiniciar; el sistema pedirá tu contraseña.")
+				: t("Se instala al reiniciar la app."),
 		action: {
-			label: t("Reiniciar"),
+			label: instalaElSistema ? t("Instalar") : t("Reiniciar"),
 			onClick: () => {
 				useActualizacion
 					.getState()
@@ -120,6 +131,7 @@ export function BotonActualizar() {
 	const paso = useActualizacion((s) => s.paso);
 	const info = useActualizacion((s) => s.info);
 	const esperando = useActualizacion((s) => s.alSalirDeLaMesa);
+	const delSistema = useActualizacion((s) => s.instalaElSistema);
 	if ((paso !== "lista" && paso !== "instalando") || !info) return null;
 	const instalar = () => {
 		toast.dismiss(ID_AVISO);
@@ -133,9 +145,11 @@ export function BotonActualizar() {
 			content={
 				esperando
 					? t("Se instalará al salir de la mesa.")
-					: info.pidePermiso
-						? t("Reinicia la app con la versión nueva. El sistema pedirá tu contraseña.")
-						: t("Reinicia la app con la versión nueva.")
+					: delSistema
+						? t("Abre el instalador de Android con la versión nueva.")
+						: info.pidePermiso
+							? t("Reinicia la app con la versión nueva. El sistema pedirá tu contraseña.")
+							: t("Reinicia la app con la versión nueva.")
 			}
 		>
 			<Button
@@ -178,9 +192,12 @@ export function useAvisoAjustes(): string | null {
 	const { t } = useLang();
 	const paso = useActualizacion((s) => s.paso);
 	const info = useActualizacion((s) => s.info);
+	const delSistema = useActualizacion((s) => s.instalaElSistema);
 	if (!info) return null;
 	if (paso === "bajando") return t("Descargando la {version}…", { version: info.version });
 	if (paso === "lista" || paso === "instalando")
-		return t("La {version} está lista: reinicia desde Ajustes.", { version: info.version });
+		return delSistema
+			? t("La {version} está lista: instálala desde Ajustes.", { version: info.version })
+			: t("La {version} está lista: reinicia desde Ajustes.", { version: info.version });
 	return null;
 }

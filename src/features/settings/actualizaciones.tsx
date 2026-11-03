@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
+import { call } from "@/lib/ipc";
 import { useActualizacion } from "@/stores/actualizacion-store";
 import { useUi } from "@/stores/ui-store";
 
@@ -17,7 +18,7 @@ export function Actualizaciones() {
 	const { t, mensaje } = useLang();
 	const id = useId();
 	const sola = useUi((s) => s.actualizarSola);
-	const { soportada, actual, paso, info, progreso, error } = useActualizacion();
+	const { soportada, actual, paso, info, progreso, error, instalaElSistema } = useActualizacion();
 
 	useEffect(() => {
 		void useActualizacion.getState().iniciar();
@@ -66,9 +67,13 @@ export function Actualizaciones() {
 				<>
 					<div className="flex items-center justify-between gap-2.5">
 						<label htmlFor={id} className="text-xs text-muted-foreground">
-							{t(
-								"Buscar versiones nuevas al abrir la app y bajarlas sin molestar. Se instalan cuando reinicies.",
-							)}
+							{instalaElSistema
+								? t(
+										"Buscar versiones nuevas al abrir la app y bajarlas sin molestar. Android te pedirá confirmar cada instalación.",
+									)
+								: t(
+										"Buscar versiones nuevas al abrir la app y bajarlas sin molestar. Se instalan cuando reinicies.",
+									)}
 						</label>
 						<Switch
 							id={id}
@@ -100,7 +105,7 @@ export function Actualizaciones() {
 							) : (
 								<Icono icon="lucide:arrow-up-circle" />
 							)}
-							{t("Reiniciar y actualizar")}
+							{instalaElSistema ? t("Instalar") : t("Reiniciar y actualizar")}
 						</Button>
 					)}
 					{progreso !== null && paso === "bajando" && (
@@ -110,6 +115,17 @@ export function Actualizaciones() {
 						</div>
 					)}
 					{error !== null && <p className="text-[11px] text-destructive">{mensaje(error)}</p>}
+					{error !== null && !esPermisoDeInstalar(error) && (
+						<Button
+							size="xs"
+							variant="outline"
+							className="self-start"
+							onClick={() => void call("update_open_release", {})}
+						>
+							<Icono icon="lucide:external-link" />
+							{t("Bajar desde GitHub")}
+						</Button>
+					)}
 					{info?.notas && paso !== "al-dia" && (
 						<ScrollArea className="rounded-md border" viewportClassName="max-h-40">
 							<p className="p-2.5 font-mono text-[11px] break-words whitespace-pre-wrap text-muted-foreground">
@@ -128,11 +144,18 @@ export function Actualizaciones() {
 	);
 }
 
+/** Android ha mandado a la persona a su ajuste de «instalar apps desconocidas»: no es un fallo. */
+function esPermisoDeInstalar(e: unknown): boolean {
+	const x = e as { code?: string; params?: { motivo?: string } } | null;
+	return x?.code === "Unsupported" && x.params?.motivo === "instalar_permiso";
+}
+
 /** Una línea con lo que está pasando. */
 function Estado() {
 	const { t } = useLang();
 	const paso = useActualizacion((s) => s.paso);
 	const info = useActualizacion((s) => s.info);
+	const delSistema = useActualizacion((s) => s.instalaElSistema);
 	if (!info) return null;
 	const texto =
 		paso === "disponible"
@@ -140,11 +163,15 @@ function Estado() {
 			: paso === "bajando"
 				? t("Descargando la {version}…", { version: info.version })
 				: paso === "lista"
-					? info.pidePermiso
-						? t("La {version} está lista. Al reiniciar, el sistema pedirá tu contraseña.", {
+					? delSistema
+						? t("La {version} está lista. Android te pedirá confirmar la instalación.", {
 								version: info.version,
 							})
-						: t("La {version} está lista. Se instala al reiniciar.", { version: info.version })
+						: info.pidePermiso
+							? t("La {version} está lista. Al reiniciar, el sistema pedirá tu contraseña.", {
+									version: info.version,
+								})
+							: t("La {version} está lista. Se instala al reiniciar.", { version: info.version })
 					: paso === "instalando"
 						? t("Instalando la {version}…", { version: info.version })
 						: null;
@@ -159,6 +186,7 @@ export function ReiniciarParaActualizar() {
 	const { t, mensaje } = useLang();
 	const paso = useActualizacion((s) => s.paso);
 	const info = useActualizacion((s) => s.info);
+	const delSistema = useActualizacion((s) => s.instalaElSistema);
 	if ((paso !== "lista" && paso !== "instalando") || !info) return null;
 	return (
 		<Button
@@ -177,7 +205,9 @@ export function ReiniciarParaActualizar() {
 			) : (
 				<Icono icon="lucide:arrow-up-circle" />
 			)}
-			{t("Reiniciar y actualizar a la {version}", { version: info.version })}
+			{delSistema
+				? t("Instalar la {version}", { version: info.version })
+				: t("Reiniciar y actualizar a la {version}", { version: info.version })}
 		</Button>
 	);
 }

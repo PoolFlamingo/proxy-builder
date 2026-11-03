@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { TemaCatalogo } from "@/bindings/TemaCatalogo";
+import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogContent,
 	DialogCuerpo,
 	DialogDescription,
 	DialogFooter,
@@ -158,7 +158,7 @@ export function TemasTweakcn({ abierto, onCerrar }: { abierto: boolean; onCerrar
 
 	return (
 		<Dialog open={abierto} onOpenChange={(o) => !o && !ocupado && onCerrar()}>
-			<DialogContent className="sm:max-w-2xl" cambiosSinGuardar={false}>
+			<DialogoAdaptable className="sm:max-w-2xl" cambiosSinGuardar={false}>
 				<DialogHeader>
 					<DialogTitle>{t("Más temas de tweakcn")}</DialogTitle>
 					<DialogDescription>
@@ -169,7 +169,7 @@ export function TemasTweakcn({ abierto, onCerrar }: { abierto: boolean; onCerrar
 				</DialogHeader>
 				<DialogCuerpo className="min-h-64">
 					<div className="flex flex-col gap-2.5 p-1">
-						<div className="flex gap-2">
+						<div className="flex flex-col gap-2 sm:flex-row">
 							<Input
 								value={enlace}
 								onChange={(e) => setEnlace(e.target.value)}
@@ -177,24 +177,26 @@ export function TemasTweakcn({ abierto, onCerrar }: { abierto: boolean; onCerrar
 								placeholder={t("Enlace o id del tema en tweakcn")}
 								className="h-8 text-xs"
 							/>
-							<Button size="sm" onClick={ver} disabled={!enlace.trim() || ocupado !== null}>
-								{ocupado === "ver" ? (
-									<Icono icon="lucide:loader-2" className="animate-spin" />
-								) : (
-									<Icono icon="lucide:eye" />
-								)}
-								{t("Ver")}
-							</Button>
-							<Button
-								size="sm"
-								variant="outline"
-								onClick={() =>
-									call("themes_open_community", {}).catch((e) => toast.error(mensaje(e)))
-								}
-							>
-								<Icono icon="lucide:external-link" />
-								{t("Abrir la galería")}
-							</Button>
+							<div className="flex gap-2">
+								<Button size="sm" onClick={ver} disabled={!enlace.trim() || ocupado !== null}>
+									{ocupado === "ver" ? (
+										<Icono icon="lucide:loader-2" className="animate-spin" />
+									) : (
+										<Icono icon="lucide:eye" />
+									)}
+									{t("Ver")}
+								</Button>
+								<Button
+									size="sm"
+									variant="outline"
+									onClick={() =>
+										call("themes_open_community", {}).catch((e) => toast.error(mensaje(e)))
+									}
+								>
+									<Icono icon="lucide:external-link" />
+									{t("Abrir la galería")}
+								</Button>
+							</div>
 						</div>
 
 						{viendo && (
@@ -299,7 +301,7 @@ export function TemasTweakcn({ abierto, onCerrar }: { abierto: boolean; onCerrar
 						{t("Cerrar")}
 					</Button>
 				</DialogFooter>
-			</DialogContent>
+			</DialogoAdaptable>
 		</Dialog>
 	);
 }

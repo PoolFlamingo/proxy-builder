@@ -33,7 +33,7 @@ export function useDeckInicial(): unknown {
 		const alTeclear = (e: KeyboardEvent) => {
 			if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== "z") return;
 			// En un campo de texto manda el deshacer del propio campo.
-			const el = e.target as HTMLElement | null;
+			const el = e.target instanceof Element ? e.target : null;
 			if (el?.closest("input, textarea, [contenteditable='true']")) return;
 			e.preventDefault();
 			if (e.shiftKey) useDeck.getState().rehacer();

@@ -13,7 +13,7 @@ import { IdentidadRed } from "./identidad-red";
  * monedas (aspecto, `aspecto-dados.tsx`), sonidos (cada tipo con su interruptor
  * y un volumen) y rendimiento.
  */
-export function AjustesMesa() {
+export function AjustesMesa({ fija = false }: { fija?: boolean }) {
 	const { t } = useLang();
 	const m = useUi((s) => s.mesa);
 	const set = useUi((s) => s.setMesa);
@@ -24,6 +24,7 @@ export function AjustesMesa() {
 			titulo={t("Mesa de juego")}
 			icono={<Icono icon="lucide:swords" className="size-3.5" />}
 			abiertaAlPrincipio={false}
+			fija={fija}
 		>
 			<h4 className="text-[11px] font-semibold text-muted-foreground uppercase">{t("Jugar")}</h4>
 			<FilaInterruptor

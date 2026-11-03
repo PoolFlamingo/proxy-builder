@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,12 @@ export function SaveIndicator() {
 				size="xs"
 				variant="ghost"
 				className="text-[11px] text-muted-foreground"
-				onClick={() => void guardarAhora().catch(() => {})}
+				// táctil: sin tooltip, al tocarlo se reintenta y el motivo sale en un aviso (`toast.error`)
+				onClick={() =>
+					void guardarAhora().catch((e) => {
+						toast.error(mensaje(e));
+					})
+				}
 			>
 				{contenido}
 			</Button>

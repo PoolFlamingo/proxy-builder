@@ -1,5 +1,4 @@
 import { type RefObject, useEffect, useRef } from "react";
-import type { Vista } from "@/stores/ui-store";
 
 /** Lo que se espera a que el contenido de la vista sea lo bastante alto, en ms. */
 const ESPERA_MS = 2000;
@@ -22,8 +21,8 @@ function viewports(raiz: HTMLElement) {
  * la vista previa llegan después del primer pintado). Si el usuario toca la
  * rueda, el teclado o el ratón antes, se deja de reponer.
  */
-export function useScrollPorVista(vista: Vista, raiz: RefObject<HTMLElement | null>) {
-	const guardado = useRef(new Map<Vista, Map<number, number>>());
+export function useScrollPorVista(vista: string, raiz: RefObject<HTMLElement | null>) {
+	const guardado = useRef(new Map<string, Map<number, number>>());
 
 	useEffect(() => {
 		const main = raiz.current;

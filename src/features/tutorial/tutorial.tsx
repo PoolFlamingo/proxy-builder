@@ -1,19 +1,17 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useFormato } from "@/lib/formato";
+import { cn } from "@/lib/utils";
 import { useUi, type Vista } from "@/stores/ui-store";
+import { ANCHO, aplicarFormato, ladoMovil, type Rect, sitioTarjeta } from "./logica";
 import { PASOS } from "./pasos";
 
-/** Ancho de la tarjeta y distancias a la zona y a los bordes (px). */
-const ANCHO = 320;
-const HUECO = 14;
-const MARGEN = 16;
 /** Lo que el foco sobresale de la zona (px). */
 const AIRE = 6;
-
-type Rect = { x: number; y: number; w: number; h: number };
 
 /** El rectángulo de la zona en pantalla, si está y se ve. */
 function zona(ancla: string | undefined): Rect | null {
@@ -23,24 +21,6 @@ function zona(ancla: string | undefined): Rect | null {
 	const r = el.getBoundingClientRect();
 	if (r.width < 4 || r.height < 4) return null;
 	return { x: r.left, y: r.top, w: r.width, h: r.height };
-}
-
-/**
- * Dónde va la tarjeta: a la derecha de la zona, a la izquierda, debajo o
- * encima (lo primero que quepa), y si no cabe en ningún lado, en el centro.
- */
-function sitioTarjeta(r: Rect | null, alto: number): { left: number; top: number } {
-	const vw = window.innerWidth;
-	const vh = window.innerHeight;
-	const centro = { left: (vw - ANCHO) / 2, top: Math.max(MARGEN, (vh - alto) / 2) };
-	if (!r) return centro;
-	const enY = (y: number) => Math.min(Math.max(MARGEN, y), vh - alto - MARGEN);
-	const enX = (x: number) => Math.min(Math.max(MARGEN, x), vw - ANCHO - MARGEN);
-	if (r.x + r.w + HUECO + ANCHO + MARGEN <= vw) return { left: r.x + r.w + HUECO, top: enY(r.y) };
-	if (r.x - HUECO - ANCHO >= MARGEN) return { left: r.x - HUECO - ANCHO, top: enY(r.y) };
-	if (r.y + r.h + HUECO + alto + MARGEN <= vh) return { left: enX(r.x), top: r.y + r.h + HUECO };
-	if (r.y - HUECO - alto >= MARGEN) return { left: enX(r.x), top: r.y - HUECO - alto };
-	return centro;
 }
 
 const cerrar = () => useUi.getState().abrirTutorial(null);
@@ -60,7 +40,9 @@ export function Tutorial() {
 
 function Recorrido({ vista }: { vista: Vista }) {
 	const { t } = useLang();
-	const pasos = PASOS[vista];
+	const { tamano, tactil } = useFormato();
+	const movil = tamano === "movil";
+	const pasos = useMemo(() => aplicarFormato(PASOS[vista], tactil), [vista, tactil]);
 	const [i, setI] = useState(0);
 	const [rect, setRect] = useState<Rect | null>(null);
 	const [alto, setAlto] = useState(200);
@@ -73,8 +55,11 @@ function Recorrido({ vista }: { vista: Vista }) {
 	// algo (los paneles se pueden redimensionar).
 	useLayoutEffect(() => {
 		const medir = () => setRect(zona(paso?.ancla));
-		medir();
 		const el = paso?.ancla ? document.querySelector(`[data-tutorial="${paso.ancla}"]`) : null;
+		// En tableta y móvil la zona puede estar fuera de la pantalla (dentro de
+		// un panel que se desplaza): se trae a la vista antes de medirla.
+		if (tactil) el?.scrollIntoView({ block: "center", inline: "nearest" });
+		medir();
 		const ro = new ResizeObserver(medir);
 		if (el) ro.observe(el);
 		window.addEventListener("resize", medir);
@@ -82,7 +67,7 @@ function Recorrido({ vista }: { vista: Vista }) {
 			ro.disconnect();
 			window.removeEventListener("resize", medir);
 		};
-	}, [paso?.ancla]);
+	}, [paso?.ancla, tamano]);
 
 	useLayoutEffect(() => {
 		if (tarjeta.current) setAlto(tarjeta.current.offsetHeight);
@@ -110,7 +95,8 @@ function Recorrido({ vista }: { vista: Vista }) {
 	}, [ultimo]);
 
 	if (!paso) return null;
-	const sitio = sitioTarjeta(rect, alto);
+	const sitio = sitioTarjeta(rect, alto, window.innerWidth, window.innerHeight);
+	const lado = ladoMovil(rect, window.innerHeight);
 	const idTitulo = "tutorial-titulo";
 
 	return createPortal(
@@ -136,8 +122,23 @@ function Recorrido({ vista }: { vista: Vista }) {
 				aria-modal="true"
 				aria-labelledby={idTitulo}
 				data-slot="tutorial-tarjeta"
-				className="absolute flex flex-col gap-2.5 rounded-[14px] border bg-card p-3.5 text-xs text-card-foreground shadow-xl transition-[left,top] duration-200"
-				style={{ width: ANCHO, left: sitio.left, top: sitio.top }}
+				className={cn(
+					"absolute flex flex-col gap-2.5 rounded-[14px] border bg-card p-3.5 text-xs text-card-foreground shadow-xl",
+					!movil && "transition-[left,top] duration-200",
+				)}
+				style={
+					movil
+						? {
+								// En móvil: todo el ancho, pegada al lado contrario de la zona y
+								// por encima de las zonas seguras.
+								left: 16,
+								right: 16,
+								...(lado === "abajo"
+									? { bottom: "calc(env(safe-area-inset-bottom) + 16px)" }
+									: { top: "calc(env(safe-area-inset-top) + 16px)" }),
+							}
+						: { width: ANCHO, left: sitio.left, top: sitio.top }
+				}
 			>
 				<div className="flex items-start gap-2">
 					<h2 id={idTitulo} className="flex-1 text-sm font-semibold">
@@ -152,7 +153,13 @@ function Recorrido({ vista }: { vista: Vista }) {
 						<Icono icon="lucide:x" />
 					</Button>
 				</div>
-				<p className="leading-relaxed text-muted-foreground">{t(paso.texto)}</p>
+				{movil ? (
+					<ScrollArea viewportClassName="max-h-[36dvh]">
+						<p className="leading-relaxed text-muted-foreground">{t(paso.texto)}</p>
+					</ScrollArea>
+				) : (
+					<p className="leading-relaxed text-muted-foreground">{t(paso.texto)}</p>
+				)}
 				<div className="flex items-center gap-1.5">
 					<span className="flex-1 text-[11px] text-muted-foreground">
 						{t("Paso {a} de {b}", { a: i + 1, b: pasos.length })}
