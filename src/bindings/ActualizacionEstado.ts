@@ -8,4 +8,9 @@ export type ActualizacionEstado = {
  * `false` en desarrollo (`pnpm tauri dev`) o si el binario no viene de
  * un instalador: no hay paquete con el que reemplazarlo.
  */
-soportada: boolean, actual: string, };
+soportada: boolean, actual: string, 
+/**
+ * Android: la instala el instalador del sistema, que pide confirmar y
+ * relanza la app; no hay «reiniciar» (la pantalla cambia sus textos).
+ */
+instalaElSistema: boolean, };
