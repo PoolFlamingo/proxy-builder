@@ -148,10 +148,19 @@ jobs:
             exit 1
           fi
           echo "$ANDROID_KEY_BASE64" | base64 -d > "$RUNNER_TEMP/android.jks"
+          # Se comprueba ya, en segundos, que el secreto abre el almacén (si no, el
+          # fallo llega tras 17 minutos de compilación: «keystore password was incorrect»).
+          if ! keytool -list -keystore "$RUNNER_TEMP/android.jks" -storepass:env ANDROID_KEY_PASSWORD -alias "$ANDROID_KEY_ALIAS" > /dev/null 2>&1; then
+            echo "::error::ANDROID_KEY_PASSWORD no abre el almacén de ANDROID_KEY_BASE64 con el alias ANDROID_KEY_ALIAS (¿contraseña distinta, otro alias, o un .jks que no es el de la clave?)."
+            exit 1
+          fi
+          # `keystore.properties` es un fichero de propiedades de Java: una `\` de la
+          # contraseña sería un escape, así que se duplica.
+          clave_escapada=$(printf '%s' "$ANDROID_KEY_PASSWORD" | sed 's/\\/\\\\/g')
           {
-            echo "keyAlias=${ANDROID_KEY_ALIAS}"
-            echo "password=${ANDROID_KEY_PASSWORD}"
-            echo "storeFile=${RUNNER_TEMP}/android.jks"
+            printf 'keyAlias=%s\n' "$ANDROID_KEY_ALIAS"
+            printf 'password=%s\n' "$clave_escapada"
+            printf 'storeFile=%s\n' "${RUNNER_TEMP}/android.jks"
           } > src-tauri/gen/android/keystore.properties
 
       - name: Compilar el APK (arm64)
