@@ -8,6 +8,7 @@ use tauri::State;
 use ts_rs::TS;
 
 use crate::error::AppResult;
+use crate::fichero;
 use crate::state::AppState;
 use crate::store::blobs::GcReport;
 use crate::store::db::Db;
@@ -158,13 +159,30 @@ pub fn deck_delete(state: State<'_, AppState>, id: String) -> AppResult<()> {
     decks::delete(&state.db, &id)
 }
 
-/// Copia al almacén las imágenes que el usuario ha elegido en el diálogo.
+/// Lo más que se lee de una imagen elegida en el selector del sistema.
+const TOPE_IMAGEN: u64 = 256 * 1024 * 1024;
+
+/// Copia al almacén las imágenes que el usuario ha elegido en el diálogo. En
+/// Android son `content://`: se leen por el sistema, sin pasar por rutas.
 #[tauri::command]
 pub async fn blob_import_files(
+    app: tauri::AppHandle,
     state: State<'_, AppState>,
-    paths: Vec<PathBuf>,
+    paths: Vec<String>,
 ) -> AppResult<Vec<FaceImage>> {
-    state.blobs.import_files(&state.db, &paths)
+    if !paths.iter().any(|p| fichero::es_uri(p)) {
+        let rutas: Vec<PathBuf> = paths.iter().map(PathBuf::from).collect();
+        return state.blobs.import_files(&state.db, &rutas);
+    }
+    paths
+        .iter()
+        .map(|p| {
+            let bytes = fichero::leer_bytes(&app, p, TOPE_IMAGEN)?;
+            state
+                .blobs
+                .put_bytes(&state.db, &bytes, proxy_core::model::ImageOrigin::Upload)
+        })
+        .collect()
 }
 
 /// El reverso genérico de la app (para devolverlo a un deck).
@@ -240,21 +258,31 @@ pub fn cache_clear(state: State<'_, AppState>) -> AppResult<CacheStats> {
     vaciar(&state.carpeta_renders())
 }
 
-/// Guarda el deck con todas sus imágenes en un `.pbdeck`.
+/// Guarda el deck con todas sus imágenes en un `.pbdeck`. En Android `path` es
+/// un `content://`: se escribe en la caché y se copia al destino.
 #[tauri::command]
 pub async fn deck_export_package(
+    app: tauri::AppHandle,
     state: State<'_, AppState>,
     id: String,
-    path: PathBuf,
+    path: String,
 ) -> AppResult<u64> {
     let deck = decks::open(&state.db, &id)?;
-    crate::package::export(&deck, &path, &state.blobs, &state.db)
+    fichero::escribir(&app, &path, Some("deck.pbdeck"), |destino| {
+        crate::package::export(&deck, destino, &state.blobs, &state.db)
+    })
 }
 
-/// Mete en la biblioteca un `.pbdeck` (ids nuevos, imágenes comprobadas).
+/// Mete en la biblioteca un `.pbdeck` (ids nuevos, imágenes comprobadas). Un
+/// `content://` de Android se copia antes a la caché: el ZIP necesita `Seek`.
 #[tauri::command]
-pub async fn deck_import_package(state: State<'_, AppState>, path: PathBuf) -> AppResult<Deck> {
-    let f = std::fs::File::open(&path)?;
+pub async fn deck_import_package(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    path: String,
+) -> AppResult<Deck> {
+    let copia = fichero::leer(&app, &path, Some("deck.pbdeck"))?;
+    let f = std::fs::File::open(&copia)?;
     crate::package::import(std::io::BufReader::new(f), &state.blobs, &state.db)
 }
 

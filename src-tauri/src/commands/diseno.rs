@@ -66,9 +66,17 @@ pub fn fonts_list(state: State<'_, AppState>) -> AppResult<Vec<LetraInfo>> {
     state.diseno.letras()
 }
 
+/// Importa una letra `.ttf`/`.otf`. En Android `path` es un `content://`: se
+/// copia a la caché con el nombre que le da el sistema (la extensión, o, si no
+/// la lleva, se reconoce por el contenido).
 #[tauri::command]
-pub fn font_import(state: State<'_, AppState>, path: String) -> AppResult<LetraInfo> {
-    state.diseno.importar_letra(std::path::Path::new(&path))
+pub fn font_import(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    path: String,
+) -> AppResult<LetraInfo> {
+    let copia = crate::fichero::leer(&app, &path, None)?;
+    state.diseno.importar_letra(&copia)
 }
 
 #[tauri::command]
@@ -81,9 +89,16 @@ pub fn packs_list(state: State<'_, AppState>) -> AppResult<Vec<PackInfo>> {
     state.diseno.packs()
 }
 
+/// Importa un pack de marcos desde una carpeta o un `.zip` (en Android, solo
+/// el ZIP: no hay selector de carpetas).
 #[tauri::command]
-pub fn pack_import(state: State<'_, AppState>, path: String) -> AppResult<PackInfo> {
-    state.diseno.importar_pack(std::path::Path::new(&path))
+pub fn pack_import(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    path: String,
+) -> AppResult<PackInfo> {
+    let copia = crate::fichero::leer(&app, &path, None)?;
+    state.diseno.importar_pack(&copia)
 }
 
 #[tauri::command]
@@ -313,26 +328,35 @@ pub fn design_export_png(
     tauri::async_runtime::spawn_blocking(move || {
         let estado = app.state::<AppState>();
         let _marca = estado.trabajo();
-        let r = crate::diseno::png::exportar(
-            &estado,
-            &cards,
-            std::path::Path::new(&folder),
-            card_size,
-            dpi,
-            &langs,
-            &cancelado,
-            &|done, total| {
-                let _ = tauri::Emitter::emit(
-                    &app,
-                    "designpng://progress",
-                    crate::diseno::png::DesignPngProgressEvent {
-                        job_id,
-                        done,
-                        total,
-                    },
-                );
-            },
-        );
+        let progreso = |done, total| {
+            let _ = tauri::Emitter::emit(
+                &app,
+                "designpng://progress",
+                crate::diseno::png::DesignPngProgressEvent {
+                    job_id,
+                    done,
+                    total,
+                },
+            );
+        };
+        let r = if crate::fichero::es_uri(&folder) {
+            // Android: no hay selector de carpetas. `folder` es el `content://`
+            // de un ZIP con las mismas carpetas por idioma.
+            png_en_zip(
+                &app, &estado, &cards, &folder, card_size, dpi, &langs, &cancelado, &progreso,
+            )
+        } else {
+            crate::diseno::png::exportar(
+                &estado,
+                &cards,
+                std::path::Path::new(&folder),
+                card_size,
+                dpi,
+                &langs,
+                &cancelado,
+                &progreso,
+            )
+        };
         estado.jobs.baja(job_id);
         let (files, error) = match r {
             Ok(n) => (n, None),
@@ -349,6 +373,30 @@ pub fn design_export_png(
         );
     });
     Ok(job_id)
+}
+
+/// Los PNG de las cartas en una carpeta temporal, empaquetados en el ZIP que
+/// la persona eligió (`destino`: un `content://` de Android).
+#[allow(clippy::too_many_arguments)]
+fn png_en_zip(
+    app: &AppHandle,
+    estado: &AppState,
+    cartas: &[DeckCard],
+    destino: &str,
+    card: proxy_core::model::CardSize,
+    ppp: u32,
+    langs: &[DesignLang],
+    cancelado: &std::sync::atomic::AtomicBool,
+    progreso: &dyn Fn(u32, u32),
+) -> AppResult<u32> {
+    let trabajo = crate::fichero::temporal(app, "png.zip")?;
+    let carpeta = trabajo.ruta().with_file_name("png");
+    let n = crate::diseno::png::exportar(
+        estado, cartas, &carpeta, card, ppp, langs, cancelado, progreso,
+    )?;
+    crate::fichero::zip_de_carpeta(&carpeta, trabajo.ruta())?;
+    crate::fichero::copiar_a(app, destino, trabajo.ruta())?;
+    Ok(n)
 }
 
 /// Traducción sugerida (experimental) de una cara sin texto en `lang` (un

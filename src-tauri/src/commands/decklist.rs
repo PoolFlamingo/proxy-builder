@@ -6,6 +6,7 @@ use proxy_core::decklist::{self, FormatoLista, ParsedDecklist};
 use proxy_core::model::Deck;
 
 use crate::error::{AppError, AppResult, ErrorCode};
+use crate::fichero;
 use crate::store::blobs::escribir_atomico;
 
 /// Lee una lista entera y dice qué es cada línea. Síncrono y barato: se llama
@@ -21,9 +22,19 @@ pub fn deck_list_text(deck: Deck, format: FormatoLista) -> String {
     decklist::exportar(&deck, format)
 }
 
-/// Guarda la lista del deck en un `.txt` (el que se elige en el diálogo).
+/// Guarda la lista del deck en un `.txt` (el que se elige en el diálogo). En
+/// Android el diálogo da un `content://` sin ruta ni extensión: se escribe tal
+/// cual (el nombre lo puso la persona al elegirlo).
 #[tauri::command]
-pub fn deck_list_save(deck: Deck, format: FormatoLista, path: String) -> AppResult<()> {
+pub fn deck_list_save(
+    app: tauri::AppHandle,
+    deck: Deck,
+    format: FormatoLista,
+    path: String,
+) -> AppResult<()> {
+    if fichero::es_uri(&path) {
+        return fichero::escribir_bytes(&app, &path, decklist::exportar(&deck, format).as_bytes());
+    }
     let p = PathBuf::from(&path);
     let es_txt = p
         .extension()

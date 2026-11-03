@@ -153,12 +153,21 @@ pub fn guardar(state: &AppState, a: &AspectoDados) -> AppResult<()> {
 /// Prepara una imagen del equipo para los dados (el cuadrado del centro a
 /// `LADO_IMAGEN` px, en JPEG) y la mete en el almacén. Devuelve su huella.
 pub fn importar_imagen(state: &AppState, ruta: &std::path::Path) -> AppResult<String> {
-    let bytes = std::fs::read(ruta)?;
-    let info = proxy_core::imaging::probe::probe(&bytes)?;
+    importar_imagen_bytes(state, &std::fs::read(ruta)?)
+}
+
+/// Lo más que se lee de la imagen de los dados (el selector de Android da una
+/// URI, no una ruta que medir antes).
+pub const TOPE_IMAGEN: u64 = 128 * 1024 * 1024;
+
+/// Como [`importar_imagen`], con la imagen ya leída (de una ruta o de un
+/// `content://`).
+pub fn importar_imagen_bytes(state: &AppState, bytes: &[u8]) -> AppResult<String> {
+    let info = proxy_core::imaging::probe::probe(bytes)?;
     if info.width > LADO_MAXIMO || info.height > LADO_MAXIMO {
         return Err(AppError::new(ErrorCode::Image).with("motivo", "too_large"));
     }
-    let img = proxy_core::imaging::decode::decode(&bytes)?;
+    let img = proxy_core::imaging::decode::decode(bytes)?;
     let lado = img.width().min(img.height()).max(1);
     let cuadrado = image::imageops::crop_imm(
         &img,

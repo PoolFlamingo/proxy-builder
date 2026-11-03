@@ -161,6 +161,15 @@ impl Red {
         Ok(ep)
     }
 
+    /// Avisa al nodo, si hay uno, de que la red ha podido cambiar: Android no lo
+    /// dice al código nativo, así que se llama al volver de segundo plano.
+    pub async fn cambio_de_red(&self) {
+        let ep = self.nodo.lock().await.clone();
+        if let Some(ep) = ep.filter(|e| !e.is_closed()) {
+            ep.network_change().await;
+        }
+    }
+
     /// Cierra el nodo (al salir de la partida en red o de la app).
     pub async fn parar(&self) {
         if let Some(ep) = self.nodo.lock().await.take() {

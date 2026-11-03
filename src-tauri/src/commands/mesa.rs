@@ -99,7 +99,7 @@ fn con_sesion<T>(state: &AppState, f: impl FnOnce(&mut Sesion) -> AppResult<T>) 
 }
 
 /// Guarda la partida en su fichero (sin bloquear por un fallo de disco).
-fn guardar_si_toca(state: &AppState, forzar: bool) {
+pub(crate) fn guardar_si_toca(state: &AppState, forzar: bool) {
     let Ok(mut m) = state.mesa.lock() else { return };
     let Some(s) = m.as_mut() else { return };
     // La partida de un invitado la guarda su anfitrión.
@@ -412,8 +412,22 @@ fn con_mirada<T>(state: &AppState, f: impl FnOnce(&mut Mirada) -> T) -> Option<T
     m.as_mut().map(f)
 }
 
+/// Que la pantalla del móvil no se apague mientras haya una mesa abierta (y
+/// que vuelva a hacerlo al salir). Un fallo solo se apunta: no impide jugar.
+fn pantalla_encendida(app: &AppHandle, si: bool) {
+    if let Err(e) = crate::android::pantalla_encendida(app, si) {
+        tracing::warn!("pantalla encendida ({si}): {e:?}");
+    }
+}
+
 #[tauri::command]
-pub fn mesa_suscribir(state: State<'_, AppState>, canal: Channel<MensajeMesa>) -> AppResult<()> {
+pub fn mesa_suscribir(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    canal: Channel<MensajeMesa>,
+) -> AppResult<()> {
+    // Cualquier mesa que se mira (local, en red, de espectador o repetición).
+    pantalla_encendida(&app, true);
     if !state.hay_partida() {
         if let Some(()) = con_mirada(&state, |v| v.suscribir(canal.clone())) {
             return Ok(());
@@ -576,6 +590,7 @@ pub fn mesa_guardar(state: State<'_, AppState>) -> AppResult<()> {
 /// seguirla luego; sin él, se termina y se olvida.
 #[tauri::command]
 pub fn mesa_salir(app: AppHandle, state: State<'_, AppState>, guardar: bool) -> AppResult<()> {
+    pantalla_encendida(&app, false);
     if guardar {
         guardar_si_toca(&state, true);
     }
@@ -939,12 +954,26 @@ pub fn mesa_tapete_get(
 /// Pone (o quita, con `origen: null`) el tapete de un deck o el general.
 #[tauri::command]
 pub async fn mesa_tapete_set(
+    app: tauri::AppHandle,
     state: State<'_, AppState>,
     deck: Option<String>,
     origen: Option<OrigenTapete>,
     velo: u8,
     desenfoque: u8,
 ) -> AppResult<Option<Tapete>> {
+    // Una imagen de Android llega como `content://`: se lee por el sistema y
+    // entra al almacén como cualquier otra.
+    let origen = match origen {
+        Some(OrigenTapete::Fichero { ruta }) if crate::fichero::es_uri(&ruta) => {
+            let bytes = crate::fichero::leer_bytes(&app, &ruta, dados::TOPE_IMAGEN)?;
+            let img =
+                state
+                    .blobs
+                    .put_bytes(&state.db, &bytes, proxy_core::model::ImageOrigin::Upload)?;
+            Some(OrigenTapete::Blob { blob: img.blob })
+        }
+        otro => otro,
+    };
     let t = match origen {
         Some(o) => Some(Tapete {
             blob: tapete::importar(&state, state.scryfall.as_ref(), &o).await?,
@@ -992,11 +1021,15 @@ pub fn mesa_dados_set(
 /// Pone una imagen del equipo en los dados (o la quita, con `ruta: null`).
 #[tauri::command]
 pub fn mesa_dados_imagen(
+    app: tauri::AppHandle,
     state: State<'_, AppState>,
     ruta: Option<String>,
 ) -> AppResult<VistaAspectoDados> {
     let imagen = match ruta {
-        Some(r) => Some(dados::importar_imagen(&state, std::path::Path::new(&r))?),
+        Some(r) => {
+            let bytes = crate::fichero::leer_bytes(&app, &r, dados::TOPE_IMAGEN)?;
+            Some(dados::importar_imagen_bytes(&state, &bytes)?)
+        }
         None => None,
     };
     let aspecto = AspectoDados {

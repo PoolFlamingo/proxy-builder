@@ -179,7 +179,7 @@ pub async fn descargar(
     let faltan = pendientes(&datos)?;
     let mut hechas = total - faltan.len() as u32;
     progreso(hechas, total);
-    let http = reqwest::Client::builder()
+    let http = crate::tls::reqwest(reqwest::Client::builder())
         .user_agent(concat!("ProxyBuilder/", env!("CARGO_PKG_VERSION")))
         .build()
         .map_err(crate::error::red)?;

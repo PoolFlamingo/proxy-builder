@@ -95,7 +95,7 @@ pub async fn salas_conectar(
                 url,
                 state.red.clave(),
                 apodo.chars().take(32).collect(),
-                Plataforma::Escritorio,
+                Plataforma::actual(),
                 AvisosApp(app.clone()),
             );
             state.red.con_servidor(|s| *s = Some(Arc::new(c)));

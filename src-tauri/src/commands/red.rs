@@ -43,23 +43,36 @@ pub fn red_identidad_set(
 }
 
 /// Guarda la identidad de la instalación en `ruta` (un fichero que permite
-/// jugar como esta instalación: la pantalla avisa de que no se comparta).
+/// jugar como esta instalación: la pantalla avisa de que no se comparta). En
+/// Android `ruta` es un `content://`: se escribe en la caché (privado) y se
+/// copia al destino.
 #[tauri::command]
-pub fn red_identidad_exportar(state: State<'_, AppState>, ruta: String) -> AppResult<()> {
-    identidad::exportar(&state.red.clave(), std::path::Path::new(&ruta))
+pub fn red_identidad_exportar(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    ruta: String,
+) -> AppResult<()> {
+    let clave = state.red.clave();
+    crate::fichero::escribir(&app, &ruta, Some("identidad.json"), |destino| {
+        identidad::exportar(&clave, destino)
+    })
 }
 
 /// Cambia la identidad de esta instalación por la de un fichero exportado.
 /// Con una partida, una sala o un salón abiertos no se puede (`Busy`).
 #[tauri::command]
 pub async fn red_identidad_importar(
+    app: tauri::AppHandle,
     state: State<'_, AppState>,
     ruta: String,
 ) -> AppResult<Identidad> {
     if state.red.ocupada() || state.hay_partida() || state.hay_mirada() {
         return Err(AppError::new(ErrorCode::Busy).with("motivo", "partida"));
     }
-    let nueva = identidad::importar(&state.paths.data, std::path::Path::new(&ruta))?;
+    let nueva = {
+        let copia = crate::fichero::leer(&app, &ruta, Some("identidad.json"))?;
+        identidad::importar(&state.paths.data, &copia)?
+    };
     state.red.cambiar_clave(nueva).await;
     identidad::leer(&state.db, &state.red.clave())
 }

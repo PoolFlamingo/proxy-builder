@@ -2,13 +2,14 @@
 //! la vista web use `navigator.clipboard.read()` («The request is not allowed
 //! by the user agent…»). En Linux se pide al portapapeles de GTK (el de la
 //! propia ventana, vale igual en X11 que en Wayland); en Windows y macOS, con
-//! arboard.
+//! arboard; en móvil no se puede (Tauri solo da texto en Android).
 
 use image::RgbaImage;
 use tauri::AppHandle;
 
 use crate::error::{AppError, AppResult, ErrorCode};
 
+#[cfg(not(mobile))]
 fn fallo(e: impl ToString) -> AppError {
     AppError::new(ErrorCode::Internal).with("detalle", e)
 }
@@ -54,7 +55,7 @@ fn rgba(p: &gtk::gdk_pixbuf::Pixbuf) -> Option<RgbaImage> {
 }
 
 /// La imagen que haya en el portapapeles; `None` si no hay ninguna.
-#[cfg(not(target_os = "linux"))]
+#[cfg(any(target_os = "windows", target_os = "macos"))]
 pub async fn imagen(_app: &AppHandle) -> AppResult<Option<RgbaImage>> {
     tauri::async_runtime::spawn_blocking(|| {
         let mut cb = arboard::Clipboard::new().map_err(fallo)?;
@@ -70,4 +71,10 @@ pub async fn imagen(_app: &AppHandle) -> AppResult<Option<RgbaImage>> {
     })
     .await
     .map_err(fallo)?
+}
+
+/// La imagen que haya en el portapapeles: en móvil no se puede leer.
+#[cfg(mobile)]
+pub async fn imagen(_app: &AppHandle) -> AppResult<Option<RgbaImage>> {
+    Err(AppError::new(ErrorCode::Unsupported))
 }

@@ -484,11 +484,19 @@ impl Recursos {
 
     pub fn importar_letra(&self, ruta: &Path) -> AppResult<LetraInfo> {
         let datos = std::fs::read(ruta)?;
+        // La extensión manda; si no la hay (un `content://` de Android sin
+        // nombre), se reconoce por el contenido.
         let ext = ruta
             .extension()
             .and_then(|e| e.to_str())
             .map(str::to_lowercase)
             .filter(|e| matches!(e.as_str(), "ttf" | "otf"))
+            .or_else(|| {
+                if ruta.extension().is_some() {
+                    return None;
+                }
+                extension_de_letra(&datos).map(str::to_string)
+            })
             .ok_or_else(|| AppError::new(ErrorCode::Unsupported))?;
         self.importar_letra_datos(datos, &ext)
     }
@@ -662,8 +670,21 @@ impl Recursos {
     }
 }
 
+// Ya es `const`: en Android clippy lo pide igualmente (falso positivo del
+// `thread_local!` de ese destino).
 thread_local! {
+    #[allow(clippy::missing_const_for_thread_local)]
     static MOTORES: RefCell<Vec<(u64, Motor)>> = const { RefCell::new(Vec::new()) };
+}
+
+/// `ttf` u `otf` según la cabecera del fichero (`OTTO` = CFF; `0x00010000` y
+/// `true`, TrueType).
+fn extension_de_letra(datos: &[u8]) -> Option<&'static str> {
+    match datos.get(..4)? {
+        b"OTTO" => Some("otf"),
+        [0, 1, 0, 0] | b"true" => Some("ttf"),
+        _ => None,
+    }
 }
 
 fn leer_zip(ruta: &Path) -> AppResult<Ficheros> {
@@ -793,6 +814,19 @@ mod tests {
             r.importar_letra(&falsa).unwrap_err().code,
             ErrorCode::Unsupported
         );
+        // Sin extensión (la copia de un `content://` sin nombre), se reconoce
+        // por la cabecera: una letra vale; un texto, no.
+        let sin_ext = dir.path().join("archivo");
+        std::fs::copy(&ttf, &sin_ext).unwrap();
+        assert!(r.importar_letra(&sin_ext).is_ok());
+        std::fs::write(&sin_ext, b"hola").unwrap();
+        assert_eq!(
+            r.importar_letra(&sin_ext).unwrap_err().code,
+            ErrorCode::Unsupported
+        );
+        assert_eq!(extension_de_letra(b"OTTO\0\0"), Some("otf"));
+        assert_eq!(extension_de_letra(&[0, 1, 0, 0, 9]), Some("ttf"));
+        assert_eq!(extension_de_letra(b"OT"), None);
         // Sobrevive a reabrir.
         let r2 = Recursos::abrir(dir.path());
         assert_eq!(r2.letras().unwrap().len(), 1);

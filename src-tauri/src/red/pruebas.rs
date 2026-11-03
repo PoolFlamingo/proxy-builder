@@ -1530,3 +1530,102 @@ async fn un_invitado_no_reinicia_ni_termina_la_partida_de_todos() {
         .mesa
         .con(|s| assert!(s.as_ref().unwrap().partida().fin.is_none()));
 }
+
+/// Pasar un deck con una partida abierta no la corta ni levanta un segundo
+/// nodo: el anfitrión de la partida sigue atendiendo su nodo y reparte
+/// `deck/1` a `pasar/` (`Mesa::atender_deck`); el bucle propio de `pasar/`
+/// no entra mientras la partida tenga el nodo.
+#[tokio::test]
+async fn pasar_un_deck_con_la_partida_abierta_no_la_corta() {
+    use crate::pasar::pruebas::{
+        deck, equipo, esperar as espera, fase_emisor, fase_receptor, nodo,
+    };
+    use crate::pasar::tipos::{
+        Decision, Destino as DestinoDeck, Eleccion, FaseEmisor, FaseReceptor,
+    };
+    use crate::pasar::{enviar, recibir};
+
+    let p = partida(2).await;
+    quedarse_todos(&p).await;
+    let siempre_el_mismo_nodo = p.host.ep.id();
+
+    // El anfitrión de la partida es también quien recibe el deck, y lo hace
+    // con su `AppState` de prueba: el gancho de su mesa en memoria.
+    let recibe = equipo();
+    {
+        let r = recibe.clone();
+        *p.host.mesa.deck.lock().unwrap() = Some(Arc::new(move |conn| {
+            tokio::spawn(crate::pasar::atender(r.clone(), conn));
+        }));
+    }
+    let codigo = recibir::abrir(&recibe, p.host.ep.clone(), "Host", false)
+        .await
+        .unwrap()
+        .codigo;
+
+    // Otro equipo, de fuera de la partida, le manda un deck.
+    let envia = equipo();
+    let ep_envia = nodo().await;
+    let d = deck(&envia, "Mientras se juega", true, 3);
+    enviar::enviar(
+        &envia,
+        ep_envia.clone(),
+        DestinoDeck::Codigo { texto: codigo },
+        vec![d.id.clone()],
+        true,
+    )
+    .await
+    .unwrap();
+
+    // Mientras llega, la partida sigue en marcha.
+    let mut azar = Azar::new(11);
+    for k in 0..60 {
+        let quien = azar.menor_que(3) as usize;
+        let m = if quien == 0 {
+            &p.host.mesa
+        } else {
+            &p.invitados[quien - 1].mesa
+        };
+        jugada(m, IdJugador(quien as u8), &mut azar);
+        if k % 10 == 0 {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+    }
+    fase_receptor(&recibe, FaseReceptor::Oferta).await;
+    recibir::responder(
+        &recibe,
+        vec![Decision {
+            indice: 0,
+            eleccion: Eleccion::ConProxies,
+            resolucion: None,
+        }],
+    )
+    .unwrap();
+    fase_receptor(&recibe, FaseReceptor::Terminado).await;
+    fase_emisor(&envia, FaseEmisor::Terminado).await;
+    espera("el deck en la biblioteca", || {
+        (crate::store::decks::list(&recibe.st.db).unwrap().len() == 1).then_some(())
+    })
+    .await;
+
+    // La partida no se ha enterado: los tres siguen igual, y el nodo es el mismo.
+    todos_iguales(&p).await;
+    assert_eq!(p.host.ep.id(), siempre_el_mismo_nodo);
+    assert!(!p.host.ep.is_closed());
+    for j in &p.invitados {
+        assert!(!j
+            .mesa
+            .avisos
+            .lock()
+            .unwrap()
+            .iter()
+            .any(|a| matches!(a, AvisoRed::Perdida | AvisoRed::Cerrada)));
+    }
+    // Y se puede seguir jugando.
+    let antes = seq(&p.host.mesa).unwrap();
+    for _ in 0..40 {
+        jugada(&p.host.mesa, IdJugador(0), &mut azar);
+    }
+    todos_iguales(&p).await;
+    assert!(seq(&p.host.mesa).unwrap() > antes);
+}

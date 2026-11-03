@@ -37,13 +37,18 @@ fn carpeta_de(ruta: &Path) -> Option<&Path> {
     }
 }
 
-/// Recuerda la carpeta de `ruta` (un fichero o una carpeta).
+/// Recuerda la carpeta de `ruta` (un fichero o una carpeta). En móvil no se
+/// recuerda nada: lo que da el selector del sistema es un `content://`, no una
+/// ruta con carpeta.
 #[tauri::command]
 pub fn carpeta_recordar(
     state: State<'_, AppState>,
     tipo: TipoCarpeta,
     ruta: String,
 ) -> AppResult<()> {
+    if cfg!(mobile) || crate::fichero::es_uri(&ruta) {
+        return Ok(());
+    }
     if let Some(dir) = carpeta_de(Path::new(&ruta)) {
         settings::set(&state.db, clave(tipo), &dir.to_string_lossy())?;
     }
@@ -58,6 +63,9 @@ pub fn carpeta_inicial(
     tipo: TipoCarpeta,
     nombre: Option<String>,
 ) -> AppResult<Option<String>> {
+    if cfg!(mobile) {
+        return Ok(nombre);
+    }
     let Some(dir) = settings::get(&state.db, clave(tipo))? else {
         return Ok(nombre);
     };

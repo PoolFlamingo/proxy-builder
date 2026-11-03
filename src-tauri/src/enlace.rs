@@ -93,6 +93,7 @@ pub fn recibir<S: AsRef<str>>(app: &AppHandle, enlaces: impl IntoIterator<Item =
     let _ = app.emit("salas://enlace", &codigo);
     if let Some(v) = app.get_webview_window("main") {
         let _ = v.show();
+        #[cfg(desktop)]
         let _ = v.unminimize();
         let _ = v.set_focus();
     }

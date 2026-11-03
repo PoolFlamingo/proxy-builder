@@ -36,7 +36,7 @@ use tokio::sync::mpsc;
 
 use super::codigo::mismo_secreto;
 use super::mesa::{AvisoRed, Mesa};
-use super::nodo::{ALPN_IMG, ALPN_MESA};
+use super::nodo::{ALPN_DECK, ALPN_IMG, ALPN_MESA};
 use super::protocolo::{
     datagrama_a_bytes, escribir_del_host, leer_al_host, leer_hola, version_app, AlHost, Ausente,
     Datagrama, DelHost, EnSala, Enlace, NodoJugador, Rol, PROTOCOLO,
@@ -1195,6 +1195,9 @@ fn evento_visible(partida: &Partida, cambio: &Cambio, quitadas: &[mesa::IdCarta]
 
 /// Atiende las conexiones que llegan al nodo mientras dure.
 pub async fn atender<M: Mesa>(ep: Endpoint, anf: Arc<Anfitrion>, mesa: M) {
+    // Mientras dure la partida, este bucle es el único que acepta en el nodo:
+    // `pasar/` le cede `deck/1` (el nodo es el mismo, nunca dos `accept`).
+    let _cedido = crate::pasar::ceder(ep.id());
     anf.poner_endpoint(ep.clone());
     if anf.con_codigo() {
         // Sin servidor, el anfitrión vigila su mayoría (Fase K).
@@ -1216,6 +1219,9 @@ pub async fn atender<M: Mesa>(ep: Endpoint, anf: Arc<Anfitrion>, mesa: M) {
             } else if alpn == ALPN_IMG {
                 // Las imágenes propias (E8).
                 super::imagenes::servir(conn, mesa).await;
+            } else if alpn == ALPN_DECK {
+                // Pasar un deck no toca la partida (`pasar/`).
+                mesa.atender_deck(conn);
             }
         });
     }

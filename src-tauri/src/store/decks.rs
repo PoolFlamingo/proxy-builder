@@ -153,6 +153,13 @@ pub fn save(db: &Db, deck: &Deck) -> AppResult<i64> {
             ahora,
         ],
     )?;
+    // El linaje: un deck nuevo es el suyo; uno que ya lo tiene conserva el
+    // suyo y apunta la hora de este contenido.
+    tx.execute(
+        "INSERT INTO deck_linaje (deck_id, linaje, actualizado) VALUES (?1, ?1, ?2)
+         ON CONFLICT(deck_id) DO UPDATE SET actualizado = excluded.actualizado",
+        params![deck.id, ahora],
+    )?;
     tx.execute("DELETE FROM deck_cards WHERE deck_id = ?1", [&deck.id])?;
     escribir_refs(&tx, &deck.id, &refs_del_deck(deck))?;
     {
@@ -250,6 +257,17 @@ pub fn idioma_de(db: &Db, id: &str) -> AppResult<Option<String>> {
         .flatten())
 }
 
+/// La carta elegida como portada (`None`: la primera con imagen).
+pub fn portada_de(db: &Db, id: &str) -> AppResult<Option<String>> {
+    Ok(db
+        .conn()?
+        .query_row("SELECT cover_card_id FROM decks WHERE id = ?1", [id], |r| {
+            r.get(0)
+        })
+        .optional()?
+        .flatten())
+}
+
 /// Apunta que el deck se acaba de abrir.
 pub fn marcar_abierto(db: &Db, id: &str) -> AppResult<()> {
     db.conn()?.execute(
@@ -260,13 +278,19 @@ pub fn marcar_abierto(db: &Db, id: &str) -> AppResult<()> {
 }
 
 pub fn rename(db: &Db, id: &str, name: &str) -> AppResult<()> {
-    let n = db.conn()?.execute(
+    let ahora = super::ahora_ms();
+    let c = db.conn()?;
+    let n = c.execute(
         "UPDATE decks SET name = ?2, updated_at = ?3 WHERE id = ?1",
-        (id, name.trim(), super::ahora_ms()),
+        (id, name.trim(), ahora),
     )?;
     if n == 0 {
         return Err(AppError::new(ErrorCode::NotFound).with("deck", id));
     }
+    c.execute(
+        "UPDATE deck_linaje SET actualizado = ?2 WHERE deck_id = ?1",
+        (id, ahora),
+    )?;
     Ok(())
 }
 

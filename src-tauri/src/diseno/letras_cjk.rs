@@ -94,7 +94,7 @@ pub async fn descargar(state: &AppState, lang: DesignLang) -> AppResult<()> {
     if state.diseno.tiene_cjk(lang)? {
         return Ok(());
     }
-    let http = reqwest::Client::builder()
+    let http = crate::tls::reqwest(reqwest::Client::builder())
         .user_agent(concat!("ProxyBuilder/", env!("CARGO_PKG_VERSION")))
         .build()
         .map_err(crate::error::red)?;
@@ -148,7 +148,7 @@ mod tests {
     async fn baja_la_japonesa() {
         let c = catalogo().unwrap();
         let l = &c.letras[0];
-        let http = reqwest::Client::builder()
+        let http = crate::tls::reqwest(reqwest::Client::builder())
             .user_agent("ProxyBuilder-test")
             .build()
             .unwrap();

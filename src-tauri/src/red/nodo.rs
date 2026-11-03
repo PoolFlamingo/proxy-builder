@@ -2,8 +2,14 @@
 //! demás. Se levanta solo cuando hace falta (al crear o unirse a una
 //! partida en red) y se cierra al salir de ella o de la app.
 //!
-//! Dos protocolos (ALPN): `proxy-builder/mesa/1` (la partida) e
-//! `proxy-builder/img/1` (las imágenes propias de cada jugador).
+//! Los protocolos (ALPN): `proxy-builder/mesa/1` (la partida),
+//! `proxy-builder/img/1` (las imágenes propias de cada jugador),
+//! `proxy-builder/ping/1` (la malla de la sala) y `proxy-builder/deck/1`
+//! (pasar decks entre equipos, `pasar/`). **Un solo nodo por instalación**
+//! para todos: dos nodos con la misma clave se pisarían en el relé. Quien
+//! atiende lo que entra reparte por ALPN: `anfitrion::atender` y
+//! `servidor::sala::aceptar` mientras hay una partida, y `pasar/` el resto
+//! del tiempo (`pasar::ceder`).
 //!
 //! Relés: con `PB_RELAY` (solo en debug), el que diga (`none` = sin relé,
 //! para LAN y pruebas; una URL = solo ese). Si no, con el relé propio de
@@ -22,6 +28,8 @@ pub const ALPN_IMG: &[u8] = b"proxy-builder/img/1";
 /// La malla de la sala (Fase F): una conexión ligera con cada jugador solo
 /// para medir la latencia y el camino.
 pub const ALPN_PING: &[u8] = b"proxy-builder/ping/1";
+/// Pasar un deck de un equipo a otro (`pasar/`). Su versión va en el ALPN.
+pub const ALPN_DECK: &[u8] = b"proxy-builder/deck/1";
 
 /// Por dónde pasa la conexión cuando no hay camino directo.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -84,7 +92,12 @@ pub(crate) fn de_red(e: impl std::fmt::Display) -> AppError {
 
 /// Levanta un nodo con esta clave y estos relés.
 pub async fn crear(clave: SecretKey, relay: Relay) -> AppResult<Endpoint> {
-    let alpns = vec![ALPN_MESA.to_vec(), ALPN_IMG.to_vec(), ALPN_PING.to_vec()];
+    let alpns = vec![
+        ALPN_MESA.to_vec(),
+        ALPN_IMG.to_vec(),
+        ALPN_PING.to_vec(),
+        ALPN_DECK.to_vec(),
+    ];
     let b = match &relay {
         Relay::Ninguno => Endpoint::builder(presets::Minimal).relay_mode(RelayMode::Disabled),
         Relay::N0 => Endpoint::builder(presets::N0),
@@ -95,10 +108,10 @@ pub async fn crear(clave: SecretKey, relay: Relay) -> AppResult<Endpoint> {
             Endpoint::builder(presets::N0).relay_mode(RelayMode::Custom(mapa_con_n0(url)))
         }
     };
-    // Los certificados del relé, con los del sistema (como reqwest y el
-    // cliente del servidor de salas), no solo los de Mozilla incrustados.
+    // Los certificados del relé, los de esta plataforma (`tls.rs`, como
+    // reqwest y el cliente del servidor de salas).
     let ep = b
-        .ca_tls_config(iroh::tls::CaTlsConfig::system())
+        .ca_tls_config(crate::tls::iroh())
         .secret_key(clave)
         .alpns(alpns)
         .bind()
@@ -175,5 +188,30 @@ pub(crate) mod tests {
         }
         let vistos = servidor.await.unwrap();
         assert_eq!(vistos, vec![ALPN_MESA.to_vec(), ALPN_IMG.to_vec()]);
+    }
+
+    #[tokio::test]
+    async fn dos_nodos_se_conectan_por_el_alpn_de_los_decks() {
+        let (a, b) = dos().await;
+        let dir = a.addr();
+        let servidor = tokio::spawn(async move {
+            let conn = a.accept().await.unwrap().await.unwrap();
+            let alpn = conn.alpn().to_vec();
+            let (mut tx, mut rx) = conn.accept_bi().await.unwrap();
+            let mut buf = [0u8; 4];
+            rx.read_exact(&mut buf).await.unwrap();
+            tx.write_all(&buf).await.unwrap();
+            tx.finish().unwrap();
+            conn.closed().await;
+            alpn
+        });
+        let conn = b.connect(dir, ALPN_DECK).await.unwrap();
+        let (mut tx, mut rx) = conn.open_bi().await.unwrap();
+        tx.write_all(b"deck").await.unwrap();
+        let mut buf = [0u8; 4];
+        rx.read_exact(&mut buf).await.unwrap();
+        assert_eq!(&buf, b"deck");
+        conn.close(0u32.into(), b"fin");
+        assert_eq!(servidor.await.unwrap(), ALPN_DECK.to_vec());
     }
 }

@@ -26,7 +26,7 @@ use crate::state::AppState;
 use crate::store::blobs::escribir_atomico;
 use proxy_core::diseno::efectivo::DisenoEfectivo;
 use proxy_core::diseno::render::Salida;
-use proxy_core::imaging::frame::trim_px;
+use proxy_core::imaging::frame::{trim_px, Target};
 use proxy_core::imaging::pipeline::{render_desde_imagen, DisenoRef};
 use proxy_core::model::DeckCard;
 
@@ -299,11 +299,76 @@ pub fn exportar(
     })
 }
 
+/// Exporta a `destino`: una ruta (como siempre) o un `content://` de Android.
+/// En ese caso el PDF se escribe en la caché y se copia al destino. Si el deck
+/// se parte en varios ficheros (`split_every`), no se puede escribir junto a
+/// una URI y los trozos van dentro de un ZIP (la pantalla pide un `.zip`);
+/// `en_zip` fuerza el ZIP aunque sea uno solo o el destino sea una ruta (el
+/// camino de la caché al compartir).
+fn exportar_en(
+    app: &AppHandle,
+    state: &AppState,
+    deck: &Deck,
+    destino: &str,
+    en_zip: bool,
+    cancelado: &AtomicBool,
+    progreso: &(dyn Fn(ExportPhase, u32, u32) + Sync),
+) -> AppResult<ExportResult> {
+    if !en_zip && !crate::fichero::es_uri(destino) {
+        return exportar(state, deck, Path::new(destino), cancelado, progreso);
+    }
+    let trabajo = crate::fichero::temporal(app, &format!("{}.pdf", nombre_de_pdf(&deck.name)))?;
+    let r = exportar(state, deck, trabajo.ruta(), cancelado, progreso)?;
+    let a_copiar = if en_zip || r.paths.len() > 1 {
+        let zip = trabajo.ruta().with_file_name("pdf.zip");
+        zip_de_trozos(&r.paths, &zip)?;
+        zip
+    } else {
+        PathBuf::from(r.paths.first().ok_or_else(|| {
+            AppError::new(ErrorCode::Internal).with("detalle", "exportación sin ficheros")
+        })?)
+    };
+    crate::fichero::copiar_a(app, destino, &a_copiar)?;
+    Ok(ExportResult {
+        paths: vec![destino.to_string()],
+        ..r
+    })
+}
+
+/// El nombre base de los PDF de un deck.
+fn nombre_de_pdf(deck: &str) -> String {
+    crate::fichero::nombre_seguro(deck)
+}
+
+/// Los trozos de un PDF partido, en un ZIP (con el nombre de cada uno).
+fn zip_de_trozos(rutas: &[String], zip: &Path) -> AppResult<()> {
+    let lista: Vec<(String, PathBuf)> = rutas
+        .iter()
+        .map(|r| {
+            let p = PathBuf::from(r);
+            let nombre = p
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_else(|| "deck.pdf".into());
+            (nombre, p)
+        })
+        .collect();
+    crate::fichero::zip_de_lista(&lista, zip)?;
+    Ok(())
+}
+
 /// Exporta el deck (la instantánea que tiene la pantalla, no la de la base:
 /// el autoguardado puede ir 800 ms por detrás). Avance por `export://progress`
 /// y final por `export://done`.
 #[tauri::command]
-pub fn export_pdf(app: AppHandle, state: State<'_, AppState>, deck: Deck, path: PathBuf) -> u32 {
+pub fn export_pdf(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    deck: Deck,
+    path: String,
+    zip: Option<bool>,
+) -> u32 {
+    let en_zip = zip.unwrap_or(false);
     let (job_id, cancelado) = state.jobs.alta();
     tauri::async_runtime::spawn_blocking(move || {
         let estado = app.state::<AppState>();
@@ -322,7 +387,7 @@ pub fn export_pdf(app: AppHandle, state: State<'_, AppState>, deck: Deck, path: 
         };
         // Un pánico no puede dejar la pantalla esperando un final que no llega.
         let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            exportar(&estado, &deck, &path, &cancelado, &progreso)
+            exportar_en(&app, &estado, &deck, &path, en_zip, &cancelado, &progreso)
         }))
         .unwrap_or_else(|_| Err(AppError::new(ErrorCode::Internal).with("detalle", "pánico")));
         estado.jobs.baja(job_id);
@@ -350,9 +415,49 @@ pub struct ExportEstimate {
     pub bytes: u64,
     pub images: u32,
     pub pages: u32,
+    /// Cuántos PDF saldrán (más de uno si el deck se parte cada N hojas). En
+    /// Android, con más de uno la pantalla pide un ZIP.
+    pub files: u32,
+    /// Más o menos la memoria que hará falta mientras se compone.
+    #[ts(type = "number")]
+    pub memory: u64,
+    /// La memoria libre del equipo no da para ello con holgura: se avisa antes
+    /// (en un móvil con poca memoria, el sistema cierra la app).
+    pub low_memory: bool,
 }
 
-/// Cuánto pesará el PDF, más o menos.
+/// Cuántos hilos preparan imágenes a la vez (los de `exportar`).
+fn hilos_de_exportacion() -> usize {
+    std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(4)
+        .min(8)
+}
+
+/// La memoria que hace falta para componer: todas las imágenes ya codificadas
+/// (el PDF las guarda enteras hasta escribirse) más, por hilo, la carta
+/// decodificada y sus copias de trabajo (RGBA, unas tres).
+fn memoria_necesaria(bytes: u64, ancho_px: u64, alto_px: u64, hilos: usize) -> u64 {
+    bytes + hilos as u64 * ancho_px * alto_px * 4 * 3
+}
+
+/// ¿Cabe con holgura en la memoria libre? Se pide que lo necesario no pase del
+/// 60 % de la libre: el sistema, la mesa y el resto de apps también la usan.
+fn cabe_en_memoria(necesaria: u64, libre: u64) -> bool {
+    libre == 0 || necesaria.saturating_mul(10) <= libre.saturating_mul(6)
+}
+
+/// La memoria libre del equipo, o 0 si no se sabe.
+fn memoria_libre() -> u64 {
+    let mut sistema = sysinfo::System::new();
+    sistema.refresh_memory();
+    match sistema.available_memory() {
+        0 => sistema.free_memory(),
+        n => n,
+    }
+}
+
+/// Cuánto pesará el PDF, más o menos, y si el equipo lo aguanta.
 #[tauri::command]
 pub fn export_estimate(deck: Deck) -> AppResult<ExportEstimate> {
     let p = plan(&deck)?;
@@ -365,10 +470,22 @@ pub fn export_estimate(deck: Deck) -> AppResult<ExportEstimate> {
         s.encoding.format,
         s.encoding.jpeg_quality,
     );
+    let bytes = por_imagen * enc.especificaciones.len() as u64;
+    let (w, h) = trim_px(s.card_size, Target::Dpi(s.quality.dpi()));
+    let b = (s.bleed_mm / 25.4 * s.quality.dpi()).round() as u64 * 2;
+    let memory = memoria_necesaria(
+        bytes,
+        u64::from(w) + b,
+        u64::from(h) + b,
+        hilos_de_exportacion(),
+    );
     Ok(ExportEstimate {
-        bytes: por_imagen * enc.especificaciones.len() as u64,
+        bytes,
         images: enc.especificaciones.len() as u32,
         pages: p.pages.len() as u32,
+        files: trozos(&p, s.split_every).len() as u32,
+        memory,
+        low_memory: !cabe_en_memoria(memory, memoria_libre()),
     })
 }
 
@@ -380,22 +497,32 @@ pub struct CalibrationTextsInput {
     pub instructions: Vec<String>,
 }
 
-/// Escribe la hoja de calibración dúplex con los ajustes actuales.
-#[tauri::command]
-pub fn export_calibration(
-    settings: PrintSettings,
-    path: PathBuf,
+/// El PDF de la hoja de calibración dúplex.
+fn hoja_de_calibracion(
+    settings: &PrintSettings,
     texts: CalibrationTextsInput,
-) -> AppResult<String> {
-    let pdf = calibration(
-        &settings,
+) -> AppResult<Vec<u8>> {
+    Ok(calibration(
+        settings,
         &CalibrationTexts {
             title: texts.title,
             instructions: texts.instructions,
         },
-    )?;
-    escribir_atomico(&path, &pdf)?;
-    Ok(path.to_string_lossy().to_string())
+    )?)
+}
+
+/// Escribe la hoja de calibración dúplex con los ajustes actuales (en `path`,
+/// una ruta o un `content://` de Android).
+#[tauri::command]
+pub fn export_calibration(
+    app: AppHandle,
+    settings: PrintSettings,
+    path: String,
+    texts: CalibrationTextsInput,
+) -> AppResult<String> {
+    let pdf = hoja_de_calibracion(&settings, texts)?;
+    crate::fichero::escribir_bytes(&app, &path, &pdf)?;
+    Ok(path)
 }
 
 /// Solo se abren ficheros que exporta la app (PDF y paquetes) y que existen.
@@ -411,9 +538,20 @@ fn exportado(path: &str) -> AppResult<PathBuf> {
     Ok(p)
 }
 
-/// Abre un PDF exportado con el visor del sistema.
+/// Abre un PDF exportado con el visor del sistema. En Android lo exportado es
+/// un `content://` sin extensión que comprobar, y `ACTION_VIEW` con una ruta no
+/// funciona (`FileUriExposedException`): se abre compartiéndolo, que deja
+/// elegir el visor.
 #[tauri::command]
-pub fn export_open(app: AppHandle, path: String) -> AppResult<()> {
+pub async fn export_open(app: AppHandle, path: String) -> AppResult<()> {
+    if crate::fichero::es_uri(&path) || cfg!(target_os = "android") {
+        return tauri::async_runtime::spawn_blocking(move || {
+            let (camino, tipo) = crate::fichero::para_compartir(&app, &path)?;
+            crate::android::compartir(&app, &camino, tipo)
+        })
+        .await
+        .map_err(|e| AppError::new(ErrorCode::Internal).with("detalle", e))?;
+    }
     use tauri_plugin_opener::OpenerExt;
     let p = exportado(&path)?;
     app.opener()
@@ -421,10 +559,13 @@ pub fn export_open(app: AppHandle, path: String) -> AppResult<()> {
         .map_err(|e| AppError::new(ErrorCode::Io).with("detalle", e))
 }
 
-/// Enseña un fichero exportado en su carpeta.
+/// Enseña un fichero exportado en su carpeta (no existe en Android).
 #[tauri::command]
 pub fn export_reveal(app: AppHandle, path: String) -> AppResult<()> {
     use tauri_plugin_opener::OpenerExt;
+    if crate::fichero::es_uri(&path) {
+        return Err(AppError::new(ErrorCode::Unsupported).with("detalle", "content"));
+    }
     let p = exportado(&path)?;
     app.opener()
         .reveal_item_in_dir(p)
@@ -442,6 +583,53 @@ mod tests {
     use crate::state::{AppState, Paths};
     use crate::store::blobs::tests::png;
     use proxy_core::model::*;
+
+    #[test]
+    fn la_memoria_necesaria_suma_las_imagenes_y_el_trabajo_de_cada_hilo() {
+        // 100 MB codificados y 8 hilos con una carta de 1500 × 2100 px.
+        let m = memoria_necesaria(100_000_000, 1500, 2100, 8);
+        assert_eq!(m, 100_000_000 + 8 * 1500 * 2100 * 12);
+        // Con holgura cabe; justo al 60 % de la libre, también; pasado, no.
+        assert!(cabe_en_memoria(600, 1000));
+        assert!(!cabe_en_memoria(601, 1000));
+        // Sin saber la memoria libre no se avisa por esto.
+        assert!(cabe_en_memoria(u64::MAX, 0));
+    }
+
+    #[test]
+    fn un_deck_de_100_cartas_a_600_ppp_en_png_no_cabe_en_2_gb_y_a_300_si() {
+        let libre = 2u64 * 1024 * 1024 * 1024 * 6 / 10 / 2; // 2 GB, ya con el sistema encima
+        let a600 = bytes_por_imagen(CardSize::MTG, 600.0, 0.0, ImageFormat::Png, 95) * 100;
+        let (w, h) = trim_px(CardSize::MTG, Target::Dpi(600.0));
+        assert!(!cabe_en_memoria(
+            memoria_necesaria(a600, w.into(), h.into(), 8),
+            libre
+        ));
+        let a300 = bytes_por_imagen(CardSize::MTG, 300.0, 0.0, ImageFormat::Jpeg, 90) * 100;
+        let (w, h) = trim_px(CardSize::MTG, Target::Dpi(300.0));
+        assert!(cabe_en_memoria(
+            memoria_necesaria(a300, w.into(), h.into(), 8),
+            libre
+        ));
+    }
+
+    #[test]
+    fn los_trozos_de_un_pdf_partido_van_en_un_zip() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut rutas = Vec::new();
+        for i in 1..=3 {
+            let p = dir.path().join(format!("deck ({i}).pdf"));
+            std::fs::write(&p, format!("pdf{i}")).unwrap();
+            rutas.push(p.to_string_lossy().into_owned());
+        }
+        let zip = dir.path().join("pdf.zip");
+        zip_de_trozos(&rutas, &zip).unwrap();
+        let mut a = zip::ZipArchive::new(std::fs::File::open(&zip).unwrap()).unwrap();
+        let nombres: Vec<_> = (0..a.len())
+            .map(|i| a.by_index(i).unwrap().name().unwrap().to_string())
+            .collect();
+        assert_eq!(nombres, ["deck (1).pdf", "deck (2).pdf", "deck (3).pdf"]);
+    }
 
     fn estado() -> (tempfile::TempDir, AppState) {
         let dir = tempfile::tempdir().unwrap();
@@ -755,15 +943,15 @@ mod tests {
     fn la_hoja_de_calibracion_se_escribe() {
         let dir = tempfile::tempdir().unwrap();
         let ruta = dir.path().join("cal.pdf");
-        export_calibration(
-            PrintSettings::default(),
-            ruta.clone(),
+        let pdf = hoja_de_calibracion(
+            &PrintSettings::default(),
             CalibrationTextsInput {
                 title: "c".into(),
                 instructions: vec!["x".into()],
             },
         )
         .unwrap();
+        escribir_atomico(&ruta, &pdf).unwrap();
         assert_eq!(lopdf::Document::load(&ruta).unwrap().get_pages().len(), 2);
     }
 

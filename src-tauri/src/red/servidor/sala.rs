@@ -39,7 +39,7 @@ use crate::red::codigo::Codigo;
 use crate::red::invitado::{unirse, Union};
 use crate::red::latencia::medir;
 use crate::red::mesa::{AvisoRed, Mesa, MesaDeApp};
-use crate::red::nodo::{ALPN_IMG, ALPN_MESA, ALPN_PING};
+use crate::red::nodo::{ALPN_DECK, ALPN_IMG, ALPN_MESA, ALPN_PING};
 use crate::red::protocolo::Rol;
 use crate::red::{colores, imagenes, Sala};
 use crate::state::AppState;
@@ -456,6 +456,9 @@ async fn conectar_al_host(app: AppHandle, salon: Arc<Salon>, host: String, migra
 
 /// Atiende las conexiones que llegan al nodo mientras se está en una sala.
 async fn aceptar(app: AppHandle, ep: Endpoint) {
+    // Mientras dure la sala, este bucle es el único que acepta en el nodo:
+    // `pasar/` le cede `deck/1` (el nodo es el mismo, nunca dos `accept`).
+    let _cedido = crate::pasar::ceder(ep.id());
     while let Some(entrante) = ep.accept().await {
         let app = app.clone();
         let yo = ep.id();
@@ -477,6 +480,9 @@ async fn aceptar(app: AppHandle, ep: Endpoint) {
                     Some(anf) => atender_conexion(conn, anf, mesa, yo).await,
                     None => conn.close(5u32.into(), b"no soy el host"),
                 }
+            } else if alpn == ALPN_DECK {
+                // Pasar un deck no toca la partida (`pasar/`).
+                mesa.atender_deck(conn);
             }
         });
     }

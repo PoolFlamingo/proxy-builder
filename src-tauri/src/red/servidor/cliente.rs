@@ -17,7 +17,6 @@ use std::time::Duration;
 
 use futures::{SinkExt, StreamExt};
 use iroh::SecretKey;
-use rustls_platform_verifier::BuilderVerifierExt;
 use tokio::sync::{mpsc, oneshot};
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::Connector;
@@ -62,17 +61,9 @@ impl Drop for Cliente {
     }
 }
 
-/// La configuración TLS: rustls con el verificador del sistema (como reqwest).
+/// La configuración TLS del WebSocket (`tls.rs`, como reqwest).
 fn tls() -> AppResult<Connector> {
-    let proveedor = Arc::new(rustls::crypto::ring::default_provider());
-    let red = |e: rustls::Error| AppError::new(ErrorCode::Network).with("detalle", e);
-    let cfg = rustls::ClientConfig::builder_with_provider(proveedor)
-        .with_safe_default_protocol_versions()
-        .map_err(red)?
-        .with_platform_verifier()
-        .map_err(red)?
-        .with_no_client_auth();
-    Ok(Connector::Rustls(Arc::new(cfg)))
+    Ok(Connector::Rustls(Arc::new(crate::tls::rustls()?)))
 }
 
 impl Cliente {

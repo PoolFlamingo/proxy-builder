@@ -106,6 +106,15 @@ pub trait Mesa: Clone + Send + Sync + 'static {
     /// Apunta (o, con `None`, olvida) la partida a la que se puede volver
     /// (`vuelta.rs`). En los tests no se guarda nada.
     fn recordar_vuelta(&self, _u: Option<&super::invitado::Union>) {}
+    /// Llega una conexión `proxy-builder/deck/1` (pasar un deck) a un nodo
+    /// que atiende una partida: es de `pasar/`, que no toca la mesa. Por
+    /// defecto se cierra sin leer nada.
+    fn atender_deck(&self, conn: iroh::endpoint::Connection) {
+        conn.close(
+            crate::pasar::CIERRE_NO_ESPERADO.into(),
+            b"no espero un deck",
+        );
+    }
 }
 
 /// La de la app: la sesión de `AppState.mesa` y los avisos por evento.
@@ -168,6 +177,11 @@ impl<Rt: tauri::Runtime> Mesa for MesaDeApp<Rt> {
         }
     }
 
+    fn atender_deck(&self, conn: iroh::endpoint::Connection) {
+        let app = self.0.clone();
+        tokio::spawn(crate::pasar::atender(app, conn));
+    }
+
     fn recordar_vuelta(&self, u: Option<&super::invitado::Union>) {
         let db = &self.0.state::<AppState>().db;
         let r = match u {
@@ -191,7 +205,13 @@ pub struct MesaEnMemoria {
     /// Lo que esta app es en la partida tras un traspaso (Fase K):
     /// `"anfitrion"` o `"invitado"`, con lo que haga falta para seguir.
     pub papel: Arc<Mutex<Option<PapelEnMemoria>>>,
+    /// Qué hacer con una conexión `deck/1` (en los tests de `pasar/`); sin
+    /// él, se cierra.
+    pub deck: Arc<Mutex<Option<GanchoDeck>>>,
 }
+
+/// Lo que hace un test con una conexión `deck/1` que llega.
+pub type GanchoDeck = Arc<dyn Fn(iroh::endpoint::Connection) + Send + Sync>;
 
 /// Lo que queda en los tests de un traspaso.
 pub enum PapelEnMemoria {
@@ -211,6 +231,7 @@ impl Default for MesaEnMemoria {
             mirada: Arc::default(),
             avisos: Arc::default(),
             papel: Arc::default(),
+            deck: Arc::default(),
             carpeta: std::env::temp_dir().join(format!(
                 "pb-mesa-{}-{n}-{}",
                 std::process::id(),
@@ -250,6 +271,17 @@ impl Mesa for MesaEnMemoria {
     fn ser_anfitrion(&self, anf: Arc<Anfitrion>, tarea: tokio::task::AbortHandle, _codigo: String) {
         if let Ok(mut p) = self.papel.lock() {
             *p = Some(PapelEnMemoria::Anfitrion { anf, tarea });
+        }
+    }
+
+    fn atender_deck(&self, conn: iroh::endpoint::Connection) {
+        let gancho = self.deck.lock().ok().and_then(|g| g.clone());
+        match gancho {
+            Some(f) => f(conn),
+            None => conn.close(
+                crate::pasar::CIERRE_NO_ESPERADO.into(),
+                b"no espero un deck",
+            ),
         }
     }
 

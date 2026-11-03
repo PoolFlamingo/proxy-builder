@@ -60,7 +60,7 @@ pub fn modelos_listos(datos: &Path) -> bool {
 /// Descarga los modelos que falten.
 pub async fn descargar_modelos(datos: &Path) -> AppResult<()> {
     let dir = carpeta_modelos(datos);
-    let http = reqwest::Client::builder()
+    let http = crate::tls::reqwest(reqwest::Client::builder())
         .user_agent(concat!("ProxyBuilder/", env!("CARGO_PKG_VERSION")))
         .build()
         .map_err(crate::error::red)?;

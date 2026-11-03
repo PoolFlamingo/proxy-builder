@@ -23,6 +23,19 @@ pub enum Plataforma {
     Ios,
 }
 
+impl Plataforma {
+    /// La de este equipo: el servidor la usa para no elegir un móvil de anfitrión.
+    pub const fn actual() -> Self {
+        if cfg!(target_os = "android") {
+            Self::Android
+        } else if cfg!(target_os = "ios") {
+            Self::Ios
+        } else {
+            Self::Escritorio
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "lowercase")]
 #[ts(export, rename = "RolPlaygroup")]

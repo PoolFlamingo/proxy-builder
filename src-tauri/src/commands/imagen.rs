@@ -54,15 +54,26 @@ fn imagen_de_cara(card: &DeckCard, dorso: bool, del_deck: Option<&FaceImage>) ->
     }
 }
 
-pub fn guardar(
+/// El formato que pide un nombre de fichero; sin extensión, PNG. (Un
+/// `content://` de Android no lleva ruta: el formato sale del nombre que le
+/// da el sistema.)
+fn formato_de_nombre(nombre: Option<&str>) -> AppResult<FormatoImagen> {
+    match nombre.and_then(crate::fichero::extension) {
+        None => Ok(FormatoImagen::Png),
+        Some(e) => FormatoImagen::de_extension(&e)
+            .ok_or_else(|| AppError::new(ErrorCode::InvalidInput).with("motivo", "formato")),
+    }
+}
+
+/// La imagen de la cara ya codificada en `formato`.
+fn generar(
     state: &AppState,
     card: &DeckCard,
     dorso: bool,
     s: &PrintSettings,
     del_deck: Option<&FaceImage>,
-    ruta: &str,
-) -> AppResult<PathBuf> {
-    let (destino, formato) = destino_y_formato(ruta)?;
+    formato: FormatoImagen,
+) -> AppResult<Vec<u8>> {
     let ppp = s.quality.dpi();
     let imagen = match (&card.design, cara_diseno(card, dorso)) {
         (Some(d), Some(cara)) => {
@@ -107,12 +118,26 @@ pub fn guardar(
             render_rgba(&bytes, &spec)?
         }
     };
-    let bytes = en_formato(&imagen, formato, s.encoding.jpeg_quality)?;
+    Ok(en_formato(&imagen, formato, s.encoding.jpeg_quality)?)
+}
+
+pub fn guardar(
+    state: &AppState,
+    card: &DeckCard,
+    dorso: bool,
+    s: &PrintSettings,
+    del_deck: Option<&FaceImage>,
+    ruta: &str,
+) -> AppResult<PathBuf> {
+    let (destino, formato) = destino_y_formato(ruta)?;
+    let bytes = generar(state, card, dorso, s, del_deck, formato)?;
     escribir_atomico(&destino, &bytes)?;
     Ok(destino)
 }
 
-/// Guarda una cara de una carta como imagen y devuelve la ruta escrita.
+/// Guarda una cara de una carta como imagen y devuelve la ruta escrita. En
+/// Android `path` es un `content://`: el formato sale del nombre del fichero
+/// que se creó, y se devuelve la misma URI.
 #[tauri::command]
 pub async fn card_export_image(
     app: AppHandle,
@@ -124,6 +149,13 @@ pub async fn card_export_image(
 ) -> AppResult<String> {
     tauri::async_runtime::spawn_blocking(move || {
         let state = app.state::<AppState>();
+        if crate::fichero::es_uri(&path) {
+            let nombre = crate::fichero::nombre_destino(&app, &path);
+            let formato = formato_de_nombre(nombre.as_deref())?;
+            let bytes = generar(&state, &card, back, &settings, deck_back.as_ref(), formato)?;
+            crate::fichero::escribir_bytes(&app, &path, &bytes)?;
+            return Ok(path);
+        }
         guardar(&state, &card, back, &settings, deck_back.as_ref(), &path)
             .map(|p: PathBuf| p.to_string_lossy().into_owned())
     })
@@ -147,6 +179,20 @@ mod tests {
         let (p, f) = destino_y_formato("/x/carta").unwrap();
         assert_eq!((p, f), (PathBuf::from("/x/carta.png"), FormatoImagen::Png));
         assert!(destino_y_formato("/x/carta.gif").is_err());
+    }
+
+    #[test]
+    fn el_formato_sale_del_nombre_y_sin_extension_es_png() {
+        assert_eq!(formato_de_nombre(None).unwrap(), FormatoImagen::Png);
+        assert_eq!(
+            formato_de_nombre(Some("carta")).unwrap(),
+            FormatoImagen::Png
+        );
+        assert_eq!(
+            formato_de_nombre(Some("Carta.JPG")).unwrap(),
+            FormatoImagen::Jpeg
+        );
+        assert!(formato_de_nombre(Some("carta.gif")).is_err());
     }
 
     #[test]
