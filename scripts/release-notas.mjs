@@ -88,3 +88,61 @@ export function notasDelActualizador(json, version, notas) {
 	datos.notes = notas === null ? "" : limpiarNotas(notas);
 	return `${JSON.stringify(datos, null, 2)}\n`;
 }
+
+/** El APK de Android que sube el trabajo `android` de `release.yml` (solo arm64). */
+export function nombreApk(version) {
+	return `Proxy-Builder_${version}_android-arm64.apk`;
+}
+
+/** La clave de `latest.json` para el APK: `android-<arquitectura>` (`.target(…)` de `actualizar.rs`). */
+export const OBJETIVO_ANDROID = "android-aarch64";
+
+/**
+ * Añade al `latest.json` del actualizador la entrada del APK de Android
+ * (`android-aarch64`) con su URL y la firma del actualizador (el contenido de
+ * su `.sig`). El trabajo `android` del workflow no toca `latest.json` (los de
+ * escritorio lo reescriben en paralelo): lo hace este script al final. Lo que
+ * ya hay (escritorio, notas, fecha) no se toca. Falla si no es el
+ * `latest.json` de la versión esperada o si la firma está vacía.
+ */
+export function conAndroid(json, version, repo, firma) {
+	const datos = JSON.parse(json);
+	if (datos.version !== version || typeof datos.platforms !== "object" || !datos.platforms) {
+		throw new Error(`latest.json no es el de la ${version}.`);
+	}
+	const signature = String(firma ?? "").trim();
+	if (!/^[A-Za-z0-9+/=]{16,}$/.test(signature)) {
+		throw new Error(`La firma del APK (${nombreApk(version)}.sig) está vacía o no es base64.`);
+	}
+	datos.platforms[OBJETIVO_ANDROID] = {
+		signature,
+		url: `https://github.com/${repo}/releases/download/v${version}/${nombreApk(version)}`,
+	};
+	return `${JSON.stringify(datos, null, 2)}\n`;
+}
+
+/** Cómo acaba un trabajo que cuenta como fallo en `gh run view --json jobs`. */
+const FALLIDOS = new Set([
+	"failure",
+	"cancelled",
+	"timed_out",
+	"startup_failure",
+	"action_required",
+]);
+
+/**
+ * Qué trabajos de una ejecución de `release.yml` han fallado (los `jobs` de
+ * `gh run view <id> --json jobs`): los de escritorio (`build (…)`) por nombre
+ * y si falló el de Android (`android`). Uno saltado (`skipped`, p. ej.
+ * `android` porque falló un `build`) no cuenta como fallo.
+ */
+export function fallosDeRelease(jobs) {
+	const fallidos = (Array.isArray(jobs) ? jobs : []).filter((j) =>
+		FALLIDOS.has(String(j?.conclusion ?? "").toLowerCase()),
+	);
+	const esAndroid = (j) => String(j?.name ?? "").trim() === "android";
+	return {
+		escritorio: fallidos.filter((j) => !esAndroid(j)).map((j) => String(j?.name ?? "?")),
+		android: fallidos.some(esAndroid),
+	};
+}

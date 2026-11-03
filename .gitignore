@@ -14,7 +14,7 @@ plans
 
 # Rust / Tauri
 src-tauri/target
-src-tauri/gen
+src-tauri/gen/schemas
 
 # Editor
 .vscode/*
@@ -33,3 +33,4 @@ server/
 
 # La carpeta game queda fuera del repo (Pablo, 27/10/2026): solo en el disco local.
 game/
+src/i18n/.bloqueo

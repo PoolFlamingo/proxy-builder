@@ -10,7 +10,7 @@
 		"enumMembers": "off",
 		"duplicates": "off"
 	},
-	"ignore": ["src/bindings/**"],
+	"ignore": ["src/bindings/**", "src/components/pulsacion-larga.tsx"],
 	"ignoreDependencies": ["tw-animate-css", "tailwindcss", "@iconify/json"],
 	"ignoreBinaries": ["rustfmt", "inkscape"],
 	"ignoreExportsUsedInFile": {

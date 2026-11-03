@@ -19,9 +19,12 @@
 // Pasos: comprueba que `main` está limpia y al día con origin → pide las notas → sube la versión
 // en los cuatro sitios (package.json, tauri.conf.json, Cargo.toml, Cargo.lock)
 // → commit «Versión X» y push → espera a la CI de ese commit → lanza el
-// workflow `release` (instaladores de Linux, Windows y macOS en un borrador) y
-// espera → pone las notas al borrador y a su `latest.json` (lo que enseña la
-// app al avisar de la versión nueva) → pregunta si publicarlo. Publicarlo crea
+// workflow `release` (instaladores de Linux, Windows y macOS y el APK de
+// Android en un borrador) y espera → pone las notas al borrador y a su
+// `latest.json` (lo que enseña la app al avisar de la versión nueva) y le añade
+// la entrada `android-aarch64` (URL del APK y contenido de su `.sig`; el trabajo
+// de Android no toca `latest.json`: los de escritorio lo reescriben en
+// paralelo) → pregunta si publicarlo. Publicarlo crea
 // la etiqueta `vX` y, desde ese momento, las apps instaladas la ven.
 //
 // Necesita `git` y `gh` (con la sesión iniciada: `gh auth login`).
@@ -32,9 +35,12 @@ import { join, resolve } from "node:path";
 import { createInterface } from "node:readline/promises";
 import {
 	componer,
+	conAndroid,
 	ErrorDeUso,
+	fallosDeRelease,
 	leerArgs,
 	limpiarNotas,
+	nombreApk,
 	notasDelActualizador,
 	plantilla,
 	USO,
@@ -207,8 +213,12 @@ function obtenerNotas(version) {
 
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// Espera a que aparezca una ejecución y la sigue hasta el final.
-async function esperarEjecucion(flujo, sha, desde, extra = []) {
+// Espera a que aparezca una ejecución y la sigue hasta el final. Con
+// `toleraAndroid`, si solo falla el trabajo `android` (p. ej. sin los secretos
+// ANDROID_KEY_*), avisa y devuelve `{ android: false }`: el escritorio se
+// publica igual, sin la entrada `android-aarch64`. Si falla uno de escritorio,
+// corta como siempre.
+async function esperarEjecucion(flujo, sha, desde, extra = [], { toleraAndroid = false } = {}) {
 	let id;
 	for (let i = 0; i < 30 && !id; i++) {
 		const lista = JSON.parse(
@@ -237,8 +247,30 @@ async function esperarEjecucion(flujo, sha, desde, extra = []) {
 			stdio: ["ignore", "inherit", "inherit"],
 		});
 	} catch {
+		if (toleraAndroid) {
+			let fallos = null;
+			try {
+				fallos = fallosDeRelease(JSON.parse(gh("run", "view", String(id), "--json", "jobs")).jobs);
+			} catch {
+				fallos = null;
+			}
+			if (fallos?.android && fallos.escritorio.length === 0) {
+				console.warn(
+					"\n  ⚠ Solo ha fallado el trabajo «android» (¿faltan los secretos ANDROID_KEY_*?)." +
+						"\n  ⚠ Se sigue SIN el APK: latest.json no tendrá «android-aarch64» y los móviles" +
+						"\n  ⚠ no verán esta versión. Si el borrador tiene un .apk suelto, bórralo antes de publicar.\n",
+				);
+				return { android: false };
+			}
+			if (fallos?.escritorio.length) {
+				throw new Fallo(
+					`«${flujo}» ha fallado en: ${fallos.escritorio.join(", ")}. Míralo en la URL de arriba.`,
+				);
+			}
+		}
 		throw new Fallo(`«${flujo}» ha fallado. Míralo en la URL de arriba.`);
 	}
+	return { android: true };
 }
 
 let _repo;
@@ -310,7 +342,13 @@ async function main() {
 	paso("Compilando los instaladores (unos 10 minutos)");
 	const desde = new Date(Date.now() - 5_000);
 	gh("workflow", "run", "release.yml", "--ref", RAMA);
-	await esperarEjecucion("release.yml", sha, desde, ["--event", "workflow_dispatch"]);
+	const { android } = await esperarEjecucion(
+		"release.yml",
+		sha,
+		desde,
+		["--event", "workflow_dispatch"],
+		{ toleraAndroid: true },
+	);
 
 	paso("Borrador listo");
 	const borrador = JSON.parse(
@@ -320,6 +358,16 @@ async function main() {
 		throw new Fallo(`El release ${etiqueta} no es el borrador esperado (${borrador.url}).`);
 	}
 	console.log(`  ${borrador.assets.length} ficheros en ${borrador.url}`);
+	// El APK y su firma del actualizador (`release.yml`, trabajo `android`):
+	// si el trabajo salió bien, tienen que estar.
+	const apk = nombreApk(nueva);
+	for (const nombre of android ? [apk, `${apk}.sig`] : []) {
+		if (!borrador.assets.some((a) => a.name === nombre)) {
+			throw new Fallo(
+				`El borrador no tiene ${nombre} (${borrador.url}). ¿Están los secretos ANDROID_KEY_*? Mira el trabajo «android».`,
+			);
+		}
+	}
 	// Sin él las apps instaladas no se enteran de la versión nueva.
 	if (!borrador.assets.some((a) => a.name === "latest.json")) {
 		throw new Fallo(
@@ -342,18 +390,34 @@ async function main() {
 		etiqueta,
 		"--pattern",
 		"latest.json",
+		...(android ? ["--pattern", `${apk}.sig`] : []),
 		"--dir",
 		carpetaJson,
 		"--clobber",
 	);
 	try {
-		writeFileSync(ficheroJson, notasDelActualizador(leer(ficheroJson), nueva, notas));
+		const conNotas = notasDelActualizador(leer(ficheroJson), nueva, notas);
+		if (android) {
+			const firmaApk = leer(join(carpetaJson, `${apk}.sig`));
+			writeFileSync(ficheroJson, conAndroid(conNotas, nueva, repo(), firmaApk));
+		} else {
+			writeFileSync(ficheroJson, conNotas);
+		}
 	} catch (e) {
 		throw new Fallo(e.message);
 	}
 	gh("release", "upload", etiqueta, ficheroJson, "--clobber");
-	console.log("  notas puestas en latest.json (las que enseña la app)");
+	console.log(
+		android
+			? "  notas y entrada de Android puestas en latest.json (lo que lee la app)"
+			: "  notas puestas en latest.json (lo que lee la app); ⚠ sin la entrada de Android",
+	);
 
+	if (!android) {
+		console.warn(
+			"\n  ⚠ Esta versión sale sin APK de Android: arregla el trabajo «android» y súbelo aparte.",
+		);
+	}
 	const publicar =
 		publicarYa ||
 		["s", "si", "sí", "y", "yes"].includes(await preguntar("\n¿Publicar ahora? [s/N] "));

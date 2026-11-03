@@ -467,6 +467,45 @@ la biblioteca (`library.db`), las imágenes de los decks (`blobs/`) y el
 registro (`logs/proxy-builder.log`). La caché de miniaturas se puede borrar
 desde la app sin perder nada.
 
+### Android
+
+La misma app, con la disposición adaptada al dedo: una pantalla a la vez en el
+móvil (pestañas abajo, hojas y diálogos a pantalla completa) y los paneles de
+siempre en la tableta. Los gestos táctiles sustituyen al clic derecho y al ratón
+encima: pulsación larga para los menús, un toque para leer una carta, dos dedos
+para el zoom. El editor de cartas es reducido en el móvil (textos, ilustración,
+marco y colores) y completo en la tableta. La mesa de juego se juega con un
+tablero a la vez, en horizontal.
+
+| Deck | Editor de cartas | Biblioteca | Ajustes |
+|---|---|---|---|
+| ![Las hojas en el móvil](docs/presentacion/movil/hojas.jpg) | ![El editor en el móvil](docs/presentacion/movil/disenar.jpg) | ![La biblioteca en el móvil](docs/presentacion/movil/biblioteca.jpg) | ![Los ajustes en el móvil](docs/presentacion/movil/ajustes.jpg) |
+
+![La mesa de juego en el móvil, en horizontal](docs/presentacion/movil/mesa.jpg)
+
+Móviles y tabletas con Android 8 o superior y procesador ARM de 64 bits (casi
+todos los de los últimos años). No hay versión en la Play Store: el APK se
+instala desde la página de *Releases*.
+
+1. Baja `Proxy-Builder_<versión>_android-arm64.apk` de la última release,
+   directamente desde el navegador del aparato o desde un ordenador (y cópialo).
+2. Android solo instala apps de «orígenes desconocidos» si lo permites. La primera
+   vez te pedirá permitirlo a la app con la que abriste el fichero (el navegador
+   o el gestor de archivos): permítelo **solo a esa app** (Ajustes → Apps →
+   Acceso especial → Instalar apps desconocidas) y, si quieres, vuelve a
+   quitárselo después.
+3. Abre el fichero bajado y pulsa *Instalar*.
+
+Desde ahí la app se actualiza por dentro: busca como la de escritorio (Ajustes →
+Actualizaciones), baja el APK nuevo, comprueba su firma y abre el instalador de
+Android, que te pide confirmar. La primera vez Android pedirá también permitir
+al propio Proxy Builder instalar apps (te abre ese ajuste). Si algo falla ahí,
+*Bajar desde GitHub* abre la página de Releases. Todos los APK van firmados con
+la misma clave, así que las actualizaciones se instalan encima de la versión
+anterior y conservan tu biblioteca; un APK firmado con otra clave (por ejemplo,
+una versión de pruebas) no se puede instalar encima, y desinstalar antes borra la
+biblioteca: exporta tus decks (`.pbdeck`) antes de probar uno.
+
 ---
 
 ## Para desarrollar
@@ -514,6 +553,18 @@ del repositorio; su mitad pública está en `tauri.conf.json`. El borrador lleva
 un `latest.json` con una entrada por instalador, y las apps instaladas lo ven al
 publicarlo. Si se pierde la clave privada, las versiones instaladas no aceptarán
 ninguna actualización nueva.
+
+La release incluye también el APK de Android (solo arm64, el trabajo `android`
+del mismo workflow, con el nombre `Proxy-Builder_<versión>_android-arm64.apk`).
+Va firmado dos veces: con la clave de Android (secretos del repositorio
+`ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` y `ANDROID_KEY_BASE64`, el `.jks` en
+base64; en local, `src-tauri/gen/android/keystore.properties`, ignorado por git)
+y, para el actualizador de la app, con la misma `TAURI_SIGNING_PRIVATE_KEY` (su
+`.sig` va a su lado). El trabajo no toca `latest.json`, porque los de escritorio
+lo reescriben en paralelo: `pnpm release` añade al final la entrada
+`android-aarch64` (la URL del APK y el contenido del `.sig`). Si se pierde la
+clave de Android, nadie podrá actualizar la app instalada sin desinstalarla, y
+eso borra su biblioteca.
 
 ---
 

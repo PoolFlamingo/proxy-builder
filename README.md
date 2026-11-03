@@ -455,6 +455,43 @@ The data lives in the app's data folder (`com.estigio.proxybuilder`): the librar
 (`library.db`), the deck images (`blobs/`) and the log (`logs/proxy-builder.log`).
 The thumbnail cache can be cleared from the app without losing anything.
 
+### Android
+
+The same app, with its layout adapted to the finger: one screen at a time on a
+phone (tabs at the bottom, sheets and full-screen dialogs), the usual panels on
+a tablet. Touch gestures replace the right click and the mouse-over: long press
+for the menus, a tap to read a card, two fingers to zoom. The card editor is
+reduced on a phone (texts, illustration, frame and colours) and complete on a
+tablet. The game table plays one board at a time, in landscape.
+
+| Deck | Card editor | Library | Game table |
+|---|---|---|---|
+| ![The sheets on a phone](docs/presentacion/en/movil/hojas.jpg) | ![The editor on a phone](docs/presentacion/en/movil/disenar.jpg) | ![The library on a phone](docs/presentacion/en/movil/biblioteca.jpg) | ![Settings on a phone](docs/presentacion/en/movil/ajustes.jpg) |
+
+![The game table on a phone, in landscape](docs/presentacion/en/movil/mesa.jpg)
+
+Phones and tablets with Android 8 or later and a 64-bit ARM processor (nearly
+every device of the last years). There is no Play Store version: you install the
+APK from the *Releases* page.
+
+1. Download `Proxy-Builder_<version>_android-arm64.apk` from the latest release,
+   straight from the device's browser or from a computer (then copy it over).
+2. Android only installs apps from «unknown sources» if you allow it. The first
+   time, it asks to allow it for the app you opened the file with (the browser or
+   the file manager): allow it **only for that app** (Settings → Apps → Special
+   access → Install unknown apps), and turn it off again afterwards if you like.
+3. Open the downloaded file and tap *Install*.
+
+The app then updates itself from inside: it checks like the desktop one (Settings
+→ Updates), downloads the new APK, verifies its signature and opens Android's
+installer, which asks you to confirm. The first time, Android also asks to allow
+Proxy Builder itself to install apps (it opens that setting for you). If anything
+fails there, *Download from GitHub* opens the Releases page. Every APK is signed
+with the same key, so updates install over the previous version and keep your
+library; an APK signed with another key (for example a test build) can't be
+installed over it, and uninstalling first would delete the library, so export
+your decks (`.pbdeck`) before trying one.
+
 ---
 
 ## For developers
@@ -501,6 +538,17 @@ Gatekeeper) with the key in the `TAURI_SIGNING_PRIVATE_KEY` repository secret;
 its public half is in `tauri.conf.json`. The draft gets a `latest.json` with an
 entry per installer, and the installed apps see it once the draft is published.
 If the private key is lost, the installed versions won't accept any new update.
+
+The release also includes the Android APK (arm64 only, the `android` job of the
+same workflow, named `Proxy-Builder_<version>_android-arm64.apk`). It is signed
+twice: with the Android key (repository secrets `ANDROID_KEY_ALIAS`,
+`ANDROID_KEY_PASSWORD` and `ANDROID_KEY_BASE64`, the `.jks` in base64; locally,
+`src-tauri/gen/android/keystore.properties`, which is git-ignored) and, for the
+in-app updater, with the same `TAURI_SIGNING_PRIVATE_KEY` (its `.sig` goes next
+to it). The job doesn't touch `latest.json`, because the desktop jobs rewrite it
+in parallel: `pnpm release` adds the `android-aarch64` entry (APK URL and the
+contents of the `.sig`) at the end. If the Android key is lost, nobody can update
+the installed app without uninstalling it, which deletes their library.
 
 ---
 

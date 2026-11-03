@@ -37,6 +37,20 @@ imagen y PDF). Antes de tocar algo grande, leer el paso del plan que le toca.
 - La pantalla habla con Rust SOLO por `src/lib/ipc.ts` (`call()`), nunca con
   `invoke` suelto.
 - La vista web no sale a internet: toda red la hace Rust.
+- 🛑 **El TLS va en un solo sitio**, `src-tauri/src/tls.rs` (Pablo, 02/11/2026): ningún
+  `reqwest::Client::builder()`, `with_platform_verifier` ni `CaTlsConfig::` fuera de él
+  (lo vigila un test). En escritorio, el verificador del sistema; en móvil, los
+  certificados de Mozilla incrustados, porque el del sistema entra en pánico en Android
+  sin su parte de Kotlin. Cubre los clientes HTTP, el actualizador, el WebSocket de
+  salas y el nodo de iroh.
+- 🛑 **Todo comando que lea o escriba un fichero que elige la persona pasa por
+  `src-tauri/src/fichero.rs`**, nunca `std::fs` sobre una ruta de diálogo: en Android es un
+  `content://` (se copia a la caché al leer; se escribe en la caché y se copia al destino).
+  Sin extensión ni carpeta: el formato y el nombre llegan como parámetro.
+- 🛑 **Lo que solo hace Android** (compartir, pantalla encendida o completa, `multicast`,
+  instalar un APK, nombre de un `content://`) está en `plugins/android-extra/` (Kotlin) y se
+  llama **solo desde Rust** por `src/android.rs`; en escritorio son no-ops o `Unsupported`.
+  La pantalla pregunta «¿móvil?» con `lib/plataforma.ts`.
 
 ## Diseño (heredado de judlex)
 
@@ -59,6 +73,54 @@ elige la persona: `components/selector-icono.tsx` (hoy, el icono de las
 etiquetas), que Rust pide a la API de Iconify (`iconos.rs`, `PERMITIDOS`) y
 guarda en `app_data_dir/iconos/elegidos.json` (catálogo en caché).
 
+**Móvil y tableta** (Pablo, 25/10 y 02/11/2026; plan `plans/20261025 - version-movil/`): una
+sola interfaz que cambia por formato, nunca pantallas aparte; el escritorio no cambia.
+- Formato con `useFormato()` (`lib/formato.ts`): `tamano` por ancho (< 640 móvil, < 1024
+  tableta; con dedo y lado corto < 600 dp es móvil, como `sw600dp`), `tactil`, `horizontal`;
+  pone `data-formato` y `data-tactil` en `<html>`. `VITE_PB_FORMATO=movil|tableta` lo fuerza
+  en desarrollo (con `minWidth: 960` en escritorio no se vería el móvil). En táctil el texto
+  sube un punto (`html[data-tactil]` en `index.css`), los botones miden ≥ 44 px y el shell
+  respeta las zonas seguras (`env(safe-area-inset-*)`, `dvh`, y `lib/teclado.ts` para el
+  teclado). Un botón con `WithTooltip` no lleva `data-slot="button"` (el CSS cubre
+  `tooltip-trigger`).
+- **Nada solo con el ratón** (`pnpm check:tactil`): todo `onPointerEnter`/`onMouseEnter`/
+  `onPointerLeave`/`onContextMenu`… lleva `// táctil: …` (en su línea o las tres anteriores)
+  que dice cómo se hace con el dedo: pulsación larga (500 ms, ≤ 8 px: `usePulsacionLarga`/
+  `PulsacionLarga`; Radix ya hace 700 ms en `ContextMenu`), un toque o un botón «⋯». Un
+  gesto por elemento: no se mezcla «mantener para arrastrar» con «mantener para el menú»
+  (las casillas se arrastran por un asa; las cartas de la mesa, al moverse más de 8 px).
+  Un `keydown` global trata `e.target` como posible `document` (`instanceof Element`).
+- Diálogos: `DialogoAdaptable` (a pantalla completa en móvil; los avisos cortos, `compacto`),
+  nunca `DialogContent` suelto (salvo `Confirmar`); paneles: `Hoja`; un diálogo con secciones
+  usa `ListaSecciones` + `BarraSeccion` y `onEscapeKeyDown={volverConEscape(…)}` para el
+  «atrás» (`registrarAtras` no llega con un diálogo abierto); con switches o checkboxes,
+  `cambiosSinGuardar={false}`. Tailwind con variantes arbitrarias, clases enteras.
+- «Atrás» de Android (`lib/atras.ts`): cierra la capa de Radix de arriba; si no, el último
+  `registrarAtras` que lo atienda; si no, «Pulsa otra vez para salir» (`app_salir`).
+- Tooltips: los que llevan información → `ConAyuda`/`AyudaAlTocar` (en táctil, un «ⓘ» que abre
+  un `Popover`); un botón de icono lleva siempre `aria-label` (mantenerlo pulsado enseña su
+  nombre: `etiquetas-tactiles.tsx`); los atajos de los menús, con `ContextMenuShortcut`/
+  `DropdownMenuShortcut` (el CSS los oculta en táctil). Un paso del tutorial que nombre el
+  ratón o el teclado lleva `tactil: { texto }`.
+- Diseñar en móvil usa las mismas piezas que el formulario completo
+  (`disenar/formulario-movil.tsx`); lo que no entra (ajustes finos, recursos, colecciones, lote,
+  traducción, renumerar, PNG) enseña `AvisoSoloTableta`. Los gestos de la carta se cuentan por
+  fotograma (`disenar/gestos.ts`); lo del `visualViewport`, en `use-alto-visible.ts`.
+- La mesa en móvil se decide con `useMesaMovil()`: un tablero a la vez (modo `movil` de
+  `disposicion.ts`, que no se elige ni se recuerda), barra de asientos, «Mano» y pantalla de
+  vida. Leer una carta en grande, siempre por `useLeerEnGrande`/`manejadoresLeer`
+  (`mesa/leer-en-grande.ts`), nunca `onPointerEnter` suelto. Las cartas del campo van en una
+  capa con zoom (`mesa/gestos.ts::conVista`): nunca convertir posiciones con `disp.campo` a
+  mano; `touch-action: none` solo en el tablero. Un tooltip con información usa
+  `AyudaAlTocar` o texto visible.
+  «Dedo» es solo `pointerType` `"touch"` (`!hayEncima`): el lápiz va como el ratón. Con
+  vida compartida (2HG), un equipo es un solo objetivo (`movil/cuentas-vida.ts`).
+- En móvil no hay «cerrar»: al irse a segundo plano se guarda todo (`lib/ciclo-de-vida.ts` el
+  deck y la carta; `ciclo.rs` la partida) y al volver el nodo de iroh llama a `network_change()`
+  (nunca `install_android_jni_context`: tao ya lo hace y dos veces entra en pánico).
+- De solo lectura (heredados de judlex), además de `components/ui/`: `theme-provider.tsx`,
+  `tooltips-nativos.tsx` y `smooth-scroll-client.tsx`.
+
 Textos: siempre por `t()` con la cadena fuente en español; la traducción va
 en **los 15 diccionarios** `src/i18n/<código>/<área>.json` (`es`, la fuente, que repite cada cadena; `en`, `fr`, `de`,
 `it`, `pt`, `ro`, `pl`, `nl`, `ru`, `uk`, `ja`, `ko`, `zhs`, `zht`; Pablo,
@@ -76,10 +138,13 @@ le falta una cadena le sale la inglesa.
 | Para qué | Comando |
 |---|---|
 | Arrancar | `pnpm tauri dev` |
-| Todo lo barato del frontend (tsc + vitest + biome + title + idiomas + knip) | `pnpm check` |
+| Todo lo barato del frontend (tsc + vitest + biome + title + táctil + idiomas + iconos + knip) | `pnpm check` |
 | Rust: avisos (bloqueantes) | `pnpm check:clippy` |
 | Rust: formato | `pnpm check:rust-fmt` |
 | Rust: tests | `pnpm test:rust` |
+| Rust: avisos en Android (las ramas `cfg(mobile)`) | `pnpm check:clippy-android` |
+| Entorno de Android (JDK 21, NDK 28.2, compiladores) | `. scripts/android-env.sh` |
+| Textos nuevos en los 15 idiomas, sin pisarse | `python3 scripts/i18n-anadir.py <área>` (JSON por stdin) |
 | Tipos de Rust a TypeScript | `pnpm bindings` |
 
 - **pnpm 12, no npm** (Pablo, 12/10/2026). Su configuración va en
@@ -107,7 +172,7 @@ le falta una cadena le sale la inglesa.
   (el recorrido guiado de cada pantalla: pasos con su ancla `data-tutorial`;
   sale solo la primera vez y con el botón de ayuda de la barra), `mesa`
   (la pestaña «Jugar»: entrada, tablero, menús, diálogos, atajos, `red/`
-  para el código directo), `salas` (playgroups y salas del servidor).
+  para el código directo), `salas` (playgroups y salas del servidor), `pasar` (enviar y recibir decks entre equipos).
 - `src/stores/`: `deck-store` (deck, historial, autoguardado), `plan-store`
   (el `PagePlan` de Rust con 100 ms de espera), `ui-store` (zoom, selección,
   diálogos, preferencias, `mesa` = Ajustes > Mesa), `trabajo-store` (el
@@ -568,6 +633,43 @@ le falta una cadena le sale la inglesa.
   proporción se aleja más de un 15 % (`MAX_ESTIRADO`).
 - 🛑 Los modales son 100 % opacos con cualquier material o skin (regla al
   final de `src/index.css`).
+
+- **Android** (Pablo, 02/11/2026; plan `plans/20261025 - version-movil/`): `src-tauri/gen/android/`
+  está en git (minSdk 26, `com.estigio.proxybuilder`, `intent-filter` de `proxybuilder://` y de los
+  `.pbdeck`; el release solo `aarch64`), `tauri.android.conf.json` (parche de JSON: `app.windows`
+  se reemplaza entera), `capabilities/{default,escritorio,movil}.json` (lo de escritorio va con
+  `platforms`), `src/{tls,ciclo,android,fichero,abrir}.rs`, `commands/fichero.rs` y
+  `plugins/android-extra/`. En Android el actualizador baja el APK a `app_cache_dir/actualizacion/`,
+  comprueba la firma minisign y lo abre con el instalador del sistema (`android-{ARCH}` en
+  `latest.json`); lo escribe `scripts/release.mjs` (entrada `android-aarch64`), no el trabajo
+  `android` de `release.yml`, que solo sube el `.apk` y su `.sig` (con `--app-version`).
+  `actualizar-local` (feature de Cargo para probar con un `latest.json` local) **nunca** se activa
+  en el CI ni en una release. 🛑 **La clave de firma del APK** (`keystore.properties` local, secretos
+  `ANDROID_KEY_ALIAS`/`ANDROID_KEY_PASSWORD`/`ANDROID_KEY_BASE64`; los comandos, en
+  `plans/20261025 - version-movil/lista-de-pablo.md`) es tan insustituible como la del actualizador:
+  un APK firmado con otra no se instala encima y desinstalar borra la biblioteca.
+- **Pasar decks entre equipos** (Pablo, 02/11/2026): `src-tauri/src/pasar/` (ALPN
+  `proxy-builder/deck/1` en **el mismo nodo** que la mesa; código `PBD1-` frente al `PB1-` de
+  partida; «equipos cerca» por mDNS con `iroh-mdns-address-lookup`; QR en Rust; oferta ≤ 64 KiB; el
+  `.pbdeck` por stream, ≤ 500 MB), `features/pasar/` y `lib/escaner.ts` (la única entrada al plugin
+  de escanear). El código vale también a distancia por los relés (cifrado de punta a punta, sin
+  cuenta). 🛑 Un bucle de `accept` por nodo: quien acepta conexiones en él llama a
+  `pasar::ceder(ep.id())` y reparte `ALPN_DECK` a `Mesa::atender_deck`. «Es el mismo deck» =
+  linaje (`deck_linaje`, migración 0009, aparte del deck y sin tocar `updated_at`; viaja en
+  `Biblioteca` del `.pbdeck`); `proxy_core::compartir::sin_proxies` quita las proxies conservando
+  los ids de carta; «Reemplazar» conserva id, nombre, etiquetas, favorito, notas, idioma e
+  historial del deck de aquí. Los tipos de `ts-rs` con nombre genérico llevan `#[ts(rename)]`
+  (`ts-rs` escribe por nombre y se pisan).
+  🛑 Todo lo que escriba en Rust un deck que puede estar abierto en el editor (reemplazar,
+  completar imágenes) pasa antes por `prestarDeck` (`deck-store.ts`): guarda lo pendiente, para
+  el autoguardado y recarga al terminar; si no, el autoguardado pisa lo que escribió Rust.
+  Reemplazar se deshace con la copia de antes si algo falla (`package.rs`, `Copia`). Sin secreto
+  solo entra un equipo con camino directo a una IP de la red local (y el código de 6 cifras). El
+  bucle de `accept` de `pasar/` vive solo mientras «Recibir» está abierto. `compartir_fichero`
+  solo acepta una URI `content://` o un fichero dentro de `app_cache_dir`. El `MulticastLock` se
+  pide por `UsoMulticast` (`android.rs` lleva la cuenta). Los fallos de red que no son HTTP, con
+  `error::red_sin_http`. Si en la release solo falla el trabajo `android`, `release.mjs` avisa y
+  sigue sin la entrada `android-aarch64`.
 
 ## Forma de trabajo
 
