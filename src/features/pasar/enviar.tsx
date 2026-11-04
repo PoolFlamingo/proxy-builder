@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import type { DestinoPasar } from "@/bindings/DestinoPasar";
 import type { EstadoEmisor } from "@/bindings/EstadoEmisor";
 import type { InfoPaquete } from "@/bindings/InfoPaquete";
+import type { ModoPaquete } from "@/bindings/ModoPaquete";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,6 @@ import { DialogCuerpo, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useBiblioteca } from "@/features/library/store";
 import {
 	abrirAjustesDeLaCamara,
@@ -26,14 +26,15 @@ import {
 	formatoCodigo6,
 	pareceCodigoDeDeck,
 	pesar,
+	pesoDe,
 	porcentaje,
 	textoDeError,
 } from "./cuentas";
 import { useCerca, useEmisor } from "./estado";
-import { Resultados } from "./piezas";
+import { Resultados, SelectorModo } from "./piezas";
 
 /**
- * **«Enviar»**: qué decks (con o sin proxies) y a quién: uno de los equipos de
+ * **«Enviar»**: qué decks, en qué modo y a quién: uno de los equipos de
  * la red local o el código de «Recibir» (pegado o leído del QR). Después, lo
  * que va pasando. Al irse de aquí, lo que estuviera en marcha se cancela.
  */
@@ -47,7 +48,7 @@ export function PanelEnviar({
 	const { t, mensaje } = useLang();
 	const decks = useBiblioteca((s) => s.decks);
 	const [ids, setIds] = useState<string[]>(idsIniciales);
-	const [conProxies, setConProxies] = useState(true);
+	const [modo, setModo] = useState<ModoPaquete>("optimizado");
 	const [info, setInfo] = useState<Record<string, InfoPaquete>>({});
 	const [codigo, setCodigo] = useState("");
 	const [errorCodigo, setErrorCodigo] = useState<string | null>(null);
@@ -103,16 +104,17 @@ export function PanelEnviar({
 
 	const elegidos = useMemo(() => (decks ?? []).filter((d) => ids.includes(d.id)), [decks, ids]);
 	const hayProxies = ids.some((id) => info[id]?.proxies);
-	const peso = ids.reduce(
-		(n, id) => n + ((conProxies ? info[id]?.tamano : info[id]?.tamanoOriginales) ?? 0),
-		0,
-	);
+	const peso = ids.reduce((n, id) => n + pesoDe(info[id], hayProxies ? modo : "sinProxies"), 0);
 
 	const lanzar = useCallback(
 		async (destino: DestinoPasar) => {
 			setEnviando(true);
 			try {
-				await call("pasar_enviar", { destino, decks: ids, conProxies: conProxies && hayProxies });
+				await call("pasar_enviar", {
+					destino,
+					decks: ids,
+					modo: hayProxies ? modo : "sinProxies",
+				});
 				setPrimero(await call("pasar_emisor_estado"));
 			} catch (e) {
 				toast.error(textoDeError(e, t, mensaje));
@@ -120,7 +122,7 @@ export function PanelEnviar({
 				setEnviando(false);
 			}
 		},
-		[ids, conProxies, hayProxies, t, mensaje],
+		[ids, modo, hayProxies, t, mensaje],
 	);
 
 	const enviarCodigo = useCallback(
@@ -202,35 +204,22 @@ export function PanelEnviar({
 						)}
 						{elegidos.length > 0 && (
 							<p className="text-muted-foreground">
-								{t("{n} decks elegidos", { n: elegidos.length })} · {pesar(peso)}
+								{t("{n} decks elegidos", { n: elegidos.length })} ·{" "}
+								{hayProxies && modo === "optimizado" ? "≈ " : ""}
+								{pesar(peso)}
 							</p>
 						)}
 					</Bloque>
 
 					{hayProxies && (
-						<Bloque titulo={t("Con o sin proxies")}>
-							<ToggleGroup
-								type="single"
-								variant="outline"
-								size="sm"
-								value={conProxies ? "con" : "sin"}
-								onValueChange={(v) => v && setConProxies(v === "con")}
-								className="w-full flex-wrap"
-							>
-								<ToggleGroupItem value="con" className="h-auto min-h-7 flex-1 px-2 py-1 text-xs">
-									{t("Con proxies")}
-								</ToggleGroupItem>
-								<ToggleGroupItem value="sin" className="h-auto min-h-7 flex-1 px-2 py-1 text-xs">
-									{t("Sin proxies")}
-								</ToggleGroupItem>
-							</ToggleGroup>
-							<p className="text-[11px] leading-snug text-muted-foreground">
-								{conProxies
-									? t("Van tus imágenes propias y tus diseños.")
-									: t(
-											"Solo van las cartas originales: las propias vinculadas pasan a su carta y quien recibe baja las imágenes.",
-										)}
-							</p>
+						<Bloque titulo={t("Cómo enviarlo")}>
+							<SelectorModo
+								modo={modo}
+								onCambio={setModo}
+								sinProxies={t(
+									"Solo van las cartas originales: las propias vinculadas pasan a su carta y quien recibe baja las imágenes.",
+								)}
+							/>
 						</Bloque>
 					)}
 
@@ -356,6 +345,40 @@ function VistaEmisor({
 					)}
 					{estado.fase === "esperandoRespuesta" && (
 						<Espera texto={t("Esperando a que «{nombre}» elija qué quiere…", { nombre: quien })} />
+					)}
+					{estado.fase === "preparando" && (
+						<div className="flex flex-col gap-1.5">
+							<div className="flex items-center justify-between">
+								<span className="truncate">
+									{p
+										? t("Preparando «{nombre}» ({i}/{total})", {
+												nombre: p.nombre,
+												i: Math.min(p.decksHechos + 1, p.decksTotal),
+												total: p.decksTotal,
+											})
+										: t("Preparando…")}
+								</span>
+								<span className="tabular-nums text-muted-foreground">{porcentaje(p)} %</span>
+							</div>
+							<Progress value={porcentaje(p)} />
+						</div>
+					)}
+					{estado.fase === "preparando" && (
+						<div className="flex flex-col gap-1.5">
+							<div className="flex items-center justify-between">
+								<span className="truncate">
+									{p
+										? t("Preparando «{nombre}» ({i}/{total})", {
+												nombre: p.nombre,
+												i: Math.min(p.decksHechos + 1, p.decksTotal),
+												total: p.decksTotal,
+											})
+										: t("Preparando…")}
+								</span>
+								<span className="tabular-nums text-muted-foreground">{porcentaje(p)} %</span>
+							</div>
+							<Progress value={porcentaje(p)} />
+						</div>
 					)}
 					{estado.fase === "enviando" && (
 						<div className="flex flex-col gap-1.5">

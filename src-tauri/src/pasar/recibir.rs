@@ -52,7 +52,9 @@ const ESPERA_HOLA: Duration = Duration::from_secs(10);
 const ESPERA_PETICION: Duration = Duration::from_secs(60);
 const ESPERA_OFERTA: Duration = Duration::from_secs(60);
 const ESPERA_DECISION: Duration = Duration::from_secs(15 * 60);
-const ESPERA_PAQUETE: Duration = Duration::from_secs(60);
+/// Quien envía hace cada paquete justo antes de mandarlo, y comprimirlo puede
+/// llevar minutos en un móvil. Si se va, la conexión se cierra y se nota antes.
+const ESPERA_PAQUETE: Duration = Duration::from_secs(10 * 60);
 const ESPERA_FIN: Duration = Duration::from_secs(20);
 /// Cada cuánto se avisa de cómo va un paquete.
 const CADA_AVISO: Duration = Duration::from_millis(100);
@@ -249,6 +251,16 @@ pub fn cancelar<E: Entorno>(e: &E) {
     }
     if libre {
         e.multicast(UsoMulticast::Recibir, false);
+    }
+}
+
+/// Cambia el nombre con el que «Recibir» se anuncia en la red local.
+pub fn renombrar<E: Entorno>(e: &E, nombre: &str) {
+    if let Some(a) = cerrojo(&e.estado().pasar.receptor)
+        .as_ref()
+        .and_then(|r| r.anuncio.as_ref())
+    {
+        a.cambiar_apodo(nombre);
     }
 }
 
@@ -526,9 +538,7 @@ async fn interior<E: Entorno>(e: &E, gen: u64, conn: &Connection) -> Salida {
     }
 
     // Dentro. Desde aquí, lo que pase es un intercambio entero.
-    let mi_apodo = crate::red::identidad::leer(&e.estado().db, &e.estado().red.clave())
-        .map(|i| i.apodo)
-        .unwrap_or_default();
+    let mi_apodo = super::nombre_equipo(e);
     mutar(e, gen, |r| {
         r.estado.fase = FaseReceptor::Conectado;
         r.estado.remoto = Some(remoto.clone());
@@ -909,6 +919,7 @@ mod tests {
                 linaje: Some("l".into()),
                 actualizado: Some(5),
                 portada: None,
+                optimizado: false,
             },
             conflicto: conflicto.then(|| Conflicto {
                 deck_id: "local".into(),

@@ -28,6 +28,7 @@ use iroh_mdns_address_lookup::{DiscoveryEvent, MdnsAddressLookup};
 use sha2::{Digest, Sha256};
 use tokio::task::AbortHandle;
 
+use super::cerrojo;
 use super::protocolo::{apodo_limpio, MAX_APODO};
 use super::tipos::Cerca;
 use crate::error::{AppError, AppResult, ErrorCode};
@@ -141,12 +142,14 @@ fn mdns(id: EndpointId, anunciar: bool) -> AppResult<MdnsAddressLookup> {
 pub struct Anuncio {
     _mdns: MdnsAddressLookup,
     tarea: AbortHandle,
+    apodo: Arc<Mutex<Option<UserData>>>,
 }
 
 impl Anuncio {
     pub fn nuevo(ep: &Endpoint, apodo: &str) -> AppResult<Anuncio> {
         let m = mdns(ep.id(), true)?;
-        let apodo: Option<UserData> = apodo_limpio(apodo).parse().ok();
+        let apodo = Arc::new(Mutex::new(apodo_limpio(apodo).parse().ok()));
+        let actual = apodo.clone();
         let ep = ep.clone();
         let publicador = m.clone();
         let tarea = tokio::spawn(async move {
@@ -158,7 +161,7 @@ impl Anuncio {
                     .filter(|a| matches!(a, TransportAddr::Ip(s) if direccion_util(&s.ip())))
                     .collect();
                 let mut datos = EndpointData::new(ips);
-                datos.set_user_data(apodo.clone());
+                datos.set_user_data(cerrojo(&actual).clone());
                 publicador.publish(&datos);
                 tokio::time::sleep(REPUBLICAR).await;
             }
@@ -166,7 +169,13 @@ impl Anuncio {
         Ok(Anuncio {
             _mdns: m,
             tarea: tarea.abort_handle(),
+            apodo,
         })
+    }
+
+    /// El nombre nuevo sale con la siguiente publicación (`REPUBLICAR`).
+    pub fn cambiar_apodo(&self, apodo: &str) {
+        *cerrojo(&self.apodo) = apodo_limpio(apodo).parse().ok();
     }
 }
 

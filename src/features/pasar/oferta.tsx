@@ -54,7 +54,9 @@ function TarjetaDeck({
 	const nombreOpcion = (o: EleccionPasar) =>
 		o === "conProxies"
 			? d.proxies
-				? t("Con proxies ({peso})", { peso: pesar(d.tamano, lang) })
+				? t("Con proxies ({peso})", {
+						peso: `${d.optimizado ? "≈ " : ""}${pesar(d.tamano, lang)}`,
+					})
 				: t("Recibirlo ({peso})", { peso: pesar(d.tamano, lang) })
 			: o === "soloOriginales"
 				? t("Solo cartas originales ({peso})", { peso: pesar(d.tamanoOriginales, lang) })
@@ -187,6 +189,13 @@ function Conflicto({
 				<p className="text-[11px] leading-snug text-muted-foreground">
 					{t(
 						"Se queda tu deck con sus etiquetas, favorito, notas, idioma y partidas; toma las cartas, las listas para jugar y la portada del que llega.",
+					)}
+				</p>
+			)}
+			{resolucion === "reemplazar" && deck.deck.optimizado && (
+				<p className="text-[11px] leading-snug text-amber-500">
+					{t(
+						"Este deck llega comprimido: si reemplazas el tuyo, puedes perder sus imágenes originales. Para conservarlas, elige «Guardar los dos» o pide que te lo envíen en «Calidad original».",
 					)}
 				</p>
 			)}

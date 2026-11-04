@@ -8,6 +8,7 @@
 //! - `instalar_apk`: el instalador de Android, con el permiso de «instalar
 //!   apps desconocidas».
 //! - `nombre_de_uri`: el nombre que Android da a un `content://`.
+//! - `nombre_equipo`: el nombre del dispositivo, para presentarse a otros equipos.
 //! - Abrir un fichero desde otra app (`ACTION_VIEW`): la URI llega aquí.
 //!
 //! En escritorio y en iOS el plugin se registra sin hacer nada.

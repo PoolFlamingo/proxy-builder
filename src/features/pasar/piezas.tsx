@@ -1,12 +1,67 @@
 import type { EstadoResultado } from "@/bindings/EstadoResultado";
+import type { InfoPaquete } from "@/bindings/InfoPaquete";
+import type { ModoPaquete } from "@/bindings/ModoPaquete";
 import type { ResultadoPasar } from "@/bindings/ResultadoPasar";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
-import { textoDeError } from "./cuentas";
+import { pesar, pesoDe, textoDeError } from "./cuentas";
 import type { AvanceImagenes } from "./imagenes";
+
+/**
+ * Cómo va un paquete: optimizado, en calidad original o sin proxies. Con `info`
+ * enseña lo que pesa cada opción. `sinProxies`: lo que le pasa a quien lo reciba.
+ */
+export function SelectorModo({
+	modo,
+	onCambio,
+	info,
+	sinProxies,
+}: {
+	modo: ModoPaquete;
+	onCambio: (m: ModoPaquete) => void;
+	info?: InfoPaquete;
+	sinProxies: string;
+}) {
+	const { t, lang } = useLang();
+	const peso = (m: ModoPaquete) => pesar(pesoDe(info, m), lang);
+	return (
+		<>
+			<ToggleGroup
+				type="single"
+				variant="outline"
+				size="sm"
+				value={modo}
+				onValueChange={(v) => v && onCambio(v as ModoPaquete)}
+				className="w-full flex-wrap"
+			>
+				<ToggleGroupItem value="optimizado" className="h-auto min-h-7 flex-1 px-2 py-1 text-xs">
+					{info ? t("Optimizado ({peso})", { peso: `≈ ${peso("optimizado")}` }) : t("Optimizado")}
+				</ToggleGroupItem>
+				<ToggleGroupItem value="original" className="h-auto min-h-7 flex-1 px-2 py-1 text-xs">
+					{info
+						? t("Calidad original ({peso})", { peso: peso("original") })
+						: t("Calidad original")}
+				</ToggleGroupItem>
+				<ToggleGroupItem value="sinProxies" className="h-auto min-h-7 flex-1 px-2 py-1 text-xs">
+					{info ? t("Sin proxies ({peso})", { peso: peso("sinProxies") }) : t("Sin proxies")}
+				</ToggleGroupItem>
+			</ToggleGroup>
+			<p className="text-[11px] leading-snug text-muted-foreground">
+				{modo === "optimizado"
+					? t(
+							"Van tus imágenes propias y tus diseños, comprimidos para que pesen mucho menos. Al imprimir no se nota y tus originales no cambian.",
+						)
+					: modo === "original"
+						? t("Van tus imágenes propias y tus diseños tal como están, sin comprimir.")
+						: sinProxies}
+			</p>
+		</>
+	);
+}
 
 const ICONO: Record<EstadoResultado, { icono: string; clase: string }> = {
 	hecho: { icono: "lucide:check", clase: "text-emerald-500" },

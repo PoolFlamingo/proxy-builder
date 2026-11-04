@@ -1,7 +1,7 @@
 //! **Enviar decks**: el lado de quien manda.
 //!
 //! Se elige a quién (uno de los equipos cerca o un código `PBD1-…` pegado o
-//! leído de un QR), qué decks y si con o sin proxies. Después: `Hola` →
+//! leído de un QR), qué decks y en qué modo (`package::Modo`). Después: `Hola` →
 //! `Oferta` (lo que cuenta cada deck, ≤ 64 KiB) → espera lo que elija quien
 //! recibe → un paquete `.pbdeck` por cada deck aceptado, hecho en la caché
 //! justo antes de mandarlo y borrado al acabar.
@@ -28,7 +28,7 @@ use super::tipos::{
 };
 use super::{cerrojo, Entorno, Temporal, CIERRE_CANCELADO, CIERRE_FIN, CIERRE_NO_ESPERADO};
 use crate::error::{AppError, AppResult, ErrorCode};
-use crate::package;
+use crate::package::{self, Modo};
 use crate::red::codigo::Codigo;
 use crate::red::nodo::ALPN_DECK;
 use crate::store::{decks, linaje};
@@ -139,7 +139,7 @@ pub async fn enviar<E: Entorno>(
     ep: Endpoint,
     destino: Destino,
     ids: Vec<String>,
-    con_proxies: bool,
+    modo: Modo,
 ) -> AppResult<()> {
     let st = e.estado();
     if ids.is_empty() || ids.len() > MAX_DECKS {
@@ -149,13 +149,8 @@ pub async fn enviar<E: Entorno>(
     let mut tamanos = Vec::with_capacity(ids.len());
     for id in &ids {
         let deck = decks::open(&st.db, id)?;
-        let hay = proxy_core::compartir::resumen_proxies(&deck).hay();
-        let sin = package::tamano_estimado(&deck, &st.blobs, &st.db, true);
-        let con = if hay && con_proxies {
-            package::tamano_estimado(&deck, &st.blobs, &st.db, false)
-        } else {
-            sin
-        };
+        let sin = package::tamano_estimado(&deck, &st.blobs, &st.db, Modo::SinProxies);
+        let con = package::tamano_estimado(&deck, &st.blobs, &st.db, modo);
         tamanos.push((con, sin));
     }
     comprobar_tamanos(&tamanos)?;
@@ -203,7 +198,7 @@ pub async fn enviar<E: Entorno>(
     }
     let e2 = e.clone();
     let tarea = tokio::spawn(async move {
-        let r = sesion(&e2, gen, ep, addr, secreto, con_aceptacion, ids, con_proxies).await;
+        let r = sesion(&e2, gen, ep, addr, secreto, con_aceptacion, ids, modo).await;
         match r {
             Ok(()) => {
                 mutar(&e2, gen, |r| {
@@ -301,11 +296,11 @@ fn portada_de(estado: &crate::state::AppState, deck: &proxy_core::model::Deck) -
     Some(base64::engine::general_purpose::STANDARD.encode(jpeg))
 }
 
-/// Lo que se cuenta de cada deck (con o sin proxies).
+/// Lo que se cuenta de cada deck.
 pub(crate) fn oferta_de<E: Entorno>(
     e: &E,
     ids: &[String],
-    con_proxies: bool,
+    modo: Modo,
 ) -> AppResult<Vec<DeckOfrecido>> {
     let st = e.estado();
     let mut out = Vec::new();
@@ -313,18 +308,22 @@ pub(crate) fn oferta_de<E: Entorno>(
         let deck = decks::open(&st.db, id)?;
         let lin = linaje::de(&st.db, id)?;
         let hay = proxy_core::compartir::resumen_proxies(&deck).hay();
-        let con = package::tamano_estimado(&deck, &st.blobs, &st.db, false);
-        let sin = package::tamano_estimado(&deck, &st.blobs, &st.db, true);
-        let manda_proxies = hay && con_proxies;
+        let sin = package::tamano_estimado(&deck, &st.blobs, &st.db, Modo::SinProxies);
+        let manda_proxies = hay && modo != Modo::SinProxies;
         out.push(DeckOfrecido {
             nombre: nombre_para_oferta(&deck.name),
             cartas: deck.cards.len() as u32,
             proxies: manda_proxies,
-            tamano: if manda_proxies { con } else { sin },
+            tamano: if manda_proxies {
+                package::tamano_estimado(&deck, &st.blobs, &st.db, modo)
+            } else {
+                sin
+            },
             tamano_originales: sin,
             linaje: Some(lin.linaje),
             actualizado: Some(lin.actualizado),
             portada: portada_de(st, &deck),
+            optimizado: manda_proxies && modo == Modo::Optimizado,
         });
     }
     Ok(out)
@@ -339,7 +338,7 @@ async fn sesion<E: Entorno>(
     secreto: Option<String>,
     con_aceptacion: bool,
     ids: Vec<String>,
-    con_proxies: bool,
+    modo: Modo,
 ) -> Result<(), Fin> {
     let st = e.estado();
     let conn = match timeout(ESPERA_CONEXION, ep.connect(addr, ALPN_DECK)).await {
@@ -355,9 +354,7 @@ async fn sesion<E: Entorno>(
     mutar(e, gen, |r| r.conn = Some(conn.clone()));
     let remoto_id = conn.remote_id();
     let codigo6 = encontrar::codigo6(ep.id(), remoto_id);
-    let yo = crate::red::identidad::leer(&st.db, &st.red.clave())
-        .map(|i| i.apodo)
-        .unwrap_or_default();
+    let yo = super::nombre_equipo(e);
 
     let (mut tx, mut rx) = conn.open_bi().await.map_err(|_| Fin::Cancelado)?;
     escribir(
@@ -417,7 +414,7 @@ async fn sesion<E: Entorno>(
     });
 
     // La oferta.
-    let mut oferta = super::bloqueante(|| oferta_de(e, &ids, con_proxies))?;
+    let mut oferta = super::bloqueante(|| oferta_de(e, &ids, modo))?;
     let mut trama = serde_json::to_vec(&AlReceptor::Oferta {
         decks: oferta.clone(),
     })
@@ -471,7 +468,7 @@ async fn sesion<E: Entorno>(
         })
         .collect();
     mutar(e, gen, |r| {
-        r.estado.fase = FaseEmisor::Enviando;
+        r.estado.fase = FaseEmisor::Preparando;
         r.estado.resultados = resultados.clone();
     });
 
@@ -483,14 +480,39 @@ async fn sesion<E: Entorno>(
         }
         let nombre = oferta[i].nombre.clone();
         // Lo que el emisor decidió manda: nunca más proxies de los que quiso.
-        let sin = !con_proxies || *eleccion == Eleccion::SoloOriginales;
+        let modo_deck = if *eleccion == Eleccion::SoloOriginales {
+            Modo::SinProxies
+        } else {
+            modo
+        };
         let temporal = Temporal::nueva(st).map_err(|er| Fin::Error(er.into()))?;
         let ruta = temporal.0.join("deck.pbdeck");
+        // Comprimir puede llevar un rato: se ve cómo va y se puede cancelar.
+        let avisar = |hechas: u32, total: u32| {
+            mutar(e, gen, |r| {
+                if es_final(r.estado.fase) {
+                    return false;
+                }
+                r.estado.fase = FaseEmisor::Preparando;
+                r.estado.progreso = Some(Progreso {
+                    indice: i as u32,
+                    nombre: nombre.clone(),
+                    hechos: u64::from(hechas),
+                    total: u64::from(total),
+                    decks_hechos: hechos,
+                    decks_total: aceptados,
+                });
+                true
+            })
+            .unwrap_or(false)
+        };
         let (tamano, huella) = super::bloqueante(|| -> AppResult<(u64, String)> {
             let deck = decks::open(&st.db, id)?;
-            let tamano = package::export_en_fichero(&deck, &ruta, &st.blobs, &st.db, sin)?;
+            let tamano =
+                package::export_en_fichero(&deck, &ruta, &st.blobs, &st.db, modo_deck, &avisar)?;
             Ok((tamano, huella_de(&ruta)?))
         })?;
+        mutar(e, gen, |r| r.estado.fase = FaseEmisor::Enviando);
         // Lo estimado podía caber y el paquete de verdad no: el otro lo
         // cortaría a medias.
         if tamano > MAX_PAQUETE {

@@ -244,7 +244,7 @@ async fn tres_decks_uno_con_proxies_uno_solo_originales_y_uno_rechazado() {
         ep_a.clone(),
         Destino::Codigo { texto: codigo },
         vec![d1.id.clone(), d2.id.clone(), d3.id.clone()],
-        true,
+        crate::package::Modo::Original,
     )
     .await
     .unwrap();
@@ -333,6 +333,57 @@ async fn tres_decks_uno_con_proxies_uno_solo_originales_y_uno_rechazado() {
 }
 
 #[tokio::test]
+async fn un_deck_optimizado_llega_en_jpeg_y_el_de_aqui_no_cambia() {
+    let (a, b) = (equipo(), equipo());
+    let (ep_a, ep_b) = (nodo().await, nodo().await);
+    let mut x = 9u32;
+    let foto = image::RgbaImage::from_fn(400, 300, |i, j| {
+        x = x.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
+        let r = (x >> 28) as u8;
+        image::Rgba([(i / 2) as u8 + r, (j / 2) as u8 + r, r, 255])
+    });
+    let png = proxy_core::imaging::encode::png(&foto).unwrap();
+    let propia =
+        a.st.blobs
+            .put_bytes(&a.st.db, &png, ImageOrigin::Upload)
+            .unwrap();
+    let mut d = deck(&a, "Ligero", true, 10);
+    d.cards[1].front = Some(propia.clone());
+    decks::save(&a.st.db, &d).unwrap();
+    let codigo = abrir(&b, &ep_b).await;
+
+    enviar::enviar(
+        &a,
+        ep_a.clone(),
+        Destino::Codigo { texto: codigo },
+        vec![d.id.clone()],
+        crate::package::Modo::Optimizado,
+    )
+    .await
+    .unwrap();
+    let s = fase_receptor(&b, FaseReceptor::Oferta).await;
+    assert!(s.oferta[0].deck.optimizado);
+    recibir::responder(&b, vec![dec(0, Eleccion::ConProxies, None)]).unwrap();
+    fase_receptor(&b, FaseReceptor::Terminado).await;
+    fase_emisor(&a, FaseEmisor::Terminado).await;
+
+    let lista = decks::list(&b.st.db).unwrap();
+    let n = decks::open(&b.st.db, &lista[0].id).unwrap();
+    let f = n.cards[1].front.as_ref().unwrap();
+    assert_ne!(f.blob, propia.blob);
+    assert_eq!(
+        b.st.blobs.ficha(&b.st.db, &f.blob).unwrap().unwrap().ext,
+        "jpg"
+    );
+    assert_eq!((f.width, f.height), (400, 300));
+    // El que envía conserva su PNG.
+    assert_eq!(decks::open(&a.st.db, &d.id).unwrap(), d);
+    assert!(a.st.blobs.locate(&a.st.db, &propia.blob).unwrap().is_some());
+    ep_a.close().await;
+    ep_b.close().await;
+}
+
+#[tokio::test]
 async fn un_codigo_de_un_solo_uso_y_uno_malo_no_dejan_pasar() {
     let (a, b) = (equipo(), equipo());
     let (ep_a, ep_b) = (nodo().await, nodo().await);
@@ -347,7 +398,7 @@ async fn un_codigo_de_un_solo_uso_y_uno_malo_no_dejan_pasar() {
         ep_a.clone(),
         Destino::Codigo { texto: de_partida },
         vec![d.id.clone()],
-        true,
+        crate::package::Modo::Original,
     )
     .await
     .unwrap_err();
@@ -365,7 +416,7 @@ async fn un_codigo_de_un_solo_uso_y_uno_malo_no_dejan_pasar() {
         ep_a.clone(),
         Destino::Codigo { texto: malo },
         vec![d.id.clone()],
-        true,
+        crate::package::Modo::Original,
     )
     .await
     .unwrap();
@@ -382,7 +433,7 @@ async fn un_codigo_de_un_solo_uso_y_uno_malo_no_dejan_pasar() {
             texto: texto.clone(),
         },
         vec![d.id.clone()],
-        true,
+        crate::package::Modo::Original,
     )
     .await
     .unwrap();
@@ -399,7 +450,7 @@ async fn un_codigo_de_un_solo_uso_y_uno_malo_no_dejan_pasar() {
         ep_a.clone(),
         Destino::Codigo { texto },
         vec![d.id.clone()],
-        true,
+        crate::package::Modo::Original,
     )
     .await
     .unwrap();
@@ -485,7 +536,7 @@ async fn un_deck_que_ya_esta_pregunta_y_reemplazar_conserva_lo_de_aqui() {
         ep_a.clone(),
         Destino::Codigo { texto },
         vec![d.id.clone()],
-        true,
+        crate::package::Modo::Original,
     )
     .await
     .unwrap();
@@ -529,7 +580,7 @@ async fn un_deck_que_ya_esta_pregunta_y_reemplazar_conserva_lo_de_aqui() {
         ep_a.clone(),
         Destino::Codigo { texto },
         vec![d.id.clone()],
-        true,
+        crate::package::Modo::Original,
     )
     .await
     .unwrap();
@@ -552,7 +603,7 @@ async fn un_deck_que_ya_esta_pregunta_y_reemplazar_conserva_lo_de_aqui() {
         ep_a.clone(),
         Destino::Codigo { texto },
         vec![d.id.clone()],
-        true,
+        crate::package::Modo::Original,
     )
     .await
     .unwrap();
@@ -580,7 +631,7 @@ async fn un_deck_que_ya_esta_pregunta_y_reemplazar_conserva_lo_de_aqui() {
         ep_a.clone(),
         Destino::Codigo { texto },
         vec![d.id.clone()],
-        true,
+        crate::package::Modo::Original,
     )
     .await
     .unwrap();
@@ -648,7 +699,7 @@ async fn cortar_a_la_mitad_no_deja_nada_a_medias() {
         ep_a.clone(),
         Destino::Codigo { texto },
         vec![d.id.clone()],
-        true,
+        crate::package::Modo::Original,
     )
     .await
     .unwrap();
@@ -676,7 +727,7 @@ async fn cancelar_desde_quien_recibe_corta_el_envio() {
         ep_a.clone(),
         Destino::Codigo { texto },
         vec![d.id.clone()],
-        true,
+        crate::package::Modo::Original,
     )
     .await
     .unwrap();
@@ -754,6 +805,7 @@ mod tramposo {
             linaje: None,
             actualizado: None,
             portada: None,
+            optimizado: false,
         };
         escribir(
             &mut tx,
@@ -797,6 +849,7 @@ mod tramposo {
             linaje: None,
             actualizado: None,
             portada: None,
+            optimizado: false,
         };
         escribir(
             &mut tx,
@@ -860,7 +913,7 @@ async fn el_codigo_de_6_cifras_acepta_a_alguien_de_la_red_local() {
             id: ep_b.id().to_string(),
         },
         vec![d.id.clone()],
-        true,
+        crate::package::Modo::Original,
     )
     .await
     .unwrap();
@@ -889,7 +942,7 @@ async fn el_codigo_de_6_cifras_acepta_a_alguien_de_la_red_local() {
             id: ep_b.id().to_string(),
         },
         vec![d.id.clone()],
-        true,
+        crate::package::Modo::Original,
     )
     .await
     .unwrap();
@@ -936,7 +989,7 @@ async fn el_codigo_vale_por_el_rele_sin_direcciones_directas() {
         ep_a.clone(),
         Destino::Codigo { texto: solo_rele },
         vec![d.id.clone()],
-        true,
+        crate::package::Modo::Original,
     )
     .await
     .unwrap();

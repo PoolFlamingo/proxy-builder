@@ -145,6 +145,25 @@ pub fn nombre_de_uri(_app: &AppHandle, _uri: &str) -> Option<String> {
     None
 }
 
+/// El nombre de este equipo según el sistema: el que le puso la persona en
+/// Android y, si no hay, su marca y modelo; en escritorio, el del ordenador.
+#[cfg(target_os = "android")]
+pub fn nombre_equipo(app: &AppHandle) -> Option<String> {
+    plugin(app).nombre_equipo().ok().flatten()
+}
+
+#[cfg(not(target_os = "android"))]
+pub fn nombre_equipo(_app: &AppHandle) -> Option<String> {
+    sin_dominio(&gethostname::gethostname().to_string_lossy())
+}
+
+/// `pablo-pc.local` → `pablo-pc`; `localhost` no le dice nada a nadie.
+#[cfg(not(target_os = "android"))]
+fn sin_dominio(nombre: &str) -> Option<String> {
+    let corto = nombre.split('.').next().unwrap_or_default().trim();
+    (!corto.is_empty() && !corto.eq_ignore_ascii_case("localhost")).then(|| corto.to_string())
+}
+
 /// Pide que cada fichero que otra app abra con esta (`ACTION_VIEW`, incluido
 /// el que arrancó la app) llegue a `f` como `content://`.
 #[cfg(target_os = "android")]
@@ -160,6 +179,15 @@ pub fn al_abrir(_app: &AppHandle, _f: impl Fn(String) + Send + Sync + 'static) -
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(not(target_os = "android"))]
+    #[test]
+    fn el_nombre_del_ordenador_va_sin_dominio() {
+        assert_eq!(sin_dominio("pablo-pc.local").as_deref(), Some("pablo-pc"));
+        assert_eq!(sin_dominio("Zeus").as_deref(), Some("Zeus"));
+        assert_eq!(sin_dominio("localhost"), None);
+        assert_eq!(sin_dominio(""), None);
+    }
 
     #[test]
     fn el_multicast_se_suelta_cuando_no_lo_usa_nadie() {

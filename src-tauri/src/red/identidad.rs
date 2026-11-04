@@ -156,6 +156,13 @@ pub fn leer(db: &Db, clave: &SecretKey) -> AppResult<Identidad> {
     })
 }
 
+/// Cambia solo el apodo: el nombre con el que este equipo se presenta al pasar
+/// decks. Vacío, vuelve al que le da el sistema.
+pub fn guardar_apodo(db: &Db, apodo: &str) -> AppResult<()> {
+    let apodo = crate::pasar::protocolo::apodo_limpio(apodo);
+    settings::set(db, APODO, &apodo)
+}
+
 /// Cambia el apodo (sin espacios de más y hasta `MAX_APODO` caracteres) y el avatar.
 pub fn guardar(db: &Db, apodo: &str, avatar: Option<&str>) -> AppResult<()> {
     let apodo = apodo.split_whitespace().collect::<Vec<_>>().join(" ");

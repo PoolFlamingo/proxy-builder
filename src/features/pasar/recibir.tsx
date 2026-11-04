@@ -7,6 +7,7 @@ import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { DialogCuerpo, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { call } from "@/lib/ipc";
 import { abrirDeck, type Devolver, prestarDeck } from "@/stores/deck-store";
@@ -171,7 +172,70 @@ function Pie({ onCancelar }: { onCancelar: () => void }) {
 	);
 }
 
-/** Nada ha llegado aún: el QR, el código, el equipo en la red local. */
+/** Lo más largo que puede ser (`MAX_APODO` en Rust). */
+const MAX_NOMBRE = 32;
+
+/**
+ * Con qué nombre te ven los demás equipos. Se guarda al salir del campo o con
+ * Intro, y también si se cierra con algo escrito. Vacío vuelve al del sistema.
+ */
+function NombreEquipo() {
+	const { t, mensaje } = useLang();
+	const [nombre, setNombre] = useState("");
+	const actual = useRef("");
+	const guardado = useRef<string | null>(null);
+	const guardar = useCallback(async () => {
+		if (guardado.current === null || actual.current.trim() === guardado.current) return;
+		const pedido = actual.current;
+		guardado.current = pedido.trim();
+		try {
+			const queda = await call("pasar_nombre_set", { nombre: pedido });
+			guardado.current = queda;
+			// Si sigue escrito lo mismo, se enseña lo que ha quedado.
+			if (actual.current === pedido) {
+				actual.current = queda;
+				setNombre(queda);
+			}
+		} catch (e) {
+			toast.error(mensaje(e));
+		}
+	}, [mensaje]);
+	useEffect(() => {
+		let vivo = true;
+		call("pasar_nombre", {})
+			.then((n) => {
+				if (!vivo) return;
+				guardado.current = n;
+				actual.current = n;
+				setNombre(n);
+			})
+			.catch(() => {});
+		return () => {
+			vivo = false;
+			void guardar();
+		};
+	}, [guardar]);
+	return (
+		<label className="flex w-full flex-col gap-1">
+			<span className="text-muted-foreground">{t("Nombre de este equipo")}</span>
+			<Input
+				value={nombre}
+				maxLength={MAX_NOMBRE}
+				onChange={(e) => {
+					actual.current = e.target.value;
+					setNombre(e.target.value);
+				}}
+				onBlur={() => void guardar()}
+				onKeyDown={(e) => {
+					if (e.key === "Enter") void guardar();
+				}}
+				className="text-xs select-text"
+			/>
+		</label>
+	);
+}
+
+/** Nada ha llegado aún: el nombre, el QR, el código, el equipo en la red local. */
 function Esperando({ estado, onCerrar }: { estado: EstadoReceptor; onCerrar: () => void }) {
 	const { t } = useLang();
 	const [ahora, setAhora] = useState(() => Date.now());
@@ -189,6 +253,7 @@ function Esperando({ estado, onCerrar }: { estado: EstadoReceptor; onCerrar: () 
 		<>
 			<DialogCuerpo>
 				<div className="flex flex-col items-center gap-3 p-1">
+					<NombreEquipo />
 					<p className="text-center text-muted-foreground">
 						{t(
 							"En el otro equipo, abre «Enviar» y lee este QR o pega el código. Si estáis en la misma red, también te verá en su lista.",

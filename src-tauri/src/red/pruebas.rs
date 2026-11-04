@@ -1572,7 +1572,7 @@ async fn pasar_un_deck_con_la_partida_abierta_no_la_corta() {
         ep_envia.clone(),
         DestinoDeck::Codigo { texto: codigo },
         vec![d.id.clone()],
-        true,
+        crate::package::Modo::Original,
     )
     .await
     .unwrap();

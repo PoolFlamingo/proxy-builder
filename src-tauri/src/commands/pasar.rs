@@ -1,6 +1,6 @@
 //! Pasar decks a otro equipo (`pasar/`), compartir y abrir el `.pbdeck` con
-//! las mismas opciones: con o sin proxies, y qué hacer si el deck ya existe
-//! aquí. Los comandos solo lanzan y consultan; lo que pasa lo cuenta el
+//! las mismas opciones: optimizado, en calidad original o sin proxies, y qué
+//! hacer si el deck ya existe aquí. Los comandos solo lanzan y consultan; lo que pasa lo cuenta el
 //! estado (`pasar://receptor`, `pasar://emisor`, `pasar://cerca`).
 
 use std::path::PathBuf;
@@ -10,7 +10,7 @@ use tauri::{AppHandle, Emitter, Manager, State};
 
 use crate::error::{AppError, AppResult, ErrorCode};
 use crate::fichero;
-use crate::package::{self, Opciones};
+use crate::package::{self, Modo, Opciones};
 use crate::pasar::encontrar::Busqueda;
 use crate::pasar::tipos::{
     Cerca, Decision, DeckOfrecido, Destino, Eleccion, EstadoEmisor, EstadoReceptor, ImagenesFin,
@@ -30,11 +30,30 @@ pub async fn pasar_recibir_abrir(
     state: State<'_, AppState>,
 ) -> AppResult<EstadoReceptor> {
     let ep = state.red.nodo().await?;
-    let apodo = crate::red::identidad::leer(&state.db, &state.red.clave())
-        .map(|i| i.apodo)
-        .unwrap_or_default();
+    let apodo = pasar::nombre_equipo(&app);
     let con_rele = crate::red::nodo::relay_de_entorno() != crate::red::nodo::Relay::Ninguno;
     pasar::recibir::abrir(&app, ep, &apodo, con_rele).await
+}
+
+/// El nombre con el que este equipo se presenta a los demás. `async`: en
+/// Android pregunta al Kotlin, que no puede esperar en el hilo principal.
+#[tauri::command]
+pub async fn pasar_nombre(app: AppHandle) -> String {
+    pasar::nombre_equipo(&app)
+}
+
+/// Lo cambia (vacío: el de fábrica) y devuelve el que queda. Si «Recibir» está
+/// abierto, los demás lo ven enseguida.
+#[tauri::command]
+pub async fn pasar_nombre_set(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    nombre: String,
+) -> AppResult<String> {
+    crate::red::identidad::guardar_apodo(&state.db, &nombre)?;
+    let queda = pasar::nombre_equipo(&app);
+    pasar::recibir::renombrar(&app, &queda);
+    Ok(queda)
 }
 
 #[tauri::command]
@@ -114,10 +133,10 @@ pub async fn pasar_enviar(
     state: State<'_, AppState>,
     destino: Destino,
     decks: Vec<String>,
-    con_proxies: bool,
+    modo: Modo,
 ) -> AppResult<()> {
     let ep = state.red.nodo().await?;
-    pasar::enviar::enviar(&app, ep, destino, decks, con_proxies).await
+    pasar::enviar::enviar(&app, ep, destino, decks, modo).await
 }
 
 /// Cancela el envío en marcha.
@@ -200,56 +219,65 @@ fn nombre_paquete(d: &Deck) -> String {
     fichero::nombre_seguro(&format!("{}.pbdeck", d.name))
 }
 
-/// Lo que pesa el paquete de un deck con y sin proxies y si lleva proxies
-/// (para elegir al compartirlo).
+/// Lo que pesa el paquete de un deck en cada modo y si lleva proxies (para
+/// elegir al compartirlo).
 #[tauri::command]
 pub fn deck_paquete_info(state: State<'_, AppState>, id: String) -> AppResult<InfoPaquete> {
     let deck = decks::open(&state.db, &id)?;
     Ok(InfoPaquete {
         proxies: proxy_core::compartir::resumen_proxies(&deck).hay(),
-        tamano: package::tamano_estimado(&deck, &state.blobs, &state.db, false),
-        tamano_originales: package::tamano_estimado(&deck, &state.blobs, &state.db, true),
+        tamano: package::tamano_estimado(&deck, &state.blobs, &state.db, Modo::Original),
+        tamano_optimizado: package::tamano_estimado(
+            &deck,
+            &state.blobs,
+            &state.db,
+            Modo::Optimizado,
+        ),
+        tamano_originales: package::tamano_estimado(
+            &deck,
+            &state.blobs,
+            &state.db,
+            Modo::SinProxies,
+        ),
     })
 }
 
-/// Guarda el deck en un `.pbdeck` (una ruta o un `content://`), con o sin
-/// proxies.
+/// Guarda el deck en un `.pbdeck` (una ruta o un `content://`), en el modo
+/// elegido.
 #[tauri::command]
 pub async fn deck_paquete_guardar(
     app: AppHandle,
     state: State<'_, AppState>,
     id: String,
     ruta: String,
-    sin_proxies: bool,
+    modo: Modo,
 ) -> AppResult<u64> {
     let deck = decks::open(&state.db, &id)?;
     if fichero::es_uri(&ruta) {
         let tmp = fichero::temporal(&app, &nombre_paquete(&deck))?;
-        let bytes = package::export_con(&deck, tmp.ruta(), &state.blobs, &state.db, sin_proxies)?;
+        let bytes = pasar::bloqueante(|| {
+            package::export_con(&deck, tmp.ruta(), &state.blobs, &state.db, modo)
+        })?;
         fichero::copiar_a(&app, &ruta, tmp.ruta())?;
         return Ok(bytes);
     }
-    package::export_con(
-        &deck,
-        &PathBuf::from(&ruta),
-        &state.blobs,
-        &state.db,
-        sin_proxies,
-    )
+    pasar::bloqueante(|| {
+        package::export_con(&deck, &PathBuf::from(&ruta), &state.blobs, &state.db, modo)
+    })
 }
 
-/// Comparte el deck con otra app del móvil (el selector del sistema), con o
-/// sin proxies: se escribe en la caché y se ofrece desde allí.
+/// Comparte el deck con otra app del móvil (el selector del sistema), en el
+/// modo elegido: se escribe en la caché y se ofrece desde allí.
 #[tauri::command]
 pub async fn deck_paquete_compartir(
     app: AppHandle,
     state: State<'_, AppState>,
     id: String,
-    sin_proxies: bool,
+    modo: Modo,
 ) -> AppResult<()> {
     let deck = decks::open(&state.db, &id)?;
     let tmp = fichero::temporal(&app, &nombre_paquete(&deck))?;
-    package::export_con(&deck, tmp.ruta(), &state.blobs, &state.db, sin_proxies)?;
+    pasar::bloqueante(|| package::export_con(&deck, tmp.ruta(), &state.blobs, &state.db, modo))?;
     let ruta = tmp.conservar();
     crate::commands::fichero::compartir_fichero(app, ruta.to_string_lossy().into_owned()).await
 }
@@ -277,6 +305,7 @@ pub async fn paquete_leer(
         portada: r
             .portada
             .map(|p| base64::engine::general_purpose::STANDARD.encode(p)),
+        optimizado: r.optimizado,
     };
     let conflicto = pasar::recibir::conflicto_en(&state.db, &deck);
     Ok(PaqueteLeido { deck, conflicto })
@@ -309,6 +338,7 @@ pub async fn paquete_importar(
         linaje: resumen.linaje,
         actualizado: resumen.actualizado,
         portada: None,
+        optimizado: resumen.optimizado,
     };
     let destino = match (
         pasar::recibir::conflicto_en(&state.db, &ofrecido),

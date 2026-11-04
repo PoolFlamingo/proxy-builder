@@ -4,4 +4,8 @@
  * Lo que pesa el paquete de un deck y si lleva proxies (para elegir al
  * compartirlo).
  */
-export type InfoPaquete = { proxies: boolean, tamano: number, tamanoOriginales: number, };
+export type InfoPaquete = { proxies: boolean, tamano: number, 
+/**
+ * Lo que pesaría optimizado (una estimación).
+ */
+tamanoOptimizado: number, tamanoOriginales: number, };

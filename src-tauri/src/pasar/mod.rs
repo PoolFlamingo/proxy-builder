@@ -67,6 +67,10 @@ pub trait Entorno: Clone + Send + Sync + 'static {
     /// El `MulticastLock` de la Wi-Fi (Android): sin él se tira el mDNS.
     /// Cada uso lo pide y lo suelta por su cuenta (`android::multicast` cuenta).
     fn multicast(&self, _uso: crate::android::UsoMulticast, _si: bool) {}
+    /// El nombre del equipo según el sistema, para quien no ha elegido uno.
+    fn nombre_del_sistema(&self) -> Option<String> {
+        None
+    }
     /// Si hay una partida en red (o una sala) que pueda esperar conexiones
     /// de la mesa en este nodo (la sucesión del anfitrión, Fase K).
     fn partida_en_red(&self) -> bool {
@@ -97,6 +101,14 @@ impl<Rt: Runtime> Entorno for AppHandle<Rt> {
         }
     }
 
+    fn nombre_del_sistema(&self) -> Option<String> {
+        // `android::nombre_equipo` es de la app con el runtime de siempre.
+        let cualquiera: &dyn std::any::Any = self;
+        cualquiera
+            .downcast_ref::<AppHandle>()
+            .and_then(crate::android::nombre_equipo)
+    }
+
     fn multicast(&self, uso: crate::android::UsoMulticast, si: bool) {
         // `android::multicast` es de la app con el runtime de siempre.
         let cualquiera: &dyn std::any::Any = self;
@@ -106,6 +118,19 @@ impl<Rt: Runtime> Entorno for AppHandle<Rt> {
             }
         }
     }
+}
+
+/// El nombre con el que este equipo se presenta a los demás: el que eligió la
+/// persona («Recibir») o, si no, el que le da el sistema.
+pub fn nombre_equipo<E: Entorno>(e: &E) -> String {
+    let st = e.estado();
+    crate::red::identidad::leer(&st.db, &st.red.clave())
+        .map(|i| i.apodo)
+        .ok()
+        .filter(|a| !a.is_empty())
+        .or_else(|| e.nombre_del_sistema())
+        .map(|n| protocolo::apodo_limpio(&n))
+        .unwrap_or_default()
 }
 
 // ── El estado de la app ─────────────────────────────────────────────────

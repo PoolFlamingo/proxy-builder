@@ -29,6 +29,10 @@ pub struct DeckOfrecido {
     pub actualizado: Option<i64>,
     /// La portada: un JPEG pequeño en base64 (sin prefijo `data:`).
     pub portada: Option<String>,
+    /// Sus imágenes van comprimidas (`package::Modo::Optimizado`) y `tamano`
+    /// es una estimación. Un equipo con una versión anterior no lo dice.
+    #[serde(default)]
+    pub optimizado: bool,
 }
 
 /// Cuál de las dos copias es más reciente.
@@ -206,6 +210,8 @@ pub enum FaseEmisor {
     EsperandoAceptacion,
     /// Esperando a que el otro elija qué quiere.
     EsperandoRespuesta,
+    /// Haciendo el paquete de un deck (`progreso` cuenta sus imágenes).
+    Preparando,
     Enviando,
     Terminado,
     Cancelado,
@@ -277,6 +283,9 @@ pub struct InfoPaquete {
     pub proxies: bool,
     #[ts(type = "number")]
     pub tamano: u64,
+    /// Lo que pesaría optimizado (una estimación).
+    #[ts(type = "number")]
+    pub tamano_optimizado: u64,
     #[ts(type = "number")]
     pub tamano_originales: u64,
 }

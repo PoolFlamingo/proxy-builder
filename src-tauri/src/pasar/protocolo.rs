@@ -288,6 +288,7 @@ mod tests {
             linaje: Some("abc-123".into()),
             actualizado: Some(1),
             portada: None,
+            optimizado: false,
         }
     }
 

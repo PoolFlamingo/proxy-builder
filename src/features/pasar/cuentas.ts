@@ -4,7 +4,9 @@ import type { DeckRevisado } from "@/bindings/DeckRevisado";
 import type { EleccionPasar } from "@/bindings/EleccionPasar";
 import type { EstadoEmisor } from "@/bindings/EstadoEmisor";
 import type { EstadoReceptor } from "@/bindings/EstadoReceptor";
+import type { InfoPaquete } from "@/bindings/InfoPaquete";
 import type { MasReciente } from "@/bindings/MasReciente";
+import type { ModoPaquete } from "@/bindings/ModoPaquete";
 import type { ProgresoPasar } from "@/bindings/ProgresoPasar";
 import type { ResolucionPasar } from "@/bindings/ResolucionPasar";
 import { paraTraducir } from "@/components/language-provider";
@@ -89,6 +91,16 @@ export function pesar(bytes: number, locale = "es"): string {
 	return `${n(bytes / 1024 / 1024 / 1024, 1)} GB`;
 }
 
+/** Lo que pesa un paquete en este modo. */
+export function pesoDe(i: InfoPaquete | undefined, modo: ModoPaquete): number {
+	if (!i) return 0;
+	return modo === "optimizado"
+		? i.tamanoOptimizado
+		: modo === "original"
+			? i.tamano
+			: i.tamanoOriginales;
+}
+
 /** El código de 6 cifras en dos grupos de tres (`123 456`). */
 export function formatoCodigo6(c: string): string {
 	return c.length === 6 ? `${c.slice(0, 3)} ${c.slice(3)}` : c;
@@ -149,7 +161,7 @@ const MOTIVOS: Record<string, string> = {
 	oferta: paraTraducir("El otro equipo ha mandado algo que esta app no entiende."),
 	oferta_grande: paraTraducir("Son demasiados decks para enviar de una vez: manda menos."),
 	paquete_grande: paraTraducir(
-		"Un deck pesa demasiado para enviarlo (más de 500 MB). Prueba a mandarlo solo con las cartas originales.",
+		"Un deck pesa demasiado para enviarlo (más de 500 MB). Prueba con «Optimizado» o solo con las cartas originales.",
 	),
 	envio_grande: paraTraducir(
 		"Todo junto pesa demasiado para enviarlo de una vez: manda menos decks.",

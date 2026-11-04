@@ -218,6 +218,25 @@ class AndroidExtraPlugin(private val activity: Activity) : Plugin(activity) {
         invoke.resolve(salida)
     }
 
+    /** El nombre que la persona le puso al dispositivo o, si no, su marca y modelo. */
+    @Command
+    fun nombreEquipo(invoke: Invoke) {
+        val salida = JSObject()
+        val propio = try {
+            Settings.Global.getString(activity.contentResolver, "device_name")
+        } catch (ex: Exception) {
+            null
+        }
+        val marca = Build.MANUFACTURER.replaceFirstChar { it.uppercase() }
+        val modelo = if (Build.MODEL.startsWith(marca, ignoreCase = true)) {
+            Build.MODEL
+        } else {
+            "$marca ${Build.MODEL}"
+        }
+        salida.put("nombre", propio?.takeIf { it.isNotBlank() } ?: modelo)
+        invoke.resolve(salida)
+    }
+
     // ── Abrir un fichero desde otra app ─────────────────────────────────
 
     private fun recoger(intent: Intent?) {

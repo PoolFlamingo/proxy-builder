@@ -99,6 +99,12 @@ impl<R: Runtime> AndroidExtra<R> {
         Ok(r.nombre.filter(|n| !n.is_empty()))
     }
 
+    /// El nombre del dispositivo: el que le puso la persona o su marca y modelo.
+    pub fn nombre_equipo(&self) -> Resultado<Option<String>> {
+        let r: Nombre = self.0.run_mobile_plugin("nombreEquipo", ())?;
+        Ok(r.nombre.filter(|n| !n.is_empty()))
+    }
+
     /// Avisa de cada fichero que otra app abre con esta (`ACTION_VIEW`),
     /// también del que arrancó la app.
     pub fn al_abrir(&self, f: impl Fn(String) + Send + Sync + 'static) -> Resultado<()> {

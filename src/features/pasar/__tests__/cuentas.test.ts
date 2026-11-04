@@ -11,6 +11,7 @@ import {
 	opcionesDe,
 	pareceCodigoDeDeck,
 	pesar,
+	pesoDe,
 	porcentaje,
 	puedeResponder,
 	quedaAlgo,
@@ -30,6 +31,7 @@ function deck(nombre: string, proxies: boolean, conflicto = false): DeckRevisado
 			linaje: "l",
 			actualizado: 5,
 			portada: null,
+			optimizado: false,
 		},
 		conflicto: conflicto ? { deckId: "local", nombre, actualizado: 3, masReciente: "llega" } : null,
 	};
@@ -140,5 +142,15 @@ describe("textos y cuentas", () => {
 			"GENERAL",
 		);
 		expect(textoDeError(new Error("x"), t, general)).toBe("GENERAL");
+	});
+});
+
+describe("pesoDe", () => {
+	const info = { proxies: true, tamano: 500, tamanoOptimizado: 120, tamanoOriginales: 30 };
+	it("da lo que pesa en cada modo", () => {
+		expect(pesoDe(info, "original")).toBe(500);
+		expect(pesoDe(info, "optimizado")).toBe(120);
+		expect(pesoDe(info, "sinProxies")).toBe(30);
+		expect(pesoDe(undefined, "original")).toBe(0);
 	});
 });

@@ -24,4 +24,9 @@ actualizado: number | null,
 /**
  * La portada: un JPEG pequeño en base64 (sin prefijo `data:`).
  */
-portada: string | null, };
+portada: string | null, 
+/**
+ * Sus imágenes van comprimidas (`package::Modo::Optimizado`) y `tamano`
+ * es una estimación. Un equipo con una versión anterior no lo dice.
+ */
+optimizado: boolean, };
