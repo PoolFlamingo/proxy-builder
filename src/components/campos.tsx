@@ -91,9 +91,9 @@ export function Seccion({
 /**
  * Una etiqueta con su control a la derecha. `ayuda` va en un tooltip (en
  * táctil, en el «ⓘ» de al lado: `ConAyuda`). `apilarEnMovil`: en el móvil la
- * etiqueta va encima del control (en 411 px no caben los dos en una línea) y,
- * con el dedo, la etiqueta larga baja de línea en vez de cortarse. En
- * escritorio no cambia nada.
+ * etiqueta va encima del control (en 411 px no caben los dos en una línea).
+ * Con el dedo, en todas, la etiqueta larga baja de línea en vez de cortarse
+ * con «…». En escritorio no cambia nada.
  */
 export function Fila({
 	etiqueta,
@@ -114,8 +114,7 @@ export function Fila({
 		<label
 			htmlFor={htmlFor}
 			className={cn(
-				"min-w-0 flex-1 truncate text-xs text-foreground/90",
-				apilarEnMovil && "[[data-tactil]_&]:whitespace-normal",
+				"min-w-0 flex-1 truncate text-xs text-foreground/90 [[data-tactil]_&]:whitespace-normal",
 			)}
 		>
 			{etiqueta}

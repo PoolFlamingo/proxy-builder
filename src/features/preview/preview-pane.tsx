@@ -93,7 +93,7 @@ function useZoomConRueda(viewport: HTMLDivElement | null) {
 }
 
 /** Si ya se ajustó el zoom al ancho en móvil (una vez por sesión). */
-let zoomAjustadoAlAncho = false;
+let ultimoZoomAjustado: number | null = null;
 
 /** Píxeles CSS por milímetro a zoom 100 %. */
 const PX_POR_MM = 96 / 25.4;
@@ -133,16 +133,31 @@ export function PreviewPane() {
 	useZoomConRueda(viewport);
 	useZoomConDedos(viewport, tactil);
 
-	// En móvil, la primera vez que hay hojas, el zoom ajusta la hoja al ancho
-	// de la pantalla (a 80 % se sale por la derecha); luego manda la persona.
-	// Una vez por sesión de la app: la pestaña Hojas se desmonta al cambiar a
-	// Lista o Exportar y volver no debe pisar el zoom del pellizco.
+	// En móvil el zoom ajusta la hoja al ancho de la pantalla (a 80 % se sale
+	// por la derecha) la primera vez y cada vez que cambia ese ancho (girar el
+	// teléfono: el zoom de horizontal, de pie, dejaba la hoja cortada). Solo si
+	// la persona no ha tocado el zoom desde el último ajuste: lo del pellizco
+	// manda. La pestaña Hojas se desmonta al cambiar a Lista o Exportar y
+	// volver no debe pisarlo, de ahí que el último ajuste viva fuera.
 	const anchoHoja = plan?.pages[0]?.widthMm;
 	useEffect(() => {
-		if (!movil || !viewport || !anchoHoja || zoomAjustadoAlAncho) return;
-		zoomAjustadoAlAncho = true;
-		const libre = viewport.clientWidth - 32;
-		if (libre > 0) setZoom(Math.min(1, libre / (anchoHoja * PX_POR_MM)));
+		if (!movil || !viewport || !anchoHoja) return;
+		const ajustar = () => {
+			// 32 de relleno de la columna y unos px de borde y de redondeo del zoom:
+			// con solo 32 sobraban 4 px y salía una barra de desplazamiento.
+			const libre = viewport.clientWidth - 40;
+			if (libre <= 0) return;
+			const z = Math.min(1, libre / (anchoHoja * PX_POR_MM));
+			const actual = useUi.getState().zoom;
+			if (ultimoZoomAjustado === null || Math.abs(actual - ultimoZoomAjustado) < 0.02) {
+				ultimoZoomAjustado = z;
+				setZoom(z);
+			}
+		};
+		ajustar();
+		const ro = new ResizeObserver(ajustar);
+		ro.observe(viewport);
+		return () => ro.disconnect();
 	}, [movil, viewport, anchoHoja, setZoom]);
 
 	const escala = zoom * PX_POR_MM;

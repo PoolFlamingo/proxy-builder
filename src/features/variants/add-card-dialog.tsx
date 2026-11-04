@@ -19,6 +19,7 @@ import { scryfallDe } from "@/features/disenar/grupos";
 import { cartaPorId } from "@/features/preview/acciones-carta";
 import { RaizScroll } from "@/features/preview/visibilidad";
 import { insertar, nuevoId, quitar } from "@/lib/deck-ops";
+import { useFormato } from "@/lib/formato";
 import { call } from "@/lib/ipc";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
@@ -48,6 +49,7 @@ export function AddCardDialog() {
 
 function Contenido({ en, hueco, cambiar }: { en?: number; hueco?: string; cambiar?: string }) {
 	const { t, mensaje } = useLang();
+	const { tactil } = useFormato();
 	const vieja = cambiar ? cartaPorId(cambiar) : undefined;
 	const viejaScryfall = vieja ? scryfallDe(vieja) : null;
 	// Las copias de la misma carta (con esta), para «cambiar todas».
@@ -170,9 +172,13 @@ function Contenido({ en, hueco, cambiar }: { en?: number; hueco?: string; cambia
 				<DialogDescription>
 					{vieja
 						? t("Busca la carta que sustituye a esta. Doble clic para cambiar solo esta copia.")
-						: t(
-								"Busca por nombre o con la sintaxis de Scryfall (t:dragon c:r). Doble clic para añadir.",
-							)}
+						: tactil
+							? t(
+									"Busca por nombre o con la sintaxis de Scryfall (t:dragon c:r). Toca las cartas que quieras y pulsa «Añadir».",
+								)
+							: t(
+									"Busca por nombre o con la sintaxis de Scryfall (t:dragon c:r). Doble clic para añadir.",
+								)}
 				</DialogDescription>
 			</DialogHeader>
 			<div className="flex flex-col gap-2.5" data-filtro="">

@@ -25,7 +25,7 @@ export function ListaSecciones({
 	onElegir: (id: string) => void;
 }) {
 	return (
-		<ul className="flex flex-col gap-2.5 p-1">
+		<ul className="flex flex-col gap-2.5 p-1 landscape:grid landscape:grid-cols-2">
 			{secciones.map((s) => (
 				<li key={s.id}>
 					<button

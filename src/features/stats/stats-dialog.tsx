@@ -68,9 +68,12 @@ function Contenido() {
 	const [error, setError] = useState<unknown>(null);
 	const [pestana, setPestana] = useState<Pestana>("resumen");
 	// En móvil las pestañas son una lista que entra en cada sección (`null` = la lista).
-	const movil = useFormato().tamano === "movil";
+	const { tamano, horizontal } = useFormato();
+	const movil = tamano === "movil";
 	const [entrada, setEntrada] = useState<Pestana | null>(null);
 	const enSeccion = movil && entrada !== null;
+	// De lado, la barra de la sección comparte fila con el selector: cada fila cuenta.
+	const seccionEnLinea = enSeccion && horizontal;
 	const [moneda, setMoneda] = useState<Moneda>("eur");
 	const [intento, setIntento] = useState(0);
 
@@ -146,6 +149,14 @@ function Contenido() {
 								))}
 							</TabsList>
 						)}
+						{seccionEnLinea && (
+							<div className="min-w-0 flex-1">
+								<BarraSeccion
+									titulo={pestanas.find((p) => p.valor === entrada)?.texto ?? ""}
+									onVolver={() => setEntrada(null)}
+								/>
+							</div>
+						)}
 						<div className="flex w-full items-center gap-1.5 sm:w-auto">
 							<Select
 								value={kind ?? "auto"}
@@ -194,7 +205,7 @@ function Contenido() {
 								}}
 							/>
 						)}
-						{enSeccion && (
+						{enSeccion && !seccionEnLinea && (
 							<div className="pb-2.5">
 								<BarraSeccion
 									titulo={pestanas.find((p) => p.valor === entrada)?.texto ?? ""}

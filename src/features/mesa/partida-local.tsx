@@ -385,8 +385,9 @@ export function PartidaLocalDialog({
 					</Button>
 					<WithTooltip content={completo ? null : porQueNo}>
 						{/* El `span`: un botón desactivado no avisa al pasar por encima. */}
-						<span>
+						<span className="[[data-formato=movil]_&]:flex [[data-formato=movil]_&>button]:flex-1">
 							<Button
+								className="[[data-formato=movil]_&]:flex-1"
 								disabled={!completo || empezando}
 								onClick={() => (hayGuardada ? setReemplazar(true) : void iniciar())}
 							>

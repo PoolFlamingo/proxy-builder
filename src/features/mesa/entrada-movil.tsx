@@ -103,7 +103,7 @@ export function PanelEmpezarMovil({
 				className={cn("flex min-w-0 items-center gap-1.5", lado && "flex-wrap")}
 				data-tutorial="mesa-lista"
 			>
-				<div className="flex min-w-0 flex-1 basis-0">
+				<div className="flex min-w-0 flex-[4] basis-0">
 					<Desplegable
 						valor={formato}
 						onChange={(v) => onFormato(v as Formato)}
@@ -112,7 +112,7 @@ export function PanelEmpezarMovil({
 					/>
 				</div>
 				{/* De lado va en su propia fila: hay alto de sobra y el nombre se lee entero. */}
-				<div className={cn("flex min-w-0 flex-1 basis-0", lado && "order-last basis-full")}>
+				<div className={cn("flex min-w-0 flex-[5] basis-0", lado && "order-last basis-full")}>
 					{!listas ? (
 						<Desplegable valor="" onChange={() => {}} opciones={[]} etiqueta="" desactivado />
 					) : sinNingunaLista ? (

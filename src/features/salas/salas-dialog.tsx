@@ -204,7 +204,7 @@ function ListaPlaygroups({
 								disabled={!!sala}
 								onClick={() => onElegir(p.id)}
 								className={cn(
-									"flex w-full flex-col gap-0.5 rounded-md border bg-card px-2.5 py-1.5 text-left transition hover:border-primary/60 disabled:opacity-60",
+									"flex w-full flex-col items-stretch gap-0.5 rounded-md border bg-card px-2.5 py-1.5 text-left transition hover:border-primary/60 disabled:opacity-60",
 									elegido === p.id && !sala && "ring-2 ring-primary",
 								)}
 							>

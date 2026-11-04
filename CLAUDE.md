@@ -120,6 +120,15 @@ sola interfaz que cambia por formato, nunca pantallas aparte; el escritorio no c
   el «Diseñar reducido en móvil» del 25/10): lo que no cabe se reparte, no se quita. Cada fila apilada
   cuesta alto, y de lado solo hay ~360 dp: la barra de pestañas pasa a un carril (`BarraInferiorMovil`
   con `lado`) y lo principal (la carta, las cartas de una lista, los decks) se queda con la pantalla.
+- 🛑 **El móvil se prueba en todos los casos, no a ojo** (Pablo, 04/11/2026: «tiene que verse bien en
+  móvil en todos los casos»): cada pantalla y diálogo, de pie (411×914) y de lado (914×411), **con datos**
+  (resultados, listas largas), con el teclado y tras girar; en el emulador, por CDP, con un script que
+  recorra el diálogo abierto y avise de `scrollWidth` > ancho, elementos fuera de pantalla y contenedores
+  con scroll horizontal (y luego las capturas, para lo que un script no ve). Trampas ya encontradas:
+  un botón con tooltip que deba encoger lleva `min-w-0` (el mínimo táctil de `index.css` lo respeta); el
+  `div` interno del `ScrollArea` de Radix es `display: table` (en diálogos táctiles se fuerza a bloque); un
+  `<button>` `flex-col` lleva `items-stretch` o su `truncate` no corta; los grids, `minmax(0,1fr)`; de lado
+  no caben descripciones ni pies apilados (`index.css`, `orientation: landscape`).
 - Diseñar en móvil es el mismo `Formulario` (seis pestañas): de pie, la carta (`VistaPrevia` con
   `compacta`: idioma, caras, margen y avisos flotan a sus lados) y debajo el formulario; de lado, la
   carta a toda la altura (`anchoColumnaCarta`) y el formulario a la derecha, en una sola rejilla para

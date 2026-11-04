@@ -131,6 +131,11 @@ export const PASOS: Record<Vista, Paso[]> = {
 			texto: paraTraducir(
 				"«Renumerar» numera las cartas por el orden del deck, «Diseñar el deck» las hace todas de una vez, «Exportar imágenes» las guarda en PNG, «Colecciones» define un estilo común (marco, pie, ajustes) y «Letras, marcos y símbolos» añade letras, packs de marcos y símbolos.",
 			),
+			tactil: {
+				texto: paraTraducir(
+					"Todo esto está en el menú «⋯» de la barra de arriba: «Renumerar» numera las cartas por el orden del deck, «Diseñar el deck» las hace todas de una vez, «Exportar imágenes» las guarda en PNG, «Colecciones» define un estilo común (marco, pie, ajustes) y «Letras, marcos y símbolos» añade letras, packs de marcos y símbolos.",
+				),
+			},
 		},
 		{
 			ancla: "disenar-vista",

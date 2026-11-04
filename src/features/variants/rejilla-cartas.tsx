@@ -18,7 +18,9 @@ export function RejillaCartas({
 	elegidas,
 	onElegir,
 	onDoble,
-	columnas = "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(120px,1fr))]",
+	// `minmax(0, 1fr)`: con `1fr` a secas la columna no baja del texto más largo
+	// (un nombre de carta doble) y la rejilla se sale del diálogo en un móvil.
+	columnas = "grid-cols-[repeat(2,minmax(0,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(120px,1fr))]",
 }: {
 	cartas: CardSummary[];
 	elegidas: Set<string>;
@@ -62,7 +64,7 @@ const Tarjeta = memo(function Tarjeta({
 			onClick={(e) => onElegir(c, e)}
 			onDoubleClick={() => onDoble?.(c)}
 			className={cn(
-				"group relative flex flex-col gap-1 rounded-lg p-1 text-left outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
+				"group relative flex min-w-0 flex-col items-stretch gap-1 rounded-lg p-1 text-left outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
 				elegida && "bg-primary/15 ring-2 ring-primary",
 			)}
 		>

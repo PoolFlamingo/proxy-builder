@@ -392,7 +392,7 @@ function Eleccion({
 			disabled={deshabilitada}
 			aria-pressed={activa}
 			className={cn(
-				"flex flex-col gap-0.5 rounded-lg border p-2.5 text-left transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-50",
+				"flex flex-col items-stretch gap-0.5 rounded-lg border p-2.5 text-left transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-50",
 				activa && "border-primary bg-primary/10",
 			)}
 		>

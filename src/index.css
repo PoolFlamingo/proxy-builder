@@ -726,6 +726,38 @@ html[data-tactil] button[data-slot="tooltip-trigger"] {
   min-height: 2.5rem;
   min-width: 2.5rem;
 }
+/* Un botón con tooltip que dice `min-w-0` es una pieza que tiene que encoger
+   (las barras de los gráficos de Estadísticas, `ui/grafico-*.tsx`, son
+   `TooltipTrigger` en fila): con el mínimo, diez barras de 43 px se salían del
+   diálogo. Solo el ancho: el alto sigue siendo el de un dedo. */
+html[data-tactil] button[data-slot="tooltip-trigger"].min-w-0 {
+  min-width: 0;
+}
+/* Teléfono de lado: el alto es lo escaso. La descripción de un diálogo se
+   queda para el lector de pantalla y el pie pasa a una fila (los botones
+   apilados se comían un tercio de los ~360 dp). */
+@media (orientation: landscape) {
+  html[data-formato="movil"] [data-slot="dialog-content"] [data-slot="dialog-description"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  html[data-formato="movil"] [data-slot="dialog-content"] [data-slot="dialog-footer"] {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  html[data-formato="movil"] [data-slot="dialog-content"] [data-slot="dialog-footer"] > * {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
 /* Las zonas seguras. En Android la app va siempre a pantalla completa y la
    muesca la deja fuera la propia actividad (`MainActivity.kt`), así que aquí
    valen 0; quedan para otras plataformas. */
@@ -754,6 +786,16 @@ html[data-tactil] [data-slot="dialog-content"] [data-slot="scroll-area"] {
 html[data-tactil] [data-slot="dialog-content"] {
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+/* El `ScrollArea` de Radix mete el contenido en un `div` con `display: table`
+   y `min-width: 100%`: una tabla toma el ancho de lo que lleva dentro, así
+   que un grid de `minmax(0, 1fr)` o un nombre con `truncate` no encogen y el
+   contenido se sale del diálogo (los resultados de «Añadir carta», las barras
+   de Estadísticas). En un diálogo de móvil el contenido va a lo ancho del
+   diálogo: el scroll horizontal, si lo hubiera, es de quien lo pide con su
+   propio `overflow-x`. */
+html[data-tactil] [data-slot="dialog-content"] [data-slot="scroll-area-viewport"] > div {
+  display: block !important;
 }
 
 /* Móvil: los avisos (sonner) quedan encima de la barra de pestañas de abajo
