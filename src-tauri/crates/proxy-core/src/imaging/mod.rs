@@ -9,6 +9,7 @@
 pub mod adjust;
 pub mod bleed;
 pub mod blur;
+pub mod compactar;
 pub mod corners;
 pub mod decode;
 pub mod edges;
