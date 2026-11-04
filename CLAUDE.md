@@ -85,8 +85,10 @@ sola interfaz que cambia por formato, nunca pantallas aparte; el escritorio no c
   botón con `WithTooltip` no lleva `data-slot="button"` (el CSS cubre `tooltip-trigger`).
 - 🛑 **En Android la app va siempre a pantalla completa** (Pablo, 03/11/2026):
   `MainActivity.kt` esconde las barras del sistema (y lo repite al recuperar el foco) y deja
-  fuera la muesca con un margen en la vista del WebView, al que le llegan las zonas seguras a
-  0 (el teclado sí le llega). No hay botón de pantalla completa en el móvil. Ningún documento
+  fuera la muesca y el teclado con un margen en la vista del WebView, al que le llegan las zonas
+  seguras a 0. 🛑 De borde a borde (Android 15+) el sistema no encoge la ventana: sin ese margen el
+  teclado tapa lo que se escribe (Pablo, 04/11/2026). De lado con el teclado solo quedan ~150 dp:
+  lo que no sea el campo se esconde con `landscape:[[data-formato=movil][data-teclado]_&]:hidden`. No hay botón de pantalla completa en el móvil. Ningún documento
   del móvil se desplaza en horizontal (`scrollWidth === innerWidth` en cada pantalla).
 - Piezas comunes del móvil, para que todo se vea igual: la barra de arriba es
   `components/barra-superior.tsx`; un menú o panel que sube, `HojaMenu`
@@ -114,9 +116,15 @@ sola interfaz que cambia por formato, nunca pantallas aparte; el escritorio no c
   nombre: `etiquetas-tactiles.tsx`); los atajos de los menús, con `ContextMenuShortcut`/
   `DropdownMenuShortcut` (el CSS los oculta en táctil). Un paso del tutorial que nombre el
   ratón o el teclado lleva `tactil: { texto }`.
-- Diseñar en móvil usa las mismas piezas que el formulario completo
-  (`disenar/formulario-movil.tsx`); lo que no entra (ajustes finos, recursos, colecciones, lote,
-  traducción, renumerar, PNG) enseña `AvisoSoloTableta`. Los gestos de la carta se cuentan por
+- 🛑 **En el móvil, las mismas opciones que en el escritorio** (Pablo, 04/11/2026; deja sin efecto
+  el «Diseñar reducido en móvil» del 25/10): lo que no cabe se reparte, no se quita. Cada fila apilada
+  cuesta alto, y de lado solo hay ~360 dp: la barra de pestañas pasa a un carril (`BarraInferiorMovil`
+  con `lado`) y lo principal (la carta, las cartas de una lista, los decks) se queda con la pantalla.
+- Diseñar en móvil es el mismo `Formulario` (seis pestañas): de pie, la carta (`VistaPrevia` con
+  `compacta`: idioma, caras, margen y avisos flotan a sus lados) y debajo el formulario; de lado, la
+  carta a toda la altura (`anchoColumnaCarta`) y el formulario a la derecha, en una sola rejilla para
+  que girar no monte el formulario de nuevo; las herramientas de la barra, en el «⋯». Con el teclado (`data-teclado`) se esconde el pie. El editor de una lista
+  (`mesa/listas/lista-dialog.tsx`) lleva «Comandante» y «Cartas» en pestañas. Los gestos de la carta se cuentan por
   fotograma (`disenar/gestos.ts`); lo del `visualViewport`, en `use-alto-visible.ts`.
 - La mesa en móvil se decide con `useMesaMovil()`: un tablero a la vez (modo `movil` de
   `disposicion.ts`, que no se elige ni se recuerda), barra de asientos, «Mano» y pantalla de
@@ -124,8 +132,9 @@ sola interfaz que cambia por formato, nunca pantallas aparte; el escritorio no c
   (`mesa/leer-en-grande.ts`), nunca `onPointerEnter` suelto; en el móvil se pinta con
   `LecturaMovil` (`mesa/lectura-movil.tsx`: entera, `object-contain`, la X fuera de la carta).
   La barra de la mesa en el móvil usa `BOTON_MOVIL` (36 px, compacta a propósito); el mulligan
-  en horizontal va en una fila (`cartaEnFila`); «Jugar» en el móvil deja a la vista nombre,
-  formato y lista y lo demás va a la hoja «Opciones de la partida» (`mesa/entrada-movil.tsx`). Las cartas del campo van en una
+  en horizontal va en una fila (`cartaEnFila`); «Jugar» en el móvil deja a la vista formato,
+  lista y cuatro botones en fila, y lo demás (nombre incluido) va a la hoja «Opciones de la partida»
+  (`mesa/entrada-movil.tsx`). Las cartas del campo van en una
   capa con zoom (`mesa/gestos.ts::conVista`): nunca convertir posiciones con `disp.campo` a
   mano; `touch-action: none` solo en el tablero. Un tooltip con información usa
   `AyudaAlTocar` o texto visible.

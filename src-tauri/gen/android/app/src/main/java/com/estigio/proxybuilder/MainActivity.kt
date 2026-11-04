@@ -19,8 +19,10 @@ import androidx.core.view.WindowInsetsControllerCompat
  * La muesca no la resuelve la web: el hueco de la cámara se deja fuera con un
  * margen en la vista que contiene el WebView, y al WebView le llega sin ella
  * (así sus `env(safe-area-inset-*)` valen 0 y no se cuenta dos veces). El
- * teclado (`ime`) sí le llega: con él encoge el `visualViewport`
- * (`lib/teclado.ts`).
+ * teclado se deja fuera igual: de borde a borde (obligatorio desde Android 15)
+ * el sistema ya no encoge la ventana y, sin este margen, el teclado tapaba lo
+ * que se escribe sin que el WebView se enterara. Con él encogen la ventana y el
+ * `visualViewport` (`lib/teclado.ts`).
  */
 class MainActivity : TauriActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,10 +32,12 @@ class MainActivity : TauriActivity() {
     val contenido = findViewById<View>(android.R.id.content)
     ViewCompat.setOnApplyWindowInsetsListener(contenido) { vista, insets ->
       val muesca = insets.getInsets(WindowInsetsCompat.Type.displayCutout())
-      vista.setPadding(muesca.left, muesca.top, muesca.right, muesca.bottom)
+      val teclado = insets.getInsets(WindowInsetsCompat.Type.ime())
+      vista.setPadding(muesca.left, muesca.top, muesca.right, maxOf(muesca.bottom, teclado.bottom))
       WindowInsetsCompat.Builder(insets)
         .setInsets(WindowInsetsCompat.Type.displayCutout(), Insets.NONE)
         .setInsets(WindowInsetsCompat.Type.systemBars(), Insets.NONE)
+        .setInsets(WindowInsetsCompat.Type.ime(), Insets.NONE)
         .setDisplayCutout(null)
         .build()
     }
