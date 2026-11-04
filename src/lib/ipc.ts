@@ -60,6 +60,7 @@ import type { LetraLibre } from "@/bindings/LetraLibre";
 import type { ListaDeJuego } from "@/bindings/ListaDeJuego";
 import type { ListasDeDeck } from "@/bindings/ListasDeDeck";
 import type { MensajeMesa } from "@/bindings/MensajeMesa";
+import type { ModoPaquete } from "@/bindings/ModoPaquete";
 import type { NombresIdiomasInfo } from "@/bindings/NombresIdiomasInfo";
 import type { OrigenCarta } from "@/bindings/OrigenCarta";
 import type { OrigenTapete } from "@/bindings/OrigenTapete";
@@ -288,7 +289,7 @@ export interface Commands {
 	pasar_cerca_parar: { args: Record<string, never>; result: null };
 	pasar_codigo_comprobar: { args: { texto: string }; result: null };
 	pasar_enviar: {
-		args: { destino: DestinoPasar; decks: string[]; conProxies: boolean };
+		args: { destino: DestinoPasar; decks: string[]; modo: ModoPaquete };
 		result: null;
 	};
 	pasar_enviar_cancelar: { args: Record<string, never>; result: null };
@@ -297,10 +298,21 @@ export interface Commands {
 	pasar_completar: { args: { deckId: string }; result: number };
 	deck_paquete_info: { args: { id: string }; result: InfoPaquete };
 	deck_paquete_guardar: {
-		args: { id: string; ruta: string; sinProxies: boolean };
+		args: { id: string; ruta: string; modo: ModoPaquete };
 		result: number;
 	};
-	deck_paquete_compartir: { args: { id: string; sinProxies: boolean }; result: null };
+	deck_paquete_compartir: { args: { id: string; modo: ModoPaquete }; result: null };
+	pasar_nombre: { args: Record<string, never>; result: string };
+	pasar_nombre_set: { args: { nombre: string }; result: string };
+	optimizar_decks: {
+		args: Record<string, never>;
+		result: import("@/bindings/DeckOptimizable").DeckOptimizable[];
+	};
+	optimizar_estimar: {
+		args: { ids: string[] };
+		result: import("@/bindings/EstimacionOptimizar").EstimacionOptimizar;
+	};
+	optimizar_lanzar: { args: { ids: string[] }; result: number };
 	paquete_leer: { args: { ruta: string }; result: PaqueteLeido };
 	paquete_importar: {
 		args: { ruta: string; eleccion: EleccionPasar; resolucion: ResolucionPasar | null };
@@ -455,6 +467,8 @@ export interface Events {
 	"pasar://cerca": EquipoCerca[];
 	"pasar://imagenes-progress": import("@/bindings/ImagenesProgreso").ImagenesProgreso;
 	"pasar://imagenes-done": import("@/bindings/ImagenesFin").ImagenesFin;
+	"optimizar://progress": import("@/bindings/OptimizarProgreso").OptimizarProgreso;
+	"optimizar://done": import("@/bindings/OptimizarFin").OptimizarFin;
 }
 
 /** Escucha un evento de Rust. Devuelve la función que deja de escuchar. */

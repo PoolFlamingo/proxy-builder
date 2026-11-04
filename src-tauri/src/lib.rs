@@ -23,6 +23,7 @@ pub mod iconos;
 pub mod jobs;
 pub mod mesa;
 pub mod ocr;
+pub mod optimizar;
 pub mod originales;
 pub mod package;
 pub mod pasar;
@@ -220,6 +221,9 @@ pub fn run() {
             commands::library::blob_import_files,
             commands::library::blob_generic_back,
             commands::library::blob_gc,
+            commands::library::optimizar_decks,
+            commands::library::optimizar_estimar,
+            commands::library::optimizar_lanzar,
             commands::library::app_setting_get,
             commands::library::app_setting_set,
             commands::cards::resolve_decklist,
@@ -249,6 +253,8 @@ pub fn run() {
             commands::pasar::pasar_peticion,
             commands::pasar::pasar_responder,
             commands::pasar::pasar_recibir_cancelar,
+            commands::pasar::pasar_nombre,
+            commands::pasar::pasar_nombre_set,
             commands::pasar::pasar_cerca_buscar,
             commands::pasar::pasar_cerca_parar,
             commands::pasar::pasar_codigo_comprobar,

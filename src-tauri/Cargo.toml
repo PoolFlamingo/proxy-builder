@@ -118,6 +118,9 @@ tempfile = "3"
 lopdf = "0.45"
 tokio = { version = "1", features = ["rt", "macros", "time", "test-util"] }
 
+[target.'cfg(not(target_os = "android"))'.dependencies]
+gethostname = "1"
+
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
 # Recuerda tamaño, posición y si estaba maximizada.

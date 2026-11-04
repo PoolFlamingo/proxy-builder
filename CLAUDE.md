@@ -695,6 +695,12 @@ le falta una cadena le sale la inglesa.
   los ids de carta; «Reemplazar» conserva id, nombre, etiquetas, favorito, notas, idioma e
   historial del deck de aquí. Los tipos de `ts-rs` con nombre genérico llevan `#[ts(rename)]`
   (`ts-rs` escribe por nombre y se pisan).
+  **Paquetes ligeros** (Pablo, 04/11/2026): `package::Modo` (`Optimizado`, de fábrica al compartir; `Original`; `SinProxies`). Optimizado pasa
+  a JPEG los PNG subidos sin transparencia (`proxy_core::imaging::compactar`, calidad 92 y 85 las de «antes», mismas medidas) y `cambiar_huellas` corrige todo el manifiesto;
+  el almacén de quien comparte no cambia y a una app vieja le llega un paquete normal. El tamaño de la oferta es una estimación (`peso_jpeg`) y el aviso de «Reemplazar» sale de `DeckOfrecido.optimizado`.
+  El nombre de un equipo es `red.apodo` o, si está vacío, el del sistema (`pasar::nombre_equipo`; se cambia en «Recibir», el anuncio mDNS lo publica sin reiniciar).
+  **Optimizar en el propio equipo** (Pablo, 04/11/2026): `optimizar.rs`, «Liberar espacio» (`features/library/liberar-dialog.tsx`). 🛑 No se puede deshacer: primero todos los JPEG (cancelar no cambia nada), luego cada deck con `decks::save_imagenes`
+  (no toca `updated_at` ni la hora del linaje) y al final `borrar_sin_usar` (solo lo que no usa nadie: otro deck, una colección, la mesa). No con partida ni trabajo en marcha (`Busy`) ni desde Diseñar, y el deck abierto va con `prestarDeck`.
   🛑 Todo lo que escriba en Rust un deck que puede estar abierto en el editor (reemplazar,
   completar imágenes) pasa antes por `prestarDeck` (`deck-store.ts`): guarda lo pendiente, para
   el autoguardado y recarga al terminar; si no, el autoguardado pisa lo que escribió Rust.
