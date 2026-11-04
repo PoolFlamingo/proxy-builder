@@ -9,6 +9,7 @@ import type { ModoMulligan } from "@/bindings/ModoMulligan";
 import type { Opciones } from "@/bindings/Opciones";
 import { CampoNumero, Fila, FilaInterruptor, Selector } from "@/components/campos";
 import { Confirmar } from "@/components/confirmar";
+import { FilaMenu } from "@/components/hoja-menu";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
@@ -327,10 +328,14 @@ function Entrada() {
 			</Button>
 		</>
 	);
+	// Móvil: los cuatro en una fila, cada uno con su icono sobre el texto.
+	const botonMovil = movil
+		? "h-auto min-h-14 min-w-0 flex-1 flex-col gap-0.5 px-1 py-1.5 text-[11px] leading-tight whitespace-normal [&_svg]:size-5"
+		: undefined;
 	const botones = (
-		<div className={cn("flex shrink-0 flex-col gap-2.5", movil && "grid grid-cols-2")}>
+		<div className={cn("flex shrink-0 flex-col gap-2.5", movil && "grid grid-cols-4 gap-1.5")}>
 			{trabajo && (
-				<div className="col-span-2 flex flex-col gap-1">
+				<div className="col-span-4 flex flex-col gap-1">
 					<span className="text-xs text-muted-foreground">{trabajo.fase}</span>
 					<Progress value={trabajo.total ? (trabajo.hechas / trabajo.total) * 100 : 0} />
 				</div>
@@ -345,12 +350,13 @@ function Entrada() {
 				}
 			>
 				{/* El `span`: un botón desactivado no avisa al pasar por encima. */}
-				<span className="flex flex-col">
+				<span className="flex h-full flex-col">
 					<Button
 						size="lg"
 						disabled={!elegido || !!trabajo || sinLista}
 						onClick={pedirSolitario}
 						data-tutorial="mesa-solitario"
+						className={botonMovil}
 					>
 						{trabajo ? (
 							<Icono icon="lucide:loader-2" className="size-4 animate-spin" />
@@ -362,10 +368,10 @@ function Entrada() {
 				</span>
 			</WithTooltip>
 			{/* Un deck con marcos que aquí no están (Original, Balatro): se avisa y se bajan. */}
-			<AvisoPacksFaltan deckId={elegido} className="col-span-2" />
+			<AvisoPacksFaltan deckId={elegido} className="col-span-4" />
 			{/* Con el dedo no hay tooltip: el porqué de «Solitario» desactivado se lee aquí. */}
 			{(!elegido || sinLista) && (
-				<p className="col-span-2 hidden text-[11px] text-muted-foreground [[data-tactil]_&]:block">
+				<p className="col-span-4 hidden text-[11px] text-muted-foreground [[data-tactil]_&]:block">
 					{!elegido
 						? t("Elige un deck.")
 						: t("Este deck tiene más cartas de las que se juegan: elige una lista.")}
@@ -376,11 +382,18 @@ function Entrada() {
 				variant={enSalaServidor ? "default" : "outline"}
 				onClick={() => setAmigos(true)}
 				data-tutorial="mesa-amigos"
+				className={botonMovil}
 			>
 				<Icono icon="lucide:users" className="size-4" />
 				{enSalaServidor ? t("Volver a la sala de amigos") : t("Con amigos…")}
 			</Button>
-			<Button size="lg" variant="outline" disabled={!!trabajo} onClick={() => setLocal(true)}>
+			<Button
+				size="lg"
+				variant="outline"
+				disabled={!!trabajo}
+				onClick={() => setLocal(true)}
+				className={botonMovil}
+			>
 				<Icono icon="lucide:user" className="size-4" />
 				{t("Partida local…")}
 			</Button>
@@ -389,6 +402,7 @@ function Entrada() {
 				variant={enSala && !enSalaServidor ? "default" : "outline"}
 				onClick={() => setRed(true)}
 				data-tutorial="mesa-red"
+				className={botonMovil}
 			>
 				<Icono icon="lucide:plug" className="size-4" />
 				{enSala && !enSalaServidor ? t("Volver a la partida en red") : t("En red…")}
@@ -484,15 +498,14 @@ function Entrada() {
 							<BarraHerramientas
 								ref={buscar}
 								titulo={t("Elige un deck")}
-								acciones={
-									<Button
-										size="icon-sm"
-										variant="ghost"
-										aria-label={t("Historial")}
+								enUnaFila
+								acciones={null}
+								menu={
+									<FilaMenu
+										icono="lucide:history"
+										texto={t("Historial")}
 										onClick={() => setHistorial(true)}
-									>
-										<Icono icon="lucide:history" />
-									</Button>
+									/>
 								}
 							/>
 							<div className="flex min-h-0 min-w-0 flex-1">

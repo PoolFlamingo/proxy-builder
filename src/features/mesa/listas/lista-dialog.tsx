@@ -5,6 +5,7 @@ import type { CartaDeLista } from "@/bindings/CartaDeLista";
 import type { Formato } from "@/bindings/Formato";
 import type { ListaDeJuego } from "@/bindings/ListaDeJuego";
 import { DialogoAdaptable } from "@/components/dialogo-adaptable";
+import { BotonMenu, FilaMenu, HojaMenu } from "@/components/hoja-menu";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { PORTADA } from "@/features/library/vista-cuadricula";
 import { useEstadoParaCerrar } from "@/lib/dialogos-abiertos";
 import { useFormato } from "@/lib/formato";
@@ -82,6 +84,10 @@ const MARCAS: Record<string, string> = {
  * quiera) y las demás. El deck no cambia. Rust comprueba la lista a cada
  * cambio y los avisos salen abajo; se puede guardar a medias, pero una lista
  * con avisos rojos no deja empezar la partida.
+ *
+ * En un móvil las cartas son lo primero: «Comandante» y «Cartas» son pestañas
+ * a toda la altura, lo demás se queda en filas sueltas (de lado, en una columna
+ * a la izquierda) y los avisos en una hoja.
  */
 export function ListaDialog({
 	abierto,
@@ -102,10 +108,11 @@ export function ListaDialog({
 	onBorrada: (id: string) => void;
 }) {
 	const { t, mensaje } = useLang();
-	// En un móvil de pie, el comandante va encima de las cartas y no a su lado.
 	const movil = useMesaMovil();
 	const { horizontal } = useFormato();
-	const apilado = movil && !horizontal;
+	const lado = movil && horizontal;
+	const [pestana, setPestana] = useState<"comandante" | "cartas">("cartas");
+	const [verAvisos, setVerAvisos] = useState(false);
 	const [todas, setTodas] = useState<CartaDeLista[] | null>(null);
 	const [nombre, setNombre] = useState("");
 	const [eleccion, setEleccion] = useState<Eleccion>({ comandantes: [], cartas: [] });
@@ -129,11 +136,14 @@ export function ListaDialog({
 		call("mesa_lista_cartas", { deck: deckId })
 			.then((c) => {
 				if (!vivo) return;
+				const inicial = lista
+					? { comandantes: lista.comandantes, cartas: lista.cartas }
+					: eleccionDeFabrica(c);
+				alAbrir.current = JSON.stringify([lista?.nombre ?? "", inicial]);
 				setTodas(c);
 				setNombre(lista?.nombre ?? "");
-				setEleccion(
-					lista ? { comandantes: lista.comandantes, cartas: lista.cartas } : eleccionDeFabrica(c),
-				);
+				setEleccion(inicial);
+				setPestana(inicial.comandantes.length === 0 ? "comandante" : "cartas");
 			})
 			.catch((e) => {
 				toast.error(mensaje(e));
@@ -172,7 +182,14 @@ export function ListaDialog({
 		return [...m.entries()].sort(([a], [b]) => a.localeCompare(b));
 	}, [todas, filtro, soloElegidas, eleccion]);
 
-	const candidatos = useMemo(() => (todas ?? []).filter((c) => c.puedeSerComandante), [todas]);
+	const candidatos = useMemo(() => {
+		const f = movil ? filtro.trim().toLowerCase() : "";
+		return (todas ?? []).filter(
+			(c) =>
+				c.puedeSerComandante &&
+				(!f || c.nombre.toLowerCase().includes(f) || (c.tipo ?? "").toLowerCase().includes(f)),
+		);
+	}, [todas, filtro, movil]);
 	const n = cuantas(eleccion);
 	const pide = commander ? 100 : null;
 	const bloquea = avisos.some(impide);
@@ -205,13 +222,16 @@ export function ListaDialog({
 		}
 	};
 
+	// En el móvil, tres por fila y a más resolución: se tienen que poder reconocer.
+	const anchoCarta = movil ? 92 : 75;
 	const miniatura = (c: CartaDeLista, elegida: boolean, alPulsar: () => void, corona = false) => (
 		<button
 			key={c.id}
 			type="button"
 			onClick={alPulsar}
 			className={cn(
-				"relative h-[105px] w-[75px] shrink-0 overflow-hidden rounded-[5%] bg-muted transition",
+				"relative shrink-0 overflow-hidden rounded-[5%] bg-muted transition",
+				movil ? "h-[129px] w-[92px]" : "h-[105px] w-[75px]",
 				elegida ? "ring-2 ring-primary" : "opacity-45 hover:opacity-80",
 			)}
 			aria-pressed={elegida}
@@ -219,7 +239,7 @@ export function ListaDialog({
 		>
 			{c.imagen ? (
 				<img
-					src={urlMiniatura(c.imagen, PORTADA, 146)}
+					src={urlMiniatura(c.imagen, PORTADA, movil ? 244 : 146)}
 					alt=""
 					loading="lazy"
 					className="size-full object-cover"
@@ -245,6 +265,323 @@ export function ListaDialog({
 		</button>
 	);
 
+	const rejillaComandantes = (
+		<div className="flex flex-wrap gap-1.5 p-1">
+			{candidatos.length === 0 && (
+				<p className="text-[11px] text-muted-foreground">
+					{t("Ninguna carta del deck puede ser comandante.")}
+				</p>
+			)}
+			{candidatos.map((c) =>
+				miniatura(
+					c,
+					eleccion.comandantes.includes(c.id),
+					() => setEleccion((e) => alternarComandante(e, c, todas ?? [])),
+					true,
+				),
+			)}
+		</div>
+	);
+	const rejillaCartas = (
+		<div className="flex flex-wrap content-start gap-2.5 p-2">
+			{grupos.map(([nombreCarta, copias]) => {
+				const elegidas = copias.filter(
+					(c) => eleccion.cartas.includes(c.id) || eleccion.comandantes.includes(c.id),
+				).length;
+				const primera = copias[0];
+				// Las básicas (sin límite): una casilla y cuántas.
+				if (primera?.sinLimite && copias.length > 1)
+					return (
+						<div key={nombreCarta} className="flex flex-col items-center gap-1">
+							{miniatura(primera, elegidas > 0, () =>
+								setEleccion((e) => conCopias(e, copias, elegidas > 0 ? 0 : copias.length)),
+							)}
+							<div className="flex items-center gap-1 text-[11px]">
+								<Button
+									size="icon"
+									variant="outline"
+									className="size-5"
+									aria-label={t("Una menos")}
+									onClick={() => setEleccion((e) => conCopias(e, copias, elegidas - 1))}
+								>
+									−
+								</Button>
+								<span className="min-w-10 text-center tabular-nums">
+									{elegidas}/{copias.length}
+								</span>
+								<Button
+									size="icon"
+									variant="outline"
+									className="size-5"
+									aria-label={t("Una más")}
+									onClick={() => setEleccion((e) => conCopias(e, copias, elegidas + 1))}
+								>
+									+
+								</Button>
+							</div>
+							<span className="truncate text-center text-[10px]" style={{ width: anchoCarta }}>
+								{nombreCarta}
+							</span>
+						</div>
+					);
+				return (
+					<div key={nombreCarta} className="flex max-w-full flex-col gap-1">
+						<div className="flex flex-wrap gap-1">
+							{copias.map((c) =>
+								miniatura(
+									c,
+									eleccion.cartas.includes(c.id) || eleccion.comandantes.includes(c.id),
+									() => setEleccion((e) => alternarCarta(e, c, todas ?? [], singleton)),
+									eleccion.comandantes.includes(c.id),
+								),
+							)}
+						</div>
+						<span
+							className="truncate text-[10px]"
+							style={{ maxWidth: `min(${copias.length * (anchoCarta + 4) - 4}px, 100%)` }}
+						>
+							{nombreCarta}
+						</span>
+					</div>
+				);
+			})}
+			{grupos.length === 0 && (
+				<p className="p-4 text-xs text-muted-foreground">{t("Ninguna carta coincide.")}</p>
+			)}
+		</div>
+	);
+	const listaAvisos = (
+		<ul className="flex flex-col gap-0.5 p-1 text-xs">
+			{avisos.map((a, i) => (
+				<li
+					key={`${a.tipo}-${i}`}
+					className={cn(
+						"flex items-center gap-1.5",
+						impide(a) ? "text-destructive" : "text-amber-600 dark:text-amber-400",
+					)}
+				>
+					<Icono icon="lucide:alert-triangle" className="size-3.5 shrink-0" />
+					{textoAviso(a, t)}
+				</li>
+			))}
+		</ul>
+	);
+	const cuenta = (
+		<span
+			className={cn(
+				"shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
+				pide !== null && n !== pide
+					? "bg-amber-500/20 text-amber-600 dark:text-amber-300"
+					: "bg-primary/15 text-primary",
+			)}
+		>
+			{pide !== null ? `${n} / ${pide}` : t("{n} cartas", { n })}
+		</span>
+	);
+	const textoBloquea = t("Se puede guardar a medias, pero así no deja empezar la partida.");
+	const botonGuardar = (
+		<Button
+			className={cn(movil && "min-w-0 flex-1")}
+			onClick={() => void guardar()}
+			disabled={!todas || !nombre.trim() || guardando}
+		>
+			{guardando ? (
+				<Icono icon="lucide:loader-2" className="size-4 animate-spin" />
+			) : (
+				<Icono icon="lucide:check" className="size-4" />
+			)}
+			{t("Guardar")}
+		</Button>
+	);
+	const botonCancelar = (
+		<Button
+			variant="outline"
+			className={cn(movil && "min-w-0 flex-1")}
+			onClick={onCerrar}
+			disabled={guardando}
+		>
+			{t("Cancelar")}
+		</Button>
+	);
+	const cabecera = (
+		<DialogHeader>
+			<DialogTitle>
+				{lista ? t("Editar la lista para jugar") : t("Nueva lista para jugar")}
+			</DialogTitle>
+			<DialogDescription className={cn(movil && "sr-only")}>
+				{commander
+					? t("Elige el comandante (la variante que quieras) y 99 cartas más. El deck no cambia.")
+					: t("Elige las cartas que se juegan. El deck no cambia.")}
+			</DialogDescription>
+		</DialogHeader>
+	);
+	const leyendo = (
+		<div className="flex flex-1 items-center justify-center gap-2 text-xs text-muted-foreground">
+			<Icono icon="lucide:loader-2" className="size-4 animate-spin" />
+			{t("Leyendo las cartas del deck…")}
+		</div>
+	);
+
+	// ── El móvil
+	if (movil) {
+		// De lado con el teclado quedan unos 120 dp: solo los campos y las cartas.
+		const sinTecladoDeLado = "landscape:[[data-teclado]_&]:hidden";
+		const pie = (
+			<DialogFooter className={cn("!flex-row items-center gap-1.5", sinTecladoDeLado)}>
+				{lista && (
+					<Button
+						size="icon"
+						variant="outline"
+						className="shrink-0"
+						aria-label={t("Borrar")}
+						onClick={() => void borrar()}
+						disabled={guardando}
+					>
+						<Icono icon="lucide:trash-2" className="size-4" />
+					</Button>
+				)}
+				{botonCancelar}
+				{botonGuardar}
+			</DialogFooter>
+		);
+		const botonAvisos = avisos.length > 0 && (
+			<Button
+				variant="outline"
+				className={cn(
+					"w-full shrink-0",
+					sinTecladoDeLado,
+					bloquea ? "text-destructive" : "text-amber-600 dark:text-amber-400",
+				)}
+				onClick={() => setVerAvisos(true)}
+			>
+				<Icono icon="lucide:alert-triangle" className="size-4" />
+				{t("Avisos")} ({avisos.length})
+			</Button>
+		);
+		const controles = todas && (
+			<>
+				<Input
+					value={nombre}
+					onChange={(e) => setNombre(e.target.value)}
+					placeholder={t("Nombre de la lista")}
+					aria-label={t("Nombre de la lista")}
+					maxLength={60}
+					className="h-10 w-full shrink-0 text-sm"
+				/>
+				<div className="flex shrink-0 items-center gap-1">
+					<div className="relative min-w-0 flex-1">
+						<Icono
+							icon="lucide:search"
+							className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+						/>
+						<Input
+							value={filtro}
+							onChange={(e) => setFiltro(e.target.value)}
+							placeholder={t("Nombre o tipo…")}
+							className="h-10 pl-8 text-sm"
+						/>
+					</div>
+					<Button
+						size="icon-sm"
+						variant={soloElegidas ? "secondary" : "ghost"}
+						aria-label={t("Solo las elegidas")}
+						aria-pressed={soloElegidas}
+						onClick={() => setSoloElegidas((v) => !v)}
+					>
+						<Icono icon="lucide:list-checks" />
+					</Button>
+					<BotonMenu etiqueta={t("Más acciones")} titulo={t("Lista para jugar")}>
+						<FilaMenu
+							icono="lucide:list-restart"
+							texto={t("Las del deck")}
+							onClick={() => setEleccion(eleccionDeFabrica(todas))}
+						/>
+						<FilaMenu
+							icono="lucide:eraser"
+							texto={t("Ninguna")}
+							onClick={() => setEleccion({ comandantes: [], cartas: [] })}
+						/>
+					</BotonMenu>
+				</div>
+			</>
+		);
+		const zonaCartas = todas ? (
+			<div className="flex min-h-0 min-w-0 flex-1 flex-col gap-1.5">
+				{/* De lado, esta fila es la de la X de cerrar. */}
+				<div
+					className={cn(
+						"flex shrink-0 items-center gap-1.5",
+						lado && "min-h-10 pr-10",
+						sinTecladoDeLado,
+					)}
+				>
+					{commander && (
+						<ToggleGroup
+							type="single"
+							variant="outline"
+							value={pestana}
+							onValueChange={(v) => (v === "comandante" || v === "cartas") && setPestana(v)}
+							className="min-w-0 flex-1"
+						>
+							<ToggleGroupItem value="comandante" className="min-w-0 flex-1 gap-1 px-1 text-xs">
+								<Icono icon="game-icons:crown" className="size-3.5" />
+								<span className="truncate">{t("Comandante")}</span>
+							</ToggleGroupItem>
+							<ToggleGroupItem value="cartas" className="min-w-0 flex-1 px-1 text-xs">
+								<span className="truncate">{t("Cartas")}</span>
+							</ToggleGroupItem>
+						</ToggleGroup>
+					)}
+					<span className={cn(!commander && "ml-auto")}>{cuenta}</span>
+				</div>
+				<ScrollArea className="min-h-0 flex-1 rounded-lg border">
+					{commander && pestana === "comandante" ? rejillaComandantes : rejillaCartas}
+				</ScrollArea>
+			</div>
+		) : (
+			leyendo
+		);
+		return (
+			<Dialog open={abierto} onOpenChange={(o) => !o && !guardando && onCerrar()}>
+				<DialogoAdaptable
+					className={cn("flex flex-col gap-2 py-2", lado && "flex-row")}
+					cambiosSinGuardar={sinGuardar}
+					ocupado={guardando}
+				>
+					{lado ? (
+						<>
+							<div className="flex min-h-0 w-64 shrink-0 flex-col gap-2">
+								<div className={sinTecladoDeLado}>{cabecera}</div>
+								{controles}
+								<div className="mt-auto flex flex-col gap-2">
+									{botonAvisos}
+									{pie}
+								</div>
+							</div>
+							{zonaCartas}
+						</>
+					) : (
+						<>
+							{cabecera}
+							{controles}
+							{zonaCartas}
+							{botonAvisos}
+							{pie}
+						</>
+					)}
+					<HojaMenu
+						abierta={verAvisos && avisos.length > 0}
+						onCerrar={() => setVerAvisos(false)}
+						titulo={t("Avisos")}
+					>
+						{listaAvisos}
+						{bloquea && <p className="text-xs text-muted-foreground">{textoBloquea}</p>}
+					</HojaMenu>
+				</DialogoAdaptable>
+			</Dialog>
+		);
+	}
+
 	return (
 		<Dialog open={abierto} onOpenChange={(o) => !o && !guardando && onCerrar()}>
 			<DialogoAdaptable
@@ -252,23 +589,9 @@ export function ListaDialog({
 				cambiosSinGuardar={sinGuardar}
 				ocupado={guardando}
 			>
-				<DialogHeader>
-					<DialogTitle>
-						{lista ? t("Editar la lista para jugar") : t("Nueva lista para jugar")}
-					</DialogTitle>
-					<DialogDescription>
-						{commander
-							? t(
-									"Elige el comandante (la variante que quieras) y 99 cartas más. El deck no cambia.",
-								)
-							: t("Elige las cartas que se juegan. El deck no cambia.")}
-					</DialogDescription>
-				</DialogHeader>
+				{cabecera}
 				{!todas ? (
-					<div className="flex flex-1 items-center justify-center gap-2 text-xs text-muted-foreground">
-						<Icono icon="lucide:loader-2" className="size-4 animate-spin" />
-						{t("Leyendo las cartas del deck…")}
-					</div>
+					leyendo
 				) : (
 					<>
 						<div className="flex flex-wrap items-center gap-2.5">
@@ -279,16 +602,7 @@ export function ListaDialog({
 								maxLength={60}
 								className="h-8 w-64 text-xs"
 							/>
-							<span
-								className={cn(
-									"rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
-									pide !== null && n !== pide
-										? "bg-amber-500/20 text-amber-600 dark:text-amber-300"
-										: "bg-primary/15 text-primary",
-								)}
-							>
-								{pide !== null ? `${n} / ${pide}` : t("{n} cartas", { n })}
-							</span>
+							{cuenta}
 							<div className="relative ml-auto">
 								<Icono
 									icon="lucide:search"
@@ -320,135 +634,26 @@ export function ListaDialog({
 								{t("Ninguna")}
 							</Button>
 						</div>
-						<div className={cn("flex min-h-0 flex-1 gap-2.5", apilado && "flex-col")}>
+						<div className="flex min-h-0 flex-1 gap-2.5">
 							{commander && (
-								<section
-									className={cn(
-										"flex shrink-0 flex-col gap-1.5 rounded-lg border p-2",
-										apilado ? "max-h-40 w-full" : "w-56",
-									)}
-								>
+								<section className="flex w-56 shrink-0 flex-col gap-1.5 rounded-lg border p-2">
 									<h4 className="flex items-center gap-1.5 text-xs font-semibold">
 										<Icono icon="game-icons:crown" className="size-3.5 text-amber-500" />
 										{t("Comandante")}
 									</h4>
-									<ScrollArea className="min-h-0 flex-1">
-										<div className="flex flex-wrap gap-1.5 p-1">
-											{candidatos.length === 0 && (
-												<p className="text-[11px] text-muted-foreground">
-													{t("Ninguna carta del deck puede ser comandante.")}
-												</p>
-											)}
-											{candidatos.map((c) =>
-												miniatura(
-													c,
-													eleccion.comandantes.includes(c.id),
-													() => setEleccion((e) => alternarComandante(e, c, todas)),
-													true,
-												),
-											)}
-										</div>
-									</ScrollArea>
+									<ScrollArea className="min-h-0 flex-1">{rejillaComandantes}</ScrollArea>
 								</section>
 							)}
-							<ScrollArea className="min-h-0 flex-1 rounded-lg border">
-								<div className="flex flex-wrap content-start gap-2.5 p-2">
-									{grupos.map(([nombreCarta, copias]) => {
-										const elegidas = copias.filter(
-											(c) => eleccion.cartas.includes(c.id) || eleccion.comandantes.includes(c.id),
-										).length;
-										const primera = copias[0];
-										// Las básicas (sin límite): una casilla y cuántas.
-										if (primera?.sinLimite && copias.length > 1)
-											return (
-												<div key={nombreCarta} className="flex flex-col items-center gap-1">
-													{miniatura(primera, elegidas > 0, () =>
-														setEleccion((e) =>
-															conCopias(e, copias, elegidas > 0 ? 0 : copias.length),
-														),
-													)}
-													<div className="flex items-center gap-1 text-[11px]">
-														<Button
-															size="icon"
-															variant="outline"
-															className="size-5"
-															aria-label={t("Una menos")}
-															onClick={() => setEleccion((e) => conCopias(e, copias, elegidas - 1))}
-														>
-															−
-														</Button>
-														<span className="min-w-10 text-center tabular-nums">
-															{elegidas}/{copias.length}
-														</span>
-														<Button
-															size="icon"
-															variant="outline"
-															className="size-5"
-															aria-label={t("Una más")}
-															onClick={() => setEleccion((e) => conCopias(e, copias, elegidas + 1))}
-														>
-															+
-														</Button>
-													</div>
-													<span className="w-[75px] truncate text-center text-[10px]">
-														{nombreCarta}
-													</span>
-												</div>
-											);
-										return (
-											<div key={nombreCarta} className="flex flex-col gap-1">
-												<div className="flex gap-1">
-													{copias.map((c) =>
-														miniatura(
-															c,
-															eleccion.cartas.includes(c.id) || eleccion.comandantes.includes(c.id),
-															() => setEleccion((e) => alternarCarta(e, c, todas, singleton)),
-															eleccion.comandantes.includes(c.id),
-														),
-													)}
-												</div>
-												<span
-													className="truncate text-[10px]"
-													style={{ maxWidth: copias.length * 79 - 4 }}
-												>
-													{nombreCarta}
-												</span>
-											</div>
-										);
-									})}
-									{grupos.length === 0 && (
-										<p className="p-4 text-xs text-muted-foreground">
-											{t("Ninguna carta coincide.")}
-										</p>
-									)}
-								</div>
-							</ScrollArea>
+							<ScrollArea className="min-h-0 flex-1 rounded-lg border">{rejillaCartas}</ScrollArea>
 						</div>
 						{avisos.length > 0 && (
-							<ScrollArea viewportClassName="max-h-24">
-								<ul className="flex flex-col gap-0.5 p-1 text-xs">
-									{avisos.map((a, i) => (
-										<li
-											key={`${a.tipo}-${i}`}
-											className={cn(
-												"flex items-center gap-1.5",
-												impide(a) ? "text-destructive" : "text-amber-600 dark:text-amber-400",
-											)}
-										>
-											<Icono icon="lucide:alert-triangle" className="size-3.5 shrink-0" />
-											{textoAviso(a, t)}
-										</li>
-									))}
-								</ul>
-							</ScrollArea>
+							<ScrollArea viewportClassName="max-h-24">{listaAvisos}</ScrollArea>
 						)}
 					</>
 				)}
 				<DialogFooter className="items-center">
 					{bloquea && (
-						<span className="mr-auto text-[11px] text-muted-foreground">
-							{t("Se puede guardar a medias, pero así no deja empezar la partida.")}
-						</span>
+						<span className="mr-auto text-[11px] text-muted-foreground">{textoBloquea}</span>
 					)}
 					{lista && (
 						<Button variant="outline" onClick={() => void borrar()} disabled={guardando}>
@@ -456,17 +661,8 @@ export function ListaDialog({
 							{t("Borrar")}
 						</Button>
 					)}
-					<Button variant="outline" onClick={onCerrar} disabled={guardando}>
-						{t("Cancelar")}
-					</Button>
-					<Button onClick={() => void guardar()} disabled={!todas || !nombre.trim() || guardando}>
-						{guardando ? (
-							<Icono icon="lucide:loader-2" className="size-4 animate-spin" />
-						) : (
-							<Icono icon="lucide:check" className="size-4" />
-						)}
-						{t("Guardar")}
-					</Button>
+					{botonCancelar}
+					{botonGuardar}
 				</DialogFooter>
 			</DialogoAdaptable>
 		</Dialog>
