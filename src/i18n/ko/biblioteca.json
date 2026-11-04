@@ -154,5 +154,20 @@
 	"Filtros y orden": "필터 및 정렬",
 	"Agrupar": "그룹",
 	"Vista": "보기",
-	"Toca varias para combinarlas.": "여러 개를 탭하면 함께 적용돼요."
+	"Toca varias para combinarlas.": "여러 개를 탭하면 함께 적용돼요.",
+	"Lo que ocupan las imágenes de tu biblioteca en este equipo.": "이 기기에서 라이브러리 이미지가 차지하는 공간입니다.",
+	"Optimizar las imágenes de los decks": "덱 이미지 최적화",
+	"Pasa los PNG sin transparencia a JPEG con las mismas medidas: ocupan mucho menos y al imprimir no se nota.": "투명도가 없는 PNG를 같은 크기의 JPEG로 변환합니다. 용량이 크게 줄고 인쇄물에서는 티가 나지 않습니다.",
+	"Las imágenes de tus decks ya están optimizadas.": "덱 이미지가 이미 최적화되어 있습니다.",
+	"≈ {mb} menos": "약 {mb} 절약",
+	"No se puede deshacer: las imágenes originales se borran de este equipo. Si quieres conservarlas, guarda antes el deck en «Calidad original» desde «Compartir».": "되돌릴 수 없습니다. 원본 이미지가 이 기기에서 삭제됩니다. 보관하려면 먼저 “공유”에서 덱을 “원본 품질”로 저장하세요.",
+	"Sal de «Diseñar» para optimizar las imágenes.": "이미지를 최적화하려면 “디자인”에서 나가세요.",
+	"Se liberarán unos {mb}": "약 {mb}가 확보됩니다",
+	"Optimizar": "최적화",
+	"¿Optimizar las imágenes?": "이미지를 최적화할까요?",
+	"Se comprimirán las imágenes de los decks elegidos y se borrarán las originales de este equipo. No se puede deshacer.": "선택한 덱의 이미지를 압축하고 원본을 이 기기에서 삭제합니다. 되돌릴 수 없습니다.",
+	"Optimizar y borrar los originales": "최적화하고 원본 삭제",
+	"Optimización cancelada: no ha cambiado nada.": "최적화를 취소했습니다. 변경된 내용은 없습니다.",
+	"Imágenes optimizadas: {mb} liberados": "이미지 최적화 완료: {mb} 확보",
+	"Borrar las imágenes sin usar y optimizar las de tus decks.": "사용하지 않는 이미지를 삭제하고 덱 이미지를 최적화합니다."
 }

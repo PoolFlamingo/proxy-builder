@@ -4,11 +4,12 @@ use std::path::PathBuf;
 
 use proxy_core::model::{Deck, FaceImage};
 use serde::Serialize;
-use tauri::State;
+use tauri::{Emitter, Manager, State};
 use ts_rs::TS;
 
-use crate::error::AppResult;
+use crate::error::{AppError, AppResult, ErrorCode};
 use crate::fichero;
+use crate::optimizar::{DeckOptimizable, EstimacionOptimizar, OptimizarFin, OptimizarProgreso};
 use crate::state::AppState;
 use crate::store::blobs::GcReport;
 use crate::store::db::Db;
@@ -195,6 +196,74 @@ pub fn blob_generic_back(state: State<'_, AppState>) -> AppResult<FaceImage> {
 #[tauri::command]
 pub fn blob_gc(state: State<'_, AppState>) -> AppResult<GcReport> {
     state.blobs.gc(&state.db, state.ocupado())
+}
+
+/// Los decks con imágenes que se pueden optimizar («Liberar espacio»).
+#[tauri::command]
+pub fn optimizar_decks(state: State<'_, AppState>) -> AppResult<Vec<DeckOptimizable>> {
+    crate::optimizar::optimizables(&state)
+}
+
+/// Lo que liberaría optimizar estos decks.
+#[tauri::command]
+pub fn optimizar_estimar(
+    state: State<'_, AppState>,
+    ids: Vec<String>,
+) -> AppResult<EstimacionOptimizar> {
+    crate::optimizar::estimar(&state, &ids)
+}
+
+/// Optimiza estos decks, en segundo plano: el avance llega por
+/// `optimizar://progress` y el final por `optimizar://done`. Se cancela con
+/// `job_cancel` (mientras se hacen los JPEG). No con una partida o un trabajo
+/// en marcha: usan estas imágenes.
+#[tauri::command]
+pub fn optimizar_lanzar(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    ids: Vec<String>,
+) -> AppResult<u32> {
+    if state.ocupado() {
+        return Err(AppError::new(ErrorCode::Busy));
+    }
+    let (job_id, cancelado) = state.jobs.alta();
+    tauri::async_runtime::spawn_blocking(move || {
+        let estado = app.state::<AppState>();
+        let _marca = estado.trabajo();
+        let emisor = app.clone();
+        let r = crate::optimizar::optimizar(&estado, &ids, &cancelado, |hechas, total| {
+            let _ = emisor.emit(
+                "optimizar://progress",
+                OptimizarProgreso {
+                    job_id,
+                    hechas,
+                    total,
+                },
+            );
+        });
+        estado.jobs.baja(job_id);
+        let fin = match r {
+            Ok(h) => OptimizarFin {
+                job_id,
+                imagenes: h.imagenes,
+                libera: h.libera,
+                cancelado: h.cancelado,
+                error: None,
+            },
+            Err(e) => {
+                tracing::warn!(codigo = ?e.code, "no se pudieron optimizar las imágenes");
+                OptimizarFin {
+                    job_id,
+                    imagenes: 0,
+                    libera: 0,
+                    cancelado: false,
+                    error: Some(e),
+                }
+            }
+        };
+        let _ = app.emit("optimizar://done", fin);
+    });
+    Ok(job_id)
 }
 
 #[tauri::command]

@@ -154,5 +154,20 @@
 	"Filtros y orden": "フィルターと並べ替え",
 	"Agrupar": "グループ化",
 	"Vista": "表示",
-	"Toca varias para combinarlas.": "複数をタップすると組み合わせられます。"
+	"Toca varias para combinarlas.": "複数をタップすると組み合わせられます。",
+	"Lo que ocupan las imágenes de tu biblioteca en este equipo.": "このデバイスでライブラリの画像が使用している容量です。",
+	"Optimizar las imágenes de los decks": "デッキの画像を最適化",
+	"Pasa los PNG sin transparencia a JPEG con las mismas medidas: ocupan mucho menos y al imprimir no se nota.": "透過のないPNGを同じ寸法のJPEGに変換します。容量が大幅に減り、印刷でも違いは目立ちません。",
+	"Las imágenes de tus decks ya están optimizadas.": "デッキの画像はすでに最適化されています。",
+	"≈ {mb} menos": "約 {mb} 削減",
+	"No se puede deshacer: las imágenes originales se borran de este equipo. Si quieres conservarlas, guarda antes el deck en «Calidad original» desde «Compartir».": "元に戻せません。元の画像はこのデバイスから削除されます。残すには、先に「共有」からデッキを「元の画質」で保存してください。",
+	"Sal de «Diseñar» para optimizar las imágenes.": "画像を最適化するには「デザイン」を終了してください。",
+	"Se liberarán unos {mb}": "約 {mb} が解放されます",
+	"Optimizar": "最適化",
+	"¿Optimizar las imágenes?": "画像を最適化しますか?",
+	"Se comprimirán las imágenes de los decks elegidos y se borrarán las originales de este equipo. No se puede deshacer.": "選択したデッキの画像を圧縮し、元の画像をこのデバイスから削除します。元に戻せません。",
+	"Optimizar y borrar los originales": "最適化して元の画像を削除",
+	"Optimización cancelada: no ha cambiado nada.": "最適化をキャンセルしました。何も変更されていません。",
+	"Imágenes optimizadas: {mb} liberados": "画像を最適化しました:{mb} を解放",
+	"Borrar las imágenes sin usar y optimizar las de tus decks.": "未使用の画像を削除し、デッキの画像を最適化します。"
 }

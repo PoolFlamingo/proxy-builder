@@ -190,5 +190,20 @@
 	"Filtros y orden": "Filtros e ordem",
 	"Agrupar": "Agrupar",
 	"Vista": "Exibição",
-	"Toca varias para combinarlas.": "Toque em várias para combiná-las."
+	"Toca varias para combinarlas.": "Toque em várias para combiná-las.",
+	"Lo que ocupan las imágenes de tu biblioteca en este equipo.": "O espaço ocupado pelas imagens da tua biblioteca neste dispositivo.",
+	"Optimizar las imágenes de los decks": "Otimizar as imagens dos decks",
+	"Pasa los PNG sin transparencia a JPEG con las mismas medidas: ocupan mucho menos y al imprimir no se nota.": "Converte os PNG sem transparência em JPEG com as mesmas medidas: ocupam muito menos e na impressão não se nota.",
+	"Las imágenes de tus decks ya están optimizadas.": "As imagens dos teus decks já estão otimizadas.",
+	"≈ {mb} menos": "≈ {mb} a menos",
+	"No se puede deshacer: las imágenes originales se borran de este equipo. Si quieres conservarlas, guarda antes el deck en «Calidad original» desde «Compartir».": "Não pode ser anulado: as imagens originais são apagadas deste dispositivo. Para as manter, guarda antes o deck em «Qualidade original» a partir de «Partilhar».",
+	"Sal de «Diseñar» para optimizar las imágenes.": "Sai de «Desenhar» para otimizar as imagens.",
+	"Se liberarán unos {mb}": "Serão libertados cerca de {mb}",
+	"Optimizar": "Otimizar",
+	"¿Optimizar las imágenes?": "Otimizar as imagens?",
+	"Se comprimirán las imágenes de los decks elegidos y se borrarán las originales de este equipo. No se puede deshacer.": "As imagens dos decks escolhidos serão comprimidas e as originais apagadas deste dispositivo. Não pode ser anulado.",
+	"Optimizar y borrar los originales": "Otimizar e apagar os originais",
+	"Optimización cancelada: no ha cambiado nada.": "Otimização cancelada: nada mudou.",
+	"Imágenes optimizadas: {mb} liberados": "Imagens otimizadas: {mb} libertados",
+	"Borrar las imágenes sin usar y optimizar las de tus decks.": "Apagar as imagens sem uso e otimizar as dos teus decks."
 }

@@ -154,5 +154,20 @@
 	"Filtros y orden": "Filtros y orden",
 	"Agrupar": "Agrupar",
 	"Vista": "Vista",
-	"Toca varias para combinarlas.": "Toca varias para combinarlas."
+	"Toca varias para combinarlas.": "Toca varias para combinarlas.",
+	"Lo que ocupan las imágenes de tu biblioteca en este equipo.": "Lo que ocupan las imágenes de tu biblioteca en este equipo.",
+	"Optimizar las imágenes de los decks": "Optimizar las imágenes de los decks",
+	"Pasa los PNG sin transparencia a JPEG con las mismas medidas: ocupan mucho menos y al imprimir no se nota.": "Pasa los PNG sin transparencia a JPEG con las mismas medidas: ocupan mucho menos y al imprimir no se nota.",
+	"Las imágenes de tus decks ya están optimizadas.": "Las imágenes de tus decks ya están optimizadas.",
+	"≈ {mb} menos": "≈ {mb} menos",
+	"No se puede deshacer: las imágenes originales se borran de este equipo. Si quieres conservarlas, guarda antes el deck en «Calidad original» desde «Compartir».": "No se puede deshacer: las imágenes originales se borran de este equipo. Si quieres conservarlas, guarda antes el deck en «Calidad original» desde «Compartir».",
+	"Sal de «Diseñar» para optimizar las imágenes.": "Sal de «Diseñar» para optimizar las imágenes.",
+	"Se liberarán unos {mb}": "Se liberarán unos {mb}",
+	"Optimizar": "Optimizar",
+	"¿Optimizar las imágenes?": "¿Optimizar las imágenes?",
+	"Se comprimirán las imágenes de los decks elegidos y se borrarán las originales de este equipo. No se puede deshacer.": "Se comprimirán las imágenes de los decks elegidos y se borrarán las originales de este equipo. No se puede deshacer.",
+	"Optimizar y borrar los originales": "Optimizar y borrar los originales",
+	"Optimización cancelada: no ha cambiado nada.": "Optimización cancelada: no ha cambiado nada.",
+	"Imágenes optimizadas: {mb} liberados": "Imágenes optimizadas: {mb} liberados",
+	"Borrar las imágenes sin usar y optimizar las de tus decks.": "Borrar las imágenes sin usar y optimizar las de tus decks."
 }

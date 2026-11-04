@@ -7,6 +7,7 @@
 //! 🛑 Vive en `app_data_dir`, no en la caché: los decks dependen de estas
 //! imágenes y el sistema puede vaciar la caché cuando quiera.
 
+use std::collections::BTreeSet;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
@@ -80,6 +81,24 @@ pub struct GcReport {
     pub freed_bytes: u64,
 }
 
+/// Quién usa una imagen.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Usos {
+    pub decks: BTreeSet<String>,
+    /// La usa algo que no es un deck (una colección, la mesa, el reverso…).
+    pub otros: bool,
+}
+
+/// Lo que apunta la base de datos de una imagen.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FichaBlob {
+    pub ext: String,
+    pub width: u32,
+    pub height: u32,
+    pub bytes: u64,
+    pub origin: String,
+}
+
 impl BlobStore {
     pub fn new(root: PathBuf) -> BlobStore {
         BlobStore { root }
@@ -103,6 +122,26 @@ impl BlobStore {
             })
             .optional()?;
         Ok(ext.and_then(|e| Kind::from_ext(&e).map(|k| (self.path_of(hash, &e), k))))
+    }
+
+    /// Lo que se sabe de una imagen sin leerla.
+    pub fn ficha(&self, db: &Db, hash: &str) -> AppResult<Option<FichaBlob>> {
+        Ok(db
+            .conn()?
+            .query_row(
+                "SELECT ext, width, height, bytes, origin FROM blobs WHERE hash = ?1",
+                [hash],
+                |r| {
+                    Ok(FichaBlob {
+                        ext: r.get(0)?,
+                        width: r.get(1)?,
+                        height: r.get(2)?,
+                        bytes: r.get::<_, i64>(3)?.max(0) as u64,
+                        origin: r.get(4)?,
+                    })
+                },
+            )
+            .optional()?)
     }
 
     /// Guarda unos bytes y devuelve su `FaceImage`. Si ya estaban, no escribe.
@@ -201,6 +240,57 @@ impl BlobStore {
                 .execute("DELETE FROM blobs WHERE hash = ?1", [&hash])?;
             informe.removed += 1;
             informe.freed_bytes += u64::try_from(bytes).unwrap_or(0);
+        }
+        Ok(informe)
+    }
+}
+
+impl BlobStore {
+    /// Quién usa esta imagen (lo mismo que mira `gc`).
+    pub fn usos(&self, db: &Db, hash: &str) -> AppResult<Usos> {
+        let c = db.conn()?;
+        let mut u = Usos::default();
+        let mut st = c.prepare_cached(
+            "SELECT deck_id FROM deck_cards WHERE front_blob = ?1 OR back_blob = ?1
+             UNION SELECT id FROM decks WHERE default_back_blob = ?1
+             UNION SELECT owner_id FROM blob_refs WHERE blob = ?1 AND owner_kind = 'deck'",
+        )?;
+        for d in st.query_map([hash], |r| r.get::<_, String>(0))? {
+            u.decks.insert(d?);
+        }
+        u.otros = c.query_row(
+            "SELECT EXISTS(SELECT 1 FROM blob_refs WHERE blob = ?1 AND owner_kind <> 'deck')
+                 OR EXISTS(SELECT 1 FROM app_settings WHERE key = ?2 AND value = ?1)",
+            (hash, CLAVE_REVERSO),
+            |r| r.get(0),
+        )?;
+        Ok(u)
+    }
+
+    /// Borra estas imágenes si ya no las usa nadie, sin la espera de 24 h de
+    /// `gc`: quien llama sabe que acaban de dejar de hacer falta.
+    pub fn borrar_sin_usar(&self, db: &Db, hashes: &[&str]) -> AppResult<GcReport> {
+        let mut informe = GcReport {
+            removed: 0,
+            freed_bytes: 0,
+        };
+        for &hash in hashes {
+            let u = self.usos(db, hash)?;
+            if u.otros || !u.decks.is_empty() {
+                continue;
+            }
+            let Some(f) = self.ficha(db, hash)? else {
+                continue;
+            };
+            match std::fs::remove_file(self.path_of(hash, &f.ext)) {
+                Ok(()) => {}
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+                Err(e) => return Err(e.into()),
+            }
+            db.conn()?
+                .execute("DELETE FROM blobs WHERE hash = ?1", [hash])?;
+            informe.removed += 1;
+            informe.freed_bytes += f.bytes;
         }
         Ok(informe)
     }

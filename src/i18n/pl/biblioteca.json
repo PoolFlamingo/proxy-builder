@@ -199,5 +199,20 @@
 	"Filtros y orden": "Filtry i sortowanie",
 	"Agrupar": "Grupuj",
 	"Vista": "Widok",
-	"Toca varias para combinarlas.": "Dotknij kilku, aby je połączyć."
+	"Toca varias para combinarlas.": "Dotknij kilku, aby je połączyć.",
+	"Lo que ocupan las imágenes de tu biblioteca en este equipo.": "Miejsce zajmowane przez obrazy biblioteki na tym urządzeniu.",
+	"Optimizar las imágenes de los decks": "Optymalizuj obrazy talii",
+	"Pasa los PNG sin transparencia a JPEG con las mismas medidas: ocupan mucho menos y al imprimir no se nota.": "Zamienia pliki PNG bez przezroczystości na JPEG o tych samych wymiarach: zajmują znacznie mniej, a na wydruku tego nie widać.",
+	"Las imágenes de tus decks ya están optimizadas.": "Obrazy twoich talii są już zoptymalizowane.",
+	"≈ {mb} menos": "≈ {mb} mniej",
+	"No se puede deshacer: las imágenes originales se borran de este equipo. Si quieres conservarlas, guarda antes el deck en «Calidad original» desde «Compartir».": "Tego nie można cofnąć: oryginalne obrazy zostaną usunięte z tego urządzenia. Aby je zachować, najpierw zapisz talię w „Oryginalnej jakości” przez „Udostępnij”.",
+	"Sal de «Diseñar» para optimizar las imágenes.": "Wyjdź z „Projektuj”, aby zoptymalizować obrazy.",
+	"Se liberarán unos {mb}": "Zwolni się około {mb}",
+	"Optimizar": "Optymalizuj",
+	"¿Optimizar las imágenes?": "Zoptymalizować obrazy?",
+	"Se comprimirán las imágenes de los decks elegidos y se borrarán las originales de este equipo. No se puede deshacer.": "Obrazy wybranych talii zostaną skompresowane, a oryginały usunięte z tego urządzenia. Tego nie można cofnąć.",
+	"Optimizar y borrar los originales": "Optymalizuj i usuń oryginały",
+	"Optimización cancelada: no ha cambiado nada.": "Optymalizacja anulowana: nic się nie zmieniło.",
+	"Imágenes optimizadas: {mb} liberados": "Obrazy zoptymalizowane: zwolniono {mb}",
+	"Borrar las imágenes sin usar y optimizar las de tus decks.": "Usuń nieużywane obrazy i zoptymalizuj te z twoich talii."
 }

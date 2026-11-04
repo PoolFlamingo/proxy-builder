@@ -186,5 +186,20 @@
 	"Filtros y orden": "Filtri e ordine",
 	"Agrupar": "Raggruppa",
 	"Vista": "Vista",
-	"Toca varias para combinarlas.": "Tocca più etichette per combinarle."
+	"Toca varias para combinarlas.": "Tocca più etichette per combinarle.",
+	"Lo que ocupan las imágenes de tu biblioteca en este equipo.": "Lo spazio occupato dalle immagini della tua libreria su questo dispositivo.",
+	"Optimizar las imágenes de los decks": "Ottimizza le immagini dei deck",
+	"Pasa los PNG sin transparencia a JPEG con las mismas medidas: ocupan mucho menos y al imprimir no se nota.": "Converte i PNG senza trasparenza in JPEG con le stesse dimensioni: occupano molto meno e in stampa non si nota.",
+	"Las imágenes de tus decks ya están optimizadas.": "Le immagini dei tuoi deck sono già ottimizzate.",
+	"≈ {mb} menos": "≈ {mb} in meno",
+	"No se puede deshacer: las imágenes originales se borran de este equipo. Si quieres conservarlas, guarda antes el deck en «Calidad original» desde «Compartir».": "Non si può annullare: le immagini originali vengono eliminate da questo dispositivo. Per conservarle, salva prima il deck in «Qualità originale» da «Condividi».",
+	"Sal de «Diseñar» para optimizar las imágenes.": "Esci da «Progetta» per ottimizzare le immagini.",
+	"Se liberarán unos {mb}": "Si libereranno circa {mb}",
+	"Optimizar": "Ottimizza",
+	"¿Optimizar las imágenes?": "Ottimizzare le immagini?",
+	"Se comprimirán las imágenes de los decks elegidos y se borrarán las originales de este equipo. No se puede deshacer.": "Le immagini dei deck scelti verranno compresse e le originali eliminate da questo dispositivo. Non si può annullare.",
+	"Optimizar y borrar los originales": "Ottimizza ed elimina gli originali",
+	"Optimización cancelada: no ha cambiado nada.": "Ottimizzazione annullata: non è cambiato nulla.",
+	"Imágenes optimizadas: {mb} liberados": "Immagini ottimizzate: {mb} liberati",
+	"Borrar las imágenes sin usar y optimizar las de tus decks.": "Elimina le immagini inutilizzate e ottimizza quelle dei tuoi deck."
 }

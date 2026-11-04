@@ -22,6 +22,7 @@ import { useUi } from "@/stores/ui-store";
 import { BarraHerramientas } from "./barra-herramientas";
 import { BarraLateral } from "./barra-lateral";
 import { useEtiquetasUi } from "./etiquetas-ui";
+import { DialogoLiberar } from "./liberar-dialog";
 import { type Acciones, AccionesDeck, BotonMenuDeck } from "./menu-deck";
 import { alPulsarDeck, entrarEnSeleccion, seleccionar } from "./organizar";
 import { useFiltros, usePrefs } from "./preferencias";
@@ -54,6 +55,7 @@ export function LibraryScreen() {
 	const [renombrar, setRenombrar] = useState<DeckSummary | null>(null);
 	const [borrar, setBorrar] = useState<string[] | null>(null);
 	const [propiedades, setPropiedades] = useState<string | null>(null);
+	const [liberando, setLiberando] = useState(false);
 	const buscar = useRef<HTMLInputElement>(null);
 
 	const intentar = useCallback(
@@ -142,14 +144,7 @@ export function LibraryScreen() {
 		usePasarUi.getState().abrirImportar(ruta);
 	});
 
-	const liberar = intentar(async () => {
-		const r = await call("blob_gc", {});
-		toast.success(
-			r.removed > 0
-				? t("{n} imágenes sin usar borradas ({mb})", { n: r.removed, mb: megas(r.freedBytes) })
-				: t("No había imágenes sin usar (se guardan 24 h por si acaso)."),
-		);
-	});
+	const liberar = () => setLiberando(true);
 
 	const acciones: Acciones = {
 		abrir,
@@ -307,6 +302,7 @@ export function LibraryScreen() {
 						await refrescar();
 					})}
 				/>
+				<DialogoLiberar abierto={liberando} onCerrar={() => setLiberando(false)} />
 				<PropiedadesDialog
 					id={propiedades}
 					onCerrar={() => setPropiedades(null)}

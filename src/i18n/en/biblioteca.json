@@ -181,5 +181,20 @@
 	"Filtros y orden": "Filters and sorting",
 	"Agrupar": "Group",
 	"Vista": "View",
-	"Toca varias para combinarlas.": "Tap several to combine them."
+	"Toca varias para combinarlas.": "Tap several to combine them.",
+	"Lo que ocupan las imágenes de tu biblioteca en este equipo.": "The space your library's images take up on this device.",
+	"Optimizar las imágenes de los decks": "Optimize deck images",
+	"Pasa los PNG sin transparencia a JPEG con las mismas medidas: ocupan mucho menos y al imprimir no se nota.": "Converts PNGs without transparency to JPEG at the same size: they take far less space and it doesn't show in print.",
+	"Las imágenes de tus decks ya están optimizadas.": "Your deck images are already optimized.",
+	"≈ {mb} menos": "≈ {mb} less",
+	"No se puede deshacer: las imágenes originales se borran de este equipo. Si quieres conservarlas, guarda antes el deck en «Calidad original» desde «Compartir».": "This can't be undone: the original images are deleted from this device. To keep them, first save the deck in “Original quality” from “Share”.",
+	"Sal de «Diseñar» para optimizar las imágenes.": "Leave “Design” to optimize the images.",
+	"Se liberarán unos {mb}": "About {mb} will be freed",
+	"Optimizar": "Optimize",
+	"¿Optimizar las imágenes?": "Optimize the images?",
+	"Se comprimirán las imágenes de los decks elegidos y se borrarán las originales de este equipo. No se puede deshacer.": "The images of the chosen decks will be compressed and the originals deleted from this device. This can't be undone.",
+	"Optimizar y borrar los originales": "Optimize and delete originals",
+	"Optimización cancelada: no ha cambiado nada.": "Optimization canceled: nothing has changed.",
+	"Imágenes optimizadas: {mb} liberados": "Images optimized: {mb} freed",
+	"Borrar las imágenes sin usar y optimizar las de tus decks.": "Delete unused images and optimize those in your decks."
 }

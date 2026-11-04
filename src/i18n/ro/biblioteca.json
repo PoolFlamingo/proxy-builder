@@ -190,5 +190,20 @@
 	"Filtros y orden": "Filtre și ordine",
 	"Agrupar": "Grupează",
 	"Vista": "Vizualizare",
-	"Toca varias para combinarlas.": "Atinge mai multe pentru a le combina."
+	"Toca varias para combinarlas.": "Atinge mai multe pentru a le combina.",
+	"Lo que ocupan las imágenes de tu biblioteca en este equipo.": "Spațiul ocupat de imaginile bibliotecii tale pe acest dispozitiv.",
+	"Optimizar las imágenes de los decks": "Optimizează imaginile deckurilor",
+	"Pasa los PNG sin transparencia a JPEG con las mismas medidas: ocupan mucho menos y al imprimir no se nota.": "Convertește PNG-urile fără transparență în JPEG cu aceleași dimensiuni: ocupă mult mai puțin, iar la tipărire nu se observă.",
+	"Las imágenes de tus decks ya están optimizadas.": "Imaginile deckurilor tale sunt deja optimizate.",
+	"≈ {mb} menos": "≈ {mb} mai puțin",
+	"No se puede deshacer: las imágenes originales se borran de este equipo. Si quieres conservarlas, guarda antes el deck en «Calidad original» desde «Compartir».": "Nu se poate anula: imaginile originale sunt șterse de pe acest dispozitiv. Ca să le păstrezi, salvează mai întâi deckul în „Calitate originală” din „Partajează”.",
+	"Sal de «Diseñar» para optimizar las imágenes.": "Ieși din „Proiectează” pentru a optimiza imaginile.",
+	"Se liberarán unos {mb}": "Se vor elibera aproximativ {mb}",
+	"Optimizar": "Optimizează",
+	"¿Optimizar las imágenes?": "Optimizezi imaginile?",
+	"Se comprimirán las imágenes de los decks elegidos y se borrarán las originales de este equipo. No se puede deshacer.": "Imaginile deckurilor alese vor fi comprimate, iar cele originale șterse de pe acest dispozitiv. Nu se poate anula.",
+	"Optimizar y borrar los originales": "Optimizează și șterge originalele",
+	"Optimización cancelada: no ha cambiado nada.": "Optimizare anulată: nu s-a schimbat nimic.",
+	"Imágenes optimizadas: {mb} liberados": "Imagini optimizate: {mb} eliberați",
+	"Borrar las imágenes sin usar y optimizar las de tus decks.": "Șterge imaginile nefolosite și optimizează-le pe cele din deckuri."
 }

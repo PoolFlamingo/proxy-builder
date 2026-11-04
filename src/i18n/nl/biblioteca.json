@@ -181,5 +181,20 @@
 	"Filtros y orden": "Filters en volgorde",
 	"Agrupar": "Groeperen",
 	"Vista": "Weergave",
-	"Toca varias para combinarlas.": "Tik op meerdere om ze te combineren."
+	"Toca varias para combinarlas.": "Tik op meerdere om ze te combineren.",
+	"Lo que ocupan las imágenes de tu biblioteca en este equipo.": "De ruimte die de afbeeldingen van je bibliotheek op dit apparaat innemen.",
+	"Optimizar las imágenes de los decks": "Deckafbeeldingen optimaliseren",
+	"Pasa los PNG sin transparencia a JPEG con las mismas medidas: ocupan mucho menos y al imprimir no se nota.": "Zet PNG's zonder transparantie om naar JPEG met dezelfde afmetingen: ze nemen veel minder ruimte in en bij het afdrukken zie je het niet.",
+	"Las imágenes de tus decks ya están optimizadas.": "De afbeeldingen van je decks zijn al geoptimaliseerd.",
+	"≈ {mb} menos": "≈ {mb} minder",
+	"No se puede deshacer: las imágenes originales se borran de este equipo. Si quieres conservarlas, guarda antes el deck en «Calidad original» desde «Compartir».": "Dit kan niet ongedaan worden gemaakt: de originele afbeeldingen worden van dit apparaat verwijderd. Bewaar het deck eerst in “Originele kwaliteit” via “Delen” om ze te behouden.",
+	"Sal de «Diseñar» para optimizar las imágenes.": "Verlaat “Ontwerpen” om de afbeeldingen te optimaliseren.",
+	"Se liberarán unos {mb}": "Er komt ongeveer {mb} vrij",
+	"Optimizar": "Optimaliseren",
+	"¿Optimizar las imágenes?": "Afbeeldingen optimaliseren?",
+	"Se comprimirán las imágenes de los decks elegidos y se borrarán las originales de este equipo. No se puede deshacer.": "De afbeeldingen van de gekozen decks worden gecomprimeerd en de originelen van dit apparaat verwijderd. Dit kan niet ongedaan worden gemaakt.",
+	"Optimizar y borrar los originales": "Optimaliseren en originelen verwijderen",
+	"Optimización cancelada: no ha cambiado nada.": "Optimalisatie geannuleerd: er is niets veranderd.",
+	"Imágenes optimizadas: {mb} liberados": "Afbeeldingen geoptimaliseerd: {mb} vrijgemaakt",
+	"Borrar las imágenes sin usar y optimizar las de tus decks.": "Ongebruikte afbeeldingen verwijderen en die van je decks optimaliseren."
 }

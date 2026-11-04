@@ -6,11 +6,12 @@ import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { megas } from "@/features/export/acciones";
+import { DialogoLiberar } from "@/features/library/liberar-dialog";
 import { call } from "@/lib/ipc";
 
 /**
  * **Almacenamiento**, en Ajustes: lo que ocupa la caché de miniaturas (se
- * vuelve a generar sola) y liberar las imágenes que ya no usa ningún deck.
+ * vuelve a generar sola) y «Liberar espacio» (`DialogoLiberar`).
  * Son las mismas acciones del panel de la lista y de la Biblioteca, juntas
  * donde se buscan.
  */
@@ -18,7 +19,7 @@ export function Almacenamiento() {
 	const { t, mensaje } = useLang();
 	const [cache, setCache] = useState<CacheStats | null>(null);
 	const [confirmar, setConfirmar] = useState(false);
-	const [ocupado, setOcupado] = useState(false);
+	const [liberando, setLiberando] = useState(false);
 	const leer = () =>
 		call("cache_stats", {})
 			.then(setCache)
@@ -26,22 +27,6 @@ export function Almacenamiento() {
 	useEffect(() => {
 		void leer();
 	}, []);
-
-	const liberar = async () => {
-		setOcupado(true);
-		try {
-			const r = await call("blob_gc", {});
-			toast.success(
-				r.removed > 0
-					? t("{n} imágenes sin usar borradas ({mb})", { n: r.removed, mb: megas(r.freedBytes) })
-					: t("No había imágenes sin usar (se guardan 24 h por si acaso)."),
-			);
-		} catch (e) {
-			toast.error(mensaje(e));
-		} finally {
-			setOcupado(false);
-		}
-	};
 
 	return (
 		<div className="flex flex-col gap-2.5 rounded-lg border p-2.5">
@@ -61,15 +46,15 @@ export function Almacenamiento() {
 				</Button>
 			</div>
 			<div className="flex flex-wrap items-center justify-between gap-2.5 text-xs">
-				<span className="text-muted-foreground">{t("Imágenes que ya no usa ningún deck.")}</span>
-				<Button size="xs" variant="outline" disabled={ocupado} onClick={() => void liberar()}>
-					<Icono
-						icon={ocupado ? "lucide:loader-2" : "lucide:hard-drive-download"}
-						className={ocupado ? "animate-spin" : undefined}
-					/>
+				<span className="text-muted-foreground">
+					{t("Borrar las imágenes sin usar y optimizar las de tus decks.")}
+				</span>
+				<Button size="xs" variant="outline" onClick={() => setLiberando(true)}>
+					<Icono icon="lucide:hard-drive-download" />
 					{t("Liberar espacio")}
 				</Button>
 			</div>
+			<DialogoLiberar abierto={liberando} onCerrar={() => setLiberando(false)} />
 			<Confirmar
 				abierto={confirmar}
 				onCerrar={() => setConfirmar(false)}

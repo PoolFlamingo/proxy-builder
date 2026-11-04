@@ -186,5 +186,20 @@
 	"Filtros y orden": "Filtres et tri",
 	"Agrupar": "Regrouper",
 	"Vista": "Affichage",
-	"Toca varias para combinarlas.": "Touchez-en plusieurs pour les combiner."
+	"Toca varias para combinarlas.": "Touchez-en plusieurs pour les combiner.",
+	"Lo que ocupan las imágenes de tu biblioteca en este equipo.": "L'espace occupé par les images de votre bibliothèque sur cet appareil.",
+	"Optimizar las imágenes de los decks": "Optimiser les images des decks",
+	"Pasa los PNG sin transparencia a JPEG con las mismas medidas: ocupan mucho menos y al imprimir no se nota.": "Convertit les PNG sans transparence en JPEG aux mêmes dimensions : ils occupent bien moins de place et cela ne se voit pas à l'impression.",
+	"Las imágenes de tus decks ya están optimizadas.": "Les images de vos decks sont déjà optimisées.",
+	"≈ {mb} menos": "≈ {mb} de moins",
+	"No se puede deshacer: las imágenes originales se borran de este equipo. Si quieres conservarlas, guarda antes el deck en «Calidad original» desde «Compartir».": "Action irréversible : les images d'origine sont supprimées de cet appareil. Pour les conserver, enregistrez d'abord le deck en « Qualité d'origine » depuis « Partager ».",
+	"Sal de «Diseñar» para optimizar las imágenes.": "Quittez « Concevoir » pour optimiser les images.",
+	"Se liberarán unos {mb}": "Environ {mb} seront libérés",
+	"Optimizar": "Optimiser",
+	"¿Optimizar las imágenes?": "Optimiser les images ?",
+	"Se comprimirán las imágenes de los decks elegidos y se borrarán las originales de este equipo. No se puede deshacer.": "Les images des decks choisis seront compressées et les originales supprimées de cet appareil. Action irréversible.",
+	"Optimizar y borrar los originales": "Optimiser et supprimer les originaux",
+	"Optimización cancelada: no ha cambiado nada.": "Optimisation annulée : rien n'a changé.",
+	"Imágenes optimizadas: {mb} liberados": "Images optimisées : {mb} libérés",
+	"Borrar las imágenes sin usar y optimizar las de tus decks.": "Supprimer les images inutilisées et optimiser celles de vos decks."
 }

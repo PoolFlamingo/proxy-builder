@@ -199,5 +199,20 @@
 	"Filtros y orden": "Фильтры и сортировка",
 	"Agrupar": "Группировка",
 	"Vista": "Вид",
-	"Toca varias para combinarlas.": "Нажмите на несколько, чтобы объединить их."
+	"Toca varias para combinarlas.": "Нажмите на несколько, чтобы объединить их.",
+	"Lo que ocupan las imágenes de tu biblioteca en este equipo.": "Место, которое занимают изображения библиотеки на этом устройстве.",
+	"Optimizar las imágenes de los decks": "Оптимизировать изображения колод",
+	"Pasa los PNG sin transparencia a JPEG con las mismas medidas: ocupan mucho menos y al imprimir no se nota.": "Преобразует PNG без прозрачности в JPEG того же размера: они занимают намного меньше места, а при печати это незаметно.",
+	"Las imágenes de tus decks ya están optimizadas.": "Изображения ваших колод уже оптимизированы.",
+	"≈ {mb} menos": "≈ на {mb} меньше",
+	"No se puede deshacer: las imágenes originales se borran de este equipo. Si quieres conservarlas, guarda antes el deck en «Calidad original» desde «Compartir».": "Это нельзя отменить: исходные изображения будут удалены с этого устройства. Чтобы сохранить их, сначала сохраните колоду в «Исходном качестве» через «Поделиться».",
+	"Sal de «Diseñar» para optimizar las imágenes.": "Выйдите из «Дизайна», чтобы оптимизировать изображения.",
+	"Se liberarán unos {mb}": "Освободится примерно {mb}",
+	"Optimizar": "Оптимизировать",
+	"¿Optimizar las imágenes?": "Оптимизировать изображения?",
+	"Se comprimirán las imágenes de los decks elegidos y se borrarán las originales de este equipo. No se puede deshacer.": "Изображения выбранных колод будут сжаты, а исходные удалены с этого устройства. Это нельзя отменить.",
+	"Optimizar y borrar los originales": "Оптимизировать и удалить оригиналы",
+	"Optimización cancelada: no ha cambiado nada.": "Оптимизация отменена: ничего не изменилось.",
+	"Imágenes optimizadas: {mb} liberados": "Изображения оптимизированы: освобождено {mb}",
+	"Borrar las imágenes sin usar y optimizar las de tus decks.": "Удалить неиспользуемые изображения и оптимизировать изображения колод."
 }

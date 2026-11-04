@@ -154,5 +154,20 @@
 	"Filtros y orden": "筛选与排序",
 	"Agrupar": "分组",
 	"Vista": "视图",
-	"Toca varias para combinarlas.": "点按多个即可组合。"
+	"Toca varias para combinarlas.": "点按多个即可组合。",
+	"Lo que ocupan las imágenes de tu biblioteca en este equipo.": "你的牌库图片在此设备上占用的空间。",
+	"Optimizar las imágenes de los decks": "优化套牌图片",
+	"Pasa los PNG sin transparencia a JPEG con las mismas medidas: ocupan mucho menos y al imprimir no se nota.": "将无透明度的 PNG 转换为相同尺寸的 JPEG:占用空间小得多,打印时看不出差别。",
+	"Las imágenes de tus decks ya están optimizadas.": "你的套牌图片已经优化。",
+	"≈ {mb} menos": "约减少 {mb}",
+	"No se puede deshacer: las imágenes originales se borran de este equipo. Si quieres conservarlas, guarda antes el deck en «Calidad original» desde «Compartir».": "此操作无法撤销:原始图片将从此设备删除。要保留它们,请先通过“分享”以“原始质量”保存套牌。",
+	"Sal de «Diseñar» para optimizar las imágenes.": "请退出“设计”后再优化图片。",
+	"Se liberarán unos {mb}": "将释放约 {mb}",
+	"Optimizar": "优化",
+	"¿Optimizar las imágenes?": "要优化图片吗?",
+	"Se comprimirán las imágenes de los decks elegidos y se borrarán las originales de este equipo. No se puede deshacer.": "所选套牌的图片将被压缩,原始图片将从此设备删除。此操作无法撤销。",
+	"Optimizar y borrar los originales": "优化并删除原始图片",
+	"Optimización cancelada: no ha cambiado nada.": "已取消优化:没有任何更改。",
+	"Imágenes optimizadas: {mb} liberados": "图片已优化:释放了 {mb}",
+	"Borrar las imágenes sin usar y optimizar las de tus decks.": "删除未使用的图片并优化套牌中的图片。"
 }

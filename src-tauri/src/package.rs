@@ -17,23 +17,31 @@
 //! opcionales: un paquete viejo se importa como un deck nuevo, y una app vieja
 //! ignora los nuevos (`package::VERSION` sigue en 2).
 //!
+//! Un paquete puede ir **optimizado** ([`Modo::Optimizado`]): los
+//! PNG sin transparencia viajan como JPEG con las mismas medidas y el manifiesto
+//! apunta a sus huellas nuevas. El almacén de quien comparte no cambia. Para una
+//! app vieja es un paquete normal: solo lleva JPEG en vez de PNG.
+//!
 //! 🛑 Al importar no se confía en nada: se ignoran las entradas con rutas
 //! raras (zip-slip), cada imagen tiene que dar la huella que dice su nombre y
 //! el deck nace con ids nuevos.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::io::{Read, Seek, Write};
 use std::path::Path;
 
 use proxy_core::diseno::modelo::Collection;
+use proxy_core::imaging::compactar;
 use proxy_core::model::{BackSpec, Deck};
+use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use ts_rs::TS;
 use zip::write::SimpleFileOptions;
 use zip::{CompressionMethod, ZipArchive, ZipWriter};
 
 use crate::error::{AppError, AppResult, ErrorCode};
-use crate::store::blobs::{es_huella, escribir_atomico, BlobStore};
+use crate::store::blobs::{es_huella, escribir_atomico, BlobStore, FichaBlob};
 use crate::store::db::Db;
 use crate::store::{colecciones, decks, etiquetas, linaje, listas};
 use mesa::lista::ListaDeJuego;
@@ -42,6 +50,31 @@ pub const FORMATO: &str = "proxy-builder-deck";
 pub const VERSION: u32 = 2;
 /// Tope por entrada al descomprimir (una imagen de 12.000 px en PNG cabe de sobra).
 const MAX_ENTRADA: u64 = 512 * 1024 * 1024;
+/// La calidad JPEG de un paquete optimizado: a la medida de impresión no se
+/// nota.
+const CALIDAD_OPTIMIZADA: u8 = 92;
+/// La de las imágenes de «antes» de un diseño: solo sirven para quitarlo.
+const CALIDAD_ANTES: u8 = 85;
+/// Lo que suele pesar por píxel cada calidad, medido con ilustraciones reales:
+/// para decir cuánto pesará el paquete sin tener que comprimirlo.
+const BYTES_POR_PIXEL_OPTIMIZADA: f64 = 0.33;
+const BYTES_POR_PIXEL_ANTES: f64 = 0.24;
+/// Cuántas imágenes se tienen en memoria a la vez, como mucho.
+const LOTE_MAXIMO: usize = 16;
+
+/// Cómo va un deck en su paquete.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export, rename = "ModoPaquete")]
+pub enum Modo {
+    /// Con sus imágenes tal cual.
+    #[default]
+    Original,
+    /// Con los PNG sin transparencia en JPEG.
+    Optimizado,
+    /// Solo lo que se puede volver a bajar (`proxy_core::compartir`).
+    SinProxies,
+}
 
 #[derive(Serialize, Deserialize)]
 struct Manifiesto {
@@ -79,6 +112,10 @@ struct Biblioteca {
     /// La carta elegida como portada (su id en el deck del paquete).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     portada: Option<String>,
+    /// Lleva imágenes comprimidas para compartirlo: quien lo recibe no tiene
+    /// las originales.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    optimizado: bool,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -137,7 +174,121 @@ fn colecciones_del_deck(deck: &Deck, db: &Db) -> AppResult<Vec<Collection>> {
         .collect())
 }
 
-fn escribir<W: Write + Seek>(w: W, deck: &Deck, blobs: &BlobStore, db: &Db) -> AppResult<W> {
+/// Las imágenes del deck que merece la pena intentar comprimir, con su calidad.
+/// Las de Scryfall no: llevan las esquinas transparentes.
+pub(crate) fn calidades_de(
+    deck: &Deck,
+    blobs: &BlobStore,
+    db: &Db,
+) -> AppResult<BTreeMap<String, u8>> {
+    let mut c: BTreeMap<String, u8> = BTreeMap::new();
+    // Primero lo de «antes»: si esa imagen se usa también en otro sitio, manda
+    // la calidad de ese otro.
+    for d in deck.cards.iter().filter_map(|c| c.design.as_ref()) {
+        if let Some(f) = &d.before.front {
+            c.insert(f.blob.clone(), CALIDAD_ANTES);
+        }
+        if let BackSpec::Dfc { image } | BackSpec::Custom { image } = &d.before.back {
+            c.insert(image.blob.clone(), CALIDAD_ANTES);
+        }
+    }
+    let mut poner = |h: &str| {
+        c.insert(h.to_string(), CALIDAD_OPTIMIZADA);
+    };
+    if let Some(b) = &deck.default_back {
+        poner(&b.blob);
+    }
+    for carta in &deck.cards {
+        if let Some(f) = &carta.front {
+            poner(&f.blob);
+        }
+        if let BackSpec::Dfc { image } | BackSpec::Custom { image } = &carta.back {
+            poner(&image.blob);
+        }
+        if let Some(d) = &carta.design {
+            for arte in d.faces.iter().filter_map(|f| f.art.as_ref()) {
+                poner(&arte.image.blob);
+            }
+        }
+    }
+    for h in deck
+        .cards
+        .iter()
+        .filter_map(|c| c.design.as_ref())
+        .flat_map(|d| d.blobs())
+    {
+        c.entry(h.to_string()).or_insert(CALIDAD_OPTIMIZADA);
+    }
+    let mut buenas = BTreeMap::new();
+    for (h, q) in c {
+        if blobs
+            .ficha(db, &h)?
+            .is_some_and(|f| f.ext == "png" && f.origin == "upload")
+        {
+            buenas.insert(h, q);
+        }
+    }
+    Ok(buenas)
+}
+
+/// Cambia en todo el JSON cada huella por la nueva: así no se queda fuera
+/// ninguna referencia, ni las que se añadan al modelo más adelante.
+pub(crate) fn cambiar_huellas(v: &mut serde_json::Value, cambios: &BTreeMap<String, String>) {
+    match v {
+        serde_json::Value::String(s) => {
+            if let Some(nueva) = cambios.get(s.as_str()) {
+                s.clone_from(nueva);
+            }
+        }
+        serde_json::Value::Array(a) => a.iter_mut().for_each(|x| cambiar_huellas(x, cambios)),
+        serde_json::Value::Object(o) => o.values_mut().for_each(|x| cambiar_huellas(x, cambios)),
+        _ => {}
+    }
+}
+
+/// Una imagen tal como va en el paquete.
+struct EnPaquete {
+    origen: String,
+    hash: String,
+    ext: String,
+    bytes: Vec<u8>,
+}
+
+fn preparar_imagen(hash: &str, ruta: &Path, calidad: Option<u8>) -> AppResult<EnPaquete> {
+    let bytes = std::fs::read(ruta)?;
+    if let Some(jpeg) = calidad.and_then(|q| compactar::png_a_jpeg(&bytes, q)) {
+        return Ok(EnPaquete {
+            origen: hash.to_string(),
+            hash: Sha256::digest(&jpeg)
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect(),
+            ext: "jpg".into(),
+            bytes: jpeg,
+        });
+    }
+    Ok(EnPaquete {
+        origen: hash.to_string(),
+        hash: hash.to_string(),
+        ext: ruta
+            .extension()
+            .and_then(|e| e.to_str())
+            .unwrap_or("bin")
+            .to_string(),
+        bytes,
+    })
+}
+
+/// `avance(hechas, total)` se llama tras cada lote de imágenes; si devuelve
+/// `false`, se deja de escribir (`Cancelled`).
+fn escribir<W: Write + Seek>(
+    w: W,
+    deck: &Deck,
+    blobs: &BlobStore,
+    db: &Db,
+    optimizar: bool,
+    avance: &dyn Fn(u32, u32) -> bool,
+) -> AppResult<W> {
     let mut zip = ZipWriter::new(w);
     let cols = colecciones_del_deck(deck, db)?;
     let mut todas = blobs_del_deck(deck);
@@ -145,6 +296,64 @@ fn escribir<W: Write + Seek>(w: W, deck: &Deck, blobs: &BlobStore, db: &Db) -> A
         cols.iter()
             .filter_map(|c| c.emblem.as_ref().map(|e| e.blob.clone())),
     );
+    let calidades = if optimizar {
+        calidades_de(deck, blobs, db)?
+    } else {
+        BTreeMap::new()
+    };
+    let rutas = todas
+        .iter()
+        .map(|h| {
+            let (ruta, _) = blobs
+                .locate(db, h)?
+                .ok_or_else(|| AppError::new(ErrorCode::NotFound).with("blob", h))?;
+            Ok((h.as_str(), ruta))
+        })
+        .collect::<AppResult<Vec<_>>>()?;
+
+    // Fecha fija: el mismo deck da el mismo fichero.
+    let fecha = zip::DateTime::default();
+    let deflate = SimpleFileOptions::default()
+        .compression_method(CompressionMethod::Deflated)
+        .last_modified_time(fecha);
+    let guardado = SimpleFileOptions::default()
+        .compression_method(CompressionMethod::Stored)
+        .last_modified_time(fecha);
+
+    // Las imágenes, unas pocas a la vez. El manifiesto va después: necesita
+    // las huellas nuevas (se lee por su nombre, el orden da igual).
+    let total = rutas.len() as u32;
+    let cancelado = || AppError::new(ErrorCode::Cancelled);
+    if !avance(0, total) {
+        return Err(cancelado());
+    }
+    let lote = rayon::current_num_threads().clamp(1, LOTE_MAXIMO);
+    let mut cambios = BTreeMap::new();
+    let mut escritas = BTreeSet::new();
+    let mut hechas = 0u32;
+    for trozo in rutas.chunks(lote) {
+        let preparadas = trozo
+            .par_iter()
+            .map(|(h, ruta)| preparar_imagen(h, ruta, calidades.get(*h).copied()))
+            .collect::<AppResult<Vec<_>>>()?;
+        hechas += preparadas.len() as u32;
+        for img in preparadas {
+            // Dos PNG con los mismos píxeles dan el mismo JPEG, y un ZIP no
+            // admite dos entradas con el mismo nombre.
+            if escritas.insert(img.hash.clone()) {
+                zip.start_file(format!("blobs/{}.{}", img.hash, img.ext), guardado)
+                    .map_err(de_zip)?;
+                zip.write_all(&img.bytes)?;
+            }
+            if img.hash != img.origen {
+                cambios.insert(img.origen, img.hash);
+            }
+        }
+        if !avance(hechas, total) {
+            return Err(cancelado());
+        }
+    }
+
     let lin = linaje::de(db, &deck.id)?;
     let biblioteca = Biblioteca {
         etiquetas: etiquetas::de_deck(db, &deck.id)?
@@ -161,97 +370,124 @@ fn escribir<W: Write + Seek>(w: W, deck: &Deck, blobs: &BlobStore, db: &Db) -> A
         linaje: Some(lin.linaje),
         actualizado: Some(lin.actualizado),
         portada: decks::portada_de(db, &deck.id)?,
+        optimizado: !cambios.is_empty(),
     };
-    let json = serde_json::to_vec_pretty(&Manifiesto {
+    let manifiesto = Manifiesto {
         format: FORMATO.into(),
         version: VERSION,
         deck: deck.clone(),
         colecciones: cols,
         biblioteca: Some(biblioteca),
-    })
-    .map_err(|e| AppError::new(ErrorCode::Internal).with("detalle", e))?;
-    // Fecha fija: el mismo deck da el mismo fichero.
-    let fecha = zip::DateTime::default();
-    let deflate = SimpleFileOptions::default()
-        .compression_method(CompressionMethod::Deflated)
-        .last_modified_time(fecha);
-    let guardado = SimpleFileOptions::default()
-        .compression_method(CompressionMethod::Stored)
-        .last_modified_time(fecha);
+    };
+    let interno = |e: serde_json::Error| AppError::new(ErrorCode::Internal).with("detalle", e);
+    let json = if cambios.is_empty() {
+        serde_json::to_vec_pretty(&manifiesto).map_err(interno)?
+    } else {
+        let mut valor = serde_json::to_value(&manifiesto).map_err(interno)?;
+        cambiar_huellas(&mut valor, &cambios);
+        serde_json::to_vec_pretty(&valor).map_err(interno)?
+    };
     zip.start_file("manifest.json", deflate).map_err(de_zip)?;
     zip.write_all(&json)?;
-    for hash in todas {
-        let (ruta, _) = blobs
-            .locate(db, &hash)?
-            .ok_or_else(|| AppError::new(ErrorCode::NotFound).with("blob", &hash))?;
-        let ext = ruta.extension().and_then(|e| e.to_str()).unwrap_or("bin");
-        zip.start_file(format!("blobs/{hash}.{ext}"), guardado)
-            .map_err(de_zip)?;
-        zip.write_all(&std::fs::read(&ruta)?)?;
-    }
     zip.finish().map_err(de_zip)
 }
 
 /// Escribe el paquete de un deck (de una vez: nunca queda uno a medias).
 pub fn export(deck: &Deck, destino: &Path, blobs: &BlobStore, db: &Db) -> AppResult<u64> {
-    export_con(deck, destino, blobs, db, false)
+    export_con(deck, destino, blobs, db, Modo::Original)
 }
 
-/// Lo mismo, con o sin proxies (`proxy_core::compartir::sin_proxies`): sin
-/// ellos, el paquete lleva solo lo que se puede volver a bajar.
+/// Lo mismo, en cualquiera de los modos.
 pub fn export_con(
     deck: &Deck,
     destino: &Path,
     blobs: &BlobStore,
     db: &Db,
-    sin_proxies: bool,
+    modo: Modo,
 ) -> AppResult<u64> {
-    let deck = segun(deck, sin_proxies);
-    let buf = escribir(std::io::Cursor::new(Vec::new()), &deck, blobs, db)?.into_inner();
+    let d = segun(deck, modo);
+    let buf = escribir(
+        std::io::Cursor::new(Vec::new()),
+        &d,
+        blobs,
+        db,
+        modo == Modo::Optimizado,
+        &|_, _| true,
+    )?
+    .into_inner();
     escribir_atomico(destino, &buf)?;
     Ok(buf.len() as u64)
 }
 
 /// Escribe el paquete directamente en un fichero (para enviarlo: sin tenerlo
-/// entero en memoria, una imagen cada vez). El que llama lo borra después.
+/// entero en memoria, unas pocas imágenes cada vez), avisando de cómo va. El
+/// que llama lo borra después.
 pub fn export_en_fichero(
     deck: &Deck,
     destino: &Path,
     blobs: &BlobStore,
     db: &Db,
-    sin_proxies: bool,
+    modo: Modo,
+    avance: &dyn Fn(u32, u32) -> bool,
 ) -> AppResult<u64> {
-    let deck = segun(deck, sin_proxies);
+    let d = segun(deck, modo);
     let f = std::fs::File::create(destino)?;
-    let mut w = escribir(std::io::BufWriter::new(f), &deck, blobs, db)?;
+    let mut w = escribir(
+        std::io::BufWriter::new(f),
+        &d,
+        blobs,
+        db,
+        modo == Modo::Optimizado,
+        avance,
+    )?;
     w.flush()?;
     Ok(std::fs::metadata(destino)?.len())
 }
 
-fn segun(deck: &Deck, sin: bool) -> Deck {
-    if sin {
+fn segun(deck: &Deck, modo: Modo) -> Deck {
+    if modo == Modo::SinProxies {
         proxy_core::compartir::sin_proxies(deck)
     } else {
         deck.clone()
     }
 }
 
-/// Lo que pesaría el paquete del deck (la suma de sus imágenes, sin
-/// comprimir: las imágenes ya vienen comprimidas), con o sin proxies. Para la
-/// oferta, sin construir nada.
-pub fn tamano_estimado(deck: &Deck, blobs: &BlobStore, db: &Db, sin_proxies: bool) -> u64 {
-    let deck = segun(deck, sin_proxies);
-    let mut todas = blobs_del_deck(&deck);
-    if let Ok(cols) = colecciones_del_deck(&deck, db) {
+/// Lo que suele pesar en JPEG una imagen, sin comprimirla.
+pub(crate) fn peso_jpeg(f: &FichaBlob, calidad: u8) -> u64 {
+    let por_pixel = if calidad == CALIDAD_ANTES {
+        BYTES_POR_PIXEL_ANTES
+    } else {
+        BYTES_POR_PIXEL_OPTIMIZADA
+    };
+    let jpeg = (f64::from(f.width) * f64::from(f.height) * por_pixel) as u64;
+    jpeg.min(f.bytes)
+}
+
+/// Lo que pesaría el paquete del deck en este modo, para la oferta, sin
+/// construir nada: la suma de sus imágenes (ya vienen comprimidas) y, en
+/// `Optimizado`, lo que suelen pesar en JPEG las que van a cambiar. Es una
+/// estimación: un PNG con transparencia no cambia, pero saberlo pide leerlo.
+pub fn tamano_estimado(deck: &Deck, blobs: &BlobStore, db: &Db, modo: Modo) -> u64 {
+    let d = segun(deck, modo);
+    let mut todas = blobs_del_deck(&d);
+    if let Ok(cols) = colecciones_del_deck(&d, db) {
         todas.extend(
             cols.iter()
                 .filter_map(|c| c.emblem.as_ref().map(|e| e.blob.clone())),
         );
     }
+    let calidades = if modo == Modo::Optimizado {
+        calidades_de(&d, blobs, db).unwrap_or_default()
+    } else {
+        BTreeMap::new()
+    };
     let mut total = 16 * 1024;
     for h in todas {
-        if let Ok(Some((ruta, _))) = blobs.locate(db, &h) {
-            total += std::fs::metadata(ruta).map(|m| m.len()).unwrap_or(0);
+        if let Ok(Some(f)) = blobs.ficha(db, &h) {
+            total += match calidades.get(&h) {
+                Some(&q) => peso_jpeg(&f, q),
+                None => f.bytes,
+            };
         }
     }
     total
@@ -567,6 +803,8 @@ pub struct ResumenPaquete {
     pub actualizado: Option<i64>,
     /// Una miniatura JPEG de la portada.
     pub portada: Option<Vec<u8>>,
+    /// Lleva imágenes comprimidas para compartirlo.
+    pub optimizado: bool,
 }
 
 /// Lee solo el manifiesto (y la imagen de la portada) de un paquete.
@@ -629,6 +867,7 @@ pub fn resumen<R: Read + Seek>(r: R) -> AppResult<ResumenPaquete> {
         linaje: b.linaje.filter(|l| linaje_sano(l)),
         actualizado: b.actualizado,
         portada,
+        optimizado: b.optimizado,
     })
 }
 
@@ -1252,16 +1491,170 @@ mod tests {
         d
     }
 
+    /// Un PNG con detalle, grande de sobra para que `compactar` lo cambie.
+    fn foto(semilla: u32, alfa: u8) -> Vec<u8> {
+        let mut x = semilla;
+        let img = image::RgbaImage::from_fn(400, 300, |i, j| {
+            x = x.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
+            let r = (x >> 28) as u8;
+            image::Rgba([
+                (i / 2) as u8 + r,
+                (j / 2) as u8 + r,
+                ((i + j) / 4) as u8 + r,
+                alfa,
+            ])
+        });
+        proxy_core::imaging::encode::png(&img).unwrap()
+    }
+
+    /// Un deck con una carta propia, otra con transparencia y el reverso.
+    fn deck_para_optimizar(db: &Db, s: &BlobStore) -> Deck {
+        let opaca = s.put_bytes(db, &foto(1, 255), ImageOrigin::Upload).unwrap();
+        let reverso = s.put_bytes(db, &foto(2, 255), ImageOrigin::Upload).unwrap();
+        let mut d = deck_con_imagenes(db, s);
+        d.cards[0].front = Some(opaca);
+        d.default_back = Some(reverso);
+        let con_alfa = s.put_bytes(db, &foto(3, 200), ImageOrigin::Upload).unwrap();
+        let mut otra = d.cards[0].clone();
+        otra.id = "alfa".into();
+        otra.front = Some(con_alfa);
+        d.cards.push(otra);
+        decks::save(db, &d).unwrap();
+        d
+    }
+
+    #[test]
+    fn optimizado_cambia_los_png_opacos_y_no_toca_el_almacen() {
+        let (dir, db, s) = entorno();
+        let d = deck_para_optimizar(&db, &s);
+        let original = dir.path().join("o.pbdeck");
+        let ligero = dir.path().join("l.pbdeck");
+        let b_original = export_con(&d, &original, &s, &db, Modo::Original).unwrap();
+        let b_ligero = export_con(&d, &ligero, &s, &db, Modo::Optimizado).unwrap();
+        assert!(b_ligero < b_original, "{b_ligero} < {b_original}");
+        assert!(
+            tamano_estimado(&d, &s, &db, Modo::Optimizado)
+                < tamano_estimado(&d, &s, &db, Modo::Original)
+        );
+        // Lo de aquí sigue igual: el mismo deck y las mismas imágenes.
+        assert_eq!(decks::open(&db, &d.id).unwrap(), d);
+        for h in blobs_del_deck(&d) {
+            assert!(s.locate(&db, &h).unwrap().is_some());
+        }
+        // Lo dice el paquete, y el original no.
+        let r = resumen(std::fs::File::open(&ligero).unwrap()).unwrap();
+        assert!(r.optimizado);
+        assert!(
+            !resumen(std::fs::File::open(&original).unwrap())
+                .unwrap()
+                .optimizado
+        );
+        // El mismo deck da el mismo fichero: se puede volver a enviar sin
+        // que haya imágenes nuevas.
+        let otra_vez = dir.path().join("l2.pbdeck");
+        export_con(&d, &otra_vez, &s, &db, Modo::Optimizado).unwrap();
+        assert_eq!(
+            std::fs::read(&ligero).unwrap(),
+            std::fs::read(&otra_vez).unwrap()
+        );
+
+        let (_d2, db2, s2) = entorno();
+        let n = import(std::fs::File::open(&ligero).unwrap(), &s2, &db2).unwrap();
+        let mime = |h: &str| s2.ficha(&db2, h).unwrap().unwrap().ext;
+        assert_eq!(mime(&n.cards[0].front.as_ref().unwrap().blob), "jpg");
+        assert_eq!(mime(&n.default_back.as_ref().unwrap().blob), "jpg");
+        // Sus medidas son las de antes: el encuadre no cambia.
+        assert_eq!(n.cards[0].front.as_ref().unwrap().width, 400);
+        // La de la transparencia sigue en PNG, con su huella de siempre.
+        let con_alfa = n.cards.iter().find(|c| {
+            c.front.is_some() && {
+                let h = &c.front.as_ref().unwrap().blob;
+                d.cards
+                    .iter()
+                    .any(|o| o.front.as_ref().is_some_and(|f| f.blob == *h))
+            }
+        });
+        assert!(con_alfa.is_some());
+        assert_eq!(mime(&con_alfa.unwrap().front.as_ref().unwrap().blob), "png");
+        for h in blobs_del_deck(&n) {
+            assert!(s2.locate(&db2, &h).unwrap().is_some(), "falta {h}");
+        }
+    }
+
+    #[test]
+    fn dos_png_iguales_son_un_solo_jpeg() {
+        use image::ImageEncoder;
+        let (dir, db, s) = entorno();
+        let mut d = deck_para_optimizar(&db, &s);
+        // Los mismos píxeles en otro PNG: otra huella y el mismo JPEG.
+        let img = proxy_core::imaging::decode::decode(&foto(1, 255)).unwrap();
+        let mut otro = Vec::new();
+        image::codecs::png::PngEncoder::new_with_quality(
+            &mut otro,
+            image::codecs::png::CompressionType::Best,
+            image::codecs::png::FilterType::NoFilter,
+        )
+        .write_image(
+            img.as_raw(),
+            img.width(),
+            img.height(),
+            image::ExtendedColorType::Rgba8,
+        )
+        .unwrap();
+        let gemela = s.put_bytes(&db, &otro, ImageOrigin::Upload).unwrap();
+        assert_ne!(Some(&gemela), d.cards[0].front.as_ref());
+        d.cards[1].front = Some(gemela);
+        decks::save(&db, &d).unwrap();
+        let ruta = dir.path().join("g.pbdeck");
+        export_con(&d, &ruta, &s, &db, Modo::Optimizado).unwrap();
+        let (_d2, db2, s2) = entorno();
+        let n = import(std::fs::File::open(&ruta).unwrap(), &s2, &db2).unwrap();
+        assert_eq!(
+            n.cards[0].front.as_ref().unwrap().blob,
+            n.cards[1].front.as_ref().unwrap().blob
+        );
+    }
+
+    #[test]
+    fn se_puede_dejar_de_escribir_a_medias() {
+        let (dir, db, s) = entorno();
+        let d = deck_para_optimizar(&db, &s);
+        let ruta = dir.path().join("c.pbdeck");
+        let e = export_en_fichero(&d, &ruta, &s, &db, Modo::Optimizado, &|hechas, _| {
+            hechas == 0
+        })
+        .unwrap_err();
+        assert_eq!(e.code, ErrorCode::Cancelled);
+    }
+
+    #[test]
+    fn cambiar_huellas_llega_a_todo_el_json() {
+        let mut v = serde_json::json!({
+            "a": "viejo",
+            "b": [{ "c": "viejo" }, "otro"],
+            "d": 1,
+        });
+        let cambios = BTreeMap::from([("viejo".to_string(), "nuevo".to_string())]);
+        cambiar_huellas(&mut v, &cambios);
+        assert_eq!(
+            v,
+            serde_json::json!({ "a": "nuevo", "b": [{ "c": "nuevo" }, "otro"], "d": 1 })
+        );
+    }
+
     #[test]
     fn solo_originales_no_guarda_las_imagenes_propias_y_pesa_menos() {
         let (dir, db, s) = entorno();
         let d = deck_mixto(&db, &s);
         let con = dir.path().join("con.pbdeck");
         let sin = dir.path().join("sin.pbdeck");
-        let b_con = export_con(&d, &con, &s, &db, false).unwrap();
-        let b_sin = export_con(&d, &sin, &s, &db, true).unwrap();
+        let b_con = export_con(&d, &con, &s, &db, Modo::Original).unwrap();
+        let b_sin = export_con(&d, &sin, &s, &db, Modo::SinProxies).unwrap();
         assert!(b_sin < b_con, "{b_sin} < {b_con}");
-        assert!(tamano_estimado(&d, &s, &db, true) < tamano_estimado(&d, &s, &db, false));
+        assert!(
+            tamano_estimado(&d, &s, &db, Modo::SinProxies)
+                < tamano_estimado(&d, &s, &db, Modo::Original)
+        );
 
         // Recibir «solo originales» un paquete con proxies: la propia pasa a
         // su carta de Scryfall, sin imagen, y su imagen no se guarda.
@@ -1323,7 +1716,7 @@ mod tests {
             .is_some_and(|p| p.starts_with(&[0xff, 0xd8])));
         // Sin proxies, ya no.
         let sin = dir.path().join("sin.pbdeck");
-        export_con(&d, &sin, &s, &db, true).unwrap();
+        export_con(&d, &sin, &s, &db, Modo::SinProxies).unwrap();
         assert!(!resumen(std::fs::File::open(&sin).unwrap()).unwrap().proxies);
         assert!(resumen(std::io::Cursor::new(zip_a_mano(&[]))).is_err());
     }

@@ -209,5 +209,20 @@
 	"Filtros y orden": "Фільтри та сортування",
 	"Agrupar": "Групування",
 	"Vista": "Вигляд",
-	"Toca varias para combinarlas.": "Торкніться кількох, щоб об’єднати їх."
+	"Toca varias para combinarlas.": "Торкніться кількох, щоб об’єднати їх.",
+	"Lo que ocupan las imágenes de tu biblioteca en este equipo.": "Місце, яке займають зображення бібліотеки на цьому пристрої.",
+	"Optimizar las imágenes de los decks": "Оптимізувати зображення колод",
+	"Pasa los PNG sin transparencia a JPEG con las mismas medidas: ocupan mucho menos y al imprimir no se nota.": "Перетворює PNG без прозорості на JPEG того самого розміру: вони займають значно менше місця, а під час друку це непомітно.",
+	"Las imágenes de tus decks ya están optimizadas.": "Зображення ваших колод уже оптимізовано.",
+	"≈ {mb} menos": "≈ на {mb} менше",
+	"No se puede deshacer: las imágenes originales se borran de este equipo. Si quieres conservarlas, guarda antes el deck en «Calidad original» desde «Compartir».": "Це неможливо скасувати: оригінальні зображення буде видалено з цього пристрою. Щоб зберегти їх, спершу збережіть колоду в «Оригінальній якості» через «Поділитися».",
+	"Sal de «Diseñar» para optimizar las imágenes.": "Вийдіть із «Дизайну», щоб оптимізувати зображення.",
+	"Se liberarán unos {mb}": "Звільниться приблизно {mb}",
+	"Optimizar": "Оптимізувати",
+	"¿Optimizar las imágenes?": "Оптимізувати зображення?",
+	"Se comprimirán las imágenes de los decks elegidos y se borrarán las originales de este equipo. No se puede deshacer.": "Зображення вибраних колод буде стиснуто, а оригінальні видалено з цього пристрою. Це неможливо скасувати.",
+	"Optimizar y borrar los originales": "Оптимізувати й видалити оригінали",
+	"Optimización cancelada: no ha cambiado nada.": "Оптимізацію скасовано: нічого не змінилося.",
+	"Imágenes optimizadas: {mb} liberados": "Зображення оптимізовано: звільнено {mb}",
+	"Borrar las imágenes sin usar y optimizar las de tus decks.": "Видалити невикористані зображення й оптимізувати зображення колод."
 }

@@ -106,7 +106,41 @@ pub fn save(db: &Db, deck: &Deck) -> AppResult<i64> {
     let ahora = super::ahora_ms();
     let mut c = db.conn()?;
     let tx = c.transaction()?;
+    guardar_en(&tx, deck, ahora)?;
+    tx.commit()?;
+    Ok(ahora)
+}
 
+/// Guarda un deck cuyas imágenes han cambiado de fichero pero que sigue siendo
+/// el mismo: ni su fecha ni la de su versión cambian (si no, en otro equipo
+/// parecería una versión más nueva).
+pub fn save_imagenes(db: &Db, deck: &Deck) -> AppResult<()> {
+    let mut c = db.conn()?;
+    let tx = c.transaction()?;
+    let actualizado: i64 = tx.query_row(
+        "SELECT updated_at FROM decks WHERE id = ?1",
+        [&deck.id],
+        |r| r.get(0),
+    )?;
+    let version: Option<i64> = tx
+        .query_row(
+            "SELECT actualizado FROM deck_linaje WHERE deck_id = ?1",
+            [&deck.id],
+            |r| r.get(0),
+        )
+        .optional()?;
+    guardar_en(&tx, deck, actualizado)?;
+    if let Some(v) = version {
+        tx.execute(
+            "UPDATE deck_linaje SET actualizado = ?2 WHERE deck_id = ?1",
+            params![deck.id, v],
+        )?;
+    }
+    tx.commit()?;
+    Ok(())
+}
+
+fn guardar_en(tx: &rusqlite::Transaction<'_>, deck: &Deck, ahora: i64) -> AppResult<()> {
     // Toda imagen referenciada tiene que estar en el almacén.
     {
         let mut existe = tx.prepare_cached("SELECT EXISTS(SELECT 1 FROM blobs WHERE hash = ?1)")?;
@@ -161,7 +195,7 @@ pub fn save(db: &Db, deck: &Deck) -> AppResult<i64> {
         params![deck.id, ahora],
     )?;
     tx.execute("DELETE FROM deck_cards WHERE deck_id = ?1", [&deck.id])?;
-    escribir_refs(&tx, &deck.id, &refs_del_deck(deck))?;
+    escribir_refs(tx, &deck.id, &refs_del_deck(deck))?;
     {
         let mut ins = tx.prepare_cached(
             "INSERT INTO deck_cards (id, deck_id, position, front_blob, back_blob, card_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
@@ -187,8 +221,7 @@ pub fn save(db: &Db, deck: &Deck) -> AppResult<i64> {
             })?;
         }
     }
-    tx.commit()?;
-    Ok(ahora)
+    Ok(())
 }
 
 pub fn list(db: &Db) -> AppResult<Vec<DeckSummary>> {

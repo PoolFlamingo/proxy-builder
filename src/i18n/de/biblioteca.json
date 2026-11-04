@@ -181,5 +181,20 @@
 	"Filtros y orden": "Filter und Sortierung",
 	"Agrupar": "Gruppieren",
 	"Vista": "Ansicht",
-	"Toca varias para combinarlas.": "Tippe mehrere an, um sie zu kombinieren."
+	"Toca varias para combinarlas.": "Tippe mehrere an, um sie zu kombinieren.",
+	"Lo que ocupan las imágenes de tu biblioteca en este equipo.": "Der Speicherplatz, den die Bilder deiner Bibliothek auf diesem Gerät belegen.",
+	"Optimizar las imágenes de los decks": "Deck-Bilder optimieren",
+	"Pasa los PNG sin transparencia a JPEG con las mismas medidas: ocupan mucho menos y al imprimir no se nota.": "Wandelt PNGs ohne Transparenz in JPEGs gleicher Größe um: Sie belegen viel weniger Platz, und im Druck fällt es nicht auf.",
+	"Las imágenes de tus decks ya están optimizadas.": "Die Bilder deiner Decks sind bereits optimiert.",
+	"≈ {mb} menos": "≈ {mb} weniger",
+	"No se puede deshacer: las imágenes originales se borran de este equipo. Si quieres conservarlas, guarda antes el deck en «Calidad original» desde «Compartir».": "Das lässt sich nicht rückgängig machen: Die Originalbilder werden von diesem Gerät gelöscht. Um sie zu behalten, speichere das Deck vorher über „Teilen“ in „Originalqualität“.",
+	"Sal de «Diseñar» para optimizar las imágenes.": "Verlasse „Entwerfen“, um die Bilder zu optimieren.",
+	"Se liberarán unos {mb}": "Etwa {mb} werden frei",
+	"Optimizar": "Optimieren",
+	"¿Optimizar las imágenes?": "Bilder optimieren?",
+	"Se comprimirán las imágenes de los decks elegidos y se borrarán las originales de este equipo. No se puede deshacer.": "Die Bilder der gewählten Decks werden komprimiert und die Originale von diesem Gerät gelöscht. Das lässt sich nicht rückgängig machen.",
+	"Optimizar y borrar los originales": "Optimieren und Originale löschen",
+	"Optimización cancelada: no ha cambiado nada.": "Optimierung abgebrochen: Es wurde nichts geändert.",
+	"Imágenes optimizadas: {mb} liberados": "Bilder optimiert: {mb} frei geworden",
+	"Borrar las imágenes sin usar y optimizar las de tus decks.": "Unbenutzte Bilder löschen und die deiner Decks optimieren."
 }
