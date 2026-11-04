@@ -58,14 +58,16 @@ export const BarraHerramientas = forwardRef<
 		titulo: string;
 		/** Móvil: las filas (`FilaMenu`) del «⋯», tras «Enviar / Recibir». */
 		menu?: ReactNode;
+		/** Móvil: sin la fila del título también de pie (de lado, siempre). */
+		enUnaFila?: boolean;
 	}
->(function BarraHerramientas({ acciones, titulo, menu }, buscar) {
+>(function BarraHerramientas({ acciones, titulo, menu, enUnaFila = false }, buscar) {
 	const { t } = useLang();
 	const anclaBarra = useAncla("barra");
 	const anclaAcciones = useAncla("acciones");
 	const p = usePrefs();
 	const { filtros: f, ponerFiltros } = useFiltros();
-	const { tamano } = useFormato();
+	const { tamano, horizontal } = useFormato();
 	const [hoja, setHoja] = useState(false);
 	if (tamano === "movil") {
 		// Móvil: la barra de arriba de siempre (título, la acción principal y el
@@ -73,19 +75,27 @@ export const BarraHerramientas = forwardRef<
 		// orden», que abren hojas.
 		const n = filtrosDelPanel(f);
 		const etiquetasPuestas = f.etiquetas.length > 0 || f.favoritos || f.sinEtiqueta;
+		const unaFila = enUnaFila || horizontal;
+		const accionesYMenu = (
+			<>
+				{acciones}
+				<BotonMenu etiqueta={t("Más acciones")} titulo={titulo}>
+					<FilaMenu
+						icono="lucide:arrow-left-right"
+						texto={t("Enviar / Recibir")}
+						onClick={() => usePasarUi.getState().abrirPasar()}
+					/>
+					{menu}
+				</BotonMenu>
+			</>
+		);
 		return (
 			<div className="flex min-w-0 shrink-0 flex-col" data-tutorial={anclaBarra}>
-				<BarraSuperior titulo={titulo} data-tutorial={anclaAcciones}>
-					{acciones}
-					<BotonMenu etiqueta={t("Más acciones")} titulo={titulo}>
-						<FilaMenu
-							icono="lucide:arrow-left-right"
-							texto={t("Enviar / Recibir")}
-							onClick={() => usePasarUi.getState().abrirPasar()}
-						/>
-						{menu}
-					</BotonMenu>
-				</BarraSuperior>
+				{!unaFila && (
+					<BarraSuperior titulo={titulo} data-tutorial={anclaAcciones}>
+						{accionesYMenu}
+					</BarraSuperior>
+				)}
 				<div className="flex min-w-0 items-center gap-1 border-b px-2 py-1.5">
 					<Button
 						size="icon-sm"
@@ -123,6 +133,11 @@ export const BarraHerramientas = forwardRef<
 							</span>
 						)}
 					</Button>
+					{unaFila && (
+						<div className="flex shrink-0 items-center gap-1" data-tutorial={anclaAcciones}>
+							{accionesYMenu}
+						</div>
+					)}
 				</div>
 				<HojaFiltrosYOrden abierta={hoja} onCerrar={() => setHoja(false)} />
 			</div>

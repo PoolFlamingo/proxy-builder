@@ -64,7 +64,7 @@ export function AppShell({
 }) {
 	const lang = useLang();
 	const { t } = lang;
-	const { tamano, tactil } = useFormato();
+	const { tamano, tactil, horizontal } = useFormato();
 	const movil = tamano === "movil";
 	// La disposición de tableta (encabezado compacto, dos paneles y Exportar en
 	// una hoja) es para el dedo: una ventana de escritorio estrecha, con ratón,
@@ -186,39 +186,46 @@ export function AppShell({
 			// rejilla) puede ensanchar el documento y crear scroll horizontal de
 			// toda la pantalla. Es `clip` y no `hidden` para que no sea un
 			// contenedor de scroll al que el navegador pueda mover al enfocar algo.
-			<div className={cn(clasesRaiz, "w-full overflow-clip")}>
-				{!mesaCompleta && (vista === "deck" || vista === "disenar") && (
-					// La barra de arriba del móvil (`BarraSuperior`): 3 rem, como las demás.
-					<header className="flex h-12 min-w-0 shrink-0 items-center gap-1 border-b px-2">
-						<Icono icon="lucide:layers" className="mx-1 size-5 shrink-0 text-primary" />
-						<NombreDeck className="ml-0 h-10 w-auto min-w-0 flex-1 px-1.5 text-sm font-semibold dark:bg-transparent" />
-						<span className="flex size-10 shrink-0 items-center justify-center">
-							<SaveIndicator compacto />
-						</span>
-					</header>
-				)}
-				<main ref={principal} className="min-h-0 min-w-0 flex-1">
-					{vista === "deck" ? (
-						<div className="flex h-full min-h-0 flex-col">
-							<PestanasDeck valor={subpestana} onCambiar={setSubpestana} />
-							<div className="min-h-0 flex-1">
-								{subpestana === "lista" ? izquierda : subpestana === "hojas" ? centro : derecha}
-							</div>
-						</div>
-					) : vista === "disenar" ? (
-						disenar
-					) : vista === "mesa" ? (
-						mesa
-					) : (
-						biblioteca
+			<div className={cn(clasesRaiz, "w-full overflow-clip", horizontal && "flex-row")}>
+				<div className="flex min-h-0 min-w-0 flex-1 flex-col">
+					{/* Diseñar no la lleva: su propia barra dice el deck y si está guardado. */}
+					{!mesaCompleta && vista === "deck" && (
+						// La barra de arriba del móvil (`BarraSuperior`): 3 rem, como las demás.
+						<header className="flex h-12 min-w-0 shrink-0 items-center gap-1 border-b px-2">
+							<Icono icon="lucide:layers" className="mx-1 size-5 shrink-0 text-primary" />
+							<NombreDeck className="ml-0 h-10 w-auto min-w-0 flex-1 px-1.5 text-sm font-semibold dark:bg-transparent" />
+							<span className="flex size-10 shrink-0 items-center justify-center">
+								<SaveIndicator compacto />
+							</span>
+							{horizontal && (
+								<PestanasDeck valor={subpestana} onCambiar={setSubpestana} enCabecera />
+							)}
+						</header>
 					)}
-				</main>
+					<main ref={principal} className="min-h-0 min-w-0 flex-1">
+						{vista === "deck" ? (
+							<div className="flex h-full min-h-0 flex-col">
+								{!horizontal && <PestanasDeck valor={subpestana} onCambiar={setSubpestana} />}
+								<div className="min-h-0 flex-1">
+									{subpestana === "lista" ? izquierda : subpestana === "hojas" ? centro : derecha}
+								</div>
+							</div>
+						) : vista === "disenar" ? (
+							disenar
+						) : vista === "mesa" ? (
+							mesa
+						) : (
+							biblioteca
+						)}
+					</main>
+				</div>
 				{!mesaCompleta && (
 					<BarraInferiorMovil
 						vista={vista}
 						onCambiar={cambiarVista}
 						onMas={() => setMas(true)}
 						masAbierto={mas}
+						lado={horizontal}
 					/>
 				)}
 				<HojaMas

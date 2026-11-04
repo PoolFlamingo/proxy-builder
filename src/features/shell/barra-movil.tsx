@@ -19,17 +19,22 @@ export const PESTANAS_MOVIL: { vista: Vista; icono: string; texto: string }[] = 
  * (el `#root` ya la lleva como relleno en táctil; por eso aquí no se repite)
  * y se esconde mientras el teclado está abierto (`data-teclado` en `<html>`,
  * `lib/teclado.ts`): quita sitio justo cuando más falta hace.
+ *
+ * `lado` (el teléfono en horizontal): un carril a la izquierda en vez de una
+ * barra abajo. De lado solo hay unos 360 dp de alto y cada fila apilada se nota.
  */
 export function BarraInferiorMovil({
 	vista,
 	onCambiar,
 	onMas,
 	masAbierto,
+	lado = false,
 }: {
 	vista: Vista;
 	onCambiar: (v: Vista) => void;
 	onMas: () => void;
 	masAbierto: boolean;
+	lado?: boolean;
 }) {
 	const { t } = useLang();
 	const avisoActualizacion = useAvisoAjustes();
@@ -37,7 +42,10 @@ export function BarraInferiorMovil({
 		<nav
 			aria-label={t("Pantallas")}
 			data-tutorial="pestanas"
-			className="flex shrink-0 border-t bg-background [[data-teclado]_&]:hidden"
+			className={cn(
+				"flex shrink-0 bg-background [[data-teclado]_&]:hidden",
+				lado ? "order-first w-16 flex-col border-r" : "border-t",
+			)}
 		>
 			{PESTANAS_MOVIL.map((p) => {
 				const activa = vista === p.vista && !masAbierto;
@@ -48,7 +56,8 @@ export function BarraInferiorMovil({
 						aria-current={activa ? "page" : undefined}
 						onClick={() => onCambiar(p.vista)}
 						className={cn(
-							"flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 text-[11px] font-medium",
+							"flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 text-[11px] font-medium",
+							lado ? "min-h-0" : "min-h-14",
 							activa ? "text-primary" : "text-muted-foreground",
 						)}
 					>
@@ -64,7 +73,8 @@ export function BarraInferiorMovil({
 				onClick={onMas}
 				data-tutorial="ajustes"
 				className={cn(
-					"relative flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 text-[11px] font-medium",
+					"relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 text-[11px] font-medium",
+					lado ? "min-h-0" : "min-h-14",
 					masAbierto ? "text-primary" : "text-muted-foreground",
 				)}
 				aria-label={avisoActualizacion ? `${t("Más")}: ${avisoActualizacion}` : t("Más")}
@@ -130,13 +140,23 @@ const SUBPESTANAS: { id: SubpestanaDeck; texto: string; icono: string }[] = [
 export function PestanasDeck({
 	valor,
 	onCambiar,
+	enCabecera = false,
 }: {
 	valor: SubpestanaDeck;
 	onCambiar: (v: SubpestanaDeck) => void;
+	/** De lado: dentro de la cabecera, en vez de en una fila más. */
+	enCabecera?: boolean;
 }) {
 	const { t } = useLang();
 	return (
-		<div role="tablist" aria-label={t("Deck")} className="flex shrink-0 border-b bg-background">
+		<div
+			role="tablist"
+			aria-label={t("Deck")}
+			className={cn(
+				"flex shrink-0 bg-background",
+				enCabecera ? "h-full [&>button]:px-3" : "border-b",
+			)}
+		>
 			{SUBPESTANAS.map((p) => (
 				<button
 					key={p.id}

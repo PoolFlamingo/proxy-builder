@@ -115,9 +115,12 @@ export function FilaMenu({
 	mantener = false,
 	marca,
 	extra,
+	detalle,
 }: {
 	icono?: string;
 	texto: ReactNode;
+	/** Lo que en escritorio dice el tooltip, debajo del texto. */
+	detalle?: ReactNode;
 	onClick: () => void;
 	destructiva?: boolean;
 	disabled?: boolean;
@@ -139,7 +142,7 @@ export function FilaMenu({
 				onClick();
 			}}
 			className={cn(
-				"flex min-h-11 w-full items-center gap-3 px-4 text-left text-sm active:bg-accent disabled:opacity-50",
+				"flex min-h-11 w-full items-center gap-3 px-4 py-1 text-left text-sm active:bg-accent disabled:opacity-50",
 				destructiva && "text-destructive",
 				activa && "text-primary",
 			)}
@@ -153,7 +156,14 @@ export function FilaMenu({
 					{marca}
 				</span>
 			)}
-			<span className="min-w-0 flex-1 truncate">{texto}</span>
+			{detalle ? (
+				<span className="flex min-w-0 flex-1 flex-col">
+					<span className="truncate">{texto}</span>
+					<span className="text-xs text-muted-foreground">{detalle}</span>
+				</span>
+			) : (
+				<span className="min-w-0 flex-1 truncate">{texto}</span>
+			)}
 			{extra}
 		</button>
 	);

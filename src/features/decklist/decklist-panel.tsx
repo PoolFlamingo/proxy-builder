@@ -412,7 +412,10 @@ export function DecklistPanel() {
 			<section className="flex h-full min-h-0 flex-col [&_[data-slot=button]]:text-xs [&_button[data-slot=tooltip-trigger]]:text-xs">
 				{/* Móvil: la barra de arriba de siempre y debajo todo en una sola
 				    columna que se desplaza (sin el asa: con el dedo no se reparte el alto). */}
-				<BarraSuperior titulo={t("Lista de cartas")}>
+				<BarraSuperior
+					titulo={t("Lista de cartas")}
+					className="landscape:[[data-formato=movil][data-teclado]_&]:hidden"
+				>
 					<Button
 						size="icon-sm"
 						variant="ghost"
@@ -511,7 +514,7 @@ function PiePanel() {
 	}, [ultima]);
 
 	return (
-		<footer className="flex min-h-11 shrink-0 flex-col justify-center gap-1 border-t px-2.5 py-1.5 text-[11px]">
+		<footer className="flex min-h-11 shrink-0 flex-col justify-center gap-1 border-t px-2.5 py-1.5 text-[11px] landscape:[[data-formato=movil][data-teclado]_&]:hidden">
 			{trabajo ? (
 				<>
 					<div className="flex items-center gap-2">
