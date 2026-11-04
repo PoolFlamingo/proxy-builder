@@ -52,14 +52,29 @@ const conRaton = (e: { pointerType?: string }) => e.pointerType === "mouse";
  * previa no salte cuando aparece o desaparece uno. Al pasar el ratón sobre un
  * contador sale el globo con lo que hay (o que no hay nada); con el dedo, un
  * toque lo abre y otro (o tocar fuera) lo cierra.
+ *
+ * `compacta` (junto a la carta, en el móvil): en columna y solo los niveles con
+ * algo, sin franja, para que la carta se quede con ese alto.
  */
 export function Incidencias({
 	avisos,
 	setLang,
+	compacta = false,
 }: {
 	avisos: Aviso[];
 	setLang: (l: DesignLang) => void;
+	compacta?: boolean;
 }) {
+	if (compacta)
+		return (
+			<div className="flex flex-col items-end" data-tutorial="disenar-incidencias">
+				{NIVELES.map((n) => {
+					const deEste = avisos.filter((a) => nivelAviso(a) === n.nivel);
+					if (deEste.length === 0) return null;
+					return <Contador key={n.nivel} {...n} avisos={deEste} setLang={setLang} lado="bottom" />;
+				})}
+			</div>
+		);
 	return (
 		<div
 			className="flex h-8 shrink-0 items-center gap-1 border-t px-2 [[data-tactil]_&]:h-11"
@@ -84,7 +99,12 @@ function Contador({
 	vacio,
 	avisos,
 	setLang,
-}: (typeof NIVELES)[number] & { avisos: Aviso[]; setLang: (l: DesignLang) => void }) {
+	lado = "top",
+}: (typeof NIVELES)[number] & {
+	avisos: Aviso[];
+	setLang: (l: DesignLang) => void;
+	lado?: "top" | "bottom";
+}) {
 	const { t } = useLang();
 	const [abierto, setAbierto] = useState(false);
 	const cierre = useRef<number | undefined>(undefined);
@@ -139,9 +159,9 @@ function Contador({
 				</button>
 			</PopoverAnchor>
 			<PopoverContent
-				side="top"
-				align="start"
-				className="w-80 p-0"
+				side={lado}
+				align={lado === "top" ? "start" : "end"}
+				className="w-[min(20rem,calc(100vw-1rem))] p-0"
 				// táctil: lo mismo que el botón: el globo se queda abierto mientras se lee y
 				// se cierra tocando fuera (salvo en el propio botón, que ya lo alterna).
 				onPointerEnter={(e) => conRaton(e) && abrir()}

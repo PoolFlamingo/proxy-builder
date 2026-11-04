@@ -17,12 +17,10 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useEstadoParaCerrar } from "@/lib/dialogos-abiertos";
-import { useFormato } from "@/lib/formato";
 import { call } from "@/lib/ipc";
 import { lanzarTrabajo } from "@/lib/trabajos";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
-import { AvisoSoloTableta } from "./aviso-tableta";
 import { numerosUsados, scryfallDe } from "./grupos";
 import { coleccionRecordada, recordarColeccion } from "./use-borrador";
 
@@ -34,11 +32,9 @@ import { coleccionRecordada, recordarColeccion } from "./use-borrador";
  */
 export function LoteDialog() {
 	const abierto = useUi((s) => s.dialogo?.tipo === "disenarDeck");
-	// Lo que no entra en el móvil: un aviso en vez del diálogo.
-	const movil = useFormato().tamano === "movil";
 	return (
 		<Dialog open={abierto} onOpenChange={(o) => !o && useUi.getState().abrir(null)}>
-			{abierto && (movil ? <AvisoSoloTableta /> : <Contenido />)}
+			{abierto && <Contenido />}
 		</Dialog>
 	);
 }

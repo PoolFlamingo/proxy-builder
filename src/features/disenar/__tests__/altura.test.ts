@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { altoCarta, altoVisible, esCampoDeTexto } from "../altura";
+import { altoCarta, altoVisible, anchoColumnaCarta, esCampoDeTexto } from "../altura";
 
 describe("altoVisible", () => {
 	it("sin teclado el contenedor entero", () => {
@@ -28,8 +28,14 @@ describe("altoVisible", () => {
 
 describe("altoCarta", () => {
 	it("la carta encoge mientras se escribe", () => {
-		expect(altoCarta(700, false)).toBe(280);
+		expect(altoCarta(700, false)).toBe(308);
 		expect(altoCarta(700, true)).toBe(154);
+	});
+});
+
+describe("anchoColumnaCarta", () => {
+	it("cabe la carta entera a todo el alto y sus controles a los lados", () => {
+		expect(anchoColumnaCarta(352)).toBe(252 + 96);
 	});
 });
 

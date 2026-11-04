@@ -20,14 +20,12 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { nombreSeguro } from "@/features/export/acciones";
 import { elegirDestinoDeImagenes } from "@/lib/dialogos";
 import { useEstadoParaCerrar } from "@/lib/dialogos-abiertos";
-import { useFormato } from "@/lib/formato";
 import { IDIOMAS } from "@/lib/idiomas";
 import { call } from "@/lib/ipc";
 import { useEsMovil } from "@/lib/plataforma";
 import { lanzarTrabajo } from "@/lib/trabajos";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
-import { AvisoSoloTableta } from "./aviso-tableta";
 import { completarIdioma, rehacerMiniaturas } from "./renumerar";
 
 /**
@@ -38,11 +36,9 @@ import { completarIdioma, rehacerMiniaturas } from "./renumerar";
  */
 export function PngDialog() {
 	const abierto = useUi((s) => s.dialogo?.tipo === "exportarPng");
-	// Lo que no entra en el móvil: un aviso en vez del diálogo.
-	const movil = useFormato().tamano === "movil";
 	return (
 		<Dialog open={abierto} onOpenChange={(o) => !o && useUi.getState().abrir(null)}>
-			{abierto && (movil ? <AvisoSoloTableta /> : <Contenido />)}
+			{abierto && <Contenido />}
 		</Dialog>
 	);
 }

@@ -118,7 +118,7 @@ function conArte(d: CardDesign, cara: number, art: ArtRef | undefined): CardDesi
  * `contenido` envuelve lo que no se puede tocar mientras la cara sigue a la
  * carta. Lo usan el formulario de siempre y el del móvil.
  */
-export function porCaras({
+function porCaras({
 	design,
 	cambiar,
 	cara,
@@ -152,6 +152,10 @@ export function porCaras({
 }
 
 /** El formulario de la derecha, en pestañas. */
+/** En un teléfono las seis no caben a partes iguales: cada una mide lo que su texto. */
+const PESTANA =
+	"[[data-formato=movil]_&]:flex-auto [[data-formato=movil]_&]:px-1 [[data-formato=movil]_&]:leading-tight [[data-formato=movil]_&]:whitespace-normal";
+
 export function Formulario({
 	design,
 	cambiar,
@@ -187,14 +191,27 @@ export function Formulario({
 			className="flex h-full min-h-0 flex-col gap-0"
 			data-tutorial="disenar-formulario"
 		>
-			<div className="shrink-0 border-b px-2.5 py-2">
-				<TabsList className="w-full">
-					<TabsTrigger value="carta">{t("Carta")}</TabsTrigger>
-					<TabsTrigger value="textos">{t("Textos")}</TabsTrigger>
-					<TabsTrigger value="arte">{t("Arte")}</TabsTrigger>
-					<TabsTrigger value="marco">{t("Marco")}</TabsTrigger>
-					<TabsTrigger value="pie">{t("Pie")}</TabsTrigger>
-					<TabsTrigger value="ajustes">{t("Ajustes finos")}</TabsTrigger>
+			{/* Un teléfono de lado con el teclado: solo quedan unos 120 dp, para el campo. */}
+			<div className="shrink-0 border-b px-2.5 py-2 landscape:[[data-formato=movil][data-teclado]_&]:hidden">
+				<TabsList className="w-full [[data-formato=movil]_&]:h-11">
+					<TabsTrigger className={PESTANA} value="carta">
+						{t("Carta")}
+					</TabsTrigger>
+					<TabsTrigger className={PESTANA} value="textos">
+						{t("Textos")}
+					</TabsTrigger>
+					<TabsTrigger className={PESTANA} value="arte">
+						{t("Arte")}
+					</TabsTrigger>
+					<TabsTrigger className={PESTANA} value="marco">
+						{t("Marco")}
+					</TabsTrigger>
+					<TabsTrigger className={PESTANA} value="pie">
+						{t("Pie")}
+					</TabsTrigger>
+					<TabsTrigger className={PESTANA} value="ajustes">
+						{t("Ajustes finos")}
+					</TabsTrigger>
 				</TabsList>
 			</div>
 			<ScrollArea className="min-h-0 flex-1">
@@ -269,7 +286,7 @@ export function Formulario({
  * de la vista previa, aquí al lado de lo que cambia (en una Secuela, la
  * ilustración de la mitad de abajo se pone con la parte 2).
  */
-export function SelectorParte({
+function SelectorParte({
 	design,
 	cara,
 	setCara,
@@ -296,7 +313,7 @@ export function SelectorParte({
 					<span className="shrink-0">
 						{caras ? t("Cara {n}", { n: i + 1 }) : t("Parte {n}", { n: i + 1 })}
 					</span>
-					<span className="truncate text-muted-foreground">{design.card.faces[i]?.name}</span>
+					<span className="truncate opacity-70">{design.card.faces[i]?.name}</span>
 				</ToggleGroupItem>
 			))}
 		</ToggleGroup>
@@ -388,7 +405,7 @@ function Partes({ partes }: { partes: Parte[] }) {
 }
 
 /** El estilo del marco y, si lo tiene, su variante. */
-export function FilasEstilo({
+function FilasEstilo({
 	design,
 	cambiar,
 	colecciones,
@@ -534,17 +551,14 @@ function PestanaCarta({
 
 // ── Textos ─────────────────────────────────────────────────────────────────
 
-export function PestanaTextos({
+function PestanaTextos({
 	design,
 	cambiar,
 	cara,
-	traducir = true,
 }: {
 	design: CardDesign;
 	cambiar: Cambiar;
 	cara: number;
-	/** Con la traducción sugerida (no entra en el móvil). */
-	traducir?: boolean;
 }) {
 	const { t } = useLang();
 	const langDiseno = useDeck((s) => s.deck?.settings.designLang ?? "es");
@@ -642,7 +656,7 @@ export function PestanaTextos({
 					</div>
 				);
 			})}
-			{traducir && <TraduccionSugerida design={design} cara={cara} cambiar={cambiar} />}
+			<TraduccionSugerida design={design} cara={cara} cambiar={cambiar} />
 			<p className="text-[11px] text-muted-foreground">
 				{t(
 					"En las reglas, el nombre original se cambia solo por el tuyo («Si Veldanava, Dragón de la Creación fuera a ir…»).",
@@ -659,7 +673,7 @@ export function PestanaTextos({
 
 // ── Arte ───────────────────────────────────────────────────────────────────
 
-export function PestanaArte({
+function PestanaArte({
 	design,
 	cambiar,
 	cara,
@@ -839,19 +853,14 @@ function alfaHex(opacidad: number): string {
 		.padStart(2, "0");
 }
 
-/** Qué parte del marco se edita: en el móvil, «Marco» y «Colores» son pestañas aparte. */
-export type ParteMarco = "todo" | "marco" | "colores";
-
 export function EditorMarco({
 	marco,
 	onChange,
 	packs,
-	parte = "todo",
 }: {
 	marco: FrameOptions;
 	onChange: (m: FrameOptions) => void;
 	packs: PackInfo[];
-	parte?: ParteMarco;
 }) {
 	const { t, mensaje } = useLang();
 	const paletas = PALETAS.map((p) => ({ valor: p.valor, etiqueta: t(p.etiqueta) }));
@@ -891,203 +900,183 @@ export function EditorMarco({
 			.then(() => onChange({ ...marco, pack }))
 			.catch((e) => toast.error(mensaje(e)));
 	};
-	const verMarco = parte !== "colores";
-	const verColores = parte !== "marco";
 	return (
 		<div className="flex flex-col gap-2.5">
-			{verMarco && (
-				<>
-					<Fila apilarEnMovil etiqueta={t("Pack de marcos")}>
-						<Selector valor={marco.pack} opciones={opciones} onChange={elegirPack} ancho="w-52" />
-					</Fila>
-					{descargables.progreso && (
-						<div className="flex flex-col gap-1.5">
-							<Progress
-								value={
-									(descargables.progreso.hechas * 100) / Math.max(1, descargables.progreso.total)
-								}
-							/>
-							<span className="text-[11px] text-muted-foreground">
-								{t("Descargando el pack: {hechas} de {total}", {
-									hechas: descargables.progreso.hechas,
-									total: descargables.progreso.total,
-								})}
-							</span>
-						</div>
-					)}
-					{originales.progreso ? (
-						<div className="flex flex-col gap-1.5">
-							<Progress
-								value={(originales.progreso.hechas * 100) / Math.max(1, originales.progreso.total)}
-							/>
-							<span className="text-[11px] text-muted-foreground">
-								{t("Descargando los marcos originales: {hechas} de {total}", {
-									hechas: originales.progreso.hechas,
-									total: originales.progreso.total,
-								})}
-							</span>
-						</div>
-					) : (
-						marco.pack === ID_ORIGINAL && (
-							<p className="text-[11px] text-muted-foreground">
-								{t(
-									"Marcos de imagen de Card Conjurer para los estilos Despejado, Extendido y Clásico; el paisaje usa el de la casa.",
-								)}
-							</p>
-						)
-					)}
-				</>
+			<Fila apilarEnMovil etiqueta={t("Pack de marcos")}>
+				<Selector valor={marco.pack} opciones={opciones} onChange={elegirPack} ancho="w-52" />
+			</Fila>
+			{descargables.progreso && (
+				<div className="flex flex-col gap-1.5">
+					<Progress
+						value={(descargables.progreso.hechas * 100) / Math.max(1, descargables.progreso.total)}
+					/>
+					<span className="text-[11px] text-muted-foreground">
+						{t("Descargando el pack: {hechas} de {total}", {
+							hechas: descargables.progreso.hechas,
+							total: descargables.progreso.total,
+						})}
+					</span>
+				</div>
 			)}
-			{verColores && (
-				<>
-					<Fila
-						apilarEnMovil
-						etiqueta={t("Color del marco")}
-						ayuda={t("Automático: un color, el suyo; dos colores, degradado; tres o más, oro.")}
-					>
-						<Selector
-							valor={color.kind}
-							opciones={[
-								{ valor: "auto", etiqueta: t("Automático") },
-								{ valor: "palette", etiqueta: t("Un color") },
-								{ valor: "gradient", etiqueta: t("Degradado") },
-								{ valor: "custom", etiqueta: t("Personalizado") },
-							]}
-							onChange={(k) =>
-								onChange({
-									...marco,
-									color:
-										k === "palette"
-											? { kind: "palette", palette: "gold" }
-											: k === "gradient"
-												? { kind: "gradient", a: "G", b: "U" }
-												: k === "custom"
-													? { kind: "custom", hex: "#7a4fd0" }
-													: { kind: "auto" },
-								})
-							}
-							ancho="w-44"
-						/>
-					</Fila>
-					{color.kind === "palette" && (
-						<Fila apilarEnMovil etiqueta={t("Paleta")}>
-							<Selector
-								valor={color.palette}
-								opciones={paletas}
-								onChange={(palette) => onChange({ ...marco, color: { kind: "palette", palette } })}
-								ancho="w-44"
-							/>
-						</Fila>
-					)}
-					{color.kind === "gradient" && (
-						<>
-							<Fila apilarEnMovil etiqueta={t("De")}>
-								<Selector
-									valor={color.a}
-									opciones={paletas}
-									onChange={(a) => onChange({ ...marco, color: { ...color, a } })}
-									ancho="w-44"
-								/>
-							</Fila>
-							<Fila apilarEnMovil etiqueta={t("A")}>
-								<Selector
-									valor={color.b}
-									opciones={paletas}
-									onChange={(b) => onChange({ ...marco, color: { ...color, b } })}
-									ancho="w-44"
-								/>
-							</Fila>
-						</>
-					)}
-					{color.kind === "custom" && (
-						<Fila apilarEnMovil etiqueta={t("Color")}>
-							<input
-								type="color"
-								value={color.hex}
-								onChange={(e) =>
-									onChange({ ...marco, color: { kind: "custom", hex: e.target.value } })
-								}
-								aria-label={t("Color")}
-								className="h-7 w-12 cursor-pointer rounded border bg-transparent [[data-tactil]_&]:h-11 [[data-tactil]_&]:w-16"
-							/>
-						</Fila>
-					)}
-				</>
+			{originales.progreso ? (
+				<div className="flex flex-col gap-1.5">
+					<Progress
+						value={(originales.progreso.hechas * 100) / Math.max(1, originales.progreso.total)}
+					/>
+					<span className="text-[11px] text-muted-foreground">
+						{t("Descargando los marcos originales: {hechas} de {total}", {
+							hechas: originales.progreso.hechas,
+							total: originales.progreso.total,
+						})}
+					</span>
+				</div>
+			) : (
+				marco.pack === ID_ORIGINAL && (
+					<p className="text-[11px] text-muted-foreground">
+						{t(
+							"Marcos de imagen de Card Conjurer para los estilos Despejado, Extendido y Clásico; el paisaje usa el de la casa.",
+						)}
+					</p>
+				)
 			)}
-			{verMarco && (
-				<Fila
-					apilarEnMovil
-					etiqueta={t("Corona de legendaria")}
-					ayuda={t("Automática: solo en el estilo despejado y en las legendarias.")}
-				>
+			<Fila
+				apilarEnMovil
+				etiqueta={t("Color del marco")}
+				ayuda={t("Automático: un color, el suyo; dos colores, degradado; tres o más, oro.")}
+			>
+				<Selector
+					valor={color.kind}
+					opciones={[
+						{ valor: "auto", etiqueta: t("Automático") },
+						{ valor: "palette", etiqueta: t("Un color") },
+						{ valor: "gradient", etiqueta: t("Degradado") },
+						{ valor: "custom", etiqueta: t("Personalizado") },
+					]}
+					onChange={(k) =>
+						onChange({
+							...marco,
+							color:
+								k === "palette"
+									? { kind: "palette", palette: "gold" }
+									: k === "gradient"
+										? { kind: "gradient", a: "G", b: "U" }
+										: k === "custom"
+											? { kind: "custom", hex: "#7a4fd0" }
+											: { kind: "auto" },
+						})
+					}
+					ancho="w-44"
+				/>
+			</Fila>
+			{color.kind === "palette" && (
+				<Fila apilarEnMovil etiqueta={t("Paleta")}>
 					<Selector
-						valor={marco.crown}
-						opciones={[
-							{ valor: "auto", etiqueta: t("Automática") },
-							{ valor: "on", etiqueta: t("Siempre") },
-							{ valor: "off", etiqueta: t("Nunca") },
-						]}
-						onChange={(crown) => onChange({ ...marco, crown })}
+						valor={color.palette}
+						opciones={paletas}
+						onChange={(palette) => onChange({ ...marco, color: { kind: "palette", palette } })}
 						ancho="w-44"
 					/>
 				</Fila>
 			)}
-			{verColores && (
+			{color.kind === "gradient" && (
 				<>
-					<Fila
-						apilarEnMovil
-						etiqueta={t("Caja de reglas")}
-						ayuda={t("Automática: teñida del color de la carta.")}
-					>
+					<Fila apilarEnMovil etiqueta={t("De")}>
 						<Selector
-							valor={marco.rulesBox.kind}
-							opciones={[
-								{ valor: "auto", etiqueta: t("Automática") },
-								{ valor: "dark", etiqueta: t("Oscura") },
-								{ valor: "light", etiqueta: t("Clara") },
-								{ valor: "tint", etiqueta: t("Otro tinte") },
-							]}
-							onChange={(k) =>
-								onChange({
-									...marco,
-									rulesBox: k === "tint" ? { kind: "tint", hex: "#2e2412" } : { kind: k },
-								})
-							}
+							valor={color.a}
+							opciones={paletas}
+							onChange={(a) => onChange({ ...marco, color: { ...color, a } })}
 							ancho="w-44"
 						/>
 					</Fila>
-					{caja.kind === "tint" && (
-						<>
-							<Fila apilarEnMovil etiqueta={t("Tinte")}>
-								<input
-									type="color"
-									value={caja.hex.slice(0, 7)}
-									onChange={(e) =>
-										onChange({
-											...marco,
-											rulesBox: { kind: "tint", hex: e.target.value + caja.hex.slice(7) },
-										})
-									}
-									aria-label={t("Tinte")}
-									className="h-7 w-12 cursor-pointer rounded border bg-transparent [[data-tactil]_&]:h-11 [[data-tactil]_&]:w-16"
-								/>
-							</Fila>
-							<FilaDeslizador
-								etiqueta={t("Opacidad del tinte")}
-								valor={opacidadDe(caja.hex)}
-								min={0}
-								max={100}
-								paso={5}
-								sufijo="%"
-								onChange={(v) =>
-									onChange({
-										...marco,
-										rulesBox: { kind: "tint", hex: caja.hex.slice(0, 7) + alfaHex(v) },
-									})
-								}
-							/>
-						</>
-					)}
+					<Fila apilarEnMovil etiqueta={t("A")}>
+						<Selector
+							valor={color.b}
+							opciones={paletas}
+							onChange={(b) => onChange({ ...marco, color: { ...color, b } })}
+							ancho="w-44"
+						/>
+					</Fila>
+				</>
+			)}
+			{color.kind === "custom" && (
+				<Fila apilarEnMovil etiqueta={t("Color")}>
+					<input
+						type="color"
+						value={color.hex}
+						onChange={(e) => onChange({ ...marco, color: { kind: "custom", hex: e.target.value } })}
+						aria-label={t("Color")}
+						className="h-7 w-12 cursor-pointer rounded border bg-transparent [[data-tactil]_&]:h-11 [[data-tactil]_&]:w-16"
+					/>
+				</Fila>
+			)}
+			<Fila
+				apilarEnMovil
+				etiqueta={t("Corona de legendaria")}
+				ayuda={t("Automática: solo en el estilo despejado y en las legendarias.")}
+			>
+				<Selector
+					valor={marco.crown}
+					opciones={[
+						{ valor: "auto", etiqueta: t("Automática") },
+						{ valor: "on", etiqueta: t("Siempre") },
+						{ valor: "off", etiqueta: t("Nunca") },
+					]}
+					onChange={(crown) => onChange({ ...marco, crown })}
+					ancho="w-44"
+				/>
+			</Fila>
+			<Fila
+				apilarEnMovil
+				etiqueta={t("Caja de reglas")}
+				ayuda={t("Automática: teñida del color de la carta.")}
+			>
+				<Selector
+					valor={marco.rulesBox.kind}
+					opciones={[
+						{ valor: "auto", etiqueta: t("Automática") },
+						{ valor: "dark", etiqueta: t("Oscura") },
+						{ valor: "light", etiqueta: t("Clara") },
+						{ valor: "tint", etiqueta: t("Otro tinte") },
+					]}
+					onChange={(k) =>
+						onChange({
+							...marco,
+							rulesBox: k === "tint" ? { kind: "tint", hex: "#2e2412" } : { kind: k },
+						})
+					}
+					ancho="w-44"
+				/>
+			</Fila>
+			{caja.kind === "tint" && (
+				<>
+					<Fila apilarEnMovil etiqueta={t("Tinte")}>
+						<input
+							type="color"
+							value={caja.hex.slice(0, 7)}
+							onChange={(e) =>
+								onChange({
+									...marco,
+									rulesBox: { kind: "tint", hex: e.target.value + caja.hex.slice(7) },
+								})
+							}
+							aria-label={t("Tinte")}
+							className="h-7 w-12 cursor-pointer rounded border bg-transparent [[data-tactil]_&]:h-11 [[data-tactil]_&]:w-16"
+						/>
+					</Fila>
+					<FilaDeslizador
+						etiqueta={t("Opacidad del tinte")}
+						valor={opacidadDe(caja.hex)}
+						min={0}
+						max={100}
+						paso={5}
+						sufijo="%"
+						onChange={(v) =>
+							onChange({
+								...marco,
+								rulesBox: { kind: "tint", hex: caja.hex.slice(0, 7) + alfaHex(v) },
+							})
+						}
+					/>
 				</>
 			)}
 		</div>
@@ -1105,21 +1094,18 @@ function marcoDe(design: CardDesign, colecciones: Collection[]) {
 
 /**
  * «Marco propio para esta carta» y, debajo, el editor del marco (apagado
- * mientras se usa el de la colección). `parte` reparte el editor entre las
- * pestañas «Marco» y «Colores» del móvil.
+ * mientras se usa el de la colección).
  */
-export function MarcoEditable({
+function MarcoEditable({
 	design,
 	cambiar,
 	colecciones,
 	packs,
-	parte = "todo",
 }: {
 	design: CardDesign;
 	cambiar: Cambiar;
 	colecciones: Collection[];
 	packs: PackInfo[];
-	parte?: ParteMarco;
 }) {
 	const { t } = useLang();
 	const { propio, marco } = marcoDe(design, colecciones);
@@ -1134,7 +1120,6 @@ export function MarcoEditable({
 			<div className={cn(!propio && "pointer-events-none opacity-60")}>
 				<EditorMarco
 					marco={marco}
-					parte={parte}
 					onChange={(m) =>
 						cambiar((d) => ({
 							...d,
@@ -1366,7 +1351,7 @@ function CampoTexto({
 	);
 }
 
-export function PestanaPie({
+function PestanaPie({
 	design,
 	cambiar,
 	colecciones,

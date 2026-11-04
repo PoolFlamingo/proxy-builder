@@ -5,30 +5,29 @@ import type { ArtFraming } from "@/bindings/ArtFraming";
 import type { Collection } from "@/bindings/Collection";
 import type { DesignLang } from "@/bindings/DesignLang";
 import type { PackInfo } from "@/bindings/PackInfo";
-import { FilaInterruptor } from "@/components/campos";
 import { ConAyuda } from "@/components/con-ayuda";
 import { Confirmar } from "@/components/confirmar";
 import { Hoja } from "@/components/hoja";
-import { CabeceraHoja, CLASES_HOJA_MENU } from "@/components/hoja-menu";
+import { CabeceraHoja, CLASES_HOJA_MENU, FilaMenu, HojaMenu } from "@/components/hoja-menu";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog } from "@/components/ui/dialog";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { WithTooltip } from "@/components/ui/with-tooltip";
+import { SaveIndicator } from "@/features/shell/save-indicator";
 import { nuevoId } from "@/lib/deck-ops";
 import { useFormato } from "@/lib/formato";
 import { call } from "@/lib/ipc";
+import { useNombreDeck } from "@/lib/use-nombre-deck";
 import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
 import { useEdicion } from "@/stores/edicion-store";
 import { useUi } from "@/stores/ui-store";
-import { altoCarta } from "./altura";
+import { altoCarta, anchoColumnaCarta } from "./altura";
 import { AvisoPacksFaltan } from "./aviso-packs-faltan";
 import { Formulario } from "./formulario";
-import { FormularioMovil } from "./formulario-movil";
 import { agrupar, conVariante, vecina } from "./grupos";
 import { ListaCartas, nombreDe } from "./lista-cartas";
 import { useMarcosOriginales } from "./marcos-originales";
@@ -53,16 +52,18 @@ const ASA_TACTIL =
  * cada copia de una carta puede llevar su propio diseño).
  *
  * Una sola pantalla que cambia con el formato. En una tableta estrecha la
- * lista de cartas pasa a una hoja (no caben tres paneles). En el móvil es
- * otra disposición con las mismas piezas: la carta arriba y debajo las
- * pestañas Textos, Ilustración, Marco y Colores (`formulario-movil.tsx`); lo
- * demás (ajustes finos, colecciones, recursos, lote, PNG…) no se enseña.
+ * lista de cartas pasa a una hoja (no caben tres paneles). En el móvil son las
+ * mismas piezas y las mismas opciones, repartidas de otra manera: de pie, la
+ * carta arriba y el formulario debajo; de lado, la carta a toda la altura y el
+ * formulario a su derecha; y lo de la barra de herramientas, en el «⋯».
  */
 export function DisenarScreen() {
 	const { t, mensaje } = useLang();
 	const cartas = useDeck((s) => s.deck?.cards);
 	const lang = useDeck((s) => s.deck?.settings.designLang ?? "es");
 	const deckId = useDeck((s) => s.deck?.id);
+	const deckNombre = useDeck((s) => s.deck?.name ?? "");
+	const nombreDeck = useNombreDeck();
 	// El idioma de la vista es el del deck: lo que se ve aquí es lo que sale
 	// en el PDF.
 	// Sube al acabar de cambiar de idioma: si se bajaron letras (japonés,
@@ -71,7 +72,7 @@ export function DisenarScreen() {
 	const setLang = (l: DesignLang) =>
 		void ponerIdiomaDiseno(l, t, mensaje).then(() => setVersionLetras((v) => v + 1));
 	const disenando = useUi((s) => s.disenando);
-	const { tamano, tactil } = useFormato();
+	const { tamano, tactil, horizontal } = useFormato();
 	const movil = tamano === "movil";
 	// Tres paneles solo caben en escritorio; en la tableta la lista sube en una hoja.
 	// Tableta solo con el dedo (como `app-shell`): una ventana de escritorio de
@@ -381,6 +382,7 @@ export function DisenarScreen() {
 					onEncuadre={encuadre}
 					cargando={b.cargando}
 					carasImpresas={resumen?.carasImpresas ?? 1}
+					compacta={movil}
 				/>
 			</div>
 		</div>
@@ -421,31 +423,54 @@ export function DisenarScreen() {
 					</Hoja>
 				)}
 			</Dialog>
-			<Dialog open={masAbierto} onOpenChange={setMasAbierto}>
-				{masAbierto && b.design && (
-					<Hoja className={CLASES_HOJA_MENU}>
-						<CabeceraHoja
-							titulo={t("Esta carta")}
-							descripcion={t("Copias, variantes y estado de la carta que estás diseñando.")}
-						/>
-						<ScrollArea className="grid min-h-0 flex-1 overflow-hidden">
-							<div className="flex flex-col gap-3 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-								<FilaInterruptor
-									etiqueta={t("Lista para imprimir")}
-									ayuda={t(
-										"Las cartas en borrador se ven en el deck, pero así sabes cuáles has revisado.",
-									)}
-									valor={b.design.status === "ready"}
-									onChange={(v) => b.cambiar((d) => ({ ...d, status: v ? "ready" : "draft" }))}
-								/>
-								{filaCopias}
-								{opcionesCopias}
-								<div className="flex items-center gap-1">{botonQuitar}</div>
-							</div>
-						</ScrollArea>
-					</Hoja>
+			{/* Móvil: lo de la barra de herramientas del escritorio y las copias de la carta. */}
+			<HojaMenu
+				abierta={masAbierto}
+				onCerrar={() => setMasAbierto(false)}
+				titulo={t("Opciones de la carta")}
+				sinRelleno
+			>
+				{b.design && (
+					<div className="flex flex-col gap-3 border-b px-4 pt-2 pb-3">
+						{filaCopias}
+						{opcionesCopias}
+						{botonQuitar && <div className="flex items-center gap-1">{botonQuitar}</div>}
+					</div>
 				)}
-			</Dialog>
+				<span className="px-4 pt-3 pb-1 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+					{t("Todo el deck")}
+				</span>
+				<FilaMenu
+					icono="lucide:hash"
+					texto={t("Renumerar")}
+					detalle={t(
+						"Vuelve a numerar las cartas por el orden del deck (las escritas a mano no cambian).",
+					)}
+					onClick={() => renumerar(t, mensaje)}
+					disabled={!cartas?.some((c) => c.design)}
+				/>
+				<FilaMenu
+					icono="lucide:wand-2"
+					texto={t("Diseñar el deck")}
+					onClick={() => useUi.getState().abrir({ tipo: "disenarDeck" })}
+				/>
+				<FilaMenu
+					icono="lucide:image-down"
+					texto={t("Exportar imágenes")}
+					onClick={() => useUi.getState().abrir({ tipo: "exportarPng" })}
+					disabled={!cartas?.some((c) => c.design)}
+				/>
+				<FilaMenu
+					icono="lucide:library"
+					texto={t("Colecciones")}
+					onClick={() => useUi.getState().abrir({ tipo: "colecciones" })}
+				/>
+				<FilaMenu
+					icono="lucide:sliders-horizontal"
+					texto={t("Letras, marcos y símbolos")}
+					onClick={() => useUi.getState().abrir({ tipo: "recursosDiseno" })}
+				/>
+			</HojaMenu>
 			<Confirmar
 				abierto={!!pendiente}
 				onCerrar={() => setPendiente(null)}
@@ -468,78 +493,120 @@ export function DisenarScreen() {
 		</>
 	);
 
-	// ── El móvil: la carta arriba y, debajo, las pestañas de lo básico.
+	// ── El móvil: de pie, la carta arriba; de lado, la carta a toda la altura.
 	if (movil) {
+		const barra = (
+			<div
+				className={cn(
+					"flex shrink-0 items-center gap-0.5 border-b px-1 py-0.5",
+					// De lado y con el teclado, cada fila cuenta: el campo es lo primero.
+					horizontal && "col-start-2 row-start-1 [[data-teclado]_&]:hidden",
+				)}
+				data-tutorial="disenar-barra"
+			>
+				<Button
+					size="sm"
+					variant="ghost"
+					onClick={() => pasarConAviso(-1)}
+					aria-label={t("Carta anterior")}
+				>
+					<Icono icon="lucide:chevron-left" />
+				</Button>
+				<button
+					type="button"
+					onClick={() => setListaAbierta(true)}
+					aria-label={t("Cartas del deck")}
+					className="flex h-11 min-w-0 flex-1 items-center gap-1.5 rounded-md px-1.5 text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+				>
+					<span className="flex min-w-0 flex-1 flex-col leading-tight">
+						<span className="truncate text-xs font-medium">{nombreActual}</span>
+						<span className="truncate text-[10px] text-muted-foreground">
+							{nombreDeck(deckNombre)}
+						</span>
+					</span>
+					<Icono icon="lucide:chevron-down" className="size-4 shrink-0 text-muted-foreground" />
+				</button>
+				<Button
+					size="sm"
+					variant="ghost"
+					onClick={() => pasarConAviso(1)}
+					aria-label={t("Carta siguiente")}
+				>
+					<Icono icon="lucide:chevron-right" />
+				</Button>
+				<span className="flex size-7 shrink-0 items-center justify-center">
+					<SaveIndicator compacto />
+				</span>
+				<Button
+					size="sm"
+					variant="ghost"
+					onClick={() => setMasAbierto(true)}
+					aria-label={t("Opciones de la carta")}
+				>
+					<Icono icon="lucide:ellipsis" />
+				</Button>
+			</div>
+		);
+		const formulario = (
+			<div className={cn("min-h-0 min-w-0", horizontal && "col-start-2 row-start-2")}>
+				{b.design ? (
+					<Formulario
+						design={b.design}
+						cambiar={b.cambiar}
+						cara={cara}
+						setCara={setCara}
+						colecciones={colecciones}
+						packs={packs}
+						onColeccion={(c) => setColecciones((cs) => cs.map((x) => (x.id === c.id ? c : x)))}
+						resumen={resumen}
+					/>
+				) : (
+					sinCarta
+				)}
+			</div>
+		);
+		// Con el teclado no se guarda: se quita para que se vea lo que se escribe.
+		const pie = b.design && (
+			<div
+				className={cn(
+					"flex shrink-0 items-center gap-1.5 border-t p-1.5 [[data-teclado]_&]:hidden",
+					horizontal && "col-start-2 row-start-3",
+				)}
+				data-tutorial="disenar-pie"
+			>
+				{botonDescartar}
+				{botonesGuardar}
+			</div>
+		);
+		// Una sola rejilla para las dos orientaciones: con dos árboles, girar el
+		// teléfono montaba el formulario de nuevo y volvía a la primera pestaña.
 		return (
 			<div ref={refMovil} className="relative h-full">
-				<div className="absolute inset-x-0 top-0 flex flex-col" style={{ height: alto ?? "100%" }}>
+				<div
+					className={cn(
+						"absolute inset-x-0 top-0 grid",
+						horizontal
+							? "grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)_auto]"
+							: "grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_minmax(0,1fr)_auto]",
+					)}
+					style={{ height: alto ?? "100%" }}
+				>
+					{barra}
 					<div
-						className="flex shrink-0 items-center gap-1 border-b px-1.5 py-1"
-						data-tutorial="disenar-barra"
+						className={cn(
+							"min-h-0 min-w-0",
+							horizontal ? "col-start-1 row-span-3 row-start-1 border-r" : "border-b",
+						)}
+						style={
+							horizontal
+								? { width: alto ? anchoColumnaCarta(alto) : "45vw" }
+								: { height: alto ? altoCarta(alto, escribiendo) : "40vh" }
+						}
 					>
-						<Button
-							size="sm"
-							variant="ghost"
-							onClick={() => pasarConAviso(-1)}
-							aria-label={t("Carta anterior")}
-						>
-							<Icono icon="lucide:chevron-left" />
-						</Button>
-						<button
-							type="button"
-							onClick={() => setListaAbierta(true)}
-							aria-label={t("Cartas del deck")}
-							className="flex h-11 min-w-0 flex-1 items-center gap-1.5 rounded-md px-2 text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-						>
-							<Icono icon="lucide:layers" className="size-4 shrink-0 text-muted-foreground" />
-							<span className="min-w-0 flex-1 truncate text-xs font-medium">{nombreActual}</span>
-							<Icono icon="lucide:chevron-down" className="size-4 shrink-0 text-muted-foreground" />
-						</button>
-						<Button
-							size="sm"
-							variant="ghost"
-							onClick={() => pasarConAviso(1)}
-							aria-label={t("Carta siguiente")}
-						>
-							<Icono icon="lucide:chevron-right" />
-						</Button>
-						<Button
-							size="sm"
-							variant="ghost"
-							onClick={() => setMasAbierto(true)}
-							disabled={!b.design}
-							aria-label={t("Opciones de la carta")}
-						>
-							<Icono icon="lucide:ellipsis" />
-						</Button>
-					</div>
-					<div className="shrink-0" style={{ height: alto ? altoCarta(alto, escribiendo) : "40%" }}>
 						{vistaPrevia}
 					</div>
-					<div className="min-h-0 flex-1 border-t">
-						{b.design ? (
-							<FormularioMovil
-								design={b.design}
-								cambiar={b.cambiar}
-								cara={cara}
-								setCara={setCara}
-								colecciones={colecciones}
-								packs={packs}
-								resumen={resumen}
-							/>
-						) : (
-							sinCarta
-						)}
-					</div>
-					{b.design && (
-						<div
-							className="flex shrink-0 items-center gap-1.5 border-t p-2"
-							data-tutorial="disenar-pie"
-						>
-							{botonDescartar}
-							{botonesGuardar}
-						</div>
-					)}
+					{formulario}
+					{pie}
 				</div>
 				{encima}
 			</div>

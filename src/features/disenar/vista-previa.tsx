@@ -8,6 +8,7 @@ import { AyudaTactil } from "@/components/ayuda-tactil";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { SelectorIdioma } from "@/components/selector-idioma";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { WithTooltip } from "@/components/ui/with-tooltip";
@@ -16,6 +17,7 @@ import { type AnchoMiniatura, urlArte, urlCapa, urlDiseno } from "@/lib/image-ur
 import { useImagenViva, useRafaga } from "@/lib/imagen-viva";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
+import { CONTROLES_CARTA } from "./altura";
 import { ArteEnVivo } from "./arte-en-vivo";
 import {
 	arrastreEnLaPieza,
@@ -60,6 +62,7 @@ export function VistaPrevia({
 	onEncuadre,
 	cargando,
 	carasImpresas,
+	compacta = false,
 }: {
 	design: CardDesign | null;
 	huella: string | null;
@@ -80,10 +83,11 @@ export function VistaPrevia({
 	/** 2 en las de doble cara; en las partidas, aventuras… las caras son
 	 *  partes de una sola cara impresa. */
 	carasImpresas: number;
+	/** El móvil: sin filas arriba ni abajo; lo suyo flota a los lados de la carta. */
+	compacta?: boolean;
 }) {
 	const { t } = useLang();
-	const { tactil, tamano } = useFormato();
-	const movil = tamano === "movil";
+	const { tactil } = useFormato();
 	const [seguro, setSeguro] = useState(false);
 	const marco = useRef<HTMLDivElement>(null);
 	// Los punteros que tocan la carta: uno arrastra, dos arrastran y pellizcan.
@@ -267,45 +271,84 @@ export function VistaPrevia({
 	};
 
 	const caras = design?.faces.length ?? 0;
+	const nombreCara = (i: number) =>
+		carasImpresas > 1 ? t("Cara {n}", { n: i + 1 }) : t("Parte {n}", { n: i + 1 });
 	return (
 		<div className="flex h-full flex-col" data-tutorial="disenar-vista">
+			{!compacta && (
+				<div className="flex shrink-0 items-center gap-2.5 border-b px-3 py-2">
+					<SelectorIdioma
+						valor={lang}
+						onCambio={setLang}
+						ancho="w-40"
+						ariaLabel={t("Idioma de las cartas diseñadas")}
+					/>
+					{caras > 1 && (
+						<ToggleGroup
+							type="single"
+							size="sm"
+							value={String(cara)}
+							onValueChange={(v) => v && setCara(Number(v))}
+						>
+							{design?.faces.map((_, i) => (
+								<ToggleGroupItem key={i} value={String(i)} className="px-2.5 text-xs">
+									{nombreCara(i)}
+								</ToggleGroupItem>
+							))}
+						</ToggleGroup>
+					)}
+					<label className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
+						<Switch checked={seguro} onCheckedChange={setSeguro} />
+						{t("Margen de seguridad")}
+					</label>
+				</div>
+			)}
 			<div
 				className={cn(
-					"flex shrink-0 items-center gap-2.5 border-b px-3 py-2",
-					movil && "flex-wrap gap-y-1 py-1",
+					"relative flex min-h-0 flex-1 items-center justify-center overflow-hidden p-4",
+					compacta && "py-1",
 				)}
+				style={compacta ? { paddingInline: CONTROLES_CARTA } : undefined}
 			>
-				<SelectorIdioma
-					valor={lang}
-					onCambio={setLang}
-					ancho="w-40"
-					ariaLabel={t("Idioma de las cartas diseñadas")}
-				/>
-				{caras > 1 && (
-					<ToggleGroup
-						type="single"
-						size="sm"
-						value={String(cara)}
-						onValueChange={(v) => v && setCara(Number(v))}
-					>
-						{design?.faces.map((_, i) => (
-							<ToggleGroupItem key={i} value={String(i)} className="px-2.5 text-xs">
-								{carasImpresas > 1 ? t("Cara {n}", { n: i + 1 }) : t("Parte {n}", { n: i + 1 })}
-							</ToggleGroupItem>
-						))}
-					</ToggleGroup>
+				{compacta && (
+					<>
+						{/* Lo que en escritorio va en las filas de encima y de debajo de la carta. */}
+						<div className="absolute top-1 left-1 z-10 flex flex-col gap-1">
+							<SelectorIdioma
+								valor={lang}
+								onCambio={setLang}
+								ancho="w-10 justify-center px-1 [&>svg:last-child]:hidden"
+								ariaLabel={t("Idioma de las cartas diseñadas")}
+								soloBandera
+							/>
+							{caras > 1 &&
+								design?.faces.map((_, i) => (
+									<Button
+										key={i}
+										size="icon-sm"
+										variant={i === cara ? "secondary" : "ghost"}
+										aria-label={nombreCara(i)}
+										aria-pressed={i === cara}
+										onClick={() => setCara(i)}
+									>
+										{i + 1}
+									</Button>
+								))}
+						</div>
+						<div className="absolute top-1 right-1 z-10 flex flex-col items-end gap-1">
+							<Button
+								size="icon-sm"
+								variant={seguro ? "secondary" : "ghost"}
+								aria-label={t("Margen de seguridad")}
+								aria-pressed={seguro}
+								onClick={() => setSeguro((v) => !v)}
+							>
+								<Icono icon="lucide:square-dashed" />
+							</Button>
+							<Incidencias avisos={avisos} setLang={setLang} compacta />
+						</div>
+					</>
 				)}
-				<label className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
-					<Switch checked={seguro} onCheckedChange={setSeguro} />
-					{t("Margen de seguridad")}
-				</label>
-			</div>
-			<div
-				className={cn(
-					"relative flex min-h-0 flex-1 items-center justify-center p-4",
-					movil && "p-2",
-				)}
-			>
 				<div
 					ref={marco}
 					className={cn(
@@ -383,7 +426,7 @@ export function VistaPrevia({
 					</AyudaTactil>
 				)}
 			</div>
-			<Incidencias avisos={avisos} setLang={setLang} />
+			{!compacta && <Incidencias avisos={avisos} setLang={setLang} />}
 		</div>
 	);
 }

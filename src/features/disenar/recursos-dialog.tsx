@@ -19,7 +19,6 @@ import { WithTooltip } from "@/components/ui/with-tooltip";
 import { cartaPropia } from "@/lib/cartas";
 import { insertar } from "@/lib/deck-ops";
 import { abrirParaImportar } from "@/lib/dialogos";
-import { useFormato } from "@/lib/formato";
 import { localeDe } from "@/lib/idiomas";
 import { urlExtra } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
@@ -27,7 +26,6 @@ import { esMovil, useEsMovil } from "@/lib/plataforma";
 import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
-import { AvisoSoloTableta } from "./aviso-tableta";
 import { ID_ORIGINAL, useMarcosOriginales } from "./marcos-originales";
 import { usePacksDescargables } from "./packs-descargables";
 import { rehacerMiniaturas } from "./renumerar";
@@ -39,11 +37,9 @@ import { ESTILOS } from "./textos";
  */
 export function RecursosDialog() {
 	const abierto = useUi((s) => s.dialogo?.tipo === "recursosDiseno");
-	// Lo que no entra en el móvil: un aviso en vez del diálogo.
-	const movil = useFormato().tamano === "movil";
 	return (
 		<Dialog open={abierto} onOpenChange={(o) => !o && useUi.getState().abrir(null)}>
-			{abierto && (movil ? <AvisoSoloTableta /> : <Contenido />)}
+			{abierto && <Contenido />}
 		</Dialog>
 	);
 }
@@ -145,7 +141,8 @@ function Contenido() {
 		<DialogoAdaptable className="flex h-[min(80vh,620px)] flex-col sm:max-w-2xl">
 			<DialogHeader>
 				<DialogTitle>{t("Letras, marcos y símbolos")}</DialogTitle>
-				<DialogDescription className="text-xs">
+				{/* De lado, el alto es para las listas. */}
+				<DialogDescription className="text-xs landscape:[[data-formato=movil]_&]:sr-only">
 					{t(
 						"Lo que usa el editor para pintar las cartas. Lo de la casa siempre está; aquí se añade lo tuyo.",
 					)}
@@ -165,8 +162,8 @@ function Contenido() {
 				</TabsList>
 
 				<TabsContent value="letras" className="flex min-h-0 flex-1 flex-col gap-2.5">
-					<div className="flex items-center gap-2.5">
-						<p className="flex-1 text-xs text-muted-foreground">
+					<div className="flex flex-wrap items-center gap-2.5">
+						<p className="min-w-48 flex-1 text-xs text-muted-foreground">
 							{t(
 								"De la casa: Spectral (título y reglas) y Montserrat (pie). Importa .ttf u .otf para usarlas en una colección.",
 							)}
@@ -244,8 +241,8 @@ function Contenido() {
 				</TabsContent>
 
 				<TabsContent value="packs" className="flex min-h-0 flex-1 flex-col gap-2.5">
-					<div className="flex items-center gap-1.5">
-						<p className="flex-1 text-xs text-muted-foreground">
+					<div className="flex flex-wrap items-center gap-1.5">
+						<p className="min-w-48 flex-1 text-xs text-muted-foreground">
 							{t("Un pack es una carpeta (o un .zip) con su pack.json y sus capas en SVG.")}
 						</p>
 						{/* En Android no hay selector de carpetas: se importa el ZIP. */}

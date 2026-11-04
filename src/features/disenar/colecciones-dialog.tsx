@@ -8,6 +8,7 @@ import { Confirmar } from "@/components/confirmar";
 import { DialogoAdaptable } from "@/components/dialogo-adaptable";
 import { Icono } from "@/components/icono";
 import { paraTraducir, useLang } from "@/components/language-provider";
+import { BarraSeccion } from "@/components/lista-secciones";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -26,11 +27,11 @@ import { idioma } from "@/lib/idiomas";
 import { EDICION_NEUTRA, parametros, urlMiniatura } from "@/lib/image-url";
 import { call } from "@/lib/ipc";
 import { conIdioma, porIdioma, tieneIdioma } from "@/lib/por-idioma";
+import { volverConEscape } from "@/lib/seccion-movil";
 import { cn } from "@/lib/utils";
 import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
 import { AJUSTES_CERO, AjustesFinos, hayAjustes } from "./ajustes-finos";
-import { AvisoSoloTableta } from "./aviso-tableta";
 import { elegirEstilo, opcionesEstilo, propiosDe, valorEstilo } from "./estilos";
 import { EditorMarco } from "./formulario";
 import { useMarcosOriginales } from "./marcos-originales";
@@ -64,17 +65,18 @@ function nueva(nombre: string): Collection {
  */
 export function ColeccionesDialog() {
 	const abierto = useUi((s) => s.dialogo?.tipo === "colecciones");
-	// Lo que no entra en el móvil: un aviso en vez del diálogo.
-	const movil = useFormato().tamano === "movil";
 	return (
 		<Dialog open={abierto} onOpenChange={(o) => !o && useUi.getState().abrir(null)}>
-			{abierto && (movil ? <AvisoSoloTableta /> : <Contenido />)}
+			{abierto && <Contenido />}
 		</Dialog>
 	);
 }
 
 function Contenido() {
 	const { t, mensaje } = useLang();
+	// En un teléfono no caben lado a lado: la lista y, al elegir una, su editor.
+	const movil = useFormato().tamano === "movil";
+	const [enEditor, setEnEditor] = useState(false);
 	const [lista, setLista] = useState<Collection[] | null>(null);
 	const [packs, setPacks] = useState<PackInfo[]>([]);
 	const [letras, setLetras] = useState<LetraInfo[]>([]);
@@ -133,10 +135,12 @@ function Contenido() {
 	const elegir = (c: Collection) => {
 		setElegida(c.id);
 		setBorrador(c);
+		setEnEditor(true);
 	};
 	const crear = () => {
 		setElegida("");
 		setBorrador(nueva(t("Nueva colección")));
+		setEnEditor(true);
 	};
 
 	const guardar = async () => {
@@ -184,6 +188,7 @@ function Contenido() {
 				const primera = cs[0] ?? null;
 				setElegida(primera?.id ?? null);
 				setBorrador(primera);
+				setEnEditor(false);
 			}
 			setTocadas(true);
 		} catch (e) {
@@ -196,8 +201,10 @@ function Contenido() {
 		<DialogoAdaptable
 			className="flex h-[min(86vh,760px)] flex-col sm:max-w-4xl"
 			cambiosSinGuardar={cambiada}
+			onEscapeKeyDown={volverConEscape(movil && enEditor, () => setEnEditor(false))}
 		>
-			<DialogHeader>
+			{/* En el editor del teléfono, la barra de volver hace de título: el alto es para los campos. */}
+			<DialogHeader className={cn(movil && enEditor && "sr-only")}>
 				<DialogTitle>{t("Colecciones")}</DialogTitle>
 				<DialogDescription className="text-xs">
 					{t(
@@ -205,8 +212,19 @@ function Contenido() {
 					)}
 				</DialogDescription>
 			</DialogHeader>
+			{movil && enEditor && (
+				<div className="-mt-2 pr-8 landscape:[[data-teclado]_&]:hidden">
+					<BarraSeccion titulo={t("Colecciones")} onVolver={() => setEnEditor(false)} />
+				</div>
+			)}
 			<div className="flex min-h-0 flex-1 gap-2.5">
-				<div className="flex w-56 shrink-0 flex-col gap-2.5 rounded-md border p-2.5">
+				<div
+					className={cn(
+						"flex flex-col gap-2.5 rounded-md border p-2.5",
+						movil ? "min-w-0 flex-1" : "w-56 shrink-0",
+						movil && enEditor && "hidden",
+					)}
+				>
 					<Button size="sm" variant="outline" onClick={crear}>
 						<Icono icon="lucide:plus" />
 						{t("Nueva colección")}
@@ -242,7 +260,12 @@ function Contenido() {
 						</ul>
 					</ScrollArea>
 				</div>
-				<div className="flex min-w-0 flex-1 flex-col rounded-md border">
+				<div
+					className={cn(
+						"flex min-w-0 flex-1 flex-col rounded-md border",
+						movil && !enEditor && "hidden",
+					)}
+				>
 					{borrador ? (
 						<>
 							<ScrollArea className="min-h-0 flex-1">
@@ -253,7 +276,7 @@ function Contenido() {
 									familias={familiasDe(letras)}
 								/>
 							</ScrollArea>
-							<div className="flex shrink-0 items-center gap-1.5 border-t p-2.5">
+							<div className="flex shrink-0 flex-wrap items-center gap-1.5 border-t p-2.5 landscape:[[data-formato=movil][data-teclado]_&]:hidden">
 								{original && (
 									<>
 										<Button size="sm" variant="ghost" onClick={() => setBorrar(original)}>
@@ -337,7 +360,7 @@ function FilaColeccion({
 			<button
 				type="button"
 				onClick={onElegir}
-				className="min-w-0 flex-1 truncate px-2 py-1.5 text-left"
+				className="min-w-0 flex-1 truncate px-2 py-1.5 text-left [[data-tactil]_&]:py-3"
 			>
 				{c.name}
 			</button>

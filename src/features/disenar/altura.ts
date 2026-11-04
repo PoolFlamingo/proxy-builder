@@ -18,10 +18,19 @@ export function altoVisible(m: {
 	return Math.max(0, Math.min(m.contenedor, Math.round(hasta - m.arriba)));
 }
 
+/** Lo que miden, con su margen, los controles que flotan a cada lado de la carta (px). */
+export const CONTROLES_CARTA = 48;
+
 /** Cuánto alto ocupa la carta en la pantalla de Diseñar del móvil: más
  *  pequeña mientras se escribe, para que quepa el campo. */
 export function altoCarta(alto: number, escribiendo: boolean): number {
-	return Math.round(alto * (escribiendo ? 0.22 : 0.4));
+	return Math.round(alto * (escribiendo ? 0.22 : 0.44));
+}
+
+/** El teléfono de lado: el ancho de la columna de la carta, que va a toda la
+ *  altura, con sitio a cada lado para sus controles (`CONTROLES_CARTA`). */
+export function anchoColumnaCarta(alto: number): number {
+	return Math.round((alto * 63) / 88) + 2 * CONTROLES_CARTA;
 }
 
 /** ¿Es este elemento un campo donde se escribe (y por tanto sale el teclado)? */
