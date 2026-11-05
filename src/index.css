@@ -828,3 +828,41 @@ html[data-tactil] [data-slot="dropdown-menu-checkbox-item"],
 html[data-tactil] [data-slot="dropdown-menu-radio-item"] {
   min-height: 2.5rem;
 }
+
+/* Móvil: los menús contextuales (y sus submenús) suben como una hoja desde abajo, a todo el
+   ancho, en vez de salir pegados al dedo. Radix los coloca junto al punto pulsado y solo sabe
+   desplazarlos en vertical: con un menú de 18 rem en una pantalla de 411 dp, si el dedo está
+   entre el 25 % y el 65 % del ancho no cabe ni a la derecha ni a la izquierda y se sale de la
+   pantalla (los textos quedaban cortados). `components/ui/` es de solo lectura y Radix pone la
+   posición en línea (y un `will-change: transform` que haría el fondo relativo al contenedor,
+   no a la pantalla), de ahí los `!important` sobre su contenedor. */
+html[data-formato="movil"]
+  [data-radix-popper-content-wrapper]:has(> [data-slot="context-menu-content"], > [data-slot="context-menu-sub-content"]) {
+  transform: none !important;
+  will-change: auto !important;
+  top: auto !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  min-width: 0 !important;
+  display: flex;
+  justify-content: center;
+  padding: 0 0.5rem calc(0.5rem + env(safe-area-inset-bottom));
+}
+/* El fondo atenúa lo de detrás, como una hoja: va detrás del menú, dentro del mismo contenedor. */
+html[data-formato="movil"]
+  [data-radix-popper-content-wrapper]:has(> [data-slot="context-menu-content"], > [data-slot="context-menu-sub-content"])::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: rgb(0 0 0 / 0.4);
+}
+html[data-formato="movil"] [data-slot="context-menu-content"],
+html[data-formato="movil"] [data-slot="context-menu-sub-content"] {
+  width: 100%;
+  max-width: 28rem;
+  max-height: min(75dvh, calc(100dvh - 3rem - env(safe-area-inset-bottom))) !important;
+  overflow-x: hidden;
+  overflow-y: auto;
+}

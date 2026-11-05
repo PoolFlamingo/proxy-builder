@@ -120,6 +120,11 @@ sola interfaz que cambia por formato, nunca pantallas aparte; el escritorio no c
   el «Diseñar reducido en móvil» del 25/10): lo que no cabe se reparte, no se quita. Cada fila apilada
   cuesta alto, y de lado solo hay ~360 dp: la barra de pestañas pasa a un carril (`BarraInferiorMovil`
   con `lado`) y lo principal (la carta, las cartas de una lista, los decks) se queda con la pantalla.
+- 🛑 **Los menús contextuales del móvil suben como hoja** (Pablo, 05/11/2026): Radix los coloca junto al dedo
+  y solo los desplaza en vertical, así que uno de 18 rem no cabe en una pantalla de 411 dp si se toca entre el 25 % y
+  el 65 % del ancho y se sale de la pantalla. `index.css` (`data-formato="movil"`) los pone abajo, a todo el ancho y con
+  el fondo atenuado, y el submenú sube como segunda hoja. Todo `ContenidoContextual` lo hereda: no uses `side`, `align`
+  ni anchos pensados para el puntero, y un menú nuevo se prueba en el emulador tocando a izquierda, centro y derecha.
 - 🛑 **El móvil se prueba en todos los casos, no a ojo** (Pablo, 04/11/2026: «tiene que verse bien en
   móvil en todos los casos»): cada pantalla y diálogo, de pie (411×914) y de lado (914×411), **con datos**
   (resultados, listas largas), con el teclado y tras girar; en el emulador, por CDP, con un script que
