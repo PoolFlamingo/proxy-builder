@@ -19,7 +19,7 @@ function corto(tipo: string): string {
 /**
  * Lo que se pinta encima de una carta del campo: contadores, fuerza y
  * resistencia cambiadas, etiquetas, palabras clave, cantidad del montón e
- * insignia «Robada».
+ * insignias «Robada» y «Copia» (ficha que copia otra carta).
  */
 export function Insignias({ c, yo }: { c: VistaCarta; yo: number | null }) {
 	const { t } = useLang();
@@ -151,6 +151,15 @@ export function Insignias({ c, yo }: { c: VistaCarta; yo: number | null }) {
 				<span className="pointer-events-none absolute top-0.5 left-0.5 flex items-center gap-0.5 rounded bg-rose-600/90 px-1 text-[8px] font-semibold text-white">
 					<Icono icon="lucide:hand" className="size-2.5" />
 					{c.controlador === yo ? t("Robada") : t("Prestada")}
+				</span>
+			)}
+			{c.esFicha && c.copiaDe !== null && (
+				// Abajo a la izquierda, donde una carta impresa lleva el número de colección y el
+				// copyright: no tapa ni el arte, ni el texto, ni la fuerza y resistencia. Solo
+				// texto visible (sin tooltip), para que se lea igual con el dedo.
+				<span className="pointer-events-none absolute bottom-0.5 left-0.5 flex items-center gap-0.5 rounded bg-violet-600/90 px-1 text-[8px] font-semibold text-white">
+					<Icono icon="lucide:copy" className="size-2.5" />
+					{t("Copia")}
 				</span>
 			)}
 			{c.habilidad && (
