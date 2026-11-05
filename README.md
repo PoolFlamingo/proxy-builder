@@ -378,6 +378,8 @@ printing, with the same images you will print (designed proxies included):
   your plays now and then, the way a real table would: it counters a spell,
   removes a creature that just came in, sweeps the board after an attack. You
   choose how hard it plays, and you decide whether each answer happens.
+- **More ghosts:** add up to nine, each with its own life, to feel a multiplayer
+  table in a solo game. They don't bring more answers; the Sparring stays the same.
 - **Dice and coins** in real 3D with physics (or a lighter 3D or a flat 2D
   version, in Settings), with your colours, finish or your own image. The
   result is decided before the animation, so it is always fair.

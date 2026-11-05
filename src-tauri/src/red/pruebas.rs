@@ -131,6 +131,7 @@ async fn partida_ajustada(
     }
     esperar("los decks de la sala", || anf.para_empezar().len() == n).await;
     let mut config = ConfigMesa {
+        fantasmas_extra: None,
         jugadores: vec![JugadorMesa {
             deck_id: "d".into(),
             nombre: "Host".into(),
@@ -1279,6 +1280,7 @@ async fn si_la_sala_cambia_entre_medias_no_empieza_nada() {
     };
     let anf = Anfitrion::nuevo("Host".into(), secreto_nuevo());
     let config = ConfigMesa {
+        fantasmas_extra: None,
         jugadores: vec![JugadorMesa {
             deck_id: "d".into(),
             nombre: "Host".into(),

@@ -1265,5 +1265,14 @@
 	"Frases": "短語",
 	"Frases amigables": "友善短語",
 	"Ver el tablero de {nombre}": "查看{nombre}的牌桌",
-	"Copia": "複製"
+	"Copia": "複製",
+	"Fantasma {i}": "幻影 {i}",
+	"{quien} añade un fantasma": "{quien} 新增了一個幻影",
+	"{quien} quita el fantasma {i}": "{quien} 移除了幻影 {i}",
+	"Fantasma {i}: {delta} vidas": "幻影 {i}：{delta} 點生命",
+	"El fantasma {i} recibe {delta} de daño de comandante": "幻影 {i} 受到 {delta} 點指揮官傷害",
+	"Fantasma {i}: {delta} venenos": "幻影 {i}：{delta} 個中毒指示物",
+	"Añadir otro fantasma": "再新增一個幻影",
+	"Quitar este fantasma": "移除這個幻影",
+	"Rivales fantasma": "幻影對手"
 }

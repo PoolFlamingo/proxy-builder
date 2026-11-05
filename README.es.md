@@ -388,6 +388,8 @@ incluidas):
   cuando responde a tus jugadas, como lo haría una mesa de verdad: contrarresta
   un hechizo, quita una criatura que acaba de entrar, barre el campo después de
   un ataque. Tú eliges lo fuerte que juega y decides si cada respuesta ocurre.
+- **Más fantasmas:** añade hasta nueve, cada uno con su propia vida, para sentir una
+  mesa de varios jugando en solitario. No traen más respuestas; el Sparring es el mismo.
 - **Dados y monedas** en 3D de verdad, con física (o un 3D más ligero o un 2D
   plano, en Ajustes), con tus colores, tu acabado o tu propia imagen. El
   resultado se decide antes de la animación, así que siempre es justo.

@@ -85,6 +85,11 @@ fn nombre(a: &Accion) -> &'static str {
         Accion::VidaFantasma { .. } => "VidaFantasma",
         Accion::DanoComandanteFantasma { .. } => "DanoComandanteFantasma",
         Accion::VerFantasma { .. } => "VerFantasma",
+        Accion::AnadirFantasma => "AnadirFantasma",
+        Accion::QuitarFantasma { .. } => "QuitarFantasma",
+        Accion::VidaOtroFantasma { .. } => "VidaOtroFantasma",
+        Accion::DanoComandanteOtroFantasma { .. } => "DanoComandanteOtroFantasma",
+        Accion::VenenoOtroFantasma { .. } => "VenenoOtroFantasma",
         Accion::Senal { .. } => "Senal",
         Accion::PasarTurno => "PasarTurno",
         Accion::TurnoExtra { .. } => "TurnoExtra",
@@ -656,6 +661,11 @@ fn cada_accion_del_catalogo() {
         Err(Rechazo::NoExiste),
         "sin fantasma con dos jugadores"
     );
+    assert_eq!(
+        m.como(YO, Accion::AnadirFantasma),
+        Err(Rechazo::NoExiste),
+        "los fantasmas son del solitario"
+    );
     m.haz(Accion::Senal {
         senal: Some(Senal::Espera),
     });
@@ -771,6 +781,71 @@ fn cada_accion_del_catalogo() {
         tipo: TipoFlecha::Ataque,
     });
     assert_eq!(s.p().flechas.last().unwrap().a, Extremo::Fantasma);
+    // Los otros rivales imaginados: cada uno con su cuenta, aparte del primero.
+    let primero = s.p().fantasma.clone();
+    s.haz(Accion::AnadirFantasma);
+    s.haz(Accion::AnadirFantasma);
+    let inicial = s.p().opciones.vida_inicial;
+    assert_eq!(s.p().fantasmas_extra[1].vida, inicial);
+    s.haz(Accion::VidaOtroFantasma {
+        fantasma: 1,
+        delta: -4,
+    });
+    s.haz(Accion::VenenoOtroFantasma {
+        fantasma: 1,
+        delta: 2,
+    });
+    s.haz(Accion::DanoComandanteOtroFantasma {
+        fantasma: 1,
+        comandante: atacante,
+        delta: 3,
+    });
+    let f = &s.p().fantasmas_extra[1];
+    assert_eq!((f.vida, f.veneno), (inicial - 7, 2));
+    assert_eq!(s.p().fantasmas_extra[0].vida, inicial);
+    assert_eq!(s.p().fantasma, primero, "el primero no se entera");
+    assert_eq!(
+        s.como(
+            YO,
+            Accion::VidaOtroFantasma {
+                fantasma: 2,
+                delta: -1
+            }
+        ),
+        Err(Rechazo::NoExiste)
+    );
+    // Quitar uno se lleva sus flechas y las de los de detrás siguen a quien apuntaban.
+    s.haz(Accion::Flecha {
+        de: Extremo::Carta(atacante),
+        a: Extremo::OtroFantasma(0),
+        tipo: TipoFlecha::Ataque,
+    });
+    s.haz(Accion::Flecha {
+        de: Extremo::Carta(atacante),
+        a: Extremo::OtroFantasma(1),
+        tipo: TipoFlecha::Ataque,
+    });
+    s.haz(Accion::QuitarFantasma { fantasma: 0 });
+    assert_eq!(s.p().fantasmas_extra.len(), 1);
+    assert_eq!(s.p().fantasmas_extra[0].veneno, 2);
+    let a_otros: Vec<Extremo> = s
+        .p()
+        .flechas
+        .iter()
+        .map(|f| f.a)
+        .filter(|a| matches!(a, Extremo::OtroFantasma(_)))
+        .collect();
+    assert_eq!(a_otros, [Extremo::OtroFantasma(0)]);
+    assert_eq!(
+        s.como(YO, Accion::QuitarFantasma { fantasma: 1 }),
+        Err(Rechazo::NoExiste)
+    );
+    // Hasta nueve en total.
+    for _ in 0..7 {
+        s.haz(Accion::AnadirFantasma);
+    }
+    assert_eq!(s.p().fantasmas_extra.len(), mesa::modelo::MAX_FANTASMAS - 1);
+    assert_eq!(s.como(YO, Accion::AnadirFantasma), Err(Rechazo::Limite));
     s.haz(Accion::VerFantasma { si: false });
     s.haz(Accion::IntensidadSparring {
         intensidad: Intensidad::Realista,
@@ -911,6 +986,11 @@ const TODAS: &[&str] = &[
     "VidaFantasma",
     "DanoComandanteFantasma",
     "VerFantasma",
+    "AnadirFantasma",
+    "QuitarFantasma",
+    "VidaOtroFantasma",
+    "DanoComandanteOtroFantasma",
+    "VenenoOtroFantasma",
     "Senal",
     "PasarTurno",
     "TurnoExtra",

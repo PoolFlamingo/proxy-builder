@@ -152,6 +152,7 @@ async fn como_anfitrion(dir: &Path) {
         tokio::time::sleep(Duration::from_millis(50)).await;
     }
     let config = ConfigMesa {
+        fantasmas_extra: None,
         jugadores: vec![JugadorMesa {
             deck_id: "d".into(),
             nombre: "Host".into(),

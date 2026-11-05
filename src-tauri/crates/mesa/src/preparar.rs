@@ -18,7 +18,7 @@ use crate::ids::{IdCarta, IdEquipo, IdJugador};
 use crate::lista::ListaDeJuego;
 use crate::modelo::{
     Carta, Designaciones, Equipo, EstadoMulligan, Jugador, OrigenCarta, Partida, RefImagen,
-    RefZona, Turno, VidaFantasma, Zona, ZonaComun,
+    RefZona, Turno, VidaFantasma, Zona, ZonaComun, MAX_FANTASMAS,
 };
 use crate::sparring::EstadoSparring;
 
@@ -202,6 +202,9 @@ pub struct Config {
     pub equipos: Vec<Equipo>,
     /// Quién empieza; `None` = al azar.
     pub primero: Option<IdJugador>,
+    /// Los rivales imaginados de más en solitario (catálogo v6), aparte del primero.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fantasmas_extra: Option<u8>,
 }
 
 /// Reparte la partida: ids, comandantes al mando, banquillo aparte, planos
@@ -272,6 +275,20 @@ pub fn iniciar(
             visible: true,
             veneno: 0,
         }),
+        fantasmas_extra: if n == 1 {
+            let cuantos = usize::from(config.fantasmas_extra.unwrap_or(0));
+            vec![
+                VidaFantasma {
+                    vida: opciones.vida_inicial,
+                    dano_comandante: BTreeMap::new(),
+                    visible: true,
+                    veneno: 0,
+                };
+                cuantos.min(MAX_FANTASMAS - 1)
+            ]
+        } else {
+            Vec::new()
+        },
         sparring: EstadoSparring::default(),
         mulligan: Some(EstadoMulligan::default()),
         seq: 0,

@@ -376,6 +376,7 @@ async fn empezar_cuando_esten(app: AppHandle, salon: Arc<Salon>, anf: Arc<Anfitr
         })
         .unwrap_or(Formato::Commander);
     let config = ConfigMesa {
+        fantasmas_extra: None,
         jugadores: vec![JugadorMesa {
             deck_id: listo.deck_id.clone(),
             nombre: salon.apodo.clone(),

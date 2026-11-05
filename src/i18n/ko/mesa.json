@@ -1265,5 +1265,14 @@
 	"Frases": "문구",
 	"Frases amigables": "친근한 문구",
 	"Ver el tablero de {nombre}": "{nombre}의 판 보기",
-	"Copia": "복사본"
+	"Copia": "복사본",
+	"Fantasma {i}": "유령 {i}",
+	"{quien} añade un fantasma": "{quien}: 유령을 추가했어요",
+	"{quien} quita el fantasma {i}": "{quien}: 유령 {i}을(를) 제거했어요",
+	"Fantasma {i}: {delta} vidas": "유령 {i}: 생명점 {delta}",
+	"El fantasma {i} recibe {delta} de daño de comandante": "유령 {i}: 커맨더 피해 {delta}",
+	"Fantasma {i}: {delta} venenos": "유령 {i}: 독 {delta}",
+	"Añadir otro fantasma": "유령 하나 더 추가",
+	"Quitar este fantasma": "이 유령 제거",
+	"Rivales fantasma": "유령 상대"
 }

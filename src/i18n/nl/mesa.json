@@ -1320,5 +1320,14 @@
 	"Frases": "Zinnetjes",
 	"Frases amigables": "Vriendelijke zinnetjes",
 	"Ver el tablero de {nombre}": "Speelveld van {nombre} bekijken",
-	"Copia": "Kopie"
+	"Copia": "Kopie",
+	"Fantasma {i}": "Spook {i}",
+	"{quien} añade un fantasma": "{quien} voegt een spook toe",
+	"{quien} quita el fantasma {i}": "{quien} verwijdert spook {i}",
+	"Fantasma {i}: {delta} vidas": "Spook {i}: {delta} levens",
+	"El fantasma {i} recibe {delta} de daño de comandante": "Spook {i} krijgt {delta} commanderschade",
+	"Fantasma {i}: {delta} venenos": "Spook {i}: {delta} gif",
+	"Añadir otro fantasma": "Nog een spook toevoegen",
+	"Quitar este fantasma": "Dit spook verwijderen",
+	"Rivales fantasma": "Spooktegenstanders"
 }

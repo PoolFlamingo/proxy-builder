@@ -45,6 +45,11 @@ pub struct Partida {
     pub pausada: bool,
     /// La vida del rival imaginado del solitario («Phantom life»).
     pub fantasma: Option<VidaFantasma>,
+    /// Más rivales imaginados (catálogo v6), para simular una partida de varios:
+    /// solo marcadores, el sparring no los mira. Sin ellos no se escribe (la
+    /// huella de antes no cambia).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub fantasmas_extra: Vec<VidaFantasma>,
     #[serde(default)]
     pub sparring: EstadoSparring,
     /// Mientras alguien no se ha quedado con su mano inicial.
@@ -500,6 +505,9 @@ pub enum Tamano {
     L,
 }
 
+/// Cuántos rivales imaginados puede haber a la vez (una mesa llega a 10 jugadores).
+pub const MAX_FANTASMAS: usize = 9;
+
 /// La vida del rival imaginado del solitario.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -631,6 +639,8 @@ pub enum Extremo {
     Jugador(IdJugador),
     /// El rival imaginado del solitario (catálogo v4).
     Fantasma,
+    /// Uno de los otros rivales imaginados, por su sitio en `fantasmas_extra` (v6).
+    OtroFantasma(u8),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]

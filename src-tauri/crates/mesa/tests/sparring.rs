@@ -131,6 +131,7 @@ fn deck() -> DeckDeMesa {
 fn partida(semilla: u64) -> Partida {
     let variantes = Variantes::default();
     let config = Config {
+        fantasmas_extra: None,
         formato: Formato::Commander,
         opciones: Opciones::de_fabrica(Formato::Commander, &variantes, 1),
         variantes,
@@ -489,4 +490,39 @@ fn quita_tierras_fuertes_pero_nunca_las_basicas() {
         }
     }
     assert!(cuna > 0, "Gaea's Cradle nunca fue objetivo");
+}
+
+/// Más fantasmas no traen más reacciones: son solo más marcadores.
+#[test]
+fn mas_fantasmas_no_cambian_las_reacciones() {
+    let mut hubo = 0;
+    for semilla in 0..20 {
+        let solo = jugar(semilla, Intensidad::Realista);
+        let mut j = Juego::nuevo(semilla, Intensidad::Realista);
+        for _ in 0..4 {
+            // Con un azar aparte: añadirlos no debe mover el de la partida.
+            j.r.procesar(
+                &Intencion {
+                    actor: J,
+                    accion: Accion::AnadirFantasma,
+                },
+                &mut Azar::new(0),
+                0,
+            )
+            .unwrap();
+        }
+        assert_eq!(j.p().fantasmas_extra.len(), 4);
+        for _ in 0..RONDAS {
+            j.ronda();
+        }
+        // Las mismas, salvo su `id`: es el `seq` del evento, y añadirlos fue un evento más.
+        let sin_id = |v: Vec<ReaccionSparring>| {
+            v.into_iter()
+                .map(|r| ReaccionSparring { id: 0, ..r })
+                .collect::<Vec<_>>()
+        };
+        hubo += solo.len();
+        assert_eq!(sin_id(solo), sin_id(j.reacciones), "semilla {semilla}");
+    }
+    assert!(hubo > 0, "sin reacciones no se ha comprobado nada");
 }

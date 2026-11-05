@@ -1358,5 +1358,14 @@
 	"Frases": "Zwroty",
 	"Frases amigables": "Przyjazne zwroty",
 	"Ver el tablero de {nombre}": "Zobacz planszę: {nombre}",
-	"Copia": "Kopia"
+	"Copia": "Kopia",
+	"Fantasma {i}": "Duch {i}",
+	"{quien} añade un fantasma": "{quien} dodaje ducha",
+	"{quien} quita el fantasma {i}": "{quien} usuwa ducha {i}",
+	"Fantasma {i}: {delta} vidas": "Duch {i}: {delta} życia",
+	"El fantasma {i} recibe {delta} de daño de comandante": "Duch {i} otrzymuje {delta} obrażeń od commandera",
+	"Fantasma {i}: {delta} venenos": "Duch {i}: {delta} trucizny",
+	"Añadir otro fantasma": "Dodaj kolejnego ducha",
+	"Quitar este fantasma": "Usuń tego ducha",
+	"Rivales fantasma": "Duchy-przeciwnicy"
 }

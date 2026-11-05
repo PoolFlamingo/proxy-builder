@@ -5,6 +5,7 @@ import {
 	claveDe,
 	crearAcumulador,
 	crearMantener,
+	mismoObjetivo,
 	type Objetivo,
 	objetivosQueCuentan,
 	vidaDe,
@@ -17,6 +18,26 @@ describe("la acción de cada cuenta", () => {
 	it("es la misma que mandan hoy los marcadores del tablero", () => {
 		expect(accionDe(J(2), { que: "vida" }, -3)).toEqual({ que: "vida", jugador: 2, delta: -3 });
 		expect(accionDe(F, { que: "vida" }, 5)).toEqual({ que: "vidaFantasma", delta: 5 });
+		const otro: Objetivo = { tipo: "otroFantasma", i: 2 };
+		expect(accionDe(otro, { que: "vida" }, -2)).toEqual({
+			que: "vidaOtroFantasma",
+			fantasma: 2,
+			delta: -2,
+		});
+		expect(accionDe(otro, { que: "veneno" }, 1)).toEqual({
+			que: "venenoOtroFantasma",
+			fantasma: 2,
+			delta: 1,
+		});
+		expect(accionDe(otro, { que: "comandante", comandante: 7 }, 3)).toEqual({
+			que: "danoComandanteOtroFantasma",
+			fantasma: 2,
+			comandante: 7,
+			delta: 3,
+		});
+		expect(mismoObjetivo(otro, { tipo: "otroFantasma", i: 2 })).toBe(true);
+		expect(mismoObjetivo(otro, { tipo: "otroFantasma", i: 0 })).toBe(false);
+		expect(mismoObjetivo(otro, F)).toBe(false);
 		expect(accionDe(J(1), { que: "veneno" }, 1)).toEqual({ que: "veneno", jugador: 1, delta: 1 });
 		expect(accionDe(F, { que: "veneno" }, -1)).toEqual({ que: "venenoFantasma", delta: -1 });
 		expect(accionDe(J(0), { que: "comandante", comandante: 7 }, 2, 4)).toEqual({

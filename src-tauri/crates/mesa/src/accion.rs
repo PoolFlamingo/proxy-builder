@@ -38,6 +38,7 @@
 //! | `RevelarMano`, `RevelarA`, `JugarBocaAbajo`, `Descartar` | mano (§2.3) |
 //! | `Eliminar`, `Conceder` | muerte (§6) |
 //! | `VidaFantasma`, `DanoComandanteFantasma`, `VerFantasma`, `VenenoFantasma` | «Phantom life» (§6); el veneno, v4 |
+//! | `AnadirFantasma`, `QuitarFantasma`, `VidaOtroFantasma`, `DanoComandanteOtroFantasma`, `VenenoOtroFantasma` | más rivales imaginados en solitario (v6) |
 //! | `Senal` | señales de prioridad (§7) |
 //! | `PasarTurno`, `TurnoExtra`, `Pausar`, `SaltarTurno` | turno (`capturas/pablo/00`, `03`) |
 //! | `Reiniciar`, `Deshacer`, `Rehacer` | los hace la sesión (`registro.rs`) |
@@ -65,7 +66,7 @@ use crate::modelo::{
 use crate::sparring::{Decision, Intensidad, ReaccionSparring};
 
 /// Sube con cada variante nueva o cambiada de `Accion` o `Cambio`.
-pub const VERSION_CATALOGO: u32 = 5;
+pub const VERSION_CATALOGO: u32 = 6;
 
 impl Accion {
     /// Lo que se puede hacer por otro jugador (`PorJugador`): lo que afecta a
@@ -756,6 +757,28 @@ pub enum Accion {
     },
     /// Catálogo v4.
     VenenoFantasma {
+        delta: i32,
+    },
+    /// Catálogo v6: otro rival imaginado, con la vida inicial de la partida.
+    AnadirFantasma,
+    /// Catálogo v6. `fantasma` es su sitio en `fantasmas_extra`; el primero no se quita.
+    QuitarFantasma {
+        fantasma: u8,
+    },
+    /// Catálogo v6.
+    VidaOtroFantasma {
+        fantasma: u8,
+        delta: i32,
+    },
+    /// Catálogo v6.
+    DanoComandanteOtroFantasma {
+        fantasma: u8,
+        comandante: IdCarta,
+        delta: i32,
+    },
+    /// Catálogo v6.
+    VenenoOtroFantasma {
+        fantasma: u8,
         delta: i32,
     },
     Senal {

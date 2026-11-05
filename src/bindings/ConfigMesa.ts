@@ -27,4 +27,8 @@ alMejorDe?: number,
 /**
  * Quién empieza la primera partida (por asiento); `None`, se sortea.
  */
-primero?: IdJugador, };
+primero?: IdJugador, 
+/**
+ * Los rivales imaginados de más en solitario, aparte del primero.
+ */
+fantasmasExtra?: number, };

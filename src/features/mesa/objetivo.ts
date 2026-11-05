@@ -58,7 +58,7 @@ export function elegirCarta(c: VistaCarta, t: Traducir): boolean {
  * Con una flecha en marcha, el fantasma del solitario es el objetivo (su
  * marcador de vida). Devuelve `false` si no hay una flecha que poner.
  */
-export function elegirFantasma(_t: Traducir): boolean {
+export function elegirFantasma(_t: Traducir, otro: number | null = null): boolean {
 	const pantalla = usePantalla.getState();
 	const md = pantalla.modo;
 	if (md?.tipo !== "flecha") return false;
@@ -66,7 +66,7 @@ export function elegirFantasma(_t: Traducir): boolean {
 	void hacer({
 		que: "flecha",
 		de: { tipo: "carta", id: md.de },
-		a: { tipo: "fantasma" },
+		a: otro === null ? { tipo: "fantasma" } : { tipo: "otroFantasma", id: otro },
 		tipo: md.flecha,
 	});
 	return true;

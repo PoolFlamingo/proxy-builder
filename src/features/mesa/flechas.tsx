@@ -56,15 +56,22 @@ export function Flechas({ disp }: { disp: Disposicion }) {
 	// O el del jugador del tablero, si es otro (`Controles` pone el suyo y no el mío).
 	const [vidaViendo, setVidaViendo] = useState<{ x: number; y: number } | null>(null);
 	// Y el del fantasma (arriba a la derecha): ahí llegan las flechas que le apuntan.
-	const [fantasma, setFantasma] = useState<{ x: number; y: number } | null>(null);
+	// Por el valor de su atributo: uno por fantasma.
+	const [fantasmas, setFantasmas] = useState<Record<string, { x: number; y: number }>>({});
 	useLayoutEffect(() => {
 		const caja = svg.current?.getBoundingClientRect();
-		const fa = document.querySelector(`[${ATRIBUTO_FANTASMA}]`);
-		if (caja && fa) {
-			const r = fa.getBoundingClientRect();
-			// Al borde de abajo, en el centro.
-			setFantasma({ x: r.left + r.width / 2 - caja.left, y: r.bottom - caja.top + 4 });
-		} else setFantasma(null);
+		const medidos: Record<string, { x: number; y: number }> = {};
+		if (caja) {
+			for (const fa of document.querySelectorAll(`[${ATRIBUTO_FANTASMA}]`)) {
+				const r = fa.getBoundingClientRect();
+				// Al borde de abajo, en el centro.
+				medidos[fa.getAttribute(ATRIBUTO_FANTASMA) ?? ""] = {
+					x: r.left + r.width / 2 - caja.left,
+					y: r.bottom - caja.top + 4,
+				};
+			}
+		}
+		setFantasmas(medidos);
 		// Al borde de arriba, en el centro: la punta no tapa el número.
 		const arriba = (j: IdJugador) => {
 			const el = document.querySelector(`[${ATRIBUTO_VIDA}="${j}"]`);
@@ -99,10 +106,12 @@ export function Flechas({ disp }: { disp: Disposicion }) {
 			return { ...desde(c.controlador), aqui: false };
 		}
 		// El fantasma: su marcador (o arriba, donde se pone, si está oculto).
-		if (e.tipo === "fantasma")
-			return fantasma
-				? { ...fantasma, aqui: true }
+		if (e.tipo === "fantasma" || e.tipo === "otroFantasma") {
+			const f = fantasmas[e.tipo === "fantasma" ? "" : String(e.id)];
+			return f
+				? { ...f, aqui: true }
 				: { x: marco.x + marco.w - 80, y: marco.y + Math.min(30, marco.h / 2), aqui: true };
+		}
 		// Yo: mi marcador de vida. El de este tablero (si miro el de otro): su
 		// marcador o, sin él, arriba en el centro. Otro: por el lado de su mesa.
 		if (e.id === yo && vida) return { ...vida, aqui: true };

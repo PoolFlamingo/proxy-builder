@@ -322,3 +322,27 @@ fn en_la_partida_salen_las_variantes_de_una_ficha_y_las_copias_iguales_una_vez()
         .collect();
     assert_eq!(nombres, vec!["a", "c", "d"]);
 }
+
+#[test]
+fn los_fantasmas_de_mas_son_del_solitario_y_con_tope() {
+    let extras = |jugadores: usize, pedidos: Option<u8>| {
+        let mut cfg = config(jugadores);
+        cfg.fantasmas_extra = pedidos;
+        let p = mesa::preparar::iniciar("p".into(), cfg, 1, 0).unwrap();
+        (p.fantasma.is_some(), p.fantasmas_extra)
+    };
+    let (primero, otros) = extras(1, Some(3));
+    assert!(primero);
+    assert_eq!(otros.len(), 3);
+    assert!(otros.iter().all(|f| f.vida > 0 && f.visible));
+    assert_eq!(extras(1, None).1.len(), 0);
+    assert_eq!(
+        extras(1, Some(200)).1.len(),
+        mesa::modelo::MAX_FANTASMAS - 1
+    );
+    assert_eq!(
+        extras(2, Some(3)),
+        (false, Vec::new()),
+        "con más jugadores no hay"
+    );
+}

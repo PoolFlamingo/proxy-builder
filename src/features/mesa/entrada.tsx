@@ -84,6 +84,7 @@ function Entrada() {
 	const [estado, setEstado] = useState<EstadoMesa | null>(null);
 	const [elegido, setElegido] = useState<string | null>(null);
 	const sparring = useUi((s) => s.mesa.sparring);
+	const rivales = useUi((s) => s.mesa.rivalesFantasma);
 	const [formato, setFormato] = useState<Formato>("commander");
 	const [opciones, setOpciones] = useState<Opciones>(() => opcionesDeFabrica("commander", 1));
 	const nombre = useNombre((s) => s.nombre);
@@ -189,6 +190,7 @@ function Entrada() {
 			},
 			opciones,
 			intensidad: sparring,
+			fantasmasExtra: rivales > 1 ? rivales - 1 : undefined,
 			equipos: [],
 		});
 	};
@@ -319,6 +321,16 @@ function Entrada() {
 					opciones={INTENSIDADES.map((i) => ({
 						valor: i.valor,
 						etiqueta: t(i.nombre),
+					}))}
+				/>
+			</Fila>
+			<Fila etiqueta={t("Rivales fantasma")}>
+				<Selector<string>
+					valor={String(rivales)}
+					onChange={(v) => useUi.getState().setMesa({ rivalesFantasma: Number(v) })}
+					opciones={Array.from({ length: 9 }, (_, i) => ({
+						valor: String(i + 1),
+						etiqueta: String(i + 1),
 					}))}
 				/>
 			</Fila>

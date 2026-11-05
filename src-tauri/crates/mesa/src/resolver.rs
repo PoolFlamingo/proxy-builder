@@ -268,7 +268,7 @@ fn permisos(p: &Partida, yo: IdJugador, a: &Accion) -> Result<(), Rechazo> {
                 p.cartas.get(c).ok_or(Rechazo::NoExiste)?;
                 Ok(())
             }
-            Extremo::Jugador(_) | Extremo::Fantasma => Ok(()),
+            Extremo::Jugador(_) | Extremo::Fantasma | Extremo::OtroFantasma(_) => Ok(()),
         },
         // Cada uno toca solo sus notas.
         Accion::EditarNota { id, .. } | Accion::QuitarNota { id } | Accion::AtarNota { id, .. } => {

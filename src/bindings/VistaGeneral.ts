@@ -14,4 +14,4 @@ export type VistaGeneral = { turno: Turno, equipos: Array<Equipo>, flechas: Arra
 /**
  * Las notas que este mirador puede leer (las privadas, solo su autor).
  */
-notas: Array<Nota>, designaciones: Designaciones, pausada: boolean, fantasma: VidaFantasma | null, sparring: EstadoSparring, mulligan: EstadoMulligan | null, fin: Resultado | null, };
+notas: Array<Nota>, designaciones: Designaciones, pausada: boolean, fantasma: VidaFantasma | null, fantasmasExtra: Array<VidaFantasma>, sparring: EstadoSparring, mulligan: EstadoMulligan | null, fin: Resultado | null, };

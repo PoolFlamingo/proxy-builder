@@ -6,7 +6,7 @@ import { useLang } from "@/components/language-provider";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { tableroDe, useMesa } from "@/stores/mesa-store";
+import { NINGUNA, tableroDe, useMesa } from "@/stores/mesa-store";
 import { useUi } from "@/stores/ui-store";
 import { hacer } from "../acciones";
 import { comandantesDe } from "../dano-comandante";
@@ -22,6 +22,7 @@ import {
 	crearMantener,
 	type Mantener,
 	mismoObjetivo,
+	nombreFantasma,
 	type Objetivo,
 	objetivoQueCuenta,
 	objetivosQueCuentan,
@@ -55,6 +56,7 @@ function ContenidoVida() {
 	const asientos = useMesa(useShallow((s) => s.asientos));
 	const jugadores = useMesa((s) => s.jugadores);
 	const fantasma = useMesa((s) => s.general?.fantasma ?? null);
+	const otros = useMesa((s) => s.general?.fantasmasExtra ?? NINGUNA);
 	const verFantasma = useUi((s) => s.mesa.fantasma);
 	const equipos = useMesa((s) => s.general?.equipos);
 	const cartas = useMesa((s) => s.cartas);
@@ -76,11 +78,12 @@ function ContenidoVida() {
 
 	// Lo que ya tiene un objetivo en una cuenta (para el daño de comandante, que no baja de 0).
 	const valorDe = (o: Objetivo, c: Cuenta): number => {
-		if (o.tipo === "fantasma") {
-			if (!fantasma) return 0;
-			if (c.que === "vida") return fantasma.vida;
-			if (c.que === "veneno") return fantasma.veneno ?? 0;
-			return fantasma.danoComandante[c.comandante] ?? 0;
+		if (o.tipo === "fantasma" || o.tipo === "otroFantasma") {
+			const f = o.tipo === "fantasma" ? fantasma : otros[o.i];
+			if (!f) return 0;
+			if (c.que === "vida") return f.vida;
+			if (c.que === "veneno") return f.veneno ?? 0;
+			return f.danoComandante[c.comandante] ?? 0;
 		}
 		const j = jugadores[o.id];
 		if (!j) return 0;
@@ -122,7 +125,11 @@ function ContenidoVida() {
 
 	const solo = elegidos.length === 1 ? elegidos[0] : undefined;
 	const nombreDe = (o: Objetivo) =>
-		o.tipo === "fantasma" ? t("Fantasma") : (jugadores[o.id]?.nombre ?? "");
+		o.tipo === "fantasma"
+			? nombreFantasma(t, null, otros.length)
+			: o.tipo === "otroFantasma"
+				? nombreFantasma(t, o.i, otros.length)
+				: (jugadores[o.id]?.nombre ?? "");
 	const titulo =
 		pestana === "vida" ? t("Vida") : pestana === "veneno" ? t("Veneno") : t("Daño de comandante");
 
@@ -214,26 +221,28 @@ function ContenidoVida() {
 								</button>
 							);
 						})}
-						{hayFantasma && (
-							<button
-								type="button"
-								aria-pressed={elegidos.some((x) => x.tipo === "fantasma")}
-								onClick={() => setElegidos((e) => alternarObjetivo(e, { tipo: "fantasma" }))}
-								className={cn(
-									"flex min-h-11 items-center gap-2 rounded-lg border px-2 py-1 text-left text-xs",
-									elegidos.some((x) => x.tipo === "fantasma")
-										? "border-primary bg-primary/15"
-										: "bg-muted/40",
-								)}
-							>
-								<Icono icon="game-icons:ghost" className="size-4 shrink-0 opacity-80" />
-								<span className="min-w-0 flex-1 truncate font-medium">{t("Fantasma")}</span>
-								<Valor
-									valor={valorDe({ tipo: "fantasma" }, cuenta)}
-									pendiente={pendienteDe({ tipo: "fantasma" })}
-								/>
-							</button>
-						)}
+						{hayFantasma &&
+							[null, ...otros.map((_, i) => i)].map((otro) => {
+								const o: Objetivo =
+									otro === null ? { tipo: "fantasma" } : { tipo: "otroFantasma", i: otro };
+								const elegido = elegidos.some((x) => mismoObjetivo(x, o));
+								return (
+									<button
+										key={otro ?? "primero"}
+										type="button"
+										aria-pressed={elegido}
+										onClick={() => setElegidos((e) => alternarObjetivo(e, o))}
+										className={cn(
+											"flex min-h-11 items-center gap-2 rounded-lg border px-2 py-1 text-left text-xs",
+											elegido ? "border-primary bg-primary/15" : "bg-muted/40",
+										)}
+									>
+										<Icono icon="game-icons:ghost" className="size-4 shrink-0 opacity-80" />
+										<span className="min-w-0 flex-1 truncate font-medium">{nombreDe(o)}</span>
+										<Valor valor={valorDe(o, cuenta)} pendiente={pendienteDe(o)} />
+									</button>
+								);
+							})}
 					</div>
 				</ScrollArea>
 				<div className="flex min-w-0 flex-1 items-center justify-center gap-4">

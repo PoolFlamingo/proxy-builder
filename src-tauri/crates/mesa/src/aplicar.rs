@@ -9,7 +9,7 @@
 //! Sin reloj ni azar de fuera: la hora llega en el evento y el azar sale de
 //! su semilla (`Cambio::Accion::azar`).
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::accion::{
     Accion, Cambio, CaraPlanar, ComoMover, ComoResolver, Designacion, Destino, Evento, FilaPt,
@@ -20,7 +20,8 @@ use crate::error::Rechazo;
 use crate::ids::{IdCarta, IdJugador};
 use crate::modelo::{
     Bolita, Carta, Eliminacion, Extremo, Flecha, InfoCarta, Nota, OrigenCarta, Partida, Pos,
-    RefImagen, RefZona, Senal, Vista, Zona, ZonaComun, POS_MAX, PREFIJO_TEMPORAL,
+    RefImagen, RefZona, Senal, VidaFantasma, Vista, Zona, ZonaComun, MAX_FANTASMAS, POS_MAX,
+    PREFIJO_TEMPORAL,
 };
 use crate::sparring::{Decision, ReaccionApuntada, TipoReaccion};
 
@@ -109,6 +110,7 @@ fn diferencias(a: &Partida, b: &Partida) -> Tocado {
         || a.designaciones != b.designaciones
         || a.pausada != b.pausada
         || a.fantasma != b.fantasma
+        || a.fantasmas_extra != b.fantasmas_extra
         || a.sparring != b.sparring
         || a.mulligan != b.mulligan
         || a.fin != b.fin
@@ -763,6 +765,8 @@ fn accion_(q: &mut Partida, a: &Accion, ctx: &mut Ctx, seq: u64) -> Result<(), R
                 | Accion::Terminar { .. }
                 | Accion::IntensidadSparring { .. }
                 | Accion::VerFantasma { .. }
+                | Accion::AnadirFantasma
+                | Accion::QuitarFantasma { .. }
                 | Accion::Pausar { .. }
         )
     {
@@ -1153,6 +1157,11 @@ fn accion_(q: &mut Partida, a: &Accion, ctx: &mut Ctx, seq: u64) -> Result<(), R
                     Extremo::Jugador(j) => existe_jugador(q, *j)?,
                     Extremo::Fantasma => {
                         q.fantasma.as_ref().ok_or(Rechazo::NoExiste)?;
+                    }
+                    Extremo::OtroFantasma(i) => {
+                        q.fantasmas_extra
+                            .get(usize::from(*i))
+                            .ok_or(Rechazo::NoExiste)?;
                     }
                 }
             }
@@ -1560,7 +1569,7 @@ fn accion_(q: &mut Partida, a: &Accion, ctx: &mut Ctx, seq: u64) -> Result<(), R
             for j in quienes {
                 vida(q, j, d)?;
             }
-            if let Some(f) = q.fantasma.as_mut() {
+            for f in q.fantasma.iter_mut().chain(q.fantasmas_extra.iter_mut()) {
                 f.vida = f.vida.saturating_add(d);
             }
             Ok(())
@@ -1576,7 +1585,7 @@ fn accion_(q: &mut Partida, a: &Accion, ctx: &mut Ctx, seq: u64) -> Result<(), R
                 vida(q, j, -n)?;
                 ganado = ganado.saturating_add(n);
             }
-            if let Some(f) = q.fantasma.as_mut() {
+            for f in q.fantasma.iter_mut().chain(q.fantasmas_extra.iter_mut()) {
                 f.vida = f.vida.saturating_sub(n);
                 ganado = ganado.saturating_add(n);
             }
@@ -1747,19 +1756,67 @@ fn accion_(q: &mut Partida, a: &Accion, ctx: &mut Ctx, seq: u64) -> Result<(), R
             let d = delta_ok(*delta)?;
             carta(q, *comandante)?;
             let f = q.fantasma.as_mut().ok_or(Rechazo::NoExiste)?;
-            let v = f.dano_comandante.entry(*comandante).or_insert(0);
-            let antes = *v;
-            *v = v.saturating_add(d).max(0);
-            let aplicado = *v - antes;
-            if *v == 0 {
-                f.dano_comandante.remove(comandante);
-            }
-            f.vida = f.vida.saturating_sub(aplicado);
+            dano_comandante_a(f, *comandante, d);
             Ok(())
         }
         Accion::VenenoFantasma { delta } => {
             let d = delta_ok(*delta)?;
             let f = q.fantasma.as_mut().ok_or(Rechazo::NoExiste)?;
+            f.veneno = f.veneno.saturating_add(d).max(0);
+            Ok(())
+        }
+        Accion::AnadirFantasma => {
+            q.fantasma.as_ref().ok_or(Rechazo::NoExiste)?;
+            if q.fantasmas_extra.len() + 1 >= MAX_FANTASMAS {
+                return Err(Rechazo::Limite);
+            }
+            let vida = q.opciones.vida_inicial;
+            q.fantasmas_extra.push(VidaFantasma {
+                vida,
+                dano_comandante: BTreeMap::new(),
+                visible: true,
+                veneno: 0,
+            });
+            Ok(())
+        }
+        Accion::QuitarFantasma { fantasma } => {
+            let quitado = *fantasma;
+            otro_fantasma(q, quitado)?;
+            q.fantasmas_extra.remove(usize::from(quitado));
+            // Sus flechas se van con él y las de los de detrás siguen a quien apuntaban.
+            q.flechas.retain(|f| {
+                f.de != Extremo::OtroFantasma(quitado) && f.a != Extremo::OtroFantasma(quitado)
+            });
+            for f in &mut q.flechas {
+                for e in [&mut f.de, &mut f.a] {
+                    if let Extremo::OtroFantasma(i) = e {
+                        if *i > quitado {
+                            *i -= 1;
+                        }
+                    }
+                }
+            }
+            Ok(())
+        }
+        Accion::VidaOtroFantasma { fantasma, delta } => {
+            let d = delta_ok(*delta)?;
+            let f = otro_fantasma(q, *fantasma)?;
+            f.vida = f.vida.saturating_add(d);
+            Ok(())
+        }
+        Accion::DanoComandanteOtroFantasma {
+            fantasma,
+            comandante,
+            delta,
+        } => {
+            let d = delta_ok(*delta)?;
+            carta(q, *comandante)?;
+            dano_comandante_a(otro_fantasma(q, *fantasma)?, *comandante, d);
+            Ok(())
+        }
+        Accion::VenenoOtroFantasma { fantasma, delta } => {
+            let d = delta_ok(*delta)?;
+            let f = otro_fantasma(q, *fantasma)?;
             f.veneno = f.veneno.saturating_add(d).max(0);
             Ok(())
         }
@@ -2371,4 +2428,23 @@ pub fn cara_planar(valor: u32) -> CaraPlanar {
         2 => CaraPlanar::Caos,
         _ => CaraPlanar::Nada,
     }
+}
+
+/// Uno de los otros rivales imaginados, por su sitio en `fantasmas_extra`.
+fn otro_fantasma(q: &mut Partida, i: u8) -> Result<&mut VidaFantasma, Rechazo> {
+    q.fantasmas_extra
+        .get_mut(usize::from(i))
+        .ok_or(Rechazo::NoExiste)
+}
+
+/// El daño de comandante también quita vida; nunca baja de 0.
+fn dano_comandante_a(f: &mut VidaFantasma, comandante: IdCarta, d: i32) {
+    let v = f.dano_comandante.entry(comandante).or_insert(0);
+    let antes = *v;
+    *v = v.saturating_add(d).max(0);
+    let aplicado = *v - antes;
+    if *v == 0 {
+        f.dano_comandante.remove(&comandante);
+    }
+    f.vida = f.vida.saturating_sub(aplicado);
 }

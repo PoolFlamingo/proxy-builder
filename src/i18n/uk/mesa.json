@@ -1363,5 +1363,14 @@
 	"Frases": "Фрази",
 	"Frases amigables": "Дружні фрази",
 	"Ver el tablero de {nombre}": "Переглянути поле: {nombre}",
-	"Copia": "Копія"
+	"Copia": "Копія",
+	"Fantasma {i}": "Привид {i}",
+	"{quien} añade un fantasma": "{quien} додає привида",
+	"{quien} quita el fantasma {i}": "{quien} прибирає привида {i}",
+	"Fantasma {i}: {delta} vidas": "Привид {i}: {delta} життя",
+	"El fantasma {i} recibe {delta} de daño de comandante": "Привид {i} отримує {delta} шкоди від командира",
+	"Fantasma {i}: {delta} venenos": "Привид {i}: {delta} отрути",
+	"Añadir otro fantasma": "Додати ще одного привида",
+	"Quitar este fantasma": "Прибрати цього привида",
+	"Rivales fantasma": "Суперники-привиди"
 }

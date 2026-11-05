@@ -11,7 +11,7 @@ import { atacantesDe } from "../cuentas-flechas";
 import { mirarJugador } from "../mirar";
 import { elegirFantasma, elegirJugador } from "../objetivo";
 import { usePantalla } from "../pantalla";
-import { vidaDe } from "./cuentas-vida";
+import { nombreFantasma, vidaDe } from "./cuentas-vida";
 
 /** La barra la recuerda plegada o abierta mientras dure la app (no el reinicio). */
 let plegadaGuardada = false;
@@ -37,6 +37,7 @@ export function BarraAsientos() {
 	const yo = useMesa((s) => s.yo);
 	const activo = useMesa((s) => s.general?.turno.activo ?? null);
 	const fantasma = useMesa((s) => s.general?.fantasma ?? null);
+	const otros = useMesa((s) => s.general?.fantasmasExtra ?? NINGUNA);
 	const verFantasma = useUi((s) => s.mesa.fantasma);
 	const seguir = useUi((s) => s.mesa.seguirTurnoLocal);
 	const equipos = useMesa((s) => s.general?.equipos);
@@ -149,24 +150,34 @@ export function BarraAsientos() {
 							</div>
 						);
 					})}
-					{hayFantasma && fantasma && (
-						<button
-							type="button"
-							onClick={() => {
-								if (!elegirFantasma(t)) usePantalla.getState().setCapa("vida");
-							}}
-							className="flex min-h-11 items-center gap-1.5 rounded-lg px-1.5 py-1 text-left text-xs"
-						>
-							<Icono icon="game-icons:ghost" className="size-3.5 shrink-0 opacity-80" />
-							<span className="flex min-w-0 flex-1 flex-col leading-tight">
-								<span className="truncate font-medium">{t("Fantasma")}</span>
-								<span className="flex items-center gap-0.5 text-white/70 tabular-nums">
-									<Icono icon="game-icons:hearts" className="size-3" />
-									{fantasma.vida}
-								</span>
-							</span>
-						</button>
-					)}
+					{hayFantasma &&
+						fantasma &&
+						[fantasma, ...otros].map((f, i) => {
+							const otro = i === 0 ? null : i - 1;
+							return (
+								<button
+									key={otro ?? "primero"}
+									type="button"
+									aria-label={nombreFantasma(t, otro, otros.length)}
+									onClick={() => {
+										if (!elegirFantasma(t, otro)) usePantalla.getState().setCapa("vida");
+									}}
+									className="flex min-h-11 items-center gap-1.5 rounded-lg px-1.5 py-1 text-left text-xs"
+								>
+									<Icono icon="game-icons:ghost" className="size-3.5 shrink-0 opacity-80" />
+									<span className="flex min-w-0 flex-1 flex-col leading-tight">
+										{/* Con varios, el número: «Fantasma 2» no cabe en esta barra y se cortaría. */}
+										<span className="truncate font-medium">
+											{otros.length > 0 ? i + 1 : t("Fantasma")}
+										</span>
+										<span className="flex items-center gap-0.5 text-white/70 tabular-nums">
+											<Icono icon="game-icons:hearts" className="size-3" />
+											{f.vida}
+										</span>
+									</span>
+								</button>
+							);
+						})}
 				</div>
 			</ScrollArea>
 			<div className="flex shrink-0 items-center justify-between gap-1">

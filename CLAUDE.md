@@ -371,6 +371,11 @@ le falta una cadena le sale la inglesa.
   `Enlaces.ausentes`, `red/anfitrion.rs::{vigilar_ausentes, expulsar}`,
   `Sesion::suplir`, `sala_expulsar` en el servidor; pantalla en
   `features/mesa/{muerte,dano-de-quien}.tsx` y `red/ausentes.tsx`.
+  **Más fantasmas** (Pablo, 05/11/2026): en solitario, hasta 9 rivales imaginados
+  (`Partida.fantasmas_extra`, catálogo v6, `PROTOCOLO` 7), cada uno con su vida, veneno y daño de
+  comandante; solo marcadores: 🛑 el sparring no los lee, no traen más reacciones. En el móvil, con
+  varios, fichas pequeñas (taparían el campo). Las insignias de carta con símbolo y texto, arriba y
+  apiladas (`insignias.tsx`); en una carta de ≤ 96 px, solo el símbolo (consulta de contenedor).
   **Notas** (Pablo, 29/10/2026): `Accion::{PonerNota,EditarNota,QuitarNota}`
   (catálogo v3, `tests/catalogo/v3.json`) y `NotaEnCarta`/`AtarNota` (v4: una
   nota atada a una carta del campo, `Nota.carta`; se suelta sola si la carta

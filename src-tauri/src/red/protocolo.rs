@@ -37,7 +37,8 @@ use crate::mesa::encuentro::VistaBanquillo;
 /// La versión del protocolo (sube con cualquier cambio incompatible).
 /// 5: catálogo v4 (veneno y flechas al fantasma, notas atadas a cartas).
 /// 6: catálogo v5 (frases amigables del chat).
-pub const PROTOCOLO: u32 = 6;
+/// 7: catálogo v6 (más rivales imaginados en solitario).
+pub const PROTOCOLO: u32 = 7;
 pub const TOPE_GENERAL: usize = 64 * 1024;
 pub const TOPE_PREPARACION: usize = 2 * 1024 * 1024;
 pub const TOPE_PARTIDA: usize = 4 * 1024 * 1024;
@@ -588,6 +589,7 @@ mod tests {
                     mesa::preparar::iniciar(
                         "p".into(),
                         mesa::preparar::Config {
+                            fantasmas_extra: None,
                             formato: mesa::formato::Formato::Constructed,
                             variantes: Default::default(),
                             opciones: mesa::formato::Opciones::de_fabrica(

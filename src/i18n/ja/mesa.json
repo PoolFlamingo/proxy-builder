@@ -1265,5 +1265,14 @@
 	"Frases": "フレーズ",
 	"Frases amigables": "フレンドリーなフレーズ",
 	"Ver el tablero de {nombre}": "{nombre}の盤面を見る",
-	"Copia": "コピー"
+	"Copia": "コピー",
+	"Fantasma {i}": "ゴースト {i}",
+	"{quien} añade un fantasma": "{quien} がゴーストを追加しました",
+	"{quien} quita el fantasma {i}": "{quien} がゴースト {i} を削除しました",
+	"Fantasma {i}: {delta} vidas": "ゴースト {i}：ライフ {delta}",
+	"El fantasma {i} recibe {delta} de daño de comandante": "ゴースト {i} が統率者ダメージを {delta} 受けました",
+	"Fantasma {i}: {delta} venenos": "ゴースト {i}：毒 {delta}",
+	"Añadir otro fantasma": "ゴーストをもう1体追加",
+	"Quitar este fantasma": "このゴーストを削除",
+	"Rivales fantasma": "ゴーストの対戦相手"
 }

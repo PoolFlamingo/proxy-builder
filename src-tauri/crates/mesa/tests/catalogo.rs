@@ -86,6 +86,27 @@ fn eventos_de_ejemplo() -> Vec<Evento> {
         Accion::Aviso {
             tipo: mesa::accion::AvisoRapido::VuelvoEnseguida,
         },
+        // v6: más rivales imaginados en solitario.
+        Accion::AnadirFantasma,
+        Accion::VidaOtroFantasma {
+            fantasma: 0,
+            delta: -3,
+        },
+        Accion::VenenoOtroFantasma {
+            fantasma: 0,
+            delta: 1,
+        },
+        Accion::DanoComandanteOtroFantasma {
+            fantasma: 0,
+            comandante: mesa::IdCarta(1),
+            delta: 2,
+        },
+        Accion::Flecha {
+            de: mesa::modelo::Extremo::Carta(mesa::IdCarta(1)),
+            a: mesa::modelo::Extremo::OtroFantasma(0),
+            tipo: mesa::modelo::TipoFlecha::Ataque,
+        },
+        Accion::QuitarFantasma { fantasma: 0 },
     ]
     .into_iter()
     .enumerate()

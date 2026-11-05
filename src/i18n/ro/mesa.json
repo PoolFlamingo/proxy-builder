@@ -1335,5 +1335,14 @@
 	"Frases": "Fraze",
 	"Frases amigables": "Fraze prietenoase",
 	"Ver el tablero de {nombre}": "Vezi masa lui {nombre}",
-	"Copia": "Copie"
+	"Copia": "Copie",
+	"Fantasma {i}": "Fantoma {i}",
+	"{quien} añade un fantasma": "{quien} adaugă o fantomă",
+	"{quien} quita el fantasma {i}": "{quien} elimină fantoma {i}",
+	"Fantasma {i}: {delta} vidas": "Fantoma {i}: {delta} viață",
+	"El fantasma {i} recibe {delta} de daño de comandante": "Fantoma {i} primește {delta} daune de commander",
+	"Fantasma {i}: {delta} venenos": "Fantoma {i}: {delta} otravă",
+	"Añadir otro fantasma": "Adaugă altă fantomă",
+	"Quitar este fantasma": "Elimină această fantomă",
+	"Rivales fantasma": "Adversari fantomă"
 }

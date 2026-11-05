@@ -1320,5 +1320,14 @@
 	"Frases": "Phrases",
 	"Frases amigables": "Friendly phrases",
 	"Ver el tablero de {nombre}": "See {nombre}'s board",
-	"Copia": "Copy"
+	"Copia": "Copy",
+	"Fantasma {i}": "Ghost {i}",
+	"{quien} añade un fantasma": "{quien} adds a ghost",
+	"{quien} quita el fantasma {i}": "{quien} removes ghost {i}",
+	"Fantasma {i}: {delta} vidas": "Ghost {i}: {delta} life",
+	"El fantasma {i} recibe {delta} de daño de comandante": "Ghost {i} takes {delta} commander damage",
+	"Fantasma {i}: {delta} venenos": "Ghost {i}: {delta} poison",
+	"Añadir otro fantasma": "Add another ghost",
+	"Quitar este fantasma": "Remove this ghost",
+	"Rivales fantasma": "Ghost opponents"
 }

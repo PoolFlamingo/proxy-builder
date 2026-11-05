@@ -11,7 +11,24 @@ import { deltaSeguro } from "../dano-comandante";
  * rachas, como `VidaJugador`) y se reparte lo mismo a varios objetivos.
  */
 
-export type Objetivo = { tipo: "jugador"; id: IdJugador } | { tipo: "fantasma" };
+export type Objetivo =
+	| { tipo: "jugador"; id: IdJugador }
+	| { tipo: "fantasma" }
+	/** Uno de los otros fantasmas, por su sitio en `fantasmasExtra`. */
+	| { tipo: "otroFantasma"; i: number };
+
+/**
+ * El nombre de un fantasma: «Fantasma» si es el único y, si hay varios, con su
+ * número. `otro`: su sitio en `fantasmasExtra` (`null`, el primero).
+ */
+export function nombreFantasma(
+	t: (es: string, vars?: Record<string, string | number>) => string,
+	otro: number | null,
+	otros: number,
+): string {
+	if (otros === 0) return t("Fantasma");
+	return t("Fantasma {i}", { i: otro === null ? 1 : otro + 2 });
+}
 
 /** Qué se está contando. */
 export type Cuenta =
@@ -20,11 +37,15 @@ export type Cuenta =
 	| { que: "comandante"; comandante: IdCarta };
 
 export const mismoObjetivo = (a: Objetivo, b: Objetivo): boolean =>
-	a.tipo === b.tipo && (a.tipo === "fantasma" || (b.tipo === "jugador" && a.id === b.id));
+	claveObjetivo(a) === claveObjetivo(b);
+
+function claveObjetivo(o: Objetivo): string {
+	return o.tipo === "fantasma" ? "f" : o.tipo === "otroFantasma" ? `f${o.i}` : `j${o.id}`;
+}
 
 /** La clave de un objetivo con una cuenta (donde se juntan los toques). */
 export function claveDe(o: Objetivo, c: Cuenta): string {
-	const quien = o.tipo === "fantasma" ? "f" : `j${o.id}`;
+	const quien = claveObjetivo(o);
 	return c.que === "comandante" ? `${quien}:c${c.comandante}` : `${quien}:${c.que}`;
 }
 
@@ -36,17 +57,26 @@ export function claveDe(o: Objetivo, c: Cuenta): string {
 export function accionDe(o: Objetivo, c: Cuenta, delta: number, actual = 0): Accion | null {
 	if (delta === 0) return null;
 	if (c.que === "vida") {
+		if (o.tipo === "otroFantasma") return { que: "vidaOtroFantasma", fantasma: o.i, delta };
 		return o.tipo === "fantasma"
 			? { que: "vidaFantasma", delta }
 			: { que: "vida", jugador: o.id, delta };
 	}
 	if (c.que === "veneno") {
+		if (o.tipo === "otroFantasma") return { que: "venenoOtroFantasma", fantasma: o.i, delta };
 		return o.tipo === "fantasma"
 			? { que: "venenoFantasma", delta }
 			: { que: "veneno", jugador: o.id, delta };
 	}
 	const d = deltaSeguro(actual, delta);
 	if (d === 0) return null;
+	if (o.tipo === "otroFantasma")
+		return {
+			que: "danoComandanteOtroFantasma",
+			fantasma: o.i,
+			comandante: c.comandante,
+			delta: d,
+		};
 	return o.tipo === "fantasma"
 		? { que: "danoComandanteFantasma", comandante: c.comandante, delta: d }
 		: { que: "danoComandante", jugador: o.id, comandante: c.comandante, delta: d };

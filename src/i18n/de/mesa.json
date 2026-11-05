@@ -1320,5 +1320,14 @@
 	"Frases": "Sprüche",
 	"Frases amigables": "Freundliche Sprüche",
 	"Ver el tablero de {nombre}": "Spielfeld von {nombre} ansehen",
-	"Copia": "Kopie"
+	"Copia": "Kopie",
+	"Fantasma {i}": "Geist {i}",
+	"{quien} añade un fantasma": "{quien} fügt einen Geist hinzu",
+	"{quien} quita el fantasma {i}": "{quien} entfernt Geist {i}",
+	"Fantasma {i}: {delta} vidas": "Geist {i}: {delta} Lebenspunkte",
+	"El fantasma {i} recibe {delta} de daño de comandante": "Geist {i} erhält {delta} Commander-Schaden",
+	"Fantasma {i}: {delta} venenos": "Geist {i}: {delta} Giftmarken",
+	"Añadir otro fantasma": "Weiteren Geist hinzufügen",
+	"Quitar este fantasma": "Diesen Geist entfernen",
+	"Rivales fantasma": "Geistergegner"
 }

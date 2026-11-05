@@ -1335,5 +1335,14 @@
 	"Frases": "Frasi",
 	"Frases amigables": "Frasi simpatiche",
 	"Ver el tablero de {nombre}": "Vedi il tavolo di {nombre}",
-	"Copia": "Copia"
+	"Copia": "Copia",
+	"Fantasma {i}": "Fantasma {i}",
+	"{quien} añade un fantasma": "{quien} aggiunge un fantasma",
+	"{quien} quita el fantasma {i}": "{quien} rimuove il fantasma {i}",
+	"Fantasma {i}: {delta} vidas": "Fantasma {i}: {delta} punti vita",
+	"El fantasma {i} recibe {delta} de daño de comandante": "Il fantasma {i} subisce {delta} danni da comandante",
+	"Fantasma {i}: {delta} venenos": "Fantasma {i}: {delta} segnalini veleno",
+	"Añadir otro fantasma": "Aggiungi un altro fantasma",
+	"Quitar este fantasma": "Rimuovi questo fantasma",
+	"Rivales fantasma": "Avversari fantasma"
 }

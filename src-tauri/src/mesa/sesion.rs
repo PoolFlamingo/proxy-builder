@@ -63,6 +63,10 @@ pub struct ConfigMesa {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub primero: Option<IdJugador>,
+    /// Los rivales imaginados de más en solitario, aparte del primero.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub fantasmas_extra: Option<u8>,
 }
 
 /// Lo que llega a la pantalla por el canal de la mesa.
@@ -171,6 +175,7 @@ pub(super) fn partida(
         Opciones::de_fabrica(config.formato, &config.variantes, config.jugadores.len())
     });
     let cfg = Config {
+        fantasmas_extra: config.fantasmas_extra,
         formato: config.formato,
         variantes: config.variantes.clone(),
         opciones,
@@ -247,6 +252,7 @@ impl Sesion {
         inv: crate::red::invitado::Invitado,
     ) -> Sesion {
         let config = ConfigMesa {
+            fantasmas_extra: None,
             // De los demás no se sabe el deck; del propio, el que se eligió
             // (para guardarla en su historial).
             jugadores: partida
@@ -586,6 +592,7 @@ pub(crate) mod tests {
 
     pub fn config() -> ConfigMesa {
         ConfigMesa {
+            fantasmas_extra: None,
             jugadores: vec![JugadorMesa {
                 deck_id: "d".into(),
                 nombre: "Yo".into(),

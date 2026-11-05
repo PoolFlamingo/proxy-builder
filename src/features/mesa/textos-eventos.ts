@@ -93,6 +93,11 @@ export const FRASES: Record<Accion["que"], string> = {
 	danoComandanteFantasma: paraTraducir("El fantasma recibe {delta} de daño de comandante"),
 	venenoFantasma: paraTraducir("Fantasma: {delta} venenos"),
 	verFantasma: paraTraducir("{quien} cambia si se ve el fantasma"),
+	anadirFantasma: paraTraducir("{quien} añade un fantasma"),
+	quitarFantasma: paraTraducir("{quien} quita el fantasma {i}"),
+	vidaOtroFantasma: paraTraducir("Fantasma {i}: {delta} vidas"),
+	danoComandanteOtroFantasma: paraTraducir("El fantasma {i} recibe {delta} de daño de comandante"),
+	venenoOtroFantasma: paraTraducir("Fantasma {i}: {delta} venenos"),
 	senal: paraTraducir("{quien} cambia su señal"),
 	pasarTurno: paraTraducir("{quien} pasa el turno"),
 	turnoExtra: paraTraducir("{a} tendrá un turno extra"),
@@ -295,7 +300,7 @@ export function textoDeEvento(
 	if (a.que === "flecha" && a.de.tipo === "carta") {
 		const de = nombreCarta(m, a.de.id, t, marcar);
 		const ataque = a.tipo === "ataque";
-		if (a.a.tipo === "fantasma")
+		if (a.a.tipo === "fantasma" || a.a.tipo === "otroFantasma")
 			return ataque
 				? t("{quien} ataca al fantasma con {de}", { quien, de })
 				: t("{quien} señala al fantasma con {de}", { quien, de });
@@ -310,6 +315,8 @@ export function textoDeEvento(
 			? t("{quien} ataca a {objetivo} con {de}", { quien, objetivo, de })
 			: t("{quien} señala {objetivo} con {de}", { quien, objetivo, de });
 	}
+	// El primer fantasma es el 1; `fantasma` cuenta desde el segundo.
+	if ("fantasma" in a && typeof a.fantasma === "number") vars.i = a.fantasma + 2;
 	if ("delta" in a && typeof a.delta === "number")
 		vars.delta = a.delta > 0 ? `+${a.delta}` : a.delta;
 	if ("jugador" in a && typeof a.jugador === "number")

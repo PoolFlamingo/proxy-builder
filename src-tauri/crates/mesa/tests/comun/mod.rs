@@ -98,6 +98,7 @@ pub fn deck(nombre: &str) -> DeckDeMesa {
 pub fn config(jugadores: usize) -> Config {
     let variantes = Variantes::default();
     Config {
+        fantasmas_extra: None,
         formato: Formato::Commander,
         opciones: Opciones::de_fabrica(Formato::Commander, &variantes, jugadores),
         variantes,

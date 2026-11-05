@@ -1358,5 +1358,14 @@
 	"Frases": "Фразы",
 	"Frases amigables": "Дружелюбные фразы",
 	"Ver el tablero de {nombre}": "Посмотреть поле: {nombre}",
-	"Copia": "Копия"
+	"Copia": "Копия",
+	"Fantasma {i}": "Призрак {i}",
+	"{quien} añade un fantasma": "{quien} добавляет призрака",
+	"{quien} quita el fantasma {i}": "{quien} убирает призрака {i}",
+	"Fantasma {i}: {delta} vidas": "Призрак {i}: {delta} жизни",
+	"El fantasma {i} recibe {delta} de daño de comandante": "Призрак {i} получает {delta} урона от командира",
+	"Fantasma {i}: {delta} venenos": "Призрак {i}: {delta} яда",
+	"Añadir otro fantasma": "Добавить ещё одного призрака",
+	"Quitar este fantasma": "Убрать этого призрака",
+	"Rivales fantasma": "Соперники-призраки"
 }

@@ -27,6 +27,7 @@ export function Insignias({ c, yo }: { c: VistaCarta; yo: number | null }) {
 	const jugadores = useMesa((s) => s.jugadores);
 	const contadores = Object.entries(c.contadores);
 	const robada = c.controlador !== c.dueno;
+	const copia = c.esFicha && c.copiaDe !== null;
 	const notas = useMesa(
 		useShallow((s) => (s.general?.notas ?? NINGUNA).filter((n) => n.carta === c.id)),
 	);
@@ -79,41 +80,74 @@ export function Insignias({ c, yo }: { c: VistaCarta; yo: number | null }) {
 					})}
 				</div>
 			)}
-			{(c.devolverA !== null || c.noEndereza || c.faseFuera || notas.length > 0) && (
-				// Arriba a la derecha, lo que dura sobre la carta: el control prestado, que
-				// no se endereza, que está fuera de fase y sus notas.
-				<div className="absolute top-0.5 right-0.5 flex flex-col items-end gap-0.5">
-					{c.devolverA !== null && (
-						<div className="pointer-events-none flex items-center gap-0.5 rounded-full bg-black/80 px-1.5 text-[9px] leading-4 font-bold text-amber-300 ring-1 ring-amber-300/80">
-							<Icono icon="lucide:clock" className="size-2.5" />
-							{jugadores[c.devolverA]?.nombre ?? ""}
+			{(robada ||
+				copia ||
+				c.devolverA !== null ||
+				c.noEndereza ||
+				c.faseFuera ||
+				notas.length > 0) && (
+				// Las dos esquinas de arriba, en una capa que mide lo que la carta: `@max-…`
+				// quita el texto de una carta pequeña y `cqw` reparte el ancho para que las
+				// de un lado nunca pisen las del otro.
+				<div className="pointer-events-none absolute inset-0 @container">
+					{(robada || copia) && (
+						// A la izquierda y apiladas, sin pisarse entre ellas. Abajo taparían la
+						// fuerza y resistencia y el texto de una carta pequeña.
+						<div className="absolute top-0.5 left-0.5 flex max-w-[50cqw] flex-col items-start gap-0.5">
+							{robada && (
+								<EtiquetaEstado
+									icono="lucide:hand"
+									texto={c.controlador === yo ? t("Robada") : t("Prestada")}
+									className="bg-rose-600/90 text-white"
+								/>
+							)}
+							{copia && (
+								<EtiquetaEstado
+									icono="lucide:copy"
+									texto={t("Copia")}
+									className="bg-violet-600/90 text-white"
+								/>
+							)}
 						</div>
 					)}
-					<div className="flex gap-0.5">
-						{c.noEndereza && <Estado icono="game-icons:padlock" ayuda={t("No se endereza")} />}
-						{c.faseFuera && <Estado icono="game-icons:portal" ayuda={t("Fuera de fase")} />}
-						{notas.length > 0 && (
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<span className="pointer-events-auto flex h-4 items-center gap-0.5 rounded-full bg-amber-300 px-1 text-[9px] font-bold text-black shadow ring-1 ring-black/30">
-										<Icono icon="lucide:sticky-note" className="size-2.5" />
-										{notas.length > 1 && notas.length}
-									</span>
-								</TooltipTrigger>
-								<TooltipContent className="max-w-60 text-xs">
-									{notas.map((n) => (
-										<p key={n.id} className="break-words whitespace-pre-wrap">
-											<span
-												className="mr-1 inline-block size-2 rounded-full align-middle"
-												style={{ background: jugadores[n.autor]?.color }}
-											/>
-											{n.texto}
-										</p>
-									))}
-								</TooltipContent>
-							</Tooltip>
-						)}
-					</div>
+					{(c.devolverA !== null || c.noEndereza || c.faseFuera || notas.length > 0) && (
+						// A la derecha, lo que dura sobre la carta: el control prestado, que no se
+						// endereza, que está fuera de fase y sus notas.
+						<div className="absolute top-0.5 right-0.5 flex max-w-[45cqw] flex-col items-end gap-0.5">
+							{c.devolverA !== null && (
+								<EtiquetaEstado
+									icono="lucide:clock"
+									texto={jugadores[c.devolverA]?.nombre ?? ""}
+									className="bg-black/80 text-amber-300 ring-1 ring-amber-300/80"
+								/>
+							)}
+							<div className="flex flex-wrap justify-end gap-0.5">
+								{c.noEndereza && <Estado icono="game-icons:padlock" ayuda={t("No se endereza")} />}
+								{c.faseFuera && <Estado icono="game-icons:portal" ayuda={t("Fuera de fase")} />}
+								{notas.length > 0 && (
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<span className="pointer-events-auto flex h-4 items-center gap-0.5 rounded-full bg-amber-300 px-1 text-[9px] font-bold text-black shadow ring-1 ring-black/30">
+												<Icono icon="lucide:sticky-note" className="size-2.5" />
+												{notas.length > 1 && notas.length}
+											</span>
+										</TooltipTrigger>
+										<TooltipContent className="max-w-60 text-xs">
+											{notas.map((n) => (
+												<p key={n.id} className="break-words whitespace-pre-wrap">
+													<span
+														className="mr-1 inline-block size-2 rounded-full align-middle"
+														style={{ background: jugadores[n.autor]?.color }}
+													/>
+													{n.texto}
+												</p>
+											))}
+										</TooltipContent>
+									</Tooltip>
+								)}
+							</div>
+						</div>
+					)}
 				</div>
 			)}
 			{c.palabrasClave.length > 0 && (
@@ -147,27 +181,37 @@ export function Insignias({ c, yo }: { c: VistaCarta; yo: number | null }) {
 					×{c.cantidad}
 				</span>
 			)}
-			{robada && (
-				<span className="pointer-events-none absolute top-0.5 left-0.5 flex items-center gap-0.5 rounded bg-rose-600/90 px-1 text-[8px] font-semibold text-white">
-					<Icono icon="lucide:hand" className="size-2.5" />
-					{c.controlador === yo ? t("Robada") : t("Prestada")}
-				</span>
-			)}
-			{c.esFicha && c.copiaDe !== null && (
-				// Abajo a la izquierda, donde una carta impresa lleva el número de colección y el
-				// copyright: no tapa ni el arte, ni el texto, ni la fuerza y resistencia. Solo
-				// texto visible (sin tooltip), para que se lea igual con el dedo.
-				<span className="pointer-events-none absolute bottom-0.5 left-0.5 flex items-center gap-0.5 rounded bg-violet-600/90 px-1 text-[8px] font-semibold text-white">
-					<Icono icon="lucide:copy" className="size-2.5" />
-					{t("Copia")}
-				</span>
-			)}
 			{c.habilidad && (
 				<span className="pointer-events-none absolute inset-x-1 bottom-1 line-clamp-3 rounded bg-black/80 px-1 text-[9px] text-white">
 					{c.habilidad}
 				</span>
 			)}
 		</>
+	);
+}
+
+/** Una etiqueta de símbolo y texto; con la carta pequeña, solo el símbolo. */
+function EtiquetaEstado({
+	icono,
+	texto,
+	className,
+}: {
+	icono: string;
+	texto: string;
+	className: string;
+}) {
+	return (
+		<span
+			role="img"
+			aria-label={texto}
+			className={cn(
+				"flex max-w-full items-center gap-0.5 rounded px-1 py-px text-[8px] font-semibold",
+				className,
+			)}
+		>
+			<Icono icon={icono} className="size-2.5 shrink-0" />
+			<span className="min-w-0 truncate @max-[96px]:hidden">{texto}</span>
+		</span>
 	);
 }
 
