@@ -15,6 +15,7 @@ import { formatoActual } from "@/lib/formato";
 import { call } from "@/lib/ipc";
 import { ponerTemaAntesDeMontar } from "@/lib/tema-inicial";
 import { prepararTemasInstalados } from "@/lib/temas-instalados";
+import { iniciarVentana } from "@/lib/ventana";
 import App from "./App";
 import "./index.css";
 
@@ -53,6 +54,8 @@ function ensenarVentana() {
 formatoActual();
 call("app_plataforma")
 	.then((p) => {
+		// Escritorio: F11 y los controles de la ventana a pantalla completa.
+		if (p === "escritorio") iniciarVentana();
 		if (p !== "android" && p !== "ios") return;
 		engancharCicloDeVida();
 		if (p === "android") return enlazarAtras();

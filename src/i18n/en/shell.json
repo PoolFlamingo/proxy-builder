@@ -38,5 +38,8 @@
 	"Pulsa otra vez para salir": "Press again to exit",
 	"Más": "More",
 	"Pantallas": "Screens",
-	"Hojas": "Sheets"
+	"Hojas": "Sheets",
+	"Minimizar": "Minimize",
+	"Pantalla completa (F11)": "Full screen (F11)",
+	"Salir de pantalla completa (F11)": "Exit full screen (F11)"
 }

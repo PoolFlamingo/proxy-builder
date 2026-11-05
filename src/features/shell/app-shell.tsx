@@ -29,6 +29,7 @@ import { BotonActualizar, PuntoActualizacion, useAvisoAjustes } from "./actualiz
 import { atrasPorDefecto, destinoDeAtras } from "./atras-shell";
 import { BarraInferiorMovil, HojaMas, PestanasDeck, type SubpestanaDeck } from "./barra-movil";
 import { ConfirmarCierre } from "./confirmar-cierre";
+import { ControlesVentana } from "./controles-ventana";
 import { useMesaAPantallaCompleta } from "./mesa-completa";
 import { SaveIndicator } from "./save-indicator";
 import { useScrollPorVista } from "./scroll-por-vista";
@@ -345,6 +346,8 @@ export function AppShell({
 							<PuntoActualizacion />
 						</Button>
 					</WithTooltip>
+					{/* Solo a pantalla completa: el sistema esconde sus botones. */}
+					<ControlesVentana />
 				</div>
 			</header>
 

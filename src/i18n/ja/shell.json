@@ -38,5 +38,8 @@
 	"Pulsa otra vez para salir": "もう一度押すと終了します",
 	"Más": "その他",
 	"Pantallas": "画面",
-	"Hojas": "用紙"
+	"Hojas": "用紙",
+	"Minimizar": "最小化",
+	"Pantalla completa (F11)": "全画面表示 (F11)",
+	"Salir de pantalla completa (F11)": "全画面表示を終了 (F11)"
 }

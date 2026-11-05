@@ -38,5 +38,8 @@
 	"Pulsa otra vez para salir": "Нажмите ещё раз, чтобы выйти",
 	"Más": "Ещё",
 	"Pantallas": "Экраны",
-	"Hojas": "Листы"
+	"Hojas": "Листы",
+	"Minimizar": "Свернуть",
+	"Pantalla completa (F11)": "Полный экран (F11)",
+	"Salir de pantalla completa (F11)": "Выйти из полноэкранного режима (F11)"
 }

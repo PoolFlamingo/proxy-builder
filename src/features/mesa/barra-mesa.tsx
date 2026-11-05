@@ -9,12 +9,14 @@ import {
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuSeparator,
+	DropdownMenuShortcut,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { WithTooltip } from "@/components/ui/with-tooltip";
 import { useFormato } from "@/lib/formato";
 import { useEsMovil } from "@/lib/plataforma";
 import { cn } from "@/lib/utils";
+import { alternarPantallaCompleta } from "@/lib/ventana";
 import { useChat } from "@/stores/chat-store";
 import { tableroDe, useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
@@ -256,7 +258,7 @@ function BarraEscritorio({ onSalir, onEditarDeck, onReiniciar }: PropsBarra) {
 				<Icono icon="lucide:keyboard" className="size-4" />
 			</Boton>
 			{!enAndroid && (
-				<Boton ayuda={t("Pantalla completa")} onClick={() => void pantallaCompleta()}>
+				<Boton ayuda={t("Pantalla completa (F11)")} onClick={() => void alternarPantallaCompleta()}>
 					<Icono icon="lucide:expand" className="size-4" />
 				</Boton>
 			)}
@@ -283,17 +285,6 @@ function BarraEscritorio({ onSalir, onEditarDeck, onReiniciar }: PropsBarra) {
 			</Boton>
 		</div>
 	);
-}
-
-/** La ventana a pantalla completa (solo escritorio: en Android la app ya va siempre así). */
-async function pantallaCompleta() {
-	try {
-		const { getCurrentWindow } = await import("@tauri-apps/api/window");
-		const v = getCurrentWindow();
-		await v.setFullscreen(!(await v.isFullscreen()));
-	} catch {
-		/* sin permiso o fuera de Tauri */
-	}
 }
 
 /**
@@ -515,9 +506,10 @@ function BarraMovil({ onSalir, onEditarDeck, onReiniciar }: PropsBarra) {
 						</DropdownMenuItem>
 					)}
 					{!enAndroid && (
-						<DropdownMenuItem onSelect={() => void pantallaCompleta()}>
+						<DropdownMenuItem onSelect={() => void alternarPantallaCompleta()}>
 							<Icono icon="lucide:expand" />
 							{t("Pantalla completa")}
+							<DropdownMenuShortcut>F11</DropdownMenuShortcut>
 						</DropdownMenuItem>
 					)}
 					<DropdownMenuSeparator />
