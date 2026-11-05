@@ -2,6 +2,7 @@
 //! solo los registra.
 
 pub mod actualizar;
+pub mod buscar;
 pub mod cards;
 pub mod carpetas;
 pub mod decklist;

@@ -1,0 +1,33 @@
+{
+	"Incluye estos colores": "Includes these colours",
+	"Exactamente estos colores": "Exactly these colours",
+	"Identidad dentro de estos": "Colour identity within these",
+	"Cualquier formato": "Any format",
+	"Comparar el coste": "Compare the cost",
+	"Una por carta": "One per card",
+	"Una por ilustración": "One per artwork",
+	"Todas las impresiones": "All printings",
+	"Resultados": "Results",
+	"Fecha de salida": "Release date",
+	"Fuerza": "Power",
+	"Precio (€)": "Price (€)",
+	"Precio ($)": "Price ($)",
+	"Descendente": "Descending",
+	"Busca por nombre, en cualquier idioma, o con la sintaxis de Scryfall (t:dragon c:r).": "Search by name, in any language, or with Scryfall syntax (t:dragon c:r).",
+	"Buscando…": "Searching…",
+	"Ver los resultados": "See the results",
+	"No se ha podido cargar la carta.": "The card could not be loaded.",
+	"Ver la otra cara": "See the other face",
+	"Set": "Set",
+	"Número": "Number",
+	"Aclaraciones de reglas (en inglés)": "Rulings (in English)",
+	"{n} impresiones": {
+		"one": "{n} printing",
+		"other": "{n} printings"
+	},
+	"Legal": "Legal",
+	"Restringida": "Restricted",
+	"Prohibida": "Banned",
+	"No legal": "Not legal",
+	"Esta impresión": "This printing"
+}

@@ -10,11 +10,12 @@ export const PESTANAS_MOVIL: { vista: Vista; icono: string; texto: string }[] = 
 	{ vista: "deck", icono: "lucide:layers", texto: paraTraducir("Deck") },
 	{ vista: "disenar", icono: "lucide:brush", texto: paraTraducir("Diseñar") },
 	{ vista: "biblioteca", icono: "lucide:book-open", texto: paraTraducir("Biblioteca") },
+	{ vista: "buscar", icono: "lucide:search", texto: paraTraducir("Buscar") },
 	{ vista: "mesa", icono: "game-icons:crossed-swords", texto: paraTraducir("Jugar") },
 ];
 
 /**
- * **La barra de pestañas de abajo (móvil).** Deck, Diseñar, Biblioteca, Jugar y
+ * **La barra de pestañas de abajo (móvil).** Deck, Diseñar, Biblioteca, Buscar, Jugar y
  * «Más». Respeta la zona segura de abajo con `env(safe-area-inset-bottom)`
  * (el `#root` ya la lleva como relleno en táctil; por eso aquí no se repite)
  * y se esconde mientras el teclado está abierto (`data-teclado` en `<html>`,

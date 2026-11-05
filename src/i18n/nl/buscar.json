@@ -1,0 +1,33 @@
+{
+	"Incluye estos colores": "Bevat deze kleuren",
+	"Exactamente estos colores": "Precies deze kleuren",
+	"Identidad dentro de estos": "Kleuridentiteit binnen deze",
+	"Cualquier formato": "Elk formaat",
+	"Comparar el coste": "Kosten vergelijken",
+	"Una por carta": "Eén per kaart",
+	"Una por ilustración": "Eén per illustratie",
+	"Todas las impresiones": "Alle drukken",
+	"Resultados": "Resultaten",
+	"Fecha de salida": "Verschijningsdatum",
+	"Fuerza": "Kracht",
+	"Precio (€)": "Prijs (€)",
+	"Precio ($)": "Prijs ($)",
+	"Descendente": "Aflopend",
+	"Busca por nombre, en cualquier idioma, o con la sintaxis de Scryfall (t:dragon c:r).": "Zoek op naam, in elke taal, of met de syntaxis van Scryfall (t:dragon c:r).",
+	"Buscando…": "Zoeken…",
+	"Ver los resultados": "Resultaten bekijken",
+	"No se ha podido cargar la carta.": "De kaart kon niet worden geladen.",
+	"Ver la otra cara": "Andere kant bekijken",
+	"Set": "Set",
+	"Número": "Nummer",
+	"Aclaraciones de reglas (en inglés)": "Regelverduidelijkingen (in het Engels)",
+	"{n} impresiones": {
+		"one": "{n} druk",
+		"other": "{n} drukken"
+	},
+	"Legal": "Legaal",
+	"Restringida": "Beperkt",
+	"Prohibida": "Verboden",
+	"No legal": "Niet legaal",
+	"Esta impresión": "Deze druk"
+}

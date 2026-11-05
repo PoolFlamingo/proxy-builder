@@ -278,6 +278,14 @@ espacio» (Free up space) deletes the images that no deck uses any more.
 
 ---
 
+## Look up any card
+
+The **Search** tab finds any Magic card with no deck involved: by name in any
+language, with Scryfall syntax or with filters (colours and colour identity, type,
+rarity, format, mana value, set, language), sorted as you like. Open a card to read
+its text, rulings, legality, price in euros and dollars and its other printings,
+and add it to the open deck if you want.
+
 ## To your taste
 
 The interface in **15 languages**: English, Spanish, French, German, Italian,

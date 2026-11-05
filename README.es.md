@@ -284,6 +284,15 @@ espacio» borra las imágenes que ya no usa ningún deck.
 
 ---
 
+## Consulta cualquier carta
+
+La pestaña **Buscar** encuentra cualquier carta de Magic sin deck de por medio: por
+nombre en cualquier idioma, con la sintaxis de Scryfall o con filtros (colores e
+identidad de color, tipo, rareza, formato, coste de maná, set, idioma), en el orden
+que quieras. Abre una carta para leer su texto, sus aclaraciones de reglas, su
+legalidad, su precio en euros y dólares y sus otras impresiones, y añádela al deck
+abierto si quieres.
+
 ## A tu gusto
 
 La interfaz en **15 idiomas**: inglés, español, francés, alemán, italiano,

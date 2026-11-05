@@ -143,7 +143,7 @@ export type Dialogo =
 	| { tipo: "disenarDeck" }
 	| { tipo: "exportarPng" };
 
-export type Vista = "deck" | "biblioteca" | "disenar" | "mesa";
+export type Vista = "deck" | "biblioteca" | "buscar" | "disenar" | "mesa";
 
 type UiStore = Preferencias & {
 	vista: Vista;

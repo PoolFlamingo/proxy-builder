@@ -241,6 +241,24 @@ pub struct SearchPage {
     #[serde(default)]
     pub has_more: bool,
     pub next_page: Option<String>,
+    /// Cuántas hay en total, no solo en esta página.
+    #[serde(default)]
+    pub total_cards: u32,
+}
+
+/// Una aclaración de reglas de `/cards/{id}/rulings`.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
+pub struct Aclaracion {
+    #[serde(default)]
+    pub published_at: String,
+    #[serde(default)]
+    pub comment: String,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct Aclaraciones {
+    #[serde(default)]
+    pub data: Vec<Aclaracion>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]

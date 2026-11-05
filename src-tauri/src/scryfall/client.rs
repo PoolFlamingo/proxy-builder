@@ -20,7 +20,10 @@ use serde::de::DeserializeOwned;
 use tokio::sync::Semaphore;
 
 use super::busquedas::{self, Busquedas};
-use super::models::{Catalog, Collection, Identifier, ScryCard, SearchPage, SetInfo, SetList};
+use super::models::{
+    Aclaracion, Aclaraciones, Catalog, Collection, Identifier, ScryCard, SearchPage, SetInfo,
+    SetList,
+};
 use super::rate::Limitador;
 use crate::error::{estado_http, red, AppError, AppResult, ErrorCode};
 
@@ -170,6 +173,35 @@ impl Scryfall {
         out.truncate(limit);
         self.busquedas.guardar(clave, out.clone());
         Ok(out)
+    }
+
+    /// Una página de `/cards/search`, para quien va pidiendo más según se baja
+    /// (la pantalla ya guarda las que tiene: no pasa por `busquedas`). Sin
+    /// resultados, una página vacía.
+    pub async fn buscar_pagina(
+        &self,
+        q: &str,
+        extra: &[(&str, &str)],
+        pagina: u32,
+    ) -> AppResult<SearchPage> {
+        let url = format!("{API}/cards/search");
+        let pagina = pagina.to_string();
+        let p: Option<SearchPage> = self
+            .json(|| {
+                self.http
+                    .get(&url)
+                    .query(&[("q", q), ("page", pagina.as_str())])
+                    .query(extra)
+            })
+            .await?;
+        Ok(p.unwrap_or_default())
+    }
+
+    /// Las aclaraciones de reglas de una carta. Sin ninguna, la lista vacía.
+    pub async fn aclaraciones(&self, id: &str) -> AppResult<Vec<Aclaracion>> {
+        let url = format!("{API}/cards/{}/rulings", urlencode(id));
+        let l: Option<Aclaraciones> = self.json(|| self.http.get(&url)).await?;
+        Ok(l.map(|l| l.data).unwrap_or_default())
     }
 
     pub async fn autocomplete(&self, q: &str) -> AppResult<Vec<String>> {

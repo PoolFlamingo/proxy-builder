@@ -209,7 +209,9 @@ le falta una cadena le sale la inglesa.
   `preview` (hojas, casillas, menú, arrastre), `export` (panel derecho,
   alinear filas, presets), `variants` (añadir carta, variantes, rejilla de
   Scryfall), `card-editor`, `library`, `stats`, `set-browser`, `shell`,
-  `disenar` (la vista «Diseñar» del editor de cartas de la 2.0), `tutorial`
+  `disenar` (la vista «Diseñar» del editor de cartas de la 2.0), `buscar` (la pestaña
+  «Buscar»: consultar cualquier carta sin deck; Rust en `commands/buscar.rs`, estado en
+  `stores/busqueda-store.ts`), `tutorial`
   (el recorrido guiado de cada pantalla: pasos con su ancla `data-tutorial`;
   sale solo la primera vez y con el botón de ayuda de la barra), `mesa`
   (la pestaña «Jugar»: entrada, tablero, menús, diálogos, atajos, `red/`

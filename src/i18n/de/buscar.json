@@ -1,0 +1,33 @@
+{
+	"Incluye estos colores": "Enthält diese Farben",
+	"Exactamente estos colores": "Genau diese Farben",
+	"Identidad dentro de estos": "Farbidentität innerhalb dieser",
+	"Cualquier formato": "Beliebiges Format",
+	"Comparar el coste": "Kosten vergleichen",
+	"Una por carta": "Eine pro Karte",
+	"Una por ilustración": "Eine pro Illustration",
+	"Todas las impresiones": "Alle Drucke",
+	"Resultados": "Ergebnisse",
+	"Fecha de salida": "Erscheinungsdatum",
+	"Fuerza": "Stärke",
+	"Precio (€)": "Preis (€)",
+	"Precio ($)": "Preis ($)",
+	"Descendente": "Absteigend",
+	"Busca por nombre, en cualquier idioma, o con la sintaxis de Scryfall (t:dragon c:r).": "Suche nach Namen in jeder Sprache oder mit der Scryfall-Syntax (t:dragon c:r).",
+	"Buscando…": "Suche läuft…",
+	"Ver los resultados": "Ergebnisse anzeigen",
+	"No se ha podido cargar la carta.": "Die Karte konnte nicht geladen werden.",
+	"Ver la otra cara": "Andere Seite ansehen",
+	"Set": "Set",
+	"Número": "Nummer",
+	"Aclaraciones de reglas (en inglés)": "Regelklärungen (auf Englisch)",
+	"{n} impresiones": {
+		"one": "{n} Druck",
+		"other": "{n} Drucke"
+	},
+	"Legal": "Legal",
+	"Restringida": "Beschränkt",
+	"Prohibida": "Gebannt",
+	"No legal": "Nicht legal",
+	"Esta impresión": "Dieser Druck"
+}

@@ -60,5 +60,14 @@
 	"Mantén pulsada una carta, una zona o el campo vacío para abrir su menú: ahí está todo lo que en un teclado tiene su tecla. Deshacer y rehacer están en la barra de arriba.": "长按一张牌、一个区域或战场空白处即可打开它的菜单：键盘上有快捷键的操作都在那里。撤销和重做在顶部的栏里。",
 	"El turno y su reloj, pausa, deshacer y rehacer, dados y monedas, fichas, el registro, el tapete y terminar o reiniciar la partida.": "回合及其计时、暂停、撤销和重做、骰子和硬币、衍生物、记录、游戏垫，以及结束或重新开始对局。",
 	"Cada deck enseña sus colores, cartas, precio e idiomas. Mantén pulsado uno para elegirlo y toca otros para sumar; en sus tres puntos: abrir, renombrar, duplicar, etiquetas, idioma, propiedades (notas y portada), exportar .pbdeck o eliminar.": "每个卡组都会显示它的颜色、卡牌、价格和语言。长按其中一个即可选中，再点按其他卡组即可添加；在它的三点菜单中：打开、重命名、复制、标签、语言、属性（备注和封面）、导出 .pbdeck 或删除。",
-	"Todo esto está en el menú «⋯» de la barra de arriba: «Renumerar» numera las cartas por el orden del deck, «Diseñar el deck» las hace todas de una vez, «Exportar imágenes» las guarda en PNG, «Colecciones» define un estilo común (marco, pie, ajustes) y «Letras, marcos y símbolos» añade letras, packs de marcos y símbolos.": "这些都在顶部栏的“⋯”菜单里：“Renumerar”按牌组顺序给卡牌编号，“Diseñar el deck”一次做出所有卡牌，“Exportar imágenes”把它们存为 PNG，“Colecciones”设置共用样式（边框、页脚、设置），“Letras, marcos y símbolos”添加字体、边框包和符号。"
+	"Todo esto está en el menú «⋯» de la barra de arriba: «Renumerar» numera las cartas por el orden del deck, «Diseñar el deck» las hace todas de una vez, «Exportar imágenes» las guarda en PNG, «Colecciones» define un estilo común (marco, pie, ajustes) y «Letras, marcos y símbolos» añade letras, packs de marcos y símbolos.": "这些都在顶部栏的“⋯”菜单里：“Renumerar”按牌组顺序给卡牌编号，“Diseñar el deck”一次做出所有卡牌，“Exportar imágenes”把它们存为 PNG，“Colecciones”设置共用样式（边框、页脚、设置），“Letras, marcos y símbolos”添加字体、边框包和符号。",
+	"Cinco pantallas": "五个界面",
+	"Deck: la lista, las hojas y la exportación. Diseñar: el editor de cartas, para hacer tus propias proxies. Biblioteca: todos tus decks guardados. Buscar: consulta cualquier carta. Jugar: la mesa, para jugar un deck en solitario o con más gente.": "套牌:列表、纸张和导出。设计:卡牌编辑器,制作你自己的代理牌。牌库:你保存的所有套牌。搜索:查询任意卡牌。游玩:牌桌,可独自或与他人使用套牌对战。",
+	"Buscar cartas": "搜索卡牌",
+	"Consulta cualquier carta de Magic sin tocar tu deck: su texto, legalidad, precio e impresiones.": "无需改动套牌,即可查询任意万智牌的文字、合法性、价格和版本。",
+	"Qué buscar": "搜索内容",
+	"Escribe un nombre, en cualquier idioma, o usa la sintaxis de Scryfall (t:dragon c:r).": "输入名称(任意语言),或使用 Scryfall 语法(t:dragon c:r)。",
+	"Afina por colores, tipo, rareza, formato, coste, set o idioma. Los resultados cambian solos.": "可按颜色、类别、稀有度、赛制、费用、系列或语言筛选。结果会自动更新。",
+	"Los resultados": "结果",
+	"Abre una carta para ver su ficha y sus otras impresiones, y añádela al deck abierto si quieres.": "打开卡牌可查看详情和其他版本,也可以将其加入当前打开的套牌。"
 }

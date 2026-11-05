@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import type { CardSummary } from "@/bindings/CardSummary";
 import { CampoNumero } from "@/components/campos";
@@ -25,6 +25,7 @@ import { useDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
 import { FiltrosBusqueda, idiomaParaRust } from "./filtros";
 import { RejillaCartas } from "./rejilla-cartas";
+import { useSugerencias } from "./sugerencias";
 import { traerCarta } from "./traer";
 
 /**
@@ -58,7 +59,7 @@ function Contenido({ en, hueco, cambiar }: { en?: number; hueco?: string; cambia
 	);
 	const idiomaDeck = useUi((s) => s.lang);
 	const [q, setQ] = useState("");
-	const [sugerencias, setSugerencias] = useState<string[]>([]);
+	const [sugerencias, setSugerencias] = useSugerencias(q);
 	const [lang, setLang] = useState(idiomaDeck === "en" ? "any" : idiomaDeck);
 	const [altaRes, setAltaRes] = useState(false);
 	const [resultados, setResultados] = useState<CardSummary[] | null>(null);
@@ -67,21 +68,6 @@ function Contenido({ en, hueco, cambiar }: { en?: number; hueco?: string; cambia
 	const [buscando, setBuscando] = useState(false);
 	const [anadiendo, setAnadiendo] = useState(false);
 	const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
-
-	useEffect(() => {
-		const texto = q.trim();
-		if (texto.length < 2) return setSugerencias([]);
-		let vigente = true;
-		const id = setTimeout(() => {
-			call("card_autocomplete", { q: texto })
-				.then((s) => vigente && setSugerencias(s.slice(0, 8)))
-				.catch(() => vigente && setSugerencias([]));
-		}, 200);
-		return () => {
-			vigente = false;
-			clearTimeout(id);
-		};
-	}, [q]);
 
 	const buscar = async (texto: string, exacto = false) => {
 		const consulta = exacto ? `!"${texto.replace(/"/g, "")}"` : texto.trim();

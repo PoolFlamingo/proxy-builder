@@ -22,9 +22,9 @@ export const PASOS: Record<Vista, Paso[]> = {
 		},
 		{
 			ancla: "pestanas",
-			titulo: paraTraducir("Cuatro pantallas"),
+			titulo: paraTraducir("Cinco pantallas"),
 			texto: paraTraducir(
-				"Deck: la lista, las hojas y la exportación. Diseñar: el editor de cartas, para hacer tus propias proxies. Biblioteca: todos tus decks guardados. Jugar: la mesa, para probar un deck en solitario.",
+				"Deck: la lista, las hojas y la exportación. Diseñar: el editor de cartas, para hacer tus propias proxies. Biblioteca: todos tus decks guardados. Buscar: consulta cualquier carta. Jugar: la mesa, para jugar un deck en solitario o con más gente.",
 			),
 		},
 		{
@@ -168,6 +168,35 @@ export const PASOS: Record<Vista, Paso[]> = {
 			titulo: paraTraducir("Guardar"),
 			texto: paraTraducir(
 				"Marca la carta como lista para imprimir, crea una variante con otro diseño, guarda o guarda y pasa a la siguiente. Los cambios no llegan al deck hasta que guardas.",
+			),
+		},
+	],
+	buscar: [
+		{
+			titulo: paraTraducir("Buscar cartas"),
+			texto: paraTraducir(
+				"Consulta cualquier carta de Magic sin tocar tu deck: su texto, legalidad, precio e impresiones.",
+			),
+		},
+		{
+			ancla: "buscar-campo",
+			titulo: paraTraducir("Qué buscar"),
+			texto: paraTraducir(
+				"Escribe un nombre, en cualquier idioma, o usa la sintaxis de Scryfall (t:dragon c:r).",
+			),
+		},
+		{
+			ancla: "buscar-filtros",
+			titulo: paraTraducir("Filtros"),
+			texto: paraTraducir(
+				"Afina por colores, tipo, rareza, formato, coste, set o idioma. Los resultados cambian solos.",
+			),
+		},
+		{
+			ancla: "buscar-resultados",
+			titulo: paraTraducir("Los resultados"),
+			texto: paraTraducir(
+				"Abre una carta para ver su ficha y sus otras impresiones, y añádela al deck abierto si quieres.",
 			),
 		},
 	],

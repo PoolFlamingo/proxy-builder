@@ -1,3 +1,4 @@
+import { BuscarScreen } from "@/features/buscar/buscar-screen";
 import { CardEditorDialog } from "@/features/card-editor/card-editor-dialog";
 import { DecklistPanel } from "@/features/decklist/decklist-panel";
 import { FichasDialog } from "@/features/decklist/fichas-dialog";
@@ -36,6 +37,7 @@ export default function App() {
 				centro={<PreviewPane />}
 				derecha={<ExportPanel />}
 				biblioteca={<LibraryScreen />}
+				buscar={<BuscarScreen />}
 				disenar={<DisenarScreen />}
 				mesa={<MesaScreen />}
 			/>

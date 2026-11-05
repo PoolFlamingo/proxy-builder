@@ -43,8 +43,8 @@ import { useScrollPorVista } from "./scroll-por-vista";
  * (`lib/formato.ts`): en **escritorio** es la de siempre; en **tableta**
  * (menos de 1024 px) el mismo encabezado más compacto, Deck con dos paneles y
  * Exportar en una hoja lateral; en **móvil**, una barra de arriba con el
- * nombre del deck, una de pestañas abajo (Deck, Diseñar, Biblioteca, Jugar y
- * Más) y Deck partido en tres pestañas (Lista, Hojas, Exportar). Con una
+ * nombre del deck, una de pestañas abajo (Deck, Diseñar, Biblioteca, Buscar,
+ * Jugar y Más) y Deck partido en tres pestañas (Lista, Hojas, Exportar). Con una
  * partida abierta en el móvil las dos barras se esconden y la mesa ocupa la
  * pantalla (`mesa-completa.ts`).
  */
@@ -53,6 +53,7 @@ export function AppShell({
 	centro,
 	derecha,
 	biblioteca,
+	buscar,
 	disenar,
 	mesa,
 }: {
@@ -60,6 +61,7 @@ export function AppShell({
 	centro: ReactNode;
 	derecha: ReactNode;
 	biblioteca: ReactNode;
+	buscar: ReactNode;
 	disenar: ReactNode;
 	mesa: ReactNode;
 }) {
@@ -215,6 +217,8 @@ export function AppShell({
 							disenar
 						) : vista === "mesa" ? (
 							mesa
+						) : vista === "buscar" ? (
+							buscar
 						) : (
 							biblioteca
 						)}
@@ -265,7 +269,11 @@ export function AppShell({
 					className={cn("ml-4 shrink-0", tableta && "ml-1")}
 					value={vista}
 					onValueChange={(v) =>
-						(v === "deck" || v === "disenar" || v === "biblioteca" || v === "mesa") &&
+						(v === "deck" ||
+							v === "disenar" ||
+							v === "biblioteca" ||
+							v === "buscar" ||
+							v === "mesa") &&
 						cambiarVista(v)
 					}
 				>
@@ -294,18 +302,23 @@ export function AppShell({
 						<span className="max-[860px]:hidden">{t("Biblioteca")}</span>
 					</ToggleGroupItem>
 					<ToggleGroupItem
+						value="buscar"
+						className={cn("gap-1.5 px-3 text-xs", tableta && "px-2")}
+						aria-label={t("Buscar")}
+					>
+						<Icono icon="lucide:search" className="size-3.5" />
+						<span className="max-[860px]:hidden">{t("Buscar")}</span>
+					</ToggleGroupItem>
+					<ToggleGroupItem
 						value="mesa"
-						className={cn("group gap-1.5 px-3 text-xs", tableta && "px-2")}
+						className={cn("gap-1.5 px-3 text-xs", tableta && "px-2")}
 						aria-label={t("Jugar")}
 					>
 						<Icono icon="game-icons:crossed-swords" className="size-3.5" />
 						<span className="max-[860px]:hidden">{t("Jugar")}</span>
-						<span className="rounded-full bg-primary/15 px-1.5 text-[9px] font-semibold uppercase leading-4 text-primary group-data-[state=on]:bg-accent-foreground/20 group-data-[state=on]:text-accent-foreground max-[860px]:hidden">
-							{t("Beta")}
-						</span>
 					</ToggleGroupItem>
 				</ToggleGroup>
-				{vista !== "biblioteca" && vista !== "mesa" && <NombreDeck />}
+				{vista !== "biblioteca" && vista !== "buscar" && vista !== "mesa" && <NombreDeck />}
 				<div className={cn("ml-auto flex items-center gap-2.5", tableta && "gap-1.5")}>
 					<SaveIndicator />
 					<BotonActualizar />
@@ -390,6 +403,8 @@ export function AppShell({
 					disenar
 				) : vista === "mesa" ? (
 					mesa
+				) : vista === "buscar" ? (
+					buscar
 				) : (
 					biblioteca
 				)}

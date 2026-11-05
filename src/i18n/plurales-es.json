@@ -254,6 +254,11 @@
 		"many": "{n} fichas añadidas",
 		"other": "{n} fichas añadidas"
 	},
+	"{n} impresiones": {
+		"one": "{n} impresión",
+		"many": "{n} de impresiones",
+		"other": "{n} impresiones"
+	},
 	"{n} imágenes exportadas": {
 		"one": "{n} imagen exportada",
 		"many": "{n} imágenes exportadas",
