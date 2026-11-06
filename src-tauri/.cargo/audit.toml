@@ -1,0 +1,14 @@
+# Lo que `cargo audit` deja pasar, con su porqué. Se revisa al subir de versión
+# `tauri-plugin-updater`: en cuanto traiga un `zip` nuevo, estas líneas sobran.
+[advisories]
+ignore = [
+    # `zip` 4 solo lo trae `tauri-plugin-updater`, que aún pide esa versión. Los
+    # cuatro fallos son de `extract()` con enlaces y permisos de Unix, y el plugin
+    # solo abre los paquetes de actualización una vez comprobada su firma minisign:
+    # sin la clave privada nadie puede hacerle abrir uno a medida. La app usa `zip`
+    # 9 y no llama a `extract()` en ningún sitio.
+    "RUSTSEC-2026-0367",
+    "RUSTSEC-2026-0368",
+    "RUSTSEC-2026-0369",
+    "RUSTSEC-2026-0429",
+]
