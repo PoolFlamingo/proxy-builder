@@ -415,7 +415,7 @@ fn con_mirada<T>(state: &AppState, f: impl FnOnce(&mut Mirada) -> T) -> Option<T
 /// Que la pantalla del móvil no se apague mientras haya una mesa abierta (y
 /// que vuelva a hacerlo al salir). Un fallo solo se apunta: no impide jugar.
 fn pantalla_encendida(app: &AppHandle, si: bool) {
-    if let Err(e) = crate::android::pantalla_encendida(app, si) {
+    if let Err(e) = crate::android::pantalla_encendida(app, crate::android::UsoPantalla::Mesa, si) {
         tracing::warn!("pantalla encendida ({si}): {e:?}");
     }
 }

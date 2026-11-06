@@ -71,7 +71,8 @@ pub async fn red_identidad_importar(
     }
     let nueva = {
         let copia = crate::fichero::leer(&app, &ruta, Some("identidad.json"))?;
-        identidad::importar(&state.paths.data, &copia)?
+        let cofre = crate::android::cofre(&app);
+        identidad::importar(&state.paths.data, &copia, cofre.as_deref())?
     };
     state.red.cambiar_clave(nueva).await;
     identidad::leer(&state.db, &state.red.clave())
@@ -164,7 +165,7 @@ pub async fn red_crear(
     if relay_de_entorno() != Relay::Ninguno {
         let _ = tokio::time::timeout(Duration::from_secs(5), ep.online()).await;
     }
-    let anf = Anfitrion::nuevo(apodo, secreto_nuevo());
+    let anf = Anfitrion::nuevo(apodo, secreto_nuevo()?);
     if let Ok(mut d) = anf.deck.lock() {
         *d = deck;
     }

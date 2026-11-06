@@ -122,7 +122,7 @@ fn quedarse(m: &MesaEnMemoria) {
 async fn como_anfitrion(dir: &Path) {
     let mesa = MesaEnMemoria::default();
     let ep = crear(SecretKey::generate(), Relay::Ninguno).await.unwrap();
-    let anf = Anfitrion::nuevo("Host".into(), secreto_nuevo());
+    let anf = Anfitrion::nuevo("Host".into(), secreto_nuevo().unwrap());
     *anf.deck.lock().unwrap() = Some("Prueba".into());
     tokio::spawn(atender(ep.clone(), anf.clone(), mesa.clone()));
     // El padre pide que se vaya a propósito (en vez de matarlo).

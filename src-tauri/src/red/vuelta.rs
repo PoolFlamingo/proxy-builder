@@ -89,7 +89,7 @@ mod tests {
         Union {
             codigo: Codigo {
                 addr: iroh::EndpointAddr::new(k.public()),
-                secreto: crate::red::codigo::secreto_nuevo(),
+                secreto: crate::red::codigo::secreto_nuevo().unwrap(),
             },
             apodo: "Ana".into(),
             rol: Rol::Jugador,

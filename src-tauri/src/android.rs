@@ -40,15 +40,49 @@ pub fn compartir(_app: &AppHandle, _ruta: &Path, _tipo: &str) -> AppResult<()> {
     Err(sin_android())
 }
 
-/// Que la pantalla no se apague (mientras haya una partida abierta).
+/// Quién pide que la pantalla no se apague: una mesa abierta y un intercambio
+/// de decks pueden coincidir, y acabar uno no debe apagársela al otro.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum UsoPantalla {
+    Mesa,
+    Pasar,
+}
+
+static USOS_PANTALLA: std::sync::Mutex<std::collections::BTreeSet<UsoPantalla>> =
+    std::sync::Mutex::new(std::collections::BTreeSet::new());
+
+/// Que la pantalla no se apague mientras alguien lo pida.
+pub fn pantalla_encendida(app: &AppHandle, uso: UsoPantalla, si: bool) -> AppResult<()> {
+    let mut usos = match USOS_PANTALLA.lock() {
+        Ok(g) => g,
+        Err(e) => e.into_inner(),
+    };
+    let previos = usos.clone();
+    match contar_usos(&mut usos, uso, si) {
+        Some(encender) => pantalla_sistema(app, encender).inspect_err(|_| *usos = previos),
+        None => Ok(()),
+    }
+}
+
 #[cfg(target_os = "android")]
-pub fn pantalla_encendida(app: &AppHandle, si: bool) -> AppResult<()> {
+fn pantalla_sistema(app: &AppHandle, si: bool) -> AppResult<()> {
     plugin(app).pantalla_encendida(si).map_err(de_plugin)
 }
 
 #[cfg(not(target_os = "android"))]
-pub fn pantalla_encendida(_app: &AppHandle, _si: bool) -> AppResult<()> {
+fn pantalla_sistema(_app: &AppHandle, _si: bool) -> AppResult<()> {
     Ok(())
+}
+
+/// Comparte un texto con otra app (el selector del sistema): `ACTION_SEND`.
+#[cfg(target_os = "android")]
+pub fn compartir_texto(app: &AppHandle, texto: &str) -> AppResult<()> {
+    plugin(app).compartir_texto(texto).map_err(de_plugin)
+}
+
+#[cfg(not(target_os = "android"))]
+pub fn compartir_texto(_app: &AppHandle, _texto: &str) -> AppResult<()> {
+    Err(sin_android())
 }
 
 /// Esconde o enseña las barras del sistema (pantalla completa de la mesa).
@@ -73,15 +107,10 @@ pub enum UsoMulticast {
 static USOS_MULTICAST: std::sync::Mutex<std::collections::BTreeSet<UsoMulticast>> =
     std::sync::Mutex::new(std::collections::BTreeSet::new());
 
-/// Apunta que `uso` pide (o suelta) el lock y dice qué hacer con el del
-/// sistema: `Some(true)` cogerlo (el primero), `Some(false)` soltarlo (el
-/// último), `None` nada. Pedirlo o soltarlo dos veces el mismo uso no cuenta
-/// doble.
-fn contar_multicast(
-    usos: &mut std::collections::BTreeSet<UsoMulticast>,
-    uso: UsoMulticast,
-    si: bool,
-) -> Option<bool> {
+/// Apunta que `uso` pide (o suelta) algo del sistema y dice qué hacer con ello:
+/// `Some(true)` cogerlo (el primero), `Some(false)` soltarlo (el último), `None`
+/// nada. Pedirlo o soltarlo dos veces el mismo uso no cuenta doble.
+fn contar_usos<U: Ord>(usos: &mut std::collections::BTreeSet<U>, uso: U, si: bool) -> Option<bool> {
     let antes = !usos.is_empty();
     if si {
         usos.insert(uso);
@@ -101,7 +130,7 @@ pub fn multicast(app: &AppHandle, uso: UsoMulticast, si: bool) -> AppResult<()> 
         Err(e) => e.into_inner(),
     };
     let previos = usos.clone();
-    match contar_multicast(&mut usos, uso, si) {
+    match contar_usos(&mut usos, uso, si) {
         Some(coger) => multicast_sistema(app, coger).inspect_err(|_| *usos = previos),
         None => Ok(()),
     }
@@ -164,6 +193,46 @@ fn sin_dominio(nombre: &str) -> Option<String> {
     (!corto.is_empty() && !corto.eq_ignore_ascii_case("localhost")).then(|| corto.to_string())
 }
 
+/// El Android Keystore, para que la clave de la identidad no se pueda usar fuera de
+/// este móvil.
+#[cfg(target_os = "android")]
+struct CofreAndroid(AppHandle);
+
+#[cfg(target_os = "android")]
+impl crate::red::identidad::Cofre for CofreAndroid {
+    fn sellar(&self, claro: &[u8]) -> AppResult<Vec<u8>> {
+        use base64::Engine;
+        let b = base64::engine::general_purpose::STANDARD;
+        let s = plugin(&self.0)
+            .cofre_sellar(&b.encode(claro))
+            .map_err(de_plugin)?;
+        b.decode(s)
+            .map_err(|e| AppError::new(ErrorCode::Internal).with("detalle", e))
+    }
+
+    fn abrir(&self, sellado: &[u8]) -> AppResult<Vec<u8>> {
+        use base64::Engine;
+        let b = base64::engine::general_purpose::STANDARD;
+        let s = plugin(&self.0)
+            .cofre_abrir(&b.encode(sellado))
+            .map_err(de_plugin)?;
+        b.decode(s)
+            .map_err(|e| AppError::new(ErrorCode::Internal).with("detalle", e))
+    }
+}
+
+/// Dónde guardar secretos en este sistema: en el escritorio, en ningún cofre (el
+/// fichero con permisos del usuario).
+#[cfg(target_os = "android")]
+pub fn cofre(app: &AppHandle) -> Option<Box<dyn crate::red::identidad::Cofre>> {
+    Some(Box::new(CofreAndroid(app.clone())))
+}
+
+#[cfg(not(target_os = "android"))]
+pub fn cofre(_app: &AppHandle) -> Option<Box<dyn crate::red::identidad::Cofre>> {
+    None
+}
+
 /// Pide que cada fichero que otra app abra con esta (`ACTION_VIEW`, incluido
 /// el que arrancó la app) llegue a `f` como `content://`.
 #[cfg(target_os = "android")]
@@ -190,22 +259,28 @@ mod tests {
     }
 
     #[test]
+    fn acabar_un_intercambio_no_apaga_la_pantalla_de_la_mesa() {
+        let mut u = std::collections::BTreeSet::new();
+        assert_eq!(contar_usos(&mut u, UsoPantalla::Mesa, true), Some(true));
+        assert_eq!(contar_usos(&mut u, UsoPantalla::Pasar, true), None);
+        assert_eq!(contar_usos(&mut u, UsoPantalla::Pasar, false), None);
+        assert_eq!(contar_usos(&mut u, UsoPantalla::Mesa, false), Some(false));
+    }
+
+    #[test]
     fn el_multicast_se_suelta_cuando_no_lo_usa_nadie() {
         let mut u = std::collections::BTreeSet::new();
-        assert_eq!(
-            contar_multicast(&mut u, UsoMulticast::Buscar, true),
-            Some(true)
-        );
-        assert_eq!(contar_multicast(&mut u, UsoMulticast::Recibir, true), None);
+        assert_eq!(contar_usos(&mut u, UsoMulticast::Buscar, true), Some(true));
+        assert_eq!(contar_usos(&mut u, UsoMulticast::Recibir, true), None);
         // Cerrar «Recibir» no se lo quita a la búsqueda.
-        assert_eq!(contar_multicast(&mut u, UsoMulticast::Recibir, false), None);
+        assert_eq!(contar_usos(&mut u, UsoMulticast::Recibir, false), None);
         // Soltarlo otra vez no cuenta doble.
-        assert_eq!(contar_multicast(&mut u, UsoMulticast::Recibir, false), None);
-        assert_eq!(contar_multicast(&mut u, UsoMulticast::Buscar, true), None);
+        assert_eq!(contar_usos(&mut u, UsoMulticast::Recibir, false), None);
+        assert_eq!(contar_usos(&mut u, UsoMulticast::Buscar, true), None);
         assert_eq!(
-            contar_multicast(&mut u, UsoMulticast::Buscar, false),
+            contar_usos(&mut u, UsoMulticast::Buscar, false),
             Some(false)
         );
-        assert_eq!(contar_multicast(&mut u, UsoMulticast::Buscar, false), None);
+        assert_eq!(contar_usos(&mut u, UsoMulticast::Buscar, false), None);
     }
 }

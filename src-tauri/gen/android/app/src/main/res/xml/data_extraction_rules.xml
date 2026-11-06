@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12 o posterior. La clave de la identidad no sale del móvil, ni a la
+     copia de Google ni al pasar los datos a un móvil nuevo. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" path="identidad/" />
+        <exclude domain="root" path="logs/" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" path="identidad/" />
+        <exclude domain="root" path="logs/" />
+    </device-transfer>
+</data-extraction-rules>

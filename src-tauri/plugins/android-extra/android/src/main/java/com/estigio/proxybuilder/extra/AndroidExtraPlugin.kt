@@ -9,6 +9,9 @@ import android.net.wifi.WifiManager
 import android.os.Build
 import android.provider.OpenableColumns
 import android.provider.Settings
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
+import android.util.Base64
 import android.view.WindowManager
 import androidx.core.content.FileProvider
 import androidx.core.view.WindowCompat
@@ -22,11 +25,26 @@ import app.tauri.plugin.Invoke
 import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
 import java.io.File
+import java.security.KeyStore
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.GCMParameterSpec
 
 @InvokeArg
 class CompartirArgs {
     lateinit var ruta: String
     var tipo: String = "*/*"
+}
+
+@InvokeArg
+class DatosArgs {
+    lateinit var datos: String
+}
+
+@InvokeArg
+class TextoArgs {
+    lateinit var texto: String
 }
 
 @InvokeArg
@@ -57,6 +75,13 @@ class EscuchaArgs {
  */
 @TauriPlugin
 class AndroidExtraPlugin(private val activity: Activity) : Plugin(activity) {
+    private companion object {
+        const val ALMACEN = "AndroidKeyStore"
+        const val ALIAS_COFRE = "proxy-builder-identidad"
+        const val CIFRADO = "AES/GCM/NoPadding"
+        const val LARGO_IV = 12
+    }
+
     private var multicastLock: WifiManager.MulticastLock? = null
     private var canal: Channel? = null
 
@@ -88,6 +113,79 @@ class AndroidExtraPlugin(private val activity: Activity) : Plugin(activity) {
             invoke.resolve()
         } catch (ex: Exception) {
             invoke.reject(ex.message ?: "no se pudo compartir")
+        }
+    }
+
+    @Command
+    fun compartirTexto(invoke: Invoke) {
+        try {
+            val args = invoke.parseArgs(TextoArgs::class.java)
+            val envio = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, args.texto)
+            }
+            val selector = Intent.createChooser(envio, null).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            activity.startActivity(selector)
+            invoke.resolve()
+        } catch (ex: Exception) {
+            invoke.reject(ex.message ?: "no se pudo compartir")
+        }
+    }
+
+    // ── El cofre ────────────────────────────────────────────────────────
+
+    /** La clave AES del Android Keystore: se crea la primera vez y nunca sale de él. */
+    private fun claveDelCofre(): SecretKey {
+        val almacen = KeyStore.getInstance(ALMACEN).apply { load(null) }
+        (almacen.getKey(ALIAS_COFRE, null) as? SecretKey)?.let { return it }
+        val generador = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ALMACEN)
+        generador.init(
+            KeyGenParameterSpec.Builder(
+                ALIAS_COFRE,
+                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT,
+            )
+                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setKeySize(256)
+                .build(),
+        )
+        return generador.generateKey()
+    }
+
+    private fun resolverDatos(invoke: Invoke, bytes: ByteArray) {
+        invoke.resolve(JSObject().apply { put("datos", Base64.encodeToString(bytes, Base64.NO_WRAP)) })
+    }
+
+    /** Devuelve el IV (12 bytes) seguido del cifrado. */
+    @Command
+    fun cofreSellar(invoke: Invoke) {
+        try {
+            val args = invoke.parseArgs(DatosArgs::class.java)
+            val cifrador = Cipher.getInstance(CIFRADO)
+            cifrador.init(Cipher.ENCRYPT_MODE, claveDelCofre())
+            val cifrado = cifrador.doFinal(Base64.decode(args.datos, Base64.NO_WRAP))
+            resolverDatos(invoke, cifrador.iv + cifrado)
+        } catch (ex: Exception) {
+            invoke.reject(ex.message ?: "no se pudo sellar")
+        }
+    }
+
+    @Command
+    fun cofreAbrir(invoke: Invoke) {
+        try {
+            val args = invoke.parseArgs(DatosArgs::class.java)
+            val sellado = Base64.decode(args.datos, Base64.NO_WRAP)
+            val cifrador = Cipher.getInstance(CIFRADO)
+            cifrador.init(
+                Cipher.DECRYPT_MODE,
+                claveDelCofre(),
+                GCMParameterSpec(128, sellado, 0, LARGO_IV),
+            )
+            resolverDatos(invoke, cifrador.doFinal(sellado, LARGO_IV, sellado.size - LARGO_IV))
+        } catch (ex: Exception) {
+            invoke.reject(ex.message ?: "no se pudo abrir")
         }
     }
 

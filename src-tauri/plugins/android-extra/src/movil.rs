@@ -28,6 +28,11 @@ struct Si {
 }
 
 #[derive(Serialize)]
+struct Texto<'a> {
+    texto: &'a str,
+}
+
+#[derive(Serialize)]
 struct Ruta<'a> {
     ruta: &'a str,
 }
@@ -40,6 +45,11 @@ struct Uri<'a> {
 #[derive(Serialize)]
 struct Escucha {
     handler: Channel,
+}
+
+#[derive(Serialize, Deserialize)]
+struct Datos {
+    datos: String,
 }
 
 #[derive(Deserialize)]
@@ -69,6 +79,33 @@ impl<R: Runtime> AndroidExtra<R> {
         let ruta = ruta.to_string_lossy();
         self.0
             .run_mobile_plugin("compartir", Compartir { ruta: &ruta, tipo })
+    }
+
+    /// Comparte un texto con otra app.
+    pub fn compartir_texto(&self, texto: &str) -> Resultado<()> {
+        self.0.run_mobile_plugin("compartirTexto", Texto { texto })
+    }
+
+    /// Sella estos datos (en base64) con la clave del Android Keystore.
+    pub fn cofre_sellar(&self, datos: &str) -> Resultado<String> {
+        let r: Datos = self.0.run_mobile_plugin(
+            "cofreSellar",
+            Datos {
+                datos: datos.to_string(),
+            },
+        )?;
+        Ok(r.datos)
+    }
+
+    /// Abre lo que selló `cofre_sellar`.
+    pub fn cofre_abrir(&self, datos: &str) -> Resultado<String> {
+        let r: Datos = self.0.run_mobile_plugin(
+            "cofreAbrir",
+            Datos {
+                datos: datos.to_string(),
+            },
+        )?;
+        Ok(r.datos)
     }
 
     pub fn pantalla_encendida(&self, si: bool) -> Resultado<()> {

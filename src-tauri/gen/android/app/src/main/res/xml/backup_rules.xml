@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 o anterior. La clave de la identidad no sale del móvil. -->
+<full-backup-content>
+    <exclude domain="root" path="identidad/" />
+    <exclude domain="root" path="logs/" />
+</full-backup-content>

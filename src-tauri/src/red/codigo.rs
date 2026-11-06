@@ -28,15 +28,13 @@ pub struct Codigo {
     pub secreto: String,
 }
 
-/// Un secreto nuevo de 16 bytes, en hexadecimal.
-pub fn secreto_nuevo() -> String {
+/// Un secreto nuevo de 16 bytes del generador del sistema, en hexadecimal.
+/// 🛑 Sin entropía no hay secreto: da un error, nunca uno adivinable.
+pub fn secreto_nuevo() -> AppResult<String> {
     let mut b = [0u8; 16];
-    if getrandom::fill(&mut b).is_err() {
-        // Sin entropía (no pasa en la práctica): el reloj y la dirección.
-        let t = crate::store::ahora_ms().to_le_bytes();
-        b[..8].copy_from_slice(&t);
-    }
-    b.iter().map(|x| format!("{x:02x}")).collect()
+    getrandom::fill(&mut b)
+        .map_err(|e| AppError::new(ErrorCode::Internal).with("detalle", e.to_string()))?;
+    Ok(b.iter().map(|x| format!("{x:02x}")).collect())
 }
 
 /// Compara dos secretos sin cortar en la primera diferencia.
@@ -111,7 +109,7 @@ mod tests {
         let k = iroh::SecretKey::generate();
         let c = Codigo {
             addr: EndpointAddr::new(k.public()),
-            secreto: secreto_nuevo(),
+            secreto: secreto_nuevo().unwrap(),
         };
         let t = c.a_texto().unwrap();
         assert!(t.starts_with("PB1-"));
@@ -131,11 +129,11 @@ mod tests {
 
     #[test]
     fn secretos() {
-        let a = secreto_nuevo();
+        let a = secreto_nuevo().unwrap();
         assert_eq!(a.len(), 32);
-        assert_ne!(a, secreto_nuevo());
+        assert_ne!(a, secreto_nuevo().unwrap());
         assert!(mismo_secreto(&a, &a.clone()));
-        assert!(!mismo_secreto(&a, &secreto_nuevo()));
+        assert!(!mismo_secreto(&a, &secreto_nuevo().unwrap()));
         assert!(!mismo_secreto(&a, "corto"));
     }
 
@@ -144,7 +142,7 @@ mod tests {
         let k = iroh::SecretKey::generate();
         let c = Codigo {
             addr: EndpointAddr::new(k.public()),
-            secreto: secreto_nuevo(),
+            secreto: secreto_nuevo().unwrap(),
         };
         let deck = c.a_texto_deck().unwrap();
         let partida = c.a_texto().unwrap();

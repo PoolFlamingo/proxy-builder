@@ -142,7 +142,9 @@ pub fn run() {
             #[cfg(target_os = "android")]
             abrir::escuchar(app.handle());
             crear_ventana(app, p, &paths.cache)?;
-            let estado = state::AppState::open(paths).map_err(|e| e.to_string())?;
+            let cofre = android::cofre(app.handle());
+            let estado =
+                state::AppState::open_con(paths, cofre.as_deref()).map_err(|e| e.to_string())?;
             app.manage(estado);
             // Las partidas que terminan se guardan en el historial (Fase H).
             let h = app.handle().clone();

@@ -98,7 +98,7 @@ async fn partida_ajustada(
         ep: crear(SecretKey::generate(), Relay::Ninguno).await.unwrap(),
         conexion: None,
     };
-    let anf = Anfitrion::nuevo("Host".into(), secreto_nuevo());
+    let anf = Anfitrion::nuevo("Host".into(), secreto_nuevo().unwrap());
     *anf.deck.lock().unwrap() = Some("Prueba".into());
     let aceptador = tokio::spawn(atender(host.ep.clone(), anf.clone(), host.mesa.clone()));
     let codigo = Codigo {
@@ -303,7 +303,7 @@ async fn sin_el_secreto_o_con_otra_version_no_se_entra() {
     let ep = crear(SecretKey::generate(), Relay::Ninguno).await.unwrap();
     let malo = Codigo {
         addr: p.codigo.addr.clone(),
-        secreto: secreto_nuevo(),
+        secreto: secreto_nuevo().unwrap(),
     };
     let e = unirse(
         ep.clone(),
@@ -1278,7 +1278,7 @@ async fn si_la_sala_cambia_entre_medias_no_empieza_nada() {
         ep: crear(SecretKey::generate(), Relay::Ninguno).await.unwrap(),
         conexion: None,
     };
-    let anf = Anfitrion::nuevo("Host".into(), secreto_nuevo());
+    let anf = Anfitrion::nuevo("Host".into(), secreto_nuevo().unwrap());
     let config = ConfigMesa {
         fantasmas_extra: None,
         jugadores: vec![JugadorMesa {
@@ -1431,7 +1431,7 @@ async fn en_la_sala_cada_uno_cambia_su_nombre_y_su_deck_y_todos_lo_ven_al_moment
         ep: crear(SecretKey::generate(), Relay::Ninguno).await.unwrap(),
         conexion: None,
     };
-    let anf = Anfitrion::nuevo("Host".into(), secreto_nuevo());
+    let anf = Anfitrion::nuevo("Host".into(), secreto_nuevo().unwrap());
     *anf.deck.lock().unwrap() = Some("Prueba".into());
     let aceptador = tokio::spawn(atender(host.ep.clone(), anf.clone(), host.mesa.clone()));
     let codigo = Codigo {

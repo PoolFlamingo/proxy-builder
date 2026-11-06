@@ -58,6 +58,14 @@ pub struct AppState {
 
 impl AppState {
     pub fn open(paths: Paths) -> AppResult<AppState> {
+        Self::open_con(paths, None)
+    }
+
+    /// Con el `cofre` donde guardar la clave de la identidad (Android).
+    pub fn open_con(
+        paths: Paths,
+        cofre: Option<&dyn crate::red::identidad::Cofre>,
+    ) -> AppResult<AppState> {
         std::fs::create_dir_all(&paths.data)?;
         std::fs::create_dir_all(&paths.cache)?;
         let db = Db::open(&paths.data.join("library.db"))?;
@@ -65,7 +73,8 @@ impl AppState {
         crate::store::decks::rellenar_refs(&db)?;
         let blobs = BlobStore::new(paths.data.join("blobs"));
         let diseno = crate::diseno::recursos::Recursos::abrir(&paths.data);
-        let red = crate::red::Red::nueva(crate::red::identidad::cargar_o_crear(&paths.data)?);
+        let red =
+            crate::red::Red::nueva(crate::red::identidad::cargar_o_crear(&paths.data, cofre)?);
         Ok(AppState {
             db,
             blobs,
