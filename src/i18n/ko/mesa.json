@@ -1272,5 +1272,11 @@
 	"Fantasma {i}: {delta} venenos": "유령 {i}: 독 {delta}",
 	"Añadir otro fantasma": "유령 하나 더 추가",
 	"Quitar este fantasma": "이 유령 제거",
-	"Rivales fantasma": "유령 상대"
+	"Rivales fantasma": "유령 상대",
+	"¿Quién empieza?": "누가 먼저 시작할까요?",
+	"Empiezas tú": "내가 먼저 시작해요",
+	"Turno de {quien}": "{quien} 님의 턴",
+	"Primer jugador": "선공 플레이어",
+	"Tiene el turno": "턴 진행 중",
+	"Ruleta al sortear quién empieza": "선공을 뽑을 때 룰렛 표시"
 }

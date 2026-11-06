@@ -1272,5 +1272,11 @@
 	"Fantasma {i}: {delta} venenos": "幻影 {i}：{delta} 个中毒指示物",
 	"Añadir otro fantasma": "再添加一个幻影",
 	"Quitar este fantasma": "移除这个幻影",
-	"Rivales fantasma": "幻影对手"
+	"Rivales fantasma": "幻影对手",
+	"¿Quién empieza?": "谁先手？",
+	"Empiezas tú": "你先手",
+	"Turno de {quien}": "{quien} 的回合",
+	"Primer jugador": "先手玩家",
+	"Tiene el turno": "当前回合",
+	"Ruleta al sortear quién empieza": "抽取先手时显示轮盘"
 }

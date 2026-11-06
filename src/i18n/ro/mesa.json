@@ -1342,5 +1342,11 @@
 	"Fantasma {i}: {delta} venenos": "Fantoma {i}: {delta} otravă",
 	"Añadir otro fantasma": "Adaugă altă fantomă",
 	"Quitar este fantasma": "Elimină această fantomă",
-	"Rivales fantasma": "Adversari fantomă"
+	"Rivales fantasma": "Adversari fantomă",
+	"¿Quién empieza?": "Cine începe?",
+	"Empiezas tú": "Începi tu",
+	"Turno de {quien}": "Tura lui {quien}",
+	"Primer jugador": "Primul jucător",
+	"Tiene el turno": "Este la rând",
+	"Ruleta al sortear quién empieza": "Ruletă la tragerea la sorți a celui care începe"
 }

@@ -11,7 +11,7 @@ import { useMesa } from "@/stores/mesa-store";
 import { useRed } from "@/stores/red-store";
 import { useUi } from "@/stores/ui-store";
 import { type Origen, origenDe, useVivo } from "@/stores/vivo-store";
-import { conProgreso, suscribir, suscrito } from "../conexion";
+import { conProgreso, conRuleta, esperarSorteo, suscribir, suscrito } from "../conexion";
 import { marcarArrastradas } from "../flip";
 
 /**
@@ -56,7 +56,10 @@ function alAviso(a: AvisoRed) {
 			break;
 		case "empezada":
 			r.poner({ empezada: true, conexion: "conectada", intento: 0 });
-			if (!suscrito()) void suscribir();
+			if (!suscrito()) {
+				esperarSorteo();
+				void suscribir();
+			}
 			break;
 		case "reconectando":
 			r.poner({ conexion: "reconectando", intento: a.intento });
@@ -226,7 +229,9 @@ export async function volverARed(): Promise<boolean> {
 
 /** El anfitrión empieza con los de la sala; `invitados` son sus ids (`EnSala.id`) por asiento. */
 export async function empezarRed(config: ConfigMesa, invitados: number[]): Promise<boolean> {
-	const ok = await conProgreso(() => call("red_empezar", { config, invitados }));
+	const ok = await conRuleta(config, () =>
+		conProgreso(() => call("red_empezar", { config, invitados })),
+	);
 	if (ok) useRed.getState().poner({ empezada: true });
 	return ok;
 }

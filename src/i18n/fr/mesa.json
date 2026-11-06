@@ -1346,5 +1346,11 @@
 	"Fantasma {i}: {delta} venenos": "Fantôme {i} : {delta} marqueurs poison",
 	"Añadir otro fantasma": "Ajouter un autre fantôme",
 	"Quitar este fantasma": "Retirer ce fantôme",
-	"Rivales fantasma": "Adversaires fantômes"
+	"Rivales fantasma": "Adversaires fantômes",
+	"¿Quién empieza?": "Qui commence ?",
+	"Empiezas tú": "Vous commencez",
+	"Turno de {quien}": "Tour de {quien}",
+	"Primer jugador": "Premier joueur",
+	"Tiene el turno": "C'est son tour",
+	"Ruleta al sortear quién empieza": "Roue pour tirer au sort qui commence"
 }

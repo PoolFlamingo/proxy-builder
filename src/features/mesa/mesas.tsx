@@ -23,6 +23,7 @@ import { deckDelTablero } from "./privacidad";
 import { useDisposicion } from "./selector-disposicion";
 import { Tablero } from "./tablero";
 import { TableroMini } from "./tablero-mini";
+import { AroTurno } from "./turno";
 import { VidaJugador } from "./vida-jugador";
 
 /**
@@ -43,6 +44,7 @@ export function Mesas({ deckIds }: { deckIds: string[] }) {
 		return (
 			<div className="relative size-full">
 				<Tablero deckId={deckId} />
+				<AroTurno />
 				<Controles />
 			</div>
 		);
@@ -186,6 +188,7 @@ function VariosTableros({ deckId }: { deckId: string | null }) {
 							className="pointer-events-none absolute inset-0 z-[6600] rounded-md border-2"
 							style={{ borderColor: colorGrande }}
 						/>
+						<AroTurno />
 					</div>
 				)}
 				{tam.w > 0 &&

@@ -36,6 +36,7 @@ export function BarraAsientos() {
 	const viendo = useMesa(tableroDe);
 	const yo = useMesa((s) => s.yo);
 	const activo = useMesa((s) => s.general?.turno.activo ?? null);
+	const primero = useMesa((s) => s.general?.turno.primero ?? null);
 	const fantasma = useMesa((s) => s.general?.fantasma ?? null);
 	const otros = useMesa((s) => s.general?.fantasmasExtra ?? NINGUNA);
 	const verFantasma = useUi((s) => s.mesa.fantasma);
@@ -118,7 +119,24 @@ export function BarraAsientos() {
 										<span className="truncate font-medium">
 											{id === yo && enRed ? t("{nombre} (tú)", { nombre: j.nombre }) : j.nombre}
 										</span>
+										{/* Debajo del nombre, para no comerle sitio en esta barra tan estrecha. */}
 										<span className="flex items-center gap-0.5 text-white/70 tabular-nums">
+											{activo === id && (
+												<Icono
+													icon="lucide:play"
+													role="img"
+													aria-label={t("Tiene el turno")}
+													className="size-3 shrink-0 text-primary"
+												/>
+											)}
+											{asientos.length > 1 && primero === id && (
+												<Icono
+													icon="lucide:flag"
+													role="img"
+													aria-label={t("Primer jugador")}
+													className="mr-0.5 size-3 shrink-0"
+												/>
+											)}
 											<Icono icon="game-icons:hearts" className="size-3" />
 											{vidaDe(j, equipos)}
 											{atacantes > 0 && (

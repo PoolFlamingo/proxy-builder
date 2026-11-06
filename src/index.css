@@ -538,6 +538,21 @@
     translate: 12px 0;
   }
 }
+/* El aviso de «turno de…» de la mesa (`features/mesa/turno.tsx`): entra, se lee y se va. */
+@keyframes aviso-turno {
+  0% {
+    opacity: 0;
+    scale: 0.92;
+  }
+  12%,
+  78% {
+    opacity: 1;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
 .entra {
   animation: entra 220ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }

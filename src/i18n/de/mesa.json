@@ -1327,5 +1327,11 @@
 	"Fantasma {i}: {delta} venenos": "Geist {i}: {delta} Giftmarken",
 	"Añadir otro fantasma": "Weiteren Geist hinzufügen",
 	"Quitar este fantasma": "Diesen Geist entfernen",
-	"Rivales fantasma": "Geistergegner"
+	"Rivales fantasma": "Geistergegner",
+	"¿Quién empieza?": "Wer beginnt?",
+	"Empiezas tú": "Du beginnst",
+	"Turno de {quien}": "{quien} ist am Zug",
+	"Primer jugador": "Startspieler",
+	"Tiene el turno": "Ist am Zug",
+	"Ruleta al sortear quién empieza": "Glücksrad beim Auslosen des Startspielers"
 }

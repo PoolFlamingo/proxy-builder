@@ -38,8 +38,10 @@ import { escucharVuelta, refrescarRed } from "./red/conexion-red";
 import { AvisoConexion, SelectorTablero } from "./red/estado-red";
 import { PanelLateral } from "./registro-panel";
 import { BarraRepeticion, salirDeLaRepeticion } from "./repeticion";
+import { Ruleta } from "./ruleta/ruleta";
 import { ReaccionPendiente } from "./sparring/reaccion";
 import { VistaFantasma } from "./sparring/vista-fantasma";
+import { AvisoTurno } from "./turno";
 import { VistaGrande } from "./vista-grande";
 
 /**
@@ -79,8 +81,12 @@ export function MesaScreen() {
 	}, []);
 
 	if (!comprobado) return null;
-	if (!activa) return <EntradaMesa />;
-	return <Mesa deckIds={deckIds} />;
+	return (
+		<>
+			{activa ? <Mesa deckIds={deckIds} /> : <EntradaMesa />}
+			<Ruleta />
+		</>
+	);
 }
 
 function Mesa({ deckIds }: { deckIds: string[] }) {
@@ -226,6 +232,7 @@ function Mesa({ deckIds }: { deckIds: string[] }) {
 			<VistaFantasma />
 			{!repitiendo && (
 				<>
+					<AvisoTurno />
 					<Mulligan />
 					<DanoDeQuien />
 					<Muertes />

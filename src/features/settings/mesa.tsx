@@ -47,6 +47,11 @@ export function AjustesMesa({ fija = false }: { fija?: boolean }) {
 				valor={m.seguirTurnoLocal}
 				onChange={(v) => set({ seguirTurnoLocal: v })}
 			/>
+			<FilaInterruptor
+				etiqueta={t("Ruleta al sortear quién empieza")}
+				valor={m.ruletaEmpieza}
+				onChange={(v) => set({ ruletaEmpieza: v })}
+			/>
 			<Fila etiqueta={t("Sparring al empezar en solitario")}>
 				<Selector<Intensidad>
 					valor={m.sparring}

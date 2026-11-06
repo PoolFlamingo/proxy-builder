@@ -1370,5 +1370,11 @@
 	"Fantasma {i}: {delta} venenos": "Привид {i}: {delta} отрути",
 	"Añadir otro fantasma": "Додати ще одного привида",
 	"Quitar este fantasma": "Прибрати цього привида",
-	"Rivales fantasma": "Суперники-привиди"
+	"Rivales fantasma": "Суперники-привиди",
+	"¿Quién empieza?": "Хто починає?",
+	"Empiezas tú": "Ви починаєте",
+	"Turno de {quien}": "Хід: {quien}",
+	"Primer jugador": "Перший гравець",
+	"Tiene el turno": "Зараз ходить",
+	"Ruleta al sortear quién empieza": "Рулетка під час жеребкування першого ходу"
 }

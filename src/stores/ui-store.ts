@@ -78,6 +78,8 @@ export type PreferenciasMesa = {
 	movimientoEnVivo: boolean;
 	/** En una partida local de varios, pasar a mirar al jugador del turno. */
 	seguirTurnoLocal: boolean;
+	/** Con varios jugadores, la ruleta que enseña a quién le ha tocado empezar. */
+	ruletaEmpieza: boolean;
 	/** Los contadores de jugador que se enseñan junto a la vida. */
 	trackers: string[];
 	/** Cómo se reparten los tableros, recordado por número de jugadores. */
@@ -107,6 +109,7 @@ export const MESA_DE_FABRICA: PreferenciasMesa = {
 	rivalesFantasma: 1,
 	movimientoEnVivo: true,
 	seguirTurnoLocal: true,
+	ruletaEmpieza: true,
 	trackers: [],
 	disposicion: {},
 };

@@ -271,9 +271,18 @@ export const TableroMini = memo(function TableroMini({
 					)}
 					<span
 						className="absolute inset-x-0 top-0 flex items-center gap-1.5 px-1.5 text-[11px] leading-none"
-						style={{ height: CABECERA, background: `${color}66` }}
+						style={{ height: CABECERA, background: `${color}${d.activo ? "dd" : "66"}` }}
 					>
 						{eliminado && <Icono icon="game-icons:death-skull" className="size-3 shrink-0" />}
+						{d.activo && (
+							<span
+								role="img"
+								aria-label={t("Tiene el turno")}
+								className="flex shrink-0 items-center rounded-sm bg-primary p-0.5 text-primary-foreground"
+							>
+								<Icono icon="lucide:play" className="size-2.5" />
+							</span>
+						)}
 						<span className="min-w-0 flex-1 truncate font-medium">{j.nombre}</span>
 						<InsigniaSenal jugador={jugador} />
 						{enRed && <Latencia id={jugador} />}

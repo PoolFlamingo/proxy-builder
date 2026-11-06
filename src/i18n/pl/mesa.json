@@ -1365,5 +1365,11 @@
 	"Fantasma {i}: {delta} venenos": "Duch {i}: {delta} trucizny",
 	"Añadir otro fantasma": "Dodaj kolejnego ducha",
 	"Quitar este fantasma": "Usuń tego ducha",
-	"Rivales fantasma": "Duchy-przeciwnicy"
+	"Rivales fantasma": "Duchy-przeciwnicy",
+	"¿Quién empieza?": "Kto zaczyna?",
+	"Empiezas tú": "Zaczynasz",
+	"Turno de {quien}": "Tura: {quien}",
+	"Primer jugador": "Pierwszy gracz",
+	"Tiene el turno": "Ma turę",
+	"Ruleta al sortear quién empieza": "Koło przy losowaniu, kto zaczyna"
 }

@@ -1327,5 +1327,11 @@
 	"Fantasma {i}: {delta} venenos": "Ghost {i}: {delta} poison",
 	"Añadir otro fantasma": "Add another ghost",
 	"Quitar este fantasma": "Remove this ghost",
-	"Rivales fantasma": "Ghost opponents"
+	"Rivales fantasma": "Ghost opponents",
+	"¿Quién empieza?": "Who goes first?",
+	"Empiezas tú": "You go first",
+	"Turno de {quien}": "{quien}'s turn",
+	"Primer jugador": "First player",
+	"Tiene el turno": "Has the turn",
+	"Ruleta al sortear quién empieza": "Wheel when drawing who goes first"
 }

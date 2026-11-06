@@ -1272,5 +1272,11 @@
 	"Fantasma {i}: {delta} venenos": "ゴースト {i}：毒 {delta}",
 	"Añadir otro fantasma": "ゴーストをもう1体追加",
 	"Quitar este fantasma": "このゴーストを削除",
-	"Rivales fantasma": "ゴーストの対戦相手"
+	"Rivales fantasma": "ゴーストの対戦相手",
+	"¿Quién empieza?": "先攻は誰？",
+	"Empiezas tú": "あなたが先攻です",
+	"Turno de {quien}": "{quien}のターン",
+	"Primer jugador": "先攻プレイヤー",
+	"Tiene el turno": "ターン中",
+	"Ruleta al sortear quién empieza": "先攻を決めるときのルーレット"
 }

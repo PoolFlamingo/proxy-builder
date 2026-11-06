@@ -27,8 +27,11 @@ const ESTILO = "h-7 gap-1 px-2 text-xs text-white hover:bg-white/10 hover:text-w
  * al jugador del turno. No cambia nada de la partida: es solo qué jugador
  * mira la pantalla (el motor ya deja hacer con lo propio cuando se quiera).
  */
-export function BotonResponder() {
+export function BotonResponder({ compacto = false }: { compacto?: boolean }) {
 	const { t } = useLang();
+	// De pie, en el móvil, la frase entera no cabe en la barra: solo el icono, y su nombre al mantenerlo.
+	const propsDe = (texto: string) => (compacto ? { "aria-label": texto } : {});
+	const texto = (frase: string) => (compacto ? null : frase);
 	const enRed = useRed((s) => s.papel !== null);
 	const asientos = useMesa(useShallow((s) => s.asientos));
 	const general = useMesa((s) => s.general);
@@ -52,9 +55,10 @@ export function BotonResponder() {
 						variant="secondary"
 						className="h-7 gap-1 px-2 text-xs"
 						onClick={() => void volverAlTurno()}
+						{...propsDe(t("Volver a {nombre}", { nombre: jugadores[activo]?.nombre ?? "" }))}
 					>
 						<Icono icon="lucide:corner-up-left" className="size-3.5" />
-						{t("Volver a {nombre}", { nombre: jugadores[activo]?.nombre ?? "" })}
+						{texto(t("Volver a {nombre}", { nombre: jugadores[activo]?.nombre ?? "" }))}
 					</Button>
 				</WithTooltip>
 			);
@@ -64,9 +68,16 @@ export function BotonResponder() {
 			<DropdownMenu>
 				<WithTooltip content={t("Cambiar de jugador que responde (Mayús+R)")}>
 					<DropdownMenuTrigger asChild>
-						<Button size="sm" variant="secondary" className="h-7 gap-1 px-2 text-xs">
+						<Button
+							size="sm"
+							variant="secondary"
+							className="h-7 gap-1 px-2 text-xs"
+							{...propsDe(
+								t("Respondiendo como {nombre}", { nombre: jugadores[viendo]?.nombre ?? "" }),
+							)}
+						>
 							<Icono icon="lucide:reply" className="size-3.5" />
-							{t("Respondiendo como {nombre}", { nombre: jugadores[viendo]?.nombre ?? "" })}
+							{texto(t("Respondiendo como {nombre}", { nombre: jugadores[viendo]?.nombre ?? "" }))}
 						</Button>
 					</DropdownMenuTrigger>
 				</WithTooltip>
@@ -94,9 +105,10 @@ export function BotonResponder() {
 					variant="ghost"
 					className={ESTILO}
 					onClick={() => void responderComo(primero)}
+					{...propsDe(t("Responder como {nombre}", { nombre: jugadores[primero]?.nombre ?? "" }))}
 				>
 					<Icono icon="lucide:reply" className="size-3.5" />
-					{t("Responder como {nombre}", { nombre: jugadores[primero]?.nombre ?? "" })}
+					{texto(t("Responder como {nombre}", { nombre: jugadores[primero]?.nombre ?? "" }))}
 				</Button>
 			</WithTooltip>
 		);
@@ -105,9 +117,9 @@ export function BotonResponder() {
 		<DropdownMenu>
 			<WithTooltip content={t("Responder desde la mesa de otro jugador (Mayús+R)")}>
 				<DropdownMenuTrigger asChild>
-					<Button size="sm" variant="ghost" className={ESTILO}>
+					<Button size="sm" variant="ghost" className={ESTILO} {...propsDe(t("Responder"))}>
 						<Icono icon="lucide:reply" className="size-3.5" />
-						{t("Responder")}
+						{texto(t("Responder"))}
 					</Button>
 				</DropdownMenuTrigger>
 			</WithTooltip>

@@ -1327,5 +1327,11 @@
 	"Fantasma {i}: {delta} venenos": "Spook {i}: {delta} gif",
 	"Añadir otro fantasma": "Nog een spook toevoegen",
 	"Quitar este fantasma": "Dit spook verwijderen",
-	"Rivales fantasma": "Spooktegenstanders"
+	"Rivales fantasma": "Spooktegenstanders",
+	"¿Quién empieza?": "Wie begint?",
+	"Empiezas tú": "Jij begint",
+	"Turno de {quien}": "Beurt van {quien}",
+	"Primer jugador": "Eerste speler",
+	"Tiene el turno": "Is aan de beurt",
+	"Ruleta al sortear quién empieza": "Rad bij het loten van wie begint"
 }

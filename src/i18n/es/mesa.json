@@ -1270,5 +1270,11 @@
 	"Fantasma {i}: {delta} venenos": "Fantasma {i}: {delta} venenos",
 	"Añadir otro fantasma": "Añadir otro fantasma",
 	"Quitar este fantasma": "Quitar este fantasma",
-	"Rivales fantasma": "Rivales fantasma"
+	"Rivales fantasma": "Rivales fantasma",
+	"¿Quién empieza?": "¿Quién empieza?",
+	"Empiezas tú": "Empiezas tú",
+	"Turno de {quien}": "Turno de {quien}",
+	"Primer jugador": "Primer jugador",
+	"Tiene el turno": "Tiene el turno",
+	"Ruleta al sortear quién empieza": "Ruleta al sortear quién empieza"
 }

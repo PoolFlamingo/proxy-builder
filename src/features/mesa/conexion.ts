@@ -2,6 +2,7 @@ import { Channel } from "@tauri-apps/api/core";
 import { toast } from "sonner";
 import type { ConfigMesa } from "@/bindings/ConfigMesa";
 import type { MensajeMesa } from "@/bindings/MensajeMesa";
+import type { VistaMesa } from "@/bindings/VistaMesa";
 import { paraTraducir, traduccionSuelta } from "@/components/language-provider";
 import { mensajeDeError } from "@/lib/errores";
 import { call } from "@/lib/ipc";
@@ -16,6 +17,8 @@ import { useDados } from "./dados/cola";
 import { usePantalla } from "./pantalla";
 import { precargar } from "./precarga";
 import { reaccionarAEvento, reaccionarEnRepeticion } from "./reaccion-eventos";
+import type { Sector } from "./ruleta/cuentas";
+import { cerrar as cerrarRuleta, girar, parar, tocaRuleta, useRuleta } from "./ruleta/estado";
 
 /**
  * **La pantalla y la partida de Rust.** Se suscribe por un canal
@@ -38,18 +41,66 @@ export async function pedirVista() {
  */
 let enEspera: MensajeMesa[] | null = null;
 
+/**
+ * El invitado se entera de que la partida empieza por un aviso, sin haber lanzado
+ * nada: su ruleta sale cuando llega la vista. Se apunta aquí para no confundir esa
+ * primera vista con la de retomar una partida guardada.
+ */
+let empiezaEnRed = false;
+
+export function esperarSorteo() {
+	empiezaEnRed = true;
+}
+
+const sectoresDe = (v: VistaMesa): Sector[] =>
+	v.jugadores.map((j) => ({ id: j.id, nombre: j.nombre, color: j.color }));
+
+const esMio = (v: VistaMesa) => {
+	const papel = useRed.getState().papel;
+	return papel !== null && papel !== "espectador" && v.yo === v.general.turno.primero;
+};
+
+/** ¿Lo ha sorteado el motor? Si se eligió a mano o empieza quien perdió, no hay nada que sortear. */
+async function seSorteo(): Promise<boolean> {
+	try {
+		return !(await call("mesa_encuentro")).empieza;
+	} catch {
+		return true; // quien solo mira no tiene encuentro
+	}
+}
+
+/** Enseña la ruleta de la primera vista, si toca. Se cumple cuando ya se ha visto. */
+async function sorteoDeLaPrimeraVista(v: VistaMesa): Promise<void> {
+	const girando = useRuleta.getState().giro !== null;
+	const enRed = empiezaEnRed;
+	empiezaEnRed = false;
+	if (!tocaRuleta(v) || (!girando && !(enRed && (await seSorteo())))) {
+		cerrarRuleta();
+		return;
+	}
+	await parar(v.general.turno.primero, sectoresDe(v), esMio(v));
+}
+
+/** «Otra partida» o la siguiente de un encuentro: no carga nada, pero también se sortea. */
+async function sorteoDeOtraPartida(v: VistaMesa) {
+	if (!tocaRuleta(v) || !(await seSorteo())) return;
+	await parar(v.general.turno.primero, sectoresDe(v), esMio(v));
+	cerrarRuleta();
+}
+
 function alMensaje(m: MensajeMesa) {
 	if (enEspera) {
 		enEspera.push(m);
 		return;
 	}
-	// La primera vista (abrir la mesa): antes de enseñarla, sus imágenes.
+	// La primera vista (abrir la mesa): antes de enseñarla, sus imágenes y quién empieza.
 	if (m.tipo === "vista" && !useMesa.getState().activa) {
 		enEspera = [];
-		void precargar(m.vista).finally(() => {
+		void Promise.all([precargar(m.vista), sorteoDeLaPrimeraVista(m.vista)]).finally(() => {
 			const pendientes = enEspera ?? [];
 			enEspera = null;
 			aplicar(m);
+			cerrarRuleta();
 			for (const x of pendientes) alMensaje(x);
 		});
 		return;
@@ -64,6 +115,7 @@ function aplicar(m: MensajeMesa) {
 			const antes = s.registro;
 			s.recibirVista(m.vista, m.registro);
 			reaccionarEnRepeticion(antes);
+			if (m.nueva && !useRepeticion.getState().activa) void sorteoDeOtraPartida(m.vista);
 			break;
 		}
 		case "parche":
@@ -145,8 +197,24 @@ export async function conProgreso(
 	}
 }
 
+/**
+ * Prepara una partida nueva: si quién empieza se va a sortear, la ruleta gira
+ * mientras tanto (el orden de los asientos es el de `config`). Si algo falla, se quita.
+ */
+export async function conRuleta(
+	config: ConfigMesa,
+	preparar: () => Promise<boolean>,
+): Promise<boolean> {
+	if (config.primero == null) {
+		girar(config.jugadores.map((j, id) => ({ id, nombre: j.nombre, color: j.color })));
+	}
+	const ok = await preparar();
+	if (!ok) cerrarRuleta();
+	return ok;
+}
+
 export function empezar(config: ConfigMesa): Promise<boolean> {
-	return conProgreso(() => call("mesa_empezar", { config }));
+	return conRuleta(config, () => conProgreso(() => call("mesa_empezar", { config })));
 }
 
 export function retomar(): Promise<boolean> {

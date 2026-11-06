@@ -1365,5 +1365,11 @@
 	"Fantasma {i}: {delta} venenos": "Призрак {i}: {delta} яда",
 	"Añadir otro fantasma": "Добавить ещё одного призрака",
 	"Quitar este fantasma": "Убрать этого призрака",
-	"Rivales fantasma": "Соперники-призраки"
+	"Rivales fantasma": "Соперники-призраки",
+	"¿Quién empieza?": "Кто начинает?",
+	"Empiezas tú": "Вы начинаете",
+	"Turno de {quien}": "Ход: {quien}",
+	"Primer jugador": "Первый игрок",
+	"Tiene el turno": "Сейчас ходит",
+	"Ruleta al sortear quién empieza": "Рулетка при жеребьёвке первого хода"
 }

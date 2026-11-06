@@ -1342,5 +1342,11 @@
 	"Fantasma {i}: {delta} venenos": "Fantasma {i}: {delta} de veneno",
 	"Añadir otro fantasma": "Adicionar outro fantasma",
 	"Quitar este fantasma": "Remover este fantasma",
-	"Rivales fantasma": "Adversários fantasma"
+	"Rivales fantasma": "Adversários fantasma",
+	"¿Quién empieza?": "Quem começa?",
+	"Empiezas tú": "Você começa",
+	"Turno de {quien}": "Turno de {quien}",
+	"Primer jugador": "Primeiro jogador",
+	"Tiene el turno": "Está no turno",
+	"Ruleta al sortear quién empieza": "Roleta ao sortear quem começa"
 }

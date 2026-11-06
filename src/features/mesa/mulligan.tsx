@@ -55,6 +55,9 @@ export function Mulligan() {
 	const primero = useMesa((s) =>
 		s.general ? (s.jugadores[s.general.turno.primero]?.nombre ?? null) : null,
 	);
+	const colorPrimero = useMesa((s) =>
+		s.general ? s.jugadores[s.general.turno.primero]?.color : undefined,
+	);
 	const encuentro = useEncuentro();
 	const movil = useMesaMovil();
 	const { horizontal } = useFormato();
@@ -94,12 +97,24 @@ export function Mulligan() {
 				</h2>
 				<p className={cn("text-xs text-white/70", enFila && "line-clamp-1")}>{t(REGLAS[modo])}</p>
 				{variosJugadores && primero && (
-					<p className="mt-1 text-sm font-semibold text-primary">
-						{encuentro?.empieza?.porque === "perdio"
-							? t("Empieza {quien}, que perdió la partida anterior", { quien: primero })
-							: encuentro?.empieza?.porque === "elegido"
-								? t("Empieza {quien}", { quien: primero })
-								: t("Sorteado al azar: empieza {quien}", { quien: primero })}
+					<p
+						className={cn(
+							"mx-auto mt-1 flex w-fit max-w-full items-center gap-1.5 rounded-2xl bg-primary px-3 font-semibold text-primary-foreground shadow-lg",
+							enFila ? "py-0.5 text-xs" : "py-1 text-sm",
+						)}
+					>
+						<span
+							className="size-2.5 shrink-0 rounded-full ring-1 ring-white/70"
+							style={{ background: colorPrimero }}
+						/>
+						<Icono icon="lucide:flag" className="size-3.5 shrink-0" />
+						<span className={cn("min-w-0", enFila && "truncate")}>
+							{encuentro?.empieza?.porque === "perdio"
+								? t("Empieza {quien}, que perdió la partida anterior", { quien: primero })
+								: encuentro?.empieza?.porque === "elegido"
+									? t("Empieza {quien}", { quien: primero })
+									: t("Sorteado al azar: empieza {quien}", { quien: primero })}
+						</span>
 					</p>
 				)}
 				{mulligans > 0 && (
