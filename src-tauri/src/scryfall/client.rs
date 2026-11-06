@@ -261,6 +261,10 @@ impl CardApi for Scryfall {
     }
 
     async fn card(&self, id: &str) -> AppResult<Option<ScryCard>> {
+        // El id puede venir de un deck recibido: que no se convierta en otra ruta.
+        if !crate::mesa::imagenes::es_id_scryfall(id) {
+            return Ok(None);
+        }
         let url = format!("{API}/cards/{id}");
         self.json(|| self.http.get(&url)).await
     }

@@ -350,42 +350,190 @@ fn a_svg(c: &Crudo) -> DatosIcono {
     }
 }
 
-/// ¿Se puede meter este SVG en la pantalla? Nada que ejecute ni que cargue de fuera.
-fn seguro(body: &str) -> bool {
-    let b = body.to_ascii_lowercase();
-    if b.contains("<script")
-        || b.contains("foreignobject")
-        || b.contains("javascript:")
-        || b.contains("<image")
-        || b.contains("<iframe")
-        || b.contains("<!entity")
+/// Los elementos que usan de verdad los iconos de Iconify (`seguro`). Sacados de
+/// la colección entera: ninguno ejecuta nada ni carga nada de fuera.
+const ELEMENTOS: &[&str] = &[
+    "animate",
+    "animateMotion",
+    "animateTransform",
+    "circle",
+    "clipPath",
+    "defs",
+    "ellipse",
+    "feBlend",
+    "feColorMatrix",
+    "feComponentTransfer",
+    "feComposite",
+    "feDropShadow",
+    "feFlood",
+    "feFuncA",
+    "feGaussianBlur",
+    "feMerge",
+    "feMergeNode",
+    "feMorphology",
+    "feOffset",
+    "filter",
+    "g",
+    "line",
+    "linearGradient",
+    "marker",
+    "mask",
+    "path",
+    "pattern",
+    "polygon",
+    "polyline",
+    "radialGradient",
+    "rect",
+    "set",
+    "stop",
+    "symbol",
+    "use",
+];
+
+/// Los atributos que usan esos iconos (los `xlink:` se miran por su nombre local).
+const ATRIBUTOS: &[&str] = &[
+    "accumulate",
+    "additive",
+    "attributeName",
+    "attributeType",
+    "begin",
+    "calcMode",
+    "class",
+    "clip-path",
+    "clip-rule",
+    "clipPathUnits",
+    "color",
+    "color-interpolation",
+    "color-interpolation-filters",
+    "cx",
+    "cy",
+    "d",
+    "display",
+    "dur",
+    "dx",
+    "dy",
+    "fill",
+    "fill-opacity",
+    "fill-rule",
+    "filter",
+    "filterUnits",
+    "flood-color",
+    "flood-opacity",
+    "from",
+    "fx",
+    "fy",
+    "gradientTransform",
+    "gradientUnits",
+    "height",
+    "href",
+    "id",
+    "in",
+    "in2",
+    "k2",
+    "k3",
+    "keySplines",
+    "keyTimes",
+    "marker-mid",
+    "markerHeight",
+    "markerWidth",
+    "mask",
+    "mask-type",
+    "maskUnits",
+    "mode",
+    "offset",
+    "opacity",
+    "operator",
+    "paint-order",
+    "path",
+    "patternTransform",
+    "patternUnits",
+    "points",
+    "r",
+    "radius",
+    "repeatCount",
+    "restart",
+    "result",
+    "rx",
+    "ry",
+    "slope",
+    "spreadMethod",
+    "stdDeviation",
+    "stop-color",
+    "stop-opacity",
+    "stroke",
+    "stroke-dasharray",
+    "stroke-dashoffset",
+    "stroke-linecap",
+    "stroke-linejoin",
+    "stroke-miterlimit",
+    "stroke-opacity",
+    "stroke-width",
+    "style",
+    "to",
+    "transform",
+    "transform-origin",
+    "type",
+    "values",
+    "vector-effect",
+    "viewBox",
+    "width",
+    "x",
+    "x1",
+    "x2",
+    "xmlns",
+    "y",
+    "y1",
+    "y2",
+];
+
+/// ¿Es seguro el valor de este atributo? Solo referencias dentro del propio SVG.
+fn valor_seguro(nombre: &str, valor: &str) -> bool {
+    let v = valor.to_ascii_lowercase();
+    if [
+        "javascript:",
+        "data:",
+        "vbscript:",
+        "expression(",
+        "@import",
+    ]
+    .iter()
+    .any(|p| v.contains(p))
     {
         return false;
     }
-    // Manejadores `on…=` en cualquier etiqueta.
-    let bytes = b.as_bytes();
-    for (i, w) in bytes.windows(2).enumerate() {
-        if w == b"on" && i > 0 && bytes[i - 1].is_ascii_whitespace() {
-            let resto = &b[i + 2..];
-            let letras = resto
-                .bytes()
-                .take_while(|c| c.is_ascii_alphabetic())
-                .count();
-            if letras > 0 && resto[letras..].trim_start().starts_with('=') {
-                return false;
-            }
-        }
+    // Una animación no puede cambiar un enlace ni un manejador.
+    if nombre == "attributeName" && (v.contains("href") || v.starts_with("on")) {
+        return false;
     }
-    // Enlaces solo dentro del propio SVG (`#id`).
-    for clave in ["href=\"", "href='", "url("] {
-        for (i, _) in b.match_indices(clave) {
-            let resto = b[i + clave.len()..].trim_start_matches(['\'', '"', ' ']);
-            if !resto.starts_with('#') {
-                return false;
-            }
-        }
+    if nombre == "href" && !v.trim_start().starts_with('#') {
+        return false;
     }
-    true
+    v.match_indices("url(").all(|(i, _)| {
+        v[i + 4..]
+            .trim_start_matches(['\'', '"', ' '])
+            .starts_with('#')
+    })
+}
+
+/// ¿Se puede meter este SVG en la pantalla? 🛑 Por lista de permitidos, no de
+/// prohibidos: lo que no se conoce no entra. Si no es XML bien formado (o trae una
+/// DTD, que `roxmltree` rechaza), tampoco.
+fn seguro(body: &str) -> bool {
+    let envuelto = format!(
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">{body}</svg>"
+    );
+    let Ok(doc) = roxmltree::Document::parse(&envuelto) else {
+        return false;
+    };
+    doc.root_element().descendants().skip(1).all(|n| {
+        if n.is_pi() {
+            return false;
+        }
+        !n.is_element()
+            || (ELEMENTOS.contains(&n.tag_name().name())
+                && n.attributes()
+                    .all(|a| ATRIBUTOS.contains(&a.name()) && valor_seguro(a.name(), a.value())))
+    })
 }
 
 /// Los datos de estos iconos: de memoria, de los elegidos o de la API.
@@ -475,6 +623,62 @@ mod tests {
         assert!(!seguro("<path style=\"fill:url(https://x)\"/>"));
         // «on» dentro de un nombre no es un manejador.
         assert!(seguro("<polygon points=\"0 0 1 1\"/>"));
+        // Lo que no está en la lista no entra, aunque nadie lo haya pensado.
+        assert!(!seguro("<style>*{display:none}</style>"));
+        assert!(!seguro("<a href=\"#x\"><path d=\"M0 0\"/></a>"));
+        assert!(!seguro("<text>hola</text>"));
+        assert!(!seguro("<path data-x=\"1\" d=\"M0 0\"/>"));
+        assert!(!seguro("<?xml-stylesheet href=\"x\"?><path d=\"M0 0\"/>"));
+        // Las maneras conocidas de colar un enlace o un script.
+        assert!(!seguro("<set attributeName=\"href\" to=\"#a\"/>"));
+        assert!(!seguro("<animate attributeName=\"onclick\" values=\"x\"/>"));
+        assert!(!seguro("<use xlink:href=\"https://x/y.svg#a\"/>"));
+        assert!(!seguro("<path style=\"fill:url( 'https://x' )\"/>"));
+        assert!(!seguro("<path fill=\"url(data:image/png;base64,xx)\"/>"));
+        // XML roto o con entidades, fuera.
+        assert!(!seguro("<path"));
+        assert!(!seguro(
+            "<!DOCTYPE x [<!ENTITY a \"b\">]><path d=\"M0 0\"/>"
+        ));
+        // Lo normal de los iconos pasa.
+        assert!(seguro("<use href=\"#a\"/><use xlink:href=\"#b\"/>"));
+        assert!(seguro("<path fill=\"url(&quot;#a&quot;)\" d=\"M0 0\"/>"));
+        assert!(seguro(
+            "<animate attributeName=\"d\" dur=\"1s\" values=\"M0 0;M1 1\"/>"
+        ));
+    }
+
+    /// Toda la colección de Iconify pasa la lista de permitidos. A mano, con
+    /// `pnpm install` hecho: `cargo test --lib -- --ignored --nocapture toda_la_coleccion`.
+    #[test]
+    #[ignore]
+    fn toda_la_coleccion_de_iconify_pasa() {
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../node_modules/@iconify/json/json");
+        let (mut total, mut malos) = (0usize, Vec::new());
+        for f in std::fs::read_dir(dir).unwrap() {
+            let f = f.unwrap().path();
+            if f.extension().is_none_or(|e| e != "json") {
+                continue;
+            }
+            let v: serde_json::Value = serde_json::from_slice(&std::fs::read(&f).unwrap()).unwrap();
+            let Some(iconos) = v["icons"].as_object() else {
+                continue;
+            };
+            for (nombre, i) in iconos {
+                total += 1;
+                if !seguro(i["body"].as_str().unwrap_or_default()) {
+                    malos.push(format!("{:?}:{nombre}", f.file_stem().unwrap()));
+                }
+            }
+        }
+        eprintln!(
+            "{total} iconos, {} rechazados: {:?}",
+            malos.len(),
+            &malos[..malos.len().min(20)]
+        );
+        assert!(total > 100_000);
+        assert!(malos.len() * 1000 < total, "se rechazan demasiados");
     }
 
     #[test]
