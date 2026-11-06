@@ -381,6 +381,13 @@ le falta una cadena le sale la inglesa.
   comandante; solo marcadores: 🛑 el sparring no los lee, no traen más reacciones. En el móvil, con
   varios, fichas pequeñas (taparían el campo). Las insignias de carta con símbolo y texto, arriba y
   apiladas (`insignias.tsx`); en una carta de ≤ 96 px, solo el símbolo (consulta de contenedor).
+  **Quién empieza y de quién es el turno** (Pablo, 06/11/2026): lo sortea siempre el motor (`turno.primero`); la ruleta
+  (`features/mesa/ruleta/`) solo lo enseña, como los dados. Gira mientras se prepara la mesa (`conexion.ts::conRuleta`), frena
+  al llegar la primera vista, y esta espera a que se vea. El invitado no prepara nada: su ruleta sale con la vista (`esperarSorteo`,
+  aviso `Empezada`). «Otra partida» llega como `MensajeMesa::Vista { nueva: true }`; 🛑 no se deduce del registro (`vigentes()` quita el
+  evento de partida nueva y deshacer hasta el principio deja lo mismo). Sin sorteo (`VistaEncuentro.empieza`: elegido a mano o perdió) no
+  hay ruleta, ni en solitario, ni con `ruletaEmpieza` apagado (Ajustes > Mesa); por eso el anfitrión manda `DelHost::Encuentro` también en una partida suelta si se eligió. El turno: `turno.tsx`
+  (`ChipTurno` en la barra, `AvisoTurno` al avanzar, `AroTurno` en el tablero), bandera en `marcas-jugador.tsx`. «Tu turno» solo en red.
   **Notas** (Pablo, 29/10/2026): `Accion::{PonerNota,EditarNota,QuitarNota}`
   (catálogo v3, `tests/catalogo/v3.json`) y `NotaEnCarta`/`AtarNota` (v4: una
   nota atada a una carta del campo, `Nota.carta`; se suelta sola si la carta
