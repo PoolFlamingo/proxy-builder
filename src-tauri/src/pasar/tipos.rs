@@ -164,7 +164,7 @@ pub enum FaseReceptor {
     /// Enseñando el QR y el código, esperando a que llegue alguien.
     Esperando,
     /// Alguien de la red local quiere enviar y hay que aceptarlo (por el
-    /// código de 6 cifras).
+    /// código de 8 cifras).
     Peticion,
     /// Ya hay alguien conectado; falta que llegue la oferta.
     Conectado,
@@ -184,17 +184,24 @@ pub enum FaseReceptor {
 #[ts(export)]
 pub struct EstadoReceptor {
     pub fase: FaseReceptor,
-    /// El código en texto (`PBD1-…`) y su QR (un SVG).
+    /// El código del QR (`PBD1-…`): con las IP, para quien está delante.
     pub codigo: String,
     pub qr: String,
+    /// El mismo código sin las IP, solo con el relé: el que se enseña, se copia y
+    /// se manda por mensaje.
+    pub codigo_mensaje: String,
     /// Cuándo caduca el código (ms desde 1970).
     #[ts(type = "number")]
     pub caduca: i64,
     /// Se anuncia en la red local (los que están cerca lo ven).
     pub cerca: bool,
+    /// El código lleva un relé: vale desde cualquier sitio con internet. Mientras
+    /// es `false`, este equipo aún no ha llegado a internet; cuando llegue, el
+    /// código y el QR se ponen al día solos.
+    pub distancia: bool,
     pub remoto: Option<Remoto>,
-    /// El código de 6 cifras de este encuentro (los dos lo ven igual).
-    pub codigo6: Option<String>,
+    /// El código de 8 cifras de este encuentro (los dos lo ven igual).
+    pub cifras: Option<String>,
     pub oferta: Vec<DeckRevisado>,
     pub progreso: Option<Progreso>,
     pub resultados: Vec<Resultado>,
@@ -206,7 +213,7 @@ pub struct EstadoReceptor {
 #[ts(export)]
 pub enum FaseEmisor {
     Conectando,
-    /// Esperando a que el otro equipo acepte (por el código de 6 cifras).
+    /// Esperando a que el otro equipo acepte (por el código de 8 cifras).
     EsperandoAceptacion,
     /// Esperando a que el otro elija qué quiere.
     EsperandoRespuesta,
@@ -225,7 +232,7 @@ pub enum FaseEmisor {
 pub struct EstadoEmisor {
     pub fase: FaseEmisor,
     pub remoto: Option<Remoto>,
-    pub codigo6: Option<String>,
+    pub cifras: Option<String>,
     pub decks: Vec<DeckOfrecido>,
     pub progreso: Option<Progreso>,
     pub resultados: Vec<Resultado>,

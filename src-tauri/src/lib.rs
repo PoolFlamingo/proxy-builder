@@ -255,6 +255,7 @@ pub fn run() {
             commands::pasar::pasar_recibir_abrir,
             commands::pasar::pasar_recibir_estado,
             commands::pasar::pasar_recibir_cerrar,
+            commands::pasar::pasar_compartir_codigo,
             commands::pasar::pasar_peticion,
             commands::pasar::pasar_responder,
             commands::pasar::pasar_recibir_cancelar,

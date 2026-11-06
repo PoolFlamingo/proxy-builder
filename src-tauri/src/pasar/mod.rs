@@ -3,8 +3,8 @@
 //! sin cuenta y sin servidor.
 //!
 //! - `protocolo.rs`: el ALPN `proxy-builder/deck/1`, sus tramas y topes.
-//! - `encontrar.rs`: equipos cerca (mDNS), el código de 6 cifras, el código en
-//!   texto `PBD1-…` y su QR.
+//! - `encontrar.rs`: equipos cerca (mDNS, con su pase), el código de 8 cifras,
+//!   el código en texto `PBD1-…` y su QR.
 //! - `recibir.rs` / `enviar.rs`: los dos lados de un intercambio.
 //! - `imagenes.rs`: bajar las imágenes que faltan tras recibir «solo
 //!   originales».
@@ -21,6 +21,10 @@
 //! 🛑 Todo lo que llega del otro equipo es entrada no confiable: tramas con
 //! tope, oferta validada, paquete con tamaño y huella, y `package::import`,
 //! que no se fía de nada. Nada llega a la biblioteca a medias.
+//!
+//! Vale en cualquier sitio: con el código, dos equipos se encuentran por internet
+//! (también con datos móviles) y, si no consiguen hablarse directamente, los datos
+//! pasan por un relé, cifrados de punta a punta (el relé no puede leerlos).
 
 pub mod encontrar;
 pub mod enviar;
@@ -53,6 +57,8 @@ pub const CIERRE_NO_ESPERADO: u32 = 40;
 pub const CIERRE_CANCELADO: u32 = 41;
 /// Con qué código se cierra uno que se acaba bien.
 pub const CIERRE_FIN: u32 = 0;
+/// Con qué código corta quien recibe si el deck no le cabe en el disco.
+pub const CIERRE_SIN_ESPACIO: u32 = 42;
 
 /// Lo que necesita un intercambio de la app, detrás de un trait para poder
 /// probarlo sin Tauri (como `red::mesa::Mesa`).
@@ -67,6 +73,9 @@ pub trait Entorno: Clone + Send + Sync + 'static {
     /// El `MulticastLock` de la Wi-Fi (Android): sin él se tira el mDNS.
     /// Cada uso lo pide y lo suelta por su cuenta (`android::multicast` cuenta).
     fn multicast(&self, _uso: crate::android::UsoMulticast, _si: bool) {}
+    /// Que el móvil no apague la pantalla durante un intercambio: con la
+    /// pantalla apagada, Android acaba cortando la red de la app.
+    fn pantalla_encendida(&self, _si: bool) {}
     /// El nombre del equipo según el sistema, para quien no ha elegido uno.
     fn nombre_del_sistema(&self) -> Option<String> {
         None
@@ -118,6 +127,16 @@ impl<Rt: Runtime> Entorno for AppHandle<Rt> {
             }
         }
     }
+
+    fn pantalla_encendida(&self, si: bool) {
+        let cualquiera: &dyn std::any::Any = self;
+        if let Some(app) = cualquiera.downcast_ref::<AppHandle>() {
+            let uso = crate::android::UsoPantalla::Pasar;
+            if let Err(e) = crate::android::pantalla_encendida(app, uso, si) {
+                tracing::warn!(codigo = ?e.code, "no se pudo cambiar la pantalla encendida");
+            }
+        }
+    }
 }
 
 /// El nombre con el que este equipo se presenta a los demás: el que eligió la
@@ -142,11 +161,42 @@ pub struct Pasar {
     pub(crate) emisor: Mutex<Option<enviar::Emisor>>,
     pub(crate) busqueda: Mutex<Option<Busqueda>>,
     generacion: AtomicU64,
+    /// Sube cada vez que se pide abrir o cerrar «Recibir»: un `abrir` que aún
+    /// espera a tener relé sabe así que ya no lo quiere nadie.
+    pedido_recibir: AtomicU64,
 }
 
 impl Pasar {
     pub(crate) fn nueva_generacion(&self) -> u64 {
         self.generacion.fetch_add(1, Ordering::SeqCst) + 1
+    }
+
+    pub(crate) fn nuevo_pedido_recibir(&self) -> u64 {
+        self.pedido_recibir.fetch_add(1, Ordering::SeqCst) + 1
+    }
+
+    pub(crate) fn pedido_recibir(&self) -> u64 {
+        self.pedido_recibir.load(Ordering::SeqCst)
+    }
+}
+
+/// Lo que ocupan estos bytes mientras se reciben: el paquete en la caché y sus
+/// imágenes en el almacén, a la vez hasta que se borra el paquete.
+pub(crate) fn cabe_al_recibir(estado: &AppState, bytes: u64) -> bool {
+    crate::store::blobs::hay_espacio(&estado.paths.cache, bytes.saturating_mul(2))
+}
+
+/// Por qué se ha caído de verdad una conexión, si no ha sido porque alguien
+/// cancelase: `cortado` si se ha ido la red, `otro_sin_espacio` si al otro no le
+/// cabe. Sin esto, un corte de cobertura se vería como «Se ha cancelado».
+pub(crate) fn motivo_del_corte(conn: &Connection) -> Option<&'static str> {
+    use iroh::endpoint::ConnectionError as C;
+    match conn.close_reason()? {
+        C::TimedOut | C::Reset | C::TransportError(_) => Some("cortado"),
+        C::ApplicationClosed(c) if c.error_code == CIERRE_SIN_ESPACIO.into() => {
+            Some("otro_sin_espacio")
+        }
+        _ => None,
     }
 }
 
@@ -331,7 +381,7 @@ pub async fn atender<E: Entorno>(e: E, conn: Connection) {
 
 // ── Lo que hacen los comandos ───────────────────────────────────────────
 
-/// Acepta o rechaza al equipo que quiere enviar (el código de 6 cifras).
+/// Acepta o rechaza al equipo que quiere enviar (el código de 8 cifras).
 pub fn aceptar_peticion<E: Entorno>(e: &E, si: bool) {
     let tx = cerrojo(&e.estado().pasar.receptor)
         .as_mut()

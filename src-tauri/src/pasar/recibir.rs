@@ -1,9 +1,11 @@
 //! **Recibir un deck**: el lado de quien espera.
 //!
-//! «Recibir» abre un modo de espera de 5 minutos: un código `PBD1-…` con su
+//! «Recibir» abre un modo de espera de 15 minutos: un código `PBD1-…` con su
 //! QR (el secreto vale una sola vez) y, si hay mDNS, un anuncio en la red
-//! local. Entra **una** conexión a la vez, y solo si trae el secreto o si la
-//! persona acepta el código de 6 cifras. Después:
+//! local. El código vale desde cualquier sitio con internet; da tiempo a mandarlo
+//! por mensaje y a que la otra persona lo pegue. Entra **una** conexión a la vez,
+//! y solo si trae el secreto o si trae el pase del anuncio y la persona acepta
+//! el código de 8 cifras. Después:
 //!
 //! 1. llega la **oferta** (los decks, con su peso y si traen proxies), se
 //!    enseña con lo que ya hay aquí del mismo linaje y la persona elige por
@@ -29,16 +31,15 @@ use tokio::time::timeout;
 
 use super::encontrar::{self, Anuncio};
 use super::protocolo::{
-    apodo_limpio, escribir, leer, recibir_bytes, validar_oferta, AlEmisor, AlReceptor, MAX_PAQUETE,
-    VERSION,
+    apodo_limpio, escribir, leer, recibir_bytes, validar_oferta, AlEmisor, AlReceptor, VERSION,
 };
 use super::tipos::{
     Conflicto, Decision, DeckOfrecido, DeckRevisado, Eleccion, EstadoReceptor, EstadoResultado,
     FaseReceptor, MasReciente, Progreso, Remoto, Resolucion, Resultado,
 };
 use super::{
-    cerrojo, registrar, retirar, Entorno, Respuesta, Temporal, CIERRE_CANCELADO, CIERRE_FIN,
-    CIERRE_NO_ESPERADO,
+    cabe_al_recibir, cerrojo, motivo_del_corte, registrar, retirar, Entorno, Respuesta, Temporal,
+    CIERRE_CANCELADO, CIERRE_FIN, CIERRE_NO_ESPERADO, CIERRE_SIN_ESPACIO,
 };
 use crate::android::UsoMulticast;
 use crate::error::{AppError, AppResult, ErrorCode};
@@ -47,14 +48,15 @@ use crate::red::codigo::{mismo_secreto, secreto_nuevo, Codigo};
 use crate::store::{ahora_ms, decks, linaje};
 
 /// Cuánto dura el código (y el anuncio) si nadie llega.
-pub const CADUCIDAD: Duration = Duration::from_secs(5 * 60);
+pub const CADUCIDAD: Duration = Duration::from_secs(15 * 60);
 const ESPERA_HOLA: Duration = Duration::from_secs(10);
 const ESPERA_PETICION: Duration = Duration::from_secs(60);
 const ESPERA_OFERTA: Duration = Duration::from_secs(60);
 const ESPERA_DECISION: Duration = Duration::from_secs(15 * 60);
-/// Quien envía hace cada paquete justo antes de mandarlo, y comprimirlo puede
-/// llevar minutos en un móvil. Si se va, la conexión se cierra y se nota antes.
-const ESPERA_PAQUETE: Duration = Duration::from_secs(10 * 60);
+/// Quien envía hace cada paquete justo antes de mandarlo, y comprimir un deck
+/// grande puede llevar mucho en un móvil. Si se va, la conexión se cierra y se
+/// nota antes.
+const ESPERA_PAQUETE: Duration = Duration::from_secs(60 * 60);
 const ESPERA_FIN: Duration = Duration::from_secs(20);
 /// Cada cuánto se avisa de cómo va un paquete.
 const CADA_AVISO: Duration = Duration::from_millis(100);
@@ -65,6 +67,8 @@ pub(crate) struct Receptor {
     pub ep_id: EndpointId,
     /// El secreto del código, hasta que alguien lo usa.
     pub secreto: Option<String>,
+    /// El pase del anuncio de la red local, si se anuncia.
+    pub pase: Option<String>,
     pub estado: EstadoReceptor,
     /// Hay un intercambio en curso (no entra otro).
     pub ocupado: bool,
@@ -128,24 +132,26 @@ pub async fn abrir<E: Entorno>(
     con_rele: bool,
 ) -> AppResult<EstadoReceptor> {
     cerrar(e);
+    let st = e.estado();
+    let pedido = st.pasar.nuevo_pedido_recibir();
     // Con relé, el código lleva el suyo: se espera (un poco) a tenerlo.
     if con_rele {
         let _ = timeout(Duration::from_secs(5), ep.online()).await;
     }
-    let st = e.estado();
+    // Mientras se esperaba, han cerrado la pantalla (u otro «Recibir» ha
+    // tomado el relevo): nada de dejar uno abierto que no ve nadie.
+    if st.pasar.pedido_recibir() != pedido {
+        return Err(AppError::new(ErrorCode::Cancelled));
+    }
     // Lo que quedara de un intercambio anterior (si no hay otro en marcha).
     if cerrojo(&st.pasar.emisor).is_none() {
         let _ = std::fs::remove_dir_all(super::carpeta_temporal(st));
     }
-    let secreto = secreto_nuevo();
-    let texto = Codigo {
-        addr: encontrar::recortar(&ep.addr(), encontrar::MAX_IP),
-        secreto: secreto.clone(),
-    }
-    .a_texto_deck()?;
-    let qr = encontrar::qr_svg(&texto)?;
+    let secreto = secreto_nuevo()?;
+    let codigos = codigo_y_qr(&ep, &secreto, con_rele)?;
     e.multicast(UsoMulticast::Recibir, true);
-    let anuncio = match Anuncio::nuevo(&ep, apodo) {
+    let pase = secreto_nuevo()?;
+    let anuncio = match Anuncio::nuevo(&ep, apodo, &pase) {
         Ok(a) => Some(a),
         Err(err) => {
             tracing::info!(codigo = ?err.code, "pasar: sin anuncio en la red local");
@@ -155,12 +161,14 @@ pub async fn abrir<E: Entorno>(
     let gen = st.pasar.nueva_generacion();
     let estado = EstadoReceptor {
         fase: FaseReceptor::Esperando,
-        codigo: texto,
-        qr,
+        codigo: codigos.texto,
+        qr: codigos.qr,
+        codigo_mensaje: codigos.mensaje,
         caduca: ahora_ms() + CADUCIDAD.as_millis() as i64,
         cerca: anuncio.is_some(),
+        distancia: codigos.distancia,
         remoto: None,
-        codigo6: None,
+        cifras: None,
         oferta: Vec::new(),
         progreso: None,
         resultados: Vec::new(),
@@ -186,25 +194,91 @@ pub async fn abrir<E: Entorno>(
         })
         .abort_handle()
     };
+    let mut tareas = vec![caducidad];
+    // Aún sin internet (un móvil que acaba de coger cobertura): cuando llegue, el
+    // código se pone al día. El secreto es el mismo, así que el de antes sigue
+    // valiendo para quien ya lo tenga en la misma red.
+    if con_rele && !estado.distancia {
+        let (e, ep, secreto) = (e.clone(), ep.clone(), secreto.clone());
+        tareas.push(
+            tokio::spawn(async move {
+                ep.online().await;
+                match codigo_y_qr(&ep, &secreto, con_rele) {
+                    Ok(c) => {
+                        mutar(&e, gen, |r| {
+                            r.estado.codigo = c.texto;
+                            r.estado.qr = c.qr;
+                            r.estado.codigo_mensaje = c.mensaje;
+                            r.estado.distancia = c.distancia;
+                        });
+                    }
+                    Err(err) => {
+                        tracing::warn!(codigo = ?err.code, "pasar: el código no se pudo renovar");
+                    }
+                }
+            })
+            .abort_handle(),
+        );
+    }
+    let pase = anuncio.is_some().then_some(pase);
     *cerrojo(&st.pasar.receptor) = Some(Receptor {
         gen,
         ep_id,
         secreto: Some(secreto),
+        pase,
         estado: estado.clone(),
         ocupado: false,
         peticion: None,
         decisiones: None,
         conn: None,
         anuncio,
-        tareas: vec![caducidad],
+        tareas,
     });
     registrar(e, ep);
     e.emitir_receptor(&estado);
     Ok(estado)
 }
 
+/// Los códigos con la dirección de ahora.
+struct Codigos {
+    /// Con las IP: el del QR, para quien está delante.
+    texto: String,
+    qr: String,
+    /// Solo con el relé: el que se manda por mensaje. Sin relé en este equipo
+    /// (`con_rele` a `false`: una prueba o una red sin internet) lleva las IP, que
+    /// es lo único con lo que se puede llegar.
+    mensaje: String,
+    distancia: bool,
+}
+
+fn codigo_y_qr(ep: &Endpoint, secreto: &str, con_rele: bool) -> AppResult<Codigos> {
+    let addr = encontrar::recortar(&ep.addr(), encontrar::MAX_IP);
+    let distancia = addr.addrs.iter().any(iroh::TransportAddr::is_relay);
+    let en_texto = |addr: iroh::EndpointAddr| {
+        Codigo {
+            addr,
+            secreto: secreto.to_string(),
+        }
+        .a_texto_deck()
+    };
+    let mensaje = en_texto(if con_rele {
+        encontrar::sin_directas(&addr)
+    } else {
+        addr.clone()
+    })?;
+    let texto = en_texto(addr)?;
+    let qr = encontrar::qr_svg(&texto)?;
+    Ok(Codigos {
+        texto,
+        qr,
+        mensaje,
+        distancia,
+    })
+}
+
 /// Cierra «Recibir»: corta lo que hubiera en curso y deja de anunciarse.
 pub fn cerrar<E: Entorno>(e: &E) {
+    e.estado().pasar.nuevo_pedido_recibir();
     let viejo = cerrojo(&e.estado().pasar.receptor).take();
     if let Some(mut r) = viejo {
         if let Some(c) = r.conn.take() {
@@ -276,48 +350,6 @@ pub fn responder<E: Entorno>(e: &E, decisiones: Vec<Decision>) -> AppResult<()> 
 
 // ── Un intercambio ──────────────────────────────────────────────────────
 
-/// Lo que se espera a que aparezca el camino directo (al principio la
-/// conexión puede ir aún por el relé mientras iroh prueba las directas).
-const ESPERA_CAMINO: Duration = Duration::from_secs(3);
-
-/// Una IP de la red local: privada, de enlace, la propia máquina o el
-/// espacio compartido `100.64.0.0/10` (CGNAT, y las VPN de malla como
-/// Tailscale), que tampoco se enruta por internet.
-pub(crate) fn ip_de_la_red_local(ip: std::net::IpAddr) -> bool {
-    match ip {
-        std::net::IpAddr::V4(v) => {
-            v.is_private()
-                || v.is_link_local()
-                || v.is_loopback()
-                || (v.octets()[0] == 100 && (v.octets()[1] & 0xc0) == 64)
-        }
-        std::net::IpAddr::V6(v) => match v.to_ipv4_mapped() {
-            Some(v4) => ip_de_la_red_local(std::net::IpAddr::V4(v4)),
-            None => v.is_loopback() || v.is_unique_local() || v.is_unicast_link_local(),
-        },
-    }
-}
-
-/// ¿Va la conexión por un camino directo a una dirección de la red local?
-/// Espera un poco a que aparezca.
-async fn camino_local(conn: &Connection) -> bool {
-    let hay = || {
-        conn.paths().iter().any(
-            |p| matches!(p.remote_addr(), iroh::TransportAddr::Ip(a) if ip_de_la_red_local(a.ip())),
-        )
-    };
-    let hasta = tokio::time::Instant::now() + ESPERA_CAMINO;
-    loop {
-        if hay() {
-            return true;
-        }
-        if tokio::time::Instant::now() >= hasta || conn.close_reason().is_some() {
-            return false;
-        }
-        tokio::time::sleep(Duration::from_millis(100)).await;
-    }
-}
-
 /// Cómo acaba un intercambio.
 enum Salida {
     /// Se rechazó antes de empezar (código malo, otro equipo, …): se sigue
@@ -332,11 +364,16 @@ impl From<crate::red::protocolo::ErrorTrama> for Salida {
     fn from(e: crate::red::protocolo::ErrorTrama) -> Self {
         // Un corte es que el otro canceló (o se fue la red).
         match e {
-            // Sin bytes en `PLAZO_SIN_BYTES`: el emisor se quedó parado.
+            // Sin bytes en `plazo_sin_bytes`: el emisor se quedó parado.
             crate::red::protocolo::ErrorTrama::Io(io)
                 if io.kind() == std::io::ErrorKind::TimedOut =>
             {
                 Salida::Error(crate::error::red_sin_http("tiempo", None))
+            }
+            crate::red::protocolo::ErrorTrama::Io(io)
+                if io.kind() == std::io::ErrorKind::StorageFull =>
+            {
+                malo("sin_espacio")
             }
             crate::red::protocolo::ErrorTrama::Io(_) => Salida::Cancelado,
             otro => Salida::Error(
@@ -374,7 +411,14 @@ pub(crate) async fn sesion<E: Entorno>(e: E, conn: Connection) {
         conn.close(CIERRE_NO_ESPERADO.into(), b"ocupado");
         return;
     };
+    e.pantalla_encendida(true);
     let salida = interior(&e, gen, &conn).await;
+    e.pantalla_encendida(false);
+    // Un corte de la red no es que nadie haya cancelado.
+    let salida = match (salida, motivo_del_corte(&conn)) {
+        (Salida::Cancelado, Some(m)) => Salida::Error(crate::error::red_sin_http(m, None)),
+        (s, _) => s,
+    };
     let mut libre = false;
     match salida {
         Salida::Rechazo => {
@@ -385,7 +429,7 @@ pub(crate) async fn sesion<E: Entorno>(e: E, conn: Connection) {
                 r.peticion = None;
                 r.estado.fase = FaseReceptor::Esperando;
                 r.estado.remoto = None;
-                r.estado.codigo6 = None;
+                r.estado.cifras = None;
             });
             // Que le dé tiempo a leer el rechazo antes de cerrar.
             tokio::time::sleep(Duration::from_millis(200)).await;
@@ -416,7 +460,13 @@ pub(crate) async fn sesion<E: Entorno>(e: E, conn: Connection) {
         }
         Salida::Error(err) => {
             tracing::warn!(codigo = ?err.code, params = ?err.params, "pasar: se corta lo que se recibía");
-            conn.close(CIERRE_CANCELADO.into(), b"error");
+            // El que manda se entera de que no cabe: no es que hayan cancelado.
+            let cierre = if err.params.get("motivo").is_some_and(|m| m == "sin_espacio") {
+                CIERRE_SIN_ESPACIO
+            } else {
+                CIERRE_CANCELADO
+            };
+            conn.close(cierre.into(), b"error");
             mutar(&e, gen, |r| {
                 if !es_final(r.estado.fase) {
                     r.estado.fase = FaseReceptor::Error;
@@ -461,6 +511,7 @@ async fn interior<E: Entorno>(e: &E, gen: u64, conn: &Connection) -> Salida {
     let AlReceptor::Hola {
         version,
         secreto,
+        pase,
         apodo,
     } = hola
     else {
@@ -499,33 +550,25 @@ async fn interior<E: Entorno>(e: &E, gen: u64, conn: &Connection) -> Salida {
             }
         }
         None => {
-            // Sin secreto solo vale desde la red local y si la persona lo
-            // acepta: «Recibir» se anuncia por mDNS y la conexión llega por
-            // un camino directo a una dirección de la red local (no por el
-            // relé ni desde una IP pública).
-            let cerca = cerrojo(&e.estado().pasar.receptor)
+            // Sin secreto solo vale con el pase del anuncio (quien lo trae ha
+            // visto este equipo en la red local) y si la persona lo acepta.
+            let admitido = cerrojo(&e.estado().pasar.receptor)
                 .as_ref()
-                .is_some_and(|r| r.gen == gen && r.estado.cerca);
-            if !cerca || !camino_local(conn).await {
-                let _ = rechazar(&mut tx, "codigo").await;
+                .filter(|r| r.gen == gen)
+                .and_then(|r| r.pase.as_deref())
+                .zip(pase.as_deref())
+                .is_some_and(|(bueno, dado)| mismo_secreto(bueno, dado));
+            if !admitido {
+                let _ = rechazar(&mut tx, "no_admite").await;
                 return Salida::Rechazo;
             }
             let (pregunta, respuesta) = oneshot::channel::<bool>();
-            let anunciado = mutar(e, gen, |r| {
-                if !r.estado.cerca {
-                    return false;
-                }
+            mutar(e, gen, |r| {
                 r.peticion = Some(pregunta);
                 r.estado.fase = FaseReceptor::Peticion;
                 r.estado.remoto = Some(remoto.clone());
-                r.estado.codigo6 = Some(encontrar::codigo6(r.ep_id, yo));
-                true
-            })
-            .unwrap_or(false);
-            if !anunciado {
-                let _ = rechazar(&mut tx, "codigo").await;
-                return Salida::Rechazo;
-            }
+                r.estado.cifras = Some(encontrar::cifras(r.ep_id, yo));
+            });
             let acepta = tokio::select! {
                 r = timeout(ESPERA_PETICION, respuesta) => matches!(r, Ok(Ok(true))),
                 _ = conn.closed() => return Salida::Cancelado,
@@ -542,7 +585,7 @@ async fn interior<E: Entorno>(e: &E, gen: u64, conn: &Connection) -> Salida {
     mutar(e, gen, |r| {
         r.estado.fase = FaseReceptor::Conectado;
         r.estado.remoto = Some(remoto.clone());
-        r.estado.codigo6 = Some(encontrar::codigo6(r.ep_id, yo));
+        r.estado.cifras = Some(encontrar::cifras(r.ep_id, yo));
     });
     if let Err(err) = escribir(&mut tx, &AlEmisor::Listo { apodo: mi_apodo }).await {
         return err.into();
@@ -587,6 +630,19 @@ async fn interior<E: Entorno>(e: &E, gen: u64, conn: &Connection) -> Salida {
         Ok(p) => p,
         Err(m) => return malo(m),
     };
+    // Si lo aceptado (lo que dice la oferta) no cabe, se dice ya, no al final.
+    let pedido: u64 = plan
+        .iter()
+        .zip(&revisados)
+        .map(|(p, d)| match p.eleccion {
+            Eleccion::No => 0,
+            Eleccion::SoloOriginales => d.deck.tamano_originales,
+            Eleccion::ConProxies => d.deck.tamano,
+        })
+        .fold(0, u64::saturating_add);
+    if !cabe_al_recibir(e.estado(), pedido) {
+        return malo("sin_espacio");
+    }
     let elecciones: Vec<Eleccion> = plan.iter().map(|p| p.eleccion).collect();
     if let Err(err) = escribir(
         &mut tx,
@@ -730,11 +786,15 @@ async fn recibir_uno<E: Entorno>(
     };
     if i != indice
         || tamano == 0
-        || tamano > MAX_PAQUETE
         || huella.len() != 64
         || !huella.chars().all(|c| c.is_ascii_hexdigit())
     {
         return Err(malo("paquete"));
+    }
+    // Sin tope fijo: lo que manda es el disco. Se mira lo que de verdad va a
+    // llegar, que puede no ser lo que decía la oferta.
+    if !cabe_al_recibir(e.estado(), tamano) {
+        return Err(malo("sin_espacio"));
     }
     let temporal = Temporal::nueva(e.estado()).map_err(|er| Salida::Error(er.into()))?;
     let ruta = temporal.0.join("deck.pbdeck");
@@ -880,33 +940,6 @@ pub(crate) fn sanear_portada(b64: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn solo_las_ips_de_la_red_local_entran_sin_secreto() {
-        for ip in [
-            "192.168.1.20",
-            "10.0.0.5",
-            "172.16.3.4",
-            "169.254.1.1",
-            "127.0.0.1",
-            "100.64.0.5",
-            "::1",
-            "fd12:3456::1",
-            "fe80::1",
-            "::ffff:192.168.0.2",
-        ] {
-            assert!(ip_de_la_red_local(ip.parse().unwrap()), "{ip}");
-        }
-        for ip in [
-            "8.8.8.8",
-            "100.128.0.1",
-            "2001:db8::1",
-            "2a00:1450::1",
-            "::ffff:8.8.8.8",
-        ] {
-            assert!(!ip_de_la_red_local(ip.parse().unwrap()), "{ip}");
-        }
-    }
 
     fn oferta(proxies: bool, conflicto: bool) -> DeckRevisado {
         DeckRevisado {

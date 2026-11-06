@@ -289,6 +289,7 @@ export interface Commands {
 	pasar_recibir_abrir: { args: Record<string, never>; result: EstadoReceptor };
 	pasar_recibir_estado: { args: Record<string, never>; result: EstadoReceptor | null };
 	pasar_recibir_cerrar: { args: Record<string, never>; result: null };
+	pasar_compartir_codigo: { args: { texto: string }; result: null };
 	pasar_peticion: { args: { aceptar: boolean }; result: null };
 	pasar_responder: { args: { decisiones: DecisionPasar[] }; result: null };
 	pasar_recibir_cancelar: { args: Record<string, never>; result: null };

@@ -26,6 +26,9 @@ const LADO_MAXIMO: u32 = 12_000;
 /// Las imágenes más recientes que esto no se borran al limpiar: pueden ser de
 /// una descarga cuyo deck todavía no se ha guardado.
 const GRACIA_MS: i64 = 24 * 60 * 60 * 1000;
+/// Lo que se deja siempre libre en el disco al traer algo de fuera: un móvil sin
+/// nada de espacio deja de funcionar, y el deck no vale tanto.
+const RESERVA_DISCO: u64 = 200 * 1024 * 1024;
 /// Clave de `app_settings` con la huella del reverso genérico.
 const CLAVE_REVERSO: &str = "generic_back_blob";
 /// El reverso genérico propio de la app (diseño original, `scripts/reverso.py`).
@@ -99,9 +102,51 @@ pub struct FichaBlob {
     pub origin: String,
 }
 
+/// Lo que queda libre en el disco de esta ruta (`None` si no se puede saber).
+pub fn espacio_libre(ruta: &Path) -> Option<u64> {
+    let real = ruta.canonicalize().ok()?;
+    let discos = sysinfo::Disks::new_with_refreshed_list();
+    discos
+        .list()
+        .iter()
+        .filter(|d| real.starts_with(d.mount_point()))
+        .max_by_key(|d| d.mount_point().as_os_str().len())
+        .map(sysinfo::Disk::available_space)
+}
+
+/// ¿Caben estos bytes en el disco de esta ruta sin dejarlo tiritando? Si no se
+/// puede saber, se intenta: quedarse sin disco a medias es un error más.
+pub fn hay_espacio(ruta: &Path, bytes: u64) -> bool {
+    espacio_libre(ruta).is_none_or(|libre| bytes.saturating_add(RESERVA_DISCO) <= libre)
+}
+
+#[cfg(test)]
+#[test]
+fn lo_que_no_cabe_en_el_disco_se_sabe() {
+    let dir = tempfile::tempdir().unwrap();
+    assert!(espacio_libre(dir.path()).is_some_and(|l| l > 0));
+    assert!(!hay_espacio(dir.path(), u64::MAX));
+    assert!(!hay_espacio(dir.path(), u64::MAX / 2));
+    // Una ruta que no existe no bloquea nada: se intenta.
+    assert!(hay_espacio(&dir.path().join("no-existe"), 1));
+    // Un almacén que todavía no tiene carpeta mira la de arriba.
+    assert!(!BlobStore::new(dir.path().join("blobs")).cabe(u64::MAX));
+}
+
 impl BlobStore {
     pub fn new(root: PathBuf) -> BlobStore {
         BlobStore { root }
+    }
+
+    /// ¿Caben estos bytes en el disco del almacén?
+    pub fn cabe(&self, bytes: u64) -> bool {
+        // La carpeta puede no existir aún: se mira la de arriba.
+        let ruta = if self.root.exists() {
+            self.root.as_path()
+        } else {
+            self.root.parent().unwrap_or(&self.root)
+        };
+        hay_espacio(ruta, bytes)
     }
 
     pub fn path_of(&self, hash: &str, ext: &str) -> PathBuf {

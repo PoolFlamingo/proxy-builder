@@ -11,9 +11,14 @@ import type { ResultadoPasar } from "./ResultadoPasar";
  */
 export type EstadoReceptor = { fase: FaseReceptor, 
 /**
- * El código en texto (`PBD1-…`) y su QR (un SVG).
+ * El código del QR (`PBD1-…`): con las IP, para quien está delante.
  */
 codigo: string, qr: string, 
+/**
+ * El mismo código sin las IP, solo con el relé: el que se enseña, se copia y
+ * se manda por mensaje.
+ */
+codigoMensaje: string, 
 /**
  * Cuándo caduca el código (ms desde 1970).
  */
@@ -21,8 +26,14 @@ caduca: number,
 /**
  * Se anuncia en la red local (los que están cerca lo ven).
  */
-cerca: boolean, remoto: RemotoPasar | null, 
+cerca: boolean, 
 /**
- * El código de 6 cifras de este encuentro (los dos lo ven igual).
+ * El código lleva un relé: vale desde cualquier sitio con internet. Mientras
+ * es `false`, este equipo aún no ha llegado a internet; cuando llegue, el
+ * código y el QR se ponen al día solos.
  */
-codigo6: string | null, oferta: Array<DeckRevisado>, progreso: ProgresoPasar | null, resultados: Array<ResultadoPasar>, error: AppError | null, };
+distancia: boolean, remoto: RemotoPasar | null, 
+/**
+ * El código de 8 cifras de este encuentro (los dos lo ven igual).
+ */
+cifras: string | null, oferta: Array<DeckRevisado>, progreso: ProgresoPasar | null, resultados: Array<ResultadoPasar>, error: AppError | null, };

@@ -22,9 +22,15 @@
 //! apunta a sus huellas nuevas. El almacén de quien comparte no cambia. Para una
 //! app vieja es un paquete normal: solo lleva JPEG en vez de PNG.
 //!
-//! 🛑 Al importar no se confía en nada: se ignoran las entradas con rutas
+//! 🛑 Al importar no se confía en nada: se rechazan las entradas con rutas
 //! raras (zip-slip), cada imagen tiene que dar la huella que dice su nombre y
 //! el deck nace con ids nuevos.
+//!
+//! 🛑 Un paquete no tiene tope de tamaño, así que **nunca se tiene entero en
+//! memoria**: se lee y se escribe imagen a imagen, y lo que manda es el espacio
+//! libre del disco. Si una imagen sale mal a medias, las anteriores se quedan en
+//! el almacén sin que nadie las use y las recoge la limpieza (`BlobStore::gc`):
+//! el deck no llega a existir.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::io::{Read, Seek, Write};
@@ -41,15 +47,25 @@ use zip::write::SimpleFileOptions;
 use zip::{CompressionMethod, ZipArchive, ZipWriter};
 
 use crate::error::{AppError, AppResult, ErrorCode};
-use crate::store::blobs::{es_huella, escribir_atomico, BlobStore, FichaBlob};
+use crate::store::blobs::{es_huella, BlobStore, FichaBlob};
 use crate::store::db::Db;
 use crate::store::{colecciones, decks, etiquetas, linaje, listas};
 use mesa::lista::ListaDeJuego;
 
 pub const FORMATO: &str = "proxy-builder-deck";
 pub const VERSION: u32 = 2;
-/// Tope por entrada al descomprimir (una imagen de 12.000 px en PNG cabe de sobra).
+/// Tope por imagen al descomprimir (una de 12.000 px en PNG cabe de sobra). Es
+/// por imagen, no por paquete: frena las bombas de compresión.
 const MAX_ENTRADA: u64 = 512 * 1024 * 1024;
+/// Tope del manifiesto: el texto de un deck, sin imágenes.
+const MAX_MANIFIESTO: u64 = 128 * 1024 * 1024;
+/// Topes de lo que dice un manifiesto: muy por encima de cualquier deck de verdad.
+const MAX_CARTAS: usize = 100_000;
+const MAX_NOMBRE: usize = 500;
+const MAX_NOTAS: usize = 1024 * 1024;
+const MAX_LISTAS: usize = 1_000;
+const MAX_ETIQUETAS: usize = 1_000;
+const MAX_COLECCIONES: usize = 1_000;
 /// La calidad JPEG de un paquete optimizado: a la medida de impresión no se
 /// nota.
 const CALIDAD_OPTIMIZADA: u8 = 92;
@@ -405,18 +421,18 @@ pub fn export_con(
     db: &Db,
     modo: Modo,
 ) -> AppResult<u64> {
-    let d = segun(deck, modo);
-    let buf = escribir(
-        std::io::Cursor::new(Vec::new()),
-        &d,
-        blobs,
-        db,
-        modo == Modo::Optimizado,
-        &|_, _| true,
-    )?
-    .into_inner();
-    escribir_atomico(destino, &buf)?;
-    Ok(buf.len() as u64)
+    if let Some(dir) = destino.parent() {
+        std::fs::create_dir_all(dir)?;
+    }
+    let parcial = destino.with_extension(format!("{}.part", uuid::Uuid::new_v4()));
+    let hecho = export_en_fichero(deck, &parcial, blobs, db, modo, &|_, _| true).and_then(|n| {
+        std::fs::rename(&parcial, destino)?;
+        Ok(n)
+    });
+    if hecho.is_err() {
+        let _ = std::fs::remove_file(&parcial);
+    }
+    hecho
 }
 
 /// Escribe el paquete directamente en un fichero (para enviarlo: sin tenerlo
@@ -441,6 +457,7 @@ pub fn export_en_fichero(
         avance,
     )?;
     w.flush()?;
+    w.get_ref().sync_all()?;
     Ok(std::fs::metadata(destino)?.len())
 }
 
@@ -493,22 +510,23 @@ pub fn tamano_estimado(deck: &Deck, blobs: &BlobStore, db: &Db, modo: Modo) -> u
     total
 }
 
-fn leer_entrada<R: Read + Seek>(zip: &mut ZipArchive<R>, i: usize) -> AppResult<(String, Vec<u8>)> {
+/// Una entrada entera en memoria, con su tope y sin pasar de lo que dice medir.
+fn leer_entrada<R: Read + Seek>(
+    zip: &mut ZipArchive<R>,
+    i: usize,
+    tope: u64,
+) -> AppResult<Vec<u8>> {
     let mut f = zip.by_index(i).map_err(de_zip)?;
-    // `enclosed_name` rechaza `..` y rutas absolutas.
-    let nombre = f
-        .enclosed_name()
-        .and_then(|p| p.to_str().map(|s| s.replace('\\', "/")))
-        .ok_or_else(|| mal("ruta"))?;
-    if f.size() > MAX_ENTRADA {
+    let dice = f.size();
+    if dice > tope {
         return Err(mal("tamano"));
     }
-    let mut v = Vec::with_capacity(f.size() as usize);
-    (&mut f).take(MAX_ENTRADA + 1).read_to_end(&mut v)?;
-    if v.len() as u64 > MAX_ENTRADA {
+    let mut v = Vec::with_capacity(dice as usize);
+    (&mut f).take(dice + 1).read_to_end(&mut v)?;
+    if v.len() as u64 > dice {
         return Err(mal("tamano"));
     }
-    Ok((nombre, v))
+    Ok(v)
 }
 
 /// Qué se hace con el deck del paquete en esta biblioteca.
@@ -546,43 +564,69 @@ fn linaje_sano(l: &str) -> bool {
             .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
 }
 
-/// Lo que el paquete dice de sí mismo, sin tocar la biblioteca.
-struct Leido {
-    manifiesto: Manifiesto,
-    imagenes: Vec<(String, Vec<u8>)>,
-}
-
-fn leer_paquete<R: Read + Seek>(r: R) -> AppResult<Leido> {
-    let mut zip = ZipArchive::new(r).map_err(de_zip)?;
-    let mut manifiesto: Option<Manifiesto> = None;
-    let mut imagenes: Vec<(String, Vec<u8>)> = Vec::new();
-    for i in 0..zip.len() {
-        let (nombre, bytes) = leer_entrada(&mut zip, i)?;
-        if nombre == "manifest.json" {
-            manifiesto = Some(serde_json::from_slice(&bytes).map_err(|_| mal("manifiesto"))?);
-        } else if let Some(resto) = nombre.strip_prefix("blobs/") {
-            let hash = resto.split('.').next().unwrap_or_default();
-            if !es_huella(hash) || resto.contains('/') {
-                return Err(mal("ruta"));
-            }
-            let real: String = Sha256::digest(&bytes)
-                .iter()
-                .map(|b| format!("{b:02x}"))
-                .collect();
-            if real != hash {
-                return Err(mal("huella").with("blob", hash));
-            }
-            imagenes.push((hash.to_string(), bytes));
-        }
-        // Cualquier otra entrada se ignora.
-    }
-    let m = manifiesto.ok_or_else(|| mal("manifiesto"))?;
+/// Comprueba el manifiesto de fuera antes de hacer nada con él.
+fn validar_manifiesto(m: &Manifiesto) -> AppResult<()> {
     if m.format != FORMATO {
         return Err(mal("formato"));
     }
     if m.version > VERSION {
         return Err(AppError::new(ErrorCode::Unsupported).with("version", m.version));
     }
+    let b = m.biblioteca.as_ref();
+    let vale = m.deck.cards.len() <= MAX_CARTAS
+        && m.deck.name.chars().count() <= MAX_NOMBRE
+        && m.colecciones.len() <= MAX_COLECCIONES
+        && b.is_none_or(|b| {
+            b.notas.len() <= MAX_NOTAS
+                && b.listas.len() <= MAX_LISTAS
+                && b.etiquetas.len() <= MAX_ETIQUETAS
+        });
+    if vale {
+        Ok(())
+    } else {
+        Err(mal("manifiesto"))
+    }
+}
+
+/// Un nombre de fuera, sin caracteres de control (los saltos de línea rompen la
+/// biblioteca y los nombres de fichero).
+fn nombre_limpio(n: &str) -> String {
+    let limpio: String = n.chars().filter(|c| !c.is_control()).collect();
+    limpio.trim().to_string()
+}
+
+/// Lo que el paquete dice de sí mismo, sin tocar la biblioteca: el manifiesto y
+/// dónde está cada imagen (se leen luego, una a una).
+struct Leido {
+    manifiesto: Manifiesto,
+    imagenes: BTreeMap<String, usize>,
+}
+
+fn leer_paquete<R: Read + Seek>(zip: &mut ZipArchive<R>) -> AppResult<Leido> {
+    let mut indice_manifiesto = None;
+    let mut imagenes = BTreeMap::new();
+    for i in 0..zip.len() {
+        let f = zip.by_index_raw(i).map_err(de_zip)?;
+        // `enclosed_name` rechaza `..` y rutas absolutas.
+        let nombre = f
+            .enclosed_name()
+            .and_then(|p| p.to_str().map(|s| s.replace('\\', "/")))
+            .ok_or_else(|| mal("ruta"))?;
+        if nombre == "manifest.json" {
+            indice_manifiesto = Some(i);
+        } else if let Some(resto) = nombre.strip_prefix("blobs/") {
+            let hash = resto.split('.').next().unwrap_or_default();
+            if !es_huella(hash) || resto.contains('/') {
+                return Err(mal("ruta"));
+            }
+            imagenes.insert(hash.to_string(), i);
+        }
+        // Cualquier otra entrada se ignora.
+    }
+    let i = indice_manifiesto.ok_or_else(|| mal("manifiesto"))?;
+    let bytes = leer_entrada(zip, i, MAX_MANIFIESTO)?;
+    let m: Manifiesto = serde_json::from_slice(&bytes).map_err(|_| mal("manifiesto"))?;
+    validar_manifiesto(&m)?;
     Ok(Leido {
         manifiesto: m,
         imagenes,
@@ -596,16 +640,18 @@ pub fn import_con<R: Read + Seek>(
     db: &Db,
     op: &Opciones,
 ) -> AppResult<Deck> {
+    let mut zip = ZipArchive::new(r).map_err(de_zip)?;
     let Leido {
         manifiesto: m,
         imagenes,
-    } = leer_paquete(r)?;
+    } = leer_paquete(&mut zip)?;
     // El deck que se va a reemplazar tiene que existir antes de tocar nada.
     let local = match &op.destino {
         Destino::Reemplazar(id) => Some(decks::open(db, id)?),
         _ => None,
     };
     let mut deck = m.deck;
+    deck.name = nombre_limpio(&deck.name);
     let mut cols = m.colecciones;
     if op.solo_originales {
         deck = proxy_core::compartir::sin_proxies(&deck);
@@ -621,19 +667,42 @@ pub fn import_con<R: Read + Seek>(
         cols.iter()
             .filter_map(|c| c.emblem.as_ref().map(|e| e.blob.clone())),
     );
-    let tenemos: BTreeSet<&str> = imagenes.iter().map(|(h, _)| h.as_str()).collect();
+    let ya_esta = |h: &str| {
+        blobs
+            .locate(db, h)
+            .ok()
+            .flatten()
+            .is_some_and(|(ruta, _)| ruta.exists())
+    };
     if let Some(falta) = necesarias
         .iter()
-        .find(|h| !tenemos.contains(h.as_str()) && blobs.locate(db, h).ok().flatten().is_none())
+        .find(|h| !imagenes.contains_key(h.as_str()) && !ya_esta(h))
     {
         return Err(mal("falta_imagen").with("blob", falta));
     }
-
-    for (h, bytes) in &imagenes {
-        if necesarias.contains(h) {
-            let origen = deck_origen(&deck, bytes);
-            blobs.put_bytes(db, bytes, origen)?;
+    // Solo las que no están ya, y si caben. Lo que dice medir cada entrada es de
+    // fiar: al leerla no se pasa de ahí (`leer_entrada`).
+    let mut nuevas = Vec::new();
+    let mut total = 0u64;
+    for h in &necesarias {
+        if let Some(&i) = imagenes.get(h).filter(|_| !ya_esta(h)) {
+            total = total.saturating_add(zip.by_index_raw(i).map_err(de_zip)?.size());
+            nuevas.push((h, i));
         }
+    }
+    if !blobs.cabe(total) {
+        return Err(mal("sin_espacio"));
+    }
+    for (h, i) in nuevas {
+        let bytes = leer_entrada(&mut zip, i, MAX_ENTRADA)?;
+        let real: String = Sha256::digest(&bytes)
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect();
+        if real != *h {
+            return Err(mal("huella").with("blob", h));
+        }
+        blobs.put_bytes(db, &bytes, deck_origen(&deck, h))?;
     }
 
     // Las colecciones: si ya hay una con el mismo id, se queda la de este
@@ -813,14 +882,9 @@ pub fn resumen<R: Read + Seek>(r: R) -> AppResult<ResumenPaquete> {
     let idx = zip
         .index_for_name("manifest.json")
         .ok_or_else(|| mal("manifiesto"))?;
-    let (_, bytes) = leer_entrada(&mut zip, idx)?;
+    let bytes = leer_entrada(&mut zip, idx, MAX_MANIFIESTO)?;
     let m: Manifiesto = serde_json::from_slice(&bytes).map_err(|_| mal("manifiesto"))?;
-    if m.format != FORMATO {
-        return Err(mal("formato"));
-    }
-    if m.version > VERSION {
-        return Err(AppError::new(ErrorCode::Unsupported).with("version", m.version));
-    }
+    validar_manifiesto(&m)?;
     let b = m.biblioteca.unwrap_or_default();
     // La portada: la elegida o la primera carta con imagen.
     let carta = b
@@ -835,7 +899,7 @@ pub fn resumen<R: Read + Seek>(r: R) -> AppResult<ResumenPaquete> {
             let idx = (0..zip.len())
                 .find(|&i| matches!(zip.name_for_index(i), Some(Ok(n)) if n.starts_with(&prefijo)));
             if let Some(i) = idx {
-                if let Ok((_, img)) = leer_entrada(&mut zip, i) {
+                if let Ok(img) = leer_entrada(&mut zip, i, MAX_ENTRADA) {
                     portada = miniatura(&img);
                 }
             }
@@ -860,7 +924,7 @@ pub fn resumen<R: Read + Seek>(r: R) -> AppResult<ResumenPaquete> {
         }
     }
     Ok(ResumenPaquete {
-        nombre: m.deck.name.clone(),
+        nombre: nombre_limpio(&m.deck.name),
         cartas: m.deck.cards.len() as u32,
         proxies: proxy_core::compartir::resumen_proxies(&m.deck).hay(),
         tamano_originales,
@@ -882,11 +946,7 @@ pub fn miniatura(bytes: &[u8]) -> Option<Vec<u8>> {
 }
 
 /// El origen con el que entró la imagen en el equipo de origen (lo dice el deck).
-fn deck_origen(deck: &Deck, bytes: &[u8]) -> proxy_core::model::ImageOrigin {
-    let hash: String = Sha256::digest(bytes)
-        .iter()
-        .map(|b| format!("{b:02x}"))
-        .collect();
+fn deck_origen(deck: &Deck, hash: &str) -> proxy_core::model::ImageOrigin {
     let todas = deck
         .default_back
         .iter()
@@ -940,6 +1000,297 @@ mod tests {
         });
         decks::save(db, &d).unwrap();
         d
+    }
+
+    fn entrada_con_nombre<R: Read + Seek>(zip: &mut ZipArchive<R>, i: usize) -> (String, Vec<u8>) {
+        let nombre = zip.by_index_raw(i).unwrap().name().unwrap().to_string();
+        (nombre, leer_entrada(zip, i, MAX_ENTRADA).unwrap())
+    }
+
+    /// Azar repetible (xorshift): la semilla que falle se puede volver a probar.
+    struct Azar(u64);
+
+    impl Azar {
+        fn nuevo(semilla: u64) -> Azar {
+            Azar(semilla.wrapping_mul(0x9E37_79B9_7F4A_7C15) | 1)
+        }
+        fn n(&mut self) -> u64 {
+            self.0 ^= self.0 << 13;
+            self.0 ^= self.0 >> 7;
+            self.0 ^= self.0 << 17;
+            self.0
+        }
+        fn hasta(&mut self, m: usize) -> usize {
+            (self.n() % m.max(1) as u64) as usize
+        }
+    }
+
+    /// Cuántas vueltas: pocas en el CI, las que se quiera a mano con `PB_ITERACIONES`.
+    fn vueltas(de_fabrica: u64) -> u64 {
+        std::env::var("PB_ITERACIONES")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(de_fabrica)
+    }
+
+    /// Unos bytes con cambios al azar: voltear, cortar, meter o pisar con lo que
+    /// más rompe.
+    fn estropear(az: &mut Azar, bytes: &[u8]) -> Vec<u8> {
+        let mut b = bytes.to_vec();
+        for _ in 0..1 + az.hasta(8) {
+            if b.is_empty() {
+                break;
+            }
+            let i = az.hasta(b.len());
+            match az.hasta(5) {
+                0 => b[i] ^= 1 << az.hasta(8),
+                1 => b[i] = [0u8, 0xff, 0x7f, 0x80][az.hasta(4)],
+                2 => b.truncate(i),
+                3 => b.insert(i, az.n() as u8),
+                _ => {
+                    let f = (i + 8).min(b.len());
+                    b[i..f].fill(0xff);
+                }
+            }
+        }
+        b
+    }
+
+    /// Cambia un valor cualquiera del JSON por algo raro.
+    fn estropear_json(az: &mut Azar, v: &mut serde_json::Value) {
+        use serde_json::{json, Value};
+        let raro = |az: &mut Azar| -> Value {
+            match az.hasta(9) {
+                0 => Value::Null,
+                1 => json!(-1),
+                2 => json!(u64::MAX),
+                3 => json!("../../../etc/passwd"),
+                4 => json!("a\u{0}\n\u{1b}[31m<script>"),
+                5 => json!("x".repeat(70_000)),
+                6 => json!([]),
+                7 => json!({}),
+                _ => json!(true),
+            }
+        };
+        match v {
+            Value::Object(o) if !o.is_empty() => {
+                let i = az.hasta(o.len());
+                if let Some(x) = o.values_mut().nth(i) {
+                    if az.hasta(3) == 0 {
+                        *x = raro(az);
+                    } else {
+                        estropear_json(az, x);
+                    }
+                }
+            }
+            Value::Array(a) if !a.is_empty() => {
+                let i = az.hasta(a.len());
+                if az.hasta(3) == 0 {
+                    a[i] = raro(az);
+                } else {
+                    estropear_json(az, &mut a[i]);
+                }
+            }
+            otro => *otro = raro(az),
+        }
+    }
+
+    /// Lo que se le pide a un paquete hostil: que nunca reviente, y que lo que entre
+    /// sea un deck entero, con todas sus imágenes.
+    fn comprobar_import(semilla: u64, paquete: Vec<u8>, s: &BlobStore, db: &Db) -> bool {
+        let antes = decks::list(db).unwrap().len();
+        let _ = resumen(std::io::Cursor::new(&paquete));
+        match import(std::io::Cursor::new(&paquete), s, db) {
+            Ok(d) => {
+                for h in blobs_del_deck(&d) {
+                    assert!(
+                        s.locate(db, &h).unwrap().is_some(),
+                        "semilla {semilla}: entró un deck sin su imagen {h}"
+                    );
+                }
+                assert!(decks::open(db, &d.id).is_ok(), "semilla {semilla}");
+                decks::delete(db, &d.id).unwrap();
+                true
+            }
+            Err(_) => {
+                assert_eq!(
+                    decks::list(db).unwrap().len(),
+                    antes,
+                    "semilla {semilla}: un error dejó un deck a medias"
+                );
+                false
+            }
+        }
+    }
+
+    #[test]
+    fn un_paquete_estropeado_al_azar_nunca_revienta_ni_deja_nada_a_medias() {
+        let (dir, db, s) = entorno();
+        let d = deck_con_imagenes(&db, &s);
+        let ruta = dir.path().join("x.pbdeck");
+        export(&d, &ruta, &s, &db).unwrap();
+        let bueno = std::fs::read(&ruta).unwrap();
+        let (_d2, db2, s2) = entorno();
+        let vueltas = vueltas(300);
+        let mut entran = 0u64;
+        for semilla in 1..=vueltas {
+            let mut az = Azar::nuevo(semilla);
+            entran += u64::from(comprobar_import(
+                semilla,
+                estropear(&mut az, &bueno),
+                &s2,
+                &db2,
+            ));
+        }
+        eprintln!("bytes estropeados: entran {entran} de {vueltas}");
+    }
+
+    #[test]
+    fn un_manifiesto_estropeado_al_azar_nunca_revienta_ni_deja_nada_a_medias() {
+        let (dir, db, s) = entorno();
+        let d = deck_con_imagenes(&db, &s);
+        let ruta = dir.path().join("x.pbdeck");
+        export(&d, &ruta, &s, &db).unwrap();
+        let (_d2, db2, s2) = entorno();
+        let vueltas = vueltas(300);
+        let mut entran = 0u64;
+        for semilla in 1..=vueltas {
+            let mut az = Azar::nuevo(semilla);
+            let paquete = reescribir_manifiesto(&ruta, |v| estropear_json(&mut az, v));
+            entran += u64::from(comprobar_import(semilla, paquete, &s2, &db2));
+        }
+        eprintln!("manifiestos estropeados: entran {entran} de {vueltas}");
+        // Si no entrara ninguno, o entraran todos, esto no estaría probando nada.
+        assert!(
+            entran > 0 && entran < vueltas,
+            "entran {entran} de {vueltas}"
+        );
+    }
+
+    #[test]
+    fn una_imagen_estropeada_al_azar_no_revienta_el_decodificador() {
+        let buena = png(40, 56, 3);
+        let jpeg = proxy_core::imaging::encode::jpeg(
+            &proxy_core::imaging::decode::decode(&buena).unwrap(),
+            80,
+        )
+        .unwrap();
+        for semilla in 1..=vueltas(300) {
+            let mut az = Azar::nuevo(semilla);
+            let _ = miniatura(&estropear(&mut az, &buena));
+            let _ = miniatura(&estropear(&mut az, &jpeg));
+        }
+    }
+
+    #[test]
+    fn un_manifiesto_con_mas_de_lo_razonable_no_entra() {
+        let (dir, db, s) = entorno();
+        let d = deck_con_imagenes(&db, &s);
+        let ruta = dir.path().join("x.pbdeck");
+        export(&d, &ruta, &s, &db).unwrap();
+        for cambiar in [
+            (|v: &mut serde_json::Value| {
+                v["deck"]["name"] = "x".repeat(MAX_NOMBRE + 1).into();
+            }) as fn(&mut serde_json::Value),
+            |v| v["biblioteca"]["notas"] = "x".repeat(MAX_NOTAS + 1).into(),
+            |v| {
+                let carta = v["deck"]["cards"][0].clone();
+                v["deck"]["cards"] = vec![carta; MAX_CARTAS + 1].into();
+            },
+        ] {
+            let p = reescribir_manifiesto(&ruta, cambiar);
+            let (_d2, db2, s2) = entorno();
+            let e = import(std::io::Cursor::new(p), &s2, &db2).unwrap_err();
+            assert_eq!(e.params["motivo"], "manifiesto");
+        }
+        // Un nombre con saltos de línea entra limpio.
+        let p = reescribir_manifiesto(&ruta, |v| v["deck"]["name"] = " a\nb\u{1b} ".into());
+        let (_d2, db2, s2) = entorno();
+        let n = import(std::io::Cursor::new(p), &s2, &db2).unwrap();
+        assert_eq!(n.name, "ab");
+    }
+
+    /// Una imagen de verdad con una cola de relleno: pesa lo que se quiera.
+    fn imagen_con_cola(i: u32, mb: usize) -> Vec<u8> {
+        let mut bytes = png(20, 28, 9);
+        let inicio = bytes.len();
+        bytes.resize(inicio + mb * 1024 * 1024, 0);
+        let mut x = u64::from(i).wrapping_mul(0x9E37_79B9_7F4A_7C15) | 1;
+        for b in bytes[inicio..].chunks_mut(8) {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            b.copy_from_slice(&x.to_le_bytes()[..b.len()]);
+        }
+        bytes
+    }
+
+    /// Un ZIP pasa de 4 GiB (ZIP64): se escribe, se lee y no se tiene en memoria. A
+    /// mano: `cargo test --lib -- --ignored --nocapture de_mas_de_4_gb`.
+    #[test]
+    #[ignore]
+    fn un_paquete_de_mas_de_4_gb_va_y_vuelve() {
+        let (dir, db, s) = entorno();
+        let mut d = decks::create(&db, "Enorme", None).unwrap();
+        let n = 46;
+        for i in 0..n {
+            let img = s
+                .put_bytes(&db, &imagen_con_cola(i, 100), ImageOrigin::Upload)
+                .unwrap();
+            d.cards.push(DeckCard {
+                id: format!("c{i}"),
+                source: CardSource::Blank,
+                front: Some(img),
+                back: BackSpec::DeckDefault,
+                edits: CardEdits::default(),
+                locked: false,
+                meta: CardMeta::default(),
+                design: None,
+                marca: None,
+            });
+        }
+        decks::save(&db, &d).unwrap();
+        let ruta = dir.path().join("x.pbdeck");
+        let bytes = export(&d, &ruta, &s, &db).unwrap();
+        assert!(bytes > 4 * 1024 * 1024 * 1024, "{bytes}");
+        let (_dir2, db2, s2) = entorno();
+        let nuevo = import(
+            std::io::BufReader::new(std::fs::File::open(&ruta).unwrap()),
+            &s2,
+            &db2,
+        )
+        .unwrap();
+        assert_eq!(nuevo.cards.len(), n as usize);
+        for c in &nuevo.cards {
+            assert!(s2
+                .locate(&db2, &c.front.as_ref().unwrap().blob)
+                .unwrap()
+                .is_some());
+        }
+    }
+
+    /// Un manifiesto de más del tope (una bomba de compresión) ni se intenta leer.
+    #[test]
+    fn un_manifiesto_enorme_no_se_lee() {
+        let dir = tempfile::tempdir().unwrap();
+        let enorme = dir.path().join("enorme.pbdeck");
+        {
+            let f = std::fs::File::create(&enorme).unwrap();
+            let mut z = ZipWriter::new(f);
+            z.start_file(
+                "manifest.json",
+                SimpleFileOptions::default().compression_method(CompressionMethod::Deflated),
+            )
+            .unwrap();
+            let bloque = vec![b' '; 1024 * 1024];
+            for _ in 0..(MAX_MANIFIESTO / (1024 * 1024) + 1) {
+                z.write_all(&bloque).unwrap();
+            }
+            z.finish().unwrap();
+        }
+        let (_d2, db2, s2) = entorno();
+        let e = import(std::fs::File::open(&enorme).unwrap(), &s2, &db2).unwrap_err();
+        assert_eq!(e.params["motivo"], "tamano");
     }
 
     #[test]
@@ -1093,7 +1444,7 @@ mod tests {
         let mut zip = ZipArchive::new(std::fs::File::open(&ruta).unwrap()).unwrap();
         let mut entradas = Vec::new();
         for i in 0..zip.len() {
-            let (n, mut b) = leer_entrada(&mut zip, i).unwrap();
+            let (n, mut b) = entrada_con_nombre(&mut zip, i);
             if n.starts_with("blobs/") {
                 let ultimo = b.len() - 1;
                 b[ultimo] ^= 0xff;
@@ -1173,7 +1524,7 @@ mod tests {
         let mut zip = ZipArchive::new(std::fs::File::open(ruta).unwrap()).unwrap();
         let mut entradas = Vec::new();
         for i in 0..zip.len() {
-            let (n, b) = leer_entrada(&mut zip, i).unwrap();
+            let (n, b) = entrada_con_nombre(&mut zip, i);
             entradas.push((n, b));
         }
         let mut f = Some(f);

@@ -9,4 +9,4 @@ import type { ResultadoPasar } from "./ResultadoPasar";
 /**
  * Lo que la pantalla de «Enviar» sabe del envío en marcha.
  */
-export type EstadoEmisor = { fase: FaseEmisor, remoto: RemotoPasar | null, codigo6: string | null, decks: Array<DeckOfrecido>, progreso: ProgresoPasar | null, resultados: Array<ResultadoPasar>, error: AppError | null, };
+export type EstadoEmisor = { fase: FaseEmisor, remoto: RemotoPasar | null, cifras: string | null, decks: Array<DeckOfrecido>, progreso: ProgresoPasar | null, resultados: Array<ResultadoPasar>, error: AppError | null, };

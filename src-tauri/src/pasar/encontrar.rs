@@ -5,8 +5,16 @@
 //!   (`Busqueda`). El servicio mDNS es propio (`pbdeck`), no el de iroh: solo
 //!   se ven entre sí las Proxy Builder que están esperando un deck, no cada
 //!   app hecha con iroh ni los nodos de una partida. Los dos ven el mismo
-//!   código de 6 cifras (`codigo6`), como al emparejar por Bluetooth, y quien
+//!   código de 8 cifras (`cifras`), como al emparejar por Bluetooth, y quien
 //!   recibe lo acepta.
+//!
+//!   El anuncio lleva un **pase** aleatorio, nuevo cada vez que se abre
+//!   «Recibir»: solo quien ve el anuncio (quien está en la red local) puede
+//!   siquiera pedir que le acepten. Antes se miraba si la IP del otro era
+//!   privada, y eso fallaba en los dos sentidos: rechazaba a quien estaba al lado
+//!   si la conexión empezaba por el relé (o por IPv6), y daba por «local» a
+//!   cualquiera de la misma operadora, porque el CGNAT de los datos móviles usa
+//!   `100.64.0.0/10`.
 //! - **QR y código** (misma red o a distancia): el código `PBD1-…` (formato
 //!   del código directo de la mesa, `red/codigo.rs`) lleva la dirección del
 //!   nodo —con las locales y el relé— y un secreto de un solo uso.
@@ -40,10 +48,28 @@ const REPUBLICAR: Duration = Duration::from_secs(3);
 /// Cuántas direcciones IP lleva el código (más hacen un QR que no se lee).
 pub const MAX_IP: usize = 6;
 
-/// El código de 6 cifras que ven los dos equipos: 20 bits del SHA-256 de las
-/// dos claves, ordenadas. No es un secreto (las claves son públicas): sirve
-/// para que las personas comprueben que hablan con el equipo que creen.
-pub fn codigo6(a: EndpointId, b: EndpointId) -> String {
+/// Lo que se publica en el anuncio: `<pase>:<apodo>` (cabe de sobra en los 245
+/// bytes de `UserData`: 32 + 1 + como mucho 128).
+fn datos_del_anuncio(pase: &str, apodo: &str) -> Option<UserData> {
+    format!("{pase}:{}", apodo_limpio(apodo)).parse().ok()
+}
+
+/// El pase y el apodo de un anuncio. Una app anterior solo anuncia el apodo.
+pub(crate) fn leer_anuncio(u: &str) -> (Option<String>, String) {
+    match u.split_once(':') {
+        Some((p, a)) if p.len() == 32 && p.chars().all(|c| c.is_ascii_hexdigit()) => {
+            (Some(p.to_string()), apodo_limpio(a))
+        }
+        _ => (None, apodo_limpio(u)),
+    }
+}
+
+/// El código de 8 cifras que ven los dos equipos, sacado del SHA-256 de las dos
+/// claves, ordenadas. No es un secreto (las claves son públicas): sirve para que
+/// las personas comprueben que hablan con el equipo que creen. Son 8 y no menos
+/// para que un atacante en la misma red no pueda fabricarse una clave que dé el
+/// mismo número en el minuto que dura la petición.
+pub fn cifras(a: EndpointId, b: EndpointId) -> String {
     let (x, y) = if a.as_bytes() <= b.as_bytes() {
         (a, b)
     } else {
@@ -53,9 +79,8 @@ pub fn codigo6(a: EndpointId, b: EndpointId) -> String {
         .chain_update(x.as_bytes())
         .chain_update(y.as_bytes())
         .finalize();
-    let bits = (u32::from(h[0]) << 12) | (u32::from(h[1]) << 4) | (u32::from(h[2]) >> 4);
-    // 20 bits llegan a 1.048.575: siete cifras. Se queda en seis.
-    format!("{:06}", bits % 1_000_000)
+    let n = u64::from_be_bytes([h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7]]);
+    format!("{:08}", n % 100_000_000)
 }
 
 fn direccion_util(ip: &IpAddr) -> bool {
@@ -103,8 +128,8 @@ pub fn recortar(addr: &EndpointAddr, max_ip: usize) -> EndpointAddr {
     out
 }
 
-/// Solo el relé: para probar que el código vale a distancia.
-#[cfg(test)]
+/// Solo el relé: la dirección para un código que se manda por mensaje, que no
+/// tiene por qué ir enseñando la IP de nadie por un grupo de WhatsApp.
 pub fn sin_directas(addr: &EndpointAddr) -> EndpointAddr {
     let mut out = EndpointAddr::new(addr.id);
     out.addrs.extend(
@@ -142,13 +167,14 @@ fn mdns(id: EndpointId, anunciar: bool) -> AppResult<MdnsAddressLookup> {
 pub struct Anuncio {
     _mdns: MdnsAddressLookup,
     tarea: AbortHandle,
+    pase: String,
     apodo: Arc<Mutex<Option<UserData>>>,
 }
 
 impl Anuncio {
-    pub fn nuevo(ep: &Endpoint, apodo: &str) -> AppResult<Anuncio> {
+    pub fn nuevo(ep: &Endpoint, apodo: &str, pase: &str) -> AppResult<Anuncio> {
         let m = mdns(ep.id(), true)?;
-        let apodo = Arc::new(Mutex::new(apodo_limpio(apodo).parse().ok()));
+        let apodo = Arc::new(Mutex::new(datos_del_anuncio(pase, apodo)));
         let actual = apodo.clone();
         let ep = ep.clone();
         let publicador = m.clone();
@@ -169,13 +195,14 @@ impl Anuncio {
         Ok(Anuncio {
             _mdns: m,
             tarea: tarea.abort_handle(),
+            pase: pase.to_string(),
             apodo,
         })
     }
 
     /// El nombre nuevo sale con la siguiente publicación (`REPUBLICAR`).
     pub fn cambiar_apodo(&self, apodo: &str) {
-        *cerrojo(&self.apodo) = apodo_limpio(apodo).parse().ok();
+        *cerrojo(&self.apodo) = datos_del_anuncio(&self.pase, apodo);
     }
 }
 
@@ -185,11 +212,21 @@ impl Drop for Anuncio {
     }
 }
 
+/// Un equipo de la lista de «cerca».
+#[derive(Clone)]
+struct Encontrado {
+    apodo: String,
+    addr: EndpointAddr,
+    pase: Option<String>,
+}
+
+type Encontrados = Arc<Mutex<BTreeMap<EndpointId, Encontrado>>>;
+
 /// Los equipos que se anuncian cerca, mientras viva.
 pub struct Busqueda {
     _mdns: MdnsAddressLookup,
     tarea: AbortHandle,
-    encontrados: Arc<Mutex<BTreeMap<EndpointId, (String, EndpointAddr)>>>,
+    encontrados: Encontrados,
 }
 
 impl Busqueda {
@@ -199,7 +236,7 @@ impl Busqueda {
         alcambiar: impl Fn(Vec<Cerca>) + Send + Sync + 'static,
     ) -> AppResult<Busqueda> {
         let m = mdns(ep.id(), false)?;
-        let encontrados: Arc<Mutex<BTreeMap<EndpointId, (String, EndpointAddr)>>> = Arc::default();
+        let encontrados: Encontrados = Arc::default();
         let mut eventos = m.subscribe().await;
         let lista = encontrados.clone();
         let yo = ep.id();
@@ -216,12 +253,19 @@ impl Busqueda {
                             if id == yo {
                                 false
                             } else {
-                                let apodo = endpoint_info
+                                let (pase, apodo) = endpoint_info
                                     .data
                                     .user_data()
-                                    .map(|u| apodo_limpio(u.as_ref()))
+                                    .map(|u| leer_anuncio(u.as_ref()))
                                     .unwrap_or_default();
-                                l.insert(id, (apodo, endpoint_info.to_endpoint_addr()));
+                                l.insert(
+                                    id,
+                                    Encontrado {
+                                        apodo,
+                                        addr: endpoint_info.to_endpoint_addr(),
+                                        pase,
+                                    },
+                                );
                                 true
                             }
                         }
@@ -243,10 +287,22 @@ impl Busqueda {
 
     /// Una búsqueda que ya ha "visto" a un equipo (para los tests, sin mDNS).
     #[cfg(test)]
-    pub fn de_prueba(id: EndpointId, apodo: &str, addr: EndpointAddr) -> Busqueda {
-        let encontrados: Arc<Mutex<BTreeMap<EndpointId, (String, EndpointAddr)>>> = Arc::default();
+    pub fn de_prueba(
+        id: EndpointId,
+        apodo: &str,
+        addr: EndpointAddr,
+        pase: Option<String>,
+    ) -> Busqueda {
+        let encontrados: Encontrados = Arc::default();
         if let Ok(mut l) = encontrados.lock() {
-            l.insert(id, (apodo.to_string(), addr));
+            l.insert(
+                id,
+                Encontrado {
+                    apodo: apodo.to_string(),
+                    addr,
+                    pase,
+                },
+            );
         }
         Busqueda {
             _mdns: MdnsAddressLookup::builder()
@@ -259,15 +315,15 @@ impl Busqueda {
         }
     }
 
-    /// La dirección con la que llamar a uno de la lista.
-    pub fn direccion(&self, id: &str) -> Option<EndpointAddr> {
+    /// La dirección con la que llamar a uno de la lista, y su pase.
+    pub fn destino(&self, id: &str) -> Option<(EndpointAddr, Option<String>)> {
         let l = match self.encontrados.lock() {
             Ok(l) => l,
             Err(e) => e.into_inner(),
         };
         l.iter()
             .find(|(k, _)| k.to_string() == id)
-            .map(|(_, (_, a))| a.clone())
+            .map(|(_, e)| (e.addr.clone(), e.pase.clone()))
     }
 
     pub fn lista(&self) -> Vec<Cerca> {
@@ -281,16 +337,16 @@ impl Drop for Busqueda {
     }
 }
 
-fn lista_de(l: &Arc<Mutex<BTreeMap<EndpointId, (String, EndpointAddr)>>>) -> Vec<Cerca> {
+fn lista_de(l: &Encontrados) -> Vec<Cerca> {
     let l = match l.lock() {
         Ok(l) => l,
         Err(e) => e.into_inner(),
     };
     let mut v: Vec<Cerca> = l
         .iter()
-        .map(|(id, (apodo, _))| Cerca {
+        .map(|(id, e)| Cerca {
             id: id.to_string(),
-            apodo: apodo.clone(),
+            apodo: e.apodo.clone(),
             huella: huella(id),
         })
         .collect();
@@ -316,16 +372,16 @@ mod tests {
         for _ in 0..200 {
             let a = SecretKey::generate().public();
             let b = SecretKey::generate().public();
-            let c = codigo6(a, b);
-            assert_eq!(c, codigo6(b, a));
-            assert_eq!(c.len(), 6);
+            let c = cifras(a, b);
+            assert_eq!(c, cifras(b, a));
+            assert_eq!(c.len(), 8);
             assert!(c.chars().all(|x| x.is_ascii_digit()));
         }
         // Con otro equipo, otro código (casi siempre).
         let a = SecretKey::generate().public();
         let b = SecretKey::generate().public();
         let otros: std::collections::BTreeSet<String> = (0..30)
-            .map(|_| codigo6(a, SecretKey::generate().public()))
+            .map(|_| cifras(a, SecretKey::generate().public()))
             .collect();
         assert!(otros.len() > 20);
         let _ = b;
@@ -371,6 +427,24 @@ mod tests {
     }
 
     #[test]
+    fn el_anuncio_lleva_el_pase_y_el_apodo() {
+        let pase = "ab".repeat(16);
+        let u = datos_del_anuncio(&pase, "  Ana\n María ").unwrap();
+        assert_eq!(
+            leer_anuncio(u.as_ref()),
+            (Some(pase.clone()), "Ana María".to_string())
+        );
+        // El apodo más largo posible, en el alfabeto que más ocupa, cabe.
+        assert!(datos_del_anuncio(&pase, &"🐉".repeat(100)).is_some());
+        // Un apodo con dos puntos no se confunde con un pase.
+        assert_eq!(leer_anuncio("Sala: 3"), (None, "Sala: 3".to_string()));
+        // El de una app anterior es solo el apodo.
+        assert_eq!(leer_anuncio("Beto"), (None, "Beto".to_string()));
+        let u = datos_del_anuncio(&pase, "a:b").unwrap();
+        assert_eq!(leer_anuncio(u.as_ref()), (Some(pase), "a:b".to_string()));
+    }
+
+    #[test]
     fn el_qr_sale_como_svg() {
         let svg = qr_svg("PBD1-abcdefghijklmnopqrstuvwxyz0123456789").unwrap();
         assert!(svg.contains("<svg") && svg.contains("</svg>"));
@@ -384,7 +458,8 @@ mod tests {
         // Necesita multicast en la máquina: en un contenedor sin red puede no
         // haberlo, y entonces el anuncio no llega (no es un fallo del código).
         let (a, b) = crate::red::nodo::tests::dos().await;
-        let Ok(_anuncio) = Anuncio::nuevo(&a, "  Ana\n María ") else {
+        let pase = "cd".repeat(16);
+        let Ok(_anuncio) = Anuncio::nuevo(&a, "  Ana\n María ", &pase) else {
             eprintln!("sin mDNS en esta máquina: se salta");
             return;
         };
@@ -419,6 +494,8 @@ mod tests {
         };
         assert_eq!(c.id, a.id().to_string());
         assert_eq!(c.apodo, "Ana María");
-        assert!(busqueda.direccion(&c.id).is_some_and(|d| d.id == a.id()));
+        let (dir, visto) = busqueda.destino(&c.id).unwrap();
+        assert_eq!(dir.id, a.id());
+        assert_eq!(visto.as_deref(), Some(pase.as_str()));
     }
 }

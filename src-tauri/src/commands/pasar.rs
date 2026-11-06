@@ -23,7 +23,7 @@ use crate::store::decks;
 // ── Recibir ─────────────────────────────────────────────────────────────
 
 /// Abre «Recibir»: el código, su QR y, si se puede, el anuncio en la red
-/// local durante 5 minutos.
+/// local durante 15 minutos. Da `Cancelled` si se cierra antes de terminar.
 #[tauri::command]
 pub async fn pasar_recibir_abrir(
     app: AppHandle,
@@ -61,14 +61,16 @@ pub fn pasar_recibir_estado(app: AppHandle) -> Option<EstadoReceptor> {
     pasar::recibir::estado(&app)
 }
 
-/// Cierra «Recibir» (y corta lo que hubiera en curso).
+/// Cierra «Recibir» (y corta lo que hubiera en curso). `async`: en Android suelta
+/// el `MulticastLock` preguntando al Kotlin, que no puede esperar en el hilo
+/// principal; lo mismo vale para `pasar_recibir_cancelar` y `pasar_cerca_parar`.
 #[tauri::command]
-pub fn pasar_recibir_cerrar(app: AppHandle) {
+pub async fn pasar_recibir_cerrar(app: AppHandle) {
     pasar::recibir::cerrar(&app);
 }
 
 /// Acepta o rechaza al equipo de la red local que quiere enviar (el código
-/// de 6 cifras).
+/// de 8 cifras).
 #[tauri::command]
 pub fn pasar_peticion(app: AppHandle, aceptar: bool) {
     pasar::aceptar_peticion(&app, aceptar);
@@ -83,7 +85,7 @@ pub fn pasar_responder(app: AppHandle, decisiones: Vec<Decision>) -> AppResult<(
 /// Cancela lo que se esté recibiendo (se ve el resultado) o, si no había nada
 /// en curso, cierra «Recibir».
 #[tauri::command]
-pub fn pasar_recibir_cancelar(app: AppHandle) {
+pub async fn pasar_recibir_cancelar(app: AppHandle) {
     pasar::recibir::cancelar(&app);
 }
 
@@ -96,7 +98,7 @@ pub async fn pasar_cerca_buscar(
     app: AppHandle,
     state: State<'_, AppState>,
 ) -> AppResult<Vec<Cerca>> {
-    pasar_cerca_parar(app.clone(), state.clone());
+    parar_busqueda(&app);
     let ep = state.red.nodo().await?;
     app.multicast(crate::android::UsoMulticast::Buscar, true);
     let emisor = app.clone();
@@ -112,11 +114,26 @@ pub async fn pasar_cerca_buscar(
     Ok(lista)
 }
 
-#[tauri::command]
-pub fn pasar_cerca_parar(app: AppHandle, state: State<'_, AppState>) {
-    if cerrojo(&state.pasar.busqueda).take().is_some() {
+fn parar_busqueda(app: &AppHandle) {
+    let habia = cerrojo(&app.state::<AppState>().pasar.busqueda)
+        .take()
+        .is_some();
+    if habia {
         app.multicast(crate::android::UsoMulticast::Buscar, false);
     }
+}
+
+#[tauri::command]
+pub async fn pasar_cerca_parar(app: AppHandle) {
+    parar_busqueda(&app);
+}
+
+/// Manda el código de «Recibir» por otra app (WhatsApp, Telegram…), con el
+/// selector del sistema. Solo en Android; en el escritorio se copia.
+#[tauri::command]
+pub async fn pasar_compartir_codigo(app: AppHandle, texto: String) -> AppResult<()> {
+    crate::red::codigo::Codigo::de_texto_deck(&texto)?;
+    crate::android::compartir_texto(&app, &texto)
 }
 
 /// Comprueba un código pegado o leído de un QR antes de enviar: uno de una
@@ -222,7 +239,7 @@ fn nombre_paquete(d: &Deck) -> String {
 /// Lo que pesa el paquete de un deck en cada modo y si lleva proxies (para
 /// elegir al compartirlo).
 #[tauri::command]
-pub fn deck_paquete_info(state: State<'_, AppState>, id: String) -> AppResult<InfoPaquete> {
+pub async fn deck_paquete_info(state: State<'_, AppState>, id: String) -> AppResult<InfoPaquete> {
     let deck = decks::open(&state.db, &id)?;
     Ok(InfoPaquete {
         proxies: proxy_core::compartir::resumen_proxies(&deck).hay(),
@@ -357,12 +374,14 @@ pub async fn paquete_importar(
         destino,
     };
     let f = std::fs::File::open(copia.ruta())?;
-    let deck = package::import_con(
-        std::io::BufReader::new(f),
-        &state.blobs,
-        &state.db,
-        &opciones,
-    )?;
+    let deck = pasar::bloqueante(|| {
+        package::import_con(
+            std::io::BufReader::new(f),
+            &state.blobs,
+            &state.db,
+            &opciones,
+        )
+    })?;
     Ok(PaqueteImportado {
         deck_id: deck.id.clone(),
         nombre: deck.name.clone(),

@@ -407,7 +407,7 @@ async fn un_codigo_de_un_solo_uso_y_uno_malo_no_dejan_pasar() {
     // Un secreto que no es: rechazado, y «Recibir» sigue esperando.
     let malo = crate::red::codigo::Codigo {
         addr: c.addr.clone(),
-        secreto: crate::red::codigo::secreto_nuevo(),
+        secreto: crate::red::codigo::secreto_nuevo().unwrap(),
     }
     .a_texto_deck()
     .unwrap();
@@ -762,6 +762,7 @@ mod tramposo {
             &AlReceptor::Hola {
                 version: VERSION,
                 secreto: Some(secreto),
+                pase: None,
                 apodo: "Mal\nicioso\u{1b}[31m".into(),
             },
         )
@@ -790,12 +791,12 @@ mod tramposo {
     }
 
     #[tokio::test]
-    async fn un_paquete_mas_grande_que_el_tope_o_con_otra_huella_se_corta() {
+    async fn un_paquete_que_no_cabe_en_el_disco_se_corta_y_el_otro_sabe_por_que() {
         let b = equipo();
         let (ep_a, ep_b) = (nodo().await, nodo().await);
         let texto = abrir(&b, &ep_b).await;
         let c = crate::red::codigo::Codigo::de_texto_deck(&texto).unwrap();
-        let (_conn, mut tx, mut rx) = hasta_la_oferta(&ep_a, c.addr, c.secreto).await;
+        let (conn, mut tx, mut rx) = hasta_la_oferta(&ep_a, c.addr, c.secreto).await;
         let oferta = super::super::tipos::DeckOfrecido {
             nombre: "X".into(),
             cartas: 1,
@@ -822,15 +823,62 @@ mod tramposo {
             &mut tx,
             &AlReceptor::Paquete {
                 indice: 0,
-                tamano: crate::pasar::protocolo::MAX_PAQUETE + 1,
+                tamano: u64::MAX,
                 huella: "0".repeat(64),
             },
         )
         .await
         .unwrap();
         let s = fase_receptor(&b, FaseReceptor::Error).await;
-        assert_eq!(s.error.unwrap().params["motivo"], "paquete");
+        assert_eq!(s.error.unwrap().params["motivo"], "sin_espacio");
         assert!(decks::list(&b.st.db).unwrap().is_empty());
+        // El que manda se entera de por qué, no de un «cancelado».
+        let razon = tokio::time::timeout(Duration::from_secs(5), conn.closed())
+            .await
+            .expect("la conexión se cierra");
+        match razon {
+            iroh::endpoint::ConnectionError::ApplicationClosed(c) => {
+                assert_eq!(c.error_code, super::super::CIERRE_SIN_ESPACIO.into());
+            }
+            otro => panic!("se esperaba un cierre de la app: {otro:?}"),
+        }
+        assert_eq!(
+            super::super::motivo_del_corte(&conn),
+            Some("otro_sin_espacio")
+        );
+    }
+
+    /// Una oferta que dice pesar más que el disco se corta antes de pedirla.
+    #[tokio::test]
+    async fn una_oferta_que_no_cabe_se_dice_antes_de_recibir_nada() {
+        let b = equipo();
+        let (ep_a, ep_b) = (nodo().await, nodo().await);
+        let texto = abrir(&b, &ep_b).await;
+        let c = crate::red::codigo::Codigo::de_texto_deck(&texto).unwrap();
+        let (_conn, mut tx, _rx) = hasta_la_oferta(&ep_a, c.addr, c.secreto).await;
+        let oferta = super::super::tipos::DeckOfrecido {
+            nombre: "Enorme".into(),
+            cartas: 1,
+            proxies: false,
+            tamano: u64::MAX / 4,
+            tamano_originales: 10,
+            linaje: None,
+            actualizado: None,
+            portada: None,
+            optimizado: false,
+        };
+        escribir(
+            &mut tx,
+            &AlReceptor::Oferta {
+                decks: vec![oferta],
+            },
+        )
+        .await
+        .unwrap();
+        fase_receptor(&b, FaseReceptor::Oferta).await;
+        recibir::responder(&b, vec![dec(0, Eleccion::ConProxies, None)]).unwrap();
+        let s = fase_receptor(&b, FaseReceptor::Error).await;
+        assert_eq!(s.error.unwrap().params["motivo"], "sin_espacio");
     }
 
     #[tokio::test]
@@ -879,33 +927,268 @@ mod tramposo {
     }
 }
 
+/// Azar repetible para las pruebas con entradas estropeadas.
+fn azar(semilla: u64) -> impl FnMut() -> u64 {
+    let mut x = semilla.wrapping_mul(0x9E37_79B9_7F4A_7C15) | 1;
+    move || {
+        x ^= x << 13;
+        x ^= x >> 7;
+        x ^= x << 17;
+        x
+    }
+}
+
+/// Bytes a medio camino entre lo válido y la basura: es lo que llega más hondo.
+fn estropeados(az: &mut impl FnMut() -> u64, bueno: &[u8]) -> Vec<u8> {
+    let mut b = bueno.to_vec();
+    for _ in 0..1 + az() % 6 {
+        if b.is_empty() {
+            break;
+        }
+        let i = (az() % b.len() as u64) as usize;
+        match az() % 4 {
+            0 => b[i] ^= 1 << (az() % 8),
+            1 => b.truncate(i),
+            2 => b.insert(i, az() as u8),
+            _ => b[i] = [b'"', b'{', b'[', 0, 0xff][(az() % 5) as usize],
+        }
+    }
+    b
+}
+
+/// Lo que llega de otro equipo, estropeado al azar: nada revienta y lo que pasa
+/// las comprobaciones cumple lo que prometen.
+#[tokio::test]
+async fn lo_que_llega_estropeado_al_azar_nunca_revienta() {
+    use super::protocolo::{apodo_limpio, leer, validar_oferta, AlEmisor, AlReceptor};
+    let vueltas: u64 = std::env::var("PB_ITERACIONES")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(3000);
+    let oferta = serde_json::to_vec(&AlReceptor::Oferta {
+        decks: vec![super::tipos::DeckOfrecido {
+            nombre: "D".into(),
+            cartas: 3,
+            proxies: true,
+            tamano: 10,
+            tamano_originales: 5,
+            linaje: Some("abc".into()),
+            actualizado: Some(1),
+            portada: Some("QUJD".into()),
+            optimizado: false,
+        }],
+    })
+    .unwrap();
+    let hola = serde_json::to_vec(&AlReceptor::Hola {
+        version: 1,
+        secreto: Some("ab".repeat(16)),
+        pase: Some("cd".repeat(16)),
+        apodo: "Ana".into(),
+    })
+    .unwrap();
+    let respuesta = br#"{"t":"respuesta","decisiones":["conProxies"]}"#.to_vec();
+    let codigo = crate::red::codigo::Codigo {
+        addr: iroh::EndpointAddr::new(SecretKey::generate().public()),
+        secreto: "ab".repeat(16),
+    }
+    .a_texto_deck()
+    .unwrap();
+    for semilla in 1..=vueltas {
+        let mut az = azar(semilla);
+        for bueno in [&oferta, &hola, &respuesta] {
+            let cuerpo = estropeados(&mut az, bueno);
+            let mut trama = (cuerpo.len() as u32).to_be_bytes().to_vec();
+            trama.extend_from_slice(&cuerpo);
+            if let Ok(AlReceptor::Oferta { decks }) = leer::<_, AlReceptor>(&mut &trama[..]).await {
+                if validar_oferta(&decks).is_ok() {
+                    for d in &decks {
+                        assert!(
+                            d.nombre.chars().all(|c| !c.is_control()),
+                            "semilla {semilla}"
+                        );
+                    }
+                }
+            }
+            let _ = leer::<_, AlEmisor>(&mut &trama[..]).await;
+            // También con una longitud que miente.
+            let mut mentira = (az() as u32).to_be_bytes().to_vec();
+            mentira.extend_from_slice(&cuerpo);
+            let _ = leer::<_, AlReceptor>(&mut &mentira[..]).await;
+        }
+        let texto = String::from_utf8_lossy(&estropeados(&mut az, codigo.as_bytes())).into_owned();
+        let _ = crate::red::codigo::Codigo::de_texto_deck(&texto);
+        let limpio = apodo_limpio(&texto);
+        assert!(limpio.chars().all(|c| !c.is_control()), "semilla {semilla}");
+        let (_, apodo) = encontrar::leer_anuncio(&texto);
+        assert!(apodo.chars().all(|c| !c.is_control()), "semilla {semilla}");
+        let _ = recibir::sanear_portada(&texto);
+    }
+}
+
+/// Un emisor que manda basura a un «Recibir» de verdad: acaba en un estado final,
+/// con la conexión cortada y nada en la biblioteca. Una tarea que reventase dejaría
+/// «Recibir» ocupado para siempre, sin ningún error a la vista.
+#[tokio::test(flavor = "multi_thread")]
+async fn un_emisor_que_manda_basura_no_deja_recibir_colgado() {
+    use super::protocolo::{escribir, leer, AlEmisor, AlReceptor, VERSION};
+    let b = equipo();
+    let (ep_a, ep_b) = (nodo().await, nodo().await);
+    let ronda: u64 = std::env::var("PB_ITERACIONES_RED")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(15);
+    for semilla in 1..=ronda {
+        let mut az = azar(semilla);
+        let texto = abrir(&b, &ep_b).await;
+        let c = crate::red::codigo::Codigo::de_texto_deck(&texto).unwrap();
+        let conn = ep_a
+            .connect(c.addr, crate::red::nodo::ALPN_DECK)
+            .await
+            .unwrap();
+        let (mut tx, mut rx) = conn.open_bi().await.unwrap();
+        escribir(
+            &mut tx,
+            &AlReceptor::Hola {
+                version: VERSION,
+                secreto: Some(c.secreto),
+                pase: None,
+                apodo: "Mal".into(),
+            },
+        )
+        .await
+        .unwrap();
+        let _: AlEmisor = leer(&mut rx).await.unwrap();
+        let n = 1 + (az() % 512) as usize;
+        let basura: Vec<u8> = (0..n).map(|_| az() as u8).collect();
+        let _ = tx.write_all(&basura).await;
+        let _ = tx.finish();
+        // Sin bytes, un plazo corta; con basura, se corta antes.
+        esperar_estado(
+            &format!("semilla {semilla}: un estado final"),
+            || recibir::estado(&b),
+            |s| {
+                matches!(
+                    s.fase,
+                    FaseReceptor::Error | FaseReceptor::Cancelado | FaseReceptor::Terminado
+                )
+            },
+        )
+        .await;
+        assert!(
+            decks::list(&b.st.db).unwrap().is_empty(),
+            "semilla {semilla}"
+        );
+        conn.close(0u32.into(), b"fin");
+    }
+}
+
+/// Pone a B como si se anunciara en la red local (sin mDNS de verdad) y a A como
+/// si lo hubiera visto con este pase.
+fn visto_en_la_red(a: &Prueba, b: &Prueba, ep_b: &Endpoint, pase_visto: Option<String>) {
+    {
+        let mut g = super::cerrojo(&b.st.pasar.receptor);
+        let r = g.as_mut().unwrap();
+        r.estado.cerca = true;
+        r.pase = Some("ab".repeat(16));
+    }
+    *super::cerrojo(&a.st.pasar.busqueda) = Some(super::encontrar::Busqueda::de_prueba(
+        ep_b.id(),
+        "Beto",
+        ep_b.addr(),
+        pase_visto,
+    ));
+}
+
+/// Sin el pase del anuncio no se llega ni a preguntar a la persona, sea cual sea
+/// el camino por el que venga la conexión; y el motivo no habla de un código que
+/// nadie ha escrito.
+#[tokio::test]
+async fn sin_el_pase_del_anuncio_no_se_pregunta_a_nadie() {
+    let (a, b) = (equipo(), equipo());
+    let (ep_a, ep_b) = (nodo().await, nodo().await);
+    let d = deck(&a, "D", false, 1);
+    for visto in [None, Some("cd".repeat(16))] {
+        abrir(&b, &ep_b).await;
+        visto_en_la_red(&a, &b, &ep_b, visto);
+        enviar::enviar(
+            &a,
+            ep_a.clone(),
+            Destino::Cerca {
+                id: ep_b.id().to_string(),
+            },
+            vec![d.id.clone()],
+            crate::package::Modo::Original,
+        )
+        .await
+        .unwrap();
+        let s = fase_emisor(&a, FaseEmisor::Error).await;
+        assert_eq!(s.error.unwrap().params["motivo"], "no_admite");
+        assert_eq!(recibir::estado(&b).unwrap().fase, FaseReceptor::Esperando);
+        assert!(!b
+            .receptor
+            .lock()
+            .unwrap()
+            .iter()
+            .any(|e| e.fase == FaseReceptor::Peticion));
+        enviar::olvidar(&a);
+    }
+}
+
+/// Cerrar «Recibir» mientras aún espera a tener relé no deja uno abierto que no ve
+/// nadie (anunciándose y con el nodo cogido).
+#[tokio::test]
+async fn cerrar_mientras_se_abre_no_deja_un_recibir_fantasma() {
+    let b = equipo();
+    let ep_b = nodo().await;
+    let (b2, ep2) = (b.clone(), ep_b.clone());
+    // Con relé pedido en un nodo sin relé, se queda esperando.
+    let abriendo = tokio::spawn(async move { recibir::abrir(&b2, ep2, "Beto", true).await });
+    tokio::time::sleep(Duration::from_millis(100)).await;
+    recibir::cerrar(&b);
+    let e = abriendo.await.unwrap().unwrap_err();
+    assert_eq!(e.code, crate::error::ErrorCode::Cancelled);
+    assert!(recibir::estado(&b).is_none());
+}
+
+/// Quien tiene el código puede llegar antes de que el otro atienda (la app de
+/// mensajes delante, sin red para la nuestra): se espera, no falla a la primera.
+#[tokio::test]
+async fn con_un_codigo_se_espera_a_que_el_otro_vuelva() {
+    let (a, b) = (equipo(), equipo());
+    let (ep_a, ep_b) = (nodo().await, nodo().await);
+    let d = deck(&a, "D", false, 1);
+    let texto = abrir(&b, &ep_b).await;
+    // Como si Android hubiera dejado a B sin atender nada.
+    super::retirar(ep_b.id());
+    enviar::enviar(
+        &a,
+        ep_a.clone(),
+        Destino::Codigo { texto },
+        vec![d.id.clone()],
+        crate::package::Modo::Original,
+    )
+    .await
+    .unwrap();
+    tokio::time::sleep(Duration::from_secs(1)).await;
+    assert_eq!(enviar::estado(&a).unwrap().fase, FaseEmisor::Conectando);
+    // Vuelve: entra solo.
+    super::registrar(&b, ep_b.clone());
+    fase_receptor(&b, FaseReceptor::Oferta).await;
+    recibir::responder(&b, vec![dec(0, Eleccion::ConProxies, None)]).unwrap();
+    fase_receptor(&b, FaseReceptor::Terminado).await;
+    fase_emisor(&a, FaseEmisor::Terminado).await;
+    assert_eq!(nombres(&b), vec!["D"]);
+}
+
 #[tokio::test]
 async fn el_codigo_de_6_cifras_acepta_a_alguien_de_la_red_local() {
-    // Sin secreto, solo vale si «Recibir» se anuncia en la red local; aquí se
-    // fuerza el anuncio (sin mDNS de verdad) para probar la aceptación.
+    // Sin secreto, hace falta el pase del anuncio; aquí se fuerza (sin mDNS de
+    // verdad) para probar la aceptación.
     let (a, b) = (equipo(), equipo());
     let (ep_a, ep_b) = (nodo().await, nodo().await);
     let d = deck(&a, "D", false, 1);
     abrir(&b, &ep_b).await;
-    {
-        let mut g = super::cerrojo(&b.st.pasar.receptor);
-        g.as_mut().unwrap().estado.cerca = true;
-    }
-    // A conoce la dirección de B (en la app la da la lista de «cerca»): la de
-    // la propia máquina, que es de la red local aunque esta tenga IP pública.
-    let mut dir = iroh::EndpointAddr::new(ep_b.id());
-    dir.addrs
-        .extend(ep_b.addr().addrs.iter().filter_map(|a| match a {
-            iroh::TransportAddr::Ip(sa) if sa.is_ipv4() => Some(iroh::TransportAddr::Ip(
-                std::net::SocketAddr::new(std::net::Ipv4Addr::LOCALHOST.into(), sa.port()),
-            )),
-            _ => None,
-        }));
-    *super::cerrojo(&a.st.pasar.busqueda) = Some(super::encontrar::Busqueda::de_prueba(
-        ep_b.id(),
-        "Beto",
-        dir,
-    ));
+    visto_en_la_red(&a, &b, &ep_b, Some("ab".repeat(16)));
     enviar::enviar(
         &a,
         ep_a.clone(),
@@ -918,10 +1201,10 @@ async fn el_codigo_de_6_cifras_acepta_a_alguien_de_la_red_local() {
     .await
     .unwrap();
     let s = fase_receptor(&b, FaseReceptor::Peticion).await;
-    let codigo = s.codigo6.unwrap();
-    assert_eq!(codigo, encontrar::codigo6(ep_a.id(), ep_b.id()));
+    let codigo = s.cifras.unwrap();
+    assert_eq!(codigo, encontrar::cifras(ep_a.id(), ep_b.id()));
     let e = fase_emisor(&a, FaseEmisor::EsperandoAceptacion).await;
-    assert_eq!(e.codigo6.unwrap(), codigo);
+    assert_eq!(e.cifras.unwrap(), codigo);
     super::aceptar_peticion(&b, true);
     fase_receptor(&b, FaseReceptor::Oferta).await;
     recibir::responder(&b, vec![dec(0, Eleccion::ConProxies, None)]).unwrap();
@@ -931,10 +1214,7 @@ async fn el_codigo_de_6_cifras_acepta_a_alguien_de_la_red_local() {
     // Si no se acepta, no entra.
     enviar::olvidar(&a);
     abrir(&b, &ep_b).await;
-    {
-        let mut g = super::cerrojo(&b.st.pasar.receptor);
-        g.as_mut().unwrap().estado.cerca = true;
-    }
+    visto_en_la_red(&a, &b, &ep_b, Some("ab".repeat(16)));
     enviar::enviar(
         &a,
         ep_a.clone(),
@@ -974,20 +1254,22 @@ async fn el_codigo_vale_por_el_rele_sin_direcciones_directas() {
     let abierto = recibir::abrir(&b, ep_b.clone(), "Beto", true)
         .await
         .unwrap();
-    // El código lleva el relé.
+    // El código lleva el relé, y la pantalla lo sabe.
     let c = crate::red::codigo::Codigo::de_texto_deck(&abierto.codigo).unwrap();
     assert!(c.addr.addrs.iter().any(|x| x.is_relay()));
-    // Sin direcciones directas: solo se llega por el relé.
-    let solo_rele = crate::red::codigo::Codigo {
-        addr: encontrar::sin_directas(&c.addr),
-        secreto: c.secreto.clone(),
-    }
-    .a_texto_deck()
-    .unwrap();
+    assert!(abierto.distancia);
+    // El que se manda por mensaje no enseña ninguna IP, y es el mismo secreto:
+    // se llega solo por el relé.
+    let mensaje = crate::red::codigo::Codigo::de_texto_deck(&abierto.codigo_mensaje).unwrap();
+    assert!(mensaje.addr.addrs.iter().all(iroh::TransportAddr::is_relay));
+    assert!(mensaje.addr.addrs.iter().any(|x| x.is_relay()));
+    assert_eq!(mensaje.secreto, c.secreto);
     enviar::enviar(
         &a,
         ep_a.clone(),
-        Destino::Codigo { texto: solo_rele },
+        Destino::Codigo {
+            texto: abierto.codigo_mensaje.clone(),
+        },
         vec![d.id.clone()],
         crate::package::Modo::Original,
     )
@@ -998,4 +1280,161 @@ async fn el_codigo_vale_por_el_rele_sin_direcciones_directas() {
     fase_receptor(&b, FaseReceptor::Terminado).await;
     fase_emisor(&a, FaseEmisor::Terminado).await;
     assert_eq!(nombres(&b), vec!["Lejos"]);
+}
+
+/// Un deck que pesa: `n` imágenes de prueba, con `mb` megas de relleno detrás para
+/// que no haya que generar píxeles (una imagen de verdad con cola sigue valiendo).
+fn deck_pesado(e: &Prueba, nombre: &str, n: u32, mb: usize) -> Deck {
+    let reverso = e.st.blobs.generic_back(&e.st.db).unwrap();
+    let mut d = decks::create(&e.st.db, nombre, Some(reverso)).unwrap();
+    for i in 0..n {
+        let mut bytes = png(20, 28, 7);
+        let inicio = bytes.len();
+        bytes.resize(inicio + mb * 1024 * 1024, 0);
+        // Que cada una tenga su huella y no se pueda comprimir.
+        let mut x = u64::from(i).wrapping_mul(0x9E37_79B9_7F4A_7C15) | 1;
+        for b in bytes[inicio..].chunks_mut(8) {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            b.copy_from_slice(&x.to_le_bytes()[..b.len()]);
+        }
+        let img =
+            e.st.blobs
+                .put_bytes(&e.st.db, &bytes, ImageOrigin::Upload)
+                .unwrap();
+        d.cards.push(DeckCard {
+            front: Some(img),
+            ..carta(
+                &format!("c{i}"),
+                "x",
+                CardSource::Custom {
+                    scryfall_id: None,
+                    externa: None,
+                },
+                0,
+                e,
+                ImageOrigin::Upload,
+            )
+        });
+    }
+    decks::save(&e.st.db, &d).unwrap();
+    d
+}
+
+/// Lo más alto que ha llegado la memoria de este proceso, en MB (Linux).
+fn pico_de_memoria_mb() -> u64 {
+    std::fs::read_to_string("/proc/self/status")
+        .ok()
+        .and_then(|s| {
+            s.lines()
+                .find(|l| l.starts_with("VmHWM:"))
+                .and_then(|l| l.split_whitespace().nth(1)?.parse::<u64>().ok())
+        })
+        .map_or(0, |kb| kb / 1024)
+}
+
+async fn mandar_y_medir(a: &Prueba, b: &Prueba, ep_a: &Endpoint, ep_b: &Endpoint, d: &Deck) -> f64 {
+    let abierto = recibir::abrir(b, ep_b.clone(), "Beto", ep_b.home_relay_ok())
+        .await
+        .unwrap();
+    let inicio = std::time::Instant::now();
+    enviar::enviar(
+        a,
+        ep_a.clone(),
+        Destino::Codigo {
+            texto: abierto.codigo,
+        },
+        vec![d.id.clone()],
+        crate::package::Modo::Original,
+    )
+    .await
+    .unwrap();
+    fase_receptor(b, FaseReceptor::Oferta).await;
+    recibir::responder(b, vec![dec(0, Eleccion::ConProxies, None)]).unwrap();
+    for _ in 0..(60 * 60 * 10) {
+        match recibir::estado(b).map(|s| s.fase) {
+            Some(FaseReceptor::Terminado) => break,
+            Some(FaseReceptor::Error | FaseReceptor::Cancelado) => {
+                let s = recibir::estado(b).unwrap();
+                panic!("se ha cortado: {:?} {:?}", s.error, s.progreso)
+            }
+            _ => tokio::time::sleep(Duration::from_millis(100)).await,
+        }
+    }
+    assert_eq!(recibir::estado(b).unwrap().fase, FaseReceptor::Terminado);
+    inicio.elapsed().as_secs_f64()
+}
+
+/// Un nodo con la dirección de relé disponible para `mandar_y_medir`.
+trait ConRele {
+    fn home_relay_ok(&self) -> bool;
+}
+
+impl ConRele for Endpoint {
+    fn home_relay_ok(&self) -> bool {
+        self.addr().addrs.iter().any(iroh::TransportAddr::is_relay)
+    }
+}
+
+/// Más de los 500 MB de antes, por la red de verdad y sin tener el paquete en
+/// memoria. A mano: `PB_PLAZO_REAL=1 cargo test --lib -- --ignored --nocapture mas_de_500_mb`.
+#[tokio::test(flavor = "multi_thread")]
+#[ignore]
+async fn un_envio_de_mas_de_500_mb_llega_entero() {
+    let (a, b) = (equipo(), equipo());
+    let (ep_a, ep_b) = (nodo().await, nodo().await);
+    let d = deck_pesado(&a, "Pesado", 60, 12);
+    let antes = pico_de_memoria_mb();
+    let s = mandar_y_medir(&a, &b, &ep_a, &ep_b, &d).await;
+    let pico = pico_de_memoria_mb();
+    let total: u32 = 60 * 12;
+    eprintln!("{total} MB en {s:.1} s ({:.0} MB/s); memoria: pico de {pico} MB (antes de enviar {antes} MB)", f64::from(total) / s);
+    assert_eq!(nombres(&b), vec!["Pesado"]);
+    let llega = decks::list(&b.st.db).unwrap();
+    assert_eq!(decks::open(&b.st.db, &llega[0].id).unwrap().cards.len(), 60);
+    assert!(
+        pico.saturating_sub(antes) < u64::from(total) / 2,
+        "el paquete no debe estar entero en memoria: de {antes} MB a {pico} MB"
+    );
+}
+
+/// La velocidad por el relé público, sin direcciones directas posibles: lo que
+/// pasaría entre dos móviles cuyas operadoras no dejan abrir camino directo. A mano:
+/// `PB_PLAZO_REAL=1 cargo test --lib -- --ignored --nocapture velocidad_por_el_rele`.
+#[tokio::test(flavor = "multi_thread")]
+#[ignore]
+async fn velocidad_por_el_rele() {
+    use crate::red::nodo::ALPN_DECK;
+    async fn solo_rele() -> Endpoint {
+        Endpoint::builder(iroh::endpoint::presets::N0)
+            .clear_ip_transports()
+            .ca_tls_config(crate::tls::iroh())
+            .secret_key(SecretKey::generate())
+            .alpns(vec![ALPN_DECK.to_vec()])
+            .bind()
+            .await
+            .unwrap()
+    }
+    let (a, b) = (equipo(), equipo());
+    let (ep_a, ep_b) = (solo_rele().await, solo_rele().await);
+    tokio::time::timeout(Duration::from_secs(20), async {
+        ep_a.online().await;
+        ep_b.online().await;
+    })
+    .await
+    .expect("sin relé de n0 desde esta máquina");
+    let mb = std::env::var("PB_MB")
+        .ok()
+        .and_then(|v| v.parse::<u32>().ok())
+        .unwrap_or(30);
+    let d = deck_pesado(&a, "Relé", mb.div_ceil(5), 5);
+    let s = mandar_y_medir(&a, &b, &ep_a, &ep_b, &d).await;
+    let c = ep_a.id().fmt_short();
+    eprintln!(
+        "nodo {c}: {} MB por el relé en {s:.1} s = {:.2} MB/s",
+        mb.div_ceil(5) * 5,
+        f64::from(mb.div_ceil(5) * 5) / s
+    );
+    assert_eq!(nombres(&b), vec!["Relé"]);
 }

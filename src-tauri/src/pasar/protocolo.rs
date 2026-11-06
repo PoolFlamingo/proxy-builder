@@ -6,7 +6,7 @@
 //!
 //! ```text
 //! emisor                              receptor
-//!   Hola { version, secreto?, apodo } →
+//!   Hola { version, secreto?, pase?, apodo } →
 //!                                     ← Listo { apodo }  |  Rechazo { motivo }
 //!   Oferta { decks } →
 //!                                     ← Respuesta { decisiones }
@@ -17,7 +17,9 @@
 //! ```
 //!
 //! Topes (lo que pasa se corta y la conexión se cierra): 64 KiB por trama
-//! (también la oferta), 32 decks por oferta, 500 MB por paquete.
+//! (también la oferta) y 32 decks por oferta. **Un paquete no tiene tope fijo**:
+//! manda el espacio libre de quien recibe (`hay_espacio`), que además ha visto
+//! el peso y ha aceptado.
 //!
 //! 🛑 Todo lo que llega de otro equipo es entrada no confiable: tramas con
 //! tope antes de leerlas, JSON tipado, la oferta validada (`validar_oferta`) y
@@ -36,10 +38,6 @@ pub const VERSION: u32 = 1;
 /// Lo más grande que puede ser una trama de control, la oferta incluida.
 pub const TOPE_TRAMA: usize = 64 * 1024;
 pub const MAX_DECKS: usize = 32;
-/// Lo más grande que puede ser un paquete.
-pub const MAX_PAQUETE: u64 = 500 * 1024 * 1024;
-/// Lo más grande que puede ser todo lo que se manda de una vez.
-pub const MAX_TOTAL: u64 = 2 * 1024 * 1024 * 1024;
 pub const MAX_NOMBRE: usize = 120;
 pub const MAX_APODO: usize = 32;
 /// Lo más largo que puede ser la portada en base64.
@@ -53,9 +51,14 @@ pub enum AlReceptor {
     Hola {
         version: u32,
         /// El del código en texto o el QR; sin él, hay que aceptar el
-        /// encuentro a mano (el código de 6 cifras).
+        /// encuentro a mano (el código de 8 cifras).
         #[serde(default)]
         secreto: Option<String>,
+        /// El pase del anuncio de la red local (`encontrar::Anuncio`): dice que
+        /// quien llama ha visto a este equipo en la lista de «cerca». Con él
+        /// aún hay que aceptar el encuentro a mano.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pase: Option<String>,
         apodo: String,
     },
     Oferta {
@@ -78,8 +81,8 @@ pub enum AlEmisor {
     Listo {
         apodo: String,
     },
-    /// No se acepta (`motivo`: `version`, `codigo`, `ocupado`, `rechazado`,
-    /// `caducado`).
+    /// No se acepta (`motivo`: `version`, `codigo`, `no_admite`, `ocupado`,
+    /// `rechazado`, `caducado`).
     Rechazo {
         motivo: String,
     },
@@ -113,13 +116,13 @@ fn texto_sano(t: &str, max: usize) -> bool {
     !t.trim().is_empty() && t.chars().count() <= max && !t.chars().any(char::is_control)
 }
 
-/// Comprueba la oferta de fuera: cuántos decks, nombres, tamaños y linajes.
-/// No toca la portada (la limpia quien la enseña, en Rust).
+/// Comprueba la oferta de fuera: cuántos decks, nombres y linajes. El peso solo
+/// se enseña: lo que cuenta es el del paquete (`recibir::recibir_uno`). No toca
+/// la portada (la limpia quien la enseña, en Rust).
 pub fn validar_oferta(decks: &[DeckOfrecido]) -> Result<(), &'static str> {
     if decks.is_empty() || decks.len() > MAX_DECKS {
         return Err("decks");
     }
-    let mut total = 0u64;
     for d in decks {
         if !texto_sano(&d.nombre, MAX_NOMBRE) {
             return Err("nombre");
@@ -127,10 +130,6 @@ pub fn validar_oferta(decks: &[DeckOfrecido]) -> Result<(), &'static str> {
         if d.cartas > 100_000 {
             return Err("cartas");
         }
-        if d.tamano > MAX_PAQUETE || d.tamano_originales > MAX_PAQUETE {
-            return Err("tamano");
-        }
-        total = total.saturating_add(d.tamano);
         if d.linaje
             .as_deref()
             .is_some_and(|l| l.is_empty() || l.len() > 64 || !l.chars().all(es_de_id))
@@ -140,9 +139,6 @@ pub fn validar_oferta(decks: &[DeckOfrecido]) -> Result<(), &'static str> {
         if d.portada.as_deref().is_some_and(|p| p.len() > MAX_PORTADA) {
             return Err("portada");
         }
-    }
-    if total > MAX_TOTAL {
-        return Err("tamano");
     }
     Ok(())
 }
@@ -165,16 +161,23 @@ pub fn apodo_limpio(a: &str) -> String {
 }
 
 /// Sin un solo byte en este tiempo, quien manda se da por perdido (un emisor
-/// lento no deja «Recibir» ocupado sin fin).
-pub const PLAZO_SIN_BYTES: std::time::Duration = if cfg!(test) {
-    std::time::Duration::from_millis(300)
-} else {
-    std::time::Duration::from_secs(30)
-};
+/// parado no deja «Recibir» ocupado sin fin). Es holgado: por datos móviles y
+/// por un relé con tope de velocidad hay parones de muchos segundos; si la
+/// conexión se muere de verdad, QUIC lo dice antes.
+pub fn plazo_sin_bytes() -> std::time::Duration {
+    #[cfg(test)]
+    {
+        // Las pruebas de velocidad por el relé necesitan el de verdad.
+        if std::env::var_os("PB_PLAZO_REAL").is_none() {
+            return std::time::Duration::from_millis(300);
+        }
+    }
+    std::time::Duration::from_secs(120)
+}
 
 /// Copia exactamente `tamano` bytes de `r` a `w` por trozos, calculando su
 /// SHA-256 y avisando del avance. Si el otro lado corta antes, es un error;
-/// si pasa [`PLAZO_SIN_BYTES`] sin que llegue nada, un `Io` de `TimedOut`.
+/// si pasa [`plazo_sin_bytes`] sin que llegue nada, un `Io` de `TimedOut`.
 pub async fn recibir_bytes<R, W, F>(
     r: &mut R,
     w: &mut W,
@@ -194,7 +197,7 @@ where
         let n = usize::try_from(falta.min(TROZO as u64)).unwrap_or(TROZO);
         let mut leidos = 0;
         while leidos < n {
-            let m = tokio::time::timeout(PLAZO_SIN_BYTES, r.read(&mut buf[leidos..n]))
+            let m = tokio::time::timeout(plazo_sin_bytes(), r.read(&mut buf[leidos..n]))
                 .await
                 .map_err(|_| std::io::Error::from(std::io::ErrorKind::TimedOut))??;
             if m == 0 {
@@ -262,7 +265,7 @@ mod tests {
         let manda = tokio::spawn(async move {
             for _ in 0..4 {
                 a.write_all(b"12345").await.unwrap();
-                tokio::time::sleep(PLAZO_SIN_BYTES / 3).await;
+                tokio::time::sleep(plazo_sin_bytes() / 3).await;
             }
         });
         let mut fuera = Vec::new();
@@ -298,6 +301,7 @@ mod tests {
         let m = AlReceptor::Hola {
             version: VERSION,
             secreto: Some("s".into()),
+            pase: None,
             apodo: "Ana".into(),
         };
         escribir(&mut a, &m).await.unwrap();
@@ -344,24 +348,32 @@ mod tests {
             validar_oferta(&[deck(&"x".repeat(MAX_NOMBRE + 1))]),
             Err("nombre")
         );
+        // El peso no tiene tope: lo decide quien recibe al verlo.
         let mut d = deck("g");
-        d.tamano = MAX_PAQUETE + 1;
-        assert_eq!(validar_oferta(&[d]), Err("tamano"));
+        d.tamano = 40 * 1024 * 1024 * 1024;
+        assert_eq!(validar_oferta(&[d]), Ok(()));
         let mut d = deck("l");
         d.linaje = Some("x'; --".into());
         assert_eq!(validar_oferta(&[d]), Err("linaje"));
         let mut d = deck("p");
         d.portada = Some("A".repeat(MAX_PORTADA + 1));
         assert_eq!(validar_oferta(&[d]), Err("portada"));
-        // La suma de lo que se manda también tiene tope.
-        let grandes: Vec<_> = (0..5)
-            .map(|i| {
-                let mut d = deck(&format!("g{i}"));
-                d.tamano = MAX_PAQUETE;
-                d
-            })
-            .collect();
-        assert_eq!(validar_oferta(&grandes), Err("tamano"));
+    }
+
+    #[test]
+    fn un_hola_sin_pase_sigue_valiendo_para_una_app_anterior() {
+        // Una 3.5 no lo manda ni lo lee: el campo es opcional en los dos sentidos.
+        let viejo = br#"{"t":"hola","version":1,"secreto":null,"apodo":"Ana"}"#;
+        let h: AlReceptor = serde_json::from_slice(viejo).unwrap();
+        assert!(matches!(h, AlReceptor::Hola { pase: None, .. }));
+        let sin = serde_json::to_string(&AlReceptor::Hola {
+            version: VERSION,
+            secreto: None,
+            pase: None,
+            apodo: "Ana".into(),
+        })
+        .unwrap();
+        assert!(!sin.contains("pase"));
     }
 
     #[test]

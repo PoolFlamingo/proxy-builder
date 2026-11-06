@@ -19,11 +19,12 @@ import {
 	escanearQr,
 	escanerDisponible,
 } from "@/lib/escaner";
+import { useFormato } from "@/lib/formato";
 import { call } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import {
 	emisorEnCurso,
-	formatoCodigo6,
+	formatoCifras,
 	pareceCodigoDeDeck,
 	pesar,
 	pesoDe,
@@ -254,6 +255,11 @@ export function PanelEnviar({
 					</Bloque>
 
 					<Bloque titulo={t("O con el código de «Recibir»")}>
+						<p className="text-muted-foreground">
+							{t(
+								"Sirve aunque estéis lejos o con datos móviles: pide a la otra persona que abra «Recibir» y te mande su código.",
+							)}
+						</p>
 						<div className="flex items-start gap-1.5">
 							<Input
 								value={codigo}
@@ -325,7 +331,8 @@ function VistaEmisor({
 	onCerrar: () => void;
 	onOtro: () => void;
 }) {
-	const { t, mensaje } = useLang();
+	const { t, mensaje, lang } = useLang();
+	const { tactil } = useFormato();
 	const en = emisorEnCurso(estado);
 	const quien = estado.remoto?.apodo || estado.remoto?.huella || t("el otro equipo");
 	const p = estado.progreso;
@@ -333,35 +340,27 @@ function VistaEmisor({
 		<>
 			<DialogCuerpo>
 				<div className="flex flex-col gap-2 p-1">
-					{estado.fase === "conectando" && <Espera texto={t("Conectando…")} />}
+					{estado.fase === "conectando" && (
+						<>
+							<Espera texto={t("Conectando…")} />
+							<p className="text-center text-muted-foreground">
+								{t(
+									"Con datos móviles puede tardar un poco. El otro equipo tiene que tener la app abierta en «Recibir».",
+								)}
+							</p>
+						</>
+					)}
 					{estado.fase === "esperandoAceptacion" && (
 						<div className="flex flex-col items-center gap-2 p-3 text-center">
 							<p>{t("Esperando a que lo acepten en el otro equipo.")}</p>
 							<div className="text-3xl font-semibold tracking-widest tabular-nums select-text">
-								{formatoCodigo6(estado.codigo6 ?? "")}
+								{formatoCifras(estado.cifras ?? "")}
 							</div>
 							<p className="text-muted-foreground">{t("Tiene que enseñar este mismo código.")}</p>
 						</div>
 					)}
 					{estado.fase === "esperandoRespuesta" && (
 						<Espera texto={t("Esperando a que «{nombre}» elija qué quiere…", { nombre: quien })} />
-					)}
-					{estado.fase === "preparando" && (
-						<div className="flex flex-col gap-1.5">
-							<div className="flex items-center justify-between">
-								<span className="truncate">
-									{p
-										? t("Preparando «{nombre}» ({i}/{total})", {
-												nombre: p.nombre,
-												i: Math.min(p.decksHechos + 1, p.decksTotal),
-												total: p.decksTotal,
-											})
-										: t("Preparando…")}
-								</span>
-								<span className="tabular-nums text-muted-foreground">{porcentaje(p)} %</span>
-							</div>
-							<Progress value={porcentaje(p)} />
-						</div>
 					)}
 					{estado.fase === "preparando" && (
 						<div className="flex flex-col gap-1.5">
@@ -395,6 +394,16 @@ function VistaEmisor({
 								<span className="tabular-nums text-muted-foreground">{porcentaje(p)} %</span>
 							</div>
 							<Progress value={porcentaje(p)} />
+							{p && (
+								<span className="tabular-nums text-muted-foreground">
+									{pesar(p.hechos, lang)} / {pesar(p.total, lang)}
+								</span>
+							)}
+							{tactil && (
+								<span className="text-muted-foreground">
+									{t("Deja la app abierta hasta que termine.")}
+								</span>
+							)}
 						</div>
 					)}
 					{estado.fase === "terminado" && <p className="font-medium">{t("Listo.")}</p>}

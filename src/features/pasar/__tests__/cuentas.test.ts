@@ -7,7 +7,7 @@ import {
 	eleccionesIniciales,
 	emisorEnCurso,
 	faltaResolver,
-	formatoCodigo6,
+	formatoCifras,
 	opcionesDe,
 	pareceCodigoDeDeck,
 	pesar,
@@ -95,9 +95,9 @@ describe("textos y cuentas", () => {
 		expect(pesar(3 * 1024 * 1024 * 1024, "en")).toBe("3 GB");
 	});
 
-	it("agrupa el código de 6 cifras y la cuenta atrás no baja de cero", () => {
-		expect(formatoCodigo6("012345")).toBe("012 345");
-		expect(formatoCodigo6("12")).toBe("12");
+	it("agrupa el código de 8 cifras y la cuenta atrás no baja de cero", () => {
+		expect(formatoCifras("01234567")).toBe("0123 4567");
+		expect(formatoCifras("12")).toBe("12");
 		expect(cuentaAtras(300_000, 0)).toBe("5:00");
 		expect(cuentaAtras(300_000, 268_000)).toBe("0:32");
 		expect(cuentaAtras(1000, 5000)).toBe("0:00");

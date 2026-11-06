@@ -19,26 +19,36 @@ use tokio::time::timeout;
 
 use super::encontrar;
 use super::protocolo::{
-    apodo_limpio, enviar_bytes, escribir, hex, leer, AlEmisor, AlReceptor, MAX_DECKS, MAX_PAQUETE,
-    MAX_TOTAL, TOPE_TRAMA, VERSION,
+    apodo_limpio, enviar_bytes, escribir, hex, leer, AlEmisor, AlReceptor, MAX_DECKS, TOPE_TRAMA,
+    VERSION,
 };
 use super::tipos::{
     DeckOfrecido, Destino, Eleccion, EstadoEmisor, EstadoResultado, FaseEmisor, Progreso, Remoto,
     Resultado,
 };
-use super::{cerrojo, Entorno, Temporal, CIERRE_CANCELADO, CIERRE_FIN, CIERRE_NO_ESPERADO};
+use super::{
+    cerrojo, motivo_del_corte, Entorno, Temporal, CIERRE_CANCELADO, CIERRE_FIN, CIERRE_NO_ESPERADO,
+};
 use crate::error::{AppError, AppResult, ErrorCode};
 use crate::package::{self, Modo};
 use crate::red::codigo::Codigo;
 use crate::red::nodo::ALPN_DECK;
 use crate::store::{decks, linaje};
 
+/// Lo que dura un intento de llamar al otro equipo.
 const ESPERA_CONEXION: Duration = Duration::from_secs(30);
+/// Lo que se insiste con un código. Quien lo mandó por mensaje puede tener aún la
+/// app de mensajes delante, y Android deja sin red a la nuestra mientras: en
+/// cuanto vuelva, se encuentran.
+const INSISTIR_CON_CODIGO: Duration = Duration::from_secs(3 * 60);
+/// Entre un intento y otro.
+const ENTRE_INTENTOS: Duration = Duration::from_secs(3);
 const ESPERA_LISTO: Duration = Duration::from_secs(30);
-/// Con el código de 6 cifras, la persona del otro lado tiene que aceptar.
+/// Con el código de 8 cifras, la persona del otro lado tiene que aceptar.
 const ESPERA_ACEPTAR: Duration = Duration::from_secs(90);
 const ESPERA_RESPUESTA: Duration = Duration::from_secs(15 * 60);
-const ESPERA_HECHO: Duration = Duration::from_secs(10 * 60);
+/// Lo que puede tardar en importar un deck grande quien lo recibe.
+const ESPERA_HECHO: Duration = Duration::from_secs(60 * 60);
 const ESPERA_ADIOS: Duration = Duration::from_secs(15);
 const CADA_AVISO: Duration = Duration::from_millis(100);
 /// Las portadas se quitan si la oferta no cabe con ellas.
@@ -116,22 +126,6 @@ fn motivo_de_hecho(m: Option<String>) -> &'static str {
     }
 }
 
-/// Lo que quien recibe rechazaría por tamaño (`protocolo::validar_oferta`),
-/// antes de llamar a nadie: así el emisor dice por qué y no «Cancelado».
-fn comprobar_tamanos(tamanos: &[(u64, u64)]) -> AppResult<()> {
-    let mut total = 0u64;
-    for &(tamano, originales) in tamanos {
-        if tamano > MAX_PAQUETE || originales > MAX_PAQUETE {
-            return Err(AppError::new(ErrorCode::InvalidInput).with("motivo", "paquete_grande"));
-        }
-        total = total.saturating_add(tamano);
-    }
-    if total > MAX_TOTAL {
-        return Err(AppError::new(ErrorCode::InvalidInput).with("motivo", "envio_grande"));
-    }
-    Ok(())
-}
-
 /// Empieza a enviar `ids` a `destino`. Vuelve en cuanto está lanzado; lo que
 /// pase llega por `pasar://emisor`.
 pub async fn enviar<E: Entorno>(
@@ -145,30 +139,33 @@ pub async fn enviar<E: Entorno>(
     if ids.is_empty() || ids.len() > MAX_DECKS {
         return Err(AppError::new(ErrorCode::InvalidInput).with("motivo", "decks"));
     }
-    // Los decks tienen que existir ya, antes de llamar a nadie, y caber.
-    let mut tamanos = Vec::with_capacity(ids.len());
+    // Los decks tienen que existir ya, antes de llamar a nadie.
     for id in &ids {
-        let deck = decks::open(&st.db, id)?;
-        let sin = package::tamano_estimado(&deck, &st.blobs, &st.db, Modo::SinProxies);
-        let con = package::tamano_estimado(&deck, &st.blobs, &st.db, modo);
-        tamanos.push((con, sin));
+        decks::open(&st.db, id)?;
     }
-    comprobar_tamanos(&tamanos)?;
     // A quién.
-    let (addr, secreto, con_aceptacion) = match destino {
+    let llamada = match destino {
         Destino::Codigo { texto } => {
             let c = Codigo::de_texto_deck(&texto)?;
-            (c.addr, Some(c.secreto), false)
+            Llamada {
+                addr: c.addr,
+                secreto: Some(c.secreto),
+                pase: None,
+            }
         }
         Destino::Cerca { id } => {
-            let a = cerrojo(&st.pasar.busqueda)
+            let (addr, pase) = cerrojo(&st.pasar.busqueda)
                 .as_ref()
-                .and_then(|b| b.direccion(&id))
+                .and_then(|b| b.destino(&id))
                 .ok_or_else(|| red("no_esta"))?;
-            (a, None, true)
+            Llamada {
+                addr,
+                secreto: None,
+                pase,
+            }
         }
     };
-    if addr.id == ep.id() {
+    if llamada.addr.id == ep.id() {
         return Err(red("uno_mismo"));
     }
     let gen = st.pasar.nueva_generacion();
@@ -182,7 +179,7 @@ pub async fn enviar<E: Entorno>(
             estado: EstadoEmisor {
                 fase: FaseEmisor::Conectando,
                 remoto: None,
-                codigo6: None,
+                cifras: None,
                 decks: Vec::new(),
                 progreso: None,
                 resultados: Vec::new(),
@@ -198,7 +195,9 @@ pub async fn enviar<E: Entorno>(
     }
     let e2 = e.clone();
     let tarea = tokio::spawn(async move {
-        let r = sesion(&e2, gen, ep, addr, secreto, con_aceptacion, ids, modo).await;
+        e2.pantalla_encendida(true);
+        let r = sesion(&e2, gen, ep, llamada, ids, modo).await;
+        e2.pantalla_encendida(false);
         match r {
             Ok(()) => {
                 mutar(&e2, gen, |r| {
@@ -211,8 +210,16 @@ pub async fn enviar<E: Entorno>(
             }
             Err(Fin::Cancelado) => {
                 mutar(&e2, gen, |r| {
+                    // Un corte de la red no es que nadie haya cancelado.
+                    let corte = r.conn.as_ref().and_then(motivo_del_corte);
                     if !es_final(r.estado.fase) {
-                        r.estado.fase = FaseEmisor::Cancelado;
+                        match corte {
+                            Some(m) => {
+                                r.estado.fase = FaseEmisor::Error;
+                                r.estado.error = Some(red(m));
+                            }
+                            None => r.estado.fase = FaseEmisor::Cancelado,
+                        }
                     }
                     r.conn = None;
                 });
@@ -230,8 +237,52 @@ pub async fn enviar<E: Entorno>(
         }
     })
     .abort_handle();
-    mutar(e, gen, |r| r.tarea = Some(tarea));
+    mutar(e, gen, |r| {
+        // Si ya lo han cancelado mientras arrancaba, no sigue por su cuenta.
+        if es_final(r.estado.fase) {
+            tarea.abort();
+        } else {
+            r.tarea = Some(tarea);
+        }
+    });
     Ok(())
+}
+
+/// A quién se llama y con qué se presenta.
+struct Llamada {
+    addr: iroh::EndpointAddr,
+    /// El del código: entra sin preguntar.
+    secreto: Option<String>,
+    /// El del anuncio de la red local: la otra persona tiene que aceptar.
+    pase: Option<String>,
+}
+
+/// Llama al otro equipo. Con un código se insiste un rato (`INSISTIR_CON_CODIGO`);
+/// en la lista de «cerca», si no contesta es que ya no está.
+async fn llamar(ep: &Endpoint, llamada: &Llamada) -> Result<Connection, Fin> {
+    let insistir = if llamada.secreto.is_some() {
+        INSISTIR_CON_CODIGO
+    } else {
+        Duration::ZERO
+    };
+    let hasta = tokio::time::Instant::now() + insistir;
+    loop {
+        let fallo =
+            match timeout(ESPERA_CONEXION, ep.connect(llamada.addr.clone(), ALPN_DECK)).await {
+                Ok(Ok(c)) => return Ok(c),
+                Ok(Err(err)) => Some(err),
+                Err(_) => None,
+            };
+        if tokio::time::Instant::now() >= hasta {
+            return Err(Fin::Error(crate::error::red_sin_http(
+                "conexion",
+                fallo
+                    .as_ref()
+                    .map(|e| e as &(dyn std::error::Error + 'static)),
+            )));
+        }
+        tokio::time::sleep(ENTRE_INTENTOS).await;
+    }
 }
 
 enum Fin {
@@ -329,31 +380,20 @@ pub(crate) fn oferta_de<E: Entorno>(
     Ok(out)
 }
 
-#[allow(clippy::too_many_arguments)]
 async fn sesion<E: Entorno>(
     e: &E,
     gen: u64,
     ep: Endpoint,
-    addr: iroh::EndpointAddr,
-    secreto: Option<String>,
-    con_aceptacion: bool,
+    llamada: Llamada,
     ids: Vec<String>,
     modo: Modo,
 ) -> Result<(), Fin> {
     let st = e.estado();
-    let conn = match timeout(ESPERA_CONEXION, ep.connect(addr, ALPN_DECK)).await {
-        Ok(Ok(c)) => c,
-        Ok(Err(err)) => {
-            return Err(Fin::Error(crate::error::red_sin_http(
-                "conexion",
-                Some(&err),
-            )));
-        }
-        Err(_) => return Err(Fin::Error(red("tiempo"))),
-    };
+    let conn = llamar(&ep, &llamada).await?;
+    let con_aceptacion = llamada.secreto.is_none();
     mutar(e, gen, |r| r.conn = Some(conn.clone()));
     let remoto_id = conn.remote_id();
-    let codigo6 = encontrar::codigo6(ep.id(), remoto_id);
+    let cifras = encontrar::cifras(ep.id(), remoto_id);
     let yo = super::nombre_equipo(e);
 
     let (mut tx, mut rx) = conn.open_bi().await.map_err(|_| Fin::Cancelado)?;
@@ -361,7 +401,8 @@ async fn sesion<E: Entorno>(
         &mut tx,
         &AlReceptor::Hola {
             version: VERSION,
-            secreto,
+            secreto: llamada.secreto,
+            pase: llamada.pase,
             apodo: yo,
         },
     )
@@ -369,7 +410,7 @@ async fn sesion<E: Entorno>(
     if con_aceptacion {
         mutar(e, gen, |r| {
             r.estado.fase = FaseEmisor::EsperandoAceptacion;
-            r.estado.codigo6 = Some(codigo6.clone());
+            r.estado.cifras = Some(cifras.clone());
         });
     }
     let espera = if con_aceptacion {
@@ -398,7 +439,9 @@ async fn sesion<E: Entorno>(
         AlEmisor::Listo { apodo } => apodo_limpio(&apodo),
         AlEmisor::Rechazo { motivo } => {
             let m = match motivo.as_str() {
-                m @ ("version" | "codigo" | "caducado" | "rechazado" | "ocupado") => m,
+                m @ ("version" | "codigo" | "no_admite" | "caducado" | "rechazado" | "ocupado") => {
+                    m
+                }
                 _ => "rechazado",
             };
             return Err(Fin::Error(red(m)));
@@ -410,7 +453,7 @@ async fn sesion<E: Entorno>(
             apodo: apodo_otro,
             huella: encontrar::huella(&remoto_id),
         });
-        r.estado.codigo6 = Some(codigo6.clone());
+        r.estado.cifras = Some(cifras.clone());
     });
 
     // La oferta.
@@ -513,13 +556,6 @@ async fn sesion<E: Entorno>(
             Ok((tamano, huella_de(&ruta)?))
         })?;
         mutar(e, gen, |r| r.estado.fase = FaseEmisor::Enviando);
-        // Lo estimado podía caber y el paquete de verdad no: el otro lo
-        // cortaría a medias.
-        if tamano > MAX_PAQUETE {
-            return Err(Fin::Error(
-                AppError::new(ErrorCode::InvalidInput).with("motivo", "paquete_grande"),
-            ));
-        }
         crate::red::protocolo::escribir_trama(
             &mut tx,
             &serde_json::to_vec(&AlReceptor::Paquete {
@@ -608,19 +644,6 @@ fn huella_de(ruta: &std::path::Path) -> AppResult<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn lo_que_no_cabe_se_rechaza_antes_de_llamar() {
-        assert!(comprobar_tamanos(&[(10, 5), (MAX_PAQUETE, MAX_PAQUETE)]).is_ok());
-        let e = comprobar_tamanos(&[(MAX_PAQUETE + 1, 5)]).unwrap_err();
-        assert_eq!(e.params["motivo"], "paquete_grande");
-        // Aunque se mande con proxies, quien recibe mira también el de sin.
-        let e = comprobar_tamanos(&[(5, MAX_PAQUETE + 1)]).unwrap_err();
-        assert_eq!(e.params["motivo"], "paquete_grande");
-        let muchos = vec![(MAX_PAQUETE, 1); (MAX_TOTAL / MAX_PAQUETE) as usize + 1];
-        let e = comprobar_tamanos(&muchos).unwrap_err();
-        assert_eq!(e.params["motivo"], "envio_grande");
-    }
 
     #[test]
     fn el_motivo_de_fuera_va_por_una_lista_cerrada() {

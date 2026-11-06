@@ -101,9 +101,9 @@ export function pesoDe(i: InfoPaquete | undefined, modo: ModoPaquete): number {
 			: i.tamanoOriginales;
 }
 
-/** El código de 6 cifras en dos grupos de tres (`123 456`). */
-export function formatoCodigo6(c: string): string {
-	return c.length === 6 ? `${c.slice(0, 3)} ${c.slice(3)}` : c;
+/** El código de 8 cifras en dos grupos de cuatro (`1234 5678`). */
+export function formatoCifras(c: string): string {
+	return c.length === 8 ? `${c.slice(0, 4)} ${c.slice(4)}` : c;
 }
 
 /** Lo que falta para que caduque el código, como `4:32` (nunca negativo). */
@@ -145,13 +145,25 @@ const MOTIVOS: Record<string, string> = {
 	rechazado: paraTraducir("El otro equipo no ha aceptado el envío."),
 	ocupado: paraTraducir("El otro equipo ya está recibiendo de alguien: espera un momento."),
 	version: paraTraducir("Los dos equipos tienen versiones distintas de la app: actualizadlos."),
+	no_admite: paraTraducir(
+		"Ese equipo no ha admitido la conexión. Cierra y vuelve a abrir «Recibir» en él, o usa su código.",
+	),
 	no_espera: paraTraducir(
 		"El otro equipo no está esperando un deck. Abre «Recibir» en él y usa el código nuevo.",
 	),
 	no_esta: paraTraducir("Ese equipo ya no está cerca: mira la lista otra vez."),
 	uno_mismo: paraTraducir("Ese código es de este mismo equipo."),
 	conexion: paraTraducir(
-		"No se ha podido llegar al otro equipo. Comprobad que los dos tenéis conexión a internet o que estáis en la misma red.",
+		"No se ha podido llegar al otro equipo. Comprobad que los dos tenéis internet y que sigue con la app abierta en «Recibir».",
+	),
+	cortado: paraTraducir(
+		"Se ha cortado la conexión. Lo que ya había llegado entero se ha guardado: volved a intentarlo con mejor cobertura.",
+	),
+	sin_espacio: paraTraducir(
+		"No hay espacio libre suficiente en este equipo. Libera espacio o elige solo las cartas originales.",
+	),
+	otro_sin_espacio: paraTraducir(
+		"Al otro equipo no le queda espacio libre suficiente. Puede liberar espacio o recibir solo las cartas originales.",
 	),
 	tiempo: paraTraducir("El otro equipo ha tardado demasiado en responder."),
 	protocolo: paraTraducir("El otro equipo ha mandado algo que esta app no entiende."),
@@ -160,12 +172,6 @@ const MOTIVOS: Record<string, string> = {
 	paquete: paraTraducir("El otro equipo ha mandado algo que esta app no entiende."),
 	oferta: paraTraducir("El otro equipo ha mandado algo que esta app no entiende."),
 	oferta_grande: paraTraducir("Son demasiados decks para enviar de una vez: manda menos."),
-	paquete_grande: paraTraducir(
-		"Un deck pesa demasiado para enviarlo (más de 500 MB). Prueba con «Optimizado» o solo con las cartas originales.",
-	),
-	envio_grande: paraTraducir(
-		"Todo junto pesa demasiado para enviarlo de una vez: manda menos decks.",
-	),
 	falta_resolucion: paraTraducir("Elige qué hacer con los decks que ya tienes."),
 	sin_oferta: paraTraducir("Ya no hay nada que elegir."),
 	enviando: paraTraducir("Ya hay un envío en marcha."),

@@ -1,15 +1,18 @@
 import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import type { AppError } from "@/bindings/AppError";
 import type { EstadoReceptor } from "@/bindings/EstadoReceptor";
 import type { ResultadoPasar } from "@/bindings/ResultadoPasar";
-import { AyudaTactil } from "@/components/ayuda-tactil";
 import { Icono } from "@/components/icono";
 import { useLang } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { DialogCuerpo, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { useFormato } from "@/lib/formato";
 import { call } from "@/lib/ipc";
+import { useEsMovil } from "@/lib/plataforma";
+import { cn } from "@/lib/utils";
 import { abrirDeck, type Devolver, prestarDeck } from "@/stores/deck-store";
 import { useUi } from "@/stores/ui-store";
 import {
@@ -17,7 +20,8 @@ import {
 	cuentaAtras,
 	type Elegido,
 	eleccionesIniciales,
-	formatoCodigo6,
+	formatoCifras,
+	pesar,
 	porcentaje,
 	puedeResponder,
 	quedaAlgo,
@@ -68,7 +72,11 @@ export function PanelRecibir({ onCerrar }: { onCerrar: () => void }) {
 		setPrimero(null);
 		call("pasar_recibir_abrir")
 			.then(setPrimero)
-			.catch((e) => setFallo(textoDeError(e, t, mensaje)));
+			.catch((e) => {
+				// Se ha cerrado antes de que terminara de abrirse: no es un fallo.
+				if ((e as AppError | undefined)?.code !== "Cancelled")
+					setFallo(textoDeError(e, t, mensaje));
+			});
 	}, [t, mensaje, evento]);
 
 	// Al entrar, se abre; al salir, se cierra (y se corta lo que hubiera).
@@ -237,15 +245,21 @@ function NombreEquipo() {
 
 /** Nada ha llegado aún: el nombre, el QR, el código, el equipo en la red local. */
 function Esperando({ estado, onCerrar }: { estado: EstadoReceptor; onCerrar: () => void }) {
-	const { t } = useLang();
+	const { t, mensaje } = useLang();
 	const [ahora, setAhora] = useState(() => Date.now());
+	const puedeCompartir = useEsMovil();
 	useEffect(() => {
 		const id = window.setInterval(() => setAhora(Date.now()), 1000);
 		return () => window.clearInterval(id);
 	}, []);
+	const compartir = () => {
+		call("pasar_compartir_codigo", { texto: estado.codigoMensaje }).catch((e) =>
+			toast.error(textoDeError(e, t, mensaje)),
+		);
+	};
 	const copiar = () => {
 		void navigator.clipboard
-			.writeText(estado.codigo)
+			.writeText(estado.codigoMensaje)
 			.then(() => toast.success(t("Código copiado")))
 			.catch(() => {});
 	};
@@ -256,7 +270,7 @@ function Esperando({ estado, onCerrar }: { estado: EstadoReceptor; onCerrar: () 
 					<NombreEquipo />
 					<p className="text-center text-muted-foreground">
 						{t(
-							"En el otro equipo, abre «Enviar» y lee este QR o pega el código. Si estáis en la misma red, también te verá en su lista.",
+							"En el otro equipo, abre «Enviar» y lee este QR o pega el código. Si estáis lejos, mándale el código por mensaje: vale con datos móviles.",
 						)}
 					</p>
 					<img
@@ -273,7 +287,7 @@ function Esperando({ estado, onCerrar }: { estado: EstadoReceptor; onCerrar: () 
 						</div>
 						<div className="flex items-start gap-1.5">
 							<code className="max-h-20 min-w-0 flex-1 overflow-hidden rounded-lg border bg-muted/40 p-2 text-[11px] break-all select-text">
-								{estado.codigo}
+								{estado.codigoMensaje}
 							</code>
 							<Button
 								size="icon-sm"
@@ -283,18 +297,38 @@ function Esperando({ estado, onCerrar }: { estado: EstadoReceptor; onCerrar: () 
 							>
 								<Icono icon="lucide:copy" />
 							</Button>
+							{puedeCompartir && (
+								<Button
+									size="icon-sm"
+									variant="outline"
+									onClick={compartir}
+									aria-label={t("Mandar el código por otra app")}
+								>
+									<Icono icon="lucide:share-2" />
+								</Button>
+							)}
 						</div>
 					</div>
-					<div className="flex items-center gap-1.5 text-muted-foreground">
-						<Icono icon={estado.cerca ? "lucide:wifi" : "lucide:wifi-off"} className="size-3.5" />
-						{estado.cerca
-							? t("Visible para los equipos de tu red local.")
-							: t("Sin red local: solo con el QR o el código.")}
-						<AyudaTactil>
-							{t(
-								"El código vale también a distancia: los datos viajan cifrados de punta a punta y solo se usan una vez.",
-							)}
-						</AyudaTactil>
+					<div className="flex w-full flex-col gap-1 text-muted-foreground">
+						<div className="flex items-center gap-1.5">
+							<Icono
+								icon={estado.distancia ? "lucide:globe" : "lucide:loader-2"}
+								className={cn("size-3.5 shrink-0", !estado.distancia && "animate-spin")}
+							/>
+							{estado.distancia
+								? t("Vale desde cualquier sitio con internet. Solo se puede usar una vez.")
+								: t("Buscando internet: por ahora, el código solo vale en tu misma red.")}
+						</div>
+						<div className="flex items-center gap-1.5">
+							<Icono
+								icon={estado.cerca ? "lucide:wifi" : "lucide:wifi-off"}
+								className="size-3.5 shrink-0"
+							/>
+							{estado.cerca
+								? t("Visible para los equipos de tu red local.")
+								: t("No visible en la red local: hace falta el QR o el código.")}
+						</div>
+						<p>{t("Deja esta pantalla abierta hasta que el otro equipo se conecte.")}</p>
 					</div>
 				</div>
 			</DialogCuerpo>
@@ -321,7 +355,7 @@ function Peticion({ estado }: { estado: EstadoReceptor }) {
 						})}
 					</p>
 					<div className="text-3xl font-semibold tracking-widest tabular-nums select-text">
-						{formatoCodigo6(estado.codigo6 ?? "")}
+						{formatoCifras(estado.cifras ?? "")}
 					</div>
 					<p className="text-muted-foreground">
 						{t("Acéptalo solo si el otro equipo enseña este mismo código.")}
@@ -380,6 +414,9 @@ function Oferta({
 					})}
 				</p>
 				<OfertaDecks oferta={estado.oferta} elegidos={elegidos} onCambio={cambiar} />
+				<p className="p-1 text-muted-foreground">
+					{t("Si estás con datos móviles, lo que recibas gasta de tu tarifa.")}
+				</p>
 			</DialogCuerpo>
 			<DialogFooter>
 				<Button size="sm" variant="outline" onClick={() => void call("pasar_recibir_cancelar")}>
@@ -394,7 +431,8 @@ function Oferta({
 }
 
 function Avance({ estado }: { estado: EstadoReceptor }) {
-	const { t } = useLang();
+	const { t, lang } = useLang();
+	const { tactil } = useFormato();
 	const p = estado.progreso;
 	return (
 		<div className="flex flex-col gap-1.5 p-1">
@@ -411,6 +449,14 @@ function Avance({ estado }: { estado: EstadoReceptor }) {
 				<span className="tabular-nums text-muted-foreground">{porcentaje(p)} %</span>
 			</div>
 			<Progress value={porcentaje(p)} />
+			{p && (
+				<span className="tabular-nums text-muted-foreground">
+					{pesar(p.hechos, lang)} / {pesar(p.total, lang)}
+				</span>
+			)}
+			{tactil && (
+				<span className="text-muted-foreground">{t("Deja la app abierta hasta que termine.")}</span>
+			)}
 		</div>
 	);
 }

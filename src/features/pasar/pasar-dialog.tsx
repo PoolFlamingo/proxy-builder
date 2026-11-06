@@ -23,7 +23,7 @@ export function DialogoPasar() {
 						<DialogTitle>{t("Pasar decks")}</DialogTitle>
 						<DialogDescription className="text-xs">
 							{t(
-								"Entre tus equipos o con un amigo, sin cuenta: los datos van cifrados de punta a punta.",
+								"Entre tus equipos o con un amigo, estéis donde estéis y sin cuenta: los datos van cifrados de punta a punta.",
 							)}
 						</DialogDescription>
 					</DialogHeader>
