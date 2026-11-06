@@ -47,6 +47,7 @@ imagen y PDF). Antes de tocar algo grande, leer el paso del plan que le toca.
   `src-tauri/src/fichero.rs`**, nunca `std::fs` sobre una ruta de diálogo: en Android es un
   `content://` (se copia a la caché al leer; se escribe en la caché y se copia al destino).
   Sin extensión ni carpeta: el formato y el nombre llegan como parámetro.
+- 🛑 **La clave de la identidad en Android va sellada** con el Android Keystore (`identidad/clave.sellada`, `red::identidad::Cofre`, `android::cofre`) y fuera de la copia automática (`res/xml/backup_rules.xml`, `data_extraction_rules.xml`). Lo que se encuentre en claro se sella al arrancar, y nunca se borra sin comprobar antes que lo sellado se abre y da la misma clave: una identidad perdida no se recupera.
 - 🛑 **Lo que solo hace Android** (compartir, pantalla encendida o completa, `multicast`,
   instalar un APK, nombre de un `content://`) está en `plugins/android-extra/` (Kotlin) y se
   llama **solo desde Rust** por `src/android.rs`; en escritorio son no-ops o `Unsupported`.
@@ -187,12 +188,14 @@ le falta una cadena le sale la inglesa.
 | Entorno de Android (JDK 21, NDK 28.2, compiladores) | `. scripts/android-env.sh` |
 | Textos nuevos en los 15 idiomas, sin pisarse | `python3 scripts/i18n-anadir.py <área>` (JSON por stdin) |
 | Tipos de Rust a TypeScript | `pnpm bindings` |
+| Fallos conocidos en las dependencias (lo pasa `auditoria.yml` cada lunes, aparte del CI; las excepciones, en `src-tauri/.cargo/audit.toml`) | `cargo audit` desde `src-tauri/` |
 
 - **pnpm 12, no npm** (Pablo, 12/10/2026). Su configuración va en
   `pnpm-workspace.yaml`: `minimumReleaseAge: 1440` (solo versiones de hace más
   de un día, el valor de pnpm 11) y `allowBuilds` (esbuild). Regenerar el
   lockfile siempre con la versión de `packageManager` (la de Pablo): uno hecho con pnpm 10 sin esa espera trajo
   versiones recién publicadas y el `pnpm install` de Pablo lo rechazó.
+- Las acciones de GitHub van fijadas por SHA, con la versión en un comentario (`dtolnay/rust-toolchain` pide además `toolchain: stable`). Lo que venga de fuera y se pinte con `dangerouslySetInnerHTML` pasa por lista de permitidos (`iconos.rs::seguro`), nunca de prohibidos.
 - Tabulador en todo salvo Rust (cuatro espacios, `rustfmt`). En lint-staged va
   `rustfmt --edition 2021` a pelo, nunca `cargo fmt`.
 - Clippy con `-D warnings`; nada de `unwrap()`/`expect()` fuera de tests
@@ -707,7 +710,7 @@ le falta una cadena le sale la inglesa.
 - **Pasar decks entre equipos** (Pablo, 02/11/2026): `src-tauri/src/pasar/` (ALPN
   `proxy-builder/deck/1` en **el mismo nodo** que la mesa; código `PBD1-` frente al `PB1-` de
   partida; «equipos cerca» por mDNS con `iroh-mdns-address-lookup`; QR en Rust; oferta ≤ 64 KiB; el
-  `.pbdeck` por stream, ≤ 500 MB), `features/pasar/` y `lib/escaner.ts` (la única entrada al plugin
+  `.pbdeck` por stream, sin tope fijo: manda el disco libre, `pasar::cabe_al_recibir`), `features/pasar/` y `lib/escaner.ts` (la única entrada al plugin
   de escanear). El código vale también a distancia por los relés (cifrado de punta a punta, sin
   cuenta). 🛑 Un bucle de `accept` por nodo: quien acepta conexiones en él llama a
   `pasar::ceder(ep.id())` y reparte `ALPN_DECK` a `Mesa::atender_deck`. «Es el mismo deck» =
@@ -726,7 +729,7 @@ le falta una cadena le sale la inglesa.
   completar imágenes) pasa antes por `prestarDeck` (`deck-store.ts`): guarda lo pendiente, para
   el autoguardado y recarga al terminar; si no, el autoguardado pisa lo que escribió Rust.
   Reemplazar se deshace con la copia de antes si algo falla (`package.rs`, `Copia`). Sin secreto
-  solo entra un equipo con camino directo a una IP de la red local (y el código de 6 cifras). El
+  solo entra quien trae el pase del anuncio mDNS (`Hola.pase`, nuevo en cada «Recibir») y la persona acepta el código de 8 cifras; 🛑 nunca decidir por la IP del otro (el relé e IPv6 la hacen fallar, y el CGNAT de las operadoras da por «local» a un desconocido). 🛑 Un `.pbdeck` nunca se tiene entero en memoria: se lee y se escribe imagen a imagen (`package.rs`). El código vale a distancia por el relé; `distancia` dice si lo lleva ya. El QR lleva las IP; el que se copia y se comparte (`codigoMensaje`), solo el relé. El
   bucle de `accept` de `pasar/` vive solo mientras «Recibir» está abierto. `compartir_fichero`
   solo acepta una URI `content://` o un fichero dentro de `app_cache_dir`. El `MulticastLock` se
   pide por `UsoMulticast` (`android.rs` lleva la cuenta). Los fallos de red que no son HTTP, con
