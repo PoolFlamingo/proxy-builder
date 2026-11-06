@@ -27,6 +27,7 @@ import { usePantalla } from "./pantalla";
 import { BotonResponder } from "./responder";
 import { SelectorDisposicion } from "./selector-disposicion";
 import { BotonSparring } from "./sparring/boton";
+import { ChipTurno } from "./turno";
 
 /** Minutos y segundos desde `desde` (ms). */
 export function cronometro(desde: number, ahora: number): string {
@@ -138,6 +139,7 @@ function BarraEscritorio({ onSalir, onEditarDeck, onReiniciar }: PropsBarra) {
 					{t("Mirando")}
 				</span>
 			)}
+			<ChipTurno />
 			<span className="px-1.5 text-xs font-medium whitespace-nowrap tabular-nums">
 				{mulligan || !turno || turno.numero === 0
 					? t("Mulligan")
@@ -344,15 +346,24 @@ function BarraMovil({ onSalir, onEditarDeck, onReiniciar }: PropsBarra) {
 			<Boton className={BOTON_MOVIL} ayuda={t("Salir de la mesa")} onClick={onSalir}>
 				<Icono icon="lucide:log-out" className="size-[1.125rem]" />
 			</Boton>
-			<span className="min-w-0 truncate px-1.5 text-xs font-medium whitespace-nowrap tabular-nums">
-				{mulligan || !turno || turno.numero === 0
-					? t("Mulligan")
-					: t("Turno {n} · ronda {r}", { n: turno.numero, r: turno.ronda })}
-				{turno && turno.numero > 0 && (
-					<span className="ml-1.5 text-[11px] text-white/60">
-						{cronometro(Number(turno.desdeMs), ahora)}
-					</span>
-				)}
+			{/* En dos líneas: de quién es el turno no cabe al lado del número sin quitarle sitio a los botones. */}
+			<span className="flex min-w-16 flex-col justify-center gap-px px-1.5 leading-tight">
+				<ChipTurno compacto />
+				<span
+					className={cn(
+						"min-w-0 truncate whitespace-nowrap tabular-nums",
+						varios ? "text-[10px] text-white/70" : "text-xs font-medium",
+					)}
+				>
+					{mulligan || !turno || turno.numero === 0
+						? t("Mulligan")
+						: t("Turno {n} · ronda {r}", { n: turno.numero, r: turno.ronda })}
+					{turno && turno.numero > 0 && (
+						<span className={cn("ml-1.5", varios ? "text-[10px]" : "text-[11px] text-white/60")}>
+							{cronometro(Number(turno.desdeMs), ahora)}
+						</span>
+					)}
+				</span>
 			</span>
 			{diaNoche && (
 				<span
@@ -386,7 +397,7 @@ function BarraMovil({ onSalir, onEditarDeck, onReiniciar }: PropsBarra) {
 					<Boton className={BOTON_MOVIL} ayuda={t("Rehacer")} onClick={() => void op.rehacer()}>
 						<Icono icon="lucide:redo-2" className="size-[1.125rem]" />
 					</Boton>
-					<BotonResponder />
+					<BotonResponder compacto={!horizontal} />
 					{horizontal && (
 						<Boton
 							className={BOTON_MOVIL}

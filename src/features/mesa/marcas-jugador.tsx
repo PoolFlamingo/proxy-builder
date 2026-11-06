@@ -10,8 +10,9 @@ import { comandantesDe } from "./dano-comandante";
 
 /**
  * **Lo que lleva encima un jugador**, a la vista: veneno, el daño de cada
- * comandante, monarca, iniciativa y bendición de la ciudad. Rojo lo que ya
- * llega al límite (el motor solo avisa; quién queda fuera lo confirma la
+ * comandante, monarca, iniciativa, bendición de la ciudad y, con varios
+ * jugadores, la bandera de quien empezó (de ahí se cuentan las rondas). Rojo lo
+ * que ya llega al límite (el motor solo avisa; quién queda fuera lo confirma la
  * persona). `pequeno`: la cabecera de las miniaturas.
  */
 export function MarcasJugador({
@@ -26,6 +27,7 @@ export function MarcasJugador({
 	const { t } = useLang();
 	const j = useMesa((s) => s.jugadores[jugador]);
 	const designaciones = useMesa((s) => s.general?.designaciones);
+	const primero = useMesa((s) => s.asientos.length > 1 && s.general?.turno.primero === jugador);
 	const limiteVeneno = useMesa((s) => s.opciones?.limiteVeneno ?? 10);
 	const limiteComandante = useMesa((s) => s.opciones?.limiteComandante ?? 21);
 	const cartas = useMesa((s) => s.cartas);
@@ -38,7 +40,9 @@ export function MarcasJugador({
 	const monarca = designaciones?.monarca === jugador;
 	const iniciativa = designaciones?.iniciativa === jugador;
 	const bendicion = designaciones?.bendicion.includes(jugador) ?? false;
-	if (!j.veneno && comandantes.length === 0 && !monarca && !iniciativa && !bendicion) return null;
+	if (!j.veneno && comandantes.length === 0 && !monarca && !iniciativa && !bendicion && !primero) {
+		return null;
+	}
 	const icono = pequeno ? "size-3" : "size-3.5";
 	const marca = cn(
 		"flex shrink-0 items-center gap-0.5 rounded-full tabular-nums",
@@ -48,6 +52,13 @@ export function MarcasJugador({
 	);
 	return (
 		<span className={cn("flex items-center gap-1", className)}>
+			{primero && (
+				<AyudaAlTocar ayuda={t("Primer jugador")}>
+					<span className={marca}>
+						<Icono icon="lucide:flag" className={icono} />
+					</span>
+				</AyudaAlTocar>
+			)}
 			{monarca && (
 				<AyudaAlTocar ayuda={t("Monarca")}>
 					<span className={cn(marca, "text-amber-300")}>
