@@ -6,4 +6,9 @@ import type { VistaMesa } from "./VistaMesa";
 /**
  * Lo que llega a la pantalla por el canal de la mesa.
  */
-export type MensajeMesa = { "tipo": "vista", vista: VistaMesa, registro: Array<Evento>, } | { "tipo": "parche", parche: ParcheVista, evento: Evento, } | { "tipo": "cerrada" } | { "tipo": "rechazo", motivo: string, };
+export type MensajeMesa = { "tipo": "vista", vista: VistaMesa, registro: Array<Evento>, 
+/**
+ * Viene de empezar otra partida («Otra partida», la siguiente de un
+ * encuentro) y no de deshacer: la pantalla enseña quién empieza.
+ */
+nueva: boolean, } | { "tipo": "parche", parche: ParcheVista, evento: Evento, } | { "tipo": "cerrada" } | { "tipo": "rechazo", motivo: string, };

@@ -57,6 +57,7 @@ impl Mirada {
         MensajeMesa::Vista {
             vista: Box::new(self.vista.clone()),
             registro: self.registro.iter().cloned().collect(),
+            nueva: false,
         }
     }
 

@@ -1269,6 +1269,17 @@ async fn el_anfitrion_elige_el_orden_de_los_asientos_los_equipos_y_quien_empieza
     });
     // Los invitados reciben lo mismo.
     todos_iguales(&p).await;
+    // Y saben que se eligió: en su pantalla no se sortea (partida suelta, sin encuentro).
+    for j in &p.invitados {
+        esperar("quién empieza en el invitado", || {
+            j.mesa.con(|s| {
+                s.as_ref()
+                    .and_then(|s| s.estado_encuentro().empieza)
+                    .is_some_and(|e| e.jugador == IdJugador(2))
+            })
+        })
+        .await;
+    }
 }
 
 #[tokio::test]

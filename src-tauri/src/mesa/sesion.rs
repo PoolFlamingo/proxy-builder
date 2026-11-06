@@ -80,6 +80,9 @@ pub enum MensajeMesa {
     Vista {
         vista: Box<VistaMesa>,
         registro: Vec<Evento>,
+        /// Viene de empezar otra partida («Otra partida», la siguiente de un
+        /// encuentro) y no de deshacer: la pantalla enseña quién empieza.
+        nueva: bool,
     },
     /// Lo que cambió con un evento, y el evento (para el registro).
     Parche {
@@ -346,6 +349,21 @@ impl Sesion {
         MensajeMesa::Vista {
             vista: Box::new(self.vista()),
             registro: vigentes[desde..].iter().map(|e| (*e).clone()).collect(),
+            nueva: false,
+        }
+    }
+
+    /// La vista entera tras un `Cambio::Restaurar`: sin nada deshecho, es otra partida.
+    fn mensaje_tras_restaurar(&self, deshecho: Option<u64>) -> MensajeMesa {
+        match self.mensaje_vista() {
+            MensajeMesa::Vista {
+                vista, registro, ..
+            } => MensajeMesa::Vista {
+                vista,
+                registro,
+                nueva: deshecho.is_none(),
+            },
+            otro => otro,
         }
     }
 
@@ -545,8 +563,8 @@ impl Sesion {
             self.repeticion_al_dia();
             return;
         }
-        if matches!(hecho.evento.cambio, Cambio::Restaurar { .. }) {
-            self.mandar(self.mensaje_vista());
+        if let Cambio::Restaurar { deshecho, .. } = &hecho.evento.cambio {
+            self.mandar(self.mensaje_tras_restaurar(*deshecho));
         } else {
             let pa = parche(self.partida(), &hecho.tocado, self.mirador());
             self.mandar(MensajeMesa::Parche {
@@ -804,6 +822,30 @@ pub(crate) mod tests {
         s.accion(Accion::Reiniciar, None).unwrap();
         assert!(s.partida().mulligan.is_some());
         assert_eq!(s.partida().cartas.len(), 60);
+    }
+
+    #[test]
+    fn la_pantalla_distingue_otra_partida_de_deshacer() {
+        use std::sync::{Arc, Mutex};
+        use tauri::ipc::{Channel, InvokeResponseBody};
+        let nuevas: Arc<Mutex<Vec<bool>>> = Arc::default();
+        let apuntar = nuevas.clone();
+        let canal = Channel::new(move |cuerpo| {
+            if let InvokeResponseBody::Json(texto) = cuerpo {
+                let m: serde_json::Value = serde_json::from_str(&texto).unwrap();
+                if m["tipo"] == "vista" {
+                    apuntar.lock().unwrap().push(m["nueva"].as_bool().unwrap());
+                }
+            }
+            Ok(())
+        });
+        let mut s = local_de_dos();
+        s.suscribir(canal);
+        s.accion(Accion::Mulligan, None).unwrap();
+        s.accion(Accion::Deshacer { hasta: None }, None).unwrap();
+        s.accion(Accion::Reiniciar, None).unwrap();
+        // Suscribirse, deshacer (aunque vuelva a dejarla sin empezar) y otra partida.
+        assert_eq!(*nuevas.lock().unwrap(), vec![false, false, true]);
     }
 
     #[test]

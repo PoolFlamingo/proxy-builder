@@ -297,7 +297,9 @@ impl Anfitrion {
 
     fn mandar_encuentro(&self, p: &Par) {
         let (encuentro, primero) = cerrojo(&self.encuentro).clone();
-        if encuentro.is_none() {
+        // Una partida suelta también lo manda si se eligió quién empieza: si no,
+        // el invitado lo daría por sorteado.
+        if encuentro.is_none() && primero.is_none() {
             return;
         }
         if let Some(tx) = &p.tx {
